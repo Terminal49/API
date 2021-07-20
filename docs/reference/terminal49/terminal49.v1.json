@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Terminal49 API Reference",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "contact": {
       "name": "Terminal49 API support",
       "url": "https://www.terminal49.com",
@@ -6210,7 +6210,7 @@
         "name": "Authorization",
         "type": "apiKey",
         "in": "header",
-        "description": "`Token YOUR_API_TOKEN`\n\nThe APIs require authentication to be done using header-based API Key and Secret Authentication. \n\nAPI key and secret aare sent in the `Authorization` header.\n\nYou send your API key and secret in the following way:\n\n`Authorization: Token YOUR_API_TOKEN`"
+        "description": "`Token YOUR_API_TOKEN`\n\nThe APIs require authentication to be done using header-based API Key and Secret Authentication. \n\nAPI key and secret are sent va the `Authorization` request header.\n\nYou send your API key and secret in the following way:\n\n`Authorization: Token YOUR_API_KEY`"
       }
     }
   },
