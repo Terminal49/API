@@ -151,10 +151,21 @@ The payload of every webhook is a `webhook_notification`. Each Webhook notificat
 }
 ```
 
-## Webhook notification origin IP
-Webhook notifications will be delivered from the IP address `35.222.62.171`
+## Security
+There are a few ways you can verify the webhooks sent by Terminal49.
 
-## Verifying the webhook signature (optional)
+Verify webhook signatures to confirm that received events are sent from Terminal49. Additionally, Terminal49 sends webhook events from a set list of IP addresses. Only trust events coming from these IP addresses.
+
+
+
+### Webhook notification origin IP
+The full list of IP addresses that webhook notifications may come from is:
+
+```
+35.222.62.171
+```
+
+### Verifying the webhook signature (optional)
 When you create or get a webhook the model will include an attribute `secret`.
 
 Whenever a webhook notification is delivered we create a signature by using the webhook `secret` as the key to generate a HMAC hex digest with SHA-256 on the body.
