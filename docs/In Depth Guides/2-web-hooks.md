@@ -183,28 +183,35 @@ class WebhooksController < ApplicationController
 end
 ```
 
-## Events
+## Available Webook Events
 
-Each event represents some change to a model which you may be notified of. These events are supported:
+Each `WebhookNotification` event represents some change to a model which you may be notified of.
 
-- container.updated
-- container.transport.empty_out
-- container.transport.full_in
-- container.transport.vessel_loaded
-- container.transport.vessel_departed
-- container.transport.vessel_arrived
-- container.transport.vessel_discharged
-- container.transport.transshipment_loaded
-- container.transport.transshipment_departed
-- container.transport.transshipment_arrived
-- container.transport.transshipment_discharged
-- container.transport.rail_departed
-- container.transport.full_out
-- container.transport.empty_in
-- shipment.estimated.arrival
-- tracking_request.succeeded
-- tracking_request.failed
+List of Supported Events: 
 
+Event | Description
+---------|----------
+ `tracking_request.succeeded` | Shipment created and linked to `TrackingRequest`
+ `tracking_request.failed` | `TrackingRequest` failed and shipment was not created
+ `container.transport.empty_out` | Empty out at port of lading (origin)
+ `container.transport.full_in` | Full in at port of lading 
+ `container.transport.vessel_loaded` | Vessel loaded at port of lading 
+ `container.transport.vessel_departed` | Vessel departed at port of lading
+ `container.transport.transshipment_arrived` | Container arrived at transhipment port
+ `container.transport.transshipment_discharged` | Container discharged at transhipment port
+  `container.transport.transshipment_loaded` | Container loaded at transhipment port
+ `container.transport.transshipment_departed` | Container departed at transhipment port
+ `container.transport.vessel_arrived` | Container arrived on vessel at port of discharge (destination port)
+ `container.transport.vessel_discharged` | Container discharged at port of discharge
+ `container.transport.full_out` | Full out at port of discharge 
+ `container.transport.empty_in` | Empty returned at destination
+ `container.transport.rail_departed` | Rail depoarted from port of discharge
+ `shipment.estimated.arrival` | ETA change notification (for port of discharge)
+ `container.updated` | Container attribute(s) Updated (see below example)
+
+
+
+## Webhook Notification Examples
 
 
 ### container.updated
