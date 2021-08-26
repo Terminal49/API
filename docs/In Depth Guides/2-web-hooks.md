@@ -204,6 +204,7 @@ Event | Description
 ---------|----------
  `tracking_request.succeeded` | Shipment created and linked to `TrackingRequest`
  `tracking_request.failed` | `TrackingRequest` failed and shipment was not created
+ `tracking_request.awaiting_manifesto` | `TrackingRequest` awaiting a manifest
  `container.transport.empty_out` | Empty out at port of lading (origin)
  `container.transport.full_in` | Full in at port of lading 
  `container.transport.vessel_loaded` | Vessel loaded at port of lading 
