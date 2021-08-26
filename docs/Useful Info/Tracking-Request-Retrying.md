@@ -30,10 +30,10 @@ Temporary reasons can become permanent when the `status` changes to `failed`.
 
 Other than that:
 
- * `duplicate` when the same shipment already existed,  
+ * `duplicate` when the shipment already existed,  
  * `shipping_line_not_supported` when we could not recognize the SCAC,
  * `expired` when the tracking request was created more than 7 days ago and still not succeded,
- * `retries_exhausted` if we tried for 14 times.
+ * `retries_exhausted` if we tried for 14 times to no avail.
 
 ## Status
 
