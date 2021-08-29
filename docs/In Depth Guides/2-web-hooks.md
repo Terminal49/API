@@ -151,10 +151,21 @@ The payload of every webhook is a `webhook_notification`. Each Webhook notificat
 }
 ```
 
-## Webhook notification origin IP
-Webhook notifications will be delivered from the IP address `35.222.62.171`
+## Security
+There are a few ways you can verify the webhooks sent by Terminal49.
 
-## Verifying the webhook signature (optional)
+Verify webhook signatures to confirm that received events are sent from Terminal49. Additionally, Terminal49 sends webhook events from a set list of IP addresses. Only trust events coming from these IP addresses.
+
+
+
+### Webhook notification origin IP
+The full list of IP addresses that webhook notifications may come from is:
+
+```
+35.222.62.171
+```
+
+### Verifying the webhook signature (optional)
 When you create or get a webhook the model will include an attribute `secret`.
 
 Whenever a webhook notification is delivered we create a signature by using the webhook `secret` as the key to generate a HMAC hex digest with SHA-256 on the body.
@@ -183,28 +194,35 @@ class WebhooksController < ApplicationController
 end
 ```
 
-## Events
+## Available Webook Events
 
-Each event represents some change to a model which you may be notified of. These events are supported:
+Each `WebhookNotification` event represents some change to a model which you may be notified of.
 
-- container.updated
-- container.transport.empty_out
-- container.transport.full_in
-- container.transport.vessel_loaded
-- container.transport.vessel_departed
-- container.transport.vessel_arrived
-- container.transport.vessel_discharged
-- container.transport.transshipment_loaded
-- container.transport.transshipment_departed
-- container.transport.transshipment_arrived
-- container.transport.transshipment_discharged
-- container.transport.rail_departed
-- container.transport.full_out
-- container.transport.empty_in
-- shipment.estimated.arrival
-- tracking_request.succeeded
-- tracking_request.failed
+List of Supported Events: 
 
+Event | Description
+---------|----------
+ `tracking_request.succeeded` | Shipment created and linked to `TrackingRequest`
+ `tracking_request.failed` | `TrackingRequest` failed and shipment was not created
+ `container.transport.empty_out` | Empty out at port of lading (origin)
+ `container.transport.full_in` | Full in at port of lading 
+ `container.transport.vessel_loaded` | Vessel loaded at port of lading 
+ `container.transport.vessel_departed` | Vessel departed at port of lading
+ `container.transport.transshipment_arrived` | Container arrived at transhipment port
+ `container.transport.transshipment_discharged` | Container discharged at transhipment port
+  `container.transport.transshipment_loaded` | Container loaded at transhipment port
+ `container.transport.transshipment_departed` | Container departed at transhipment port
+ `container.transport.vessel_arrived` | Container arrived on vessel at port of discharge (destination port)
+ `container.transport.vessel_discharged` | Container discharged at port of discharge
+ `container.transport.full_out` | Full out at port of discharge 
+ `container.transport.empty_in` | Empty returned at destination
+ `container.transport.rail_departed` | Rail depoarted from port of discharge
+ `shipment.estimated.arrival` | ETA change notification (for port of discharge)
+ `container.updated` | Container attribute(s) Updated (see below example)
+
+
+
+## Webhook Notification Examples
 
 
 ### container.updated
