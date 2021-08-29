@@ -4563,6 +4563,22 @@
                     "format": "uuid"
                   }
                 }
+              },
+              "destination_terminal": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "terminal",
+                      "rail_terminal"
+                    ]
+                  },
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
               }
             }
           },
