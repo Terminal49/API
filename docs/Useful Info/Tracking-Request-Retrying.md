@@ -11,7 +11,7 @@ This process can take up to approximately 24 hours. You will not receive a `trac
 If the shipping line returns a response that it cannot find the provided number we either immediately fail the tracking request or keep trying depending on whether the request_type is a bill of lading or a booking number:
 
  * **Bill of lading numbers** fail straight away after a not found response from the shipping line. We change the `status` field to `failed` and send the `tracking_request.failed` event to your webhook.
- * **Booking numbers** do not fail instantly. We change the `status` to `awaiting_manifest` and will keep checking your request every 6 hours. You will receive a `tracking_request.awaiting_manifest` webhook notification the first time it happens. If your request number cannot be found after 7 days we will mark the tracking request as failed by changing the `status` field `failed` and sending the `tracking_request.failed` event to your webhook.
+ * **Booking numbers** do not fail instantly. We change the `status` to `awaiting_manifest` and will keep checking your request daily. You will receive a `tracking_request.awaiting_manifest` webhook notification the first time it happens. If your request number cannot be found after 7 days we will mark the tracking request as failed by changing the `status` field `failed` and sending the `tracking_request.failed` event to your webhook.
 
 ## Failed Reason
 
