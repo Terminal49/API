@@ -26,9 +26,7 @@ The `failed_reason` field can take one of the following temporary values:
 
 ### Permanent
 
-Temporary reasons can become permanent when the `status` changes to `failed`.
-
-Other than that:
+Temporary reasons can become permanent when the `status` changes to `failed`:
 
  * `duplicate` when the shipment already existed,  
  * `expired` when the tracking request was created more than 7 days ago and still not succeded,
