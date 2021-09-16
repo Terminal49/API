@@ -4151,7 +4151,7 @@
           }
         },
         "operationId": "get-containers-id-raw_events",
-        "description": "Get a list of past and futuer (estimated) milestones for a container as reported by the carrier. Some of the data is normalized even though the API is called raw_events. \n\nNormalized attributes: `event`, `estimated_at`, `actual_at` timestamps. Not all of the `event` values have been normalized. You can expect the the events related to container movements to be normalized but there are cases (paperwork \"milestones\" like customs release) where events are not normalized. "
+        "description": "Get a list of past and futuer (estimated) milestones for a container as reported by the carrier. Some of the data is normalized even though the API is called raw_events. \n\nNormalized attributes: `event` and `timestamp` timestamp. Not all of the `event` values have been normalized. You can expect the the events related to container movements to be normalized but there are cases (paperwork \"milestones\" like customs release) where events are not normalized. "
       }
     },
     "/containers/{id}/transport_events": {
@@ -6212,7 +6212,7 @@
       "raw_event": {
         "title": "Raw Event Model",
         "type": "object",
-        "description": "Raw Events represent the milestones from the shipping line for a given container.\n\n### About raw_event datetimes\n\nThe events may include estimated future events. The event is a future event if an `estimated_` timestamp is not null. \n\nThe datetime properties `actual_on`, `estimated_on`, `actual_at`, and `estimated_at` are all mutually exclusive. \n\nWhen the `time_zone` property is present the datetimes are UTC timestamps, which can be converted to the local time by parsing the provided `time_zone`.\n\nWhen the `time_zone` property is absent, the datetimes represent local times which serialized as UTC timestamps for consistency. ",
+        "description": "Raw Events represent the milestones from the shipping line for a given container.\n\n### About raw_event datetimes\n\nThe events may include estimated future events. The event is a future event if an `estimated_` timestamp is not null. \n\nThe datetime properties `timestamp` and `estimated`. \n\nWhen the `time_zone` property is present the datetimes are UTC timestamps, which can be converted to the local time by parsing the provided `time_zone`.\n\nWhen the `time_zone` property is absent, the datetimes represent local times which serialized as UTC timestamps for consistency. ",
         "properties": {
           "id": {
             "type": "string"
