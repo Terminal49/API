@@ -5648,7 +5648,8 @@
                 ]
               },
               "voyage_number": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "timestamp": {
                 "type": "string",
@@ -5657,11 +5658,13 @@
               },
               "timezone": {
                 "type": "string",
-                "description": "IANA tz"
+                "description": "IANA tz",
+                "nullable": true
               },
               "location_locode": {
                 "type": "string",
-                "description": "UNLOCODE of the event location"
+                "description": "UNLOCODE of the event location",
+                "nullable": true
               },
               "created_at": {
                 "type": "string",
