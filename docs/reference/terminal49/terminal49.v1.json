@@ -6282,12 +6282,12 @@
               "actual_at": {
                 "type": "string",
                 "format": "date-time",
-                "description": "Depracated: The datetime the event transpired in UTC"
+                "description": "Deprecated: The datetime the event transpired in UTC"
               },
               "estimated_at": {
                 "type": "string",
                 "format": "date-time",
-                "description": "Depracated: The estimated datetime the event will occur in UTC"
+                "description": "Deprecated: The estimated datetime the event will occur in UTC"
               },
               "timezone": {
                 "type": "string",
