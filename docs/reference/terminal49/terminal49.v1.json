@@ -186,7 +186,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "Visakhapatnam",
-                            "locode": "INVTZ",
+                            "code": "INVTZ",
                             "country_code": "IN",
                             "timezone": "Asia/Calcutta"
                           }
@@ -196,7 +196,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "Damietta",
-                            "locode": "EGDAM",
+                            "code": "EGDAM",
                             "country_code": "EG",
                             "time_zone": "Africa/Cairo"
                           }
@@ -206,7 +206,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "New York / New Jersey",
-                            "locode": "USNYC",
+                            "code": "USNYC",
                             "country_code": "US",
                             "timezone": "America/New_York"
                           }
@@ -216,7 +216,7 @@
                           "type": "metro_area",
                           "attributes": {
                             "name": "Detroit",
-                            "locode": "USDET",
+                            "code": "USDET",
                             "country_code": "US",
                             "state_abbr": "MI",
                             "timezone": "America/Detroit"
@@ -504,7 +504,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "Visakhapatnam",
-                            "locode": "INVTZ",
+                            "code": "INVTZ",
                             "country_code": "IN",
                             "timezone": "Asia/Calcutta"
                           }
@@ -514,7 +514,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "Damietta",
-                            "locode": "EGDAM",
+                            "code": "EGDAM",
                             "country_code": "EG",
                             "time_zone": "Africa/Cairo"
                           }
@@ -524,7 +524,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "New York / New Jersey",
-                            "locode": "USNYC",
+                            "code": "USNYC",
                             "country_code": "US",
                             "timezone": "America/New_York"
                           }
@@ -534,7 +534,7 @@
                           "type": "metro_area",
                           "attributes": {
                             "name": "Detroit",
-                            "locode": "USDET",
+                            "code": "USDET",
                             "country_code": "US",
                             "state_abbr": "MI",
                             "timezone": "America/Detroit"
@@ -698,7 +698,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "Visakhapatnam",
-                            "locode": "INVTZ",
+                            "code": "INVTZ",
                             "country_code": "IN",
                             "timezone": "Asia/Calcutta"
                           }
@@ -708,7 +708,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "Damietta",
-                            "locode": "EGDAM",
+                            "code": "EGDAM",
                             "country_code": "EG",
                             "time_zone": "Africa/Cairo"
                           }
@@ -718,7 +718,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "New York / New Jersey",
-                            "locode": "USNYC",
+                            "code": "USNYC",
                             "country_code": "US",
                             "timezone": "America/New_York"
                           }
@@ -728,7 +728,7 @@
                           "type": "metro_area",
                           "attributes": {
                             "name": "Detroit",
-                            "locode": "USDET",
+                            "code": "USDET",
                             "country_code": "US",
                             "state_abbr": "MI",
                             "timezone": "America/Detroit"
@@ -5230,7 +5230,7 @@
                 "type": "string",
                 "description": "IANA tz"
               },
-              "locode": {
+              "code": {
                 "type": "string",
                 "description": "UN/LOCODE"
               }
