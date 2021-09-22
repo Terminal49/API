@@ -9,7 +9,7 @@ Our platform gets data from variety of sources in order to create a complete vie
 - **Ocean carriers (aka steamship lines):** bill of lading/booking details, vessel eta, containers and milestones
 - **Container terminal operators:** container availability, last free day, holds, fees etc
 - **Container rail carriers:** container milestones via rail
-- **AIS data: ** vessel details and real-time location tracking
+- **AIS data:** vessel details and real-time location tracking
 
 ## Supported Ocean Carriers
 View a complete list of supported carriers and attributes on [Google Sheets](https://docs.google.com/spreadsheets/d/1cWK8sNpkjY5V-KlXe1fHi8mU_at2HcJYqjCvGQgixQk/edit#gid=0)
