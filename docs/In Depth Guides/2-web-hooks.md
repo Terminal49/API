@@ -14,7 +14,7 @@ When an event is triggered we will attempt to post to the URL you provided with 
 
 The payload of every webhook is a `webhook_notification`. Each Webhook notification includes a `reference_object` in it's relationships which is the subject of that notification (e.g. a tracking request, or an updated container).
 
-Please note that we expect the endpoint to return [HTTP 200 OK](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200), [HTTP 201]((https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/201), [HTTP 202]((https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/202) or [HTTP 204]((https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/204). We aim to deliver all webhook notifications, so any other response, including timeout, will result in a dozen of retries.
+Please note that we expect the endpoint to return [HTTP 200 OK](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200), [HTTP 201](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/201), [HTTP 202](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/202) or [HTTP 204](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/204). We aim to deliver all webhook notifications, so any other response, including timeout, will result in a dozen of retries.
 
 ```json json_schema
 {
