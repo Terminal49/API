@@ -5045,6 +5045,11 @@
                 "description": "The chassis number used when container was picked up at POD (if available)",
                 "nullable": true
               },
+              "location_at_pod_terminal": {
+                "type": "string",
+                "description": "Location at port of discharge terminal",
+                "nullable": true
+              },
               "final_destination_full_out_at": {
                 "type": "string",
                 "format": "date-time",
