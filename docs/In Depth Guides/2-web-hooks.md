@@ -219,10 +219,10 @@ Event | Description
  `container.transport.vessel_discharged` | Container discharged at port of discharge
  `container.transport.full_out` | Full out at port of discharge 
  `container.transport.empty_in` | Empty returned at destination
- `container.transport.rail_departed` | Rail departed from port of discharge
- `container.transport.rail_loaded` | Rail loaded at port of discharge
- `container.transport.rail_unloaded` | Rail unloaded at port of discharge
- `container.transport.rail_arrived` | Rail arrived at port of discharge
+ `container.transport.rail_loaded` | Rail loaded
+ `container.transport.rail_departed` | Rail departed
+ `container.transport.rail_arrived` | Rail arrived
+ `container.transport.rail_unloaded` | Rail unloaded
  `shipment.estimated.arrival` | ETA change notification (for port of discharge)
  `container.updated` | Container attribute(s) Updated (see below example)
 
