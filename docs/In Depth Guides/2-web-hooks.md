@@ -341,6 +341,7 @@ N.B. the `container_updated_event` also has a relationship to a `terminal` which
         "available_for_pickup": null,
         "pod_arrived_at": "2020-06-26T23:30:01Z",
         "pod_discharged_at": "2020-06-26T23:30:01Z",
+        "location_at_pod_terminal": "CC1-162-B-3(Deck)",
         "final_destination_full_out_at": "2020-06-26T23:30:01Z",
         "pod_full_out_at": null,
         "empty_terminated_at": null
@@ -524,6 +525,7 @@ N.B. the `container_updated_event` also has a relationship to a `terminal` which
         "available_for_pickup": false,
         "pod_arrived_at": null,
         "pod_discharged_at": null,
+        "location_at_pod_terminal": null,
         "final_destination_full_out_at": null,
         "pod_full_out_at": null,
         "empty_terminated_at": null
@@ -688,6 +690,7 @@ N.B. the `container_updated_event` also has a relationship to a `terminal` which
         "available_for_pickup": false,
         "pod_arrived_at": "2021-03-02T20:24:00Z",
         "pod_discharged_at": null,
+        "location_at_pod_terminal": null,
         "final_destination_full_out_at": null,
         "pod_full_out_at": null,
         "empty_terminated_at": null
@@ -848,6 +851,7 @@ N.B. the `container_updated_event` also has a relationship to a `terminal` which
         "available_for_pickup": false,
         "pod_arrived_at": "2021-03-02T20:24:00Z",
         "pod_discharged_at": null,
+        "location_at_pod_terminal": null,
         "final_destination_full_out_at": null,
         "pod_full_out_at": null,
         "empty_terminated_at": null
