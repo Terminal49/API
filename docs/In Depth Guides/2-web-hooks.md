@@ -236,7 +236,6 @@ Event | Description
 The container updated event lets you know about changes to container properties at the terminal, or which terminal the container is (or will be) located at.
 
 The `changeset` attribute on is a hash of all the properties which changed on the container.
-Below are some payload examples with notes.
 
 Each changed property is the hash key. The prior value is the first item in the array, and the current value is the second item in the array. 
 
@@ -256,13 +255,168 @@ The properties we show changes for are:
 - available_for_pickup
 - pod_terminal
 
+In every case the attribute `container_updated.timestamp` tells you when we picked up the changes from the terminal.
 
+
+<!--
+type: tab
+title: Available for pickup
+-->
+As container availability becomes known or changes at the POD Terminal we will send `container_updated` events with the key `available_for_pickup` in the `changeset`.
+```json
+{
+  "data": {
+    "id": "e049e4c0-1bb5-49ee-a789-bed21b62844b",
+    "type": "webhook_notification",
+    "attributes": {
+      "id": "e049e4c0-1bb5-49ee-a789-bed21b62844b",
+      "event": "container.updated",
+      "delivery_status": "pending",
+      "created_at": "2021-11-10 00:15:42 UTC"
+    },
+    "relationships": {
+      "reference_object": {
+        "data": {
+          "id": "029a7159-e4f4-427a-9cb5-243d4a118a33",
+          "type": "container_updated_event"
+        }
+      },
+      "webhook": {
+        "data": {
+          "id": "f94cd7f0-0ea1-4733-bf6e-6542b1445681",
+          "type": "webhook"
+        }
+      },
+      "webhook_notification_logs": {
+        "data": [
+
+        ]
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "029a7159-e4f4-427a-9cb5-243d4a118a33",
+      "type": "container_updated_event",
+      "attributes": {
+        "changeset": {
+          "available_for_pickup": [
+            false,
+            true
+          ]
+        },
+        "timestamp": "2021-11-10 00:15:42 UTC",
+        "timezone": "America/Los_Angeles"
+      },
+      "relationships": {
+        "container": {
+          "data": {
+            "id": "329e469f-7951-4770-9364-071189a1c522",
+            "type": "container"
+          }
+        },
+        "terminal": {
+          "data": {
+            "id": "6c4fc9b0-591b-4a10-80b5-0bbb81f13354",
+            "type": "terminal"
+          }
+        }
+      }
+    },
+    {
+      "id": "329e469f-7951-4770-9364-071189a1c522",
+      "type": "container",
+      "attributes": {
+        "number": "CMUA1658304",
+        "seal_number": "5828597c0d362c42",
+        "created_at": "2021-11-10 00:15:42 UTC",
+        "equipment_type": "dry",
+        "equipment_length": 40,
+        "equipment_height": "standard",
+        "weight_in_lbs": 57598,
+        "fees_at_pod_terminal": [
+
+        ],
+        "holds_at_pod_terminal": [
+
+        ],
+        "pickup_lfd": null,
+        "pickup_appointment_at": null,
+        "pod_full_out_chassis_number": null,
+        "location_at_pod_terminal": null,
+        "availability_known": true,
+        "available_for_pickup": true,
+        "pod_arrived_at": "2021-11-10 00:15:42 UTC",
+        "pod_discharged_at": "2021-11-10 00:15:42 UTC",
+        "final_destination_full_out_at": "2021-11-10 00:15:42 UTC",
+        "pod_full_out_at": null,
+        "empty_terminated_at": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "2160e0b1-50b4-4813-ba0f-15277db8dd19",
+            "type": "shipment"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "6c4fc9b0-591b-4a10-80b5-0bbb81f13354",
+            "type": "terminal"
+          }
+        },
+        "transport_events": {
+          "data": [
+
+          ]
+        },
+        "raw_events": {
+          "data": [
+
+          ]
+        }
+      }
+    },
+    {
+      "id": "6c4fc9b0-591b-4a10-80b5-0bbb81f13354",
+      "type": "terminal",
+      "attributes": {
+        "id": "6c4fc9b0-591b-4a10-80b5-0bbb81f13354",
+        "nickname": "SSA",
+        "name": "SSA Terminal",
+        "firms_code": "Z985"
+      },
+      "relationships": {
+        "port": {
+          "data": {
+            "id": "833c3706-dc0e-4bbe-97ee-e0f4c05f2912",
+            "type": "port"
+          }
+        }
+      }
+    },
+    {
+      "id": "833c3706-dc0e-4bbe-97ee-e0f4c05f2912",
+      "type": "port",
+      "attributes": {
+        "id": "833c3706-dc0e-4bbe-97ee-e0f4c05f2912",
+        "name": "Port of Oakland",
+        "code": "USOAK",
+        "state_abbr": "CA",
+        "city": "Oakland",
+        "country_code": "US",
+        "time_zone": "America/Los_Angeles"
+      }
+    }
+  ]
+}
+```
 
 <!--
 type: tab
 title: POD Terminal
 -->
-The pod_terminal is a relationship of the container. When the pod_terminal changes the id is included. The terminal will be serialized in the included models.
+The `pod_terminal` is a relationship of the container. When the pod_terminal changes the id is included. The terminal will be serialized in the included models.
 
 N.B. the `container_updated_event` also has a relationship to a `terminal` which refers to where the information came from. Currently this is always the POD terminal. In the future this may be the final destination terminal or an off-dock location.
 ```json
