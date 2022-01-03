@@ -5462,6 +5462,7 @@
                 "type": "string",
                 "enum": [
                   "pending",
+                  "awaiting_manifest",
                   "created",
                   "failed"
                 ]
@@ -5469,7 +5470,13 @@
               "failed_reason": {
                 "type": "string",
                 "enum": [
-                  "shipping_line_unavailable",
+                  "booking_cancelled",
+                  "duplicate",
+                  "expired",
+                  "internal_processing_error",
+                  "not_found",
+                  "retries_exhausted",
+                  "shipping_line_unreachable",
                   "unrecognized_response"
                 ],
                 "description": "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request",
@@ -5479,7 +5486,8 @@
                 "type": "string",
                 "enum": [
                   "bill_of_lading",
-                  "booking_number"
+                  "booking_number",
+                  "container"
                 ],
                 "example": "bill_of_lading"
               },

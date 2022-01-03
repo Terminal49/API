@@ -6,12 +6,14 @@ If we are having difficulty connecting to the shipping line, or if we are unable
 
 This process can take up to approximately 24 hours. You will not receive a `tracking_request.failed` webhook notification until we have exhausted the retries, and the `status` field will not be changed to `failed` until then.
 
-## Request Number Not Found
+## Request Number Not Found / Awaiting Manifest
 
 If the shipping line returns a response that it cannot find the provided number we either immediately fail the tracking request or keep trying depending on whether the request_type is a bill of lading or a booking number:
 
  * **Bill of lading numbers** fail straight away after a not found response from the shipping line. We change the `status` field to `failed` and send the `tracking_request.failed` event to your webhook.
+ * **Bill of lading numbers - awaiting manifest** in the case of Hapag-Lloyd we will retry for BL numbers if we see that the number is `awaiting_manifest` (see below).
  * **Booking numbers** do not fail instantly. We change the `status` to `awaiting_manifest` and will keep checking your request daily. You will receive a `tracking_request.awaiting_manifest` webhook notification the first time it happens. If your request number cannot be found after 7 days we will mark the tracking request as failed by changing the `status` field `failed` and sending the `tracking_request.failed` event to your webhook.
+ 
 
 ## Failed Reason
 
@@ -22,7 +24,8 @@ The `failed_reason` field can take one of the following temporary values:
  * `unrecognized_response` when we could not parse the response from the shipping line, 
  * `shipping_line_unreachable` if the shipping line was unreachable,
  * `internal_processing_error` when we faced other issue,
- * `not_found` if the shipping line could not find the number.
+ * `not_found` if the shipping line could not find the booking number.
+ * `awaiting_manifest` if the shipping line indidicates a BL number is found, but data is not yet available.
 
 ### Permanent
 
@@ -31,7 +34,8 @@ Temporary reasons can become permanent when the `status` changes to `failed`:
  * `duplicate` when the shipment already existed,  
  * `expired` when the tracking request was created more than 7 days ago and still not succeded,
  * `retries_exhausted` if we tried for 14 times to no avail,
- * `not_found` if the shipping line could not find the number.
+ * `not_found` if the shipping line could not find the BL number.
+ * `booking_cancelled` if the shipping line indicates that the booking has been cancelled.
 
 ## Status
 
