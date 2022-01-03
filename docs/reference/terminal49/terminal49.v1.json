@@ -5474,6 +5474,7 @@
                   "duplicate",
                   "expired",
                   "internal_processing_error",
+                  "invalid_number",
                   "not_found",
                   "retries_exhausted",
                   "shipping_line_unreachable",
