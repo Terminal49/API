@@ -993,7 +993,7 @@
             "authorization": []
           }
         ],
-        "description": "To track an ocean shipment, you create a new tracking request. \nTwo attributes are required to track a shipment. A `bill of lading/booking number` and a shipping line `SCAC`. \n\nOnce a tracking request is created we will attempt to fetch the shipment details and it's related containers from the shipping line. If the attempt is successful we will create in new shipment object including any related container objects. We will send a `tracking_Request.succeeded` webhook notification to your webhooks.  \n\nIf the attempt to fetch fails then we will send a `tracking_Request.failed` webhook notification to your `webhooks`.  \n\nA `tracking_Request.succeeded` or `tracking_Request.failed` webhook notificaiton will only be sent  if you have  atleast one active webhook. ",
+        "description": "To track an ocean shipment, you create a new tracking request. \nTwo attributes are required to track a shipment. A `bill of lading/booking number` and a shipping line `SCAC`. \n\nOnce a tracking request is created we will attempt to fetch the shipment details and it's related containers from the shipping line. If the attempt is successful we will create in new shipment object including any related container objects. We will send a `tracking_request.succeeded` webhook notification to your webhooks.  \n\nIf the attempt to fetch fails then we will send a `tracking_request.failed` webhook notification to your `webhooks`.  \n\nA `tracking_request.succeeded` or `tracking_request.failed` webhook notificaiton will only be sent  if you have  atleast one active webhook. ",
         "tags": [
           "Tracking Requests"
         ],
