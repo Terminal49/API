@@ -39,6 +39,8 @@ Temporary reasons can become permanent when the `status` changes to `failed`:
 
 ## Stopped
 
+\* Going live 2022-01-20
+
 Terminal49 will stop tracking requests for the following reasons:
 
  * The booking was cancelled.
