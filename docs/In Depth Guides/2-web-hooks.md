@@ -5,7 +5,7 @@ You may subscribe to events through webhooks to be alerted as to when events are
 
 You may subscribe to all webhooks by subscribing to `*`. Specific webhooks by specifying the full name of the event. e.g. `container.transport.vessel_arrived`. Or even all webhooks related to a specific model. E.g. `tracking_request.*`
 
-See the webhooks [post endpoint](/docs/api/reference/terminal49/terminal49.json/paths/~1webhooks/post) for details on adding a webhooks.
+See the webhooks [post endpoint](https://developers.terminal49.com/docs/api/b3A6MTYyMzcyMA-create-a-webhook) for details on adding a webhooks.
 
 
 ## Receiving Webhooks
