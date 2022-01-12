@@ -37,6 +37,15 @@ Temporary reasons can become permanent when the `status` changes to `failed`:
  * `invalid_number` if the shipping line rejects the formatting of the number.
  * `booking_cancelled` if the shipping line indicates that the booking has been cancelled.
 
+## Stopped
+
+Terminal49 will stop tracking requests for the following reasons:
+
+ * When all cargo is marked `empty_returned`.
+ * For Maersk: all cargo is marked `empty_returned` or `picked_up`.
+ * If more than 56 days have passed since the cargo arrived at it's destination.
+ * If there have been no updates for more than 56 days.
+
 ## Status
 
 If you want to see the status of your tracking request you can make a [GET request](https://developers.terminal49.com/docs/api/docs/reference/terminal49/terminal49.v1.json/paths/~1tracking_requests~1%7Bid%7D/get) on what the most recent failure reason was (`failed_reason` field).
