@@ -1,4 +1,4 @@
-# Tracking Request Retrying
+# Tracking Request Lifecycle
 
 When you submit a tracking request your request is added to our queue to being checked at the shipping line. So what happens if the request doesn't go through correctly?
 
