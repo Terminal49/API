@@ -44,8 +44,8 @@ Temporary reasons can become permanent when the `status` changes to `failed`:
 Terminal49 will stop tracking requests for the following reasons:
 
  * The booking was cancelled.
- * When all cargo is marked `empty_returned`.
- * For Maersk: all cargo is marked `empty_returned` or `picked_up`.
+ * When all containers are marked `empty_returned`.
+ * For Maersk: all containers are marked `empty_returned` or `picked_up`.
  * If more than 56 days have passed since the cargo arrived at it's destination.
  * If there have been no updates for more than 56 days.
 
