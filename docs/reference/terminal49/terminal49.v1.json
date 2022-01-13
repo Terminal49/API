@@ -2038,7 +2038,7 @@
                             "pod_full_out_at": null,
                             "empty_terminated_at": null
                           },
-                          "relation ships": {
+                          "relationships": {
                             "shipment": {
                               "data": {
                                 "id": "b5b10c0a-8d18-46da-b4c2-4e5fa790e7da",
@@ -4881,9 +4881,9 @@
                 "enum": [
                   "all_containers_terminated",
                   "past_arrival_window",
-                  "not_found_at_line",
                   "no_updates_at_line",
-                  "cancelled_by_user"
+                  "cancelled_by_user",
+                  "booking_cancelled"
                 ],
                 "description": "The reason Terminal49 stopped checking",
                 "nullable": true
@@ -5464,7 +5464,8 @@
                   "pending",
                   "awaiting_manifest",
                   "created",
-                  "failed"
+                  "failed",
+                  "tracking_stopped"
                 ]
               },
               "failed_reason": {

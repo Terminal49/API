@@ -1,4 +1,4 @@
-# Tracking Request Retrying
+# Tracking Request Lifecycle
 
 When you submit a tracking request your request is added to our queue to being checked at the shipping line. So what happens if the request doesn't go through correctly?
 
@@ -24,7 +24,6 @@ The `failed_reason` field can take one of the following temporary values:
  * `unrecognized_response` when we could not parse the response from the shipping line, 
  * `shipping_line_unreachable` if the shipping line was unreachable,
  * `internal_processing_error` when we faced other issue,
- * `not_found` if the shipping line could not find the booking number.
  * `awaiting_manifest` if the shipping line indidicates a BL number is found, but data is not yet available.
 
 ### Permanent
@@ -38,6 +37,20 @@ Temporary reasons can become permanent when the `status` changes to `failed`:
  * `invalid_number` if the shipping line rejects the formatting of the number.
  * `booking_cancelled` if the shipping line indicates that the booking has been cancelled.
 
-## Status
+## Stopped 
+
+\* Going live 2022-01-20
+
+When a shipment is no longer being updated then the tracking request status is marked as tracking_stopped
+
+Terminal49 will stop tracking requests for the following reasons:
+
+ * The booking was cancelled.
+ * All shipment containers are marked `empty_returned`.
+ * For Maersk: all shipment containers are marked `empty_returned` or `picked_up`.
+ * More than 56 days have passed since the shipment arrived at it's destination.
+ * There have been no updates from the shipping line for more than 56 days.
+
+## Retrieving Status
 
 If you want to see the status of your tracking request you can make a [GET request](https://developers.terminal49.com/docs/api/docs/reference/terminal49/terminal49.v1.json/paths/~1tracking_requests~1%7Bid%7D/get) on what the most recent failure reason was (`failed_reason` field).
