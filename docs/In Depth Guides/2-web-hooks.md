@@ -5,7 +5,7 @@ You may subscribe to events through webhooks to be alerted as to when events are
 
 You may subscribe to all webhooks by subscribing to `*`. Specific webhooks by specifying the full name of the event. e.g. `container.transport.vessel_arrived`. Or even all webhooks related to a specific model. E.g. `tracking_request.*`
 
-See the webhooks [post endpoint](/docs/api/reference/terminal49/terminal49.json/paths/~1webhooks/post) for details on adding a webhooks.
+See the webhooks [post endpoint](https://developers.terminal49.com/docs/api/b3A6MTYyMzcyMA-create-a-webhook) for details on adding a webhooks.
 
 
 ## Receiving Webhooks
@@ -324,6 +324,83 @@ As container availability becomes known or changes at the POD Terminal we will s
       }
     },
     {
+      "id": "cdece040-b740-4e97-8049-b9560ddb0e97",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2022-01-12T19:34:58Z",
+        "ref_numbers": [
+          "REF-CFF6E6"
+        ],
+        "tags": [],
+        "bill_of_lading_number": "TE49F51BEE73",
+        "shipping_line_scac": "MSCU",
+        "shipping_line_name": "Mediterranean Shipping Company",
+        "shipping_line_short_name": "MSC",
+        "port_of_lading_locode": "MXZLO",
+        "port_of_lading_name": "Manzanillo",
+        "port_of_discharge_locode": "USOAK",
+        "port_of_discharge_name": "Port of Oakland",
+        "pod_vessel_name": "MSC CHANNE",
+        "pod_vessel_imo": "9710438",
+        "pod_voyage_number": "098N",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": "2021-12-30T19:34:57Z",
+        "pol_timezone": "America/Mexico_City",
+        "pod_eta_at": "2022-01-19T19:34:57Z",
+        "pod_ata_at": null,
+        "pod_timezone": "America/Los_Angeles",
+        "line_tracking_last_attempted_at": null,
+        "line_tracking_last_succeeded_at": "2022-01-12T19:34:58Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "fb9b0d04-c945-4c6f-9451-80f928ab4588",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "b24cb1a4-1629-4d1b-b347-73af1e6d1d56",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "bf63e164-5e7e-43a8-b40e-8d256d66e2bc",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "bf63e164-5e7e-43a8-b40e-8d256d66e2bc",
+            "type": "terminal"
+          }
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "adecace3-8662-46af-a47c-5e522a8ad5aa",
+              "type": "container"
+            }
+          ]
+        }
+      },
+      "links": {
+        "self": "/v2/shipments/cdece040-b740-4e97-8049-b9560ddb0e97"
+      }
+    },
+    {
       "id": "329e469f-7951-4770-9364-071189a1c522",
       "type": "container",
       "attributes": {
@@ -475,6 +552,83 @@ N.B. the `container_updated_event` also has a relationship to a `terminal` which
             "type": "terminal"
           }
         }
+      }
+    },
+    {
+      "id": "cdece040-b740-4e97-8049-b9560ddb0e97",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2022-01-12T19:34:58Z",
+        "ref_numbers": [
+          "REF-CFF6E6"
+        ],
+        "tags": [],
+        "bill_of_lading_number": "TE49F51BEE73",
+        "shipping_line_scac": "MSCU",
+        "shipping_line_name": "Mediterranean Shipping Company",
+        "shipping_line_short_name": "MSC",
+        "port_of_lading_locode": "MXZLO",
+        "port_of_lading_name": "Manzanillo",
+        "port_of_discharge_locode": "USOAK",
+        "port_of_discharge_name": "Port of Oakland",
+        "pod_vessel_name": "MSC CHANNE",
+        "pod_vessel_imo": "9710438",
+        "pod_voyage_number": "098N",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": "2021-12-30T19:34:57Z",
+        "pol_timezone": "America/Mexico_City",
+        "pod_eta_at": "2022-01-19T19:34:57Z",
+        "pod_ata_at": null,
+        "pod_timezone": "America/Los_Angeles",
+        "line_tracking_last_attempted_at": null,
+        "line_tracking_last_succeeded_at": "2022-01-12T19:34:58Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "fb9b0d04-c945-4c6f-9451-80f928ab4588",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "b24cb1a4-1629-4d1b-b347-73af1e6d1d56",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "bf63e164-5e7e-43a8-b40e-8d256d66e2bc",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "bf63e164-5e7e-43a8-b40e-8d256d66e2bc",
+            "type": "terminal"
+          }
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "adecace3-8662-46af-a47c-5e522a8ad5aa",
+              "type": "container"
+            }
+          ]
+        }
+      },
+      "links": {
+        "self": "/v2/shipments/cdece040-b740-4e97-8049-b9560ddb0e97"
       }
     },
     {
