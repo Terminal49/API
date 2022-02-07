@@ -4571,6 +4571,43 @@
         "operationId": "get-shipping_lines-id",
         "description": "Return the details of a single shipping line."
       }
+    },
+    "/ports/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get a single port using the locode or the id",
+        "tags": [
+          "Ports"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/port"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-port-id",
+        "description": "Return the details of a single port."
+      }
     }
   },
   "x-tagGroups": [
@@ -4581,7 +4618,8 @@
         "Containers",
         "Tracking Requests",
         "Webhooks",
-        "Webhook Notifications"
+        "Webhook Notifications",
+        "Ports"
       ]
     }
   ],
@@ -6426,6 +6464,9 @@
     },
     {
       "name": "Webhook Notifications"
+    },
+    {
+      "name": "Ports"
     }
   ],
   "security": [
