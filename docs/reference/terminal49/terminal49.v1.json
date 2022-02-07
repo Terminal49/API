@@ -4681,6 +4681,43 @@
         "operationId": "get-shipping_lines-id",
         "description": "Return the details of a single shipping line."
       }
+    },
+    "/metro_areas/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get a metro area using the un/locode or the id",
+        "tags": [
+          "Ports"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/metro_area"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-metro-area-id",
+        "description": "Return the details of a single metro area."
+      }
     }
   },
   "x-tagGroups": [
@@ -4691,7 +4728,8 @@
         "Containers",
         "Tracking Requests",
         "Webhooks",
-        "Webhook Notifications"
+        "Webhook Notifications",
+        "Metro Areas"
       ]
     }
   ],
@@ -6536,6 +6574,12 @@
     },
     {
       "name": "Webhook Notifications"
+    },
+    {
+      "name": "Ports"
+    },
+    {
+      "name": "Metro Areas"
     }
   ],
   "security": [
