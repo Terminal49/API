@@ -770,6 +770,61 @@
             "description": "Comma delimited list of relations to include"
           }
         ]
+      },
+      "patch": {
+        "summary": "Edit a shipment",
+        "operationId": "patch-shipments-id",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "./terminal49.v1.json#/components/schemas/shipment"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Update a shipment",
+        "tags": [
+          "Shipments"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes",
+                      "type"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "ref_number": {
+                            "type": "string",
+                            "example": "REFNUMBER10",
+                            "description": "Shipment ref number."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/tracking_requests": {
@@ -1472,6 +1527,61 @@
           }
         ],
         "x-internal": false
+      },
+      "patch": {
+        "summary": "Edit a tracking request",
+        "operationId": "patch-track-request-by-id",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "./terminal49.v1.json#/components/schemas/tracking_request"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Update a tracking request",
+        "tags": [
+          "Tracking requests"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes",
+                      "type"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "ref_number": {
+                            "type": "string",
+                            "example": "REFNUMBER11",
+                            "description": "Tracking request ref number."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/webhooks/{id}": {
