@@ -4906,7 +4906,117 @@
       "container": {
         "title": "Container model",
         "type": "object",
-        "x-examples": {},
+        "x-examples": {
+          "Example Container": {
+            "id": "ff77a822-23a7-4ccd-95ca-g534c071baaf3",
+            "type": "container",
+            "attributes": {
+              "number": "KOCU4959010",
+              "seal_number": "210084213",
+              "created_at": "2021-10-18T09:52:33Z",
+              "equipment_type": "dry",
+              "equipment_length": 40,
+              "equipment_height": "high_cube",
+              "weight_in_lbs": 20210,
+              "fees_at_pod_terminal": [],
+              "holds_at_pod_terminal": [],
+              "pickup_lfd": "2022-01-21T08:00:00Z",
+              "pickup_appointment_at": null,
+              "pod_full_out_chassis_number": "APMZ418805",
+              "location_at_pod_terminal": "Delivered 02/11/2022 14:18",
+              "availability_known": true,
+              "available_for_pickup": false,
+              "pod_arrived_at": "2022-01-03T10:30:00Z",
+              "pod_discharged_at": "2022-01-08T09:15:00Z",
+              "final_destination_full_out_at": null,
+              "pod_full_out_at": "2022-02-11T22:18:00Z",
+              "empty_terminated_at": null,
+              "terminal_checked_at": "2022-02-11T22:45:32Z"
+            },
+            "relationships": {
+              "shipment": {
+                "data": {
+                  "id": "x92acf88-c263-43ddf-b005-aca2a32d47f1",
+                  "type": "shipment"
+                }
+              },
+              "pod_terminal": {
+                "data": {
+                  "id": "x551cac7-aff5-40a6-9c63-49facf19cc3df",
+                  "type": "terminal"
+                }
+              },
+              "transport_events": {
+                "data": [
+                  {
+                    "id": "xecfe2d1-c498-4022-a9f8-ec56722e1215",
+                    "type": "transport_event"
+                  },
+                  {
+                    "id": "2900a9b8-d9e2-4696-abd86-4a767b885d23",
+                    "type": "transport_event"
+                  },
+                  {
+                    "id": "5ad0dce1-x78e4-464d-af5f-a36190428a2c",
+                    "type": "transport_event"
+                  },
+                  {
+                    "id": "876575d5-5ede-40d6-a093-c3a4cfcxaa1c7",
+                    "type": "transport_event"
+                  },
+                  {
+                    "id": "dc2a9d8f-75e6-43xa5-a04e-58458495f08c",
+                    "type": "transport_event"
+                  },
+                  {
+                    "id": "50xd2ea1-01ac-473d-8a08-3b5d77d2b793",
+                    "type": "transport_event"
+                  },
+                  {
+                    "id": "9d1f55xe3-6758-4be7-872a-30451ddd957e",
+                    "type": "transport_event"
+                  }
+                ]
+              },
+              "raw_events": {
+                "data": [
+                  {
+                    "id": "38084a1d-a2eb-434e-81ac3-606c89a61c4b",
+                    "type": "raw_event"
+                  },
+                  {
+                    "id": "53680df3-93d5-4385-86c5-a33ee41b4c1f",
+                    "type": "raw_event"
+                  },
+                  {
+                    "id": "7d9cdf70-51e8-4b75-a8229-f5d691495ab6",
+                    "type": "raw_event"
+                  },
+                  {
+                    "id": "e62d41ac-8738-42e8-b582-35ef28ae88e2",
+                    "type": "raw_event"
+                  },
+                  {
+                    "id": "1209172b-acd8-4ce0-8821-dbc4934208b3",
+                    "type": "raw_event"
+                  },
+                  {
+                    "id": "4265ea5f-2b9a-436f-98fa-803d8ed49acb2",
+                    "type": "raw_event"
+                  },
+                  {
+                    "id": "c3cb2eb7-6c0a-4db8-8742-517b97b175d5",
+                    "type": "raw_event"
+                  },
+                  {
+                    "id": "b1959f36-a218-4b6e-863a9-2e0b4ad5159c",
+                    "type": "raw_event"
+                  }
+                ]
+              }
+            }
+          }
+        },
         "description": "Represents the equipment during a specific journey.",
         "properties": {
           "id": {
@@ -5028,6 +5138,10 @@
                 "items": {
                   "$ref": "#/components/schemas/terminal_fee"
                 }
+              },
+              "location_at_pod_terminal": {
+                "type": "string",
+                "description": "Location string at the POD terminal"
               }
             }
           }
