@@ -5331,10 +5331,6 @@
                 "items": {
                   "$ref": "#/components/schemas/terminal_fee"
                 }
-              },
-              "location_at_pod_terminal": {
-                "type": "string",
-                "description": "Location string at the POD terminal"
               }
             }
           }
