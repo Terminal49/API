@@ -186,7 +186,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "Visakhapatnam",
-                            "locode": "INVTZ",
+                            "code": "INVTZ",
                             "country_code": "IN",
                             "timezone": "Asia/Calcutta"
                           }
@@ -196,7 +196,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "Damietta",
-                            "locode": "EGDAM",
+                            "code": "EGDAM",
                             "country_code": "EG",
                             "time_zone": "Africa/Cairo"
                           }
@@ -206,7 +206,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "New York / New Jersey",
-                            "locode": "USNYC",
+                            "code": "USNYC",
                             "country_code": "US",
                             "timezone": "America/New_York"
                           }
@@ -216,7 +216,7 @@
                           "type": "metro_area",
                           "attributes": {
                             "name": "Detroit",
-                            "locode": "USDET",
+                            "code": "USDET",
                             "country_code": "US",
                             "state_abbr": "MI",
                             "timezone": "America/Detroit"
@@ -504,7 +504,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "Visakhapatnam",
-                            "locode": "INVTZ",
+                            "code": "INVTZ",
                             "country_code": "IN",
                             "timezone": "Asia/Calcutta"
                           }
@@ -514,7 +514,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "Damietta",
-                            "locode": "EGDAM",
+                            "code": "EGDAM",
                             "country_code": "EG",
                             "time_zone": "Africa/Cairo"
                           }
@@ -524,7 +524,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "New York / New Jersey",
-                            "locode": "USNYC",
+                            "code": "USNYC",
                             "country_code": "US",
                             "timezone": "America/New_York"
                           }
@@ -534,7 +534,7 @@
                           "type": "metro_area",
                           "attributes": {
                             "name": "Detroit",
-                            "locode": "USDET",
+                            "code": "USDET",
                             "country_code": "US",
                             "state_abbr": "MI",
                             "timezone": "America/Detroit"
@@ -698,7 +698,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "Visakhapatnam",
-                            "locode": "INVTZ",
+                            "code": "INVTZ",
                             "country_code": "IN",
                             "timezone": "Asia/Calcutta"
                           }
@@ -708,7 +708,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "Damietta",
-                            "locode": "EGDAM",
+                            "code": "EGDAM",
                             "country_code": "EG",
                             "time_zone": "Africa/Cairo"
                           }
@@ -718,7 +718,7 @@
                           "type": "port",
                           "attributes": {
                             "name": "New York / New Jersey",
-                            "locode": "USNYC",
+                            "code": "USNYC",
                             "country_code": "US",
                             "timezone": "America/New_York"
                           }
@@ -728,7 +728,7 @@
                           "type": "metro_area",
                           "attributes": {
                             "name": "Detroit",
-                            "locode": "USDET",
+                            "code": "USDET",
                             "country_code": "US",
                             "state_abbr": "MI",
                             "timezone": "America/Detroit"
@@ -993,7 +993,7 @@
             "authorization": []
           }
         ],
-        "description": "To track an ocean shipment, you create a new tracking request. \nTwo attributes are required to track a shipment. A `bill of lading/booking number` and a shipping line `SCAC`. \n\nOnce a tracking request is created we will attempt to fetch the shipment details and it's related containers from the shipping line. If the attempt is successful we will create in new shipment object including any related container objects. We will send a `tracking_Request.succeeded` webhook notification to your webhooks.  \n\nIf the attempt to fetch fails then we will send a `tracking_Request.failed` webhook notification to your `webhooks`.  \n\nA `tracking_Request.succeeded` or `tracking_Request.failed` webhook notificaiton will only be sent  if you have  atleast one active webhook. ",
+        "description": "To track an ocean shipment, you create a new tracking request. \nTwo attributes are required to track a shipment. A `bill of lading/booking number` and a shipping line `SCAC`. \n\nOnce a tracking request is created we will attempt to fetch the shipment details and it's related containers from the shipping line. If the attempt is successful we will create in new shipment object including any related container objects. We will send a `tracking_request.succeeded` webhook notification to your webhooks.  \n\nIf the attempt to fetch fails then we will send a `tracking_request.failed` webhook notification to your `webhooks`.  \n\nA `tracking_request.succeeded` or `tracking_request.failed` webhook notificaiton will only be sent  if you have  atleast one active webhook. ",
         "tags": [
           "Tracking Requests"
         ],
@@ -2038,7 +2038,7 @@
                             "pod_full_out_at": null,
                             "empty_terminated_at": null
                           },
-                          "relation ships": {
+                          "relationships": {
                             "shipment": {
                               "data": {
                                 "id": "b5b10c0a-8d18-46da-b4c2-4e5fa790e7da",
@@ -3754,6 +3754,8 @@
                           "id": "ca6b760f-13e9-4bf6-ab49-3cf2e40757fb",
                           "type": "raw_event",
                           "attributes": {
+                            "timestamp": "2020-03-03T00:00:00Z",
+                            "estimated": false,
                             "actual_on": "2020-03-03",
                             "estimated_at": null,
                             "actual_at": null,
@@ -3781,6 +3783,8 @@
                           "id": "bcdfc796-0570-4c85-9336-d6c7d0da02d2",
                           "type": "raw_event",
                           "attributes": {
+                            "timestamp": "2020-03-09T00:00:00Z",
+                            "estimated": false,
                             "actual_on": "2020-03-09",
                             "estimated_at": null,
                             "actual_at": null,
@@ -3808,6 +3812,8 @@
                           "id": "a4ff01b0-b374-4123-ae65-3dc0c7ea41ea",
                           "type": "raw_event",
                           "attributes": {
+                            "timestamp": "2020-03-14T00:00:00Z",
+                            "estimated": false,
                             "actual_on": "2020-03-14",
                             "estimated_at": null,
                             "actual_at": null,
@@ -3838,6 +3844,8 @@
                           "id": "ca5862ef-6e27-4245-a281-0cec6bbe1fb7",
                           "type": "raw_event",
                           "attributes": {
+                            "timestamp": "2020-03-15T00:00:00Z",
+                            "estimated": false,
                             "actual_on": "2020-03-15",
                             "estimated_at": null,
                             "actual_at": null,
@@ -3868,6 +3876,8 @@
                           "id": "f47a903e-e6d1-41c5-aec6-8401b2abf297",
                           "type": "raw_event",
                           "attributes": {
+                            "timestamp": "2020-03-25T00:00:00Z",
+                            "estimated": false,
                             "actual_on": "2020-03-25",
                             "estimated_at": null,
                             "actual_at": null,
@@ -3898,6 +3908,8 @@
                           "id": "72a1a13b-a2e0-4ac0-851d-eec41e9e9087",
                           "type": "raw_event",
                           "attributes": {
+                            "timestamp": "2020-03-25T00:00:00Z",
+                            "estimated": false,
                             "actual_on": "2020-03-25",
                             "estimated_at": null,
                             "actual_at": null,
@@ -3928,6 +3940,8 @@
                           "id": "cd91f0cf-ee73-4c47-b99f-63245cb5bc96",
                           "type": "raw_event",
                           "attributes": {
+                            "timestamp": "2020-04-07T00:00:00Z",
+                            "estimated": false,
                             "actual_on": "2020-04-07",
                             "estimated_at": null,
                             "actual_at": null,
@@ -3958,6 +3972,8 @@
                           "id": "561dbb7e-c3ab-4e63-b09b-957878b1425f",
                           "type": "raw_event",
                           "attributes": {
+                            "timestamp": "2020-04-07T00:00:00Z",
+                            "estimated": false,
                             "actual_on": "2020-04-07",
                             "estimated_at": null,
                             "actual_at": null,
@@ -3988,6 +4004,8 @@
                           "id": "551711a6-62ad-4205-8da2-00e0c0cbd2db",
                           "type": "raw_event",
                           "attributes": {
+                            "timestamp": "2020-04-12T00:00:00Z",
+                            "estimated": false,
                             "actual_on": "2020-04-12",
                             "estimated_at": null,
                             "actual_at": null,
@@ -4018,6 +4036,8 @@
                           "id": "f4027470-75ca-4e2a-b4f0-47654a25ac48",
                           "type": "raw_event",
                           "attributes": {
+                            "timestamp": "2020-04-13T00:00:00Z",
+                            "estimated": false,
                             "actual_on": "2020-04-13",
                             "estimated_at": null,
                             "actual_at": null,
@@ -4048,6 +4068,8 @@
                           "id": "50f11e4f-411e-48e2-8141-64226500df9c",
                           "type": "raw_event",
                           "attributes": {
+                            "timestamp": "2020-04-14T00:00:00Z",
+                            "estimated": false,
                             "actual_on": "2020-04-14",
                             "estimated_at": null,
                             "actual_at": null,
@@ -4075,6 +4097,8 @@
                           "id": "49aea23c-b8c5-4a97-b133-f7a9723fa1b4",
                           "type": "raw_event",
                           "attributes": {
+                            "timestamp": "2020-04-15T00:00:00Z",
+                            "estimated": false,
                             "actual_on": "2020-04-15",
                             "estimated_at": null,
                             "actual_at": null,
@@ -4127,7 +4151,7 @@
           }
         },
         "operationId": "get-containers-id-raw_events",
-        "description": "Get a list of past and futuer (estimated) milestones for a container as reported by the carrier. Some of the data is normalized even though the API is called raw_events. \n\nNormalized attributes: `event`, `estimated_at`, `actual_at` timestamps. Not all of the `event` values have been normalized. You can expect the the events related to container movements to be normalized but there are cases (paperwork \"milestones\" like customs release) where events are not normalized. "
+        "description": "Get a list of past and futuer (estimated) milestones for a container as reported by the carrier. Some of the data is normalized even though the API is called raw_events. \n\nNormalized attributes: `event` and `timestamp` timestamp. Not all of the `event` values have been normalized. You can expect the the events related to container movements to be normalized but there are cases (paperwork \"milestones\" like customs release) where events are not normalized. "
       }
     },
     "/containers/{id}/transport_events": {
@@ -4547,7 +4571,81 @@
         "operationId": "get-shipping_lines-id",
         "description": "Return the details of a single shipping line."
       }
-    }
+    },
+    "/ports/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get a single port using the locode or the id",
+        "tags": [
+          "Ports"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/port"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-port-id",
+        "description": "Return the details of a single port."
+      }
+    },
+    "/metro_areas/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get a metro area using the un/locode or the id",
+        "tags": [
+          "Metro Areas"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/metro_area"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-metro-area-id",
+        "description": "Return the details of a single metro area."
+      }
+    }    
   },
   "x-tagGroups": [
     {
@@ -4557,7 +4655,9 @@
         "Containers",
         "Tracking Requests",
         "Webhooks",
-        "Webhook Notifications"
+        "Webhook Notifications",
+        "Ports",
+        "Metro Areas"
       ]
     }
   ],
@@ -4711,6 +4811,22 @@
                     "format": "uuid"
                   }
                 }
+              },
+              "destination_terminal": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "terminal",
+                      "rail_terminal"
+                    ]
+                  },
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
               }
             }
           },
@@ -4841,9 +4957,9 @@
                 "enum": [
                   "all_containers_terminated",
                   "past_arrival_window",
-                  "not_found_at_line",
                   "no_updates_at_line",
-                  "cancelled_by_user"
+                  "cancelled_by_user",
+                  "booking_cancelled"
                 ],
                 "description": "The reason Terminal49 stopped checking",
                 "nullable": true
@@ -5115,6 +5231,11 @@
                 "description": "The chassis number used when container was picked up at POD (if available)",
                 "nullable": true
               },
+              "location_at_pod_terminal": {
+                "type": "string",
+                "description": "Location at port of discharge terminal",
+                "nullable": true
+              },
               "final_destination_full_out_at": {
                 "type": "string",
                 "format": "date-time",
@@ -5328,7 +5449,7 @@
                 "type": "string",
                 "description": "IANA tz"
               },
-              "locode": {
+              "code": {
                 "type": "string",
                 "description": "UN/LOCODE"
               }
@@ -5531,14 +5652,23 @@
                 "type": "string",
                 "enum": [
                   "pending",
+                  "awaiting_manifest",
                   "created",
-                  "failed"
+                  "failed",
+                  "tracking_stopped"
                 ]
               },
               "failed_reason": {
                 "type": "string",
                 "enum": [
-                  "shipping_line_unavailable",
+                  "booking_cancelled",
+                  "duplicate",
+                  "expired",
+                  "internal_processing_error",
+                  "invalid_number",
+                  "not_found",
+                  "retries_exhausted",
+                  "shipping_line_unreachable",
                   "unrecognized_response"
                 ],
                 "description": "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request",
@@ -5548,7 +5678,8 @@
                 "type": "string",
                 "enum": [
                   "bill_of_lading",
-                  "booking_number"
+                  "booking_number",
+                  "container"
                 ],
                 "example": "bill_of_lading"
               },
@@ -5738,7 +5869,10 @@
                   "container.transport.vessel_discharged",
                   "container.transport.full_out",
                   "container.transport.empty_in",
+                  "container.transport.rail_loaded",
                   "container.transport.rail_departed",
+                  "container.transport.rail_arrived",
+                  "container.transport.rail_unloaded",
                   "container.transport.transshipment_arrived",
                   "container.transport.transshipment_discharged",
                   "container.transport.transshipment_loaded",
@@ -5746,7 +5880,8 @@
                 ]
               },
               "voyage_number": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "timestamp": {
                 "type": "string",
@@ -5755,11 +5890,13 @@
               },
               "timezone": {
                 "type": "string",
-                "description": "IANA tz"
+                "description": "IANA tz",
+                "nullable": true
               },
               "location_locode": {
                 "type": "string",
-                "description": "UNLOCODE of the event location"
+                "description": "UNLOCODE of the event location",
+                "nullable": true
               },
               "created_at": {
                 "type": "string",
@@ -6043,7 +6180,10 @@
                   "container.transport.vessel_discharged",
                   "container.transport.vessel_loaded",
                   "container.transport.vessel_departed",
+                  "container.transport.rail_loaded",
                   "container.transport.rail_departed",
+                  "container.transport.rail_arrived",
+                  "container.transport.rail_unloaded",
                   "container.transport.transshipment_arrived",
                   "container.transport.empty_out",
                   "container.transport.full_in",
@@ -6286,7 +6426,7 @@
       "raw_event": {
         "title": "Raw Event Model",
         "type": "object",
-        "description": "Raw Events represent the milestones from the shipping line for a given container.\n\n### About raw_event datetimes\n\nThe events may include estimated future events. The event is a future event if an `estimated_` timestamp is not null. \n\nThe datetime properties `actual_on`, `estimated_on`, `actual_at`, and `estimated_at` are all mutually exclusive. \n\nWhen the `time_zone` property is present the datetimes are UTC timestamps, which can be converted to the local time by parsing the provided `time_zone`.\n\nWhen the `time_zone` property is absent, the datetimes represent local times which serialized as UTC timestamps for consistency. ",
+        "description": "Raw Events represent the milestones from the shipping line for a given container.\n\n### About raw_event datetimes\n\nThe events may include estimated future events. The event is a future event if an `estimated_` timestamp is not null. \n\nThe datetime properties `timestamp` and `estimated`. \n\nWhen the `time_zone` property is present the datetimes are UTC timestamps, which can be converted to the local time by parsing the provided `time_zone`.\n\nWhen the `time_zone` property is absent, the datetimes represent local times which serialized as UTC timestamps for consistency. ",
         "properties": {
           "id": {
             "type": "string"
@@ -6314,10 +6454,10 @@
                   "transshipment_discharged",
                   "transshipment_loaded",
                   "transshipment_departed",
-                  "rail_arrived",
                   "rail_loaded",
-                  "rail_unloaded",
                   "rail_departed",
+                  "rail_arrived",
+                  "rail_unloaded",
                   "vessel_arrived",
                   "vessel_discharged",
                   "arrived_at_destination",
@@ -6334,25 +6474,34 @@
                 "type": "string",
                 "description": "The event name as returned by the carrier"
               },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The datetime the event either transpired or will occur in UTC"
+              },
+              "estimated": {
+                "type": "boolean",
+                "description": "True if the timestamp is estimated, false otherwise"
+              },
               "actual_on": {
                 "type": "string",
                 "format": "date",
-                "description": "The date of the event at the event location when no time information is available. "
+                "description": "Deprecated: The date of the event at the event location when no time information is available. "
               },
               "estimated_on": {
                 "type": "string",
                 "format": "date",
-                "description": "The estimated date of the event at the event location when no time information is available. "
+                "description": "Deprecated: The estimated date of the event at the event location when no time information is available. "
               },
               "actual_at": {
                 "type": "string",
                 "format": "date-time",
-                "description": "The datetime the event transpired in UTC"
+                "description": "Deprecated: The datetime the event transpired in UTC"
               },
               "estimated_at": {
                 "type": "string",
                 "format": "date-time",
-                "description": "The estimated datetime the event will occur in UTC"
+                "description": "Deprecated: The estimated datetime the event will occur in UTC"
               },
               "timezone": {
                 "type": "string",
@@ -6467,6 +6616,12 @@
     },
     {
       "name": "Webhook Notifications"
+    },
+    {
+      "name": "Ports"
+    },
+    {
+      "name": "Metro Areas"
     }
   ],
   "security": [

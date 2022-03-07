@@ -5,7 +5,7 @@ You may subscribe to events through webhooks to be alerted as to when events are
 
 You may subscribe to all webhooks by subscribing to `*`. Specific webhooks by specifying the full name of the event. e.g. `container.transport.vessel_arrived`. Or even all webhooks related to a specific model. E.g. `tracking_request.*`
 
-See the webhooks [post endpoint](/docs/api/reference/terminal49/terminal49.json/paths/~1webhooks/post) for details on adding a webhooks.
+See the webhooks [post endpoint](https://developers.terminal49.com/docs/api/b3A6MTYyMzcyMA-create-a-webhook) for details on adding a webhooks.
 
 
 ## Receiving Webhooks
@@ -13,6 +13,8 @@ See the webhooks [post endpoint](/docs/api/reference/terminal49/terminal49.json/
 When an event is triggered we will attempt to post to the URL you provided with the webhook.
 
 The payload of every webhook is a `webhook_notification`. Each Webhook notification includes a `reference_object` in it's relationships which is the subject of that notification (e.g. a tracking request, or an updated container).
+
+Please note that we expect the endpoint to return [HTTP 200 OK](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200), [HTTP 201](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/201), [HTTP 202](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/202) or [HTTP 204](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/204). We aim to deliver all webhook notifications, so any other response, including timeout, will result in a dozen of retries.
 
 ```json json_schema
 {
@@ -204,6 +206,8 @@ Event | Description
 ---------|----------
  `tracking_request.succeeded` | Shipment created and linked to `TrackingRequest`
  `tracking_request.failed` | `TrackingRequest` failed and shipment was not created
+ `tracking_request.awaiting_manifest` | `TrackingRequest` awaiting a manifest
+ `tracking_request.tracking_stopped` | Terminal49 is no longer updating this `TrackingRequest`. \* Going live 2022-01-20
  `container.transport.empty_out` | Empty out at port of lading (origin)
  `container.transport.full_in` | Full in at port of lading 
  `container.transport.vessel_loaded` | Vessel loaded at port of lading 
@@ -216,7 +220,10 @@ Event | Description
  `container.transport.vessel_discharged` | Container discharged at port of discharge
  `container.transport.full_out` | Full out at port of discharge 
  `container.transport.empty_in` | Empty returned at destination
- `container.transport.rail_departed` | Rail depoarted from port of discharge
+ `container.transport.rail_loaded` | Rail loaded
+ `container.transport.rail_departed` | Rail departed
+ `container.transport.rail_arrived` | Rail arrived
+ `container.transport.rail_unloaded` | Rail unloaded
  `shipment.estimated.arrival` | ETA change notification (for port of discharge)
  `container.updated` | Container attribute(s) Updated (see below example)
 
@@ -230,7 +237,6 @@ Event | Description
 The container updated event lets you know about changes to container properties at the terminal, or which terminal the container is (or will be) located at.
 
 The `changeset` attribute on is a hash of all the properties which changed on the container.
-Below are some payload examples with notes.
 
 Each changed property is the hash key. The prior value is the first item in the array, and the current value is the second item in the array. 
 
@@ -250,123 +256,409 @@ The properties we show changes for are:
 - available_for_pickup
 - pod_terminal
 
+In every case the attribute `container_updated.timestamp` tells you when we picked up the changes from the terminal.
 
 
 <!--
 type: tab
-title: POD Terminal
+title: Available for pickup
 -->
-The pod_terminal is a relationship of the container. When the pod_terminal changes the id is included. The terminal will be serialized in the included models.
-
-N.B. the `container_updated_event` also has a relationship to a `terminal` which refers to where the information came from. Currently this is always the POD terminal. In the future this may be the final destination terminal or an off-dock location.
+As container availability becomes known or changes at the POD Terminal we will send `container_updated` events with the key `available_for_pickup` in the `changeset`.
 ```json
 {
   "data": {
-    "id": "7f0da45a-05e4-410e-b30b-75bbfa1bae1e",
+    "id": "390fec9e-a093-4bc3-8318-f0eb480db58f",
     "type": "webhook_notification",
     "attributes": {
-      "id": "7f0da45a-05e4-410e-b30b-75bbfa1bae1e",
+      "id": "390fec9e-a093-4bc3-8318-f0eb480db58f",
       "event": "container.updated",
       "delivery_status": "pending",
-      "created_at": "2020-06-26T23:30:01Z"
+      "created_at": "2022-01-13T19:46:11Z"
     },
     "relationships": {
       "reference_object": {
         "data": {
-          "id": "2356a80e-d57c-441e-89e7-9a580576f668",
+          "id": "072a58fc-bf59-4363-b0d8-ac330a3945e6",
           "type": "container_updated_event"
         }
       },
       "webhook": {
         "data": {
-          "id": "6b4565c6-9d4a-49e6-987f-e8d9249697df",
+          "id": "6a0286e5-400c-481a-849b-bf2d9703494d",
           "type": "webhook"
         }
       },
       "webhook_notification_logs": {
-        "data": []
+        "data": [
+
+        ]
       }
     }
   },
   "included": [
     {
-      "id": "2356a80e-d57c-441e-89e7-9a580576f668",
+      "id": "072a58fc-bf59-4363-b0d8-ac330a3945e6",
       "type": "container_updated_event",
       "attributes": {
         "changeset": {
-          "pod_terminal": [
-            null,
-            "39613037-1dcd-4b82-bac1-a00ad6a5f972"
+          "available_for_pickup": [
+            false,
+            true
           ]
         },
-        "timestamp": "2020-06-26T23:30:01Z",
+        "timestamp": "2022-01-13T19:46:11Z",
         "timezone": "America/Los_Angeles"
       },
       "relationships": {
         "container": {
           "data": {
-            "id": "70a07a7d-9a09-455e-ad9f-dbf26aa5367d",
+            "id": "f5972784-e6f7-472b-aece-c115f811b3ab",
             "type": "container"
           }
         },
         "terminal": {
           "data": {
-            "id": "39613037-1dcd-4b82-bac1-a00ad6a5f972",
+            "id": "e313d04f-9e5c-46ab-a0f2-720fc6161929",
             "type": "terminal"
           }
         }
       }
     },
     {
-      "id": "70a07a7d-9a09-455e-ad9f-dbf26aa5367d",
+      "id": "f5972784-e6f7-472b-aece-c115f811b3ab",
       "type": "container",
       "attributes": {
-        "number": "TRLU1483600",
-        "seal_number": "b229e75cd5a0fb49",
-        "created_at": "2020-06-26T23:30:01Z",
+        "number": "TRLU1766209",
+        "seal_number": "c562a22aaff88b99",
+        "created_at": "2022-01-13T19:46:11Z",
         "equipment_type": "dry",
         "equipment_length": 40,
         "equipment_height": "standard",
-        "weight_in_lbs": 47544,
-        "fees_at_pod_terminal": [],
-        "holds_at_pod_terminal": [],
+        "weight_in_lbs": 58321,
+        "fees_at_pod_terminal": [
+
+        ],
+        "holds_at_pod_terminal": [
+
+        ],
         "pickup_lfd": null,
+        "pickup_appointment_at": null,
+        "pod_full_out_chassis_number": null,
+        "location_at_pod_terminal": null,
         "availability_known": true,
-        "available_for_pickup": null,
-        "pod_arrived_at": "2020-06-26T23:30:01Z",
-        "pod_discharged_at": "2020-06-26T23:30:01Z",
-        "final_destination_full_out_at": "2020-06-26T23:30:01Z",
+        "available_for_pickup": true,
+        "pod_arrived_at": "2022-01-13T18:46:10Z",
+        "pod_discharged_at": "2022-01-13T19:46:10Z",
+        "final_destination_full_out_at": null,
         "pod_full_out_at": null,
         "empty_terminated_at": null
       },
       "relationships": {
         "shipment": {
           "data": {
-            "id": "9e788708-c43d-4af9-9deb-890cc49e852a",
+            "id": "0072a028-8742-45f4-b8c7-a55def2b1e21",
             "type": "shipment"
           }
         },
         "pod_terminal": {
           "data": {
-            "id": "39613037-1dcd-4b82-bac1-a00ad6a5f972",
+            "id": "e313d04f-9e5c-46ab-a0f2-720fc6161929",
+            "type": "terminal"
+          }
+        },
+        "transport_events": {
+          "data": [
+
+          ]
+        },
+        "raw_events": {
+          "data": [
+
+          ]
+        }
+      }
+    },
+    {
+      "id": "e313d04f-9e5c-46ab-a0f2-720fc6161929",
+      "type": "terminal",
+      "attributes": {
+        "id": "e313d04f-9e5c-46ab-a0f2-720fc6161929",
+        "nickname": "SSA",
+        "name": "SSA Terminal",
+        "firms_code": "Z985"
+      },
+      "relationships": {
+        "port": {
+          "data": {
+            "id": "c966b176-ef63-4448-a1bc-590fe15561a5",
+            "type": "port"
+          }
+        }
+      }
+    },
+    {
+      "id": "c966b176-ef63-4448-a1bc-590fe15561a5",
+      "type": "port",
+      "attributes": {
+        "id": "c966b176-ef63-4448-a1bc-590fe15561a5",
+        "name": "Port of Oakland",
+        "code": "USOAK",
+        "state_abbr": "CA",
+        "city": "Oakland",
+        "country_code": "US",
+        "time_zone": "America/Los_Angeles"
+      }
+    },
+    {
+      "id": "0072a028-8742-45f4-b8c7-a55def2b1e21",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2022-01-13T19:46:10Z",
+        "ref_numbers": [
+          "REF-BFD922",
+          "REF-D10A1D",
+          "REF-76FF19"
+        ],
+        "tags": [
+
+        ],
+        "bill_of_lading_number": "TE49DB4FDD03",
+        "shipping_line_scac": "MSCU",
+        "shipping_line_name": "Mediterranean Shipping Company",
+        "shipping_line_short_name": "MSC",
+        "port_of_lading_locode": "MXZLO",
+        "port_of_lading_name": "Manzanillo",
+        "port_of_discharge_locode": "USOAK",
+        "port_of_discharge_name": "Port of Oakland",
+        "pod_vessel_name": "MSC CHANNE",
+        "pod_vessel_imo": "9710438",
+        "pod_voyage_number": "098N",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": "2021-12-31T19:46:10Z",
+        "pol_timezone": "America/Mexico_City",
+        "pod_eta_at": "2022-01-13T15:46:10Z",
+        "pod_ata_at": "2022-01-13T18:46:10Z",
+        "pod_timezone": "America/Los_Angeles",
+        "line_tracking_last_attempted_at": null,
+        "line_tracking_last_succeeded_at": "2022-01-13T19:46:10Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "0a66d934-1447-4277-986f-8c1adaca14d9",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "c966b176-ef63-4448-a1bc-590fe15561a5",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "e313d04f-9e5c-46ab-a0f2-720fc6161929",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "19e3efc7-1e97-4bda-918c-82d3a3eddac6",
+            "type": "terminal"
+          }
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "f5972784-e6f7-472b-aece-c115f811b3ab",
+              "type": "container"
+            }
+          ]
+        }
+      },
+      "links": {
+        "self": "/v2/shipments/0072a028-8742-45f4-b8c7-a55def2b1e21"
+      }
+    }
+  ]
+}
+```
+
+<!--
+type: tab
+title: POD Terminal
+-->
+The `pod_terminal` is a relationship of the container. When the pod_terminal changes the id is included. The terminal will be serialized in the included models.
+
+N.B. the `container_updated_event` also has a relationship to a `terminal` which refers to where the information came from. Currently this is always the POD terminal. In the future this may be the final destination terminal or an off-dock location.
+```json
+{
+  "data": {
+    "id": "125f8f3b-4188-4dfb-ad7a-c26d285dc253",
+    "type": "webhook_notification",
+    "attributes": {
+      "id": "125f8f3b-4188-4dfb-ad7a-c26d285dc253",
+      "event": "container.updated",
+      "delivery_status": "pending",
+      "created_at": "2022-01-13T19:46:55Z"
+    },
+    "relationships": {
+      "reference_object": {
+        "data": {
+          "id": "933731b0-4b79-4714-8ddb-c5c55ac036ea",
+          "type": "container_updated_event"
+        }
+      },
+      "webhook": {
+        "data": {
+          "id": "44be82c4-870b-49c9-84db-4c2902b74f10",
+          "type": "webhook"
+        }
+      },
+      "webhook_notification_logs": {
+        "data": [
+
+        ]
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "933731b0-4b79-4714-8ddb-c5c55ac036ea",
+      "type": "container_updated_event",
+      "attributes": {
+        "changeset": {
+          "pod_terminal": [
+            "70c7b121-0aad-42bb-8e3b-c2ef01847381",
+            "9b4e30d8-2a47-4d6b-a724-da3551e5b324"
+          ]
+        },
+        "timestamp": "2022-01-13T19:46:55Z",
+        "timezone": "America/Los_Angeles"
+      },
+      "relationships": {
+        "container": {
+          "data": {
+            "id": "bfadcd16-a459-46f7-bd2f-23fb6b4f4c79",
+            "type": "container"
+          }
+        },
+        "terminal": {
+          "data": {
+            "id": "70c7b121-0aad-42bb-8e3b-c2ef01847381",
             "type": "terminal"
           }
         }
       }
     },
     {
-      "id": "39613037-1dcd-4b82-bac1-a00ad6a5f972",
+      "id": "bfadcd16-a459-46f7-bd2f-23fb6b4f4c79",
+      "type": "container",
+      "attributes": {
+        "number": "TRLU1957205",
+        "seal_number": "48b2cf71c681fcba",
+        "created_at": "2022-01-13T19:46:55Z",
+        "equipment_type": "dry",
+        "equipment_length": 40,
+        "equipment_height": "standard",
+        "weight_in_lbs": 45370,
+        "fees_at_pod_terminal": [
+
+        ],
+        "holds_at_pod_terminal": [
+
+        ],
+        "pickup_lfd": null,
+        "pickup_appointment_at": null,
+        "pod_full_out_chassis_number": null,
+        "location_at_pod_terminal": null,
+        "availability_known": true,
+        "available_for_pickup": true,
+        "pod_arrived_at": "2022-01-13T19:46:55Z",
+        "pod_discharged_at": "2022-01-13T19:46:55Z",
+        "final_destination_full_out_at": null,
+        "pod_full_out_at": null,
+        "empty_terminated_at": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "b30412be-bdc1-448b-9ce9-1a4ec0f5ca6f",
+            "type": "shipment"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "9b4e30d8-2a47-4d6b-a724-da3551e5b324",
+            "type": "terminal"
+          }
+        },
+        "transport_events": {
+          "data": [
+
+          ]
+        },
+        "raw_events": {
+          "data": [
+
+          ]
+        }
+      }
+    },
+    {
+      "id": "9b4e30d8-2a47-4d6b-a724-da3551e5b324",
       "type": "terminal",
       "attributes": {
-        "id": "39613037-1dcd-4b82-bac1-a00ad6a5f972",
-        "nickname": "Bayer-Hilpert",
-        "name": "Mann Group Terminal",
-        "firms_code": "S787"
+        "id": "9b4e30d8-2a47-4d6b-a724-da3551e5b324",
+        "nickname": "STO",
+        "name": "Shippers Transport Express",
+        "firms_code": "STO"
       },
       "relationships": {
         "port": {
           "data": {
-            "id": "e9e9f38d-bf9f-455f-8862-f7067d39b29c",
+            "id": "86715d6d-1949-423a-89e5-0db3a12af695",
+            "type": "port"
+          }
+        }
+      }
+    },
+    {
+      "id": "86715d6d-1949-423a-89e5-0db3a12af695",
+      "type": "port",
+      "attributes": {
+        "id": "86715d6d-1949-423a-89e5-0db3a12af695",
+        "name": "Port of Oakland",
+        "code": "USOAK",
+        "state_abbr": "CA",
+        "city": "Oakland",
+        "country_code": "US",
+        "time_zone": "America/Los_Angeles"
+      }
+    },
+    {
+      "id": "70c7b121-0aad-42bb-8e3b-c2ef01847381",
+      "type": "terminal",
+      "attributes": {
+        "id": "70c7b121-0aad-42bb-8e3b-c2ef01847381",
+        "nickname": "SSA",
+        "name": "SSA Terminal",
+        "firms_code": "Z985"
+      },
+      "relationships": {
+        "port": {
+          "data": {
+            "id": "86715d6d-1949-423a-89e5-0db3a12af695",
             "type": "port"
           }
         }
@@ -518,6 +810,7 @@ N.B. the `container_updated_event` also has a relationship to a `terminal` which
         "available_for_pickup": false,
         "pod_arrived_at": null,
         "pod_discharged_at": null,
+        "location_at_pod_terminal": null,
         "final_destination_full_out_at": null,
         "pod_full_out_at": null,
         "empty_terminated_at": null
@@ -592,155 +885,156 @@ N.B. the `container_updated_event` also has a relationship to a `terminal` which
 ```json
 {
   "data": {
-    "id": "42641e9a-3c73-465f-a5f7-21ce3d7cb2a8",
+    "id": "b03bcf3c-252d-41f8-b86f-939b404e304b",
     "type": "webhook_notification",
     "attributes": {
-      "id": "42641e9a-3c73-465f-a5f7-21ce3d7cb2a8",
-      "event": "container.transport.vessel_arrived",
+      "id": "b03bcf3c-252d-41f8-b86f-939b404e304b",
+      "event": "shipment.estimated.arrival",
       "delivery_status": "pending",
-      "created_at": "2021-03-02T20:58:00Z"
+      "created_at": "2022-01-13T19:56:58Z"
     },
     "relationships": {
       "reference_object": {
         "data": {
-          "id": "e83a7824-b3b5-4fed-b296-2cd9c4d1b35e",
-          "type": "transport_event"
+          "id": "14b5047f-e3e7-4df7-a570-2d3878e6d863",
+          "type": "estimated_event"
         }
       },
       "webhook": {
         "data": {
-          "id": "0b73bb88-9559-4a1c-bf18-1e872acb494f",
+          "id": "d60a23a4-f40d-44d2-8b6a-2e55a527e6a2",
           "type": "webhook"
         }
       },
       "webhook_notification_logs": {
-        "data": []
+        "data": [
+
+        ]
       }
     }
   },
   "included": [
     {
-      "id": "e83a7824-b3b5-4fed-b296-2cd9c4d1b35e",
-      "type": "transport_event",
+      "id": "14b5047f-e3e7-4df7-a570-2d3878e6d863",
+      "type": "estimated_event",
       "attributes": {
-        "event": "container.transport.vessel_arrived",
-        "created_at": "2021-03-02T20:58:00Z",
-        "voyage_number": "E031",
-        "timestamp": "2021-03-02T20:24:00Z",
-        "location_locode": "USLAX",
+        "created_at": "2022-01-13T19:56:58Z",
+        "estimated_timestamp": "2022-01-16T19:56:58Z",
+        "voyage_number": "098N",
+        "event": "shipment.estimated.arrival",
+        "location_locode": "USOAK",
         "timezone": "America/Los_Angeles"
       },
       "relationships": {
         "shipment": {
           "data": {
-            "id": "7640de8e-0d48-4fb8-b0c6-d43d77fbdd1a",
+            "id": "8e4a1f1e-aa13-4cad-9df0-aec6c791a5f8",
             "type": "shipment"
           }
         },
-        "container": {
+        "port": {
           "data": {
-            "id": "5e3d9209-5232-454c-b944-e05512b8dc2d",
-            "type": "container"
+            "id": "3ee88ea1-3b8b-4b96-80fb-6aa23ba7065e",
+            "type": "port"
           }
         },
         "vessel": {
           "data": {
-            "id": "cacaf7b4-13a6-4d0c-858b-bce46b21658c",
+            "id": "b1550abc-4e73-4271-a0f4-8ac031f242cd",
             "type": "vessel"
           }
-        },
-        "location": {
-          "data": {
-            "id": "7479dc0e-f90c-457b-8f8e-88d359d54df2",
-            "type": "port"
-          }
-        },
-        "terminal": {
-          "data": {
-            "id": "eb18b31e-4b27-4641-8879-c471c3b8c336",
-            "type": "terminal"
-          }
         }
       }
     },
     {
-      "id": "5e3d9209-5232-454c-b944-e05512b8dc2d",
-      "type": "container",
-      "attributes": {
-        "number": "GLDU1532502",
-        "seal_number": null,
-        "created_at": "2021-02-02T20:58:00Z",
-        "equipment_type": "dry",
-        "equipment_length": 40,
-        "equipment_height": "standard",
-        "weight_in_lbs": 59354,
-        "fees_at_pod_terminal": [],
-        "holds_at_pod_terminal": [],
-        "pickup_lfd": null,
-        "pickup_appointment_at": null,
-        "availability_known": true,
-        "available_for_pickup": false,
-        "pod_arrived_at": "2021-03-02T20:24:00Z",
-        "pod_discharged_at": null,
-        "final_destination_full_out_at": null,
-        "pod_full_out_at": null,
-        "empty_terminated_at": null
-      },
-      "relationships": {
-        "shipment": {
-          "data": null
-        },
-        "pod_terminal": {
-          "data": null
-        },
-        "transport_events": {
-          "data": [
-            {
-              "id": "e83a7824-b3b5-4fed-b296-2cd9c4d1b35e",
-              "type": "transport_event"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": "7479dc0e-f90c-457b-8f8e-88d359d54df2",
+      "id": "3ee88ea1-3b8b-4b96-80fb-6aa23ba7065e",
       "type": "port",
       "attributes": {
-        "id": "7479dc0e-f90c-457b-8f8e-88d359d54df2",
-        "name": "Los Angeles",
-        "code": "USLAX",
+        "id": "3ee88ea1-3b8b-4b96-80fb-6aa23ba7065e",
+        "name": "Port of Oakland",
+        "code": "USOAK",
         "state_abbr": "CA",
-        "city": "Los Angeles",
+        "city": "Oakland",
         "country_code": "US",
         "time_zone": "America/Los_Angeles"
       }
     },
     {
-      "id": "eb18b31e-4b27-4641-8879-c471c3b8c336",
-      "type": "terminal",
+      "id": "8e4a1f1e-aa13-4cad-9df0-aec6c791a5f8",
+      "type": "shipment",
       "attributes": {
-        "id": "eb18b31e-4b27-4641-8879-c471c3b8c336",
-        "nickname": "Pier 400",
-        "name": "APM Terminals Los Angeles",
-        "firms_code": "W185"
+        "created_at": "2022-01-13T19:56:58Z",
+        "ref_numbers": [
+          "REF-3AA505",
+          "REF-910757",
+          "REF-2A8357"
+        ],
+        "tags": [
+
+        ],
+        "bill_of_lading_number": "TE49C31E16E2",
+        "shipping_line_scac": "MSCU",
+        "shipping_line_name": "Mediterranean Shipping Company",
+        "shipping_line_short_name": "MSC",
+        "port_of_lading_locode": "MXZLO",
+        "port_of_lading_name": "Manzanillo",
+        "port_of_discharge_locode": "USOAK",
+        "port_of_discharge_name": "Port of Oakland",
+        "pod_vessel_name": "MSC CHANNE",
+        "pod_vessel_imo": "9710438",
+        "pod_voyage_number": "098N",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": "2021-12-31T19:56:58Z",
+        "pol_timezone": "America/Mexico_City",
+        "pod_eta_at": "2022-01-16T19:56:58Z",
+        "pod_ata_at": null,
+        "pod_timezone": "America/Los_Angeles",
+        "line_tracking_last_attempted_at": null,
+        "line_tracking_last_succeeded_at": "2022-01-13T19:56:58Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
       },
       "relationships": {
-        "port": {
+        "port_of_lading": {
           "data": {
-            "id": "7479dc0e-f90c-457b-8f8e-88d359d54df2",
+            "id": "78ad2915-700b-4919-8ede-a3b6c2137436",
             "type": "port"
           }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "3ee88ea1-3b8b-4b96-80fb-6aa23ba7065e",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "3bd88777-48ea-4880-9cb9-961dd4d26a00",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "1d016b3d-96d5-4867-8f99-77233d1cc57d",
+            "type": "terminal"
+          }
+        },
+        "containers": {
+          "data": [
+
+          ]
         }
-      }
-    },
-    {
-      "id": "cacaf7b4-13a6-4d0c-858b-bce46b21658c",
-      "type": "vessel",
-      "attributes": {
-        "name": "COSCO BOSTON",
-        "imo": "9335173",
-        "mmsi": "372934000"
+      },
+      "links": {
+        "self": "/v2/shipments/8e4a1f1e-aa13-4cad-9df0-aec6c791a5f8"
       }
     }
   ]
@@ -752,103 +1046,114 @@ N.B. the `container_updated_event` also has a relationship to a `terminal` which
 ```json
 {
   "data": {
-    "id": "42641e9a-3c73-465f-a5f7-21ce3d7cb2a8",
+    "id": "1df77756-572d-41a0-a6f7-d4b4b3b0dc41",
     "type": "webhook_notification",
     "attributes": {
-      "id": "42641e9a-3c73-465f-a5f7-21ce3d7cb2a8",
+      "id": "1df77756-572d-41a0-a6f7-d4b4b3b0dc41",
       "event": "container.transport.vessel_arrived",
       "delivery_status": "pending",
-      "created_at": "2021-03-02T20:58:00Z"
+      "created_at": "2022-01-13T19:53:39Z"
     },
     "relationships": {
       "reference_object": {
         "data": {
-          "id": "e83a7824-b3b5-4fed-b296-2cd9c4d1b35e",
+          "id": "ee4efc1c-f410-4655-987f-97432969a579",
           "type": "transport_event"
         }
       },
       "webhook": {
         "data": {
-          "id": "0b73bb88-9559-4a1c-bf18-1e872acb494f",
+          "id": "c0f000fe-71e9-40cc-bc94-827867e1e550",
           "type": "webhook"
         }
       },
       "webhook_notification_logs": {
-        "data": []
+        "data": [
+
+        ]
       }
     }
   },
   "included": [
     {
-      "id": "e83a7824-b3b5-4fed-b296-2cd9c4d1b35e",
+      "id": "ee4efc1c-f410-4655-987f-97432969a579",
       "type": "transport_event",
       "attributes": {
         "event": "container.transport.vessel_arrived",
-        "created_at": "2021-03-02T20:58:00Z",
-        "voyage_number": "E031",
-        "timestamp": "2021-03-02T20:24:00Z",
-        "location_locode": "USLAX",
+        "created_at": "2022-01-13T19:53:38Z",
+        "voyage_number": null,
+        "timestamp": "2022-01-13T19:53:38Z",
+        "location_locode": "USOAK",
         "timezone": "America/Los_Angeles"
       },
       "relationships": {
         "shipment": {
           "data": {
-            "id": "7640de8e-0d48-4fb8-b0c6-d43d77fbdd1a",
+            "id": "de5f51d5-f324-413c-967a-fe390ffcbcba",
             "type": "shipment"
           }
         },
         "container": {
           "data": {
-            "id": "5e3d9209-5232-454c-b944-e05512b8dc2d",
+            "id": "69a44f2e-d1da-4c7c-b7e6-899ef4d05df3",
             "type": "container"
           }
         },
         "vessel": {
           "data": {
-            "id": "cacaf7b4-13a6-4d0c-858b-bce46b21658c",
+            "id": "cbaf97a8-efd1-4f80-b012-a04917d22f3a",
             "type": "vessel"
           }
         },
         "location": {
           "data": {
-            "id": "7479dc0e-f90c-457b-8f8e-88d359d54df2",
+            "id": "e7a09d30-89ea-4c16-9c03-4af94e05d0a5",
             "type": "port"
           }
         },
         "terminal": {
           "data": {
-            "id": "eb18b31e-4b27-4641-8879-c471c3b8c336",
+            "id": "ac5bb6e7-4004-4bb9-984f-0b1c9a74be21",
             "type": "terminal"
           }
         }
       }
     },
     {
-      "id": "5e3d9209-5232-454c-b944-e05512b8dc2d",
+      "id": "69a44f2e-d1da-4c7c-b7e6-899ef4d05df3",
       "type": "container",
       "attributes": {
-        "number": "GLDU1532502",
-        "seal_number": "d60ad316104e6727",
-        "created_at": "2021-02-02T20:58:00Z",
+        "number": "EITU1886509",
+        "seal_number": "06ae7501dab385aa",
+        "created_at": "2022-01-13T19:53:39Z",
         "equipment_type": "dry",
         "equipment_length": 40,
         "equipment_height": "standard",
-        "weight_in_lbs": 59354,
-        "fees_at_pod_terminal": [],
-        "holds_at_pod_terminal": [],
+        "weight_in_lbs": 55660,
+        "fees_at_pod_terminal": [
+
+        ],
+        "holds_at_pod_terminal": [
+
+        ],
         "pickup_lfd": null,
         "pickup_appointment_at": null,
+        "pod_full_out_chassis_number": null,
+        "location_at_pod_terminal": null,
         "availability_known": true,
         "available_for_pickup": false,
-        "pod_arrived_at": "2021-03-02T20:24:00Z",
-        "pod_discharged_at": null,
-        "final_destination_full_out_at": null,
+        "pod_arrived_at": "2022-01-13T19:53:38Z",
+        "pod_discharged_at": "2022-01-13T19:53:38Z",
+        "final_destination_full_out_at": "2022-01-13T19:53:38Z",
         "pod_full_out_at": null,
         "empty_terminated_at": null
       },
       "relationships": {
         "shipment": {
-          "data": null
+          "data": {
+            "id": "de5f51d5-f324-413c-967a-fe390ffcbcba",
+            "type": "shipment"
+          }
         },
         "pod_terminal": {
           "data": null
@@ -856,51 +1161,136 @@ N.B. the `container_updated_event` also has a relationship to a `terminal` which
         "transport_events": {
           "data": [
             {
-              "id": "e83a7824-b3b5-4fed-b296-2cd9c4d1b35e",
+              "id": "ee4efc1c-f410-4655-987f-97432969a579",
               "type": "transport_event"
             }
+          ]
+        },
+        "raw_events": {
+          "data": [
+
           ]
         }
       }
     },
     {
-      "id": "7479dc0e-f90c-457b-8f8e-88d359d54df2",
+      "id": "e7a09d30-89ea-4c16-9c03-4af94e05d0a5",
       "type": "port",
       "attributes": {
-        "id": "7479dc0e-f90c-457b-8f8e-88d359d54df2",
-        "name": "Los Angeles",
-        "code": "USLAX",
+        "id": "e7a09d30-89ea-4c16-9c03-4af94e05d0a5",
+        "name": "Port of Oakland",
+        "code": "USOAK",
         "state_abbr": "CA",
-        "city": "Los Angeles",
+        "city": "Oakland",
         "country_code": "US",
         "time_zone": "America/Los_Angeles"
       }
     },
     {
-      "id": "eb18b31e-4b27-4641-8879-c471c3b8c336",
+      "id": "de5f51d5-f324-413c-967a-fe390ffcbcba",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2022-01-13T19:53:38Z",
+        "ref_numbers": [
+          "REF-6650D4",
+          "REF-C9DCC8"
+        ],
+        "tags": [
+
+        ],
+        "bill_of_lading_number": "TE4922989A09",
+        "shipping_line_scac": "MSCU",
+        "shipping_line_name": "Mediterranean Shipping Company",
+        "shipping_line_short_name": "MSC",
+        "port_of_lading_locode": "MXZLO",
+        "port_of_lading_name": "Manzanillo",
+        "port_of_discharge_locode": "USOAK",
+        "port_of_discharge_name": "Port of Oakland",
+        "pod_vessel_name": "MSC CHANNE",
+        "pod_vessel_imo": "9710438",
+        "pod_voyage_number": "098N",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": "2021-12-31T19:53:38Z",
+        "pol_timezone": "America/Mexico_City",
+        "pod_eta_at": "2022-01-20T19:53:38Z",
+        "pod_ata_at": "2022-01-20T20:53:38Z",
+        "pod_timezone": "America/Los_Angeles",
+        "line_tracking_last_attempted_at": null,
+        "line_tracking_last_succeeded_at": "2022-01-13T19:53:38Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "6dc77d28-83bc-4826-a42d-af6808797607",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "e7a09d30-89ea-4c16-9c03-4af94e05d0a5",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "ac5bb6e7-4004-4bb9-984f-0b1c9a74be21",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "4b10d3ef-901a-40db-a622-cb033ccef282",
+            "type": "terminal"
+          }
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "69a44f2e-d1da-4c7c-b7e6-899ef4d05df3",
+              "type": "container"
+            }
+          ]
+        }
+      },
+      "links": {
+        "self": "/v2/shipments/de5f51d5-f324-413c-967a-fe390ffcbcba"
+      }
+    },
+    {
+      "id": "ac5bb6e7-4004-4bb9-984f-0b1c9a74be21",
       "type": "terminal",
       "attributes": {
-        "id": "eb18b31e-4b27-4641-8879-c471c3b8c336",
-        "nickname": "Pier 400",
-        "name": "APM Terminals Los Angeles",
-        "firms_code": "W185"
+        "id": "ac5bb6e7-4004-4bb9-984f-0b1c9a74be21",
+        "nickname": "SSA",
+        "name": "SSA Terminal",
+        "firms_code": "Z985"
       },
       "relationships": {
         "port": {
           "data": {
-            "id": "7479dc0e-f90c-457b-8f8e-88d359d54df2",
+            "id": "e7a09d30-89ea-4c16-9c03-4af94e05d0a5",
             "type": "port"
           }
         }
       }
     },
     {
-      "id": "cacaf7b4-13a6-4d0c-858b-bce46b21658c",
+      "id": "cbaf97a8-efd1-4f80-b012-a04917d22f3a",
       "type": "vessel",
       "attributes": {
-        "name": "COSCO BOSTON",
-        "imo": "9335173",
-        "mmsi": "372934000"
+        "name": "MSC CHANNE",
+        "imo": "9710438",
+        "mmsi": "255805864"
       }
     }
   ]
