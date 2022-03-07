@@ -770,6 +770,61 @@
             "description": "Comma delimited list of relations to include"
           }
         ]
+      },
+      "patch": {
+        "summary": "Edit a shipment",
+        "operationId": "patch-shipments-id",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "./terminal49.v1.json#/components/schemas/shipment"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Update a shipment",
+        "tags": [
+          "Shipments"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes",
+                      "type"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "ref_number": {
+                            "type": "string",
+                            "example": "REFNUMBER10",
+                            "description": "Shipment ref number."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/tracking_requests": {
@@ -1472,6 +1527,61 @@
           }
         ],
         "x-internal": false
+      },
+      "patch": {
+        "summary": "Edit a tracking request",
+        "operationId": "patch-track-request-by-id",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "./terminal49.v1.json#/components/schemas/tracking_request"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Update a tracking request",
+        "tags": [
+          "Tracking requests"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes",
+                      "type"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "ref_number": {
+                            "type": "string",
+                            "example": "REFNUMBER11",
+                            "description": "Tracking request ref number."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/webhooks/{id}": {
@@ -4572,43 +4682,6 @@
         "description": "Return the details of a single shipping line."
       }
     },
-    "/ports/{id}": {
-      "parameters": [
-        {
-          "schema": {
-            "type": "string"
-          },
-          "name": "id",
-          "in": "path",
-          "required": true
-        }
-      ],
-      "get": {
-        "summary": "Get a single port using the locode or the id",
-        "tags": [
-          "Ports"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/port"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "operationId": "get-port-id",
-        "description": "Return the details of a single port."
-      }
-    },
     "/metro_areas/{id}": {
       "parameters": [
         {
@@ -4623,7 +4696,7 @@
       "get": {
         "summary": "Get a metro area using the un/locode or the id",
         "tags": [
-          "Metro Areas"
+          "Ports"
         ],
         "responses": {
           "200": {
@@ -4645,7 +4718,7 @@
         "operationId": "get-metro-area-id",
         "description": "Return the details of a single metro area."
       }
-    }    
+    }
   },
   "x-tagGroups": [
     {
@@ -4656,7 +4729,6 @@
         "Tracking Requests",
         "Webhooks",
         "Webhook Notifications",
-        "Ports",
         "Metro Areas"
       ]
     }
