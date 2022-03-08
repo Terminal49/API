@@ -5969,6 +5969,15 @@
               "created_at": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "data_source": {
+                "type": "string",
+                "enum": [
+                  "shipping_line",
+                  "terminal"
+                ],
+                "example": "shipping_line",
+                "description": "The original source of the event data"
               }
             }
           },
@@ -6102,9 +6111,9 @@
           "attributes": {
             "type": "object",
             "required": [
-              "event",
+              "created_at",
               "estimated_timestamp",
-              "created_at"
+              "event"
             ],
             "properties": {
               "created_at": {
@@ -6135,6 +6144,14 @@
               "voyage_number": {
                 "type": "string",
                 "nullable": true
+              },
+              "data_source": {
+                "type": "string",
+                "enum": [
+                  "shipping_line",
+                  "terminal"
+                ],
+                "description": "The original source of the event data"
               }
             }
           },
@@ -6415,6 +6432,13 @@
               "timezone": {
                 "type": "string",
                 "description": "IANA tz "
+              },
+              "data_source": {
+                "type": "string",
+                "enum": [
+                  "terminal"
+                ],
+                "example": "terminal"
               }
             },
             "required": [
@@ -6458,10 +6482,10 @@
               },
               "terminal": {
                 "type": "object",
+                "description": "",
                 "required": [
                   "data"
                 ],
-                "description": "",
                 "properties": {
                   "data": {
                     "type": "object",
