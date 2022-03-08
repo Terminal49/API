@@ -1709,7 +1709,8 @@
                 "required": [
                   "data"
                 ]
-              }
+              },
+              "examples": {}
             }
           }
         }
@@ -1767,13 +1768,13 @@
                             "url": "http://example.com",
                             "active": true,
                             "events": [
-                              "string"
+                              "tracking_request.succeeded"
                             ],
-                            "secret": "string",
+                            "secret": "672bd7b58b54645934a830d8fa",
                             "headers": [
                               {
-                                "name": "string",
-                                "value": "string"
+                                "name": "x-secret-sauce",
+                                "value": "sriracha"
                               }
                             ]
                           }
@@ -1936,7 +1937,7 @@
                           "url": "https://webhook.site/",
                           "active": true,
                           "events": [
-                            "*"
+                            "tracking_request.succeeded"
                           ],
                           "secret": "C193J3QOXMFH",
                           "created_at": "2020-06-05T19:06:13Z"
