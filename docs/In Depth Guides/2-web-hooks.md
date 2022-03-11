@@ -1,11 +1,44 @@
 # Webhooks
 
 ## Creating Webhooks
-You may subscribe to events through webhooks to be alerted as to when events are triggered. 
+You may subscribe to events through webhooks to be alerted when events are triggered. 
 
-You may subscribe to all webhooks by subscribing to `*`. Specific webhooks by specifying the full name of the event. e.g. `container.transport.vessel_arrived`. Or even all webhooks related to a specific model. E.g. `tracking_request.*`
+Visit https://app.terminal49.com/developers/webhooks and click the 'Create Webhook Endpoint' button to create your webhook through the UI.
 
-See the webhooks [post endpoint](https://developers.terminal49.com/docs/api/b3A6MTYyMzcyMA-create-a-webhook) for details on adding a webhooks.
+If you prefer to create webhooks programatically then see the [webhooks post endpoint documentation](https://developers.terminal49.com/docs/api/b3A6MTYyMzcyMA-create-a-webhook).
+
+
+## Available Webook Events
+
+Each `WebhookNotification` event represents some change to a model which you may be notified of.
+
+List of Supported Events: 
+
+Event | Description
+---------|----------
+ `tracking_request.succeeded` | Shipment created and linked to `TrackingRequest`
+ `tracking_request.failed` | `TrackingRequest` failed and shipment was not created
+ `tracking_request.awaiting_manifest` | `TrackingRequest` awaiting a manifest
+ `tracking_request.tracking_stopped` | Terminal49 is no longer updating this `TrackingRequest`. \* Going live 2022-01-20
+ `container.transport.empty_out` | Empty out at port of lading (origin)
+ `container.transport.full_in` | Full in at port of lading 
+ `container.transport.vessel_loaded` | Vessel loaded at port of lading 
+ `container.transport.vessel_departed` | Vessel departed at port of lading
+ `container.transport.transshipment_arrived` | Container arrived at transhipment port
+ `container.transport.transshipment_discharged` | Container discharged at transhipment port
+  `container.transport.transshipment_loaded` | Container loaded at transhipment port
+ `container.transport.transshipment_departed` | Container departed at transhipment port
+ `container.transport.vessel_arrived` | Container arrived on vessel at port of discharge (destination port)
+ `container.transport.vessel_discharged` | Container discharged at port of discharge
+ `container.transport.full_out` | Full out at port of discharge 
+ `container.transport.empty_in` | Empty returned at destination
+ `container.transport.rail_loaded` | Rail loaded
+ `container.transport.rail_departed` | Rail departed
+ `container.transport.rail_arrived` | Rail arrived
+ `container.transport.rail_unloaded` | Rail unloaded
+ `shipment.estimated.arrival` | ETA change notification (for port of discharge)
+ `container.updated` | Container attribute(s) Updated (see below example)
+
 
 
 ## Receiving Webhooks
@@ -195,37 +228,6 @@ class WebhooksController < ApplicationController
   end
 end
 ```
-
-## Available Webook Events
-
-Each `WebhookNotification` event represents some change to a model which you may be notified of.
-
-List of Supported Events: 
-
-Event | Description
----------|----------
- `tracking_request.succeeded` | Shipment created and linked to `TrackingRequest`
- `tracking_request.failed` | `TrackingRequest` failed and shipment was not created
- `tracking_request.awaiting_manifest` | `TrackingRequest` awaiting a manifest
- `tracking_request.tracking_stopped` | Terminal49 is no longer updating this `TrackingRequest`. \* Going live 2022-01-20
- `container.transport.empty_out` | Empty out at port of lading (origin)
- `container.transport.full_in` | Full in at port of lading 
- `container.transport.vessel_loaded` | Vessel loaded at port of lading 
- `container.transport.vessel_departed` | Vessel departed at port of lading
- `container.transport.transshipment_arrived` | Container arrived at transhipment port
- `container.transport.transshipment_discharged` | Container discharged at transhipment port
-  `container.transport.transshipment_loaded` | Container loaded at transhipment port
- `container.transport.transshipment_departed` | Container departed at transhipment port
- `container.transport.vessel_arrived` | Container arrived on vessel at port of discharge (destination port)
- `container.transport.vessel_discharged` | Container discharged at port of discharge
- `container.transport.full_out` | Full out at port of discharge 
- `container.transport.empty_in` | Empty returned at destination
- `container.transport.rail_loaded` | Rail loaded
- `container.transport.rail_departed` | Rail departed
- `container.transport.rail_arrived` | Rail arrived
- `container.transport.rail_unloaded` | Rail unloaded
- `shipment.estimated.arrival` | ETA change notification (for port of discharge)
- `container.updated` | Container attribute(s) Updated (see below example)
 
 
 
