@@ -3,7 +3,10 @@
 ## Creating Webhooks
 You may subscribe to events through webhooks to be alerted when events are triggered. 
 
-See the webhooks [post endpoint](https://developers.terminal49.com/docs/api/b3A6MTYyMzcyMA-create-a-webhook) for details on adding a webhooks.
+Visit https://app.terminal49.com/developers/webhooks and click the 'Create Webhook Endpoint' button to create your webhook through the UI.
+
+If you prefer to create webhooks programatically then see the [webhooks post endpoint documentation](https://developers.terminal49.com/docs/api/b3A6MTYyMzcyMA-create-a-webhook).
+
 
 ## Available Webook Events
 
