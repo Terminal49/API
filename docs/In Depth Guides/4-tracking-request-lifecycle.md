@@ -24,7 +24,7 @@ The `failed_reason` field can take one of the following temporary values:
  * `unrecognized_response` when we could not parse the response from the shipping line, 
  * `shipping_line_unreachable` if the shipping line was unreachable,
  * `internal_processing_error` when we faced other issue,
- * `awaiting_manifest` if the shipping line indidicates a BL number is found, but data is not yet available.
+ * `awaiting_manifest` if the shipping line indidicates a BL number is found, but data is not yet available. Or if the requested booking number could not be found.
 
 ### Permanent
 
