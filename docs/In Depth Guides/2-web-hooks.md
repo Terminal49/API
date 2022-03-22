@@ -19,8 +19,8 @@ Event | Description
  `tracking_request.succeeded` | Shipment created and linked to `TrackingRequest`
  `tracking_request.failed` | `TrackingRequest` failed and shipment was not created
  `tracking_request.awaiting_manifest` | `TrackingRequest` awaiting a manifest
- `tracking_request.tracking_stopped` | Terminal49 is no longer updating this `TrackingRequest`. \* Going live 2022-01-20
- `container.transport.empty_out` | Empty out at port of lading (origin)
+ `tracking_request.tracking_stopped` | Terminal49 is no longer updating this `TrackingRequest`.
+ `container.transport.empty_out` | Empty out at port of lading
  `container.transport.full_in` | Full in at port of lading 
  `container.transport.vessel_loaded` | Vessel loaded at port of lading 
  `container.transport.vessel_departed` | Vessel departed at port of lading
@@ -37,7 +37,7 @@ Event | Description
  `container.transport.rail_arrived` | Rail arrived
  `container.transport.rail_unloaded` | Rail unloaded
  `shipment.estimated.arrival` | ETA change notification (for port of discharge)
- `container.updated` | Container attribute(s) Updated (see below example)
+ `container.updated` | Container attribute(s) updated (see below example)
 
 
 
