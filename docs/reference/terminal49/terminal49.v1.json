@@ -4982,7 +4982,8 @@
               "ref_numbers": {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "type": "string",
+                  "nullable": true
                 }
               },
               "created_at": {
@@ -4993,29 +4994,36 @@
                 "type": "array",
                 "description": "`unreleased`",
                 "items": {
-                  "type": "string"
+                  "type": "string",
+                  "nullable": true
                 }
               },
               "port_of_lading_locode": {
                 "type": "string",
-                "description": "UN/LOCODE"
+                "description": "UN/LOCODE",
+                "nullable": true
               },
               "port_of_lading_name": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "port_of_discharge_locode": {
                 "type": "string",
-                "description": "UN/LOCODE"
+                "description": "UN/LOCODE",
+                "nullable": true
               },
               "port_of_discharge_name": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "destination_locode": {
                 "type": "string",
-                "description": "UN/LOCODE"
+                "description": "UN/LOCODE",
+                "nullable": true
               },
               "destination_name": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "shipping_line_scac": {
                 "type": "string"
@@ -5024,13 +5032,16 @@
                 "type": "string"
               },
               "pod_vessel_name": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "pod_vessel_imo": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "pod_voyage_number": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "pol_etd_at": {
                 "type": "string",
