@@ -5404,12 +5404,14 @@
               },
               "holds_at_pod_terminal": {
                 "type": "array",
+                "nullable": true,
                 "items": {
                   "$ref": "#/components/schemas/terminal_hold"
                 }
               },
               "fees_at_pod_terminal": {
                 "type": "array",
+                "nullable": true,
                 "items": {
                   "$ref": "#/components/schemas/terminal_fee"
                 }
