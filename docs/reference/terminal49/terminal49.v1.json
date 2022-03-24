@@ -3727,7 +3727,7 @@
           }
         },
         "operationId": "get-containers",
-        "description": "Returns a list of container. The containers are returned sorted by creation date, with the most recent container appearing first.\n\nThis API will return all containers associated with the account.",
+        "description": "Returns a list of container. The containers are returned sorted by creation date, with the most recently refreshed container appearing first.\n\nThis API will return all containers associated with the account.",
         "parameters": [
           {
             "schema": {
@@ -3753,6 +3753,14 @@
             "in": "query",
             "name": "include",
             "description": "Comma delimited list of relations to include"
+          },
+          {
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "terminal_checked_before",
+            "description": "Number of seconds in which containers were refreshed"
           }
         ]
       }
