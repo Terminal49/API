@@ -5915,102 +5915,6 @@
           "type"
         ]
       },
-      "webhook": {
-        "title": "webhook",
-        "type": "object",
-        "x-examples": {},
-        "description": "",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "webhook"
-            ]
-          },
-          "attributes": {
-            "type": "object",
-            "properties": {
-              "url": {
-                "type": "string",
-                "format": "uri",
-                "description": "https end point"
-              },
-              "active": {
-                "type": "boolean",
-                "default": true,
-                "description": "Whether the webhook will be delivered when events are triggered"
-              },
-              "events": {
-                "type": "array",
-                "description": "The list of events to enabled for this endpoint",
-                "uniqueItems": true,
-                "minItems": 1,
-                "items": {
-                  "type": "string",
-                  "enum": [
-                    "tracking_request.succeeded",
-                    "tracking_request.failed",
-                    "tracking_request.awaiting_manifest",
-                    "tracking_request.tracking_stopped",
-                    "container.transport.vessel_arrived",
-                    "container.transport.vessel_discharged",
-                    "container.transport.vessel_loaded",
-                    "container.transport.vessel_departed",
-                    "container.transport.rail_departed",
-                    "container.transport.rail_arrived",
-                    "container.transport.rail_loaded",
-                    "container.transport.rail_unloaded",
-                    "container.transport.transshipment_arrived",
-                    "container.transport.empty_out",
-                    "container.transport.full_in",
-                    "container.transport.full_out",
-                    "container.transport.empty_in",
-                    "container.transport.transshipment_discharged",
-                    "container.transport.transshipment_loaded",
-                    "container.transport.transshipment_departed",
-                    "shipment.estimated.arrival",
-                    "container.updated"
-                  ],
-                  "nullable": true
-                }
-              },
-              "secret": {
-                "type": "string",
-                "description": "A random token that will sign all delivered webhooks"
-              },
-              "headers": {
-                "type": "array",
-                "nullable": true,
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string"
-                    },
-                    "value": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            },
-            "required": [
-              "url",
-              "active",
-              "events",
-              "secret"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "type"
-        ]
-      },
       "vessel": {
         "title": "vessel",
         "type": "object",
@@ -6374,6 +6278,102 @@
           "relationships"
         ]
       },
+      "webhook": {
+        "title": "webhook",
+        "type": "object",
+        "x-examples": {},
+        "description": "",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "webhook"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "https end point"
+              },
+              "active": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether the webhook will be delivered when events are triggered"
+              },
+              "events": {
+                "type": "array",
+                "description": "The list of events to enabled for this endpoint",
+                "uniqueItems": true,
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "tracking_request.succeeded",
+                    "tracking_request.failed",
+                    "tracking_request.awaiting_manifest",
+                    "tracking_request.tracking_stopped",
+                    "container.transport.vessel_arrived",
+                    "container.transport.vessel_discharged",
+                    "container.transport.vessel_loaded",
+                    "container.transport.vessel_departed",
+                    "container.transport.rail_departed",
+                    "container.transport.rail_arrived",
+                    "container.transport.rail_loaded",
+                    "container.transport.rail_unloaded",
+                    "container.transport.transshipment_arrived",
+                    "container.transport.empty_out",
+                    "container.transport.full_in",
+                    "container.transport.full_out",
+                    "container.transport.empty_in",
+                    "container.transport.transshipment_discharged",
+                    "container.transport.transshipment_loaded",
+                    "container.transport.transshipment_departed",
+                    "shipment.estimated.arrival",
+                    "container.updated"
+                  ],
+                  "nullable": true
+                }
+              },
+              "secret": {
+                "type": "string",
+                "description": "A random token that will sign all delivered webhooks"
+              },
+              "headers": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "required": [
+              "url",
+              "active",
+              "events",
+              "secret"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
       "webhook_notification": {
         "title": "webhook_notification",
         "type": "object",
@@ -6391,6 +6391,9 @@
           "attributes": {
             "type": "object",
             "properties": {
+              "id": {
+                "type": "string"
+              },
               "event": {
                 "type": "string",
                 "enum": [
