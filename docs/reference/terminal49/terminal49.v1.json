@@ -5402,6 +5402,10 @@
                 "description": "Time empty container was returned.",
                 "nullable": true
               },
+              "terminal_checked_at": {
+                "type": "string",
+                "nullable": true
+              },
               "holds_at_pod_terminal": {
                 "type": "array",
                 "nullable": true,
