@@ -5768,7 +5768,12 @@
               },
               "firms_code": {
                 "type": "string",
-                "description": "CBP FIRMS Code or CBS Sublocation Code"
+                "description": "CBP FIRMS Code or CBS Sublocation Code",
+                "nullable": true
+              },
+              "city": {
+                "type": "string",
+                "nullable": true
               }
             }
           },
