@@ -6706,6 +6706,10 @@
                 "format": "date-time",
                 "description": "The datetime the event either transpired or will occur in UTC"
               },
+              "index": {
+                "type": "integer",
+                "description": "The order of the event. Thishelpful when only dates (i.e. actual_on) are available."
+              },
               "estimated": {
                 "type": "boolean",
                 "description": "True if the timestamp is estimated, false otherwise"
@@ -6713,54 +6717,60 @@
               "actual_on": {
                 "type": "string",
                 "format": "date",
-                "description": "Deprecated: The date of the event at the event location when no time information is available. "
+                "description": "Deprecated: The date of the event at the event location when no time information is available. ",
+                "nullable": true
               },
               "estimated_on": {
                 "type": "string",
                 "format": "date",
-                "description": "Deprecated: The estimated date of the event at the event location when no time information is available. "
+                "description": "Deprecated: The estimated date of the event at the event location when no time information is available. ",
+                "nullable": true
               },
               "actual_at": {
                 "type": "string",
                 "format": "date-time",
-                "description": "Deprecated: The datetime the event transpired in UTC"
+                "description": "Deprecated: The datetime the event transpired in UTC",
+                "nullable": true
               },
               "estimated_at": {
                 "type": "string",
                 "format": "date-time",
-                "description": "Deprecated: The estimated datetime the event will occur in UTC"
+                "description": "Deprecated: The estimated datetime the event will occur in UTC",
+                "nullable": true
               },
               "timezone": {
                 "type": "string",
-                "description": "IANA tz where the event occured"
+                "description": "IANA tz where the event occured",
+                "nullable": true
+              },
+              "location_name": {
+                "type": "string",
+                "description": "The city or facility name of the event location",
+                "nullable": true
+              },
+              "location_locode": {
+                "type": "string",
+                "description": "UNLOCODE of the event location",
+                "nullable": true
+              },
+              "vessel_name": {
+                "type": "string",
+                "description": "The name of the vessel where applicable",
+                "nullable": true
+              },
+              "vessel_imo": {
+                "type": "string",
+                "description": "The IMO of the vessel where applicable",
+                "nullable": true
+              },
+              "voyage_number": {
+                "type": "string",
+                "nullable": true
               },
               "created_at": {
                 "type": "string",
                 "format": "date-time",
                 "description": "When the raw_event was created in UTC"
-              },
-              "location_name": {
-                "type": "string",
-                "description": "The city or facility name of the event location"
-              },
-              "location_locode": {
-                "type": "string",
-                "description": "UNLOCODE of the event location"
-              },
-              "vessel_name": {
-                "type": "string",
-                "description": "The name of the vessel where applicable"
-              },
-              "vessel_imo": {
-                "type": "string",
-                "description": "The IMO of the vessel where applicable"
-              },
-              "index": {
-                "type": "integer",
-                "description": "The order of the event. Thishelpful when only dates (i.e. actual_on) are available."
-              },
-              "voyage_number": {
-                "type": "string"
               }
             }
           },
