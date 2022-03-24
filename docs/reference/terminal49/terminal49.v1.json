@@ -6032,10 +6032,12 @@
                 "type": "string"
               },
               "imo": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "mmsi": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               }
             }
           }
