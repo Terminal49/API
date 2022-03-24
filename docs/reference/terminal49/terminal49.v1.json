@@ -6099,10 +6099,6 @@
                 "description": "UNLOCODE of the event location",
                 "nullable": true
               },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              },
               "data_source": {
                 "type": "string",
                 "enum": [
@@ -6110,7 +6106,12 @@
                   "terminal"
                 ],
                 "example": "shipping_line",
-                "description": "The original source of the event data"
+                "description": "The original source of the event data",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           },
