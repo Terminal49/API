@@ -4797,43 +4797,6 @@
         "operationId": "get-metro-area-id",
         "description": "Return the details of a single metro area."
       }
-    },
-    "/ports/{id}": {
-      "parameters": [
-        {
-          "schema": {
-            "type": "string"
-          },
-          "name": "id",
-          "in": "path",
-          "required": true
-        }
-      ],
-      "get": {
-        "summary": "Get a single port using the locode or the id",
-        "tags": [
-          "Ports"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/port"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "operationId": "get-port-id",
-        "description": "Return the details of a single port."
-      }
     }
   },
   "x-tagGroups": [
@@ -5493,19 +5456,7 @@
         "required": [
           "id",
           "type"
-        ],
-        "x-examples": {
-          "example-1": {
-            "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
-            "attributes": {
-              "name": "string",
-              "country_code": "string",
-              "time_zone": "string",
-              "code": "string"
-            },
-            "type": "port"
-          }
-        }
+        ]
       },
       "shipping_line": {
         "title": "Shipping line model",
