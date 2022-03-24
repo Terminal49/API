@@ -4767,7 +4767,7 @@
       "get": {
         "summary": "Get a metro area using the un/locode or the id",
         "tags": [
-          "Ports"
+          "Metro Areas"
         ],
         "responses": {
           "200": {
