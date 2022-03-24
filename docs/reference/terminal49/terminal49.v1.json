@@ -5603,17 +5603,23 @@
               "name": {
                 "type": "string"
               },
-              "country_code": {
-                "type": "string",
-                "description": "2 digit country code"
-              },
-              "timezone": {
-                "type": "string",
-                "description": "IANA tz"
-              },
               "code": {
                 "type": "string",
                 "description": "UN/LOCODE"
+              },
+              "country_code": {
+                "type": "string",
+                "description": "2 digit country code",
+                "nullable": true
+              },
+              "timezone": {
+                "type": "string",
+                "description": "IANA tz",
+                "nullable": true
+              },
+              "state_abbr": {
+                "type": "string",
+                "nullable": true
               }
             }
           },
