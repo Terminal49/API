@@ -4767,7 +4767,7 @@
       "get": {
         "summary": "Get a metro area using the un/locode or the id",
         "tags": [
-          "Ports"
+          "Metro Areas"
         ],
         "responses": {
           "200": {
@@ -4788,6 +4788,43 @@
         },
         "operationId": "get-metro-area-id",
         "description": "Return the details of a single metro area."
+      }
+    },
+    "/ports/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get a port using the locode or the id",
+        "tags": [
+          "Ports"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/port"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-port-id",
+        "description": "Return the details of a single port."
       }
     }
   },
