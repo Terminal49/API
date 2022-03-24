@@ -6285,7 +6285,8 @@
                   "shipping_line",
                   "terminal"
                 ],
-                "description": "The original source of the event data"
+                "description": "The original source of the event data",
+                "nullable": true
               }
             }
           },
