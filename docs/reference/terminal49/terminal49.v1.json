@@ -5437,17 +5437,26 @@
               "name": {
                 "type": "string"
               },
-              "country_code": {
+              "code": {
                 "type": "string",
-                "description": "2 digit country code"
+                "description": "UN/LOCODE"
               },
               "time_zone": {
                 "type": "string",
                 "description": "IANA tz"
               },
-              "code": {
+              "city": {
                 "type": "string",
-                "description": "UN/LOCODE"
+                "nullable": true
+              },
+              "state_abbr": {
+                "type": "string",
+                "nullable": true
+              },
+              "country_code": {
+                "type": "string",
+                "description": "2 digit country code",
+                "nullable": true
               }
             }
           },
@@ -5461,7 +5470,8 @@
         "required": [
           "id",
           "type"
-        ]
+        ],
+        "description": ""
       },
       "shipping_line": {
         "title": "Shipping line model",
