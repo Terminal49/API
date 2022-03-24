@@ -5813,17 +5813,20 @@
                 "type": "string",
                 "example": "ONEYSH9AME650500"
               },
-              "ref_numbers": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
+              "request_type": {
+                "type": "string",
+                "enum": [
+                  "bill_of_lading",
+                  "booking_number",
+                  "container"
+                ],
+                "example": "bill_of_lading"
               },
-              "tags": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
+              "scac": {
+                "type": "string",
+                "example": "ONEY",
+                "minLength": 4,
+                "maxLength": 4
               },
               "status": {
                 "type": "string",
@@ -5834,6 +5837,13 @@
                   "failed",
                   "tracking_stopped"
                 ]
+              },
+              "ref_numbers": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
               },
               "failed_reason": {
                 "type": "string",
@@ -5851,39 +5861,25 @@
                 "description": "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request",
                 "nullable": true
               },
-              "request_type": {
-                "type": "string",
-                "enum": [
-                  "bill_of_lading",
-                  "booking_number",
-                  "container"
-                ],
-                "example": "bill_of_lading"
-              },
-              "scac": {
-                "type": "string",
-                "example": "ONEY",
-                "minLength": 4,
-                "maxLength": 4
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              },
               "is_retrying": {
                 "type": "boolean",
                 "description": ""
               },
               "retry_count": {
                 "type": "integer",
-                "description": "How many times T49 has attempted to get the shipment from the shipping line"
+                "description": "How many times T49 has attempted to get the shipment from the shipping line",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
               }
             },
             "required": [
               "request_number",
-              "status",
               "request_type",
               "scac",
+              "status",
               "created_at"
             ]
           },
