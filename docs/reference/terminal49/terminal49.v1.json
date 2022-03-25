@@ -5981,7 +5981,9 @@
                   "container.transport.transshipment_arrived",
                   "container.transport.transshipment_discharged",
                   "container.transport.transshipment_loaded",
-                  "container.transport.transshipment_departed"
+                  "container.transport.transshipment_departed",
+                  "container.transport.empty_out",
+                  "container.transport.full_in"
                 ]
               },
               "voyage_number": {
