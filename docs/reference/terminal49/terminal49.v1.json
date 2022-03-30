@@ -5929,8 +5929,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "format": "uuid",
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
