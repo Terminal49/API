@@ -5057,7 +5057,8 @@
                 "nullable": true
               },
               "port_of_lading_name": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "port_of_discharge_locode": {
                 "type": "string",
