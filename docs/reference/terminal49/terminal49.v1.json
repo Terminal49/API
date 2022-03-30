@@ -6103,20 +6103,27 @@
               "event": {
                 "type": "string",
                 "enum": [
-                  "container.transport.vessel_loaded",
+                  "tracking_request.succeeded",
+                  "tracking_request.failed",
+                  "tracking_request.tracking_stopped",
+                  "container.updated",
                   "container.transport.vessel_arrived",
-                  "container.transport.vessel_departed",
                   "container.transport.vessel_discharged",
-                  "container.transport.full_out",
-                  "container.transport.empty_in",
+                  "container.transport.vessel_loaded",
+                  "container.transport.vessel_departed",
                   "container.transport.rail_loaded",
                   "container.transport.rail_departed",
                   "container.transport.rail_arrived",
                   "container.transport.rail_unloaded",
                   "container.transport.transshipment_arrived",
+                  "container.transport.empty_out",
+                  "container.transport.full_in",
+                  "container.transport.full_out",
+                  "container.transport.empty_in",
                   "container.transport.transshipment_discharged",
                   "container.transport.transshipment_loaded",
-                  "container.transport.transshipment_departed"
+                  "container.transport.transshipment_departed",
+                  "shipment.estimated.arrival"
                 ]
               },
               "voyage_number": {
