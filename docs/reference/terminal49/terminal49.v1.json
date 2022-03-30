@@ -6554,14 +6554,7 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string",
-            "enum": [
-              "customs",
-              "freight",
-              "USDA",
-              "TMF",
-              "other"
-            ]
+            "type": "string"
           },
           "status": {
             "type": "string",
