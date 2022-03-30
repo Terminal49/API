@@ -5037,7 +5037,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               },
               "created_at": {
                 "type": "string",
@@ -5848,7 +5849,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               },
               "tags": {
                 "type": "array",
