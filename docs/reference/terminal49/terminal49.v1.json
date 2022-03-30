@@ -4868,7 +4868,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "type": {
                         "type": "string",
@@ -4893,7 +4896,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "type": {
                         "type": "string",
@@ -4944,7 +4950,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "type": {
                         "type": "string",
@@ -5028,7 +5037,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               },
               "created_at": {
                 "type": "string",
@@ -5043,24 +5053,30 @@
               },
               "port_of_lading_locode": {
                 "type": "string",
-                "description": "UN/LOCODE"
+                "description": "UN/LOCODE",
+                "nullable": true
               },
               "port_of_lading_name": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "port_of_discharge_locode": {
                 "type": "string",
-                "description": "UN/LOCODE"
+                "description": "UN/LOCODE",
+                "nullable": true
               },
               "port_of_discharge_name": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "destination_locode": {
                 "type": "string",
-                "description": "UN/LOCODE"
+                "description": "UN/LOCODE",
+                "nullable": true
               },
               "destination_name": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "shipping_line_scac": {
                 "type": "string"
@@ -5069,13 +5085,16 @@
                 "type": "string"
               },
               "pod_vessel_name": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "pod_vessel_imo": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "pod_voyage_number": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "pol_etd_at": {
                 "type": "string",
@@ -5147,7 +5166,8 @@
                   "past_arrival_window",
                   "no_updates_at_line",
                   "cancelled_by_user",
-                  "booking_cancelled"
+                  "booking_cancelled",
+                  null
                 ],
                 "description": "The reason Terminal49 stopped checking",
                 "nullable": true
@@ -5341,7 +5361,8 @@
                   "open top",
                   "flat rack",
                   "bulk",
-                  "tank"
+                  "tank",
+                  null
                 ],
                 "nullable": true
               },
@@ -5351,7 +5372,8 @@
                   10,
                   20,
                   40,
-                  45
+                  45,
+                  null
                 ],
                 "nullable": true
               },
@@ -5359,7 +5381,8 @@
                 "type": "string",
                 "enum": [
                   "standard",
-                  "high_cube"
+                  "high_cube",
+                  null
                 ],
                 "nullable": true
               },
@@ -5732,7 +5755,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -5824,7 +5850,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               },
               "tags": {
                 "type": "array",
@@ -5853,7 +5880,8 @@
                   "not_found",
                   "retries_exhausted",
                   "shipping_line_unreachable",
-                  "unrecognized_response"
+                  "unrecognized_response",
+                  null
                 ],
                 "description": "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request",
                 "nullable": true
@@ -5883,7 +5911,8 @@
               },
               "retry_count": {
                 "type": "integer",
-                "description": "How many times T49 has attempted to get the shipment from the shipping line"
+                "description": "How many times T49 has attempted to get the shipment from the shipping line",
+                "nullable": true
               }
             },
             "required": [
@@ -5901,8 +5930,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "format": "uuid",
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6072,20 +6103,27 @@
               "event": {
                 "type": "string",
                 "enum": [
-                  "container.transport.vessel_loaded",
+                  "tracking_request.succeeded",
+                  "tracking_request.failed",
+                  "tracking_request.tracking_stopped",
+                  "container.updated",
                   "container.transport.vessel_arrived",
-                  "container.transport.vessel_departed",
                   "container.transport.vessel_discharged",
-                  "container.transport.full_out",
-                  "container.transport.empty_in",
+                  "container.transport.vessel_loaded",
+                  "container.transport.vessel_departed",
                   "container.transport.rail_loaded",
                   "container.transport.rail_departed",
                   "container.transport.rail_arrived",
                   "container.transport.rail_unloaded",
                   "container.transport.transshipment_arrived",
+                  "container.transport.empty_out",
+                  "container.transport.full_in",
+                  "container.transport.full_out",
+                  "container.transport.empty_in",
                   "container.transport.transshipment_discharged",
                   "container.transport.transshipment_loaded",
-                  "container.transport.transshipment_departed"
+                  "container.transport.transshipment_departed",
+                  "shipment.estimated.arrival"
                 ]
               },
               "voyage_number": {
@@ -6149,7 +6187,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6170,7 +6211,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6190,7 +6234,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6333,7 +6380,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6354,7 +6404,10 @@
                 "description": "\n",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6402,6 +6455,8 @@
                 "enum": [
                   "tracking_request.succeeded",
                   "tracking_request.failed",
+                  "tracking_request.tracking_stopped",
+                  "container.updated",
                   "container.transport.vessel_arrived",
                   "container.transport.vessel_discharged",
                   "container.transport.vessel_loaded",
@@ -6499,14 +6554,7 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string",
-            "enum": [
-              "customs",
-              "freight",
-              "USDA",
-              "TMF",
-              "other"
-            ]
+            "type": "string"
           },
           "status": {
             "type": "string",
@@ -6517,7 +6565,8 @@
           },
           "description": {
             "type": "string",
-            "description": "Text description from the terminal (if any)"
+            "description": "Text description from the terminal (if any)",
+            "nullable": true
           }
         },
         "required": [
