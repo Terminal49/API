@@ -6565,7 +6565,8 @@
           },
           "description": {
             "type": "string",
-            "description": "Text description from the terminal (if any)"
+            "description": "Text description from the terminal (if any)",
+            "nullable": true
           }
         },
         "required": [
