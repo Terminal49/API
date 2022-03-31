@@ -6105,6 +6105,7 @@
                 "enum": [
                   "tracking_request.succeeded",
                   "tracking_request.failed",
+                  "tracking_request.awaiting_manifest",
                   "tracking_request.tracking_stopped",
                   "container.updated",
                   "container.transport.vessel_arrived",
@@ -6455,6 +6456,7 @@
                 "enum": [
                   "tracking_request.succeeded",
                   "tracking_request.failed",
+                  "tracking_request.awaiting_manifest",
                   "tracking_request.tracking_stopped",
                   "container.updated",
                   "container.transport.vessel_arrived",
