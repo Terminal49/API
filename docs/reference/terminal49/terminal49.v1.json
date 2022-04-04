@@ -5437,6 +5437,12 @@
                 "description": "Full Out time at port of discharge. Null for inland moves.",
                 "nullable": true
               },
+              "terminal_checked_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When the terminal was last checked.",
+                "nullable": true
+              },
               "pod_full_out_chassis_number": {
                 "type": "string",
                 "description": "The chassis number used when container was picked up at POD (if available)",
