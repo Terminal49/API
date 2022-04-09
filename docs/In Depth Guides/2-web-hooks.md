@@ -38,6 +38,7 @@ Event | Description
  `container.transport.rail_unloaded` | Rail unloaded
  `shipment.estimated.arrival` | ETA change notification (for port of discharge)
  `container.updated` | Container attribute(s) updated (see below example)
+ `container.pod_terminal_changed` | Port of discharge assignment changed for container
 
 
 
