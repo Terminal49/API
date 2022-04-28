@@ -6134,11 +6134,6 @@
               "event": {
                 "type": "string",
                 "enum": [
-                  "tracking_request.succeeded",
-                  "tracking_request.failed",
-                  "tracking_request.awaiting_manifest",
-                  "tracking_request.tracking_stopped",
-                  "container.updated",
                   "container.transport.vessel_arrived",
                   "container.transport.vessel_discharged",
                   "container.transport.vessel_loaded",
@@ -6154,8 +6149,7 @@
                   "container.transport.empty_in",
                   "container.transport.transshipment_discharged",
                   "container.transport.transshipment_loaded",
-                  "container.transport.transshipment_departed",
-                  "shipment.estimated.arrival"
+                  "container.transport.transshipment_departed"
                 ]
               },
               "voyage_number": {
@@ -6489,7 +6483,9 @@
                   "tracking_request.failed",
                   "tracking_request.awaiting_manifest",
                   "tracking_request.tracking_stopped",
+                  "container.created",
                   "container.updated",
+                  "container.pod_terminal_changed",
                   "container.transport.vessel_arrived",
                   "container.transport.vessel_discharged",
                   "container.transport.vessel_loaded",
