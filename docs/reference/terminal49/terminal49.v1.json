@@ -5035,6 +5035,10 @@
               "bill_of_lading_number": {
                 "type": "string"
               },
+              "normalized_number": {
+                "type": "string",
+                "description": "The normalized version of the shipment number used for querying the carrier"
+              },
               "ref_numbers": {
                 "type": "array",
                 "items": {
