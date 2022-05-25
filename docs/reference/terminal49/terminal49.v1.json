@@ -6622,7 +6622,12 @@
           },
           "amount": {
             "type": "number",
-            "description": "The fee amount in USD"
+            "description": "The fee amount in local currency"
+          },
+          "currency_code": {
+            "type": "string",
+            "description": "The ISO 4217 currency code of the fee is charged in. E.g. USD",
+            "example": "USD"
           }
         },
         "required": [
