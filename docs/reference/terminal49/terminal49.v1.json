@@ -6614,10 +6614,11 @@
           "type": {
             "type": "string",
             "enum": [
-              "exam",
               "demurrage",
-              "total",
-              "other"
+              "exam",
+              "extended_dwell_time",
+              "other",
+              "total"
             ]
           },
           "amount": {
