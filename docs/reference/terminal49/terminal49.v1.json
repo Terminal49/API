@@ -4342,7 +4342,7 @@
           }
         },
         "operationId": "get-containers-id-raw_events",
-        "description": "Get a list of past and futuer (estimated) milestones for a container as reported by the carrier. Some of the data is normalized even though the API is called raw_events. \n\nNormalized attributes: `event` and `timestamp` timestamp. Not all of the `event` values have been normalized. You can expect the the events related to container movements to be normalized but there are cases (paperwork \"milestones\" like customs release) where events are not normalized. "
+        "description": "Get a list of past and future (estimated) milestones for a container as reported by the carrier. Some of the data is normalized even though the API is called raw_events. \n\nNormalized attributes: `event` and `timestamp` timestamp. Not all of the `event` values have been normalized. You can expect the the events related to container movements to be normalized but there are cases (paperwork \"milestones\" like customs release) where events are not normalized. "
       }
     },
     "/containers/{id}/transport_events": {
@@ -4671,7 +4671,7 @@
           }
         },
         "operationId": "get-containers-id-transport_events",
-        "description": "Get a list of past transport events (canonical) for a container. All data has been normalized across all carriers. These are a verified subset of the raw events may also be sent as Webhook Notifications to a webhook endpoint.\n\nThis does not provide any estiamted future events. See `container/:id/raw_events` endpoint for that.  ",
+        "description": "Get a list of past transport events (canonical) for a container. All data has been normalized across all carriers. These are a verified subset of the raw events may also be sent as Webhook Notifications to a webhook endpoint.\n\nThis does not provide any estimated future events. See `container/:id/raw_events` endpoint for that.  ",
         "parameters": [
           {
             "schema": {
