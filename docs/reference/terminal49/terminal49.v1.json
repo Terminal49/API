@@ -5396,7 +5396,7 @@
                 "items": {
                   "type": "string"
                 },
-                "nullable": true
+                "nullable": false
               },
               "equipment_type": {
                 "type": "string",
