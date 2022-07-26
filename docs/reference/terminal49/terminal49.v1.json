@@ -3789,6 +3789,63 @@
             "description": "Number of seconds in which containers were refreshed"
           }
         ]
+      },
+      "patch": {
+        "summary": "Edit a container",
+        "operationId": "patch-containers-id",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "./terminal49.v1.json#/components/schemas/container"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Update a container",
+        "tags": [
+          "Containers"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes",
+                      "type"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "ref_numbers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "example": "REF-12345"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/containers/{id}": {
