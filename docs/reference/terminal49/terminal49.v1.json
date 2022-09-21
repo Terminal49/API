@@ -2834,6 +2834,10 @@
                           "type": "container",
                           "attributes": {
                             "number": "TCLU6738746",
+                            "ref_numbers": [
+                              "REF-1",
+                              "REF-2"
+                            ],
                             "seal_number": null,
                             "created_at": "2019-05-16T18:58:29Z",
                             "equipment_type": "dry",
@@ -2884,6 +2888,10 @@
                           "type": "container",
                           "attributes": {
                             "number": "BMOU5497252",
+                            "ref_numbers": [
+                              "REF-A",
+                              "REF-B"
+                            ],
                             "seal_number": null,
                             "created_at": "2019-05-09T23:35:35Z",
                             "equipment_type": "dry",
@@ -2934,6 +2942,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "BMOU4973652",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-02T17:14:57Z",
                             "equipment_type": "dry",
@@ -2984,6 +2993,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "HLXU8143951",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2020-04-09T21:28:21Z",
                             "equipment_type": "dry",
@@ -3050,6 +3060,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "TCLU9195719",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2020-01-23T18:38:56Z",
                             "equipment_type": "dry",
@@ -3112,6 +3123,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "UACU8516536",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-01T17:07:24Z",
                             "equipment_type": "dry",
@@ -3162,6 +3174,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "SEGU5107747",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-08T21:45:51Z",
                             "equipment_type": "dry",
@@ -3212,6 +3225,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "UACU5471567",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-08T21:35:38Z",
                             "equipment_type": "dry",
@@ -3262,6 +3276,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "UACU5524137",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-08T17:12:41Z",
                             "equipment_type": "dry",
@@ -3312,6 +3327,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "HLXU5075494",
+                            "ref_numbers": [],
                             "seal_number": "026376",
                             "created_at": "2019-04-25T21:36:28Z",
                             "equipment_type": "dry",
@@ -3362,6 +3378,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "TGHU1471867",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-04-25T21:17:31Z",
                             "equipment_type": "dry",
@@ -3412,6 +3429,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "HLXU5101016",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-04-25T20:45:40Z",
                             "equipment_type": "dry",
@@ -3462,6 +3480,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "UACU8574527",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-04-25T20:58:36Z",
                             "equipment_type": "dry",
@@ -3512,6 +3531,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "MRKU4151565",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-15T18:15:45Z",
                             "equipment_type": "dry",
@@ -3553,6 +3573,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "TLLU5827929",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-04-30T16:24:17Z",
                             "equipment_type": "dry",
@@ -3594,6 +3615,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "TCKU6404546",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-04-29T19:27:04Z",
                             "equipment_type": "dry",
@@ -3635,6 +3657,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "MOFU6829869",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-02T15:31:07Z",
                             "equipment_type": "dry",
@@ -3676,6 +3699,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "TCNU1126827",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-04-29T19:33:59Z",
                             "equipment_type": "dry",
@@ -3765,6 +3789,63 @@
             "description": "Number of seconds in which containers were refreshed"
           }
         ]
+      },
+      "patch": {
+        "summary": "Edit a container",
+        "operationId": "patch-containers-id",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "./terminal49.v1.json#/components/schemas/container"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Update a container",
+        "tags": [
+          "Containers"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes",
+                      "type"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "ref_numbers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "example": "REF-12345"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/containers/{id}": {
@@ -3820,6 +3901,10 @@
                         "type": "container",
                         "attributes": {
                           "number": "HLXU8143951",
+                          "ref_numbers": [
+                            "REF-1",
+                            "REF-2"
+                          ],
                           "seal_number": null,
                           "created_at": "2020-04-09T21:28:21Z",
                           "equipment_type": "dry",
@@ -5242,6 +5327,10 @@
             "type": "container",
             "attributes": {
               "number": "KOCU4959010",
+              "ref_numbers": [
+                "REF-1",
+                "REF-2"
+              ],
               "seal_number": "210084213",
               "created_at": "2021-10-18T09:52:33Z",
               "equipment_type": "dry",
@@ -5358,6 +5447,13 @@
             "properties": {
               "number": {
                 "type": "string"
+              },
+              "ref_numbers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "nullable": false
               },
               "equipment_type": {
                 "type": "string",
