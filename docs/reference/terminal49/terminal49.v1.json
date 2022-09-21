@@ -1695,7 +1695,8 @@
                                 "container.transport.transshipment_loaded",
                                 "container.transport.transshipment_departed",
                                 "shipment.estimated.arrival",
-                                "container.updated"
+                                "container.updated",
+                                "container.pod_terminal_changed"
                               ]
                             }
                           },
@@ -1903,9 +1904,10 @@
                                 "container.transport.transshipment_loaded",
                                 "container.transport.transshipment_departed",
                                 "shipment.estimated.arrival",
-                                "container.updated"
+                                "container.updated",
+                                "container.pod_terminal_changed"
                               ],
-                              "example": "['tracking_request.succeeded']"
+                              "example": "tracking_request.succeeded"
                             }
                           },
                           "active": {
@@ -2832,6 +2834,10 @@
                           "type": "container",
                           "attributes": {
                             "number": "TCLU6738746",
+                            "ref_numbers": [
+                              "REF-1",
+                              "REF-2"
+                            ],
                             "seal_number": null,
                             "created_at": "2019-05-16T18:58:29Z",
                             "equipment_type": "dry",
@@ -2882,6 +2888,10 @@
                           "type": "container",
                           "attributes": {
                             "number": "BMOU5497252",
+                            "ref_numbers": [
+                              "REF-A",
+                              "REF-B"
+                            ],
                             "seal_number": null,
                             "created_at": "2019-05-09T23:35:35Z",
                             "equipment_type": "dry",
@@ -2932,6 +2942,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "BMOU4973652",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-02T17:14:57Z",
                             "equipment_type": "dry",
@@ -2982,6 +2993,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "HLXU8143951",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2020-04-09T21:28:21Z",
                             "equipment_type": "dry",
@@ -3048,6 +3060,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "TCLU9195719",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2020-01-23T18:38:56Z",
                             "equipment_type": "dry",
@@ -3110,6 +3123,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "UACU8516536",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-01T17:07:24Z",
                             "equipment_type": "dry",
@@ -3160,6 +3174,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "SEGU5107747",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-08T21:45:51Z",
                             "equipment_type": "dry",
@@ -3210,6 +3225,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "UACU5471567",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-08T21:35:38Z",
                             "equipment_type": "dry",
@@ -3260,6 +3276,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "UACU5524137",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-08T17:12:41Z",
                             "equipment_type": "dry",
@@ -3310,6 +3327,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "HLXU5075494",
+                            "ref_numbers": [],
                             "seal_number": "026376",
                             "created_at": "2019-04-25T21:36:28Z",
                             "equipment_type": "dry",
@@ -3360,6 +3378,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "TGHU1471867",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-04-25T21:17:31Z",
                             "equipment_type": "dry",
@@ -3410,6 +3429,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "HLXU5101016",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-04-25T20:45:40Z",
                             "equipment_type": "dry",
@@ -3460,6 +3480,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "UACU8574527",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-04-25T20:58:36Z",
                             "equipment_type": "dry",
@@ -3510,6 +3531,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "MRKU4151565",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-15T18:15:45Z",
                             "equipment_type": "dry",
@@ -3551,6 +3573,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "TLLU5827929",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-04-30T16:24:17Z",
                             "equipment_type": "dry",
@@ -3592,6 +3615,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "TCKU6404546",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-04-29T19:27:04Z",
                             "equipment_type": "dry",
@@ -3633,6 +3657,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "MOFU6829869",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-05-02T15:31:07Z",
                             "equipment_type": "dry",
@@ -3674,6 +3699,7 @@
                           "type": "container",
                           "attributes": {
                             "number": "TCNU1126827",
+                            "ref_numbers": [],
                             "seal_number": null,
                             "created_at": "2019-04-29T19:33:59Z",
                             "equipment_type": "dry",
@@ -3727,7 +3753,7 @@
           }
         },
         "operationId": "get-containers",
-        "description": "Returns a list of container. The containers are returned sorted by creation date, with the most recent container appearing first.\n\nThis API will return all containers associated with the account.",
+        "description": "Returns a list of container. The containers are returned sorted by creation date, with the most recently refreshed containers appearing first.\n\nThis API will return all containers associated with the account.",
         "parameters": [
           {
             "schema": {
@@ -3753,8 +3779,73 @@
             "in": "query",
             "name": "include",
             "description": "Comma delimited list of relations to include"
+          },
+          {
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "terminal_checked_before",
+            "description": "Number of seconds in which containers were refreshed"
           }
         ]
+      },
+      "patch": {
+        "summary": "Edit a container",
+        "operationId": "patch-containers-id",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "./terminal49.v1.json#/components/schemas/container"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Update a container",
+        "tags": [
+          "Containers"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes",
+                      "type"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "ref_numbers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "example": "REF-12345"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/containers/{id}": {
@@ -3810,6 +3901,10 @@
                         "type": "container",
                         "attributes": {
                           "number": "HLXU8143951",
+                          "ref_numbers": [
+                            "REF-1",
+                            "REF-2"
+                          ],
                           "seal_number": null,
                           "created_at": "2020-04-09T21:28:21Z",
                           "equipment_type": "dry",
@@ -4332,7 +4427,7 @@
           }
         },
         "operationId": "get-containers-id-raw_events",
-        "description": "Get a list of past and futuer (estimated) milestones for a container as reported by the carrier. Some of the data is normalized even though the API is called raw_events. \n\nNormalized attributes: `event` and `timestamp` timestamp. Not all of the `event` values have been normalized. You can expect the the events related to container movements to be normalized but there are cases (paperwork \"milestones\" like customs release) where events are not normalized. "
+        "description": "Get a list of past and future (estimated) milestones for a container as reported by the carrier. Some of the data is normalized even though the API is called raw_events. \n\nNormalized attributes: `event` and `timestamp` timestamp. Not all of the `event` values have been normalized. You can expect the the events related to container movements to be normalized but there are cases (paperwork \"milestones\" like customs release) where events are not normalized. "
       }
     },
     "/containers/{id}/transport_events": {
@@ -4661,7 +4756,7 @@
           }
         },
         "operationId": "get-containers-id-transport_events",
-        "description": "Get a list of past transport events (canonical) for a container. All data has been normalized across all carriers. These are a verified subset of the raw events may also be sent as Webhook Notifications to a webhook endpoint.\n\nThis does not provide any estiamted future events. See `container/:id/raw_events` endpoint for that.  ",
+        "description": "Get a list of past transport events (canonical) for a container. All data has been normalized across all carriers. These are a verified subset of the raw events may also be sent as Webhook Notifications to a webhook endpoint.\n\nThis does not provide any estimated future events. See `container/:id/raw_events` endpoint for that.  ",
         "parameters": [
           {
             "schema": {
@@ -4767,7 +4862,7 @@
       "get": {
         "summary": "Get a metro area using the un/locode or the id",
         "tags": [
-          "Ports"
+          "Metro Areas"
         ],
         "responses": {
           "200": {
@@ -4788,6 +4883,43 @@
         },
         "operationId": "get-metro-area-id",
         "description": "Return the details of a single metro area."
+      }
+    },
+    "/ports/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get a port using the locode or the id",
+        "tags": [
+          "Ports"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/port"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-port-id",
+        "description": "Return the details of a single port."
       }
     }
   },
@@ -4823,7 +4955,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "type": {
                         "type": "string",
@@ -4848,7 +4983,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "type": {
                         "type": "string",
@@ -4899,7 +5037,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "type": {
                         "type": "string",
@@ -4979,12 +5120,16 @@
               "bill_of_lading_number": {
                 "type": "string"
               },
+              "normalized_number": {
+                "type": "string",
+                "description": "The normalized version of the shipment number used for querying the carrier"
+              },
               "ref_numbers": {
                 "type": "array",
                 "items": {
-                  "type": "string",
-                  "nullable": true
-                }
+                  "type": "string"
+                },
+                "nullable": true
               },
               "created_at": {
                 "type": "string",
@@ -5113,7 +5258,8 @@
                   "past_arrival_window",
                   "no_updates_at_line",
                   "cancelled_by_user",
-                  "booking_cancelled"
+                  "booking_cancelled",
+                  null
                 ],
                 "description": "The reason Terminal49 stopped checking",
                 "nullable": true
@@ -5182,6 +5328,10 @@
             "type": "container",
             "attributes": {
               "number": "KOCU4959010",
+              "ref_numbers": [
+                "REF-1",
+                "REF-2"
+              ],
               "seal_number": "210084213",
               "created_at": "2021-10-18T09:52:33Z",
               "equipment_type": "dry",
@@ -5299,6 +5449,13 @@
               "number": {
                 "type": "string"
               },
+              "ref_numbers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "nullable": false
+              },
               "equipment_type": {
                 "type": "string",
                 "enum": [
@@ -5307,7 +5464,8 @@
                   "open top",
                   "flat rack",
                   "bulk",
-                  "tank"
+                  "tank",
+                  null
                 ],
                 "nullable": true
               },
@@ -5317,7 +5475,8 @@
                   10,
                   20,
                   40,
-                  45
+                  45,
+                  null
                 ],
                 "nullable": true
               },
@@ -5325,7 +5484,8 @@
                 "type": "string",
                 "enum": [
                   "standard",
-                  "high_cube"
+                  "high_cube",
+                  null
                 ],
                 "nullable": true
               },
@@ -5378,6 +5538,12 @@
                 "type": "string",
                 "format": "date-time",
                 "description": "Full Out time at port of discharge. Null for inland moves.",
+                "nullable": true
+              },
+              "terminal_checked_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When the terminal was last checked.",
                 "nullable": true
               },
               "pod_full_out_chassis_number": {
@@ -5569,24 +5735,45 @@
         "type": "object",
         "properties": {
           "detail": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "title": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "source": {
             "type": "object",
+            "nullable": true,
             "properties": {
               "pointer": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
+              },
+              "parameter": {
+                "type": "string",
+                "nullable": true
               }
             }
           },
           "code": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
+          },
+          "meta": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "tracking_request_id": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              }
+            }
           }
         },
         "required": [
@@ -5720,7 +5907,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -5822,6 +6012,13 @@
                 ],
                 "example": "bill_of_lading"
               },
+              "ref_numbers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "nullable": true
+              },
               "scac": {
                 "type": "string",
                 "example": "ONEY",
@@ -5856,7 +6053,8 @@
                   "not_found",
                   "retries_exhausted",
                   "shipping_line_unreachable",
-                  "unrecognized_response"
+                  "unrecognized_response",
+                  null
                 ],
                 "description": "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request",
                 "nullable": true
@@ -5890,8 +6088,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "format": "uuid",
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -5968,17 +6168,19 @@
               "event": {
                 "type": "string",
                 "enum": [
-                  "container.transport.vessel_loaded",
                   "container.transport.vessel_arrived",
-                  "container.transport.vessel_departed",
                   "container.transport.vessel_discharged",
-                  "container.transport.full_out",
-                  "container.transport.empty_in",
+                  "container.transport.vessel_loaded",
+                  "container.transport.vessel_departed",
                   "container.transport.rail_loaded",
                   "container.transport.rail_departed",
                   "container.transport.rail_arrived",
                   "container.transport.rail_unloaded",
                   "container.transport.transshipment_arrived",
+                  "container.transport.empty_out",
+                  "container.transport.full_in",
+                  "container.transport.full_out",
+                  "container.transport.empty_in",
                   "container.transport.transshipment_discharged",
                   "container.transport.transshipment_loaded",
                   "container.transport.transshipment_departed",
@@ -6048,7 +6250,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6069,7 +6274,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6089,7 +6297,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6233,7 +6444,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6254,7 +6468,10 @@
                 "description": "\n",
                 "properties": {
                   "data": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6401,6 +6618,11 @@
                 "enum": [
                   "tracking_request.succeeded",
                   "tracking_request.failed",
+                  "tracking_request.awaiting_manifest",
+                  "tracking_request.tracking_stopped",
+                  "container.created",
+                  "container.updated",
+                  "container.pod_terminal_changed",
                   "container.transport.vessel_arrived",
                   "container.transport.vessel_discharged",
                   "container.transport.vessel_loaded",
@@ -6498,14 +6720,7 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string",
-            "enum": [
-              "customs",
-              "freight",
-              "USDA",
-              "TMF",
-              "other"
-            ]
+            "type": "string"
           },
           "status": {
             "type": "string",
@@ -6516,7 +6731,8 @@
           },
           "description": {
             "type": "string",
-            "description": "Text description from the terminal (if any)"
+            "description": "Text description from the terminal (if any)",
+            "nullable": true
           }
         },
         "required": [
@@ -6531,15 +6747,21 @@
           "type": {
             "type": "string",
             "enum": [
-              "exam",
               "demurrage",
-              "total",
-              "other"
+              "exam",
+              "extended_dwell_time",
+              "other",
+              "total"
             ]
           },
           "amount": {
             "type": "number",
-            "description": "The fee amount in USD"
+            "description": "The fee amount in local currency"
+          },
+          "currency_code": {
+            "type": "string",
+            "description": "The ISO 4217 currency code of the fee is charged in. E.g. USD",
+            "example": "USD"
           }
         },
         "required": [
@@ -6826,6 +7048,90 @@
             }
           }
         }
+      },
+      "container_pod_terminal_changed_event": {
+        "title": "Container Pod Terminal Changed Event",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "data_source": {
+                "type": "string",
+                "enum": [
+                  "shipping_line",
+                  "terminal",
+                  "pierpass"
+                ],
+                "example": "shipping_line",
+                "description": "Where the information about the terminal change came from"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When the terminal change was recorded"
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "container": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "container"
+                    ]
+                  }
+                }
+              },
+              "shipment": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "shipment"
+                    ]
+                  }
+                }
+              },
+              "terminal": {
+                "type": "object",
+                "description": "The terminal the container has changed to. If this container is still on the vessel this represents an advisory. If it was previously at the terminal this represents an off-dock move.",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "terminal"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": ""
       }
     },
     "securitySchemes": {

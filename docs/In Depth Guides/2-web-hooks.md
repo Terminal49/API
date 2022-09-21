@@ -37,7 +37,9 @@ Event | Description
  `container.transport.rail_arrived` | Rail arrived
  `container.transport.rail_unloaded` | Rail unloaded
  `shipment.estimated.arrival` | ETA change notification (for port of discharge)
+ `container.created` | Container added to shipment. Helpful for seeing new containers on a booking or BL.
  `container.updated` | Container attribute(s) updated (see below example)
+ `container.pod_terminal_changed` | Port of discharge assignment changed for container
 
 
 
