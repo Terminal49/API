@@ -2791,6 +2791,100 @@
         ]
       }
     },
+    "/webhook_notifications/examples": {
+      "get": {
+        "summary": "Get webhook notification payload examples",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/webhook_notification"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/webhook"
+                          },
+                          {
+                            "$ref": "#/components/schemas/tracking_request"
+                          },
+                          {
+                            "$ref": "#/components/schemas/transport_event"
+                          },
+                          {
+                            "$ref": "#/components/schemas/estimated_event"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-webhook-notifications-example",
+        "description": "Returns an example payload as it would be sent to a webhook endpoint for the provided `event` ",
+        "tags": [
+          "Webhook Notifications"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "container.transport.vessel_arrived",
+                "container.transport.vessel_discharged",
+                "container.transport.vessel_loaded",
+                "container.transport.vessel_departed",
+                "container.transport.rail_departed",
+                "container.transport.rail_arrived",
+                "container.transport.rail_loaded",
+                "container.transport.rail_unloaded",
+                "container.transport.transshipment_arrived",
+                "container.transport.empty_out",
+                "container.transport.full_in",
+                "container.transport.full_out",
+                "container.transport.empty_in",
+                "container.transport.transshipment_discharged",
+                "container.transport.transshipment_loaded",
+                "container.transport.transshipment_departed",
+                "container.transport.vessel_berthed",
+                "shipment.estimated.arrival",
+                "tracking_request.succeeded",
+                "tracking_request.failed",
+                "tracking_request.awaiting_manifest",
+                "tracking_request.tracking_stopped",
+                "container.created",
+                "container.updated",
+                "container.pod_terminal_changed"
+              ],
+              "example": "container.transport.full_out"
+            },
+            "in": "query",
+            "name": "event",
+            "description": "The webhook notification event name you wish to see an example of"
+          }
+        ]
+      },
+      "parameters": []
+    },
     "/containers": {
       "get": {
         "summary": "List containers",
