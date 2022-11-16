@@ -29,6 +29,7 @@ Event | Description
   `container.transport.transshipment_loaded` | Container loaded at transhipment port
  `container.transport.transshipment_departed` | Container departed at transhipment port
  `container.transport.vessel_arrived` | Container arrived on vessel at port of discharge (destination port)
+ `container.transport.vessel_berthed` | Container on vessel berthed at port of discharge (destination port)
  `container.transport.vessel_discharged` | Container discharged at port of discharge
  `container.transport.full_out` | Full out at port of discharge 
  `container.transport.empty_in` | Empty returned at destination
