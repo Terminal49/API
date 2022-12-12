@@ -1,6 +1,6 @@
 
 
-# API Data Sources and Availability. 
+# API Data Sources and Availability.
 
 Our platform gets data from variety of sources in order to create a complete view of a shipment and containers. However,some data is not universally available from all sources, and some data does not become available until certain milestones pass. This page will help you understand which data sources we support, and which data items should be universally expected by your code and which you need to code more defensively around.
 
@@ -9,7 +9,7 @@ Our platform gets data from variety of sources in order to create a complete vie
 - **Ocean carriers (aka steamship lines):** bill of lading/booking details, vessel eta, containers and milestones
 - **Container terminal operators:** container availability, last free day, holds, fees etc
 - **Container rail carriers:** container milestones via rail
-- **AIS data:** vessel details and real-time location tracking
+- **AIS data:** vessel details and real-time location tracking (coming soon!)
 
 ## Supported Ocean Carriers
 View a complete list of supported carriers and attributes on [Google Sheets](https://docs.google.com/spreadsheets/d/1cWK8sNpkjY5V-KlXe1fHi8mU_at2HcJYqjCvGQgixQk/edit#gid=0)
