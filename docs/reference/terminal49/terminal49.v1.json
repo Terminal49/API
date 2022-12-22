@@ -5545,10 +5545,10 @@
               },
               "ref_numbers": {
                 "type": "array",
+                "nullable": false,
                 "items": {
                   "type": "string"
-                },
-                "nullable": false
+                }
               },
               "equipment_type": {
                 "type": "string",
@@ -5566,11 +5566,11 @@
               "equipment_length": {
                 "type": "integer",
                 "enum": [
+                  null,
                   10,
                   20,
                   40,
-                  45,
-                  null
+                  45
                 ],
                 "nullable": true
               },
@@ -5673,6 +5673,21 @@
                 "items": {
                   "$ref": "#/components/schemas/terminal_fee"
                 }
+              },
+              "pod_timezone": {
+                "type": "string",
+                "description": "IANA tz. Applies to attributes pod_arrived_at, pod_discharged_at, pickup_appointment_at, pod_full_out_at.",
+                "nullable": true
+              },
+              "final_destination_timezone": {
+                "type": "string",
+                "description": "IANA tz. Applies to attribute final_destination_full_out_at.",
+                "nullable": true
+              },
+              "empty_terminated_timezone": {
+                "type": "string",
+                "description": "IANA tz. Applies to attribute empty_terminated_at.",
+                "nullable": true
               }
             }
           }
