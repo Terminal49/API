@@ -157,8 +157,8 @@
                             "destination_picked_up_at": null,
                             "empty_returned_at": null,
                             "pod_timezone": "America/Los_Angeles",
-                            "destination_timezone": "America/Detroit",
-                            "empty_returned_timezone": null
+                            "final_destination_timezone": "America/Detroit",
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "most_recent_location": {
@@ -475,8 +475,8 @@
                             "destination_picked_up_at": null,
                             "empty_returned_at": null,
                             "pod_timezone": "America/Los_Angeles",
-                            "destination_timezone": "America/Detroit",
-                            "empty_returned_timezone": null
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "most_recent_location": {
@@ -669,8 +669,8 @@
                             "destination_picked_up_at": null,
                             "empty_returned_at": null,
                             "pod_timezone": "America/Los_Angeles",
-                            "destination_timezone": "America/Detroit",
-                            "empty_returned_timezone": null
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "most_recent_location": {
@@ -2220,7 +2220,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": null,
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -2662,7 +2665,10 @@
                             "pod_discharged_at": "2020-06-04T22:03:08Z",
                             "final_destination_full_out_at": "2020-06-04T22:03:08Z",
                             "pod_full_out_at": null,
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -2949,7 +2955,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-22T18:57:17Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3003,7 +3012,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-17T16:37:28Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3054,7 +3066,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-10T20:27:32Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3105,7 +3120,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2020-04-14T21:07:54Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3172,7 +3190,10 @@
                             "pod_discharged_at": "2020-01-26T00:00:00Z",
                             "final_destination_full_out_at": "2020-01-28T18:47:21Z",
                             "pod_full_out_at": null,
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3235,7 +3256,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-09T17:27:03Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3286,7 +3310,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-17T16:08:09Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3337,7 +3364,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-16T22:18:25Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3388,7 +3418,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-16T19:08:23Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3439,7 +3472,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-02T19:28:06Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3490,7 +3526,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-06T21:47:04Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3541,7 +3580,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-03T22:58:38Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3592,7 +3634,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-03T23:08:29Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3643,7 +3688,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-20T23:07:06Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3685,7 +3733,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-09T18:18:40Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3727,7 +3778,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-08T20:40:06Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3769,7 +3823,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-10T14:27:42Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3811,7 +3868,10 @@
                             "pod_discharged_at": null,
                             "final_destination_full_out_at": null,
                             "pod_full_out_at": "2019-05-08T23:29:59Z",
-                            "empty_terminated_at": null
+                            "empty_terminated_at": null,
+                            "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                           },
                           "relationships": {
                             "shipment": {
@@ -4016,7 +4076,10 @@
                           "pod_discharged_at": null,
                           "final_destination_full_out_at": null,
                           "pod_full_out_at": "2020-04-14T21:07:54Z",
-                          "empty_terminated_at": null
+                          "empty_terminated_at": null,
+                          "pod_timezone": "America/Los_Angeles",
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                         },
                         "relationships": {
                           "shipment": {
