@@ -1308,9 +1308,7 @@
                           "attributes": {
                             "created_at": "2020-04-04T16:13:37-07:00",
                             "bill_of_lading_number": "MEDUFR030802",
-                            "ref_numbers": [
-                              null
-                            ],
+                            "ref_numbers": [],
                             "shipping_line_scac": "MSCU",
                             "shipping_line_name": "Mediterranean Shipping Company",
                             "port_of_lading_locode": "FRFOS",
@@ -4198,7 +4196,7 @@
                             "original_event": "Truck Gate out empty",
                             "created_at": "2020-04-18T00:18:27Z",
                             "voyage_number": null,
-                            "location_name": null,
+                            "location_name": "Oakland",
                             "location_locode": null,
                             "vessel_name": null,
                             "vessel_imo": null,
@@ -7058,7 +7056,8 @@
                   "carrier_release",
                   "customs_release"
                 ],
-                "description": "Normalized string representing the event"
+                "description": "Normalized string representing the event",
+                "nullable": true
               },
               "original_event": {
                 "type": "string",
@@ -7076,26 +7075,31 @@
               "actual_on": {
                 "type": "string",
                 "format": "date",
-                "description": "Deprecated: The date of the event at the event location when no time information is available. "
+                "description": "Deprecated: The date of the event at the event location when no time information is available. ",
+                "nullable": true
               },
               "estimated_on": {
                 "type": "string",
                 "format": "date",
-                "description": "Deprecated: The estimated date of the event at the event location when no time information is available. "
+                "description": "Deprecated: The estimated date of the event at the event location when no time information is available. ",
+                "nullable": true
               },
               "actual_at": {
                 "type": "string",
                 "format": "date-time",
-                "description": "Deprecated: The datetime the event transpired in UTC"
+                "description": "Deprecated: The datetime the event transpired in UTC",
+                "nullable": true
               },
               "estimated_at": {
                 "type": "string",
                 "format": "date-time",
-                "description": "Deprecated: The estimated datetime the event will occur in UTC"
+                "description": "Deprecated: The estimated datetime the event will occur in UTC",
+                "nullable": true
               },
               "timezone": {
                 "type": "string",
-                "description": "IANA tz where the event occured"
+                "description": "IANA tz where the event occured",
+                "nullable": true
               },
               "created_at": {
                 "type": "string",
@@ -7108,22 +7112,26 @@
               },
               "location_locode": {
                 "type": "string",
-                "description": "UNLOCODE of the event location"
+                "description": "UNLOCODE of the event location",
+                "nullable": true
               },
               "vessel_name": {
                 "type": "string",
-                "description": "The name of the vessel where applicable"
+                "description": "The name of the vessel where applicable",
+                "nullable": true
               },
               "vessel_imo": {
                 "type": "string",
-                "description": "The IMO of the vessel where applicable"
+                "description": "The IMO of the vessel where applicable",
+                "nullable": true
               },
               "index": {
                 "type": "integer",
-                "description": "The order of the event. Thishelpful when only dates (i.e. actual_on) are available."
+                "description": "The order of the event. This may be helpful when only dates (i.e. actual_on) are available."
               },
               "voyage_number": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               }
             }
           },

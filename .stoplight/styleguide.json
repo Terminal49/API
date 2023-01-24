@@ -1,6 +1,10 @@
 {
+  "name": "API Docs",
   "description": "",
   "spectralExtends": [],
+  "extends": [
+    "cHJqOjEyMzU4Ng@32"
+  ],
   "formats": [
     "oas2",
     "oas3",
@@ -8,19 +12,7 @@
     "oas3.1"
   ],
   "aliases": {},
-  "rules": {
-    "operation-description": {
-      "given": [],
-      "severity": "info",
-      "then": {
-        "function": ""
-      },
-      "name": "operation-description"
-    }
-  },
-  "extends": [
-    "cHJqOjEyMzU4Ng@32"
-  ],
+  "rules": {},
   "extendedStyleguides": [
     {
       "id": "cHJqOjEyMzU4Ng",
