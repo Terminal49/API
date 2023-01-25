@@ -4076,8 +4076,8 @@
                           "pod_full_out_at": "2020-04-14T21:07:54Z",
                           "empty_terminated_at": null,
                           "pod_timezone": "America/Los_Angeles",
-                          "final_destination_timezone": null,
-                          "empty_terminated_timezone": null
+                            "final_destination_timezone": null,
+                            "empty_terminated_timezone": null
                         },
                         "relationships": {
                           "shipment": {
@@ -5659,7 +5659,7 @@
               "pickup_lfd": {
                 "type": "string",
                 "format": "date-time",
-                "description": "The last free day for pickup before deummurage accrues. Corresponding timezone is pod_timezone.",
+                "description": "The last free day for pickup before deummurage accrues.",
                 "nullable": true
               },
               "pickup_appointment_at": {
@@ -5721,12 +5721,6 @@
                 "type": "string",
                 "format": "date-time",
                 "description": "Time empty container was returned.",
-                "nullable": true
-              },
-              "last_status_refresh_at": {
-                "type": "string",
-                "format": "date-time",
-                "description": "The last time the container status was retrieved from the pod terminal. (UTC)",
                 "nullable": true
               },
               "holds_at_pod_terminal": {
