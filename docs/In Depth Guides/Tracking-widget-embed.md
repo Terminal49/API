@@ -53,5 +53,5 @@ The Track & Trace Widget provides a number of advantages:
 - It can reduce customer service costs by providing customers with the information they need without having to contact customer service.
 - It can help you differentiate from other service providers. 
 
-![1pgr Final Drafts (1).png](<../../assets/images/1pgr Final Drafts (1).png>)
 
+![terminal49-container-tracking-widget.jpg](../../assets/images/terminal49-container-tracking-widget.jpg)
