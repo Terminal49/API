@@ -21,23 +21,29 @@ View a complete list of supported carriers and attributes on [Google Sheets](htt
 Presently, the Terminal 49 api integrates with terminals at the following ports:
 - Baltimore
 - Boston
-- Florida
+- Charleston
+- Fraser Surrey (CA)
+- Halifax (CA)
 - Houston
 - Jacksonville
-- Long Beach
+- London Gateway (UK)
+- Long Beach 
 - Los Angeles
 - Miami
 - Mobile
-- New Jersey
 - New Orleans
-- New York
+- New York / New Jersey
 - Oakland
 - Philadelphia
 - Port Everglades
+- Portland
+- Prince Rupert (CA)
 - Savannah
 - Seattle
+- Southampton (UK)
 - Tacoma
 - Tampa
+- Vancouver (CA)
 - Virginia
 
 You can view a complete list of supported terminals and attributes on [Google Sheets](https://docs.google.com/spreadsheets/d/1cWK8sNpkjY5V-KlXe1fHi8mU_at2HcJYqjCvGQgixQk/edit#gid=1406366493)
@@ -62,7 +68,6 @@ Below are a list of known issuses with our data sources:
 - No container seal number
 
 ### MSC
-- No departure or arrival events. Actual departure and arrival times are based on lading/unlading. Estimated times are departure / arrival times.
 - No container seal number
 
 ### Hapag Lloyd
@@ -92,11 +97,6 @@ Below are a list of known issuses with our data sources:
 - No container weight
 - No container seal number
 
-### PIL
-- No departure or arrival events. All departure and arrival times are based on lading/unlading.
-- No container weight
-- No container seal number
-
 ### Westwood Shipping
 - No container weight
 - Only Dry container types are mapped to our system
@@ -109,7 +109,7 @@ Below is a list of data that can be retrieved via the API, including whether is 
 Shipment Data is the primary data that comes from the Carrier. It containers the details of the shipment retrieved from the Bill of Lading, and references multiple container objects.
 
 | Data                                           | Availability            | More details           | Notes |
-| ------ |-----|-----|
+| ------ |-----|-----|-----|
 | Port of Lading                                 | Always                               | Port of Lading name, Port of Lading UN/LOCODE, Port of Lading Timezone                |                                                                            |
 | Port of Discharge                              | Always                               | Port of Discharge name, Port of discharge UN/LOCODE,Port of Discharge Timezone        |                                                                            |
 | Final Destination beyond Port of Discharge     | Carrier dependent, Journey Dependent | ,Destination name, Destination UN/LOCODE, Destination UN/LOCODE, Destination Timezone | Only for shipments with inland moves provided by or booked by the carrier. |
@@ -168,9 +168,24 @@ A list of milestones that the API can track, as well as the event name used in t
 
 |              Milestone Event Name        | Event Name           |
 | -------------------- | -------------------------------------- |
-| Vessel Loaded        | container.transport.vessel\_loaded     |
-| Vessel Arrived       | container.transport.vessel\_arrived    |
-| Vessel Departed      | container.transport.vessel\_departed   |
-| Vessel Discharged    | container.transport.vessel\_discharged |
-| Full Out             | container.transport.full\_out          |
-| Empty In             | container.transport.empty\_in          |
+| Vessel Loaded   | container.transport.vessel\_loaded |
+| Vessel Departed   | container.transport.vessel\_departed |
+| Vessel Arrived    | container.transport.vessel\_arrived |
+| Vessel Berthed    | container.transport.vessel\_berthed |
+| Vessel Discharged   | container.transport.vessel\_discharged |
+| Empty Out   | container.transport.empty\_oud |
+| Full In   | container.transport.full\_id |
+| Full Out    | container.transport.full\_out |
+| Empty In    | container.transport.empty\_id |
+| Rail Departed   | container.transport.rail\_departed |
+| Rail Arrived    | container.transport.rail\_arrived |
+| Rail Loaded   | container.transport.rail\_loaded |
+| Rail Unloaded   | container.transport.rail\_unloaded |
+| Transshipment Arrived   | container.transport.transshipment\_arrived |
+| Transshipment Discharged    | container.transport.transshipment\_discharged |
+| Transshipment Loaded    | container.transport.transshipment\_loaded |
+| Transshipment Departed    | container.transport.transshipment\_departed |
+| Feeder Arrived    | container.transport.feeder\_arrived |
+| Feeder Discharged   | container.transport.feeder\_discharged |
+| Feeder Loaded   | container.transport.feeder\_loaded |
+| Feeder Departed   | container.transport.feeder\_departed |
