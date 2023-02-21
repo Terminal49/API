@@ -28,6 +28,10 @@ Event | Description
  `container.transport.transshipment_discharged` | Container discharged at transhipment port
   `container.transport.transshipment_loaded` | Container loaded at transhipment port
  `container.transport.transshipment_departed` | Container departed at transhipment port
+ `container.transport.feeder_arrived` | Container arrived on feeder vessel or barge
+ `container.transport.feeder_discharged` | Container discharged from feeder vessel or barge
+  `container.transport.feeder_loaded` | Container loaded on feeder vessel or barge
+ `container.transport.feeder_departed` | Container departed on feeder vessel or barge
  `container.transport.vessel_arrived` | Container arrived on vessel at port of discharge (destination port)
  `container.transport.vessel_berthed` | Container on vessel berthed at port of discharge (destination port)
  `container.transport.vessel_discharged` | Container discharged at port of discharge
