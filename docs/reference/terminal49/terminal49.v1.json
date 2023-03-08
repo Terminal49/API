@@ -5799,6 +5799,24 @@
               "name": {
                 "type": "string"
               },
+              "code": {
+                "type": "string",
+                "description": "UN/LOCODE"
+              },
+              "state_abbr": {
+                "type": "string",
+                "nullable": true,
+                "x-stoplight": {
+                  "id": "jixah1a0q3exs"
+                }
+              },
+              "city": {
+                "type": "string",
+                "nullable": true,
+                "x-stoplight": {
+                  "id": "657ij4boc7kyv"
+                }
+              },
               "country_code": {
                 "type": "string",
                 "description": "2 digit country code"
@@ -5806,10 +5824,6 @@
               "time_zone": {
                 "type": "string",
                 "description": "IANA tz"
-              },
-              "code": {
-                "type": "string",
-                "description": "UN/LOCODE"
               }
             }
           },
@@ -5976,17 +5990,29 @@
               "name": {
                 "type": "string"
               },
-              "country_code": {
-                "type": "string",
-                "description": "2 digit country code"
-              },
-              "timezone": {
-                "type": "string",
-                "description": "IANA tz"
-              },
               "code": {
                 "type": "string",
                 "description": "UN/LOCODE"
+              },
+              "state_abbr": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "j9yuwej2ym7yq"
+                },
+                "nullable": true
+              },
+              "country_code": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "hfupdk750wcrj"
+                }
+              },
+              "time_zone": {
+                "type": "string",
+                "description": "IANA tz",
+                "x-stoplight": {
+                  "id": "izvtty345nfsz"
+                }
               }
             }
           },
@@ -5995,6 +6021,12 @@
             "enum": [
               "metro_area"
             ]
+          },
+          "": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "kwcjunrtu3r5o"
+            }
           }
         },
         "required": [
