@@ -6027,6 +6027,20 @@
                 "x-stoplight": {
                   "id": "izvtty345nfsz"
                 }
+              },
+              "latitude": {
+                "type": "number",
+                "x-stoplight": {
+                  "id": "9l62t4cwsp53w"
+                },
+                "nullable": true
+              },
+              "longitude": {
+                "type": "number",
+                "x-stoplight": {
+                  "id": "3tzibc0li8xvg"
+                },
+                "nullable": true
               }
             }
           },
