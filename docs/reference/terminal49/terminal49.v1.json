@@ -5805,17 +5805,17 @@
               },
               "state_abbr": {
                 "type": "string",
-                "nullable": true,
                 "x-stoplight": {
                   "id": "jixah1a0q3exs"
-                }
+                },
+                "nullable": true
               },
               "city": {
                 "type": "string",
-                "nullable": true,
                 "x-stoplight": {
                   "id": "657ij4boc7kyv"
-                }
+                },
+                "nullable": true
               },
               "country_code": {
                 "type": "string",
@@ -5824,6 +5824,20 @@
               "time_zone": {
                 "type": "string",
                 "description": "IANA tz"
+              },
+              "latitude": {
+                "type": "number",
+                "x-stoplight": {
+                  "id": "480os7a90z6kk"
+                },
+                "nullable": true
+              },
+              "longitude": {
+                "type": "number",
+                "x-stoplight": {
+                  "id": "nfdetqgx5p1yv"
+                },
+                "nullable": true
               }
             }
           },
@@ -6013,6 +6027,20 @@
                 "x-stoplight": {
                   "id": "izvtty345nfsz"
                 }
+              },
+              "latitude": {
+                "type": "number",
+                "x-stoplight": {
+                  "id": "9l62t4cwsp53w"
+                },
+                "nullable": true
+              },
+              "longitude": {
+                "type": "number",
+                "x-stoplight": {
+                  "id": "3tzibc0li8xvg"
+                },
+                "nullable": true
               }
             }
           },
