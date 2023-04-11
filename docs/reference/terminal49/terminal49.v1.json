@@ -7023,7 +7023,7 @@
             "properties": {
               "changeset": {
                 "type": "object",
-                "description": "A hash of all the changed attributes with the values being an array of the before and after. E.g. \n`{\"pickup_lfd\": [null, \"2020-05-20\"]}`\n\nThe current attributes that can be alerted on are:\n- `available_for_pickup`\n- `pickup_lfd`\n- `fees_at_pod_terminal`\n- `holds_at_pod_terminal`"
+                "description": "A hash of all the changed attributes with the values being an array of the before and after. E.g. \n`{\"pickup_lfd\": [null, \"2020-05-20\"]}`\n\nThe current attributes that can be alerted on are:\n- `available_for_pickup`\n- `pickup_lfd`\n- `fees_at_pod_terminal`\n- `holds_at_pod_terminal`\n- `pickup_appointment_at`\n- `pod_terminal`"
               },
               "timestamp": {
                 "type": "string",
