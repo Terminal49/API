@@ -13,15 +13,16 @@ If the shipping line returns a response that it cannot find the provided number 
  * **Bill of lading numbers** fail straight away after a not found response from the shipping line. We change the `status` field to `failed` and send the `tracking_request.failed` event to your webhook.
  * **Bill of lading numbers - awaiting manifest** in the case of Hapag-Lloyd we will retry for BL numbers if we see that the number is `awaiting_manifest` (see below).
  * **Booking numbers** do not fail instantly. We change the `status` to `awaiting_manifest` and will keep checking your request daily. You will receive a `tracking_request.awaiting_manifest` webhook notification the first time it happens. If your request number cannot be found after 7 days we will mark the tracking request as failed by changing the `status` field `failed` and sending the `tracking_request.failed` event to your webhook.
- 
+ * **Incorrect request number type** if the request number type (ex. booking number) is incorrect, the tracking request will still fail even though the request number is correct.
+
 
 ## Failed Reason
 
-### Temporary 
+### Temporary
 
 The `failed_reason` field can take one of the following temporary values:
 
- * `unrecognized_response` when we could not parse the response from the shipping line, 
+ * `unrecognized_response` when we could not parse the response from the shipping line,
  * `shipping_line_unreachable` if the shipping line was unreachable,
  * `internal_processing_error` when we faced other issue,
  * `awaiting_manifest` if the shipping line indidicates a BL number is found, but data is not yet available. Or if the requested booking number could not be found.
@@ -30,14 +31,14 @@ The `failed_reason` field can take one of the following temporary values:
 
 Temporary reasons can become permanent when the `status` changes to `failed`:
 
- * `duplicate` when the shipment already existed,  
+ * `duplicate` when the shipment already existed,
  * `expired` when the tracking request was created more than 7 days ago and still not succeded,
  * `retries_exhausted` if we tried for 14 times to no avail,
  * `not_found` if the shipping line could not find the BL number.
  * `invalid_number` if the shipping line rejects the formatting of the number.
  * `booking_cancelled` if the shipping line indicates that the booking has been cancelled.
 
-## Stopped 
+## Stopped
 
 \* Going live 2022-01-20
 
@@ -54,3 +55,6 @@ Terminal49 will stop tracking requests for the following reasons:
 ## Retrieving Status
 
 If you want to see the status of your tracking request you can make a [GET request](https://developers.terminal49.com/docs/api/docs/reference/terminal49/terminal49.v1.json/paths/~1tracking_requests~1%7Bid%7D/get) on what the most recent failure reason was (`failed_reason` field).
+
+
+[Failed Reasons when tracking request through dashboard](https://help.terminal49.com/en/articles/6116676-what-happens-after-i-add-a-shipment-to-terminal49-recently-added-shipments#h_ac9b93504f)
