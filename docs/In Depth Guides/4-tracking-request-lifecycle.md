@@ -38,6 +38,8 @@ Temporary reasons can become permanent when the `status` changes to `failed`:
  * `invalid_number` if the shipping line rejects the formatting of the number.
  * `booking_cancelled` if the shipping line indicates that the booking has been cancelled.
 
+[Failed Reasons when tracking request through dashboard](https://help.terminal49.com/en/articles/6116676-what-happens-after-i-add-a-shipment-to-terminal49-recently-added-shipments#h_ac9b93504f)
+
 ## Stopped
 
 \* Going live 2022-01-20
@@ -55,6 +57,3 @@ Terminal49 will stop tracking requests for the following reasons:
 ## Retrieving Status
 
 If you want to see the status of your tracking request you can make a [GET request](https://developers.terminal49.com/docs/api/docs/reference/terminal49/terminal49.v1.json/paths/~1tracking_requests~1%7Bid%7D/get) on what the most recent failure reason was (`failed_reason` field).
-
-
-[Failed Reasons when tracking request through dashboard](https://help.terminal49.com/en/articles/6116676-what-happens-after-i-add-a-shipment-to-terminal49-recently-added-shipments#h_ac9b93504f)
