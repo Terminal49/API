@@ -1383,7 +1383,12 @@ N.B. the `container_updated_event` also has a relationship to a `terminal` which
       "attributes": {
         "name": "MSC CHANNE",
         "imo": "9710438",
-        "mmsi": "255805864"
+        "mmsi": "255805864",
+        "latitude": -78.30435842851921,
+        "longitude": 25.471353799804547,
+        "nautical_speed_knots": 100,
+        "navigational_heading_degrees": 1,
+        "position_timestamp": "2023-06-05T19:46:18Z"
       }
     },
     {

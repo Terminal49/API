@@ -3437,7 +3437,12 @@
       "attributes": {
         "name": "MERIDIAN",
         "imo": "7002605",
-        "mmsi": "218415000"
+        "mmsi": "218415000",
+        "latitude": -78.30435842851921,
+        "longitude": 25.471353799804547,
+        "nautical_speed_knots": 100,
+        "navigational_heading_degrees": 1,
+        "position_timestamp": "2023-06-05T19:46:18Z"
       }
     },
     {
@@ -3771,7 +3776,12 @@
       "attributes": {
         "name": "NORTHERN PRIORITY",
         "imo": "9450313",
-        "mmsi": "636091832"
+        "mmsi": "636091832",
+        "latitude": -78.30435842851921,
+        "longitude": 25.471353799804547,
+        "nautical_speed_knots": 100,
+        "navigational_heading_degrees": 1,
+        "position_timestamp": "2023-06-05T19:46:18Z"
       }
     },
     {
@@ -4055,7 +4065,12 @@
       "attributes": {
         "name": "ELBSPRING",
         "imo": "9412529",
-        "mmsi": "305575000"
+        "mmsi": "305575000",
+        "latitude": -78.30435842851921,
+        "longitude": 25.471353799804547,
+        "nautical_speed_knots": 100,
+        "navigational_heading_degrees": 1,
+        "position_timestamp": "2023-06-05T19:46:18Z"
       }
     },
     {
@@ -4389,7 +4404,12 @@
       "attributes": {
         "name": "NORTHERN PRIORITY",
         "imo": "9450313",
-        "mmsi": "636091832"
+        "mmsi": "636091832",
+        "latitude": -78.30435842851921,
+        "longitude": 25.471353799804547,
+        "nautical_speed_knots": 100,
+        "navigational_heading_degrees": 1,
+        "position_timestamp": "2023-06-05T19:46:18Z"
       }
     },
     {
@@ -4669,7 +4689,12 @@
       "attributes": {
         "name": "TONGALA",
         "imo": "9278105",
-        "mmsi": "636013644"
+        "mmsi": "636013644",
+        "latitude": -78.30435842851921,
+        "longitude": 25.471353799804547,
+        "nautical_speed_knots": 100,
+        "navigational_heading_degrees": 1,
+        "position_timestamp": "2023-06-05T19:46:18Z"
       }
     },
     {
@@ -5007,7 +5032,12 @@
       "attributes": {
         "name": "YM UNANIMITY",
         "imo": "9462718",
-        "mmsi": "416466000"
+        "mmsi": "416466000",
+        "latitude": -78.30435842851921,
+        "longitude": 25.471353799804547,
+        "nautical_speed_knots": 25,
+        "navigational_heading_degrees": 1,
+        "position_timestamp": "2023-06-05T19:46:18Z"
       }
     },
     {
@@ -5344,7 +5374,12 @@
       "attributes": {
         "name": "MERIDIAN",
         "imo": "7002605",
-        "mmsi": "218415000"
+        "mmsi": "218415000",
+        "latitude": -78.30435842851921,
+        "longitude": 25.471353799804547,
+        "nautical_speed_knots": 44,
+        "navigational_heading_degrees": 1,
+        "position_timestamp": "2023-06-05T19:46:18Z"
       }
     },
     {
@@ -5726,7 +5761,12 @@
       "attributes": {
         "name": "ESSEN EXPRESS",
         "imo": "9501370",
-        "mmsi": "218474000"
+        "mmsi": "218474000",
+        "latitude": -78.30435842851921,
+        "longitude": 25.471353799804547,
+        "nautical_speed_knots": 13,
+        "navigational_heading_degrees": 99,
+        "position_timestamp": "2023-06-05T19:46:18Z"
       }
     },
     {
@@ -6031,7 +6071,12 @@
       "attributes": {
         "name": "NYK THEMIS",
         "imo": "9356696",
-        "mmsi": "636018225"
+        "mmsi": "636018225",
+        "latitude": -78.30435842851921,
+        "longitude": 25.471353799804547,
+        "nautical_speed_knots": 100,
+        "navigational_heading_degrees": 18,
+        "position_timestamp": "2023-06-05T19:46:18Z"
       }
     },
     {
