@@ -6491,42 +6491,42 @@
             "properties": {
               "name": {
                 "type": "string",
-                "description": "The name of the ship or vessel."
+                "description": "The name of the ship or vessel"
               },
               "imo": {
                 "type": "string",
                 "nullable": true,
-                "description": "International Maritime Organization (IMO) number",
+                "description": "International Maritime Organization (IMO) number"
               },
               "mmsi": {
                 "type": "string",
                 "nullable": true,
-                "description": "Maritime Mobile Service Identity (MMSI)",
+                "description": "Maritime Mobile Service Identity (MMSI)"
               },
               "latitude": {
                 "type": "number",
                 "nullable": true,
-                "description": "The current latitude position of the vessel."
+                "description": "The current latitude position of the vessel"
               },
               "longitude": {
                 "type": "number",
                 "nullable": true,
-                "description": "The current longitude position of the vessel."
+                "description": "The current longitude position of the vessel"
               },
               "nautical_speed_knots": {
                 "type": "number",
                 "nullable": true,
-                "description": "The current speed of the ship in knots (nautical miles per hour)."
+                "description": "The current speed of the ship in knots (nautical miles per hour)"
               },
               "navigational_heading_degrees": {
                 "type": "number",
                 "nullable": true,
-                "description": "The current heading of the ship in degrees, where 0 is North, 90 is East, 180 is South, and 270 is West."
+                "description": "The current heading of the ship in degrees, where 0 is North, 90 is East, 180 is South, and 270 is West"
               },
               "position_timestamp": {
                 "type": "string",
                 "nullable": true,
-                "description": "The timestamp of when the ship's position was last recorded, in ISO 8601 date and time format."
+                "description": "The timestamp of when the ship's position was last recorded, in ISO 8601 date and time format"
               }
             }
           }
