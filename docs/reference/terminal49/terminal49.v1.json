@@ -6535,7 +6535,6 @@
       "transport_event": {
         "title": "Transport Event Model",
         "type": "object",
-        "description": "",
         "properties": {
           "id": {
             "type": "string",
@@ -6603,7 +6602,8 @@
                 "type": "string",
                 "enum": [
                   "shipping_line",
-                  "terminal"
+                  "terminal",
+                  "ais"
                 ],
                 "example": "shipping_line",
                 "description": "The original source of the event data"
@@ -6637,10 +6637,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6661,10 +6659,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6684,10 +6680,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
