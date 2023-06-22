@@ -5137,8 +5137,10 @@
         }
       ],
       "get": {
-        "summary": "Your GET endpoint",
-        "tags": [],
+        "summary": "Get a vessel using the id",
+        "tags": [
+          "Vessels"
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -5172,8 +5174,10 @@
         }
       ],
       "get": {
-        "summary": "Your GET endpoint",
-        "tags": [],
+        "summary": "Get a vessel using the imo",
+        "tags": [
+          "Vessels"
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -5192,7 +5196,8 @@
           }
         },
         "operationId": "get-vessels-imo",
-        "description": "Returns a vessel by the given IMO number."
+        "description": "Returns a vessel by the given IMO number.",
+        "x-internal": true
       }
     }
   },
