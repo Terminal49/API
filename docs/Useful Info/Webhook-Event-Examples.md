@@ -419,7 +419,13 @@
           "pod_full_out_chassis_number": false,
           "location_at_pod_terminal_notes": "",
           "pod_full_out_chassis_number_notes": ""
-        }
+          },
+        "street": "302 Port Jersey Boulevard",
+        "city": "Jersey City",
+        "state": "New Jersey",
+        "state_abbr": "NJ",
+        "zip": "07305",
+        "country": "United States"
       },
       "relationships": {
         "port": {
@@ -1541,7 +1547,13 @@
           "pod_full_out_chassis_number": false,
           "location_at_pod_terminal_notes": "",
           "pod_full_out_chassis_number_notes": ""
-        }
+          },
+        "street": "701 New Dock Street Berths 212-225",
+        "city": "Terminal Island",
+        "state": "California",
+        "state_abbr": "CA",
+        "zip": "90731",
+        "country": "United States"
       },
       "relationships": {
         "port": {
@@ -5015,7 +5027,13 @@
           "pod_full_out_chassis_number": false,
           "location_at_pod_terminal_notes": "",
           "pod_full_out_chassis_number_notes": ""
-        }
+          },
+        "street": "701 New Dock Street Berths 212-225",
+        "city": "Terminal Island",
+        "state": "California",
+        "state_abbr": "CA",
+        "zip": "90731",
+        "country": "United States"
       },
       "relationships": {
         "port": {
@@ -5744,7 +5762,13 @@
           "pod_full_out_chassis_number": false,
           "location_at_pod_terminal_notes": "",
           "pod_full_out_chassis_number_notes": ""
-        }
+          },
+        "street": "701 New Dock Street Berths 212-225",
+        "city": "Terminal Island",
+        "state": "California",
+        "state_abbr": "CA",
+        "zip": "90731",
+        "country": "United States"
       },
       "relationships": {
         "port": {
@@ -6280,7 +6304,13 @@
           "pod_full_out_chassis_number": false,
           "location_at_pod_terminal_notes": "",
           "pod_full_out_chassis_number_notes": ""
-        }
+          },
+        "street": "701 New Dock Street Berths 212-225",
+        "city": "Terminal Island",
+        "state": "California",
+        "state_abbr": "CA",
+        "zip": "90731",
+        "country": "United States"
       },
       "relationships": {
         "port": {
