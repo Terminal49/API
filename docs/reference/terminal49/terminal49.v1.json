@@ -6588,11 +6588,6 @@
                 "description": "The current longitude position of the vessel",
                 "nullable": true
               },
-              "longitude - copy": {
-                "type": "number",
-                "description": "The current longitude position of the vessel",
-                "nullable": true
-              },
               "nautical_speed_knots": {
                 "type": "number",
                 "description": "The current speed of the ship in knots (nautical miles per hour)",
