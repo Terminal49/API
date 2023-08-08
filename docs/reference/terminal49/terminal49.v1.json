@@ -831,7 +831,7 @@
                             "items": {
                               "type": "string"
                             },
-                            "example": "REFNUMBER10",
+                            "example": ["REFNUMBER10"],
                             "description": "Shipment ref numbers."
                           }
                         }
