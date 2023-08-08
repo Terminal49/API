@@ -826,10 +826,13 @@
                       "attributes": {
                         "type": "object",
                         "properties": {
-                          "ref_number": {
-                            "type": "string",
+                          "ref_numbers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
                             "example": "REFNUMBER10",
-                            "description": "Shipment ref number."
+                            "description": "Shipment ref numbers."
                           }
                         }
                       }
