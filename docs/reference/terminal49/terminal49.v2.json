@@ -1,5 +1,8 @@
 {
   "openapi": "3.0.0",
+  "x-stoplight": {
+    "id": "30853c8d56ddc"
+  },
   "info": {
     "title": "Terminal49 API Reference",
     "version": "0.2.0",
