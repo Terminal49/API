@@ -4977,6 +4977,173 @@
         ]
       }
     },
+    "/containers/{id}/route": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get a container route",
+        "tags": [
+          "Containers"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/route"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/route_location"
+                          },
+                          {
+                            "$ref": "#/components/schemas/terminal"
+                          },
+                          {
+                            "$ref": "#/components/schemas/rail_terminal"
+                          },
+                          {
+                            "$ref": "#/components/schemas/port"
+                          },
+                          {
+                            "$ref": "#/components/schemas/metro_area"
+                          },
+                          {
+                            "$ref": "#/components/schemas/vessel"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "Example Container": {
+                    "value": {
+                      "data": {
+                        "id": "eeafd337-72b5-4e5c-87cb-9ef83fa99cf4",
+                        "type": "container",
+                        "attributes": {
+                          "number": "HLXU8143951",
+                          "ref_numbers": [
+                            "REF-1",
+                            "REF-2"
+                          ],
+                          "seal_number": null,
+                          "created_at": "2020-04-09T21:28:21Z",
+                          "equipment_type": "dry",
+                          "equipment_length": 40,
+                          "equipment_height": "high_cube",
+                          "weight_in_lbs": null,
+                          "fees_at_pod_terminal": [],
+                          "holds_at_pod_terminal": [],
+                          "pickup_lfd": "2020-04-20T07:00:00Z",
+                          "pickup_appointment_at": null,
+                          "availability_known": true,
+                          "available_for_pickup": false,
+                          "pod_arrived_at": null,
+                          "pod_discharged_at": null,
+                          "final_destination_full_out_at": null,
+                          "pod_full_out_at": "2020-04-14T21:07:54Z",
+                          "empty_terminated_at": null,
+                          "pod_timezone": "America/Los_Angeles",
+                          "final_destination_timezone": null,
+                          "empty_terminated_timezone": null
+                        },
+                        "relationships": {
+                          "shipment": {
+                            "data": {
+                              "id": "06264731-503e-498e-bc76-f90b87b31562",
+                              "type": "shipment"
+                            }
+                          },
+                          "pod_terminal": {
+                            "data": {
+                              "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
+                              "type": "terminal"
+                            }
+                          },
+                          "transport_events": {
+                            "data": [
+                              {
+                                "id": "efc3f3c1-cdc2-4a7d-a176-762ddec107b8",
+                                "type": "transport_event"
+                              },
+                              {
+                                "id": "951058bd-2c3b-4bcc-94e1-9be2526b9687",
+                                "type": "transport_event"
+                              },
+                              {
+                                "id": "69af6795-56c2-4157-9a87-afd761cc85a0",
+                                "type": "transport_event"
+                              },
+                              {
+                                "id": "68c3c29a-504a-4dbb-ad27-7194ef42d484",
+                                "type": "transport_event"
+                              },
+                              {
+                                "id": "03349405-a9be-4f3e-abde-28f2cb3922bd",
+                                "type": "transport_event"
+                              },
+                              {
+                                "id": "ba9f85b4-658d-4f23-9308-635964df8037",
+                                "type": "transport_event"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "links": {
+                        "self": "https://api.terminal49.com/v2/containers/eeafd337-72b5-4e5c-87cb-9ef83fa99cf4"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-containers-id-route",
+        "description": "Retreives the routing details for a given container\n\n<!-- theme: warning -->\n> #### BETA notice\n> This endpoint is currently in beta and subject to change.\n",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "include",
+            "description": "Comma delimited list of relations to include"
+          }
+        ],
+        "x-stoplight": {
+          "id": "k663n869ibs50"
+        }
+      }
+    },
     "/shipping_lines": {
       "get": {
         "summary": "Shipping Lines",
@@ -5164,7 +5331,106 @@
           }
         },
         "operationId": "get-vessels-id",
-        "description": "Returns a vessel by it's given identifier"
+        "description": "Returns a vessel by the given identifier\n\n<!-- theme: warning -->\n> #### BETA notice\n> The `show_positions` query paramaters and `positions` attribute are currently in beta and subject to revision.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "in": "query",
+            "name": "show_positions[from_timestamp]",
+            "description": "Starting timestamp for showing vessel positions"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "in": "query",
+            "name": "show_positions[to_timestamp]",
+            "description": "Ending timestamp for showing vessel positions"
+          }
+        ]
+      }
+    },
+    "/vessels/{id}/future_positions_with_coordinates": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The id of the vessel"
+        }
+      ],
+      "get": {
+        "summary": "Get a vessel using the id",
+        "tags": [
+          "Vessels"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/vessel"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-vessels-id-future-positions-with-coordinates",
+        "description": "Returns the estimated future coordinates of a vessel based on a pair of ports.\n\n<!-- theme: warning -->\n> #### BETA notice\n> This endpoint is currently in beta and subject to change.\n\n<!-- theme: info -->\n> #### timestamp and heading estimation\n> Only the latitude and longitude of future positions are estimated. The position timestamps will always show exactly one our from the current time.\n",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "query",
+            "name": "port_id",
+            "required": true,
+            "description": "The future destination port you wish to estimate future events to"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "query",
+            "name": "previous_port_id",
+            "required": true,
+            "description": "A previous port to estimate the positions from"
+          },
+          {
+            "schema": {
+              "type": "number"
+            },
+            "in": "query",
+            "name": "latitude",
+            "description": "The current latitude of the vessel"
+          },
+          {
+            "schema": {
+              "type": "number"
+            },
+            "in": "query",
+            "name": "longitude",
+            "description": "The current longitude of the vessel"
+          }
+        ],
+        "x-stoplight": {
+          "id": "kemoszkhudvfq"
+        }
       }
     },
     "/vessels/{imo}": {
@@ -5201,8 +5467,26 @@
           }
         },
         "operationId": "get-vessels-imo",
-        "description": "Returns a vessel by the given IMO number.",
-        "x-internal": true
+        "description": "Returns a vessel by the given IMO number.\n\n<!-- theme: warning -->\n> #### BETA notice\n> The `show_positions` query paramaters and `positions` attribute are currently in beta and subject to revision.",
+        "x-internal": false,
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "show_positions[from_timestamp]",
+            "description": "Starting timestamp for showing vessel positions"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "show_positions[to_timestamp]",
+            "description": "Ending timestamp for showing vessel positions"
+          }
+        ]
       }
     }
   },
@@ -5225,7 +5509,6 @@
         "title": "Shipment model",
         "type": "object",
         "x-examples": {},
-        "description": "",
         "properties": {
           "id": {
             "type": "string",
@@ -5238,10 +5521,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "type": {
                         "type": "string",
@@ -5266,10 +5547,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "type": {
                         "type": "string",
@@ -5320,10 +5599,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "type": {
                         "type": "string",
@@ -5399,6 +5676,9 @@
           },
           "attributes": {
             "type": "object",
+            "required": [
+              "bill_of_lading_number"
+            ],
             "properties": {
               "bill_of_lading_number": {
                 "type": "string"
@@ -5409,10 +5689,10 @@
               },
               "ref_numbers": {
                 "type": "array",
+                "nullable": true,
                 "items": {
                   "type": "string"
-                },
-                "nullable": true
+                }
               },
               "created_at": {
                 "type": "string",
@@ -5546,20 +5826,18 @@
                 "description": "The reason Terminal49 stopped checking",
                 "nullable": true
               }
-            },
-            "required": [
-              "bill_of_lading_number"
-            ]
+            }
           },
           "type": {
             "type": "string",
-            "enum": [
-              "shipment"
-            ]
+            "default": "shipment",
+            "example": "shipment"
           }
         },
         "required": [
           "id",
+          "relationships",
+          "attributes",
           "type"
         ]
       },
@@ -6616,6 +6894,16 @@
           },
           "attributes": {
             "type": "object",
+            "required": [
+              "name",
+              "imo",
+              "mmsi",
+              "latitude",
+              "longitude",
+              "nautical_speed_knots",
+              "navigational_heading_degrees",
+              "position_timestamp"
+            ],
             "properties": {
               "name": {
                 "type": "string",
@@ -6625,48 +6913,63 @@
               "imo": {
                 "type": "string",
                 "description": "International Maritime Organization (IMO) number",
-                "nullable": true,
-                "example": "9811000"
+                "example": "9811000",
+                "nullable": true
               },
               "mmsi": {
                 "type": "string",
                 "description": "Maritime Mobile Service Identity (MMSI)",
-                "nullable": true,
-                "example": "353136000"
+                "example": "353136000",
+                "nullable": true
               },
               "latitude": {
                 "type": "number",
                 "description": "The current latitude position of the vessel",
-                "nullable": true,
-                "example": "25.29845"
+                "example": "25.29845",
+                "nullable": true
               },
               "longitude": {
                 "type": "number",
                 "description": "The current longitude position of the vessel",
-                "nullable": true,
-                "example": "121.217"
+                "example": "121.217",
+                "nullable": true
               },
               "nautical_speed_knots": {
                 "type": "number",
                 "description": "The current speed of the ship in knots (nautical miles per hour)",
-                "nullable": true,
-                "example": "90"
+                "example": "90",
+                "nullable": true
               },
               "navigational_heading_degrees": {
                 "type": "number",
                 "description": "The current heading of the ship in degrees, where 0 is North, 90 is East, 180 is South, and 270 is West",
-                "nullable": true,
-                "example": "194"
+                "example": "194",
+                "nullable": true
               },
               "position_timestamp": {
                 "type": "string",
                 "description": "The timestamp of when the ship's position was last recorded, in ISO 8601 date and time format",
-                "nullable": true,
-                "example": "2023-07-28T14:01:37Z"
+                "example": "2023-07-28T14:01:37Z",
+                "format": "date-time",
+                "nullable": true
+              },
+              "positions": {
+                "type": "array",
+                "x-stoplight": {
+                  "id": "bs284uddlyzlu"
+                },
+                "items": {
+                  "$ref": "#/components/schemas/vessel_position"
+                }
               }
             }
           }
-        }
+        },
+        "required": [
+          "id",
+          "type",
+          "attributes"
+        ]
       },
       "transport_event": {
         "title": "Transport Event Model",
@@ -7558,6 +7861,386 @@
           }
         },
         "description": ""
+      },
+      "vessel_position": {
+        "title": "Vessel position model",
+        "x-stoplight": {
+          "id": "i1uayj2wxoe62"
+        },
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "x-stoplight": {
+              "id": "tx534brnmpbeo"
+            }
+          },
+          "longitude": {
+            "type": "number",
+            "x-stoplight": {
+              "id": "pbmg9dqeudto3"
+            }
+          },
+          "heading": {
+            "type": "number",
+            "x-stoplight": {
+              "id": "cytd9f3o8zwq2"
+            },
+            "description": "The heading of the ship in degrees, where 0 is North, 90 is East, 180 is South, and 270 is West",
+            "nullable": true
+          },
+          "timestamp": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "mljyypl8syf0k"
+            },
+            "example": "2023-07-28T14:01:37Z",
+            "description": "The timestamp of when the ship's position was last recorded, in ISO 8601 date and time format",
+            "nullable": true
+          },
+          "estimated": {
+            "type": "boolean",
+            "x-stoplight": {
+              "id": "9hrzqt26c5e7o"
+            },
+            "description": "True when the vessel position is estimated vs a historical data from AIS"
+          }
+        }
+      },
+      "route": {
+        "title": "route",
+        "x-stoplight": {
+          "id": "zgdnie7mvoqho"
+        },
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "992bjcu8kuacg"
+            }
+          },
+          "type": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "9ky8y1mtmur37"
+            }
+          },
+          "relationships": {
+            "type": "array",
+            "x-stoplight": {
+              "id": "rcm0w0btnytrc"
+            },
+            "items": {}
+          }
+        },
+        "description": "<!-- theme: warning -->\n> #### Route persistance\n> Routes are not persisted and the id is ephemeral\n"
+      },
+      "route_location": {
+        "title": "route_location",
+        "x-stoplight": {
+          "id": "r5e2hwndn30o2"
+        },
+        "type": "object",
+        "description": "<!-- theme: warning -->\n> #### Route location persistance\n> Route locations are not persisted and the id is ephemeral\n",
+        "properties": {
+          "id": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "e7i5bteqs2zfo"
+            }
+          },
+          "type": {
+            "x-stoplight": {
+              "id": "9797kn2atpwo7"
+            },
+            "enum": [
+              "route_location"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "x-stoplight": {
+              "id": "wp0osqibihd03"
+            },
+            "required": [
+              "id",
+              "inbound_scac",
+              "inbound_mode",
+              "inbound_eta_at",
+              "inbound_ata_at",
+              "inbound_voyage_number",
+              "outbound_scac",
+              "outbound_mode",
+              "outbound_etd_at",
+              "outbound_atd_at",
+              "outbound_voyage_number",
+              "created_at",
+              "updated_at"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "gu7phva656w8k"
+                },
+                "format": "uuid"
+              },
+              "inbound_scac": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "mwcbmz1jvzg1a"
+                },
+                "nullable": true
+              },
+              "inbound_mode": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "5xzpbi65s2i2d"
+                },
+                "nullable": true
+              },
+              "inbound_eta_at": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "it7q5emn7tl8j"
+                },
+                "format": "date-time",
+                "nullable": true
+              },
+              "inbound_ata_at": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "7jmi5h2fynr9o"
+                },
+                "nullable": true
+              },
+              "inbound_voyage_number": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "00720tjhrghm3"
+                },
+                "nullable": true
+              },
+              "outbound_scac": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "9qsn8u61ceg9c"
+                },
+                "nullable": true
+              },
+              "outbound_mode": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "i38b143osnoep"
+                },
+                "nullable": true
+              },
+              "outbound_etd_at": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "qbgb55f3prlkx"
+                },
+                "nullable": true
+              },
+              "outbound_atd_at": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "9mubshbhlfy81"
+                },
+                "nullable": true
+              },
+              "outbound_voyage_number": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "iz95qyj9b4er3"
+                },
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "vbiqhzkc2z9x7"
+                },
+                "description": "The timestamp the route_location was generated"
+              },
+              "updated_at": {
+                "type": "string",
+                "x-stoplight": {
+                  "id": "6kwl3wk6qa8l9"
+                },
+                "description": "The timestamp the route_location was generated"
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "x-stoplight": {
+              "id": "klfhifdhpafro"
+            },
+            "required": [
+              "inbound_vessel",
+              "outbound_vessel",
+              "location",
+              "facility"
+            ],
+            "properties": {
+              "inbound_vessel": {
+                "type": "object",
+                "x-stoplight": {
+                  "id": "dfmhwofb1nvm8"
+                },
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "x-stoplight": {
+                      "id": "ma67r1h071une"
+                    },
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "x-stoplight": {
+                          "id": "xl04rlsay7t42"
+                        },
+                        "format": "uuid",
+                        "readOnly": true
+                      },
+                      "type": {
+                        "x-stoplight": {
+                          "id": "kuhdrqw1mm15w"
+                        },
+                        "enum": [
+                          "vessel"
+                        ],
+                        "readOnly": true
+                      }
+                    }
+                  }
+                }
+              },
+              "outbound_vessel": {
+                "type": "object",
+                "x-stoplight": {
+                  "id": "m34oxys45jt6e"
+                },
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "x-stoplight": {
+                      "id": "a7xk0bcr7f77e"
+                    },
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "x-stoplight": {
+                          "id": "gjv3ogudxbnqn"
+                        },
+                        "format": "uuid",
+                        "readOnly": true
+                      },
+                      "type": {
+                        "x-stoplight": {
+                          "id": "81zb6sp1qh2lv"
+                        },
+                        "enum": [
+                          "vessel"
+                        ],
+                        "readOnly": true
+                      }
+                    }
+                  }
+                }
+              },
+              "location": {
+                "type": "object",
+                "x-stoplight": {
+                  "id": "3p8i3yq2cv1qo"
+                },
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "x-stoplight": {
+                      "id": "eztzll4ksfwfh"
+                    },
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "x-stoplight": {
+                          "id": "eggweibpfc7yb"
+                        },
+                        "format": "uuid",
+                        "readOnly": true
+                      },
+                      "type": {
+                        "x-stoplight": {
+                          "id": "z6f6qlta4wc5i"
+                        },
+                        "enum": [
+                          "port",
+                          "metro_area"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "facility": {
+                "type": "object",
+                "x-stoplight": {
+                  "id": "31eag4wepr4st"
+                },
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "x-stoplight": {
+                      "id": "94ps0r8tn3ezo"
+                    },
+                    "nullable": true
+                  },
+                  "id": {
+                    "type": "string",
+                    "x-stoplight": {
+                      "id": "52yteklxtv9t0"
+                    },
+                    "format": "uuid",
+                    "readOnly": true
+                  },
+                  "type": {
+                    "x-stoplight": {
+                      "id": "5r5udqm46hk33"
+                    },
+                    "enum": [
+                      "terminal",
+                      "rail_terminal"
+                    ],
+                    "readOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "attributes",
+          "relationships"
+        ]
       }
     },
     "securitySchemes": {
