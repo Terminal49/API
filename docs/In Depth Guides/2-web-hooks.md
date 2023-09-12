@@ -1,7 +1,7 @@
 # Webhooks
 
 ## Creating Webhooks
-You may subscribe to events through webhooks to be alerted when events are triggered. 
+You may subscribe to events through webhooks to be alerted when events are triggered.
 
 Visit https://app.terminal49.com/developers/webhooks and click the 'Create Webhook Endpoint' button to create your webhook through the UI.
 
@@ -12,7 +12,7 @@ If you prefer to create webhooks programatically then see the [webhooks post end
 
 Each `WebhookNotification` event represents some change to a model which you may be notified of.
 
-List of Supported Events: 
+List of Supported Events:
 
 Event | Description
 ---------|----------
@@ -21,8 +21,8 @@ Event | Description
  `tracking_request.awaiting_manifest` | `TrackingRequest` awaiting a manifest
  `tracking_request.tracking_stopped` | Terminal49 is no longer updating this `TrackingRequest`.
  `container.transport.empty_out` | Empty out at port of lading
- `container.transport.full_in` | Full in at port of lading 
- `container.transport.vessel_loaded` | Vessel loaded at port of lading 
+ `container.transport.full_in` | Full in at port of lading
+ `container.transport.vessel_loaded` | Vessel loaded at port of lading
  `container.transport.vessel_departed` | Vessel departed at port of lading
  `container.transport.transshipment_arrived` | Container arrived at transhipment port
  `container.transport.transshipment_discharged` | Container discharged at transhipment port
@@ -35,7 +35,7 @@ Event | Description
  `container.transport.vessel_arrived` | Container arrived on vessel at port of discharge (destination port)
  `container.transport.vessel_berthed` | Container on vessel berthed at port of discharge (destination port)
  `container.transport.vessel_discharged` | Container discharged at port of discharge
- `container.transport.full_out` | Full out at port of discharge 
+ `container.transport.full_out` | Full out at port of discharge
  `container.transport.empty_in` | Empty returned at destination
  `container.transport.rail_loaded` | Rail loaded
  `container.transport.rail_departed` | Rail departed
@@ -184,7 +184,7 @@ Please note that we expect the endpoint to return [HTTP 200 OK](https://develope
             "type": "object",
             "title": "Port",
           },
-          
+
         ]
       }
     }
@@ -192,6 +192,9 @@ Please note that we expect the endpoint to return [HTTP 200 OK](https://develope
   }
 }
 ```
+
+> [How to Troubleshoot Missing Webhook Notifications](https://help.terminal49.com/en/articles/7851422-missing-webhook-notifications)
+
 
 ## Security
 There are a few ways you can verify the webhooks sent by Terminal49.
@@ -214,7 +217,7 @@ Whenever a webhook notification is delivered we create a signature by using the 
 
 This signature is added as the header `X-T49-Webhook-Signature`
 
-If you would like to verify that the webhook payload has not been tampered with by a 3rd party, then you can perform the same operation on the response body with the webhook secret and confirm that the digests match. 
+If you would like to verify that the webhook payload has not been tampered with by a 3rd party, then you can perform the same operation on the response body with the webhook secret and confirm that the digests match.
 
 Below is a basic example of how this might look in a rails application.
 ```ruby
@@ -247,7 +250,7 @@ The container updated event lets you know about changes to container properties 
 
 The `changeset` attribute on is a hash of all the properties which changed on the container.
 
-Each changed property is the hash key. The prior value is the first item in the array, and the current value is the second item in the array. 
+Each changed property is the hash key. The prior value is the first item in the array, and the current value is the second item in the array.
 
 For example:
 ```
