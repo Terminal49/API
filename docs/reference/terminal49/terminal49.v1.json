@@ -6389,10 +6389,10 @@
               },
               "ref_numbers": {
                 "type": "array",
+                "nullable": true,
                 "items": {
                   "type": "string"
-                },
-                "nullable": true
+                }
               },
               "tags": {
                 "type": "array",
@@ -6422,6 +6422,7 @@
                   "retries_exhausted",
                   "shipping_line_unreachable",
                   "unrecognized_response",
+                  "data_unavailable",
                   null
                 ],
                 "description": "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request",
@@ -6447,8 +6448,7 @@
                 "format": "date-time"
               },
               "is_retrying": {
-                "type": "boolean",
-                "description": ""
+                "type": "boolean"
               },
               "retry_count": {
                 "type": "integer",
@@ -6471,10 +6471,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",

@@ -37,22 +37,25 @@ Temporary reasons can become permanent when the `status` changes to `failed`:
  * `not_found` if the shipping line could not find the BL number.
  * `invalid_number` if the shipping line rejects the formatting of the number.
  * `booking_cancelled` if the shipping line indicates that the booking has been cancelled.
+ * `data_unavailable` if the number is valid but the shipping line will not provide the data. Examples include shipments that are flagged as private or results that are removed due to data retention policies.
 
 [Failed Reasons when tracking request through dashboard](https://help.terminal49.com/en/articles/6116676-what-happens-after-i-add-a-shipment-to-terminal49-recently-added-shipments#h_ac9b93504f)
 
 ## Stopped
 
-\* Going live 2022-01-20
+When a shipment is no longer being updated then the tracking request `status` is marked as `tracking_stopped`.
 
-When a shipment is no longer being updated then the tracking request status is marked as tracking_stopped
+You may subscribe to the event `tracking_request.tracking_stopped` for notifications when this occurs.
 
 Terminal49 will stop tracking requests for the following reasons:
 
  * The booking was cancelled.
+ * The data is no longer available at the shipping line.
  * All shipment containers are marked `empty_returned`.
- * For Maersk: all shipment containers are marked `empty_returned` or `picked_up`.
  * More than 56 days have passed since the shipment arrived at it's destination.
  * There have been no updates from the shipping line for more than 56 days.
+
+ In addition end-users may stop tracking a shipment through the dashboard.
 
 ## Retrieving Status
 
