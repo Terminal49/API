@@ -172,12 +172,6 @@
                                 "id": "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8",
                                 "type": "shipment"
                               }
-                            },
-                            "current_vessel": {
-                              "data": {
-                                "id": "252a5450-2893-4207-b5c4-81ce3152ce84",
-                                "type": "vessel"
-                              }
                             }
                           }
                         },
@@ -495,12 +489,6 @@
                                 "id": "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8",
                                 "type": "shipment"
                               }
-                            },
-                            "current_vessel": {
-                              "data": {
-                                "id": "252a5450-2893-4207-b5c4-81ce3152ce84",
-                                "type": "vessel"
-                              }
                             }
                           }
                         },
@@ -693,12 +681,6 @@
                               "data": {
                                 "id": "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8",
                                 "type": "shipment"
-                              }
-                            },
-                            "current_vessel": {
-                              "data": {
-                                "id": "252a5450-2893-4207-b5c4-81ce3152ce84",
-                                "type": "vessel"
                               }
                             }
                           }
