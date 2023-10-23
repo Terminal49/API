@@ -208,6 +208,8 @@ The full list of IP addresses that webhook notifications may come from is:
 
 ```
 35.222.62.171
+3.230.67.145
+44.217.15.129
 ```
 
 ### Verifying the webhook signature (optional)
