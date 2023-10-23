@@ -2916,7 +2916,7 @@
     },
     "/webhook_ips": {
       "get": {
-        "summary": "List webhook notification IPs",
+        "summary": "List webhook IPs",
         "responses": {
           "200": {
             "description": "OK",
@@ -2925,50 +2925,37 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": {
+                    "webhook_notification_ips": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/webhook_notification"
+                        "type": "string",
+                        "format": "ipv4"
                       }
                     },
-                    "links": {
-                      "$ref": "#/components/schemas/links"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/meta"
-                    },
-                    "included": {
-                      "type": "array",
-                      "items": {
-                        "anyOf": [
-                          {
-                            "$ref": "#/components/schemas/webhook"
-                          },
-                          {
-                            "$ref": "#/components/schemas/tracking_request"
-                          },
-                          {
-                            "$ref": "#/components/schemas/transport_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/estimated_event"
-                          }
-                        ]
-                      }
+                    "last_updated": {
+                      "type": "string",
+                      "format": "date-time"
                     }
                   }
+                },
+                "example": {
+                  "webhook_notification_ips": [
+                    "35.222.62.171",
+                    "3.230.67.145",
+                    "44.217.15.129"
+                  ],
+                  "last_updated": "2023-10-17T21:23:16Z"
                 }
               }
             }
           }
         },
-        "operationId": "get-webhook-notifications-ips",
-        "description": "Return the list of IPs used for sending webhook notifications.  This can be useful for whitelisting the IPs on the firwall.",
+        "operationId": "get-webhooks-ips",
+        "description": "Return the list of IPs used for sending webhook notifications.  This can be useful for whitelisting the IPs on the firewall.",
         "tags": [
-          "Webhook Notifications"
+          "Webhooks"
         ],
-        "parameters": [
-        ]
+        "parameters": []
       }
     },
     "/containers": {
