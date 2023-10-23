@@ -2914,7 +2914,7 @@
       },
       "parameters": []
     },
-    "/webhook_ips": {
+    "/webhooks/ips": {
       "get": {
         "summary": "List webhook IPs",
         "responses": {
