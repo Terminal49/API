@@ -2914,6 +2914,63 @@
       },
       "parameters": []
     },
+    "/webhook_ips": {
+      "get": {
+        "summary": "List webhook notification IPs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/webhook_notification"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/webhook"
+                          },
+                          {
+                            "$ref": "#/components/schemas/tracking_request"
+                          },
+                          {
+                            "$ref": "#/components/schemas/transport_event"
+                          },
+                          {
+                            "$ref": "#/components/schemas/estimated_event"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-webhook-notifications-ips",
+        "description": "Return the list of IPs used for sending webhook notifications.  This can be useful for whitelisting the IPs on the firwall.",
+        "tags": [
+          "Webhook Notifications"
+        ],
+        "parameters": [
+        ]
+      }
+    },
     "/containers": {
       "get": {
         "summary": "List containers",
