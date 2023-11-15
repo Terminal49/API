@@ -4665,7 +4665,8 @@
           }
         },
         "operationId": "get-containers-id-raw_events",
-        "description": "Get a list of past and future (estimated) milestones for a container as reported by the carrier. Some of the data is normalized even though the API is called raw_events. \n\nNormalized attributes: `event` and `timestamp` timestamp. Not all of the `event` values have been normalized. You can expect the the events related to container movements to be normalized but there are cases (paperwork \"milestones\" like customs release) where events are not normalized. "
+        "description": "<!-- theme: warning -->\n> #### Deprecation warning\n>\n> The `raw_events` endpoint is provided as-is.\n>\n> For past events we recommend consuming `transport_events`.\n\n\nGet a list of past and future (estimated) milestones for a container as reported by the carrier. Some of the data is normalized even though the API is called raw_events. \n\nNormalized attributes: `event` and `timestamp` timestamp. Not all of the `event` values have been normalized. You can expect the the events related to container movements to be normalized but there are cases where events are not normalized. \n\nFor past historical events we recommend consuming `transport_events`. Although there are fewer events here those events go through additional vetting and normalization to avoid false positives and get you correct data.",
+        "deprecated": true
       }
     },
     "/containers/{id}/transport_events": {
