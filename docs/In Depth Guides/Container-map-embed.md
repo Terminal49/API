@@ -1,3 +1,8 @@
+---
+stoplight-id: leasnylhe5su7
+tags: [map, embed]
+---
+
 # Container Map Embed Guide
 
 The Terminal49 Container Map allows you to embed real-time visualized container tracking on your website with just a few lines of code.
@@ -180,32 +185,3 @@ This is what we do on the Terminal49 website to style the map markers to our nee
 }
 ```
 You might want to copy this code and adjust it to your needs.
-
-
-@TODO the below FAQ section.
-
-## Frequently Asked Questions 
-
-### How does it work? 
-
-With a few lines of code, you can embed an interactive container tracking form. Once the widget is live on your website, your customer can enter a master bill of lading, container number, or reference numbers that a shipment is tagged with. After the number has been entered, the widget will retrieve and display shipment and container details from your Terminal49 account.
-
-### Do I need Terminal49 account? 
-Yes, the information that fetched and displayed by the widget is based on the shipments and containers tracked within your Terminal49 account. 
-
-### Is there a cost to embed the widget? 
-Yes, there is a $500/month fee to embed and use the widget. This include unlimited number of visitors and tracking requests.  
-
-## Terminal49 container tracking widget one-pager
-
-Here is a one-pager that describes the benefits of the Track & Trace Widget. Feel free to share it with your team or management if you want to demonstrate the benefits of adding track and trace functionality to your website.
-
-The Track & Trace Widget provides a number of advantages:
-
-- It offers your customers a convenient way to track their shipments and containers.
-- It helps to improve customer satisfaction by providing accurate container status.
-- It can reduce customer service costs by providing customers with the information they need without having to contact customer service.
-- It can help you differentiate from other service providers. 
-
-
-![terminal49-container-tracking-widget.jpg](../../assets/images/terminal49-container-tracking-widget.jpg)
