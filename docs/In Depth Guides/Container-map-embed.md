@@ -1,8 +1,3 @@
----
-stoplight-id: leasnylhe5su7
-tags: [map, embed]
----
-
 # Container Map Embed Guide
 
 The Terminal49 Container Map allows you to embed real-time visualized container tracking on your website with just a few lines of code.
