@@ -67,7 +67,7 @@ await map.start();
 await map.load(shipmentId, containerId)
 ```
 
-![container-map.png](../../assets/images/map/container-map.png)
+![terminal49-map.png](../../assets/images/map/terminal49-map.png)
 
 Additionally, the map element doesn't have to be an element id but can be a DOM element reference instead.
 Consider this example where we use a query selector to select the map element.
@@ -98,7 +98,7 @@ Let's say you want to tell the map to take 60% of the total viewport size when e
 }
 ```
 
-![container-map-expanded.png](../../assets/images/map/container-map-expanded.png)
+![terminal49-map-expanded.png](../../assets/images/map/terminal49-map-expanded.png)
 
 #### Colors
 
@@ -142,7 +142,7 @@ First let's define the default, blue color:
 
 Result:
 
-![container-map-colors.png](../../assets/images/map/container-map-colors.png)
+![terminal49-map-colors.png](../../assets/images/map/terminal49-map-colors.png)
 
 It's also possible to change the marker colors based on wheter they're hovered over or not.
 
