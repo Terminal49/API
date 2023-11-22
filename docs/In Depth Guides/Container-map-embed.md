@@ -1,27 +1,25 @@
 ---
-stoplight-id: leasnylhe5su7
 tags: [map, embed]
 ---
 
-# Container Map Embed Guide
+# Terminal49 Map Embed Guide
 
-The Terminal49 Container Map allows you to embed real-time visualized container tracking on your website with just a few lines of code.
+The Terminal49 Map allows you to embed real-time visualized container tracking on your website with just a few lines of code.
 
 ### Prerequisites
 
-- Visit [getting started](https://developers.terminal49.com/docs/api/43898cdb7bad1-1-start-here#get-an-api-key) to get your developer API key and Terminal49 account.
-- Familiarity with Shipment and Container APIs.
+- You will need a [Developer API Key](https://developers.terminal49.com/docs/api/43898cdb7bad1-1-start-here#get-an-api-key) and Terminal49 account.
+- Familiarity with our [Shipments API](https://developers.terminal49.com/docs/api/d31aeeda6fa44-list-shipments) and [Containers API](https://developers.terminal49.com/docs/api/f77d723c227c1-list-containers).
 In the following examples we'll be passing a `containerId` and `shipmentId` variables to the embedded map.
 They relate to `id` attributes of the container and shipment objects that are returned by the API.
-See [Containers API](https://developers.terminal49.com/docs/api/f77d723c227c1-list-containers) and [Shipments API](https://developers.terminal49.com/docs/api/d31aeeda6fa44-list-shipments) for more information.
 
 ### How do I embed the map on my website?
 
 Once you have the API Key, you can embed the map on your website.
 
 
-1. Copy and paste the code below and insert it on yor website.
-This will load and make the map code available through the global `window` object. 
+1. Copy and paste the code below and insert it on your website.
+Once loaded, this will make the map code available through the global `window` object.
 
 ```html
 <link rel="stylesheet" href="https://map.terminal49.com/bundle.css" />
@@ -51,15 +49,13 @@ This tells the map to initialize and hook into the element designated during ini
 await map.start();
 ```
 
-5. Load a container. 
-This is the final step where you can pass shipment and container ids to the map where it'll fetch the data and display it on the map.
-The reason why this is an another step is because you might re-use that map to load different containers or shipments.
+5. Final step: load a container. You can pass shipment and container ids to the map where it'll fetch the data and display it.
 
 ```javascript
 await map.load(shipmentId, containerId)
 ```
 
-Putting it all together, here is the javascript code that you need to embed the map on your website. 
+6. Putting it all together, here is the javascript code that you need to embed the map on your website.
 
 ```javascript
 const map = new window.TntMap("#map", {
@@ -91,9 +87,8 @@ The styles are written in [BEM](https://getbem.com/) style as well as they're sc
 
 #### Sizing
 
-By default the map will take the full width of it's container and take some height.
-The map is also expandable by clicking on the expand button on the bottom left corner of the map.
-That still might not be enough for your use case, so let's see how you can override the default styles to customize the map to your likings.
+By default the map will take the full width of its container and some height. The map is expandable by clicking on the expand button on the bottom left corner of the map.
+You can also override the default styles to customize the map to your liking.
 
 Let's say you want to tell the map to take 60% of the total viewport size when expanded, we'd do this as follows:
 
