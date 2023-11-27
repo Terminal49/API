@@ -8,7 +8,8 @@ The Terminal49 Map allows you to embed real-time visualized container tracking o
 
 ### Prerequisites
 
-- You will need a [Developer API Key](https://developers.terminal49.com/docs/api/43898cdb7bad1-1-start-here#get-an-api-key) and Terminal49 account.
+- A Terminal49 account.
+- A Publishable API key, you can get one by reaching out to us at support@terminal49.com.
 - Familiarity with our [Shipments API](https://developers.terminal49.com/docs/api/d31aeeda6fa44-list-shipments) and [Containers API](https://developers.terminal49.com/docs/api/f77d723c227c1-list-containers).
 In the following examples we'll be passing a `containerId` and `shipmentId` variables to the embedded map.
 They relate to `id` attributes of the container and shipment objects that are returned by the API.
@@ -36,11 +37,11 @@ Once loaded, this will make the map code available through the global `window` o
 
 ```javascript
 const map = new window.TntMap("#map", {
-  authToken: developerApiKey
+  authToken: publishableApiKey,
 });
 ```
 
-Notice that the `authToken` option is required. This is where you pass your developer API key. 
+Notice that the `authToken` option is required. This is where you pass your Publishable API key. 
 
 4. Start the map. 
 This tells the map to initialize and hook into the element designated during initialization.
@@ -59,7 +60,7 @@ await map.load(shipmentId, containerId)
 
 ```javascript
 const map = new window.TntMap("#map", {
-  authToken: developerApiKey
+  authToken: publishableApiKey,
 });
 
 await map.start();
@@ -75,7 +76,7 @@ Consider this example where we use a query selector to select the map element.
 ```javascript
 const element = document.querySelector("#map");
 const map = new window.TntMap(element, {
-  authToken: developerApiKey,
+  authToken: publishableApiKey,
 });
 ```
 
