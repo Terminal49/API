@@ -2049,7 +2049,7 @@
       },
       "parameters": []
     },
-    "/webhook_notification/{id}": {
+    "/webhook_notifications/{id}": {
       "parameters": [
         {
           "schema": {
