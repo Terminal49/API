@@ -5272,9 +5272,8 @@
         "operationId": "get-terminal-id",
         "description": "Return the details of a single terminal."
       }
-    },
+    }
   },
-
   "x-tagGroups": [
     {
       "name": "End Points",
