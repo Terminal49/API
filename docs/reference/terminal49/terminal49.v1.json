@@ -5235,6 +5235,43 @@
         "description": "Returns a vessel by the given IMO number.",
         "x-internal": true
       }
+    },
+    "/terminals/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get a terminal using the id",
+        "tags": [
+          "Terminals"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/terminal"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-terminal-id",
+        "description": "Return the details of a single terminal."
+      }
     }
   },
   "x-tagGroups": [
@@ -7625,6 +7662,9 @@
     },
     {
       "name": "Metro Areas"
+    },
+    {
+      "name": "Terminals"
     }
   ],
   "security": [
