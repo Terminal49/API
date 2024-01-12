@@ -8,11 +8,10 @@ This process can take up to approximately 24 hours. You will not receive a `trac
 
 ## Request Number Not Found / Awaiting Manifest
 
-If the shipping line returns a response that it cannot find the provided number we either immediately fail the tracking request or keep trying depending on whether the request_type is a bill of lading or a booking number:
+If the shipping line returns a response that it cannot find the provided number we either immediately fail the tracking request or keep trying depending on whether the `request_type` is a container or not:
 
- * **Bill of lading numbers** fail straight away after a not found response from the shipping line. We change the `status` field to `failed` and send the `tracking_request.failed` event to your webhook.
- * **Bill of lading numbers - awaiting manifest** in the case of Hapag-Lloyd we will retry for BL numbers if we see that the number is `awaiting_manifest` (see below).
- * **Booking numbers** do not fail instantly. We change the `status` to `awaiting_manifest` and will keep checking your request daily. You will receive a `tracking_request.awaiting_manifest` webhook notification the first time it happens. If your request number cannot be found after 7 days we will mark the tracking request as failed by changing the `status` field `failed` and sending the `tracking_request.failed` event to your webhook.
+ * **Containers** fail straight away after a not found response from the shipping line.
+ * **Bill of lading** and **booking numbers** do not fail instantly. We change the `status` to `awaiting_manifest` and will keep checking your request daily. You will receive a `tracking_request.awaiting_manifest` webhook notification the first time it happens. If your request number cannot be found after 7 days we will mark the tracking request as failed by changing the `status` field `failed` and sending the `tracking_request.failed` event to your webhook.
  * **Incorrect request number type** if the request number type (ex. booking number) is incorrect, the tracking request will still fail even though the request number is correct.
 
 
@@ -25,7 +24,7 @@ The `failed_reason` field can take one of the following temporary values:
  * `unrecognized_response` when we could not parse the response from the shipping line,
  * `shipping_line_unreachable` if the shipping line was unreachable,
  * `internal_processing_error` when we faced other issue,
- * `awaiting_manifest` if the shipping line indidicates a BL number is found, but data is not yet available. Or if the requested booking number could not be found.
+ * `awaiting_manifest` if the shipping line indidicates a bill of lading number is found, but data is not yet available, or if the requested booking number could not be found.
 
 ### Permanent
 
