@@ -2,14 +2,14 @@
 
 # API Data Sources and Availability.
 
-Our platform gets data from variety of sources in order to create a complete view of a shipment and containers. However,some data is not universally available from all sources, and some data does not become available until certain milestones pass. This page will help you understand which data sources we support, and which data items should be universally expected by your code and which you need to code more defensively around.
+Our platform gets data from various sources to create a complete view of a shipment and its containers. However, some data is not universally available from all sources, and some are unavailable until certain milestones pass. This page will help you understand which data sources we support, which data items your code should universally expect, and which you need to code more defensively around.
 
 # Data Sources
 
-- **Ocean carriers (aka steamship lines):** bill of lading/booking details, vessel eta, containers and milestones
-- **Container terminal operators:** container availability, last free day, holds, fees etc
-- **Container rail carriers:** container milestones via rail
-- **AIS data:** vessel details and real-time location tracking (coming soon!)
+- **Ocean Carriers (aka Steamship Lines):** Bill of lading/booking details, vessel eta, containers and Milestones
+- **Container Terminal Operators:** Container availability, last free day, holds, fees, etc
+- **AIS Data:** Vessel details and real-time location tracking (coming soon!)
+- **Container Rail Carriers:** Container milestones via rail (coming soon!)
 
 ## Supported Ocean Carriers
 View a complete list of supported carriers and attributes on [Google Sheets](https://docs.google.com/spreadsheets/d/1cWK8sNpkjY5V-KlXe1fHi8mU_at2HcJYqjCvGQgixQk/edit#gid=0)
@@ -31,6 +31,7 @@ Presently, the Terminal 49 api integrates with terminals at the following ports:
 - Los Angeles
 - Miami
 - Mobile
+- Montreal
 - New Orleans
 - New York / New Jersey
 - Oakland
@@ -54,52 +55,17 @@ Shipment data is populated from requests to the shipping lines.
 
 Below are a list of known issuses with our data sources:
 
-### Cma-Cgm, APL, ANL
-- No container weight
-- No container seal number
-
-### Maersk, Sealand, Safmarine
-- Shipment departure/arrival events are not always available depending on when BL is entered into system.
-- No container seal number
-
-### Hamburg Süd
-- No estimated departure time
-- No container weight
-- No container seal number
+### Evergreen, ICL
+- All dates are provided as dates, not datetimes. We record and return them all as midnight at the location the event happened (when location is available) or midnight UTC.
 
 ### MSC
-- No container seal number
-
-### Hapag Lloyd
-- No container weight
-- No container seal number
-
-### Evergreen
-- All dates are provided as dates, not datetimes. We record and return them all as midnight at the location the event happened (when location is available) or midnight UTC.
-- Only Dry, Reefer, and Flatpack container types are mapped to our system
+- All dates except ETD and ETA are provided as dates, not datetimes. We record and return them all as midnight at the location the event happened (when location is available) or midnight UTC.
 
 ### COSCO
-- No departure or arrival events. Does not affect departure/arrival times.
-
-###  OOCL
-- No container seal number
-
-### ONE
-- Only Dry, and Reefer container types are mapped to our system
+- They only provide the most recent event at this time.
 
 ### Yang-Ming
 - When BL has multiple containers, the container weight returned is the average of the shipment. (i.e. the BL gross weight / number of containers)
-
-### Hyundai Merchant Marine
-- No container type
-
-### ZIM
-- No container weight
-- No container seal number
-
-### Westwood Shipping
-- No container weight
-- Only Dry container types are mapped to our system
 
 # Data Fields & Availability
 
@@ -125,7 +91,7 @@ Shipment Data is the primary data that comes from the Carrier. It containers the
 
 
 ## Container Data
-At the container level, the following data is available. Container data is combined from all sources to create a single data view of the container. As such some of this data will only available when certain milestones have passed.
+At the container level, the following data is available. Container data is combined from all sources to create a single data view of the container. As such, some of this data will only be available when certain milestones have passed.
 
 |    Data          |     Availability          |                More Details                   |        Notes          |
 | ---------------- | ----------------- | ------------------------------------------------ | -------------------- |
@@ -148,7 +114,7 @@ At the container level, the following data is available. Container data is combi
 
 
 ##  Milestone Event Data
-When a milestone passes, the Terminal49 API will ping one of your webhooks with a Milestone event. For each milestone, the following data is always provided. Container, Shipment, Vessel, Location and Terminal data will be provided as objects that contain the information listed above.
+When a milestone passes, the Terminal49 API will ping one of your webhooks with a Milestone event. For each milestone, the following data is always provided. Container, Shipment, Vessel, Location, and Terminal data will be provided as objects containing the above information.
 
 | Milestone Data |         Description                                              |
 | -------------- | ---------------------------------------------------------------- |
@@ -164,7 +130,7 @@ When a milestone passes, the Terminal49 API will ping one of your webhooks with 
 | Terminal       | Which terminal did this occur at.                                |
 
 ## Milestones Events Supported
-A list of milestones that the API can track, as well as the event name used in the API. In future, further events may be supported.
+A list of milestones that the API can track and the event name used in the API. In the future, more events may be supported.
 
 |              Milestone Event Name        | Event Name           |
 | -------------------- | -------------------------------------- |
