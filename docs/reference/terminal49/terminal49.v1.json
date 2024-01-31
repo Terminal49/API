@@ -5701,7 +5701,8 @@
               "final_destination_full_out_at": null,
               "pod_full_out_at": "2022-02-11T22:18:00Z",
               "empty_terminated_at": null,
-              "terminal_checked_at": "2022-02-11T22:45:32Z"
+              "terminal_checked_at": "2022-02-11T22:45:32Z",
+              "pickup_rail_carrier_scac": "UPRR"
             },
             "relationships": {
               "shipment": {
