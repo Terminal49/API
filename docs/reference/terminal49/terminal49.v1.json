@@ -5723,12 +5723,6 @@
                     "type": "terminal"
                 }
               },
-              "pickup_rail_carrier": {
-                "data": {
-                  "id": "25e42605-f487-4b30-9372-919ac2da343b",
-                  "type": "shipping_line"
-                }
-              },
               "transport_events": {
                 "data": [
                   {
