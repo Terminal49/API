@@ -5957,6 +5957,11 @@
                 "type": "string",
                 "description": "IANA tz. Applies to attribute empty_terminated_at.",
                 "nullable": true
+              },
+              "pickup_rail_carrier_scac": {
+                "type": "string",
+                "description": "The SCAC of the rail carrier for the pickup leg of the container's journey.(BETA)",
+                "nullable": true
               }
             }
           }
