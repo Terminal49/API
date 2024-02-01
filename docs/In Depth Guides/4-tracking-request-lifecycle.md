@@ -12,6 +12,7 @@ If the shipping line returns a response that it cannot find the provided number 
 
  * **Containers** fail straight away after a not found response from the shipping line.
  * **Bill of lading** and **booking numbers** do not fail instantly. We change the `status` to `awaiting_manifest` and will keep checking your request daily. You will receive a `tracking_request.awaiting_manifest` webhook notification the first time it happens. If your request number cannot be found after 7 days we will mark the tracking request as failed by changing the `status` field `failed` and sending the `tracking_request.failed` event to your webhook.
+ * Should you wish to adjust the duration before marking your tracking requests as failed, please contact us through support@terminal49.com.
  * **Incorrect request number type** if the request number type (ex. booking number) is incorrect, the tracking request will still fail even though the request number is correct.
 
 
