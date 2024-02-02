@@ -5701,7 +5701,8 @@
               "final_destination_full_out_at": null,
               "pod_full_out_at": "2022-02-11T22:18:00Z",
               "empty_terminated_at": null,
-              "terminal_checked_at": "2022-02-11T22:45:32Z"
+              "terminal_checked_at": "2022-02-11T22:45:32Z",
+              "pickup_rail_carrier_scac": "UPRR"
             },
             "relationships": {
               "shipment": {
@@ -5714,6 +5715,12 @@
                 "data": {
                   "id": "x551cac7-aff5-40a6-9c63-49facf19cc3df",
                   "type": "terminal"
+                }
+              },
+              "pickup_facility": {
+                "data": {
+                    "id": "d7d8d314-b02b-4caa-b04f-d3d4726f4107",
+                    "type": "terminal"
                 }
               },
               "transport_events": {
@@ -5949,6 +5956,11 @@
               "empty_terminated_timezone": {
                 "type": "string",
                 "description": "IANA tz. Applies to attribute empty_terminated_at.",
+                "nullable": true
+              },
+              "pickup_rail_carrier_scac": {
+                "type": "string",
+                "description": "The SCAC of the rail carrier for the pickup leg of the container's journey.(BETA)",
                 "nullable": true
               }
             }
