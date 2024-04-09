@@ -6705,25 +6705,25 @@
                 "type": "number",
                 "description": "The current latitude position of the vessel",
                 "nullable": true,
-                "example": "25.29845"
+                "example": 25.29845
               },
               "longitude": {
                 "type": "number",
                 "description": "The current longitude position of the vessel",
                 "nullable": true,
-                "example": "121.217"
+                "example": 121.217
               },
               "nautical_speed_knots": {
                 "type": "number",
                 "description": "The current speed of the ship in knots (nautical miles per hour)",
                 "nullable": true,
-                "example": "90"
+                "example": 90
               },
               "navigational_heading_degrees": {
                 "type": "number",
                 "description": "The current heading of the ship in degrees, where 0 is North, 90 is East, 180 is South, and 270 is West",
                 "nullable": true,
-                "example": "194"
+                "example": 194
               },
               "position_timestamp": {
                 "type": "string",
