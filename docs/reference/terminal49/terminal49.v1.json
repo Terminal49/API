@@ -5303,10 +5303,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "type": {
                         "type": "string",
@@ -5331,10 +5329,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "type": {
                         "type": "string",
@@ -5385,10 +5381,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "type": {
                         "type": "string",
@@ -6373,10 +6367,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
@@ -7035,10 +7027,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
@@ -7059,10 +7049,8 @@
                 "description": "\n",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
