@@ -31,7 +31,6 @@ Presently, the Terminal 49 api integrates with terminals at the following ports:
 - Los Angeles
 - Miami
 - Mobile
-- Montreal (CA)
 - New Orleans
 - New York / New Jersey
 - Oakland

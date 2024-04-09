@@ -143,7 +143,8 @@
                             "equipment_type": "reefer",
                             "length": 40,
                             "height": "high_cube",
-                            "weight_in_lbs": 35075,
+                            "weight": 35075,
+                            "weight_unit": "kigs",
                             "created_at": "2020-02-20T08:19:52Z",
                             "seal_number": null,
                             "pickup_lfd": null,
@@ -170,6 +171,12 @@
                               "data": {
                                 "id": "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8",
                                 "type": "shipment"
+                              }
+                            },
+                            "current_vessel": {
+                              "data": {
+                                "id": "252a5450-2893-4207-b5c4-81ce3152ce84",
+                                "type": "vessel"
                               }
                             }
                           }
@@ -459,7 +466,8 @@
                             "equipment_type": "reefer",
                             "length": 40,
                             "height": "high_cube",
-                            "weight_in_lbs": 35075,
+                            "weight": 35075,
+                            "weight_unit": "kigs",
                             "created_at": "2020-02-20T08:19:52Z",
                             "seal_number": null,
                             "pickup_lfd": null,
@@ -486,6 +494,12 @@
                               "data": {
                                 "id": "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8",
                                 "type": "shipment"
+                              }
+                            },
+                            "current_vessel": {
+                              "data": {
+                                "id": "252a5450-2893-4207-b5c4-81ce3152ce84",
+                                "type": "vessel"
                               }
                             }
                           }
@@ -651,7 +665,8 @@
                             "equipment_type": "reefer",
                             "length": 40,
                             "height": "high_cube",
-                            "weight_in_lbs": 35075,
+                            "weight": 35075,
+                            "weight_unit": "kigs",
                             "created_at": "2020-02-20T08:19:52Z",
                             "seal_number": null,
                             "pickup_lfd": null,
@@ -678,6 +693,12 @@
                               "data": {
                                 "id": "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8",
                                 "type": "shipment"
+                              }
+                            },
+                            "current_vessel": {
+                              "data": {
+                                "id": "252a5450-2893-4207-b5c4-81ce3152ce84",
+                                "type": "vessel"
                               }
                             }
                           }
@@ -1224,8 +1245,8 @@
               "type": "string"
             },
             "in": "query",
-            "name": "filter[request_number]",
-            "description": "filter by `request_number`"
+            "name": "request_number",
+            "description": "filter by tracking_requests `request_number`"
           }
         ]
       }
@@ -2046,7 +2067,7 @@
       },
       "parameters": []
     },
-    "/webhook_notifications/{id}": {
+    "/webhook_notification/{id}": {
       "parameters": [
         {
           "schema": {
@@ -2910,54 +2931,6 @@
         ]
       },
       "parameters": []
-    },
-    "/webhooks/ips": {
-      "get": {
-        "summary": "List webhook IPs",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "webhook_notification_ips": {
-                      "type": "array",
-                      "items": {
-                        "type": "string",
-                        "format": "ipv4"
-                      }
-                    },
-                    "last_updated": {
-                      "type": "string",
-                      "format": "date-time"
-                    }
-                  }
-                },
-                "examples": {
-                  "Example List of IPs": {
-                    "value": {
-                      "webhook_notification_ips": [
-                        "35.222.62.171",
-                        "3.230.67.145",
-                        "44.217.15.129"
-                      ],
-                      "last_updated": "2023-10-17T21:23:16Z"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "operationId": "get-webhooks-ips",
-        "description": "Return the list of IPs used for sending webhook notifications.  This can be useful for whitelisting the IPs on the firewall.",
-        "tags": [
-          "Webhooks"
-        ],
-        "parameters": []
-      }
     },
     "/containers": {
       "get": {
@@ -4662,8 +4635,7 @@
           }
         },
         "operationId": "get-containers-id-raw_events",
-        "description": "<!-- theme: warning -->\n> #### Deprecation warning\n>\n> The `raw_events` endpoint is provided as-is.\n>\n> For past events we recommend consuming `transport_events`.\n\n\nGet a list of past and future (estimated) milestones for a container as reported by the carrier. Some of the data is normalized even though the API is called raw_events. \n\nNormalized attributes: `event` and `timestamp` timestamp. Not all of the `event` values have been normalized. You can expect the the events related to container movements to be normalized but there are cases where events are not normalized. \n\nFor past historical events we recommend consuming `transport_events`. Although there are fewer events here those events go through additional vetting and normalization to avoid false positives and get you correct data.",
-        "deprecated": true
+        "description": "Get a list of past and future (estimated) milestones for a container as reported by the carrier. Some of the data is normalized even though the API is called raw_events. \n\nNormalized attributes: `event` and `timestamp` timestamp. Not all of the `event` values have been normalized. You can expect the the events related to container movements to be normalized but there are cases (paperwork \"milestones\" like customs release) where events are not normalized. "
       }
     },
     "/containers/{id}/transport_events": {
@@ -5232,43 +5204,6 @@
         "description": "Returns a vessel by the given IMO number.",
         "x-internal": true
       }
-    },
-    "/terminals/{id}": {
-      "parameters": [
-        {
-          "schema": {
-            "type": "string"
-          },
-          "name": "id",
-          "in": "path",
-          "required": true
-        }
-      ],
-      "get": {
-        "summary": "Get a terminal using the id",
-        "tags": [
-          "Terminals"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/terminal"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "operationId": "get-terminal-id",
-        "description": "Return the details of a single terminal."
-      }
     }
   },
   "x-tagGroups": [
@@ -5698,8 +5633,7 @@
               "final_destination_full_out_at": null,
               "pod_full_out_at": "2022-02-11T22:18:00Z",
               "empty_terminated_at": null,
-              "terminal_checked_at": "2022-02-11T22:45:32Z",
-              "pickup_rail_carrier_scac": "UPRR"
+              "terminal_checked_at": "2022-02-11T22:45:32Z"
             },
             "relationships": {
               "shipment": {
@@ -5712,12 +5646,6 @@
                 "data": {
                   "id": "x551cac7-aff5-40a6-9c63-49facf19cc3df",
                   "type": "terminal"
-                }
-              },
-              "pickup_facility": {
-                "data": {
-                    "id": "d7d8d314-b02b-4caa-b04f-d3d4726f4107",
-                    "type": "terminal"
                 }
               },
               "transport_events": {
@@ -5953,11 +5881,6 @@
               "empty_terminated_timezone": {
                 "type": "string",
                 "description": "IANA tz. Applies to attribute empty_terminated_at.",
-                "nullable": true
-              },
-              "pickup_rail_carrier_scac": {
-                "type": "string",
-                "description": "The SCAC of the rail carrier for the pickup leg of the container's journey.(BETA)",
                 "nullable": true
               }
             }
@@ -6466,10 +6389,10 @@
               },
               "ref_numbers": {
                 "type": "array",
-                "nullable": true,
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               },
               "tags": {
                 "type": "array",
@@ -6499,7 +6422,6 @@
                   "retries_exhausted",
                   "shipping_line_unreachable",
                   "unrecognized_response",
-                  "data_unavailable",
                   null
                 ],
                 "description": "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request",
@@ -6525,7 +6447,8 @@
                 "format": "date-time"
               },
               "is_retrying": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": ""
               },
               "retry_count": {
                 "type": "integer",
@@ -6548,8 +6471,10 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": "object",
-                    "nullable": true,
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "id": {
                         "type": "string",
@@ -7671,9 +7596,6 @@
     },
     {
       "name": "Metro Areas"
-    },
-    {
-      "name": "Terminals"
     }
   ],
   "security": [
