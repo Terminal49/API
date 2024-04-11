@@ -5,7 +5,7 @@ You may subscribe to events through webhooks to be alerted when events are trigg
 
 Visit https://app.terminal49.com/developers/webhooks and click the 'Create Webhook Endpoint' button to create your webhook through the UI.
 
-If you prefer to create webhooks programatically then see the [webhooks post endpoint documentation](https://developers.terminal49.com/docs/api/b3A6MTYyMzcyMA-create-a-webhook).
+If you prefer to create webhooks programatically then see the [webhooks POST endpoint documentation](https://developers.terminal49.com/docs/api/b3A6MTYyMzcyMA-create-a-webhook).
 
 
 ## Available Webook Events
@@ -196,8 +196,9 @@ Please note that we expect the endpoint to return [HTTP 200 OK](https://develope
 ## Security
 There are a few ways you can verify the webhooks sent by Terminal49.
 
-Verify webhook signatures to confirm that received events are sent from Terminal49. Additionally, Terminal49 sends webhook events from a set list of IP addresses. Only trust events coming from these IP addresses.
 
+1. Confirm that webhook origin IP is in the list used by Terminal49
+2. Verify webhook signatures to confirm that received events are sent from Terminal49
 
 
 ### Webhook notification origin IP
@@ -216,7 +217,7 @@ This signature is added as the header `X-T49-Webhook-Signature`
 
 If you would like to verify that the webhook payload has not been tampered with by a 3rd party, then you can perform the same operation on the response body with the webhook secret and confirm that the digests match. 
 
-Below is a basic example of how this might look in a rails application.
+Below is a basic example of how this might look in a Ruby on Rails application.
 ```ruby
 class WebhooksController < ApplicationController
   def receive_tracking_request
@@ -240,6 +241,8 @@ end
 
 ## Webhook Notification Examples
 
+The following are a small set of examples of webhooks you might receive.  For more, [see our full list](https://developers.terminal49.com/docs/api/4256bf76d9952-webhook-events-examples).
+
 
 ### container.updated
 
@@ -249,13 +252,14 @@ The `changeset` attribute on is a hash of all the properties which changed on th
 
 Each changed property is the hash key. The prior value is the first item in the array, and the current value is the second item in the array. 
 
-For example:
-```
+For example, the following code shows that the pickup last free day (`pickup_lfd`) has changed from not being set (`null`) to being set as May 20 2020 (`"2020-05-20 00:00:00"`).
+
+```json
 "changeset": {
   "pickup_lfd": [null, "2020-05-20 00:00:00"]
 }
 ```
-Shows that the pickup last free day has changed from not being set to May 20 2020.
+
 
 The properties we show changes for are:
 - fees_at_pod_terminal
