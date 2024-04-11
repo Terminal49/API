@@ -13,10 +13,9 @@ You'll need a four things to get started.
 
 You can try this using the embedded request maker below, or using Postman.
 
-1. Try it below. Click "Headers" and replace YOUR_API_KEY with your API key. In the authorization header value.
-2. Enter a value for the `request_number` and `scac`. The request number has to be a shipping line booking or master bill of lading number. The SCAC has to be a shipping line scac (see data sources to get a list of valid SCACs)
+1. Try it below. Click "Parameters" and replace YOUR_API_KEY with your API key. In the authorization header value.
+2. Enter a value for the `request_number` and `scac`. The request number has to be a shipping line booking or master bill of lading number. The SCAC has to be a shipping line scac (see [our list of covered shipping lines](https://www.terminal49.com/shipping-lines/) to see valid SCACs)
 
-Note that you can also access sample code, include a cURL template, by clicking the "Code Generation" tab in the Request Maker.
 
 ```json http
 {
@@ -64,9 +63,6 @@ If your tracking request was successful, you will now be able to list your track
 
 **Try it below. Click "Parameters" and replace YOUR_API_KEY with your API key.**
 
-Sometimes it may take a while for the tracking request to show up, but usually no more than a few minutes.
-
-If you had trouble adding your first shipment, try adding a few more.
 
 ```json http
 {
@@ -78,6 +74,10 @@ If you had trouble adding your first shipment, try adding a few more.
   }
 }
 ```
+
+Sometimes it may take a while for the tracking request to show up, but usually no more than a few minutes.
+
+While waiting, try adding a few more shipments - Terminal49 is most powerful when you can see all your shipments in one place.
 
 ## List all your Tracked Containers
 
