@@ -1,6 +1,14 @@
 # Tracking Request Lifecycle
 
-When you submit a tracking request your request is added to our queue to being checked at the shipping line. So what happens if the request doesn't go through correctly?
+What happens between the time you submit a Tracking Request and the time you receive a result?
+
+1. We create your Tracking Request, and return a `201` response with the tracking request's ID
+2. We add the Tracking Request to a queue. Once it's through the queue, we connect with shipping lines to fetch the data.  This should happen quickly in most cases.
+3. We clean the data, then combine it with data from terminals and other sources
+
+This is what happens in cases whe the data fetching and parsing is successfull.  What about when there are errors connecting with the shipping line, or the data isn't available yet?
+
+## Retries
 
 If we are having difficulty connecting to the shipping line, or if we are unable to parse the response from the shipping line, we will keep retrying up to 14 times.
 
@@ -8,7 +16,7 @@ This process can take up to approximately 24 hours. You will not receive a `trac
 
 ## Request Number Not Found / Awaiting Manifest
 
-If the shipping line returns a response that it cannot find the provided number we either immediately fail the tracking request or keep trying depending on whether the `request_type` is a container or not:
+If the shipping line returns a response that says it cannot find the provided number, we either immediately fail the tracking request or keep trying depending on whether the `request_type` is a container or not:
 
  * **Containers** fail straight away after a not found response from the shipping line.
  * **Bill of lading** and **booking numbers** do not fail instantly. We change the `status` to `awaiting_manifest` and will keep checking your request daily. You will receive a `tracking_request.awaiting_manifest` webhook notification the first time it happens. If your request number cannot be found after 7 days we will mark the tracking request as failed by changing the `status` field `failed` and sending the `tracking_request.failed` event to your webhook.
@@ -43,7 +51,7 @@ Temporary reasons can become permanent when the `status` changes to `failed`:
 
 ## Stopped
 
-When a shipment is no longer being updated then the tracking request `status` is marked as `tracking_stopped`.
+When a shipment is no longer being updated, then the tracking request `status` is marked as `tracking_stopped`.
 
 You may subscribe to the event `tracking_request.tracking_stopped` for notifications when this occurs.
 

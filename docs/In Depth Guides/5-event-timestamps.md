@@ -3,7 +3,7 @@ stoplight-id: dtx1vqg1jidyj
 ---
 
 # Event Timestamps
-Through the typical container lifecycle events occur across multiple timezones. Wheverever you see a timestamp for some kind of transporation event, there should be a corresponding [IANA tz](https://www.iana.org/time-zones).
+Through the typical container lifecycle, events occur across multiple timezones. Wheverever you see a timestamp for some kind of transporation event, there should be a corresponding [IANA tz](https://www.iana.org/time-zones).
 
 Event timestamps are stored and returned in UTC. If you wish to present them in the local time you need to convert that UTC timestamp using the corresponding timezone.
 

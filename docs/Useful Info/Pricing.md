@@ -4,4 +4,4 @@ tags: [See Also]
 
 # Pricing
 
-View our [standard API pricing on our website](https://www.terminal49.com/pricing-plans#API-Section)
+[Compare our API plans on our website](https://www.terminal49.com/api-pricing/), and then [contact our customer success team for custom pricing](https://www.terminal49.com/contact/).
