@@ -1,6 +1,14 @@
 # Tracking Request Lifecycle
 
-When you submit a tracking request your request is added to our queue to being checked at the shipping line. So what happens if the request doesn't go through correctly?
+What happens between the time you submit a Tracking Request and the time you receive a result?
+
+1. We create your Tracking Request, and return a `201` response with the tracking request's ID
+2. We add the Tracking Request to a queue. Once it's through the queue, we connect with shipping lines to fetch the data.  This should happen quickly in most cases.
+3. We clean the data, then combine it with data from terminals and other sources
+
+This is what happens in cases whe the data fetching and parsing is successfull.  What about when there are errors connecting with the shipping line, or the data isn't available yet?
+
+## Retries
 
 If we are having difficulty connecting to the shipping line, or if we are unable to parse the response from the shipping line, we will keep retrying up to 14 times.
 
@@ -8,7 +16,7 @@ This process can take up to approximately 24 hours. You will not receive a `trac
 
 ## Request Number Not Found / Awaiting Manifest
 
-If the shipping line returns a response that it cannot find the provided number we either immediately fail the tracking request or keep trying depending on whether the request_type is a bill of lading or a booking number:
+If the shipping line returns a response that it cannot find the provided number, we either immediately fail the tracking request or keep trying depending on whether the request_type is a bill of lading or a booking number:
 
  * **Bill of lading numbers** fail straight away after a not found response from the shipping line. We change the `status` field to `failed` and send the `tracking_request.failed` event to your webhook.
  * **Bill of lading numbers - awaiting manifest** in the case of Hapag-Lloyd we will retry for BL numbers if we see that the number is `awaiting_manifest` (see below).
@@ -42,9 +50,7 @@ Temporary reasons can become permanent when the `status` changes to `failed`:
 
 ## Stopped
 
-\* Going live 2022-01-20
-
-When a shipment is no longer being updated then the tracking request status is marked as tracking_stopped
+When a shipment is no longer being updated then the tracking request status is marked as `tracking_stopped`
 
 Terminal49 will stop tracking requests for the following reasons:
 
