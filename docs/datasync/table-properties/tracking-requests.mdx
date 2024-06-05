@@ -1,0 +1,22 @@
+---
+title: Tracking Requests
+---
+The `tracking_requests` table contains 1 row per tracking request (`tracking_request_id`is the unique key).
+
+A tracking request can fail or succeed (`status` column). A successful tracking request will lead to the creation of a shipment (`shipment_id`).
+
+There can be multiple tracking requests for the same requested number (possibly failing before finally succeeding).
+
+| COLUMN NAME         | DESCRIPTION                                                                                   | DATA TYPE | PRIMARY KEY |
+|---------------------|-----------------------------------------------------------------------------------------------|-----------|-------------|
+| tracking_request_id | Tracking request ID. This is the unique key of the table.                                     | text      | Yes         |
+| request_number      | Number requested to be tracked                                                                | text      | No          |
+| reference_numbers   | Reference numbers associated to the tracking request, concatenated                            | text      | No          |
+| shipment_tags       | Tags added to the request, concatenated and separated by a comma                              | text      | No          |
+| status              | Status of the tracking request: created, pending, awaiting_manifest, failed, tracking_stopped | text      | No          |
+| failed_reason       | For tracking requests that failed, a description of the error                                 | text      | No          |
+| request_type        | Type of tracking request: bill_of_lading, booking_number, or container                        | text      | No          |
+| scac                | Standard carrier alpha numeric code of the shipping line                                      | text      | No          |
+| shipment_id         | If the tracking request succeeded, this is the ID of the shipment that was created            | text      | No          |
+| created_at          | When the tracking was requested, as a UTC timestamp                                           | timestamp | No          |
+| updated_at          | When the tracking request was last updated, as a UTC timestamp                                | timestamp | No          |

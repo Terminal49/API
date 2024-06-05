@@ -1,0 +1,11 @@
+---
+title: Tracking Request Retrying
+---
+
+When you submit a tracking request your request is added to our queue to being checked at the shipping line. So what happens if the request doesn't go through correctly?
+
+If we are having difficulty connecting to the shipping line, or if we are unable to parse the response from the shipping line, we will keep retrying up to 14 times with an exponential back off. This process can take up to approximately 24 hours. You will not receive a `tracking_request.failed` webhook notification until we have exhausted the retries.
+
+If the shipping line returns a response that it cannot find the provided number then we will immediately return the `tracking_request.failed` event to your webhook.
+
+If you want to see the status of your tracking request you can make a [GET request](https://developers.terminal49.com/docs/api/docs/reference/terminal49/terminal49.v1.json/paths/~1tracking_requests~1%7Bid%7D/get) on it's `id` to see how many times it has retried, and what the most recent failure reason was.
