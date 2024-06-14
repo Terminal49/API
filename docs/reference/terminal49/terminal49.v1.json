@@ -814,6 +814,16 @@
                               "REFNUMBER10"
                             ],
                             "description": "Shipment ref numbers."
+                          },
+                          "tags": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "example": [
+                              "TAG-1", "TAG-2"
+                            ],
+                            "description": "Shipment tags."
                           }
                         }
                       }
