@@ -7,7 +7,15 @@
       "light": "#52bfff",
       "dark": "#00A2FF"
     },
-
+    "modeToggle": {
+      "default": "light",
+      "isHidden": false
+    },
+    "feedback": {
+      "thumbsRating": true, 
+      "raiseIssue": true, 
+      "suggestEdit": true
+    },
     "topbarCtaButton": {
         "name": "Sign in",
         "url": "https://app.terminal49.com/"
