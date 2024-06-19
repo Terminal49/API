@@ -71,7 +71,9 @@
                 "api-docs/in-depth-guides/tracking-request-lifecycle",
                 "api-docs/in-depth-guides/event-timestamps",
                 "api-docs/in-depth-guides/terminal49-map",
-                "api-docs/in-depth-guides/terminal49-widget"
+                "api-docs/in-depth-guides/terminal49-widget",
+                "api-docs/in-depth-guides/rail-integration-guide"
+
             ]
         },
         {
