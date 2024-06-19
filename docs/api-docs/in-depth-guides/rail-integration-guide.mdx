@@ -1,12 +1,14 @@
 ---
-title: 'Dev Guide: Integrating North American Class-1 Rail Container Tracking Data'
+title: 'Integrate Rail Container Tracking Data'
 description: 'This guide provides a comprehensive, step-by-step approach for integrating North American Class-1 rail container tracking data into your systems. Whether you are a shipper or a logistics service provider, this guide will help you track all your rail container via single API.'
 ---
 
 
-### Overview of Class-1 Rail Integrations on Terminal49
+## Terminal40 Rail Integrations Overview
 
 Terminal49 container tracking platform integrates with all major North American Class-1 railroads, providing comprehensive visibility into rail container movements. Our platform supports the following carriers:
+
+### Supported Rail Carriers
 - BNSF Railway
 - Canadian National Railway (CN)
 - Canadian Pacific Railway (CP)
@@ -29,25 +31,25 @@ graph LR
     C --> D[Rail Unloaded]
     D --> E[Full Out]
     E --> F[Empty Return]
-    
-    style A fill:#000,stroke:#333,stroke-width:4px
-    style B fill:#000,stroke:#333,stroke-width:4px
-    style C fill:#000,stroke:#333,stroke-width:4px
-    style D fill:#000,stroke:#333,stroke-width:4px
-    style E fill:#000,stroke:#333,stroke-width:4px
-    style F fill:#000,stroke:#333,stroke-width:4px
   ```
 
-**Events / Webhook Notifications**:
-- `container.transport.rail_loaded`: Notification when the container is loaded onto a railcar.
-- `container.transport.rail_departed`: Information when the container departs from the origin terminal.
-- `container.transport.rail_arrived`: Notification when the container arrives at the destination terminal.
-- `container.transport.rail_unloaded`: Information when the container is unloaded from a railcar.
-- `container.transport.full_out`: Update when the full container leaves the rail terminal.
-- `container.transport.empty_in`: Notification when the empty container is returned to the terminal.
-- `container.estimated.rail_arrival`: (Coming soon) Estimated time of arrival for the container.
+#### Rail Milestones (aka rail events)
 
-**Container Attributes**:
+Terminal49 provides a series of webhook notifications to keep you updated on key milestones in a container’s rail journey. These notifications allow you to integrate near real-time tracking data directly into your applications. Here’s a list of the supported rail events:
+
+| Milestone | Webhook Notification | Description |
+|----------------|----------------------|-------------|
+| Rail Loaded    | `container.transport.rail_loaded`   | Notification when the container is loaded onto a railcar. |
+| Rail Departed  | `container.transport.rail_departed` | Notification when the container departs from the origin terminal (usually port of discharge). |
+| Rail Arrived   | `container.transport.rail_arrived`  | Notification when the container arrives at the destination terminal. |
+| Rail Unloaded  | `container.transport.rail_unloaded` | Notification when the container is unloaded from a railcar. |
+| Full Out       | `container.transport.full_out`      | Update when the full container leaves the rail terminal. |
+| Empty In       | `container.transport.empty_in`      | Notification when the empty container is returned to the terminal. |
+| Estimated Rail Arrival | `container.estimated.rail_arrival` | (Coming soon) Estimated time of arrival for the container at the rail terminal. |
+
+Integrate these notifications by subscribing to the webhooks and handling the incoming data to update your systems. 
+
+#### Rail Container Attributes
 - **Pickup Facility**: Information about the inland destination, rail terminal, and FIRMS code.
 - **Rail ETA**: Estimated Time of Arrival at the destination terminal.
 - **Rail ATA**: Actual Time of Arrival at the destination terminal.
