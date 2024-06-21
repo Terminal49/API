@@ -33,6 +33,24 @@ graph LR
     E --> F[Empty Return]
   ```
 
+```mermaid
+timeline
+    title Container Milestones (Rail Import)
+    section Port of Discharge
+        Vessel Arrival : Port of discharge : Terminal details : discharged timestamp
+        Vessel Birth : Port of discharge : Terminal details : Birth timestamp
+        Container Discharged : Port of discharge : Terminal details : discharged timestamp
+    section Container On Rail
+        Rail Loaded : Loaded location : loaded timestamp
+        Rail Departed : Departed location : departed timestamp
+        Rail Arrived : Arrived location : arrived timestamp
+        Rail Unloaded : Unloaded location : unloaded timestamp
+    section Final Destination (Rail Terminal)
+        Full Out : Full out port : Full out terminal : Full out timestamp
+        Empty Return : empty return timestamp
+
+```
+
 #### Rail Milestones (aka rail events)
 
 Terminal49 provides a series of webhook notifications to keep you updated on key milestones in a container’s rail journey. These notifications allow you to integrate near real-time tracking data directly into your applications. Here’s a list of the supported rail events:
