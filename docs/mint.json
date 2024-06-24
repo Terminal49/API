@@ -12,8 +12,8 @@
       "isHidden": false
     },
     "feedback": {
-      "thumbsRating": true, 
-      "raiseIssue": true, 
+      "thumbsRating": true,
+      "raiseIssue": true,
       "suggestEdit": true
     },
     "topbarCtaButton": {
@@ -100,7 +100,7 @@
                 "datasync/home"
             ]
         },
-        
+
         {
             "group": " ",
             "pages": [
@@ -122,7 +122,9 @@
           "pages": [
             "api-docs/api-reference/shipments/list-shipments",
             "api-docs/api-reference/shipments/get-a-shipment",
-            "api-docs/api-reference/shipments/edit-a-shipment"
+            "api-docs/api-reference/shipments/edit-a-shipment",
+            "api-docs/api-reference/shipments/stop-tracking-shipment",
+            "api-docs/api-reference/shipments/resume-tracking-shipment"
           ]
         },
         {
@@ -202,7 +204,7 @@
         }
     ],
 
-    
+
     "footerSocials": {
       "twitter": "https://twitter.com/terminal49",
       "linkedin": "https://www.linkedin.com/company/terminal49/"
