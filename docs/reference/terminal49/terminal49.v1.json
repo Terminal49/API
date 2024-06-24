@@ -777,7 +777,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "./terminal49.v1.json#/components/schemas/shipment"
+                      "$ref": "#/components/schemas/shipment"
                     }
                   }
                 }
@@ -1547,7 +1547,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "./terminal49.v1.json#/components/schemas/tracking_request"
+                      "$ref": "#/components/schemas/tracking_request"
                     }
                   }
                 }
@@ -1639,7 +1639,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "./terminal49.v1.json#/components/schemas/webhook"
+                      "$ref": "#/components/schemas/webhook"
                     }
                   }
                 }
@@ -4034,7 +4034,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "./terminal49.v1.json#/components/schemas/container"
+                      "$ref": "#/components/schemas/container"
                     }
                   }
                 }
@@ -5313,10 +5313,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "type": {
                         "type": "string",
@@ -5341,10 +5339,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "type": {
                         "type": "string",
@@ -5395,10 +5391,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "type": {
                         "type": "string",
@@ -6383,10 +6377,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
@@ -6723,25 +6715,25 @@
                 "type": "number",
                 "description": "The current latitude position of the vessel",
                 "nullable": true,
-                "example": "25.29845"
+                "example": 25.29845
               },
               "longitude": {
                 "type": "number",
                 "description": "The current longitude position of the vessel",
                 "nullable": true,
-                "example": "121.217"
+                "example": 121.217
               },
               "nautical_speed_knots": {
                 "type": "number",
                 "description": "The current speed of the ship in knots (nautical miles per hour)",
                 "nullable": true,
-                "example": "90"
+                "example": 90
               },
               "navigational_heading_degrees": {
                 "type": "number",
                 "description": "The current heading of the ship in degrees, where 0 is North, 90 is East, 180 is South, and 270 is West",
                 "nullable": true,
-                "example": "194"
+                "example": 194
               },
               "position_timestamp": {
                 "type": "string",
@@ -7045,10 +7037,8 @@
                 "type": "object",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
@@ -7069,10 +7059,8 @@
                 "description": "\n",
                 "properties": {
                   "data": {
-                    "type": [
-                      "object",
-                      "null"
-                    ],
+                    "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
