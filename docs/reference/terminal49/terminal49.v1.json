@@ -836,6 +836,80 @@
         }
       }
     },
+    "/shipments/{id}/stop_tracking": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "patch": {
+        "summary": "Stop tracking a shipment",
+        "operationId": "patch-shipments-id-stop-tracking",
+        "tags": [
+          "Shipments"
+        ],
+        "description": "We'll stop tracking the shipment, which means that there will be no more updates.  You can still access the shipment's previously-collected information via the API or dashboard.\n\nYou can resume tracking a shipment by calling the `resume_tracking` endpoint, but keep in mind that some information is only made available by our data sources at specific times, so a stopped and resumed shipment may have some information missing.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/shipment"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/shipments/{id}/resume_tracking": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "patch": {
+        "summary": "Resume tracking a shipment",
+        "operationId": "patch-shipments-id-resume-tracking",
+        "tags": [
+          "Shipments"
+        ],
+        "description": "Resume tracking a shipment.  Keep in mind that some information is only made available by our data sources at specific times, so a stopped and resumed shipment may have some information missing.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/shipment"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tracking_requests": {
       "post": {
         "summary": "Create a tracking request",
@@ -1150,7 +1224,7 @@
             }
           }
         },
-        "description": "Returns a list of your tracking requests. The trackig requests are returned sorted by creation date, with the most recent tracking request appearing first.",
+        "description": "Returns a list of your tracking requests. The tracking requests are returned sorted by creation date, with the most recent tracking request appearing first.",
         "tags": [
           "Tracking Requests"
         ],
