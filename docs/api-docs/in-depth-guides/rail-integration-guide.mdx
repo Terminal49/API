@@ -38,16 +38,16 @@ graph LR
 timeline
     title Container Milestones (Rail Import)
     section Port of Discharge
-        Vessel Arrival : Port of discharge : Terminal details : discharged timestamp
-        Vessel Berth : Port of discharge : Terminal details : berth timestamp
-        Container Discharged : Port of discharge : Terminal details : discharged timestamp
+        Vessel Arrived : Port of discharge : Terminal details : arrival timestamp
+        Vessel Berthed : Port of discharge : Terminal details : berth timestamp
+        Vessel Discharged : Port of discharge : Terminal details : discharged timestamp
     section Container On Rail
         Rail Loaded : Loaded location : loaded timestamp
         Rail Departed : Departed location : departed timestamp
         Rail Arrived : Arrived location : arrived timestamp
         Rail Unloaded : Unloaded location : unloaded timestamp
     section Final Destination (Rail Terminal)
-        Full Out : Full out port : Full out terminal : Full out timestamp
+        Full Out : Full out port : Full out terminal : full out timestamp
         Empty Return : empty return timestamp
 
 ```
@@ -58,12 +58,12 @@ Terminal49 provides a series of webhook notifications to keep you updated on key
 
 | Milestone | Webhook Notification | Description |
 |----------------|----------------------|-------------|
-| Rail Loaded    | `container.transport.rail_loaded`   | Notification when the container is loaded onto a railcar. |
-| Rail Departed  | `container.transport.rail_departed` | Notification when the container departs from the origin terminal (usually port of discharge). |
-| Rail Arrived   | `container.transport.rail_arrived`  | Notification when the container arrives at the destination terminal. |
-| Rail Unloaded  | `container.transport.rail_unloaded` | Notification when the container is unloaded from a railcar. |
-| Full Out       | `container.transport.full_out`      | Update when the full container leaves the rail terminal. |
-| Empty In       | `container.transport.empty_in`      | Notification when the empty container is returned to the terminal. |
+| Rail Loaded    | `container.transport.rail_loaded`   | The container is loaded onto a railcar. |
+| Rail Departed  | `container.transport.rail_departed` | The container departs on the railcar (usually from port of discharge). |
+| Rail Arrived   | `container.transport.rail_arrived`  | The container arrives at the destination terminal. |
+| Rail Unloaded  | `container.transport.rail_unloaded` | The container is unloaded from a railcar. |
+| Full Out       | `container.transport.full_out`      | The full container leaves the rail terminal. |
+| Empty In       | `container.transport.empty_in`      | The empty container is returned to the terminal. |
 | Estimated Rail Arrival | `container.estimated.rail_arrival` | (Coming soon) Estimated time of arrival for the container at the rail terminal. |
 
 Integrate these notifications by subscribing to the webhooks and handling the incoming data to update your systems.
