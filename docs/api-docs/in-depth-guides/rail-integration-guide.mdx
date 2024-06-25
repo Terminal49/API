@@ -6,7 +6,7 @@ mode: "wide"
 ---
 
 
-## Terminal40 Rail Integrations Overview
+## Terminal49 Rail Integrations Overview
 
 Terminal49 container tracking platform integrates with all major North American Class-1 railroads, providing comprehensive visibility into rail container movements. Our platform supports the following carriers:
 
@@ -39,7 +39,7 @@ timeline
     title Container Milestones (Rail Import)
     section Port of Discharge
         Vessel Arrival : Port of discharge : Terminal details : discharged timestamp
-        Vessel Birth : Port of discharge : Terminal details : Birth timestamp
+        Vessel Berth : Port of discharge : Terminal details : berth timestamp
         Container Discharged : Port of discharge : Terminal details : discharged timestamp
     section Container On Rail
         Rail Loaded : Loaded location : loaded timestamp
@@ -54,7 +54,7 @@ timeline
 
 #### Rail Milestones (aka rail events)
 
-Terminal49 provides a series of webhook notifications to keep you updated on key milestones in a container’s rail journey. These notifications allow you to integrate near real-time tracking data directly into your applications. Here’s a list of the supported rail events:
+Terminal49 provides a series of webhook notifications to keep you updated on key milestones in a container's rail journey. These notifications allow you to integrate near real-time tracking data directly into your applications. Here's a list of the supported rail events:
 
 | Milestone | Webhook Notification | Description |
 |----------------|----------------------|-------------|
@@ -66,7 +66,7 @@ Terminal49 provides a series of webhook notifications to keep you updated on key
 | Empty In       | `container.transport.empty_in`      | Notification when the empty container is returned to the terminal. |
 | Estimated Rail Arrival | `container.estimated.rail_arrival` | (Coming soon) Estimated time of arrival for the container at the rail terminal. |
 
-Integrate these notifications by subscribing to the webhooks and handling the incoming data to update your systems. 
+Integrate these notifications by subscribing to the webhooks and handling the incoming data to update your systems.
 
 #### Rail Container Attributes
 - **Pickup Facility**: Information about the inland destination, rail terminal, and FIRMS code.
@@ -79,21 +79,21 @@ Integrate these notifications by subscribing to the webhooks and handling the in
 
 ### Integration Methods
 
-There are two primary methods to integrate Terminal49’s rail tracking data programmatically: via API and DataSync.
+There are two primary methods to integrate Terminal49's rail tracking data programmatically: via API and DataSync.
 
 **A. Integration via API**
 
-Terminal49 provides a robust API that allows you to programmatically access rail container tracking data. Here’s a step-by-step guide to get started:
+Terminal49 provides a robust API that allows you to programmatically access rail container tracking data and receive updates via webhooks. Here's a step-by-step guide to get started:
 
 
 **B. Integration via DataSync**
 
-Terminal49’s DataSync service provides a continuous feed of tracking data, automatically syncing with your system. Here’s how to set it up:
+Terminal49's DataSync service automatically syncs up-to-date tracking data with your system. Here's how to set it up:
 
 
 
 ---
-Other Links 
+Other Links
 - [Blog post on North American intermodal rail visibility](https://www.terminal49.com/blog/launching-north-american-intermodal-rail-visibility-on-terminal49/).
 
 If you have any questions or need further assistance, please contact Terminal49 support.
