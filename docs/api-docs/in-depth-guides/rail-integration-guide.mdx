@@ -7,11 +7,10 @@ mode: "wide"
 
 {/* TODO - maybe a table of contents? */}
 
-## Terminal49 Rail Integrations Overview
+## Supported Rail Carriers
 
-Terminal49 container tracking platform integrates with all major North American Class-1 railroads, providing comprehensive visibility into rail container movements. Our platform supports the following carriers:
+Terminal49 container tracking platform integrates with all North American Class-1 railroads that handle container shipping, providing comprehensive visibility into your rail container movements.
 
-### Supported Rail Carriers
 - BNSF Railway
 - Canadian National Railway (CN)
 - Canadian Pacific Railway (CP)
@@ -21,17 +20,15 @@ Terminal49 container tracking platform integrates with all major North American 
 
 By integrating with these carriers, Terminal49 ensures that you have real-time access to critical tracking data, enabling better decision-making and operational efficiency.
 
-### Supported Rail Milestones and Data Attributes
-
-Terminal49 tracks various milestones and data attributes that are essential for effective rail container management. The key events and attributes include:
+## Supported Rail Milestones and Data Attributes
 
 Terminal49 seamlessly tracks your containers as they go from container ship, to ocean terminal, to rail carrier.
 
-We provide a set of milestones/events that let you track the status of your containers as they move through the rail system.  Each milestone contains a timestamp and a location.
+We provide a set of milestones/events that let you track the status of your containers as they move through the rail system.  You can be notified by webhook whenever these events occur.
 
 We also provide a set of attributes that let you know the current status of your container at any given time, as well as useful information such as ETA, pickup facility, and availability information.
 
-#### Rail Milestones (aka rail events)
+### Rail Milestones (aka rail events)
 
 {/* TODO: create rail-carriers page or section */}
 There are several core milestones that occur on most rail journeys.  Some rail carriers do not share all events (see [Rail Carriers](#rail-carriers) for more details), but in general these are the key events for a container.
@@ -45,9 +42,7 @@ D --> E[Full Out]
 E --> F[Empty Return]
 ```
 
-
-
-However, not all shipments have a simple journey.  Yo umay want to track events such as when a train passes through a town, when the container switches trains or rail carriers at an interchange, and when the status of your container at the terminal changes.
+However, not all shipments have a simple journey.  You may want to track events such as when a train passes through a town, when the container switches trains or rail carriers at an interchange, and when the status of your container at the terminal changes.
 
 This is a more complex diagram that shows the various events that can occur in a container's rail journey.
 
@@ -64,7 +59,7 @@ graph LR
     C --> X[Rail Interchange Delivered]
     X --> Z
     D --> G[Available for Pickup]
-    D --> H[Unavailable]
+    D --> H[Not Available]
     H -- Holds and Fees Updated --> H
     G --> H
     H --> G
@@ -72,9 +67,11 @@ graph LR
     E --> F[Empty Return]
 ```
 
-Terminal49 provides a series of webhook notifications to keep you updated on key milestones in a container's rail journey. These notifications allow you to integrate near real-time tracking data directly into your applications. Here's a list of the supported rail events:
+### Webhook Notifications
 
-{/* TODO: update this list to include all the others we have listed */}
+Terminal49 provides webhook notifications to keep you updated on key milestones in a container's rail journey. These notifications allow you to integrate near real-time tracking data directly into your applications.
+
+Here's a list of the rail-specific events which support webhook notifications:
 
 | Milestone | Webhook Notification | Description |
 |----------------|----------------------|-------------|
@@ -82,11 +79,26 @@ Terminal49 provides a series of webhook notifications to keep you updated on key
 | Rail Departed  | `container.transport.rail_departed` | The container departs on the railcar (usually from port of discharge). |
 | Rail Arrived   | `container.transport.rail_arrived`  | The container arrives at the destination terminal. |
 | Rail Unloaded  | `container.transport.rail_unloaded` | The container is unloaded from a railcar. |
+
+There's also a set of events that are triggered when the status of the container at the destination rail terminal changes.  For containers without rail, they would have been triggered at the ocean terminal.
+
+| Milestone | Webhook Notification | Description |
+|----------------|----------------------|-------------|
+| Available for Pickup | `container.transport.available`     | (Coming Soon) The container is available for pickup at the rail terminal. |
+| Not Available  | `container.transport.not_available` | (Coming Soon) The container is not available for pickup at the rail terminal. |
+| Holds and Fees Updated | `container.transport.holds_and_fees_updated` | (Coming Soon) The holds and fees for the container at the rail terminal have been changed, but not fully cleared. |
 | Full Out       | `container.transport.full_out`      | The full container leaves the rail terminal. |
 | Empty In       | `container.transport.empty_in`      | The empty container is returned to the terminal. |
+
+Finally, we plan to provide webhook notifications for when estimated rail arrival times change, but this is still under development.
+
+| Milestone | Webhook Notification | Description |
+|----------------|----------------------|-------------|
 | Estimated Rail Arrival | `container.estimated.rail_arrival` | (Coming soon) Estimated time of arrival for the container at the rail terminal. |
 
 Integrate these notifications by subscribing to the webhooks and handling the incoming data to update your systems.
+
+> Note: We do not have webhook notifications planned for Train Passing, Rail Interchange Received, or Rail Interchange Delivered.  However, you can still see them in the dashboard.
 
 #### Rail Container Attributes
 
@@ -115,9 +127,8 @@ Terminal49's DataSync service automatically syncs up-to-date tracking data with 
 
 [Learn more about DataSync](/datasync/overview)
 
-
-
 ---
+
 Other Links
 - [Blog post on North American intermodal rail visibility](https://www.terminal49.com/blog/launching-north-american-intermodal-rail-visibility-on-terminal49/).
 
