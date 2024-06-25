@@ -107,13 +107,24 @@ Integrate these notifications by subscribing to the webhooks and handling the in
 
 #### Rail Container Attributes
 
-- **Pickup Facility**: Information about the inland destination, rail terminal, and FIRMS code.
-- **Rail ETA**: Estimated Time of Arrival at the destination terminal.
-- **Rail ATA**: Actual Time of Arrival at the destination terminal.
-- **Available for Pickup**: Status indicating when the container is available for pickup.
-- **Demurrage LFD**: Last Free Day for demurrage charges.
-- **Rail Terminal Holds**: Holds placed on the container at the rail terminal.
-- **Rail Terminal Fees**: Fees associated with the container at the rail terminal.
+The following are new attributes that are specific to rail container tracking.
+
+- **pod_rail_loaded_at**: Time when the container is loaded onto a railcar at the POD.
+- **pod_rail_departed_at**: Time when the container departs from the POD.
+- **inland_destination_eta_at**: Estimated Time of Arrival at the destination terminal.
+- **inland_destination_ata_at**: Actual Time of Arrival at the destination terminal.
+- **inland_destination_rail_unloaded_at**: Time when the container is unloaded from the rail terminal.
+- **pickup_facility_holds**: Holds placed on the container at the rail terminal.
+- **pickup_facility_fees**: Fees associated with the container at the rail terminal.
+- **pickup_facility_yard_location**: Yard location of the container at the rail terminal.
+- **pickup_facility_lfd_on**: Last Free Day for demurrage charges.
+- **pickup_rail_carrier_scac**: SCAC code of the rail carrier that picks up the container from the POD (this could be different than the rail carrier that delivers to the destination terminal). {/* I think this is a bad name.  We should rename it to pod_rail_carrier_scac -- which is actually what it's named internally, but we change it for the serializer! */}
+{/* Why is there not a rail carrier scac for the delivery destination in the serializer?  We should add */}
+
+
+{/* TODO: Look at the other container attributes that could be fed via rail but are currently shipping-line-only.  Such as :current_issues, :pickup_appointment_at, :availability_known, :available_for_pickup  */}
+
+These attributes can be found on [container objects](http://localhost:3000/api-docs/api-reference/containers/get-a-container).
 
 ## Integration Methods
 
