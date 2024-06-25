@@ -24,38 +24,53 @@ By integrating with these carriers, Terminal49 ensures that you have real-time a
 
 Terminal49 tracks various milestones and data attributes that are essential for effective rail container management. The key events and attributes include:
 
+Terminal49 seamlessly tracks your containers as they go from container ship, to ocean terminal, to rail carrier.
 
-```mermaid
-graph LR
-    A[Rail Loaded] --> B[Rail Departed]
-    B --> C[Rail Arrived]
-    C --> D[Rail Unloaded]
-    D --> E[Full Out]
-    E --> F[Empty Return]
-  ```
+We provide a set of milestones/events that let you track the status of your containers as they move through the rail system.  Each milestone contains a timestamp and a location.
 
-```mermaid
-timeline
-    title Container Milestones (Rail Import)
-    section Port of Discharge
-        Vessel Arrived : Port of discharge : Terminal details : arrival timestamp
-        Vessel Berthed : Port of discharge : Terminal details : berth timestamp
-        Vessel Discharged : Port of discharge : Terminal details : discharged timestamp
-    section Container On Rail
-        Rail Loaded : Loaded location : loaded timestamp
-        Rail Departed : Departed location : departed timestamp
-        Rail Arrived : Arrived location : arrived timestamp
-        Rail Unloaded : Unloaded location : unloaded timestamp
-    section Final Destination (Rail Terminal)
-        Full Out : Full out port : Full out terminal : full out timestamp
-        Empty Return : empty return timestamp
-
-```
+We also provide a set of attributes that let you know the current status of your container at any given time, as well as useful information such as ETA, pickup facility, and availability information.
 
 #### Rail Milestones (aka rail events)
 
+{/* TODO: create rail-carriers page or section */}
+There are several core milestones that occur on most rail journeys.  Some rail carriers do not share all events (see [Rail Carriers](#rail-carriers) for more details), but in general these are the key events for a container.
+
+```mermaid
+graph LR
+A[Rail Loaded] --> B[Rail Departed]
+B --> C[Rail Arrived]
+C --> D[Rail Unloaded]
+D --> E[Full Out]
+E --> F[Empty Return]
+```
+
+
+
+However, not all shipments have a simple journey.  Yo umay want to track events such as when a train passes through a town, when the container switches trains or rail carriers at an interchange, and when the status of your container at the terminal changes.
+
+This is a more complex diagram that shows the various events that can occur in a container's rail journey.
+    Y[From ocean terminal or carrier] --> A
+    Z[Rail Interchange Received] --> B
+    A[Rail Loaded] --> B[Rail Departed]
+    B --> L[Train Passing]
+    B --> C[Rail Arrived]
+    L --> L
+    L --> C
+    C --> D[Rail Unloaded]
+    C --> X[Rail Interchange Delivered]
+    X --> Z
+    D --> G[Available for Pickup]
+    D --> H[Unavailable]
+    H -- Holds and Fees Updated --> H
+    G --> H
+    H --> G
+    G --> E[Full Out]
+    E --> F[Empty Return]
+```
+
 Terminal49 provides a series of webhook notifications to keep you updated on key milestones in a container's rail journey. These notifications allow you to integrate near real-time tracking data directly into your applications. Here's a list of the supported rail events:
 
+{/* TODO: update this list to include all the others we have listed */}
 | Milestone | Webhook Notification | Description |
 |----------------|----------------------|-------------|
 | Rail Loaded    | `container.transport.rail_loaded`   | The container is loaded onto a railcar. |
