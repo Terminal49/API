@@ -89,6 +89,7 @@ Terminal49 provides a series of webhook notifications to keep you updated on key
 Integrate these notifications by subscribing to the webhooks and handling the incoming data to update your systems.
 
 #### Rail Container Attributes
+
 - **Pickup Facility**: Information about the inland destination, rail terminal, and FIRMS code.
 - **Rail ETA**: Estimated Time of Arrival at the destination terminal.
 - **Rail ATA**: Actual Time of Arrival at the destination terminal.
@@ -97,18 +98,22 @@ Integrate these notifications by subscribing to the webhooks and handling the in
 - **Rail Terminal Holds**: Holds placed on the container at the rail terminal.
 - **Rail Terminal Fees**: Fees associated with the container at the rail terminal.
 
-### Integration Methods
+## Integration Methods
 
 There are two primary methods to integrate Terminal49's rail tracking data programmatically: via API and DataSync.
 
-**A. Integration via API**
+#### A. Integration via API
 
-Terminal49 provides a robust API that allows you to programmatically access rail container tracking data and receive updates via webhooks. Here's a step-by-step guide to get started:
+Terminal49 provides a robust API that allows you to programmatically access rail container tracking data and receive updates via webhooks. You will receive rail events and attributes alongside events and attributes from the ocean terminal and carrier.
+
+[Here's a step-by-step guide to get started](/api-docs/getting-started/start-here)
 
 
-**B. Integration via DataSync**
+#### B. Integration via DataSync
 
-Terminal49's DataSync service automatically syncs up-to-date tracking data with your system. Here's how to set it up:
+Terminal49's DataSync service automatically syncs up-to-date tracking data with your system.  The rail data will be in the same tables alongside the ocean terminal and carrier data.
+
+[Learn more about DataSync](/datasync/overview)
 
 
 
