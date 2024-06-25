@@ -1,10 +1,11 @@
 ---
 title: 'Integrate Rail Container Tracking Data'
-description: 'This guide provides a comprehensive, step-by-step approach for integrating North American Class-1 rail container tracking data into your systems. Whether you are a shipper or a logistics service provider, this guide will help you track all your rail container via single API.'
+description: 'This guide provides a comprehensive, step-by-step approach for integrating North American Class-1 rail container tracking data into your systems. Whether you are a shipper or a logistics service provider, this guide will help you track all your rail containers via single API.'
 mode: "wide"
 
 ---
 
+{/* TODO - maybe a table of contents? */}
 
 ## Terminal49 Rail Integrations Overview
 
@@ -49,6 +50,9 @@ E --> F[Empty Return]
 However, not all shipments have a simple journey.  Yo umay want to track events such as when a train passes through a town, when the container switches trains or rail carriers at an interchange, and when the status of your container at the terminal changes.
 
 This is a more complex diagram that shows the various events that can occur in a container's rail journey.
+
+```mermaid
+graph LR
     Y[From ocean terminal or carrier] --> A
     Z[Rail Interchange Received] --> B
     A[Rail Loaded] --> B[Rail Departed]
@@ -71,6 +75,7 @@ This is a more complex diagram that shows the various events that can occur in a
 Terminal49 provides a series of webhook notifications to keep you updated on key milestones in a container's rail journey. These notifications allow you to integrate near real-time tracking data directly into your applications. Here's a list of the supported rail events:
 
 {/* TODO: update this list to include all the others we have listed */}
+
 | Milestone | Webhook Notification | Description |
 |----------------|----------------------|-------------|
 | Rail Loaded    | `container.transport.rail_loaded`   | The container is loaded onto a railcar. |
