@@ -5926,6 +5926,10 @@
             "type": "string",
             "format": "uuid"
           },
+          "type": {
+            "type": "string",
+            "enum": ["container"]
+          },
           "attributes": {
             "type": "object",
             "properties": {
@@ -5934,7 +5938,6 @@
               },
               "ref_numbers": {
                 "type": "array",
-                "nullable": false,
                 "items": {
                   "type": "string"
                 }
@@ -5954,22 +5957,12 @@
               },
               "equipment_length": {
                 "type": "integer",
-                "enum": [
-                  null,
-                  10,
-                  20,
-                  40,
-                  45
-                ],
+                "enum": [null, 10, 20, 40, 45],
                 "nullable": true
               },
               "equipment_height": {
                 "type": "string",
-                "enum": [
-                  "standard",
-                  "high_cube",
-                  null
-                ],
+                "enum": ["standard", "high_cube", null],
                 "nullable": true
               },
               "weight_in_lbs": {
@@ -5987,7 +5980,7 @@
               "pickup_lfd": {
                 "type": "string",
                 "format": "date-time",
-                "description": "The last free day for pickup before deummurage accrues. Corresponding timezone is pod_timezone.",
+                "description": "The last free day for pickup before demmurage accrues. Corresponding timezone is pod_timezone.",
                 "nullable": true
               },
               "pickup_appointment_at": {
@@ -6051,12 +6044,6 @@
                 "description": "Time empty container was returned.",
                 "nullable": true
               },
-              "last_status_refresh_at": {
-                "type": "string",
-                "format": "date-time",
-                "description": "The last time the container status was retrieved from the pod terminal. (UTC)",
-                "nullable": true
-              },
               "holds_at_pod_terminal": {
                 "type": "array",
                 "items": {
@@ -6088,13 +6075,165 @@
                 "type": "string",
                 "description": "The SCAC of the rail carrier for the pickup leg of the container's journey.(BETA)",
                 "nullable": true
+              },
+              "pod_last_tracking_request_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "shipment_last_tracking_request_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "pod_rail_loaded_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "pod_rail_departed_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "inland_destination_eta_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "inland_destination_ata_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "inland_destination_rail_unloaded_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "pickup_facility_holds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "nullable": true
+              },
+              "pickup_facility_fees": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                },
+                "nullable": true
+              },
+              "pickup_facility_yard_location": {
+                "type": "string",
+                "nullable": true
+              },
+              "pickup_facility_lfd_on": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "shipment": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": ["shipment"]
+                      }
+                    }
+                  }
+                }
+              },
+              "pickup_facility": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": ["terminal"]
+                      }
+                    }
+                  }
+                }
+              },
+              "pod_terminal": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": ["terminal"]
+                      }
+                    }
+                  }
+                }
+              },
+              "transport_events": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": ["transport_event"]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "raw_events": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": ["raw_event"]
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id", "type", "attributes"]
       },
       "port": {
         "title": "Port model",
