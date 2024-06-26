@@ -128,7 +128,7 @@ Here are the events we receive from each carrier.
 
 In addition to some data not being provided by all carriers, there are a couple other known issues:
 
-- BNSF does not provide an event history
+- BNSF does not provide an event history - we construct it. So we might miss events that happened before tracking began, or that happened in close succession between times we retrieved new data.
 - ETAs are notoriously incorrect (we're working on a way to improve on what we get from the carriers)
 
 # Data Fields & Availability
