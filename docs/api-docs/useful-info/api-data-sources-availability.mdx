@@ -25,7 +25,7 @@ Presently, the Terminal 49 api integrates with terminals at the following ports:
 - Houston
 - Jacksonville
 - London Gateway (UK)
-- Long Beach 
+- Long Beach
 - Los Angeles
 - Miami
 - Mobile
@@ -101,6 +101,9 @@ Below are a list of known issuses with our data sources:
 
 # Data Fields & Availability
 
+{/* These seem very out of date... many new properties added since we updated it years ago.  Should we update it, or remove it? */}
+{/* I went ahead and added the newest properties to Container Data  */}
+
 Below is a list of data that can be retrieved via the API, including whether is is always available, or whether it is only supported by certain carriers (Carrier Dependent), certain Terminals (Terminal Dependent) or on certain types of journeys (Journey dependent).
 
 ## Shipment Data
@@ -133,16 +136,23 @@ At the container level, the following data is available. Container data is combi
 | Equipment length | Always            | 20, 40, 45, 50                                   | Enumerated Data Type |
 | Equipment height | Always            | Standard, high cube                              | Enumerated Data Type |
 | Weight           | Carrier Dependent | Number                                           |                      |
-| Terminal Availability                    | Always         | Availability Known, Availability for Pickup | |
-| Holds                           | Terminal  Dependent     | Array of    statuses   |  Each status includes the hold name (one of: customs, freight, TMF, other, USDA) and the status (pending, hold) as well as any extra description|
-| Fees                            | Terminal Dependent| Array of statuses| Each status includes the fee type (one of: Demurrage, Exam, Other) and the amount the hold is for  (a float)|
-| Last Free Day                   | Terminal Dependent| Date of last free day |     |
-| Arrived at Port of Discharge    | Always          | Once Arrived |        |
-| Discharged at Port of Discharge | Always         | Once discharged          |                |
-| Full Out at Port of Discharge   | Always         |  | |
-| Full out at final destination   | Journey Dependent | Only if non-port final destination |  |
-
-
+| Terminal Availability               | Always            | Availability Known, Availability for Pickup | |
+| Holds                               | Terminal Dependent| Array of    statuses   |  Each status includes the hold name (one of: customs, freight, TMF, other, USDA) and the status (pending, hold) as well as any extra description|
+| Fees                                | Terminal Dependent| Array of statuses| Each status includes the fee type (one of: Demurrage, Exam, Other) and the amount the hold is for  (a float)|
+| Last Free Day                       | Terminal Dependent| Date of last free day |     |
+| Arrived at Port of Discharge        | Always            | Once Arrived |        |
+| Discharged at Port of Discharge     | Always            | Once discharged          |                |
+| Full Out at Port of Discharge       | Always            |  | |
+| Full out at final destination       | Journey Dependent | Only if non-port final destination |  |
+| Rail Loaded At Port of Discharge    | Journey Dependent | Only if non-port final destination |  |
+| Rail Departed At Port of Discharge  | Journey Dependent | Only if non-port final destination |  |
+| Rail Carrier Scac at Port of Discharge |Journey Dependent | Only if non-port final destination | |
+| ETA for final destination           | Carrier Dependent, Journey Dependent | Only if non-port final destination |  |
+| ATA for final destination           | Journey Dependent | Only if non-port final destination |  |
+| Holds at final destination          | Carrier Dependent, Journey Dependent | Only if non-port final destination |  |
+| Fees at final destination           | Carrier Dependent, Journey Dependent | Only if non-port final destination |  |
+| Yard Location at final destination  | Carrier Dependent, Journey Dependent | Only if non-port final destination |  |
+| LFD at final destination            | Carrier Dependent, Journey Dependent | Only if non-port final destination |  |
 
 
 ##  Milestone Event Data
@@ -163,6 +173,8 @@ When a milestone passes, the Terminal49 API will ping one of your webhooks with 
 
 ## Milestones Events Supported
 A list of milestones that the API can track, as well as the event name used in the API. In future, further events may be supported.
+
+{/* Why do we have this here when we already have a list of events in multiple other places? */}
 
 |              Milestone Event Name        | Event Name           |
 | -------------------- | -------------------------------------- |
@@ -187,3 +199,9 @@ A list of milestones that the API can track, as well as the event name used in t
 | Feeder Discharged   | container.transport.feeder\_discharged |
 | Feeder Loaded   | container.transport.feeder\_loaded |
 | Feeder Departed   | container.transport.feeder\_departed |
+| Rail Departed   | container.transport.rail\_departed |
+| Rail Arrived    | container.transport.rail\_arrived |
+| Rail Loaded   | container.transport.rail\_loaded |
+| Rail Unloaded   | container.transport.rail\_unloaded |
+{/* Should we include rail_passing, rail_interchange_received, and rail_interchange_departed events? */}
+{/* Or should we leave them out because we don't have TransportEvents */}
