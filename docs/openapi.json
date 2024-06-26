@@ -4248,80 +4248,119 @@
                   "Example Container": {
                     "value": {
                       "data": {
-                        "id": "eeafd337-72b5-4e5c-87cb-9ef83fa99cf4",
+                        "id": "55a700e4-7005-45a9-92fd-1ff38641dbd9",
                         "type": "container",
                         "attributes": {
-                          "number": "HLXU8143951",
-                          "ref_numbers": [
-                            "REF-1",
-                            "REF-2"
-                          ],
+                          "number": "CAIU7432986",
                           "seal_number": null,
-                          "created_at": "2020-04-09T21:28:21Z",
+                          "created_at": "2024-06-26T15:05:21Z",
+                          "ref_numbers": [],
+                          "pod_arrived_at": null,
+                          "pod_discharged_at": "2024-06-22T04:00:00Z",
+                          "final_destination_full_out_at": null,
+                          "holds_at_pod_terminal": [],
+                          "available_for_pickup": true,
                           "equipment_type": "dry",
                           "equipment_length": 40,
                           "equipment_height": "high_cube",
                           "weight_in_lbs": null,
-                          "fees_at_pod_terminal": [],
-                          "holds_at_pod_terminal": [],
-                          "pickup_lfd": "2020-04-20T07:00:00Z",
-                          "pickup_appointment_at": null,
-                          "availability_known": true,
-                          "available_for_pickup": false,
-                          "pod_arrived_at": null,
-                          "pod_discharged_at": null,
-                          "final_destination_full_out_at": null,
-                          "pod_full_out_at": "2020-04-14T21:07:54Z",
+                          "pod_full_out_at": null,
                           "empty_terminated_at": null,
-                          "pod_timezone": "America/Los_Angeles",
-                          "final_destination_timezone": null,
-                          "empty_terminated_timezone": null
+                          "terminal_checked_at": "2024-06-26T17:51:12Z",
+                          "fees_at_pod_terminal": [],
+                          "pickup_lfd": "2024-07-07T04:00:00Z",
+                          "pickup_appointment_at": null,
+                          "pod_full_out_chassis_number": null,
+                          "location_at_pod_terminal": "Yard - Y0709A",
+                          "pod_last_tracking_request_at": "2024-06-26T17:51:12Z",
+                          "shipment_last_tracking_request_at": "2024-06-26T15:05:20Z",
+                          "availability_known": true,
+                          "pod_timezone": "America/New_York",
+                          "final_destination_timezone": "US/Eastern",
+                          "empty_terminated_timezone": "US/Eastern",
+                          "pickup_rail_carrier_scac": "CSXT",
+                          "pod_rail_loaded_at": null,
+                          "pod_rail_departed_at": null,
+                          "inland_destination_eta_at": null,
+                          "inland_destination_ata_at": null,
+                          "inland_destination_rail_unloaded_at": null,
+                          "pickup_facility_holds": null,
+                          "pickup_facility_fees": null,
+                          "pickup_facility_yard_location": null,
+                          "pickup_facility_lfd_on": null
                         },
                         "relationships": {
                           "shipment": {
                             "data": {
-                              "id": "06264731-503e-498e-bc76-f90b87b31562",
+                              "id": "02b1bd6f-407c-45bb-8645-06e7ee34e7e3",
                               "type": "shipment"
                             }
                           },
+                          "pickup_facility": {
+                            "data": null
+                          },
                           "pod_terminal": {
                             "data": {
-                              "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
+                              "id": "b859f5c3-8515-41da-bf20-39c0a5ada887",
                               "type": "terminal"
                             }
                           },
                           "transport_events": {
                             "data": [
                               {
-                                "id": "efc3f3c1-cdc2-4a7d-a176-762ddec107b8",
+                                "id": "45b542cb-332b-4684-b915-42e3a0759823",
                                 "type": "transport_event"
                               },
                               {
-                                "id": "951058bd-2c3b-4bcc-94e1-9be2526b9687",
+                                "id": "174ed528-a1a9-4002-aef0-f2c9369199da",
                                 "type": "transport_event"
                               },
                               {
-                                "id": "69af6795-56c2-4157-9a87-afd761cc85a0",
+                                "id": "7a2f30a6-a756-4c14-9477-fbfc1c7fe2f8",
                                 "type": "transport_event"
                               },
                               {
-                                "id": "68c3c29a-504a-4dbb-ad27-7194ef42d484",
+                                "id": "e7365004-175a-46e8-96cd-dbed0f3daf21",
                                 "type": "transport_event"
                               },
                               {
-                                "id": "03349405-a9be-4f3e-abde-28f2cb3922bd",
+                                "id": "7c567bf3-7f01-4a3d-a176-eaa1f7165585",
                                 "type": "transport_event"
+                              }
+                            ]
+                          },
+                          "raw_events": {
+                            "data": [
+                              {
+                                "id": "2956f71c-bfb9-4e49-b9e2-1b4d53c74cac",
+                                "type": "raw_event"
                               },
                               {
-                                "id": "ba9f85b4-658d-4f23-9308-635964df8037",
-                                "type": "transport_event"
+                                "id": "391e0eda-65b5-4fc3-a53d-25ecd9570259",
+                                "type": "raw_event"
+                              },
+                              {
+                                "id": "74810c04-6c8a-4194-8cff-52936584a965",
+                                "type": "raw_event"
+                              },
+                              {
+                                "id": "4b1500e2-b23b-4896-87bd-c38b1d16f385",
+                                "type": "raw_event"
+                              },
+                              {
+                                "id": "8b9a7d88-720a-4304-8c1e-a3336e39f481",
+                                "type": "raw_event"
+                              },
+                              {
+                                "id": "bf1f59c5-5dd8-4013-87f9-d7056bc87114",
+                                "type": "raw_event"
                               }
                             ]
                           }
                         }
                       },
                       "links": {
-                        "self": "https://api.terminal49.com/v2/containers/eeafd337-72b5-4e5c-87cb-9ef83fa99cf4"
+                        "self": "https://api.terminal49.com/v2/containers/55a700e4-7005-45a9-92fd-1ff38641dbd9"
                       }
                     }
                   }
