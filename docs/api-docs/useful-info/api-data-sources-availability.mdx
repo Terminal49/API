@@ -46,6 +46,14 @@ Presently, the Terminal 49 api integrates with terminals at the following ports:
 
 You can view a complete list of supported terminals and attributes on [Google Sheets](https://docs.google.com/spreadsheets/d/1cWK8sNpkjY5V-KlXe1fHi8mU_at2HcJYqjCvGQgixQk/edit#gid=1406366493)
 
+## Rail Carriers
+
+- BNSF Railway
+- Canadian National Railway (CN)
+- Canadian Pacific Railway (CP)
+- CSX Transportation
+- Norfolk Southern Railway (NS)
+- Union Pacific Railroad (UP)
 
 ## Known Issues (ocean)
 Shipment data is populated from requests to the shipping lines.
@@ -99,6 +107,45 @@ Below are a list of known issues with our data sources:
 - No container weight
 - Only Dry container types are mapped to our system
 
+## Known Issues (Rail)
+
+Rail data is populated from requests to the rail carriers.
+
+Below are a list of known issues with our rail data sources.
+
+{/* The following are taken from this Notion document: https://www.notion.so/terminal49/Rail-Integration-Research-c54287a8a6b34a5e9a3f73498a3f09a1?pvs=4#889f3227c0104781b38be4d780ece49f */}
+{/* However, I think what we care about has changed since then */}
+{/* TODO: collaborate with Matt/Arman/Edy to update this list */}
+
+### General Rail Issues
+
+The ETAs from rail carriers are not particularly accurate.  We are working on strategies to provide intelligence beyond what is provided by the rail carriers themselves.
+
+### BNSF
+
+- No Demmurage data
+- Inexact event times
+- Can't get events from before tracking started
+
+### Canadian National Railway (CN)
+
+- No Demmurage data
+- Can't get events from before tracking started
+
+### Canadian Pacific Railway (CP)
+
+- No LFD
+
+### Norfolk Southern Railway (NS)
+
+- Can't get events from before tracking started
+
+### Union Pacific Railroad (UP)
+
+{/* TODO: this was not on the list from Rail Integration Research */}
+
+### CSX Transportation
+
 # Data Fields & Availability
 
 Below is a list of data that can be retrieved via the API, including whether is is always available, or whether it is only supported by certain carriers (Carrier Dependent), certain Terminals (Terminal Dependent) or on certain types of journeys (Journey dependent).
@@ -110,7 +157,7 @@ Shipment Data is the primary data that comes from the Carrier. It containers the
 | ------ |-----|-----|-----|
 | Port of Lading                                 | Always                               | Port of Lading name, Port of Lading UN/LOCODE, Port of Lading Timezone                |                                                                            |
 | Port of Discharge                              | Always                               | Port of Discharge name, Port of discharge UN/LOCODE,Port of Discharge Timezone        |                                                                            |
-| Final Destination beyond Port of Discharge     | Carrier dependent, Journey Dependent | ,Destination name, Destination UN/LOCODE, Destination UN/LOCODE, Destination Timezone | Only for shipments with inland moves provided by or booked by the carrier. |
+| Final Destination beyond Port of Discharge     | Carrier dependent, Journey Dependent | Destination name, Destination UN/LOCODE, Destination UN/LOCODE, Destination Timezone | Only for shipments with inland moves provided by or booked by the carrier. |
 | Listing of Container Numbers                   | Always                               | A list of container numbers with data attributes listed below                         |                                                                            |
 | Bill of Lading Number                          | Always (inputted by user)            | BOL                                                                                   |                                                                            |
 | Shipping Line Details                          | Always                               | SCAC, SSL Name                                                                        |                                                                            |
