@@ -5490,9 +5490,8 @@
                   }
                 }
               },
-              "customer": {
+              "pod_terminal": {
                 "type": "object",
-                "description": "`unreleased`",
                 "properties": {
                   "data": {
                     "type": "object",
@@ -5500,45 +5499,67 @@
                       "type": {
                         "type": "string",
                         "enum": [
-                          "account"
+                          "terminal"
                         ]
                       },
                       "id": {
                         "type": "string",
                         "format": "uuid"
                       }
-                    }
-                  }
-                }
-              },
-              "pod_terminal": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "terminal"
+                    },
+                    "required": [
+                      "type",
+                      "id"
                     ]
-                  },
-                  "id": {
-                    "type": "string",
-                    "format": "uuid"
                   }
                 }
               },
               "destination_terminal": {
                 "type": "object",
                 "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "terminal",
-                      "rail_terminal"
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "terminal",
+                          "rail_terminal"
+                        ]
+                      },
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "id"
                     ]
-                  },
-                  "id": {
-                    "type": "string",
-                    "format": "uuid"
+                  }
+                }
+              },
+              "line_tracking_stopped_by_user": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      },
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "id"
+                    ]
                   }
                 }
               }
@@ -5567,7 +5588,6 @@
               },
               "tags": {
                 "type": "array",
-                "description": "`unreleased`",
                 "items": {
                   "type": "string"
                 }
@@ -5605,6 +5625,13 @@
               "shipping_line_name": {
                 "type": "string"
               },
+              "shipping_line_short_name": {
+                "type": "string"
+              },
+              "customer_name": {
+                "type": "string",
+                "nullable": true
+              },
               "pod_vessel_name": {
                 "type": "string",
                 "nullable": true
@@ -5628,6 +5655,11 @@
                 "nullable": true
               },
               "pod_eta_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "pod_original_eta_at": {
                 "type": "string",
                 "format": "date-time",
                 "nullable": true
@@ -5703,11 +5735,26 @@
             "enum": [
               "shipment"
             ]
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "self"
+            ]
           }
         },
         "required": [
           "id",
-          "type"
+          "type",
+          "attributes",
+          "relationships",
+          "links"
         ]
       },
       "meta": {
