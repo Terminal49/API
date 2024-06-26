@@ -5840,7 +5840,21 @@
               "pod_full_out_at": "2022-02-11T22:18:00Z",
               "empty_terminated_at": null,
               "terminal_checked_at": "2022-02-11T22:45:32Z",
-              "pickup_rail_carrier_scac": "UPRR"
+              "pickup_rail_carrier_scac": "UPRR",
+              "pod_timezone": "America/Los_Angeles",
+              "final_destination_timezone": null,
+              "empty_terminated_timezone": null,
+              "pod_last_tracking_request_at": "2022-02-11T22:40:00Z",
+              "shipment_last_tracking_request_at": "2022-02-11T22:40:00Z",
+              "pod_rail_loaded_at": "2022-02-11T22:18:00Z",
+              "pod_rail_departed_at": "2022-02-11T23:30:00Z",
+              "inland_destination_eta_at": null,
+              "inland_destination_ata_at": "2022-02-15T01:12:00Z",
+              "inland_destination_rail_unloaded_at": "2022-02-15T07:54:00Z",
+              "pickup_facility_holds": null,
+              "pickup_facility_fees": null,
+              "pickup_facility_yard_location": null,
+              "pickup_facility_lfd_on": null
             },
             "relationships": {
               "shipment": {
