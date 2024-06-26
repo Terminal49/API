@@ -25,7 +25,7 @@ Presently, the Terminal 49 api integrates with terminals at the following ports:
 - Houston
 - Jacksonville
 - London Gateway (UK)
-- Long Beach 
+- Long Beach
 - Los Angeles
 - Miami
 - Mobile
@@ -46,11 +46,19 @@ Presently, the Terminal 49 api integrates with terminals at the following ports:
 
 You can view a complete list of supported terminals and attributes on [Google Sheets](https://docs.google.com/spreadsheets/d/1cWK8sNpkjY5V-KlXe1fHi8mU_at2HcJYqjCvGQgixQk/edit#gid=1406366493)
 
+## Rail Carriers
+
+- BNSF Railway
+- Canadian National Railway (CN)
+- Canadian Pacific Railway (CP)
+- CSX Transportation
+- Norfolk Southern Railway (NS)
+- Union Pacific Railroad (UP)
 
 ## Known Issues (ocean)
 Shipment data is populated from requests to the shipping lines.
 
-Below are a list of known issuses with our data sources:
+Below are a list of known issues with our data sources:
 
 ### Cma-Cgm, APL, ANL
 - No container weight
@@ -99,6 +107,36 @@ Below are a list of known issuses with our data sources:
 - No container weight
 - Only Dry container types are mapped to our system
 
+## Rail Coverage
+
+Rail data is populated from requests to the rail carriers.  Some carriers provide more data than others.
+
+
+| Event                       | BNSF | Canadian National Railway | Canadian Pacific Railway | Norfolk Southern Railway | Union Pacific Railroad | CSX Transportation |
+|-----------------------------|------|---------------------------|--------------------------|--------------------------|------------------------|---------------------|
+| rail_loaded                 |  ❌  |           ✅                |       ✅                   |       ✅                   |         ✅               |       ❌              |
+| rail_departed               |  ❌  |           ❌                |       ✅                   |           ✅               |           ✅             |       ✅              |
+| rail_arrived                |  ✅  |           ✅                |       ✅                   |           ✅               |           ✅             |       ✅              |
+| arrived_at_destination      |  ❌  |           ❌                |       ✅                   |         ❌                |         ❌               |        ❌             |
+| rail_unloaded               |  ✅  |           ✅                |       ❌                   |           ✅               |           ✅             |       ❌              |
+| train_passing               |  ❌  |           ❌                |       ❌                   |        ❌                  |         ✅               |       ❌              |
+| rail_interchange_delivered  |  ❌  |           ✅                |       ✅                   |           ✅               |           ✅             |       ❌              |
+| rail_interchange_received   |  ❌  |           ✅                |       ✅                   |         ✅                 |         ✅               |       ✅              |
+| full_out                    |  ❌  |           ✅                |       ✅                   |           ✅               |           ✅             |       ❌              |
+| empty_in                    |  ❌  |           ✅                |       ❌                   |         ❌                |         ✅               |        ❌             |
+| full_in                     |  ❌  |           ✅                |       ✅                   |         ✅                 |         ✅               |       ✅              |
+| empty_out                   |  ❌  |           ✅                |       ❌                   |         ❌                |         ❌               |        ❌             |
+| available                   |  ✅  |           ✅                |       ✅                   |         ✅                 |         ✅               |       ✅             |
+| customs_release             |  ❌  |           ✅                |       ❌                   |         ❌                |         ❌               |        ❌             |
+| not_available               |      |                           |                          |                          |                        |                     |
+| holds_and_fees_changed      |      |                           |                          |                          |                        |                     |
+| last_free_day_changed       |  ✅    |         ✅                  |     ✅                     |         ✅                 |          ✅              |     ✅                |
+
+In addition to some data not being provided by all carriers, there are a couple other known issues:
+
+- BNSF does not provide an event history
+- ETAs are notoriously incorrect (we're working on a way to improve on what we get from the carriers)
+
 # Data Fields & Availability
 
 Below is a list of data that can be retrieved via the API, including whether is is always available, or whether it is only supported by certain carriers (Carrier Dependent), certain Terminals (Terminal Dependent) or on certain types of journeys (Journey dependent).
@@ -110,7 +148,7 @@ Shipment Data is the primary data that comes from the Carrier. It containers the
 | ------ |-----|-----|-----|
 | Port of Lading                                 | Always                               | Port of Lading name, Port of Lading UN/LOCODE, Port of Lading Timezone                |                                                                            |
 | Port of Discharge                              | Always                               | Port of Discharge name, Port of discharge UN/LOCODE,Port of Discharge Timezone        |                                                                            |
-| Final Destination beyond Port of Discharge     | Carrier dependent, Journey Dependent | ,Destination name, Destination UN/LOCODE, Destination UN/LOCODE, Destination Timezone | Only for shipments with inland moves provided by or booked by the carrier. |
+| Final Destination beyond Port of Discharge     | Carrier dependent, Journey Dependent | Destination name, Destination UN/LOCODE, Destination UN/LOCODE, Destination Timezone | Only for shipments with inland moves provided by or booked by the carrier. |
 | Listing of Container Numbers                   | Always                               | A list of container numbers with data attributes listed below                         |                                                                            |
 | Bill of Lading Number                          | Always (inputted by user)            | BOL                                                                                   |                                                                            |
 | Shipping Line Details                          | Always                               | SCAC, SSL Name                                                                        |                                                                            |
