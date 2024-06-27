@@ -53,11 +53,12 @@ graph LR
 A[Rail Loaded] --> B[Rail Departed]
 B --> C[Rail Arrived]
 C --> D[Rail Unloaded]
-D --> E[Full Out]
+D --> G[Available for Pickup]
+G --> E[Full Out]
 E --> F[Empty Return]
 ```
 
-However, not all shipments have a simple journey.  You may want to track events such as when a train passes through a town, when the container switches trains or rail carriers at an interchange, and when the status of your container at the terminal changes.
+{/* However, not all shipments have a simple journey.  You may want to track events such as when a train passes through a town, when the container switches trains or rail carriers at an interchange, and when the status of your container at the terminal changes.
 
 This is a more complex diagram that shows the various events that can occur in a container's rail journey.
 
@@ -80,6 +81,19 @@ graph LR
     H --> G
     G --> E[Full Out]
     E --> F[Empty Return]
+``` */}
+
+In addition, there are events that update you on the status of your container at the rail terminal, marking it as available or unavailable.  Some of these events come directly from the carriers, while others we generate when we see the fees and holds on your container change.
+
+```mermaid
+graph LR
+    C[Previous events] --> D[Rail Unloaded]
+    D --> G[Available for Pickup]
+    D --> H[Not Available]
+    G --> H
+    H --> G
+    H -- Holds and Fees Updated --> H
+    G --> E[Full Out]
 ```
 
 ### Webhook Notifications
