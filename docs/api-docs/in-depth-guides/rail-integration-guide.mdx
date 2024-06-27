@@ -14,8 +14,8 @@ For a broader overview, including the reasons why you'd want rail visibility and
 ## Table of Contents
 
 - [Supported Rail Carriers](#supported-rail-carriers)
-- [Supported Rail Milestones and Data Attributes](#supported-rail-milestones-and-data-attributes)
-  - [Rail Milestones (aka rail events)](#rail-milestones-aka-rail-events)
+- [Supported Rail Events and Data Attributes](#supported-rail-events-and-data-attributes)
+  - [Rail-specific Transport Events](#rail-specific-transport-events)
   - [Webhook Notifications](#webhook-notifications)
   - [Rail Container Attributes](#rail-container-attributes)
 - [Integration Methods](#integration-methods)
@@ -35,18 +35,18 @@ Terminal49 container tracking platform integrates with all North American Class-
 
 By integrating with these carriers, Terminal49 ensures that you have real-time access to critical tracking data, enabling better decision-making and operational efficiency.
 
-## Supported Rail Milestones and Data Attributes
+## Supported Rail Events and Data Attributes
 
 Terminal49 seamlessly tracks your containers as they go from container ship, to ocean terminal, to rail carrier.
 
-We provide a set of milestones/events that let you track the status of your containers as they move through the rail system.  You can be notified by webhook whenever these events occur.
+We provide a set of Transport Events that let you track the status of your containers as they move through the rail system.  You can be notified by webhook whenever these events occur.
 
 We also provide a set of attributes that let you know the current status of your container at any given time, as well as useful information such as ETA, pickup facility, and availability information.
 
-### Rail Milestones (aka rail events)
+### Rail-Specific Transport Events
 
 {/* TODO: create rail-carriers page or section */}
-There are several core milestones that occur on most rail journeys.  Some rail carriers do not share all events, {/* (see [Rail Carriers](#rail-carriers) for more details), */} but in general these are the key events for a container.
+There are several core Transport Events that occur on most rail journeys.  Some rail carriers do not share all events, {/* (see [Rail Carriers](#rail-carriers) for more details), */} but in general these are the key events for a container.
 
 ```mermaid
 graph LR
@@ -57,6 +57,8 @@ D --> G[Available for Pickup]
 G --> E[Full Out]
 E --> F[Empty Return]
 ```
+
+`Available for Pickup`, `Full Out` and `Empty Return` are not specific to rail, but are included here since they are a key part of the rail journey.
 
 {/* However, not all shipments have a simple journey.  You may want to track events such as when a train passes through a town, when the container switches trains or rail carriers at an interchange, and when the status of your container at the terminal changes.
 
@@ -98,11 +100,11 @@ graph LR
 
 ### Webhook Notifications
 
-Terminal49 provides webhook notifications to keep you updated on key milestones in a container's rail journey. These notifications allow you to integrate near real-time tracking data directly into your applications.
+Terminal49 provides webhook notifications to keep you updated on key Transport Events in a container's rail journey. These notifications allow you to integrate near real-time tracking data directly into your applications.
 
 Here's a list of the rail-specific events which support webhook notifications:
 
-| Milestone | Webhook Notification | Description |
+| Transport Event | Webhook Notification | Description |
 |----------------|----------------------|-------------|
 | Rail Loaded    | `container.transport.rail_loaded`   | The container is loaded onto a railcar. |
 | Rail Departed  | `container.transport.rail_departed` | The container departs on the railcar (usually from port of discharge). |
@@ -111,7 +113,7 @@ Here's a list of the rail-specific events which support webhook notifications:
 
 There's also a set of events that are triggered when the status of the container at the destination rail terminal changes.  For containers without rail, they would have been triggered at the ocean terminal.
 
-| Milestone | Webhook Notification | Description |
+| Transport Event | Webhook Notification | Description |
 |----------------|----------------------|-------------|
 | Available for Pickup | `container.transport.available`     | (Coming Soon) The container is available for pickup at the rail terminal. |
 | Not Available  | `container.transport.not_available` | (Coming Soon) The container is not available for pickup at the rail terminal. |
@@ -121,7 +123,7 @@ There's also a set of events that are triggered when the status of the container
 
 Finally, we plan to provide webhook notifications for when estimated rail arrival times change, but this is still under development.
 
-| Milestone | Webhook Notification | Description |
+| Transport Event | Webhook Notification | Description |
 |----------------|----------------------|-------------|
 | Estimated Rail Arrival | `container.estimated.rail_arrival` | (Coming soon) Estimated time of arrival for the container at the rail terminal. |
 
