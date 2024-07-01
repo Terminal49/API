@@ -106,8 +106,9 @@ Here's a list of the rail-specific events which support webhook notifications:
 | Transport Event | Webhook Notification | Description |
 |----------------|----------------------|-------------|
 | Rail Loaded    | `container.transport.rail_loaded`   | The container is loaded onto a railcar. |
-| Rail Departed  | `container.transport.rail_departed` | The container departs on the railcar (usually from port of discharge). |
-| Rail Arrived   | `container.transport.rail_arrived`  | The container arrives at the destination terminal. |
+| Rail Departed  | `container.transport.rail_departed` | The container departs on the railcar (not always from port of discharge). |
+| Rail Arrived   | `container.transport.rail_arrived`  | The container arrives at a rail terminal (not always at the destination terminal). |
+| Arrived At Inland Destination | `container.transport.arrived_at_inland_destination` | The container arrives at the destination terminal. |
 | Rail Unloaded  | `container.transport.rail_unloaded` | The container is unloaded from a railcar. |
 
 There's also a set of events that are triggered when the status of the container at the destination rail terminal changes.  For containers without rail, they would have been triggered at the ocean terminal.
