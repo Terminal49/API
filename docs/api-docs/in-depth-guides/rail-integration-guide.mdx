@@ -141,8 +141,8 @@ The following are new attributes that are specific to rail container tracking.
 - **pickup_facility_fees**: Fees associated with the container at the rail terminal.
 - **pickup_facility_yard_location**: Yard location of the container at the rail terminal.
 - **pickup_facility_lfd_on**: Last Free Day for demurrage charges.
-- **pickup_rail_carrier_scac**: SCAC code of the rail carrier that picks up the container from the POD (this could be different than the rail carrier that delivers to the destination terminal). {/* I think this is a bad name.  We should rename it to pod_rail_carrier_scac -- which is actually what it's named internally, but we change it for the serializer! */}
-{/* Why is there not a rail carrier scac for the delivery destination in the serializer?  We should add */}
+- **pickup_rail_carrier_scac**: SCAC code of the rail carrier that picks up the container from the POD (this could be different than the rail carrier that delivers to the destination terminal). {/* Linear ticket to rename: https://linear.app/terminal49/issue/DATA-2767/rename-pickup-rail-carrier-scac */}
+{/* Linear ticket to add matching delivery/destination rail carrier scac: https://linear.app/terminal49/issue/DATA-2768/add-destination-rail-carrier-scac-to-serializer */}
 
 
 {/* TODO: Look at the other container attributes that could be fed via rail but are currently shipping-line-only.  Such as :current_issues, :pickup_appointment_at, :availability_known, :available_for_pickup  */}
