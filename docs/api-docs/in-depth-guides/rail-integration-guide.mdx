@@ -120,11 +120,11 @@ There's also a set of events that are triggered when the status of the container
 | Full Out       | `container.transport.full_out`      | The full container leaves the rail terminal. |
 | Empty In       | `container.transport.empty_in`      | The empty container is returned to the terminal. |
 
-Finally, we plan to provide webhook notifications for when estimated rail arrival times change, but this is still under development.
+Finally, we have a webhook notifications for when the destination ETA changes.
 
 | Transport Event | Webhook Notification | Description |
 |----------------|----------------------|-------------|
-| Estimated Rail Arrival | `container.estimated.rail_arrival` | (Coming soon) Estimated time of arrival for the container at the rail terminal. |
+| Estimated Destination Arrival | `container.transport.estimated.arrived_at_inland_destination` | Estimated time of arrival for the container at the destination rail terminal. |
 
 Integrate these notifications by subscribing to the webhooks and handling the incoming data to update your systems.
 
