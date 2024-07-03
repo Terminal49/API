@@ -68,175 +68,447 @@
                     "value": {
                       "data": [
                         {
-                          "id": "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8",
+                          "id": "62738624-7032-4a50-892e-c55826228c25",
                           "type": "shipment",
                           "attributes": {
-                            "bill_of_lading_number": "6140575020",
-                            "ref_numbers": [
-                              "my-ref-49",
-                              "PO#18412"
-                            ],
-                            "created_at": "2020-02-20T13:37:12Z",
+                            "created_at": "2024-06-26T17:28:59Z",
+                            "ref_numbers": [],
                             "tags": [],
-                            "port_of_lading_locode": "INVTZ",
-                            "port_of_lading_name": "Visakhapatnam, IN",
-                            "port_of_discharge_locode": "USNYC",
-                            "port_of_discharge_name": "New York / New Jersey, NY",
-                            "destination_locode": "USDET",
-                            "destination_name": "Detroit, MI",
-                            "shipping_line_scac": "HLCU",
-                            "pod_vessel_name": "CMA CGM ALMAVIVA",
-                            "pod_vessel_imo": "9450648",
-                            "pod_voyage_number": "0108",
-                            "pol_etd_at": null,
-                            "pol_atd_at": "2020-02-15T21:53:00Z",
-                            "pol_timezone": "Asia/Calcutta",
-                            "pod_eta_at": "2020-03-18T08:00:00Z",
-                            "pod_ata_at": null,
-                            "pod_timezone": "America/New_York",
-                            "destination_eta_at": "2020-03-26T17:00:00Z",
+                            "bill_of_lading_number": "OOLU2148468620",
+                            "normalized_number": "2148468620",
+                            "shipping_line_scac": "OOLU",
+                            "shipping_line_name": "Orient Overseas Container Line",
+                            "shipping_line_short_name": "OOCL",
+                            "customer_name": "Sodor Steamworks",
+                            "port_of_lading_locode": "CNNBG",
+                            "port_of_lading_name": "Ningbo",
+                            "port_of_discharge_locode": "USLAX",
+                            "port_of_discharge_name": "Los Angeles",
+                            "pod_vessel_name": "EVER FORWARD",
+                            "pod_vessel_imo": "9850551",
+                            "pod_voyage_number": "1119E",
+                            "destination_locode": "USCLE",
+                            "destination_name": "Cleveland",
+                            "destination_timezone": "America/New_York",
                             "destination_ata_at": null,
-                            "destination_timezone": "America/Detroit"
+                            "destination_eta_at": "2024-07-02T08:00:00Z",
+                            "pol_etd_at": null,
+                            "pol_atd_at": "2024-06-09T03:42:00Z",
+                            "pol_timezone": "Asia/Shanghai",
+                            "pod_eta_at": null,
+                            "pod_original_eta_at": null,
+                            "pod_ata_at": "2024-06-22T13:36:00Z",
+                            "pod_timezone": "America/Los_Angeles",
+                            "line_tracking_last_attempted_at": "2024-06-26T17:28:59Z",
+                            "line_tracking_last_succeeded_at": "2024-06-26T17:28:59Z",
+                            "line_tracking_stopped_at": null,
+                            "line_tracking_stopped_reason": null
+                          },
+                          "links": {
+                            "self": "/v2/shipments/62738624-7032-4a50-892e-c55826228c25"
                           },
                           "relationships": {
-                            "containers": {
-                              "data": [
-                                {
-                                  "id": "c99a81c0-ff69-4bdf-aa5f-8e33a787f5fa",
-                                  "type": "container"
-                                }
-                              ]
-                            },
                             "port_of_lading": {
                               "data": {
-                                "id": "bde5465a-1160-4fde-a026-74df9c362f65",
+                                "id": "2a90c27b-c2ee-45e2-892f-5c695d74e2d0",
                                 "type": "port"
                               }
                             },
                             "port_of_discharge": {
                               "data": {
-                                "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+                                "id": "47b27584-4ec9-4e2f-95e1-7a42928cc40c",
                                 "type": "port"
+                              }
+                            },
+                            "pod_terminal": {
+                              "data": {
+                                "id": "42c53b13-0d29-4fa6-8663-7343a56319f1",
+                                "type": "terminal"
                               }
                             },
                             "destination": {
                               "data": {
-                                "id": "c9ae2b6b-5088-4e07-ba09-2872121e4fa2",
-                                "type": "metro_area"
+                                "id": "3b1cc325-ffe9-400a-82ce-f5c4891af382",
+                                "type": "port"
                               }
                             },
-                            "customer": {
+                            "destination_terminal": {
                               "data": {
-                                "id": "ff76b51a-371e-45ec-86d1-9d03ccae566a",
-                                "type": "account"
+                                "id": "ce22669e-14b2-4501-b782-f0a360f07cd0",
+                                "type": "terminal"
                               }
+                            },
+                            "line_tracking_stopped_by_user": {
+                              "data": null
+                            },
+                            "containers": {
+                              "data": [
+                                {
+                                  "id": "7aefc29e-0898-4825-8376-4f998b51d033",
+                                  "type": "container"
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "id": "baaa725e-aa0e-4937-ac78-54d9e2e8621e",
+                          "type": "shipment",
+                          "attributes": {
+                            "created_at": "2024-06-26T16:47:42Z",
+                            "ref_numbers": [],
+                            "tags": [],
+                            "bill_of_lading_number": "HDMUTAOM72244900",
+                            "normalized_number": "TAOM72244900",
+                            "shipping_line_scac": "HDMU",
+                            "shipping_line_name": "Hyundai Merchant Marine",
+                            "shipping_line_short_name": "Hyundai",
+                            "customer_name": "Sodor Steamworks",
+                            "port_of_lading_locode": "CNQDG",
+                            "port_of_lading_name": "Qingdao",
+                            "port_of_discharge_locode": "USSAV",
+                            "port_of_discharge_name": "Savannah",
+                            "pod_vessel_name": "UMM SALAL",
+                            "pod_vessel_imo": "9525857",
+                            "pod_voyage_number": "0038E",
+                            "destination_locode": "USROQ",
+                            "destination_name": "Rossville",
+                            "destination_timezone": "America/Chicago",
+                            "destination_ata_at": null,
+                            "destination_eta_at": "2024-06-30T07:05:00Z",
+                            "pol_etd_at": null,
+                            "pol_atd_at": "2024-05-07T03:01:00Z",
+                            "pol_timezone": "Asia/Shanghai",
+                            "pod_eta_at": null,
+                            "pod_original_eta_at": null,
+                            "pod_ata_at": "2024-06-20T21:27:00Z",
+                            "pod_timezone": "America/New_York",
+                            "line_tracking_last_attempted_at": "2024-06-26T16:48:04Z",
+                            "line_tracking_last_succeeded_at": "2024-06-26T16:48:04Z",
+                            "line_tracking_stopped_at": null,
+                            "line_tracking_stopped_reason": null
+                          },
+                          "links": {
+                            "self": "/v2/shipments/baaa725e-aa0e-4937-ac78-54d9e2e8621e"
+                          },
+                          "relationships": {
+                            "port_of_lading": {
+                              "data": {
+                                "id": "0ccbe8af-c8d0-4abd-a842-3bfad1d82024",
+                                "type": "port"
+                              }
+                            },
+                            "port_of_discharge": {
+                              "data": {
+                                "id": "6129528d-846e-4571-ae16-b5328a4285ab",
+                                "type": "port"
+                              }
+                            },
+                            "pod_terminal": {
+                              "data": {
+                                "id": "a243bdf8-0da3-4056-a6a7-05fe8ab43999",
+                                "type": "terminal"
+                              }
+                            },
+                            "destination": {
+                              "data": {
+                                "id": "87ca3f37-e4d1-46eb-9eb1-6b5ffafde95d",
+                                "type": "port"
+                              }
+                            },
+                            "destination_terminal": {
+                              "data": null
+                            },
+                            "line_tracking_stopped_by_user": {
+                              "data": null
+                            },
+                            "containers": {
+                              "data": [
+                                {
+                                  "id": "772cd872-9677-4c68-9b7a-4e9e843b00e2",
+                                  "type": "container"
+                                },
+                                {
+                                  "id": "52efc544-0de1-452f-bcf8-0290a6ce5c11",
+                                  "type": "container"
+                                },
+                                {
+                                  "id": "3107692e-61ad-4b4c-b3d4-78348b2e37ff",
+                                  "type": "container"
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "id": "7721a48c-5e93-43c9-9f5f-5be10a87fdde",
+                          "type": "shipment",
+                          "attributes": {
+                            "created_at": "2024-06-26T16:28:39Z",
+                            "ref_numbers": [],
+                            "tags": [],
+                            "bill_of_lading_number": "OOLU2738424980",
+                            "normalized_number": "2738424980",
+                            "shipping_line_scac": "OOLU",
+                            "shipping_line_name": "Orient Overseas Container Line",
+                            "shipping_line_short_name": "OOCL",
+                            "customer_name": "Sodor Steamworks",
+                            "port_of_lading_locode": "ITSPE",
+                            "port_of_lading_name": "La Spezia",
+                            "port_of_discharge_locode": "USSAV",
+                            "port_of_discharge_name": "Savannah",
+                            "pod_vessel_name": "OOCL GUANGZHOU",
+                            "pod_vessel_imo": "9404869",
+                            "pod_voyage_number": "162E",
+                            "destination_locode": "USATL",
+                            "destination_name": "Atlanta",
+                            "destination_timezone": "America/New_York",
+                            "destination_ata_at": null,
+                            "destination_eta_at": "2024-06-27T06:42:00Z",
+                            "pol_etd_at": null,
+                            "pol_atd_at": "2024-06-05T08:03:00Z",
+                            "pol_timezone": "Europe/Rome",
+                            "pod_eta_at": null,
+                            "pod_original_eta_at": null,
+                            "pod_ata_at": "2024-06-23T15:34:00Z",
+                            "pod_timezone": "America/New_York",
+                            "line_tracking_last_attempted_at": "2024-06-26T16:28:39Z",
+                            "line_tracking_last_succeeded_at": "2024-06-26T16:28:39Z",
+                            "line_tracking_stopped_at": null,
+                            "line_tracking_stopped_reason": null
+                          },
+                          "links": {
+                            "self": "/v2/shipments/7721a48c-5e93-43c9-9f5f-5be10a87fdde"
+                          },
+                          "relationships": {
+                            "port_of_lading": {
+                              "data": {
+                                "id": "b5656766-a56f-4b32-8e03-d240e7519604",
+                                "type": "port"
+                              }
+                            },
+                            "port_of_discharge": {
+                              "data": {
+                                "id": "6129528d-846e-4571-ae16-b5328a4285ab",
+                                "type": "port"
+                              }
+                            },
+                            "pod_terminal": {
+                              "data": {
+                                "id": "a243bdf8-0da3-4056-a6a7-05fe8ab43999",
+                                "type": "terminal"
+                              }
+                            },
+                            "destination": {
+                              "data": {
+                                "id": "7daf9ea3-3018-4d62-b88c-43803df9030c",
+                                "type": "port"
+                              }
+                            },
+                            "destination_terminal": {
+                              "data": {
+                                "id": "022ef8fc-1e2a-4ad6-8eae-330d65eb1c8e",
+                                "type": "terminal"
+                              }
+                            },
+                            "line_tracking_stopped_by_user": {
+                              "data": null
+                            },
+                            "containers": {
+                              "data": [
+                                {
+                                  "id": "2a25fd3e-a18e-47cc-9cea-62771e82d0f2",
+                                  "type": "container"
+                                },
+                                {
+                                  "id": "6cdc725d-2b31-40f9-86dd-76225390a488",
+                                  "type": "container"
+                                },
+                                {
+                                  "id": "2f1e9a9d-4689-4f4d-84a8-64409b56521d",
+                                  "type": "container"
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "id": "32b5ad78-43ba-42d9-bdc0-4cf12320e020",
+                          "type": "shipment",
+                          "attributes": {
+                            "created_at": "2024-06-26T15:59:52Z",
+                            "ref_numbers": [],
+                            "tags": [],
+                            "bill_of_lading_number": "OOLU2738277190",
+                            "normalized_number": "2738277190",
+                            "shipping_line_scac": "OOLU",
+                            "shipping_line_name": "Orient Overseas Container Line",
+                            "shipping_line_short_name": "OOCL",
+                            "customer_name": "Sodor Steamworks",
+                            "port_of_lading_locode": "CNQDG",
+                            "port_of_lading_name": "Qingdao",
+                            "port_of_discharge_locode": "USLAX",
+                            "port_of_discharge_name": "Los Angeles",
+                            "pod_vessel_name": "EVER FORWARD",
+                            "pod_vessel_imo": "9850551",
+                            "pod_voyage_number": "1119E",
+                            "destination_locode": "USMEM",
+                            "destination_name": "Memphis",
+                            "destination_timezone": "America/Chicago",
+                            "destination_ata_at": null,
+                            "destination_eta_at": "2024-07-01T14:00:00Z",
+                            "pol_etd_at": null,
+                            "pol_atd_at": "2024-06-02T18:22:00Z",
+                            "pol_timezone": "Asia/Shanghai",
+                            "pod_eta_at": null,
+                            "pod_original_eta_at": null,
+                            "pod_ata_at": "2024-06-22T13:36:00Z",
+                            "pod_timezone": "America/Los_Angeles",
+                            "line_tracking_last_attempted_at": "2024-06-26T15:59:52Z",
+                            "line_tracking_last_succeeded_at": "2024-06-26T15:59:52Z",
+                            "line_tracking_stopped_at": null,
+                            "line_tracking_stopped_reason": null
+                          },
+                          "links": {
+                            "self": "/v2/shipments/32b5ad78-43ba-42d9-bdc0-4cf12320e020"
+                          },
+                          "relationships": {
+                            "port_of_lading": {
+                              "data": {
+                                "id": "0ccbe8af-c8d0-4abd-a842-3bfad1d82024",
+                                "type": "port"
+                              }
+                            },
+                            "port_of_discharge": {
+                              "data": {
+                                "id": "47b27584-4ec9-4e2f-95e1-7a42928cc40c",
+                                "type": "port"
+                              }
+                            },
+                            "pod_terminal": {
+                              "data": {
+                                "id": "42c53b13-0d29-4fa6-8663-7343a56319f1",
+                                "type": "terminal"
+                              }
+                            },
+                            "destination": {
+                              "data": {
+                                "id": "ba0b9f68-2025-40ca-ae12-1c2210cca333",
+                                "type": "port"
+                              }
+                            },
+                            "destination_terminal": {
+                              "data": {
+                                "id": "d0ec0da1-8a3a-4b11-b1e3-5716bbc71dc3",
+                                "type": "terminal"
+                              }
+                            },
+                            "line_tracking_stopped_by_user": {
+                              "data": null
+                            },
+                            "containers": {
+                              "data": [
+                                {
+                                  "id": "60d2fd62-14e2-4ca2-a927-9633fc58fdff",
+                                  "type": "container"
+                                },
+                                {
+                                  "id": "0ffe3e75-b3df-4d20-b9f4-97bbbcec404d",
+                                  "type": "container"
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "id": "bd117d3b-8fa4-487c-9bab-25c15e227d1a",
+                          "type": "shipment",
+                          "attributes": {
+                            "created_at": "2024-06-26T15:59:35Z",
+                            "ref_numbers": [],
+                            "tags": [],
+                            "bill_of_lading_number": "OOLU2147973020",
+                            "normalized_number": "2147973020",
+                            "shipping_line_scac": "OOLU",
+                            "shipping_line_name": "Orient Overseas Container Line",
+                            "shipping_line_short_name": "OOCL",
+                            "customer_name": "Sodor Steamworks",
+                            "port_of_lading_locode": "IDSUB",
+                            "port_of_lading_name": "Surabaya",
+                            "port_of_discharge_locode": "USLAX",
+                            "port_of_discharge_name": "Los Angeles",
+                            "pod_vessel_name": "CMA CGM A.LINCOLN",
+                            "pod_vessel_imo": "9780859",
+                            "pod_voyage_number": "1TU70E1MA",
+                            "destination_locode": null,
+                            "destination_name": null,
+                            "destination_timezone": null,
+                            "destination_ata_at": null,
+                            "destination_eta_at": null,
+                            "pol_etd_at": null,
+                            "pol_atd_at": "2024-05-14T02:37:00Z",
+                            "pol_timezone": "Asia/Jakarta",
+                            "pod_eta_at": null,
+                            "pod_original_eta_at": null,
+                            "pod_ata_at": "2024-06-23T21:58:00Z",
+                            "pod_timezone": "America/Los_Angeles",
+                            "line_tracking_last_attempted_at": "2024-06-26T15:59:35Z",
+                            "line_tracking_last_succeeded_at": "2024-06-26T15:59:35Z",
+                            "line_tracking_stopped_at": null,
+                            "line_tracking_stopped_reason": null
+                          },
+                          "links": {
+                            "self": "/v2/shipments/bd117d3b-8fa4-487c-9bab-25c15e227d1a"
+                          },
+                          "relationships": {
+                            "port_of_lading": {
+                              "data": {
+                                "id": "4201ab42-c51f-48ac-b7a1-12146e02c6a2",
+                                "type": "port"
+                              }
+                            },
+                            "port_of_discharge": {
+                              "data": {
+                                "id": "47b27584-4ec9-4e2f-95e1-7a42928cc40c",
+                                "type": "port"
+                              }
+                            },
+                            "pod_terminal": {
+                              "data": {
+                                "id": "eaa2580c-5f5b-4198-85e4-821145d62098",
+                                "type": "terminal"
+                              }
+                            },
+                            "destination": {
+                              "data": null
+                            },
+                            "destination_terminal": {
+                              "data": null
+                            },
+                            "line_tracking_stopped_by_user": {
+                              "data": null
+                            },
+                            "containers": {
+                              "data": [
+                                {
+                                  "id": "815ff702-fdb5-4455-a28e-314c345d7481",
+                                  "type": "container"
+                                }
+                              ]
                             }
                           }
                         }
                       ],
-                      "included": [
-                        {
-                          "id": "c99a81c0-ff69-4bdf-aa5f-8e33a787f5fa",
-                          "type": "container",
-                          "attributes": {
-                            "number": "UACU4743531",
-                            "equipment_type": "reefer",
-                            "length": 40,
-                            "height": "high_cube",
-                            "weight_in_lbs": 35075,
-                            "created_at": "2020-02-20T08:19:52Z",
-                            "seal_number": null,
-                            "pickup_lfd": null,
-                            "availability_known": false,
-                            "available_for_pickup": null,
-                            "current_transportation_mode": "vessel",
-                            "pod_discharged_at": null,
-                            "pod_picked_up_at": null,
-                            "destination_unloaded_at": null,
-                            "destination_picked_up_at": null,
-                            "empty_returned_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": "America/Detroit",
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "most_recent_location": {
-                              "data": {
-                                "id": "dd179094-a1d4-4129-842d-b952e43df4b7",
-                                "type": "port"
-                              }
-                            },
-                            "shipment": {
-                              "data": {
-                                "id": "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8",
-                                "type": "shipment"
-                              }
-                            }
-                          }
-                        },
-                        {
-                          "id": "bde5465a-1160-4fde-a026-74df9c362f65",
-                          "type": "port",
-                          "attributes": {
-                            "name": "Visakhapatnam",
-                            "code": "INVTZ",
-                            "country_code": "IN",
-                            "timezone": "Asia/Calcutta"
-                          }
-                        },
-                        {
-                          "id": "dd179094-a1d4-4129-842d-b952e43df4b7",
-                          "type": "port",
-                          "attributes": {
-                            "name": "Damietta",
-                            "code": "EGDAM",
-                            "country_code": "EG",
-                            "time_zone": "Africa/Cairo"
-                          }
-                        },
-                        {
-                          "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
-                          "type": "port",
-                          "attributes": {
-                            "name": "New York / New Jersey",
-                            "code": "USNYC",
-                            "country_code": "US",
-                            "timezone": "America/New_York"
-                          }
-                        },
-                        {
-                          "id": "c9ae2b6b-5088-4e07-ba09-2872121e4fa2",
-                          "type": "metro_area",
-                          "attributes": {
-                            "name": "Detroit",
-                            "code": "USDET",
-                            "country_code": "US",
-                            "state_abbr": "MI",
-                            "timezone": "America/Detroit"
-                          }
-                        },
-                        {
-                          "id": "ff76b51a-371e-45ec-86d1-9d03ccae566a",
-                          "type": "account",
-                          "attributes": {
-                            "name": "A-Z Imports"
-                          }
-                        },
-                        {
-                          "id": "252a5450-2893-4207-b5c4-81ce3152ce84",
-                          "type": "vessel",
-                          "attributes": {
-                            "name": "CMA CGM ALMAVIVA",
-                            "imo": "9450648",
-                            "mmsi": "228339600",
-                            "latitude": 70.22625823437389,
-                            "longitude": 45.06279126658865,
-                            "nautical_speed_knots": 100,
-                            "navigational_heading_degrees": 1,
-                            "position_timestamp": "2023-06-05T19:46:18Z"
-                          }
-                        }
-                      ]
+                      "meta": {
+                        "size": 5,
+                        "total": 34044
+                      },
+                      "links": {
+                        "self": "https://api.terminal49.com/v2/shipments?page[size]=5",
+                        "current": "https://api.terminal49.com/v2/shipments?page[number]=1&page[size]=5",
+                        "next": "https://api.terminal49.com/v2/shipments?page[number]=2&page[size]=5",
+                        "last": "https://api.terminal49.com/v2/shipments?page[number]=6809&page[size]=5"
+                      }
                     }
                   }
                 }
@@ -385,48 +657,49 @@
                   "En-route to NY with inland move": {
                     "value": {
                       "data": {
-                        "id": "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8",
+                        "id": "02b1bd6f-407c-45bb-8645-06e7ee34e7e3",
                         "type": "shipment",
                         "attributes": {
-                          "bill_of_lading_number": "6140575020",
-                          "ref_numbers": [
-                            "my-ref-49",
-                            "PO#18412"
-                          ],
-                          "created_at": "2020-02-20T13:37:12Z",
+                          "created_at": "2024-06-26T15:05:20Z",
+                          "ref_numbers": [],
                           "tags": [],
-                          "port_of_lading_locode": "INVTZ",
-                          "port_of_lading_name": "Visakhapatnam, IN",
+                          "bill_of_lading_number": "MEDUF5399896",
+                          "normalized_number": "MEDUF5399896",
+                          "shipping_line_scac": "MSCU",
+                          "shipping_line_name": "Mediterranean Shipping Company",
+                          "shipping_line_short_name": "MSC",
+                          "customer_name": "Sodor Steamworks",
+                          "port_of_lading_locode": "FRLEH",
+                          "port_of_lading_name": "Le Havre",
                           "port_of_discharge_locode": "USNYC",
-                          "port_of_discharge_name": "New York / New Jersey, NY",
-                          "destination_locode": "USDET",
-                          "destination_name": "Detroit, MI",
-                          "shipping_line_scac": "HLCU",
-                          "pod_vessel_name": "CMA CGM ALMAVIVA",
-                          "pod_vessel_imo": "9450648",
-                          "pod_voyage_number": "0108",
+                          "port_of_discharge_name": "New York / New Jersey",
+                          "pod_vessel_name": "MSC ANISHA R.",
+                          "pod_vessel_imo": "9227297",
+                          "pod_voyage_number": "421A",
+                          "destination_locode": "USIND",
+                          "destination_name": "Indianapolis",
+                          "destination_timezone": "US/Eastern",
+                          "destination_ata_at": null,
+                          "destination_eta_at": null,
                           "pol_etd_at": null,
-                          "pol_atd_at": "2020-02-15T21:53:00Z",
-                          "pol_timezone": "Asia/Calcutta",
-                          "pod_eta_at": "2020-03-18T08:00:00Z",
+                          "pol_atd_at": "2024-06-11T22:00:00Z",
+                          "pol_timezone": "Europe/Paris",
+                          "pod_eta_at": null,
+                          "pod_original_eta_at": null,
                           "pod_ata_at": null,
                           "pod_timezone": "America/New_York",
-                          "destination_eta_at": "2020-03-26T17:00:00Z",
-                          "destination_ata_at": null,
-                          "destination_timezone": "America/Detroit"
+                          "line_tracking_last_attempted_at": "2024-06-26T15:05:20Z",
+                          "line_tracking_last_succeeded_at": "2024-06-26T15:05:20Z",
+                          "line_tracking_stopped_at": null,
+                          "line_tracking_stopped_reason": null
+                        },
+                        "links": {
+                          "self": "/v2/shipments/02b1bd6f-407c-45bb-8645-06e7ee34e7e3"
                         },
                         "relationships": {
-                          "containers": {
-                            "data": [
-                              {
-                                "id": "c99a81c0-ff69-4bdf-aa5f-8e33a787f5fa",
-                                "type": "container"
-                              }
-                            ]
-                          },
                           "port_of_lading": {
                             "data": {
-                              "id": "bde5465a-1160-4fde-a026-74df9c362f65",
+                              "id": "fe7fc831-8a81-4079-8938-b90015912e8b",
                               "type": "port"
                             }
                           },
@@ -436,120 +709,148 @@
                               "type": "port"
                             }
                           },
-                          "destination": {
+                          "pod_terminal": {
                             "data": {
-                              "id": "c9ae2b6b-5088-4e07-ba09-2872121e4fa2",
-                              "type": "metro_area"
+                              "id": "b859f5c3-8515-41da-bf20-39c0a5ada887",
+                              "type": "terminal"
                             }
                           },
-                          "customer": {
+                          "destination": {
                             "data": {
-                              "id": "ff76b51a-371e-45ec-86d1-9d03ccae566a",
-                              "type": "account"
+                              "id": "e1e492f6-c8ba-45a9-ad1a-67a7e74547ce",
+                              "type": "port"
                             }
+                          },
+                          "destination_terminal": {
+                            "data": null
+                          },
+                          "line_tracking_stopped_by_user": {
+                            "data": null
+                          },
+                          "containers": {
+                            "data": [
+                              {
+                                "id": "55a700e4-7005-45a9-92fd-1ff38641dbd9",
+                                "type": "container"
+                              }
+                            ]
                           }
                         }
                       },
+                      "links": {
+                        "self": "https://api.terminal49.com/v2/shipments/02b1bd6f-407c-45bb-8645-06e7ee34e7e3?include=containers"
+                      },
                       "included": [
                         {
-                          "id": "c99a81c0-ff69-4bdf-aa5f-8e33a787f5fa",
+                          "id": "55a700e4-7005-45a9-92fd-1ff38641dbd9",
                           "type": "container",
                           "attributes": {
-                            "number": "UACU4743531",
-                            "equipment_type": "reefer",
-                            "length": 40,
-                            "height": "high_cube",
-                            "weight_in_lbs": 35075,
-                            "created_at": "2020-02-20T08:19:52Z",
+                            "number": "CAIU7432986",
                             "seal_number": null,
-                            "pickup_lfd": null,
-                            "availability_known": false,
-                            "available_for_pickup": null,
-                            "current_transportation_mode": "vessel",
-                            "pod_discharged_at": null,
-                            "pod_picked_up_at": null,
-                            "destination_unloaded_at": null,
-                            "destination_picked_up_at": null,
-                            "empty_returned_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
+                            "created_at": "2024-06-26T15:05:21Z",
+                            "ref_numbers": [],
+                            "pod_arrived_at": null,
+                            "pod_discharged_at": "2024-06-22T04:00:00Z",
+                            "final_destination_full_out_at": null,
+                            "holds_at_pod_terminal": [],
+                            "available_for_pickup": true,
+                            "equipment_type": "dry",
+                            "equipment_length": 40,
+                            "equipment_height": "high_cube",
+                            "weight_in_lbs": null,
+                            "pod_full_out_at": null,
+                            "empty_terminated_at": null,
+                            "terminal_checked_at": "2024-06-26T17:51:12Z",
+                            "fees_at_pod_terminal": [],
+                            "pickup_lfd": "2024-07-07T04:00:00Z",
+                            "pickup_appointment_at": null,
+                            "pod_full_out_chassis_number": null,
+                            "location_at_pod_terminal": "Yard - Y0709A",
+                            "pod_last_tracking_request_at": "2024-06-26T17:51:12Z",
+                            "shipment_last_tracking_request_at": "2024-06-26T15:05:20Z",
+                            "availability_known": true,
+                            "pod_timezone": "America/New_York",
+                            "final_destination_timezone": "US/Eastern",
+                            "empty_terminated_timezone": "US/Eastern",
+                            "pickup_rail_carrier_scac": "CSXT",
+                            "pod_rail_loaded_at": null,
+                            "pod_rail_departed_at": null,
+                            "inland_destination_eta_at": null,
+                            "inland_destination_ata_at": null,
+                            "inland_destination_rail_unloaded_at": null,
+                            "pickup_facility_holds": null,
+                            "pickup_facility_fees": null,
+                            "pickup_facility_yard_location": null,
+                            "pickup_facility_lfd_on": null
                           },
                           "relationships": {
-                            "most_recent_location": {
-                              "data": {
-                                "id": "dd179094-a1d4-4129-842d-b952e43df4b7",
-                                "type": "port"
-                              }
-                            },
                             "shipment": {
                               "data": {
-                                "id": "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8",
+                                "id": "02b1bd6f-407c-45bb-8645-06e7ee34e7e3",
                                 "type": "shipment"
                               }
+                            },
+                            "pickup_facility": {
+                              "data": null
+                            },
+                            "pod_terminal": {
+                              "data": {
+                                "id": "b859f5c3-8515-41da-bf20-39c0a5ada887",
+                                "type": "terminal"
+                              }
+                            },
+                            "transport_events": {
+                              "data": [
+                                {
+                                  "id": "45b542cb-332b-4684-b915-42e3a0759823",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "174ed528-a1a9-4002-aef0-f2c9369199da",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "7a2f30a6-a756-4c14-9477-fbfc1c7fe2f8",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "e7365004-175a-46e8-96cd-dbed0f3daf21",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "7c567bf3-7f01-4a3d-a176-eaa1f7165585",
+                                  "type": "transport_event"
+                                }
+                              ]
+                            },
+                            "raw_events": {
+                              "data": [
+                                {
+                                  "id": "2956f71c-bfb9-4e49-b9e2-1b4d53c74cac",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "391e0eda-65b5-4fc3-a53d-25ecd9570259",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "74810c04-6c8a-4194-8cff-52936584a965",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "4b1500e2-b23b-4896-87bd-c38b1d16f385",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "8b9a7d88-720a-4304-8c1e-a3336e39f481",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "bf1f59c5-5dd8-4013-87f9-d7056bc87114",
+                                  "type": "raw_event"
+                                }
+                              ]
                             }
-                          }
-                        },
-                        {
-                          "id": "bde5465a-1160-4fde-a026-74df9c362f65",
-                          "type": "port",
-                          "attributes": {
-                            "name": "Visakhapatnam",
-                            "code": "INVTZ",
-                            "country_code": "IN",
-                            "timezone": "Asia/Calcutta"
-                          }
-                        },
-                        {
-                          "id": "dd179094-a1d4-4129-842d-b952e43df4b7",
-                          "type": "port",
-                          "attributes": {
-                            "name": "Damietta",
-                            "code": "EGDAM",
-                            "country_code": "EG",
-                            "time_zone": "Africa/Cairo"
-                          }
-                        },
-                        {
-                          "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
-                          "type": "port",
-                          "attributes": {
-                            "name": "New York / New Jersey",
-                            "code": "USNYC",
-                            "country_code": "US",
-                            "timezone": "America/New_York"
-                          }
-                        },
-                        {
-                          "id": "c9ae2b6b-5088-4e07-ba09-2872121e4fa2",
-                          "type": "metro_area",
-                          "attributes": {
-                            "name": "Detroit",
-                            "code": "USDET",
-                            "country_code": "US",
-                            "state_abbr": "MI",
-                            "timezone": "America/Detroit"
-                          }
-                        },
-                        {
-                          "id": "ff76b51a-371e-45ec-86d1-9d03ccae566a",
-                          "type": "account",
-                          "attributes": {
-                            "name": "A-Z Imports"
-                          }
-                        },
-                        {
-                          "id": "252a5450-2893-4207-b5c4-81ce3152ce84",
-                          "type": "vessel",
-                          "attributes": {
-                            "name": "CMA CGM ALMAVIVA",
-                            "imo": "9450648",
-                            "mmsi": "228339600",
-                            "latitude": 70.22625823437389,
-                            "longitude": 45.06279126658865,
-                            "nautical_speed_knots": 100,
-                            "navigational_heading_degrees": 1,
-                            "position_timestamp": "2023-06-05T19:46:18Z"
                           }
                         }
                       ]
@@ -1787,7 +2088,10 @@
                                 "tracking_request.tracking_stopped",
                                 "container.created",
                                 "container.updated",
-                                "container.pod_terminal_changed"
+                                "container.pod_terminal_changed",
+                                "container.transport.arrived_at_inland_destination",
+                                "container.transport.estimated.arrived_at_inland_destination",
+                                "container.pickup_lfd.changed"
                               ]
                             }
                           },
@@ -2002,7 +2306,10 @@
                                 "tracking_request.tracking_stopped",
                                 "container.created",
                                 "container.updated",
-                                "container.pod_terminal_changed"
+                                "container.pod_terminal_changed",
+                                "container.transport.arrived_at_inland_destination",
+                                "container.transport.estimated.arrived_at_inland_destination",
+                                "container.pickup_lfd.changed"
                               ],
                               "example": "tracking_request.succeeded"
                             }
@@ -2077,7 +2384,10 @@
                           "tracking_request.tracking_stopped",
                           "container.created",
                           "container.updated",
-                          "container.pod_terminal_changed"
+                          "container.pod_terminal_changed",
+                          "container.transport.arrived_at_inland_destination",
+                          "container.transport.estimated.arrived_at_inland_destination",
+                          "container.pickup_lfd.changed"
                         ],
                         "active": true
                       },
@@ -2987,7 +3297,10 @@
                 "tracking_request.tracking_stopped",
                 "container.created",
                 "container.updated",
-                "container.pod_terminal_changed"
+                "container.pod_terminal_changed",
+                "container.transport.arrived_at_inland_destination",
+                "container.transport.estimated.arrived_at_inland_destination",
+                "container.pickup_lfd.changed"
               ],
               "example": "container.transport.full_out"
             },
@@ -3082,978 +3395,836 @@
                   }
                 },
                 "examples": {
-                  "Example List of containers": {
+                                    "Example List of containers": {
                     "value": {
                       "data": [
                         {
-                          "id": "99e13c35-4bfa-47d7-863e-789f8be38ffc",
+                          "id": "be0b247b-c144-4163-8919-cf9178930736",
                           "type": "container",
                           "attributes": {
-                            "number": "TCLU6738746",
-                            "ref_numbers": [
-                              "REF-1",
-                              "REF-2"
-                            ],
+                            "number": "TCLU6718159",
                             "seal_number": null,
-                            "created_at": "2019-05-16T18:58:29Z",
-                            "equipment_type": "dry",
-                            "equipment_length": 40,
-                            "equipment_height": "high_cube",
-                            "weight_in_lbs": 38618,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-24T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": "2019-05-19T12:30:00Z",
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-22T18:57:17Z",
-                            "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "shipment": {
-                              "data": {
-                                "id": "2c13b381-5a21-487d-9b77-e1480216de54",
-                                "type": "shipment"
-                              }
-                            },
-                            "pod_terminal": {
-                              "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
-                                "type": "terminal"
-                              }
-                            },
-                            "transport_events": {
-                              "data": [
-                                {
-                                  "id": "f3747336-4f6b-4090-85c3-4550110fa403",
-                                  "type": "transport_event"
-                                },
-                                {
-                                  "id": "ca3b871f-84e3-4f50-854c-6c8233ab1765",
-                                  "type": "transport_event"
-                                }
-                              ]
-                            }
-                          }
-                        },
-                        {
-                          "id": "b40c182d-31c8-474f-9c44-91764a6ca7f2",
-                          "type": "container",
-                          "attributes": {
-                            "number": "BMOU5497252",
-                            "ref_numbers": [
-                              "REF-A",
-                              "REF-B"
-                            ],
-                            "seal_number": null,
-                            "created_at": "2019-05-09T23:35:35Z",
-                            "equipment_type": "dry",
-                            "equipment_length": 40,
-                            "equipment_height": "high_cube",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-21T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": "2019-05-14T02:00:00Z",
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-17T16:37:28Z",
-                            "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "shipment": {
-                              "data": {
-                                "id": "497db4cd-89cc-44c1-a1ba-7b8adeaa109c",
-                                "type": "shipment"
-                              }
-                            },
-                            "pod_terminal": {
-                              "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
-                                "type": "terminal"
-                              }
-                            },
-                            "transport_events": {
-                              "data": [
-                                {
-                                  "id": "d05c6bf9-2963-4dfe-8960-c82fd3adff54",
-                                  "type": "transport_event"
-                                },
-                                {
-                                  "id": "8f8eb94a-8f57-4e1d-9479-4a3f0727db03",
-                                  "type": "transport_event"
-                                }
-                              ]
-                            }
-                          }
-                        },
-                        {
-                          "id": "0c2fb0e9-7a42-4b8f-863b-6e4315d854c3",
-                          "type": "container",
-                          "attributes": {
-                            "number": "BMOU4973652",
+                            "created_at": "2024-06-26T15:05:18Z",
                             "ref_numbers": [],
-                            "seal_number": null,
-                            "created_at": "2019-05-02T17:14:57Z",
+                            "pod_arrived_at": "2024-06-21T14:12:00Z",
+                            "pod_discharged_at": "2024-06-23T00:19:00Z",
+                            "final_destination_full_out_at": null,
+                            "holds_at_pod_terminal": [],
+                            "available_for_pickup": false,
                             "equipment_type": "dry",
                             "equipment_length": 40,
                             "equipment_height": "high_cube",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-14T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": "2019-05-07T00:30:00Z",
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-10T20:27:32Z",
+                            "weight_in_lbs": 53502,
+                            "pod_full_out_at": "2024-06-26T16:15:00Z",
                             "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
+                            "terminal_checked_at": "2024-06-26T18:47:56Z",
+                            "fees_at_pod_terminal": [],
+                            "pickup_lfd": null,
+                            "pickup_appointment_at": null,
+                            "pod_full_out_chassis_number": null,
+                            "location_at_pod_terminal": "Community",
+                            "pod_last_tracking_request_at": "2024-06-26T18:47:56Z",
+                            "shipment_last_tracking_request_at": "2024-06-26T15:05:18Z",
+                            "availability_known": true,
+                            "pod_timezone": "America/New_York",
                             "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
+                            "empty_terminated_timezone": "America/New_York",
+                            "pickup_rail_carrier_scac": null,
+                            "pod_rail_loaded_at": null,
+                            "pod_rail_departed_at": null,
+                            "inland_destination_eta_at": null,
+                            "inland_destination_ata_at": null,
+                            "inland_destination_rail_unloaded_at": null,
+                            "pickup_facility_holds": null,
+                            "pickup_facility_fees": null,
+                            "pickup_facility_yard_location": null,
+                            "pickup_facility_lfd_on": null
                           },
                           "relationships": {
                             "shipment": {
                               "data": {
-                                "id": "30017ce8-9146-4adb-aece-61063f582682",
+                                "id": "cc8f8e43-d6a9-4edb-a8c0-d0ab03c113d3",
                                 "type": "shipment"
                               }
                             },
+                            "pickup_facility": {
+                              "data": null
+                            },
                             "pod_terminal": {
                               "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
+                                "id": "a243bdf8-0da3-4056-a6a7-05fe8ab43999",
                                 "type": "terminal"
                               }
                             },
                             "transport_events": {
                               "data": [
                                 {
-                                  "id": "fc5ddc55-ce76-4d66-847f-52df957f066b",
+                                  "id": "fb53b35c-6a0c-4e22-b196-b623e8ba7db5",
                                   "type": "transport_event"
                                 },
                                 {
-                                  "id": "16f8c3c7-c546-473a-a319-6922b630df7a",
+                                  "id": "179897a3-04f5-450b-86e1-db57970c0248",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "a119b8e6-10c5-4967-8364-885f7dbf8e50",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "3372d58c-df89-46a2-b064-b308a9dc7040",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "800a3e59-8231-4e42-a80f-73c97cfb1be9",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "d466676b-0073-4b0c-89aa-d42486e9ed4f",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "85665836-5915-4cb9-ab78-b8487598cd0d",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "94cca22a-520a-4d19-a551-0554aceb3794",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "032e812f-d5e4-48af-8d79-2c2b41a07032",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "1b7dd74d-eff6-4e06-9a15-234295ce6fd5",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "b9f07b7e-1653-4209-b375-4588653d5275",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "a35f3c1b-ad35-4347-b0f2-9e08f0d4ca64",
                                   "type": "transport_event"
                                 }
                               ]
-                            }
-                          }
-                        },
-                        {
-                          "id": "eeafd337-72b5-4e5c-87cb-9ef83fa99cf4",
-                          "type": "container",
-                          "attributes": {
-                            "number": "HLXU8143951",
-                            "ref_numbers": [],
-                            "seal_number": null,
-                            "created_at": "2020-04-09T21:28:21Z",
-                            "equipment_type": "dry",
-                            "equipment_length": 40,
-                            "equipment_height": "high_cube",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2020-04-20T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": null,
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2020-04-14T21:07:54Z",
-                            "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "shipment": {
-                              "data": {
-                                "id": "06264731-503e-498e-bc76-f90b87b31562",
-                                "type": "shipment"
-                              }
                             },
-                            "pod_terminal": {
-                              "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
-                                "type": "terminal"
-                              }
-                            },
-                            "transport_events": {
+                            "raw_events": {
                               "data": [
                                 {
-                                  "id": "efc3f3c1-cdc2-4a7d-a176-762ddec107b8",
-                                  "type": "transport_event"
+                                  "id": "e26fc659-f79d-4cc0-8efc-5ce5e8444891",
+                                  "type": "raw_event"
                                 },
                                 {
-                                  "id": "951058bd-2c3b-4bcc-94e1-9be2526b9687",
-                                  "type": "transport_event"
+                                  "id": "8820af5e-cb77-41c5-a897-906f2c56eb1e",
+                                  "type": "raw_event"
                                 },
                                 {
-                                  "id": "69af6795-56c2-4157-9a87-afd761cc85a0",
-                                  "type": "transport_event"
+                                  "id": "a628a2c2-dab6-4b04-b3ae-d7ec99098a89",
+                                  "type": "raw_event"
                                 },
                                 {
-                                  "id": "68c3c29a-504a-4dbb-ad27-7194ef42d484",
-                                  "type": "transport_event"
+                                  "id": "6ca157f9-3b58-4db5-8155-fc7b41a62611",
+                                  "type": "raw_event"
                                 },
                                 {
-                                  "id": "03349405-a9be-4f3e-abde-28f2cb3922bd",
-                                  "type": "transport_event"
+                                  "id": "6fb06390-4b0a-4c1f-9703-ec89927df7f3",
+                                  "type": "raw_event"
                                 },
                                 {
-                                  "id": "ba9f85b4-658d-4f23-9308-635964df8037",
-                                  "type": "transport_event"
+                                  "id": "26fe408d-e091-412a-a2fb-23a4d778b6b9",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "16490dd8-d79f-468a-91b1-dbb30bb45c85",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "ff3db923-a644-4706-8057-1bd53c95fbd5",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "3fd27ffd-9618-477f-b1a9-cbc179defefe",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "f92efdd3-f79c-4a1c-97ce-9a47588b525c",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "3b2a88ef-df0b-4e61-99c1-d4a175910111",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "9b367e33-9e43-488f-8217-081698adf40d",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "ee0915df-e2f8-46b0-acf1-816871ca142d",
+                                  "type": "raw_event"
                                 }
                               ]
                             }
                           }
                         },
                         {
-                          "id": "6b291a97-858a-4706-82b1-52d54a334fca",
+                          "id": "a9e52f3d-2fa9-467c-8deb-09e90dac2f0b",
                           "type": "container",
                           "attributes": {
-                            "number": "TCLU9195719",
-                            "ref_numbers": [],
+                            "number": "TCLU2224327",
                             "seal_number": null,
-                            "created_at": "2020-01-23T18:38:56Z",
+                            "created_at": "2024-06-26T15:05:34Z",
+                            "ref_numbers": [],
+                            "pod_arrived_at": "2024-06-21T14:12:00Z",
+                            "pod_discharged_at": "2024-06-23T17:21:00Z",
+                            "final_destination_full_out_at": null,
+                            "holds_at_pod_terminal": [],
+                            "available_for_pickup": false,
                             "equipment_type": "dry",
-                            "equipment_length": 40,
+                            "equipment_length": 20,
                             "equipment_height": "standard",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2020-02-03T08:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": "2020-01-27T02:16:55Z",
-                            "pod_discharged_at": "2020-01-26T00:00:00Z",
-                            "final_destination_full_out_at": "2020-01-28T18:47:21Z",
+                            "weight_in_lbs": 44225,
                             "pod_full_out_at": null,
                             "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "shipment": {
-                              "data": {
-                                "id": "6e1933b4-5bea-4631-a7d2-fda49f48ded2",
-                                "type": "shipment"
-                              }
-                            },
-                            "pod_terminal": {
-                              "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
-                                "type": "terminal"
-                              }
-                            },
-                            "transport_events": {
-                              "data": [
-                                {
-                                  "id": "48f7ccd9-1de8-401f-ab82-3ee3cca928cb",
-                                  "type": "transport_event"
-                                },
-                                {
-                                  "id": "31d6f5a4-4357-41fe-abd0-e9836c931474",
-                                  "type": "transport_event"
-                                },
-                                {
-                                  "id": "6c1119dc-e56f-4829-9d68-bd0c893f497a",
-                                  "type": "transport_event"
-                                },
-                                {
-                                  "id": "71dd3cf3-d4bd-403f-baa6-3c373a9f1cfd",
-                                  "type": "transport_event"
-                                },
-                                {
-                                  "id": "028e5599-278f-46a6-b6ca-e5a659c7bf18",
-                                  "type": "transport_event"
-                                }
-                              ]
-                            }
-                          }
-                        },
-                        {
-                          "id": "157d61a9-9c88-4e9e-b2c9-5bfb9a83a2cc",
-                          "type": "container",
-                          "attributes": {
-                            "number": "UACU8516536",
-                            "ref_numbers": [],
-                            "seal_number": null,
-                            "created_at": "2019-05-01T17:07:24Z",
-                            "equipment_type": "dry",
-                            "equipment_length": 40,
-                            "equipment_height": "standard",
-                            "weight_in_lbs": null,
+                            "terminal_checked_at": "2024-06-26T18:47:56Z",
                             "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-10T07:00:00Z",
+                            "pickup_lfd": null,
                             "pickup_appointment_at": null,
+                            "pod_full_out_chassis_number": null,
+                            "location_at_pod_terminal": "Yard",
+                            "pod_last_tracking_request_at": "2024-06-26T18:47:56Z",
+                            "shipment_last_tracking_request_at": "2024-06-26T15:05:34Z",
                             "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": "2019-05-05T14:06:00Z",
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-09T17:27:03Z",
-                            "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
+                            "pod_timezone": "America/New_York",
+                            "final_destination_timezone": "America/Chicago",
+                            "empty_terminated_timezone": "America/Chicago",
+                            "pickup_rail_carrier_scac": "CSXT",
+                            "pod_rail_loaded_at": null,
+                            "pod_rail_departed_at": null,
+                            "inland_destination_eta_at": "2024-07-02T14:20:00Z",
+                            "inland_destination_ata_at": null,
+                            "inland_destination_rail_unloaded_at": null,
+                            "pickup_facility_holds": null,
+                            "pickup_facility_fees": null,
+                            "pickup_facility_yard_location": null,
+                            "pickup_facility_lfd_on": null
                           },
                           "relationships": {
                             "shipment": {
                               "data": {
-                                "id": "6de97a1b-c98f-4fce-a8fb-94cd768465c6",
+                                "id": "99f84294-3bda-4765-81b3-31765e6d2a24",
                                 "type": "shipment"
+                              }
+                            },
+                            "pickup_facility": {
+                              "data": {
+                                "id": "e6fa9a01-511b-4f43-a7e1-d628315b84ef",
+                                "type": "terminal"
                               }
                             },
                             "pod_terminal": {
                               "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
+                                "id": "a243bdf8-0da3-4056-a6a7-05fe8ab43999",
                                 "type": "terminal"
                               }
                             },
                             "transport_events": {
                               "data": [
                                 {
-                                  "id": "7b737e07-2f82-4053-9a5c-8bb948879ce0",
+                                  "id": "4a5a04b7-8974-4c46-beaa-bf55004422c9",
                                   "type": "transport_event"
                                 },
                                 {
-                                  "id": "70046aab-9f82-4ea5-ac3a-66178d2ed963",
+                                  "id": "11c90391-aa9c-408b-b20e-daed8dd09586",
                                   "type": "transport_event"
+                                },
+                                {
+                                  "id": "d7f23c71-7084-4fbb-9fef-740f624182aa",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "c4c3537d-5c47-4623-afe0-edc0dd6f75c5",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "e4002e13-0a74-4bd4-9147-787bb21e2fda",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "57b5568f-d8a6-443d-b1c8-be5cd080e5ed",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "0771cff1-79bf-4eaa-9d9d-790cb433ce44",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "031021b9-7b39-41f7-bd45-26cc8cb799d2",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "9956448d-34d3-4c23-bcfd-19807eb4034f",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "f1caf6ea-3e92-4b68-bcea-556828301062",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "2dd558a8-fa07-454c-acf3-b53d072264af",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "83118511-d9ed-4b16-b323-5e685d9b266e",
+                                  "type": "transport_event"
+                                }
+                              ]
+                            },
+                            "raw_events": {
+                              "data": [
+                                {
+                                  "id": "f256289f-219d-45f6-b727-56fb9c6bc433",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "c5581f60-ffb2-4ef0-a855-b70acd3b294f",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "3c6716f9-814c-4459-9bbb-753f010446b2",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "62c7b849-c99b-4e37-9861-105141cc0a4c",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "7db37d43-426a-4f84-82af-2957621ce466",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "d4342119-db56-46fc-8299-f573f5b52e73",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "ba159c3b-590c-43ff-bc04-b0354fd326f4",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "ec1be31a-17f1-4f6f-85ab-c74cb0dbe6cb",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "d12c4656-0d1f-4f30-a0fa-a2ee887741a8",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "146d56e2-b41d-4469-8202-0c7d7315e794",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "6b86b4d1-f85f-4c26-9fbc-3132a62f0fbc",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "bb2c9105-e421-4372-9265-e61b3fa54851",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "3a09c49f-c12e-49e9-b2de-b8dca2b3d608",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "54d91ebc-8f57-4764-b7c6-a3f4dc2459be",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "9e788c46-9431-41eb-baee-c8b14fb4f590",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "d3051802-8b6f-497d-ad16-fb35547c8662",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "af3090e7-c6d3-4d8e-88aa-9cd757102f9b",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "95daf204-d95d-4a89-bedf-358bedb8b3b8",
+                                  "type": "raw_event"
                                 }
                               ]
                             }
                           }
                         },
                         {
-                          "id": "8ab02150-421c-4f12-aa0f-47db07669314",
+                          "id": "8d1faeeb-3890-4fac-8659-cd13737b26f1",
                           "type": "container",
                           "attributes": {
-                            "number": "SEGU5107747",
-                            "ref_numbers": [],
+                            "number": "CMAU0619052",
                             "seal_number": null,
-                            "created_at": "2019-05-08T21:45:51Z",
-                            "equipment_type": "dry",
-                            "equipment_length": 40,
-                            "equipment_height": "high_cube",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-21T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": "2019-05-14T02:00:00Z",
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-17T16:08:09Z",
-                            "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "shipment": {
-                              "data": {
-                                "id": "20cc2981-82f5-40b8-a902-b8b23ac09333",
-                                "type": "shipment"
-                              }
-                            },
-                            "pod_terminal": {
-                              "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
-                                "type": "terminal"
-                              }
-                            },
-                            "transport_events": {
-                              "data": [
-                                {
-                                  "id": "600c0649-2a98-4da1-a3b5-1feb2e1e0596",
-                                  "type": "transport_event"
-                                },
-                                {
-                                  "id": "fdfe058a-e767-4509-9bf0-7de6e4be9f83",
-                                  "type": "transport_event"
-                                }
-                              ]
-                            }
-                          }
-                        },
-                        {
-                          "id": "6bd7146e-db95-46fa-a4b7-ffc3c9b78a17",
-                          "type": "container",
-                          "attributes": {
-                            "number": "UACU5471567",
+                            "created_at": "2024-06-26T15:02:11Z",
                             "ref_numbers": [],
-                            "seal_number": null,
-                            "created_at": "2019-05-08T21:35:38Z",
-                            "equipment_type": "dry",
-                            "equipment_length": 40,
-                            "equipment_height": "high_cube",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-21T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": "2019-05-14T02:00:00Z",
-                            "pod_discharged_at": null,
+                            "pod_arrived_at": "2024-06-22T22:10:00Z",
+                            "pod_discharged_at": "2024-06-23T20:38:00Z",
                             "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-16T22:18:25Z",
-                            "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "shipment": {
-                              "data": {
-                                "id": "1cd49507-67fc-4921-87a0-c364ea7f4983",
-                                "type": "shipment"
-                              }
-                            },
-                            "pod_terminal": {
-                              "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
-                                "type": "terminal"
-                              }
-                            },
-                            "transport_events": {
-                              "data": [
-                                {
-                                  "id": "33f908de-b7ae-4657-b915-1e3075506933",
-                                  "type": "transport_event"
-                                },
-                                {
-                                  "id": "341d2a94-bdbc-4dd7-845e-916fcaebf245",
-                                  "type": "transport_event"
-                                }
-                              ]
-                            }
-                          }
-                        },
-                        {
-                          "id": "d640c4ea-5807-4988-b56b-65e7b6de29d0",
-                          "type": "container",
-                          "attributes": {
-                            "number": "UACU5524137",
-                            "ref_numbers": [],
-                            "seal_number": null,
-                            "created_at": "2019-05-08T17:12:41Z",
-                            "equipment_type": "dry",
-                            "equipment_length": 40,
-                            "equipment_height": "high_cube",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
                             "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-21T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
                             "available_for_pickup": false,
-                            "pod_arrived_at": "2019-05-14T02:00:00Z",
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-16T19:08:23Z",
-                            "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "shipment": {
-                              "data": {
-                                "id": "b01c16c3-0587-458a-8dd7-098849a0c5cd",
-                                "type": "shipment"
-                              }
-                            },
-                            "pod_terminal": {
-                              "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
-                                "type": "terminal"
-                              }
-                            },
-                            "transport_events": {
-                              "data": [
-                                {
-                                  "id": "af73b15e-e4e7-46e7-b062-5e65b4b90b41",
-                                  "type": "transport_event"
-                                },
-                                {
-                                  "id": "4f2fe79f-1711-48e8-b567-db606a0dd056",
-                                  "type": "transport_event"
-                                }
-                              ]
-                            }
-                          }
-                        },
-                        {
-                          "id": "0f339ef2-a61e-4e7f-aa80-f11da3b34632",
-                          "type": "container",
-                          "attributes": {
-                            "number": "HLXU5075494",
-                            "ref_numbers": [],
-                            "seal_number": "026376",
-                            "created_at": "2019-04-25T21:36:28Z",
-                            "equipment_type": "dry",
-                            "equipment_length": 40,
-                            "equipment_height": "standard",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-07T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": "2019-04-28T07:00:00Z",
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-02T19:28:06Z",
-                            "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "shipment": {
-                              "data": {
-                                "id": "e05d8614-3975-49be-bedd-405df9c1b93e",
-                                "type": "shipment"
-                              }
-                            },
-                            "pod_terminal": {
-                              "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
-                                "type": "terminal"
-                              }
-                            },
-                            "transport_events": {
-                              "data": [
-                                {
-                                  "id": "45cd2c09-741d-4274-af06-40e47c811aee",
-                                  "type": "transport_event"
-                                },
-                                {
-                                  "id": "1a5df459-dfc1-4213-b75e-b3e26ec6dc24",
-                                  "type": "transport_event"
-                                }
-                              ]
-                            }
-                          }
-                        },
-                        {
-                          "id": "6dcf7287-9902-4773-8aa4-282039fa8bc1",
-                          "type": "container",
-                          "attributes": {
-                            "number": "TGHU1471867",
-                            "ref_numbers": [],
-                            "seal_number": null,
-                            "created_at": "2019-04-25T21:17:31Z",
                             "equipment_type": "dry",
                             "equipment_length": 20,
                             "equipment_height": "standard",
                             "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-07T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": "2019-04-28T07:00:00Z",
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-06T21:47:04Z",
+                            "pod_full_out_at": null,
                             "empty_terminated_at": null,
+                            "terminal_checked_at": "2024-06-26T18:47:47Z",
+                            "fees_at_pod_terminal": [],
+                            "pickup_lfd": "2024-06-27T07:00:00Z",
+                            "pickup_appointment_at": null,
+                            "pod_full_out_chassis_number": null,
+                            "location_at_pod_terminal": "Grounded",
+                            "pod_last_tracking_request_at": "2024-06-26T18:47:47Z",
+                            "shipment_last_tracking_request_at": "2024-06-26T15:02:11Z",
+                            "availability_known": true,
                             "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
+                            "final_destination_timezone": "Asia/Shanghai",
+                            "empty_terminated_timezone": "Asia/Shanghai",
+                            "pickup_rail_carrier_scac": null,
+                            "pod_rail_loaded_at": null,
+                            "pod_rail_departed_at": null,
+                            "inland_destination_eta_at": null,
+                            "inland_destination_ata_at": null,
+                            "inland_destination_rail_unloaded_at": null,
+                            "pickup_facility_holds": null,
+                            "pickup_facility_fees": null,
+                            "pickup_facility_yard_location": null,
+                            "pickup_facility_lfd_on": null
                           },
                           "relationships": {
                             "shipment": {
                               "data": {
-                                "id": "bb157764-43d6-49b4-ad8e-9e502005b4df",
+                                "id": "f706cbea-3264-473d-8d26-af257f3bc1be",
                                 "type": "shipment"
                               }
                             },
+                            "pickup_facility": {
+                              "data": null
+                            },
                             "pod_terminal": {
                               "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
+                                "id": "eaa2580c-5f5b-4198-85e4-821145d62098",
                                 "type": "terminal"
                               }
                             },
                             "transport_events": {
                               "data": [
                                 {
-                                  "id": "a72106e2-c417-4a61-ba84-eab052641acc",
+                                  "id": "1bb3a814-edab-403f-8ef2-a6d0966df423",
                                   "type": "transport_event"
                                 },
                                 {
-                                  "id": "52fc252e-5396-4291-b9fb-903117501ab7",
+                                  "id": "19f197bf-444c-40ee-8478-6f02abe715a9",
                                   "type": "transport_event"
+                                },
+                                {
+                                  "id": "4c9223bb-0218-4175-8a2e-7bb99c40642a",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "432da964-6e99-45e9-b4b1-00b7be858591",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "b462b4d1-1e02-4037-af7f-6c8fa981f268",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "e3ca4a25-692f-474a-aa71-48fb9840aef1",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "014b9d1f-f033-4a3e-89f9-c57569883436",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "2cec71c9-721a-4060-993f-0ffcf01151cd",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "24941515-1b5e-4fca-87eb-092e56ed156a",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "0fd06bc0-1fda-467c-ab67-90a30c6d62ab",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "0bce915e-b9ba-42a0-a484-136266fe8b9a",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "582006aa-6547-4712-b964-5637aad839b4",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "11458420-b354-4288-a275-7572d3c60e33",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "5c900fa1-11bf-4f96-89e7-b12f6a98edc4",
+                                  "type": "transport_event"
+                                }
+                              ]
+                            },
+                            "raw_events": {
+                              "data": [
+                                {
+                                  "id": "999d7de7-eaed-4313-85df-772a6d24a85e",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "ac9c2780-240d-443f-87f4-95465fa5447b",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "a0ee3724-91c3-4b78-af32-2f16e8c2d600",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "79725b1f-19f7-4fc3-8c69-586e237c1719",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "4f07f257-ea4f-4e61-94ed-a01598899020",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "41612acb-b3d4-495f-9138-f34105851d21",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "84ffdd37-ec39-404a-9b68-d72d8fb96d48",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "7e9d8a6d-5339-4266-a6fb-22c28f41149f",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "2359b787-b218-42dc-b9a5-84b608aee671",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "ea33303e-0e48-4442-9886-0dfe38b726b5",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "3689d013-8525-418b-92ed-95ec684130b4",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "a64f7f7e-a6fa-4913-aba0-b28ba189d68b",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "c264a859-4fcb-4fab-95c0-29be99ec54a4",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "2aabf25c-9a3e-44bc-b6c8-ed7b1e3c3630",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "6ae70038-02d7-425a-99c1-8761c69a9033",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "c30021d8-93e9-4bfd-a978-e9e24de148c8",
+                                  "type": "raw_event"
                                 }
                               ]
                             }
                           }
                         },
                         {
-                          "id": "4465c3b5-d2fa-4d43-b188-7e7607ec6dcc",
+                          "id": "853f1794-9b94-4118-9970-4e28e549440d",
                           "type": "container",
                           "attributes": {
-                            "number": "HLXU5101016",
-                            "ref_numbers": [],
+                            "number": "TGHU6578122",
                             "seal_number": null,
-                            "created_at": "2019-04-25T20:45:40Z",
+                            "created_at": "2024-06-26T15:08:30Z",
+                            "ref_numbers": [],
+                            "pod_arrived_at": "2024-06-23T21:58:00Z",
+                            "pod_discharged_at": "2024-06-24T02:28:00Z",
+                            "final_destination_full_out_at": null,
+                            "holds_at_pod_terminal": [],
+                            "available_for_pickup": false,
                             "equipment_type": "dry",
                             "equipment_length": 40,
-                            "equipment_height": "standard",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-07T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": "2019-04-29T00:12:00Z",
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-03T22:58:38Z",
+                            "equipment_height": "high_cube",
+                            "weight_in_lbs": 8898,
+                            "pod_full_out_at": null,
                             "empty_terminated_at": null,
+                            "terminal_checked_at": "2024-06-26T18:47:47Z",
+                            "fees_at_pod_terminal": [],
+                            "pickup_lfd": "2024-06-27T07:00:00Z",
+                            "pickup_appointment_at": null,
+                            "pod_full_out_chassis_number": null,
+                            "location_at_pod_terminal": "Wheeled",
+                            "pod_last_tracking_request_at": "2024-06-26T18:47:46Z",
+                            "shipment_last_tracking_request_at": "2024-06-26T15:08:30Z",
+                            "availability_known": true,
                             "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
+                            "final_destination_timezone": "America/New_York",
+                            "empty_terminated_timezone": "America/New_York",
+                            "pickup_rail_carrier_scac": "BNSF",
+                            "pod_rail_loaded_at": null,
+                            "pod_rail_departed_at": null,
+                            "inland_destination_eta_at": "2024-07-07T08:00:00Z",
+                            "inland_destination_ata_at": null,
+                            "inland_destination_rail_unloaded_at": null,
+                            "pickup_facility_holds": null,
+                            "pickup_facility_fees": null,
+                            "pickup_facility_yard_location": null,
+                            "pickup_facility_lfd_on": null
                           },
                           "relationships": {
                             "shipment": {
                               "data": {
-                                "id": "a20645d1-a719-48c6-b69f-f82c4c721f90",
+                                "id": "f3cfe624-706e-4a0c-89d5-140980d986fd",
                                 "type": "shipment"
+                              }
+                            },
+                            "pickup_facility": {
+                              "data": {
+                                "id": "7e4557b9-cc5a-4298-aaec-1a32e90202c9",
+                                "type": "terminal"
                               }
                             },
                             "pod_terminal": {
                               "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
+                                "id": "eaa2580c-5f5b-4198-85e4-821145d62098",
                                 "type": "terminal"
                               }
                             },
                             "transport_events": {
                               "data": [
                                 {
-                                  "id": "8b37f3fa-6306-46d1-b139-100af4c995c8",
+                                  "id": "94f687d0-dc6b-4342-8710-cb98bc98716e",
                                   "type": "transport_event"
                                 },
                                 {
-                                  "id": "b2455095-5820-4ad6-9b28-abf66af1642b",
+                                  "id": "a8d0a842-95fe-4c12-a80e-bd12e87a1421",
                                   "type": "transport_event"
+                                },
+                                {
+                                  "id": "c1f1a186-3737-41ca-ae2b-f79a17519991",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "7fcc5496-d402-4b1c-a6c5-8514e6433070",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "ab7cd84a-edc5-476d-a1c4-190011582314",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "68d91384-3eb3-4d21-ac7a-c1f688f649c2",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "5a702f46-4356-4570-bd2e-2b8adab5ba3e",
+                                  "type": "transport_event"
+                                }
+                              ]
+                            },
+                            "raw_events": {
+                              "data": [
+                                {
+                                  "id": "a4b7e4b6-5227-4f34-9e91-9e75223798ae",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "4f3e3c7b-d1e6-4fde-b95e-ce9a8835445c",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "39e8570d-1a8f-4e10-8d2e-ac930abc5971",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "b8015a72-9741-4fbf-8adc-d30b87de6aa3",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "61512b1a-a94e-4cac-8bab-763588dbbddf",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "c0bf87f2-37c3-4895-90b0-9f97ac4b5c13",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "3856c7e7-f832-42ca-873b-096952599e29",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "485be998-0861-4d10-8a60-f66d27eb46a7",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "29cde194-bbd9-40c2-adba-5dcb1514f5fc",
+                                  "type": "raw_event"
                                 }
                               ]
                             }
                           }
                         },
                         {
-                          "id": "b8a3a0a9-ea77-4707-aace-c23812e9b6d7",
+                          "id": "681d713d-bcd6-4303-b082-b9f893e7d1d9",
                           "type": "container",
                           "attributes": {
-                            "number": "UACU8574527",
-                            "ref_numbers": [],
+                            "number": "CSNU8439129",
                             "seal_number": null,
-                            "created_at": "2019-04-25T20:58:36Z",
+                            "created_at": "2024-06-26T15:02:32Z",
+                            "ref_numbers": [],
+                            "pod_arrived_at": "2024-06-23T21:58:00Z",
+                            "pod_discharged_at": "2024-06-26T04:30:00Z",
+                            "final_destination_full_out_at": null,
+                            "holds_at_pod_terminal": [],
+                            "available_for_pickup": true,
                             "equipment_type": "dry",
                             "equipment_length": 40,
-                            "equipment_height": "standard",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-07T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": "2019-04-28T07:00:00Z",
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-03T23:08:29Z",
+                            "equipment_height": "high_cube",
+                            "weight_in_lbs": 40488,
+                            "pod_full_out_at": null,
                             "empty_terminated_at": null,
+                            "terminal_checked_at": "2024-06-26T18:47:47Z",
+                            "fees_at_pod_terminal": [],
+                            "pickup_lfd": "2024-07-01T07:00:00Z",
+                            "pickup_appointment_at": "2024-06-28T15:00:00Z",
+                            "pod_full_out_chassis_number": null,
+                            "location_at_pod_terminal": "Grounded",
+                            "pod_last_tracking_request_at": "2024-06-26T18:47:46Z",
+                            "shipment_last_tracking_request_at": "2024-06-26T15:02:32Z",
+                            "availability_known": true,
                             "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
+                            "final_destination_timezone": "America/Chicago",
+                            "empty_terminated_timezone": "America/Chicago",
+                            "pickup_rail_carrier_scac": "BNSF",
+                            "pod_rail_loaded_at": null,
+                            "pod_rail_departed_at": null,
+                            "inland_destination_eta_at": "2024-07-04T22:00:00Z",
+                            "inland_destination_ata_at": null,
+                            "inland_destination_rail_unloaded_at": null,
+                            "pickup_facility_holds": null,
+                            "pickup_facility_fees": null,
+                            "pickup_facility_yard_location": null,
+                            "pickup_facility_lfd_on": null
                           },
                           "relationships": {
                             "shipment": {
                               "data": {
-                                "id": "d9f7749c-eab3-48bd-a082-2db475669e1b",
+                                "id": "edd626cf-b0b5-4679-8a6c-80c8e9fe7698",
                                 "type": "shipment"
+                              }
+                            },
+                            "pickup_facility": {
+                              "data": {
+                                "id": "572b372f-21c7-4403-8fb0-948377c74642",
+                                "type": "terminal"
                               }
                             },
                             "pod_terminal": {
                               "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
+                                "id": "eaa2580c-5f5b-4198-85e4-821145d62098",
                                 "type": "terminal"
                               }
                             },
                             "transport_events": {
                               "data": [
                                 {
-                                  "id": "66343ca1-97a4-4bb9-abfa-708443ebc206",
+                                  "id": "9d19125a-2944-442c-8132-bf0d83670e5c",
                                   "type": "transport_event"
                                 },
                                 {
-                                  "id": "6476546a-2ff0-49af-8664-0c3017bf68b2",
+                                  "id": "b2ff0b47-3151-41e2-8c46-7f95cdbe4167",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "e52feaa3-7a50-4570-a2ea-bf06f955ce23",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "c56d95e5-774f-432c-b6f4-c53967f07292",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "9b1d8b48-e870-46fa-bc46-10f9b30c64d4",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "3e1d3571-6b24-4ad2-a071-4e70d59af521",
+                                  "type": "transport_event"
+                                },
+                                {
+                                  "id": "60f5eefe-13d5-4f85-9b65-d13b4c67115a",
                                   "type": "transport_event"
                                 }
                               ]
-                            }
-                          }
-                        },
-                        {
-                          "id": "cd238a58-a7c9-451c-92c7-97d66f6d1706",
-                          "type": "container",
-                          "attributes": {
-                            "number": "MRKU4151565",
-                            "ref_numbers": [],
-                            "seal_number": null,
-                            "created_at": "2019-05-15T18:15:45Z",
-                            "equipment_type": "dry",
-                            "equipment_length": 40,
-                            "equipment_height": "high_cube",
-                            "weight_in_lbs": 39522,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-26T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": null,
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-20T23:07:06Z",
-                            "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "shipment": {
-                              "data": {
-                                "id": "61ea98fe-9c02-45b6-b231-226ac10c78f5",
-                                "type": "shipment"
-                              }
                             },
-                            "pod_terminal": {
-                              "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
-                                "type": "terminal"
-                              }
-                            },
-                            "transport_events": {
-                              "data": []
-                            }
-                          }
-                        },
-                        {
-                          "id": "7f1ae474-085a-4bb2-a23c-bf37f2ed7f67",
-                          "type": "container",
-                          "attributes": {
-                            "number": "TLLU5827929",
-                            "ref_numbers": [],
-                            "seal_number": null,
-                            "created_at": "2019-04-30T16:24:17Z",
-                            "equipment_type": "dry",
-                            "equipment_length": 40,
-                            "equipment_height": "high_cube",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-12T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": null,
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-09T18:18:40Z",
-                            "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "shipment": {
-                              "data": {
-                                "id": "ccb853d3-9263-40c5-a79b-78d55364c380",
-                                "type": "shipment"
-                              }
-                            },
-                            "pod_terminal": {
-                              "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
-                                "type": "terminal"
-                              }
-                            },
-                            "transport_events": {
-                              "data": []
-                            }
-                          }
-                        },
-                        {
-                          "id": "d5c91950-68c6-4106-93da-b73dfb08b4aa",
-                          "type": "container",
-                          "attributes": {
-                            "number": "TCKU6404546",
-                            "ref_numbers": [],
-                            "seal_number": null,
-                            "created_at": "2019-04-29T19:27:04Z",
-                            "equipment_type": "dry",
-                            "equipment_length": 40,
-                            "equipment_height": "high_cube",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-12T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": null,
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-08T20:40:06Z",
-                            "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "shipment": {
-                              "data": {
-                                "id": "9fa62c77-6091-4652-b70d-a8c5060c8638",
-                                "type": "shipment"
-                              }
-                            },
-                            "pod_terminal": {
-                              "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
-                                "type": "terminal"
-                              }
-                            },
-                            "transport_events": {
-                              "data": []
-                            }
-                          }
-                        },
-                        {
-                          "id": "6f36e54b-4bdd-451c-af83-1db946f215fe",
-                          "type": "container",
-                          "attributes": {
-                            "number": "MOFU6829869",
-                            "ref_numbers": [],
-                            "seal_number": null,
-                            "created_at": "2019-05-02T15:31:07Z",
-                            "equipment_type": "dry",
-                            "equipment_length": 40,
-                            "equipment_height": "standard",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-13T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": null,
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-10T14:27:42Z",
-                            "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "shipment": {
-                              "data": {
-                                "id": "8831b8ab-155c-4569-9946-5fe245571cfb",
-                                "type": "shipment"
-                              }
-                            },
-                            "pod_terminal": {
-                              "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
-                                "type": "terminal"
-                              }
-                            },
-                            "transport_events": {
-                              "data": []
-                            }
-                          }
-                        },
-                        {
-                          "id": "0c1362dd-00f2-4de8-85c8-d6187ba3bea6",
-                          "type": "container",
-                          "attributes": {
-                            "number": "TCNU1126827",
-                            "ref_numbers": [],
-                            "seal_number": null,
-                            "created_at": "2019-04-29T19:33:59Z",
-                            "equipment_type": "dry",
-                            "equipment_length": 40,
-                            "equipment_height": "high_cube",
-                            "weight_in_lbs": null,
-                            "fees_at_pod_terminal": [],
-                            "holds_at_pod_terminal": [],
-                            "pickup_lfd": "2019-05-12T07:00:00Z",
-                            "pickup_appointment_at": null,
-                            "availability_known": true,
-                            "available_for_pickup": false,
-                            "pod_arrived_at": null,
-                            "pod_discharged_at": null,
-                            "final_destination_full_out_at": null,
-                            "pod_full_out_at": "2019-05-08T23:29:59Z",
-                            "empty_terminated_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
-                          },
-                          "relationships": {
-                            "shipment": {
-                              "data": {
-                                "id": "03845d0d-d54b-494c-97ef-ffa3e80c74b1",
-                                "type": "shipment"
-                              }
-                            },
-                            "pod_terminal": {
-                              "data": {
-                                "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
-                                "type": "terminal"
-                              }
-                            },
-                            "transport_events": {
-                              "data": []
+                            "raw_events": {
+                              "data": [
+                                {
+                                  "id": "2af51127-0971-4741-9b97-ea1b338e3a7c",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "4472ded6-eb69-4f21-8666-9a4f2342dfeb",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "ce238754-d5fd-4dc8-9f55-2ac6efdfbb5e",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "5cd3b5ef-843f-4f60-87ce-5beaeea86f7b",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "55291737-98b6-403c-9424-1605e6e01007",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "cdc55ea8-a075-45b3-9570-ade6fb2f0d94",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "c0ab5406-4e10-4fdc-85a4-e17ce8d956f5",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "965f0172-1c20-4342-a44a-7be0e594ff76",
+                                  "type": "raw_event"
+                                },
+                                {
+                                  "id": "db178011-c795-42a4-9537-b4e77ffb4f98",
+                                  "type": "raw_event"
+                                }
+                              ]
                             }
                           }
                         }
                       ],
                       "meta": {
-                        "size": 18,
-                        "total": 18
+                        "size": 5,
+                        "total": 59229
                       },
                       "links": {
-                        "self": "https://api.terminal49.com/v2/containers",
-                        "current": "https://api.terminal49.com/v2/containers?page[number]=1"
+                        "self": "https://api.terminal49.com/v2/containers?page[size]=5",
+                        "current": "https://api.terminal49.com/v2/containers?page[number]=1&page[size]=5",
+                        "next": "https://api.terminal49.com/v2/containers?page[number]=2&page[size]=5",
+                        "last": "https://api.terminal49.com/v2/containers?page[number]=11846&page[size]=5"
                       }
                     }
                   }
@@ -4207,80 +4378,119 @@
                   "Example Container": {
                     "value": {
                       "data": {
-                        "id": "eeafd337-72b5-4e5c-87cb-9ef83fa99cf4",
+                        "id": "55a700e4-7005-45a9-92fd-1ff38641dbd9",
                         "type": "container",
                         "attributes": {
-                          "number": "HLXU8143951",
-                          "ref_numbers": [
-                            "REF-1",
-                            "REF-2"
-                          ],
+                          "number": "CAIU7432986",
                           "seal_number": null,
-                          "created_at": "2020-04-09T21:28:21Z",
+                          "created_at": "2024-06-26T15:05:21Z",
+                          "ref_numbers": [],
+                          "pod_arrived_at": null,
+                          "pod_discharged_at": "2024-06-22T04:00:00Z",
+                          "final_destination_full_out_at": null,
+                          "holds_at_pod_terminal": [],
+                          "available_for_pickup": true,
                           "equipment_type": "dry",
                           "equipment_length": 40,
                           "equipment_height": "high_cube",
                           "weight_in_lbs": null,
-                          "fees_at_pod_terminal": [],
-                          "holds_at_pod_terminal": [],
-                          "pickup_lfd": "2020-04-20T07:00:00Z",
-                          "pickup_appointment_at": null,
-                          "availability_known": true,
-                          "available_for_pickup": false,
-                          "pod_arrived_at": null,
-                          "pod_discharged_at": null,
-                          "final_destination_full_out_at": null,
-                          "pod_full_out_at": "2020-04-14T21:07:54Z",
+                          "pod_full_out_at": null,
                           "empty_terminated_at": null,
-                          "pod_timezone": "America/Los_Angeles",
-                          "final_destination_timezone": null,
-                          "empty_terminated_timezone": null
+                          "terminal_checked_at": "2024-06-26T17:51:12Z",
+                          "fees_at_pod_terminal": [],
+                          "pickup_lfd": "2024-07-07T04:00:00Z",
+                          "pickup_appointment_at": null,
+                          "pod_full_out_chassis_number": null,
+                          "location_at_pod_terminal": "Yard - Y0709A",
+                          "pod_last_tracking_request_at": "2024-06-26T17:51:12Z",
+                          "shipment_last_tracking_request_at": "2024-06-26T15:05:20Z",
+                          "availability_known": true,
+                          "pod_timezone": "America/New_York",
+                          "final_destination_timezone": "US/Eastern",
+                          "empty_terminated_timezone": "US/Eastern",
+                          "pickup_rail_carrier_scac": "CSXT",
+                          "pod_rail_loaded_at": null,
+                          "pod_rail_departed_at": null,
+                          "inland_destination_eta_at": null,
+                          "inland_destination_ata_at": null,
+                          "inland_destination_rail_unloaded_at": null,
+                          "pickup_facility_holds": null,
+                          "pickup_facility_fees": null,
+                          "pickup_facility_yard_location": null,
+                          "pickup_facility_lfd_on": null
                         },
                         "relationships": {
                           "shipment": {
                             "data": {
-                              "id": "06264731-503e-498e-bc76-f90b87b31562",
+                              "id": "02b1bd6f-407c-45bb-8645-06e7ee34e7e3",
                               "type": "shipment"
                             }
                           },
+                          "pickup_facility": {
+                            "data": null
+                          },
                           "pod_terminal": {
                             "data": {
-                              "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
+                              "id": "b859f5c3-8515-41da-bf20-39c0a5ada887",
                               "type": "terminal"
                             }
                           },
                           "transport_events": {
                             "data": [
                               {
-                                "id": "efc3f3c1-cdc2-4a7d-a176-762ddec107b8",
+                                "id": "45b542cb-332b-4684-b915-42e3a0759823",
                                 "type": "transport_event"
                               },
                               {
-                                "id": "951058bd-2c3b-4bcc-94e1-9be2526b9687",
+                                "id": "174ed528-a1a9-4002-aef0-f2c9369199da",
                                 "type": "transport_event"
                               },
                               {
-                                "id": "69af6795-56c2-4157-9a87-afd761cc85a0",
+                                "id": "7a2f30a6-a756-4c14-9477-fbfc1c7fe2f8",
                                 "type": "transport_event"
                               },
                               {
-                                "id": "68c3c29a-504a-4dbb-ad27-7194ef42d484",
+                                "id": "e7365004-175a-46e8-96cd-dbed0f3daf21",
                                 "type": "transport_event"
                               },
                               {
-                                "id": "03349405-a9be-4f3e-abde-28f2cb3922bd",
+                                "id": "7c567bf3-7f01-4a3d-a176-eaa1f7165585",
                                 "type": "transport_event"
+                              }
+                            ]
+                          },
+                          "raw_events": {
+                            "data": [
+                              {
+                                "id": "2956f71c-bfb9-4e49-b9e2-1b4d53c74cac",
+                                "type": "raw_event"
                               },
                               {
-                                "id": "ba9f85b4-658d-4f23-9308-635964df8037",
-                                "type": "transport_event"
+                                "id": "391e0eda-65b5-4fc3-a53d-25ecd9570259",
+                                "type": "raw_event"
+                              },
+                              {
+                                "id": "74810c04-6c8a-4194-8cff-52936584a965",
+                                "type": "raw_event"
+                              },
+                              {
+                                "id": "4b1500e2-b23b-4896-87bd-c38b1d16f385",
+                                "type": "raw_event"
+                              },
+                              {
+                                "id": "8b9a7d88-720a-4304-8c1e-a3336e39f481",
+                                "type": "raw_event"
+                              },
+                              {
+                                "id": "bf1f59c5-5dd8-4013-87f9-d7056bc87114",
+                                "type": "raw_event"
                               }
                             ]
                           }
                         }
                       },
                       "links": {
-                        "self": "https://api.terminal49.com/v2/containers/eeafd337-72b5-4e5c-87cb-9ef83fa99cf4"
+                        "self": "https://api.terminal49.com/v2/containers/55a700e4-7005-45a9-92fd-1ff38641dbd9"
                       }
                     }
                   }
@@ -5490,9 +5700,8 @@
                   }
                 }
               },
-              "customer": {
+              "pod_terminal": {
                 "type": "object",
-                "description": "`unreleased`",
                 "properties": {
                   "data": {
                     "type": "object",
@@ -5500,45 +5709,67 @@
                       "type": {
                         "type": "string",
                         "enum": [
-                          "account"
+                          "terminal"
                         ]
                       },
                       "id": {
                         "type": "string",
                         "format": "uuid"
                       }
-                    }
-                  }
-                }
-              },
-              "pod_terminal": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "terminal"
+                    },
+                    "required": [
+                      "type",
+                      "id"
                     ]
-                  },
-                  "id": {
-                    "type": "string",
-                    "format": "uuid"
                   }
                 }
               },
               "destination_terminal": {
                 "type": "object",
                 "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "terminal",
-                      "rail_terminal"
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "terminal",
+                          "rail_terminal"
+                        ]
+                      },
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "id"
                     ]
-                  },
-                  "id": {
-                    "type": "string",
-                    "format": "uuid"
+                  }
+                }
+              },
+              "line_tracking_stopped_by_user": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      },
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "id"
+                    ]
                   }
                 }
               }
@@ -5567,7 +5798,6 @@
               },
               "tags": {
                 "type": "array",
-                "description": "`unreleased`",
                 "items": {
                   "type": "string"
                 }
@@ -5605,6 +5835,13 @@
               "shipping_line_name": {
                 "type": "string"
               },
+              "shipping_line_short_name": {
+                "type": "string"
+              },
+              "customer_name": {
+                "type": "string",
+                "nullable": true
+              },
               "pod_vessel_name": {
                 "type": "string",
                 "nullable": true
@@ -5628,6 +5865,11 @@
                 "nullable": true
               },
               "pod_eta_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "pod_original_eta_at": {
                 "type": "string",
                 "format": "date-time",
                 "nullable": true
@@ -5703,11 +5945,26 @@
             "enum": [
               "shipment"
             ]
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "self"
+            ]
           }
         },
         "required": [
           "id",
-          "type"
+          "type",
+          "attributes",
+          "relationships",
+          "links"
         ]
       },
       "meta": {
@@ -5781,7 +6038,21 @@
               "pod_full_out_at": "2022-02-11T22:18:00Z",
               "empty_terminated_at": null,
               "terminal_checked_at": "2022-02-11T22:45:32Z",
-              "pickup_rail_carrier_scac": "UPRR"
+              "pickup_rail_carrier_scac": "UPRR",
+              "pod_timezone": "America/Los_Angeles",
+              "final_destination_timezone": null,
+              "empty_terminated_timezone": null,
+              "pod_last_tracking_request_at": "2022-02-11T22:40:00Z",
+              "shipment_last_tracking_request_at": "2022-02-11T22:40:00Z",
+              "pod_rail_loaded_at": "2022-02-11T22:18:00Z",
+              "pod_rail_departed_at": "2022-02-11T23:30:00Z",
+              "inland_destination_eta_at": null,
+              "inland_destination_ata_at": "2022-02-15T01:12:00Z",
+              "inland_destination_rail_unloaded_at": "2022-02-15T07:54:00Z",
+              "pickup_facility_holds": null,
+              "pickup_facility_fees": null,
+              "pickup_facility_yard_location": null,
+              "pickup_facility_lfd_on": null
             },
             "relationships": {
               "shipment": {
@@ -5879,6 +6150,10 @@
             "type": "string",
             "format": "uuid"
           },
+          "type": {
+            "type": "string",
+            "enum": ["container"]
+          },
           "attributes": {
             "type": "object",
             "properties": {
@@ -5887,7 +6162,6 @@
               },
               "ref_numbers": {
                 "type": "array",
-                "nullable": false,
                 "items": {
                   "type": "string"
                 }
@@ -5907,22 +6181,12 @@
               },
               "equipment_length": {
                 "type": "integer",
-                "enum": [
-                  null,
-                  10,
-                  20,
-                  40,
-                  45
-                ],
+                "enum": [null, 10, 20, 40, 45],
                 "nullable": true
               },
               "equipment_height": {
                 "type": "string",
-                "enum": [
-                  "standard",
-                  "high_cube",
-                  null
-                ],
+                "enum": ["standard", "high_cube", null],
                 "nullable": true
               },
               "weight_in_lbs": {
@@ -5940,7 +6204,7 @@
               "pickup_lfd": {
                 "type": "string",
                 "format": "date-time",
-                "description": "The last free day for pickup before deummurage accrues. Corresponding timezone is pod_timezone.",
+                "description": "The last free day for pickup before demmurage accrues. Corresponding timezone is pod_timezone.",
                 "nullable": true
               },
               "pickup_appointment_at": {
@@ -6004,12 +6268,6 @@
                 "description": "Time empty container was returned.",
                 "nullable": true
               },
-              "last_status_refresh_at": {
-                "type": "string",
-                "format": "date-time",
-                "description": "The last time the container status was retrieved from the pod terminal. (UTC)",
-                "nullable": true
-              },
               "holds_at_pod_terminal": {
                 "type": "array",
                 "items": {
@@ -6041,13 +6299,165 @@
                 "type": "string",
                 "description": "The SCAC of the rail carrier for the pickup leg of the container's journey.(BETA)",
                 "nullable": true
+              },
+              "pod_last_tracking_request_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "shipment_last_tracking_request_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "pod_rail_loaded_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "pod_rail_departed_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "inland_destination_eta_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "inland_destination_ata_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "inland_destination_rail_unloaded_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "pickup_facility_holds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "nullable": true
+              },
+              "pickup_facility_fees": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                },
+                "nullable": true
+              },
+              "pickup_facility_yard_location": {
+                "type": "string",
+                "nullable": true
+              },
+              "pickup_facility_lfd_on": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "shipment": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": ["shipment"]
+                      }
+                    }
+                  }
+                }
+              },
+              "pickup_facility": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": ["terminal"]
+                      }
+                    }
+                  }
+                }
+              },
+              "pod_terminal": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": ["terminal"]
+                      }
+                    }
+                  }
+                }
+              },
+              "transport_events": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": ["transport_event"]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "raw_events": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": ["raw_event"]
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id", "type", "attributes"]
       },
       "port": {
         "title": "Port model",
@@ -6717,7 +7127,10 @@
                     "tracking_request.tracking_stopped",
                     "container.created",
                     "container.updated",
-                    "container.pod_terminal_changed"
+                    "container.pod_terminal_changed",
+                    "container.transport.arrived_at_inland_destination",
+                    "container.transport.estimated.arrived_at_inland_destination",
+                    "container.pickup_lfd.changed"
                   ]
                 }
               },
@@ -6863,7 +7276,10 @@
                   "container.transport.full_in",
                   "container.transport.full_out",
                   "container.transport.empty_in",
-                  "container.transport.vessel_berthed"
+                  "container.transport.vessel_berthed",
+                  "container.transport.arrived_at_inland_destination",
+                  "container.transport.estimated.arrived_at_inland_destination",
+                  "container.pickup_lfd.changed"
                 ]
               },
               "voyage_number": {
@@ -7212,7 +7628,10 @@
                   "tracking_request.tracking_stopped",
                   "container.created",
                   "container.updated",
-                  "container.pod_terminal_changed"
+                  "container.pod_terminal_changed",
+                  "container.transport.arrived_at_inland_destination",
+                  "container.transport.estimated.arrived_at_inland_destination",
+                  "container.pickup_lfd.changed"
                 ]
               },
               "delivery_status": {
