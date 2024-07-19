@@ -225,18 +225,18 @@ Some objects have **relationships**. These are simply links to another object. T
 function registerWebhook(){
   // Make a POST request with a JSON payload.
   options = {
-    'method' : 'POST'
-    'headers' : {
-      'content-type': 'application/vnd.api+json',
-      'authorization' : 'Token YOUR_API_KEY"
+    "method" : "POST"
+    "headers" : {
+      "content-type": "application/vnd.api+json",
+      "authorization" : "Token YOUR_API_KEY"
     },
-    'payload' : {
-      'data': {  
-        'type': 'webhook',
-        'attributes': {
-          'url': "http://yourwebhookurl.com/webhook",
-          'active': true,
-          'events': ['tracking_request.succeeded']
+    "payload" : {
+      "data": {  
+        "type": "webhook",
+        "attributes": {
+          "url": "http://yourwebhookurl.com/webhook",
+          "active": true,
+          "events": ["tracking_request.succeeded"]
         }
       }
     }
