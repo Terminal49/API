@@ -3,7 +3,7 @@ title: Including Resources
 ---
 Throughout the documentation you will notice that many of the endpoints include a `relationships` object inside of the `data` attribute.
 
-For example, if you are [requesting a container](https://developers.terminal49.com/docs/api/docs/reference/terminal49/terminal49.v1.json/paths/~1containers~1%7Bid%7D/get) the relationships will include `shipment`, and possibly `pod_terminal` and `transport_events`
+For example, if you are [requesting a container](/docs/api/4c6091811c4e0-get-a-container) the relationships will include `shipment`, and possibly `pod_terminal` and `transport_events`
 
 If you want to load the `shipment` and `pod_terminal` without making any additional requests you can add the query parameter `include` and provide a comma delimited list of the related resources:
 ```
