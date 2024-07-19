@@ -3,9 +3,9 @@ title: Overview
 ---
 DataSync is the easiest way to get fresh, up-to-date container and shipment data into your system.
 
-DataSync will create 3 tables in your system, in the schema / dataset / folder / spreadsheet of your choice: [containers](https://developers.terminal49.com/docs/data-sync/zjjg8zr2zu0e6-containers), [shipments](https://developers.terminal49.com/docs/data-sync/yeuqjfl43ax44-shipments), and [tracking_requests](https://developers.terminal49.com/docs/data-sync/ufj16839ldwtj-tracking-requests). In addition to these 3 tables, a technical table named [_transfer_status](https://developers.terminal49.com/docs/data-sync/49tfwr53m246j-transfer-status) is also created, which tells you when each table was last refreshed.
+DataSync will create 3 tables in your system, in the schema / dataset / folder / spreadsheet of your choice: [containers](/docs/datasync/table-properties/containers), [shipments](/docs/datasync/table-properties/shipments), and [tracking_requests](/docs/datasync/table-properties/tracking-requests). In addition to these 3 tables, a technical table named [_transfer_status](/docs/datasync/table-properties/transfer-status) is also created, which tells you when each table was last refreshed.
 
-We can send the data to almost any database, data warehouse, or object store, as well as to Google Sheets. See the [full list of supported systems](https://terminal49.stoplight.io/docs/data-sync/j9gw5vf0ujemv-supported-destinations).
+We can send the data to almost any database, data warehouse, or object store, as well as to Google Sheets. See the [full list of supported systems](/docs/datasync/supported-destinations).
 
 
 ## How often does the data update?
@@ -13,7 +13,7 @@ DataSync will keep the data tables updated with a refresh every hour.
 
 Each refresh reloads only the rows that have been changed since the previous refresh, so you won't have excess writes to your system.
 
-To check when a table was last updated, check the [_transfer_status](https://developers.terminal49.com/docs/data-sync/49tfwr53m246j-transfer-status) table - for each row in that table there is a unique table key, and the time when the latest sync occurred for that table.
+To check when a table was last updated, check the [_transfer_status](/docs/datasync/table-properties/transfer-status) table - for each row in that table there is a unique table key, and the time when the latest sync occurred for that table.
 
 
 ## How to use the data
@@ -44,7 +44,7 @@ There are many ways you can start tracking shipments with Terminal49. They all r
     - [Send an email with a CSV to track@terminal49.com](https://help.terminal49.com/en/articles/5506959-how-to-add-shipments-via-email)
     - Upload a CSV through [our dashboard](https://app.terminal49.com/shipments/imports/new)
     - Input shipments directly through [our dashboard](https://app.terminal49.com/shipments/imports/new)
-    - [Use the Terminal49 API to create TrackingRequests](https://developers.terminal49.com/docs/api/bcc30e6df9ed9-create-a-tracking-request)
+    - [Use the Terminal49 API to create TrackingRequests](/docs/api-docs/api-reference/tracking-requests/create-a-tracking-request)
 
 
 ## Getting Started

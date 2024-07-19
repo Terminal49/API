@@ -131,18 +131,18 @@ Because Google App Script does not have native JSON API support, we need to pars
 function listTrackedShipments(){
   // first we construct the request.
   var options = {
-    'method' : 'GET',
-    'headers' : {
-      'content-type': 'application/vnd.api+json',
-      'authorization' : 'Token MY_API_KEY'
+    "method" : "GET",
+    "headers" : {
+      "content-type": "application/vnd.api+json",
+      "authorization" : "Token YOUR_API_KEY"
     },
-      'payload' : ''
+      "payload" : ""
    };
 
 
   try {
     // note that URLFetchApp is a function of Google App Script, not a standard JS function.
-    var response = UrlFetchApp.fetch('https://api.terminal49.com/v2/shipments', options);
+    var response = UrlFetchApp.fetch("https://api.terminal49.com/v2/shipments", options);
     var json = response.getContentText();
     var shipments = JSON.parse(json)["data"];
     var shipment_values = [];

@@ -63,7 +63,7 @@ The token should be sent with each API request in the Authentication header:
 Support [dev@terminal49.com](dev@terminal49.com)
 
 ```
-Authentication: Token YOUR_API_TOKEN
+Authorization: Token YOUR_API_KEY
 ```
 
 ## How to Create a Tracking Request
@@ -161,7 +161,7 @@ The most common issue people encounter is that they are entering the wrong numbe
 
 Please check that you are entering the Bill of Lading number, booking number, or container number and not internal reference at your company or by your frieght forwarder. You can the number you are supplying by going to a carrier's website and using their tools to track your shipment using the request number. If this works, and if the SCAC is supported by T49, you should able to track it with us.
 
-It is entirely possible that's neither us nor you but the shipping line is giving us a headache. Temporary network problems, not populated manifest and other things happen! You can read on how are we handling them in the [Tracking Request Retrying](https://developers.terminal49.com/docs/api/95984bab0bf17-tracking-request-retrying) section.
+It is entirely possible that's neither us nor you but the shipping line is giving us a headache. Temporary network problems, not populated manifest and other things happen! You can read on how are we handling them in the [Tracking Request Retrying](/docs/api-docs/useful-info/tracking-request-retrying) section.
 </Warning>
 
 <Info>
@@ -191,7 +191,7 @@ We have not yet set up a webook to receive status updates from the Terminal49 AP
   "url": "https://api.terminal49.com/v2/tracking_requests",
   "headers": {
     "Content-Type": "application/vnd.api+json",
-    "Authorization": "Token <YOUR_API_KEY>"
+    "Authorization": "Token YOUR_API_KEY"
   }
 }
 ```
