@@ -1,212 +1,212 @@
 {
-    "name": "Terminal 49",
-    "logo": "/logos/light.svg",
-    "favicon": "/logos/favicon.svg",
-    "colors": {
-      "primary": "#00A2FF",
-      "light": "#52bfff",
-      "dark": "#00A2FF"
-    },
-    "modeToggle": {
-      "default": "light",
-      "isHidden": false
-    },
-    "feedback": {
-      "thumbsRating": true,
-      "raiseIssue": true,
-      "suggestEdit": true
-    },
-    "topbarCtaButton": {
-        "name": "Sign in",
-        "url": "https://app.terminal49.com/"
-      },
-      "topbarLinks": [
-        {
-          "name": "Start your free trial",
-          "url": "https://app.terminal49.com/register"
-        }
-      ],
-      "anchors": [
-        {
-          "name": "Contact",
-          "icon": "phone",
-          "url": "https://www.terminal49.com/contact/"
-        },
-        {
-          "name": "Schedule Demo",
-          "icon": "calendar-days",
-          "url": "https://www.terminal49.com/demo/"
-        },
-        {
-          "name": "Blog",
-          "icon": "newspaper",
-          "url": "https://www.terminal49.com/blog/"
-        }
-      ],
-    "primaryTab": {
-        "name": "API Docs"
-    },
-    "tabs": [
-        {
-            "name": "DataSync",
-            "url": "datasync"
-        }
-    ],
-
-
-    "navigation": [
-        {
-            "group": " ",
-            "pages": [
-                "home"
-            ]
-        },
-        {
-            "group": "Getting Started",
-            "pages": [
-                "api-docs/getting-started/start-here",
-                "api-docs/getting-started/tracking-shipments-and-containers",
-                "api-docs/getting-started/list-shipments-and-containers",
-                "api-docs/getting-started/recieve-status-updates"
-            ]
-        },
-        {
-            "group": "In Depth Guides",
-            "pages": [
-                "api-docs/in-depth-guides/quickstart",
-                "api-docs/in-depth-guides/webhooks",
-                "api-docs/in-depth-guides/including-resources",
-                "api-docs/in-depth-guides/tracking-request-lifecycle",
-                "api-docs/in-depth-guides/event-timestamps",
-                "api-docs/in-depth-guides/terminal49-map",
-                "api-docs/in-depth-guides/terminal49-widget",
-                "api-docs/in-depth-guides/rail-integration-guide"
-
-            ]
-        },
-        {
-            "group": "Useful Info",
-            "pages": [
-                "api-docs/useful-info/api-data-sources-availability",
-                "api-docs/useful-info/pricing",
-                "api-docs/useful-info/test-numbers",
-                "api-docs/useful-info/tracking-request-retrying",
-                "api-docs/useful-info/webhook-events-examples"
-            ]
-        },
-        {
-            "group": " ",
-            "pages": [
-                "datasync/home"
-            ]
-        },
-
-        {
-            "group": " ",
-            "pages": [
-                "datasync/overview",
-                "datasync/supported-destinations"
-            ]
-        },
-        {
-            "group": "Table Properties",
-            "pages": [
-                "datasync/table-properties/containers",
-                "datasync/table-properties/shipments",
-                "datasync/table-properties/tracking-requests",
-                "datasync/table-properties/transfer-status"
-            ]
-        },
-        {
-          "group": "Shipments",
-          "pages": [
-            "api-docs/api-reference/shipments/list-shipments",
-            "api-docs/api-reference/shipments/get-a-shipment",
-            "api-docs/api-reference/shipments/edit-a-shipment",
-            "api-docs/api-reference/shipments/stop-tracking-shipment",
-            "api-docs/api-reference/shipments/resume-tracking-shipment"
-          ]
-        },
-        {
-          "group": "Tracking Requests",
-          "pages": [
-            "api-docs/api-reference/tracking-requests/list-tracking-requests",
-            "api-docs/api-reference/tracking-requests/create-a-tracking-request",
-            "api-docs/api-reference/tracking-requests/get-a-single-tracking-request"
-          ]
-        },
-        {
-          "group": "Tracking requests",
-          "pages": [
-            "api-docs/api-reference/tracking-requests/edit-a-tracking-request"
-          ]
-        },
-        {
-          "group": "Webhooks",
-          "pages": [
-            "api-docs/api-reference/webhooks/get-single-webhook",
-            "api-docs/api-reference/webhooks/delete-a-webhook",
-            "api-docs/api-reference/webhooks/edit-a-webhook",
-            "api-docs/api-reference/webhooks/list-webhooks",
-            "api-docs/api-reference/webhooks/create-a-webhook",
-            "api-docs/api-reference/webhooks/list-webhook-ips"
-          ]
-        },
-        {
-          "group": "Webhook Notifications",
-          "pages": [
-            "api-docs/api-reference/webhook-notifications/get-a-single-webhook-notification",
-            "api-docs/api-reference/webhook-notifications/list-webhook-notifications",
-            "api-docs/api-reference/webhook-notifications/get-webhook-notification-payload-examples"
-          ]
-        },
-        {
-          "group": "Containers",
-          "pages": [
-            "api-docs/api-reference/containers/list-containers",
-            "api-docs/api-reference/containers/edit-a-container",
-            "api-docs/api-reference/containers/get-a-container",
-            "api-docs/api-reference/containers/get-a-containers-raw-events",
-            "api-docs/api-reference/containers/get-a-containers-transport-events"
-          ]
-        },
-        {
-          "group": "Shipping Lines",
-          "pages": [
-            "api-docs/api-reference/shipping-lines/shipping-lines",
-            "api-docs/api-reference/shipping-lines/get-a-single-shipping-line"
-          ]
-        },
-        {
-          "group": "Metro Areas",
-          "pages": [
-            "api-docs/api-reference/metro-areas/get-a-metro-area-using-the-unlocode-or-the-id"
-          ]
-        },
-        {
-          "group": "Ports",
-          "pages": [
-            "api-docs/api-reference/ports/get-a-port-using-the-locode-or-the-id"
-          ]
-        },
-        {
-          "group": "Vessels",
-          "pages": [
-            "api-docs/api-reference/vessels/get-a-vessel-using-the-id",
-            "api-docs/api-reference/vessels/get-a-vessel-using-the-imo"
-          ]
-        },
-        {
-          "group": "Terminals",
-          "pages": [
-            "api-docs/api-reference/terminals/get-a-terminal-using-the-id"
-          ]
-        }
-    ],
-
-
-    "footerSocials": {
-      "twitter": "https://twitter.com/terminal49",
-      "linkedin": "https://www.linkedin.com/company/terminal49/"
+  "name": "Terminal 49",
+  "logo": "/logos/light.svg",
+  "favicon": "/logos/favicon.svg",
+  "colors": {
+    "primary": "#00A2FF",
+    "light": "#52bfff",
+    "dark": "#00A2FF"
+  },
+  "modeToggle": {
+    "default": "light",
+    "isHidden": false
+  },
+  "feedback": {
+    "thumbsRating": true,
+    "raiseIssue": true,
+    "suggestEdit": true
+  },
+  "topbarCtaButton": {
+    "name": "Sign in",
+    "url": "https://app.terminal49.com/"
+  },
+  "topbarLinks": [
+    {
+      "name": "Start your free trial",
+      "url": "https://app.terminal49.com/register"
     }
-  }
+  ],
+  "anchors": [
+    {
+      "name": "Contact",
+      "icon": "phone",
+      "url": "https://www.terminal49.com/contact/"
+    },
+    {
+      "name": "Schedule Demo",
+      "icon": "calendar-days",
+      "url": "https://www.terminal49.com/demo/"
+    },
+    {
+      "name": "Blog",
+      "icon": "newspaper",
+      "url": "https://www.terminal49.com/blog/"
+    }
+  ],
+  "primaryTab": {
+    "name": "API Docs"
+  },
+  "tabs": [
+    {
+      "name": "DataSync",
+      "url": "datasync"
+    }
+  ],
+  "navigation": [
+    {
+      "group": " ",
+      "pages": [
+        "home"
+      ]
+    },
+    {
+      "group": "Getting Started",
+      "pages": [
+        "api-docs/getting-started/start-here",
+        "api-docs/getting-started/tracking-shipments-and-containers",
+        "api-docs/getting-started/list-shipments-and-containers",
+        "api-docs/getting-started/receive-status-updates"
+      ]
+    },
+    {
+      "group": "In Depth Guides",
+      "pages": [
+        "api-docs/in-depth-guides/quickstart",
+        "api-docs/in-depth-guides/webhooks",
+        "api-docs/in-depth-guides/including-resources",
+        "api-docs/in-depth-guides/tracking-request-lifecycle",
+        "api-docs/in-depth-guides/event-timestamps",
+        "api-docs/in-depth-guides/terminal49-map",
+        "api-docs/in-depth-guides/terminal49-widget",
+        "api-docs/in-depth-guides/rail-integration-guide"
+      ]
+    },
+    {
+      "group": "Useful Info",
+      "pages": [
+        "api-docs/useful-info/api-data-sources-availability",
+        "api-docs/useful-info/pricing",
+        "api-docs/useful-info/test-numbers",
+        "api-docs/useful-info/tracking-request-retrying",
+        "api-docs/useful-info/webhook-events-examples"
+      ]
+    },
+    {
+      "group": " ",
+      "pages": [
+        "datasync/home"
+      ]
+    },
+    {
+      "group": " ",
+      "pages": [
+        "datasync/overview",
+        "datasync/supported-destinations"
+      ]
+    },
+    {
+      "group": "Table Properties",
+      "pages": [
+        "datasync/table-properties/containers",
+        "datasync/table-properties/shipments",
+        "datasync/table-properties/tracking-requests",
+        "datasync/table-properties/transfer-status"
+      ]
+    },
+    {
+      "group": "Shipments",
+      "pages": [
+        "api-docs/api-reference/shipments/list-shipments",
+        "api-docs/api-reference/shipments/get-a-shipment",
+        "api-docs/api-reference/shipments/edit-a-shipment",
+        "api-docs/api-reference/shipments/stop-tracking-shipment",
+        "api-docs/api-reference/shipments/resume-tracking-shipment"
+      ]
+    },
+    {
+      "group": "Tracking Requests",
+      "pages": [
+        "api-docs/api-reference/tracking-requests/list-tracking-requests",
+        "api-docs/api-reference/tracking-requests/create-a-tracking-request",
+        "api-docs/api-reference/tracking-requests/get-a-single-tracking-request"
+      ]
+    },
+    {
+      "group": "Tracking requests",
+      "pages": [
+        "api-docs/api-reference/tracking-requests/edit-a-tracking-request"
+      ]
+    },
+    {
+      "group": "Webhooks",
+      "pages": [
+        "api-docs/api-reference/webhooks/get-single-webhook",
+        "api-docs/api-reference/webhooks/delete-a-webhook",
+        "api-docs/api-reference/webhooks/edit-a-webhook",
+        "api-docs/api-reference/webhooks/list-webhooks",
+        "api-docs/api-reference/webhooks/create-a-webhook",
+        "api-docs/api-reference/webhooks/list-webhook-ips"
+      ]
+    },
+    {
+      "group": "Webhook Notifications",
+      "pages": [
+        "api-docs/api-reference/webhook-notifications/get-a-single-webhook-notification",
+        "api-docs/api-reference/webhook-notifications/list-webhook-notifications",
+        "api-docs/api-reference/webhook-notifications/get-webhook-notification-payload-examples"
+      ]
+    },
+    {
+      "group": "Containers",
+      "pages": [
+        "api-docs/api-reference/containers/list-containers",
+        "api-docs/api-reference/containers/edit-a-container",
+        "api-docs/api-reference/containers/get-a-container",
+        "api-docs/api-reference/containers/get-a-containers-raw-events",
+        "api-docs/api-reference/containers/get-a-containers-transport-events"
+      ]
+    },
+    {
+      "group": "Shipping Lines",
+      "pages": [
+        "api-docs/api-reference/shipping-lines/shipping-lines",
+        "api-docs/api-reference/shipping-lines/get-a-single-shipping-line"
+      ]
+    },
+    {
+      "group": "Metro Areas",
+      "pages": [
+        "api-docs/api-reference/metro-areas/get-a-metro-area-using-the-unlocode-or-the-id"
+      ]
+    },
+    {
+      "group": "Ports",
+      "pages": [
+        "api-docs/api-reference/ports/get-a-port-using-the-locode-or-the-id"
+      ]
+    },
+    {
+      "group": "Vessels",
+      "pages": [
+        "api-docs/api-reference/vessels/get-a-vessel-using-the-id",
+        "api-docs/api-reference/vessels/get-a-vessel-using-the-imo"
+      ]
+    },
+    {
+      "group": "Terminals",
+      "pages": [
+        "api-docs/api-reference/terminals/get-a-terminal-using-the-id"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "twitter": "https://twitter.com/terminal49",
+    "linkedin": "https://www.linkedin.com/company/terminal49/"
+  },
+  "redirects": [
+    {
+      "source": "/api-docs/getting-started/recieve-status-updates",
+      "destination": "/api-docs/getting-started/receive-status-updates"
+    }
+  ]
+}
