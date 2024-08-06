@@ -103,29 +103,29 @@ Terminal49 provides webhook notifications to keep you updated on key Transport E
 
 Here's a list of the rail-specific events which support webhook notifications:
 
-| Transport Event | Webhook Notification | Description |
-|----------------|----------------------|-------------|
-| Rail Loaded    | `container.transport.rail_loaded`   | The container is loaded onto a railcar. |
-| Rail Departed  | `container.transport.rail_departed` | The container departs on the railcar (not always from port of discharge). |
-| Rail Arrived   | `container.transport.rail_arrived`  | The container arrives at a rail terminal (not always at the destination terminal). |
-| Arrived At Inland Destination | `container.transport.arrived_at_inland_destination` | The container arrives at the destination terminal. |
-| Rail Unloaded  | `container.transport.rail_unloaded` | The container is unloaded from a railcar. |
+| Transport Event | Webhook Notification | Description | Example |
+|----------------|----------------------|-------------|---------|
+| Rail Loaded    | `container.transport.rail_loaded`   | The container is loaded onto a railcar. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-rail-loaded" target="_blank">Example</a> |
+| Rail Departed  | `container.transport.rail_departed` | The container departs on the railcar (not always from port of discharge). | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-rail-departed" target="_blank">Example</a> |
+| Rail Arrived   | `container.transport.rail_arrived`  | The container arrives at a rail terminal (not always at the destination terminal). | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-rail-arrived" target="_blank">Example</a> |
+| Arrived At Inland Destination | `container.transport.arrived_at_inland_destination` | The container arrives at the destination terminal. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-arrived-at-inland-destination" target="_blank">Example</a> |
+| Rail Unloaded  | `container.transport.rail_unloaded` | The container is unloaded from a railcar. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-rail-unloaded" target="_blank">Example</a> |
 
 There's also a set of events that are triggered when the status of the container at the destination rail terminal changes.  For containers without rail, they would have been triggered at the ocean terminal.
 
-| Transport Event | Webhook Notification | Description |
-|----------------|----------------------|-------------|
-| Available for Pickup | `container.transport.available`     | (Unreleased) The container is available for pickup at the rail terminal. |
-| Not Available  | `container.transport.not_available` | (Unreleased) The container is not available for pickup at the rail terminal. |
-| Holds and Fees Updated | `container.transport.holds_and_fees_updated` | (Unreleased) The holds and fees for the container at the rail terminal have been changed, but not fully cleared. |
-| Full Out       | `container.transport.full_out`      | The full container leaves the rail terminal. |
-| Empty In       | `container.transport.empty_in`      | The empty container is returned to the terminal. |
+| Transport Event | Webhook Notification | Description | Example |
+|----------------|----------------------|-------------|---------|
+| Available for Pickup | `container.transport.available`     | (Unreleased) The container is available for pickup at the rail terminal. | - |
+| Not Available  | `container.transport.not_available` | (Unreleased) The container is not available for pickup at the rail terminal. | - |
+| Holds and Fees Updated | `container.transport.holds_and_fees_updated` | (Unreleased) The holds and fees for the container at the rail terminal have been changed, but not fully cleared. | - |
+| Full Out       | `container.transport.full_out`      | The full container leaves the rail terminal. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-full-out" target="_blank">Example</a> |
+| Empty In       | `container.transport.empty_in`      | The empty container is returned to the terminal. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-empty-in" target="_blank">Example</a> |
 
 Finally, we have a webhook notifications for when the destination ETA changes.
 
-| Transport Event | Webhook Notification | Description |
-|----------------|----------------------|-------------|
-| Estimated Destination Arrival | `container.transport.estimated.arrived_at_inland_destination` | Estimated time of arrival for the container at the destination rail terminal. |
+| Transport Event | Webhook Notification | Description | Example |
+|----------------|----------------------|-------------|---------|
+| Estimated Destination Arrival | `container.transport.estimated.arrived_at_inland_destination` | Estimated time of arrival for the container at the destination rail terminal. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-estimated-arrived-at-inland-destination" target="_blank">Example</a> |
 
 Integrate these notifications by subscribing to the webhooks and handling the incoming data to update your systems.
 
