@@ -6647,6 +6647,20 @@
       }
     },
     {
+      "id": "50ce561a-577f-46d1-af67-b236b847f51d",
+      "type": "vessel",
+      "attributes": {
+        "name": "MAERSK WINNIPEG",
+        "imo": "9410284",
+        "mmsi": "027803989",
+        "latitude": -78.30435842851921,
+        "longitude": 25.471353799804547,
+        "nautical_speed_knots": 100,
+        "navigational_heading_degrees": 1,
+        "position_timestamp": "2023-06-05T19:46:18Z"
+      }
+    },
+    {
       "id": "0db4d1a2-ec3e-4123-9d80-1431c81733e6",
       "type": "estimated_event",
       "attributes": {
