@@ -772,13 +772,14 @@
                             "pod_timezone": "America/New_York",
                             "final_destination_timezone": "US/Eastern",
                             "empty_terminated_timezone": "US/Eastern",
-                            "pickup_rail_carrier_scac": "CSXT",
+                            "pod_rail_carrier_scac": "CSXT",
+                            "ind_rail_carrier_scac": "CSXT",
                             "pod_rail_loaded_at": null,
                             "pod_rail_departed_at": null,
-                            "inland_destination_eta_at": null,
-                            "inland_destination_ata_at": null,
-                            "inland_destination_rail_unloaded_at": null,
-                            "pickup_facility_lfd_on": null
+                            "ind_eta_at": null,
+                            "ind_ata_at": null,
+                            "ind_rail_unloaded_at": null,
+                            "ind_facility_lfd_on": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3426,13 +3427,14 @@
                             "pod_timezone": "America/New_York",
                             "final_destination_timezone": null,
                             "empty_terminated_timezone": "America/New_York",
-                            "pickup_rail_carrier_scac": null,
+                            "pod_rail_carrier_scac": null,
+                            "ind_rail_carrier_scac": null,
                             "pod_rail_loaded_at": null,
                             "pod_rail_departed_at": null,
-                            "inland_destination_eta_at": null,
-                            "inland_destination_ata_at": null,
-                            "inland_destination_rail_unloaded_at": null,
-                            "pickup_facility_lfd_on": null
+                            "ind_eta_at": null,
+                            "ind_ata_at": null,
+                            "ind_rail_unloaded_at": null,
+                            "ind_facility_lfd_on": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3591,13 +3593,14 @@
                             "pod_timezone": "America/New_York",
                             "final_destination_timezone": "America/Chicago",
                             "empty_terminated_timezone": "America/Chicago",
-                            "pickup_rail_carrier_scac": "CSXT",
+                            "pod_rail_carrier_scac": "CSXT",
+                            "ind_rail_carrier_scac": "CSXT",
                             "pod_rail_loaded_at": null,
                             "pod_rail_departed_at": null,
-                            "inland_destination_eta_at": "2024-07-02T14:20:00Z",
-                            "inland_destination_ata_at": null,
-                            "inland_destination_rail_unloaded_at": null,
-                            "pickup_facility_lfd_on": null
+                            "ind_eta_at": "2024-07-02T14:20:00Z",
+                            "ind_ata_at": null,
+                            "ind_rail_unloaded_at": null,
+                            "ind_facility_lfd_on": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3779,13 +3782,14 @@
                             "pod_timezone": "America/Los_Angeles",
                             "final_destination_timezone": "Asia/Shanghai",
                             "empty_terminated_timezone": "Asia/Shanghai",
-                            "pickup_rail_carrier_scac": null,
+                            "pod_rail_carrier_scac": null,
+                            "ind_rail_carrier_scac": null,
                             "pod_rail_loaded_at": null,
                             "pod_rail_departed_at": null,
-                            "inland_destination_eta_at": null,
-                            "inland_destination_ata_at": null,
-                            "inland_destination_rail_unloaded_at": null,
-                            "pickup_facility_lfd_on": null
+                            "ind_eta_at": null,
+                            "ind_ata_at": null,
+                            "ind_rail_unloaded_at": null,
+                            "ind_facility_lfd_on": null
                           },
                           "relationships": {
                             "shipment": {
@@ -3964,13 +3968,14 @@
                             "pod_timezone": "America/Los_Angeles",
                             "final_destination_timezone": "America/New_York",
                             "empty_terminated_timezone": "America/New_York",
-                            "pickup_rail_carrier_scac": "BNSF",
+                            "pod_rail_carrier_scac": "BNSF",
+                            "ind_rail_carrier_scac": "CSXT",
                             "pod_rail_loaded_at": null,
                             "pod_rail_departed_at": null,
-                            "inland_destination_eta_at": "2024-07-07T08:00:00Z",
-                            "inland_destination_ata_at": null,
-                            "inland_destination_rail_unloaded_at": null,
-                            "pickup_facility_lfd_on": null
+                            "ind_eta_at": "2024-07-07T08:00:00Z",
+                            "ind_ata_at": null,
+                            "ind_rail_unloaded_at": null,
+                            "ind_facility_lfd_on": null
                           },
                           "relationships": {
                             "shipment": {
@@ -4096,13 +4101,14 @@
                             "pod_timezone": "America/Los_Angeles",
                             "final_destination_timezone": "America/Chicago",
                             "empty_terminated_timezone": "America/Chicago",
-                            "pickup_rail_carrier_scac": "BNSF",
+                            "pod_rail_carrier_scac": "BNSF",
+                            "ind_rail_carrier_scac": "BNSF",
                             "pod_rail_loaded_at": null,
                             "pod_rail_departed_at": null,
-                            "inland_destination_eta_at": "2024-07-04T22:00:00Z",
-                            "inland_destination_ata_at": null,
-                            "inland_destination_rail_unloaded_at": null,
-                            "pickup_facility_lfd_on": null
+                            "ind_eta_at": "2024-07-04T22:00:00Z",
+                            "ind_ata_at": null,
+                            "ind_rail_unloaded_at": null,
+                            "ind_facility_lfd_on": null
                           },
                           "relationships": {
                             "shipment": {
@@ -4390,13 +4396,14 @@
                           "pod_timezone": "America/New_York",
                           "final_destination_timezone": "US/Eastern",
                           "empty_terminated_timezone": "US/Eastern",
-                          "pickup_rail_carrier_scac": "CSXT",
+                          "pod_rail_carrier_scac": "CSXT",
+                          "ind_rail_carrier_scac": "CSXT",
                           "pod_rail_loaded_at": null,
                           "pod_rail_departed_at": null,
-                          "inland_destination_eta_at": null,
-                          "inland_destination_ata_at": null,
-                          "inland_destination_rail_unloaded_at": null,
-                          "pickup_facility_lfd_on": null
+                          "ind_eta_at": null,
+                          "ind_ata_at": null,
+                          "ind_rail_unloaded_at": null,
+                          "ind_facility_lfd_on": null
                         },
                         "relationships": {
                           "shipment": {
@@ -6017,7 +6024,8 @@
               "pod_full_out_at": "2022-02-11T22:18:00Z",
               "empty_terminated_at": null,
               "terminal_checked_at": "2022-02-11T22:45:32Z",
-              "pickup_rail_carrier_scac": "UPRR",
+              "pod_rail_carrier_scac": "UPRR",
+              "ind_rail_carrier_scac": "CSXT",
               "pod_timezone": "America/Los_Angeles",
               "final_destination_timezone": null,
               "empty_terminated_timezone": null,
@@ -6025,10 +6033,10 @@
               "shipment_last_tracking_request_at": "2022-02-11T22:40:00Z",
               "pod_rail_loaded_at": "2022-02-11T22:18:00Z",
               "pod_rail_departed_at": "2022-02-11T23:30:00Z",
-              "inland_destination_eta_at": null,
-              "inland_destination_ata_at": "2022-02-15T01:12:00Z",
-              "inland_destination_rail_unloaded_at": "2022-02-15T07:54:00Z",
-              "pickup_facility_lfd_on": null
+              "ind_eta_at": null,
+              "ind_ata_at": "2022-02-15T01:12:00Z",
+              "ind_rail_unloaded_at": "2022-02-15T07:54:00Z",
+              "ind_facility_lfd_on": null
             },
             "relationships": {
               "shipment": {
@@ -6271,9 +6279,14 @@
                 "description": "IANA tz. Applies to attribute empty_terminated_at.",
                 "nullable": true
               },
-              "pickup_rail_carrier_scac": {
+              "pod_rail_carrier_scac": {
                 "type": "string",
                 "description": "The SCAC of the rail carrier for the pickup leg of the container's journey.(BETA)",
+                "nullable": true
+              },
+              "ind_rail_carrier_scac": {
+                "type": "string",
+                "description": "The SCAC of the rail carrier for the delivery leg of the container's journey.(BETA)",
                 "nullable": true
               },
               "pod_last_tracking_request_at": {
@@ -6296,22 +6309,22 @@
                 "format": "date-time",
                 "nullable": true
               },
-              "inland_destination_eta_at": {
+              "ind_eta_at": {
                 "type": "string",
                 "format": "date-time",
                 "nullable": true
               },
-              "inland_destination_ata_at": {
+              "ind_ata_at": {
                 "type": "string",
                 "format": "date-time",
                 "nullable": true
               },
-              "inland_destination_rail_unloaded_at": {
+              "ind_rail_unloaded_at": {
                 "type": "string",
                 "format": "date-time",
                 "nullable": true
               },
-              "pickup_facility_lfd_on": {
+              "ind_facility_lfd_on": {
                 "type": "string",
                 "format": "date-time",
                 "nullable": true

@@ -135,13 +135,12 @@ The following are new attributes that are specific to rail container tracking.
 
 - **pod_rail_loaded_at**: Time when the container is loaded onto a railcar at the POD.
 - **pod_rail_departed_at**: Time when the container departs from the POD.
-- **inland_destination_eta_at**: Estimated Time of Arrival at the destination terminal.
-- **inland_destination_ata_at**: Actual Time of Arrival at the destination terminal.
-- **inland_destination_rail_unloaded_at**: Time when the container is unloaded from the rail terminal.
-- **pickup_facility_lfd_on**: Last Free Day for demurrage charges.
-- **pickup_rail_carrier_scac**: SCAC code of the rail carrier that picks up the container from the POD (this could be different than the rail carrier that delivers to the destination terminal). {/* Linear ticket to rename: https://linear.app/terminal49/issue/DATA-2767/rename-pickup-rail-carrier-scac */}
-{/* Linear ticket to add matching delivery/destination rail carrier scac: https://linear.app/terminal49/issue/DATA-2768/add-destination-rail-carrier-scac-to-serializer */}
-
+- **ind_eta_at**: Estimated Time of Arrival at the inland destination.
+- **ind_ata_at**: Actual Time of Arrival at the inland destination.
+- **ind_rail_unloaded_at**: Time when the container is unloaded from rail at the inland destination.
+- **ind_facility_lfd_on**: Last Free Day for demurrage charges at the inland destination terminal.
+- **pod_rail_carrier_scac**: SCAC code of the rail carrier that picks up the container from the POD (this could be different than the rail carrier that delivers to the inland destination).
+- **ind_rail_carrier_scac**: SCAC code of the rail carrier that delivers the container to the inland destination.
 
 {/* TODO: Look at the other container attributes that could be fed via rail but are currently shipping-line-only.  Such as :current_issues, :pickup_appointment_at, :availability_known, :available_for_pickup  */}
 
