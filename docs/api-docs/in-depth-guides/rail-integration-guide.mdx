@@ -84,9 +84,7 @@ graph LR
     E --> F[Empty Return]
 ``` */}
 
-In addition, there are events that update you on the status of your container at the rail terminal, marking it as available or unavailable.  Some of these events come directly from the carriers, while others we generate when we see the fees and holds on your container change.
-
-```mermaid
+{/* ```mermaid
 graph LR
     C[Previous events] --> D[Rail Unloaded]
     D --> G[Available for Pickup]
@@ -95,7 +93,7 @@ graph LR
     H --> G
     H -- Holds and Fees Updated --> H
     G --> E[Full Out]
-```
+``` */}
 
 ### Webhook Notifications
 
@@ -115,9 +113,6 @@ There's also a set of events that are triggered when the status of the container
 
 | Transport Event | Webhook Notification | Description | Example |
 |----------------|----------------------|-------------|---------|
-| Available for Pickup | `container.transport.available`     | (Unreleased) The container is available for pickup at the rail terminal. | - |
-| Not Available  | `container.transport.not_available` | (Unreleased) The container is not available for pickup at the rail terminal. | - |
-| Holds and Fees Updated | `container.transport.holds_and_fees_updated` | (Unreleased) The holds and fees for the container at the rail terminal have been changed, but not fully cleared. | - |
 | Full Out       | `container.transport.full_out`      | The full container leaves the rail terminal. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-full-out" target="_blank">Example</a> |
 | Empty In       | `container.transport.empty_in`      | The empty container is returned to the terminal. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-empty-in" target="_blank">Example</a> |
 
