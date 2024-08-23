@@ -778,9 +778,6 @@
                             "inland_destination_eta_at": null,
                             "inland_destination_ata_at": null,
                             "inland_destination_rail_unloaded_at": null,
-                            "pickup_facility_holds": null,
-                            "pickup_facility_fees": null,
-                            "pickup_facility_yard_location": null,
                             "pickup_facility_lfd_on": null
                           },
                           "relationships": {
@@ -3435,9 +3432,6 @@
                             "inland_destination_eta_at": null,
                             "inland_destination_ata_at": null,
                             "inland_destination_rail_unloaded_at": null,
-                            "pickup_facility_holds": null,
-                            "pickup_facility_fees": null,
-                            "pickup_facility_yard_location": null,
                             "pickup_facility_lfd_on": null
                           },
                           "relationships": {
@@ -3603,9 +3597,6 @@
                             "inland_destination_eta_at": "2024-07-02T14:20:00Z",
                             "inland_destination_ata_at": null,
                             "inland_destination_rail_unloaded_at": null,
-                            "pickup_facility_holds": null,
-                            "pickup_facility_fees": null,
-                            "pickup_facility_yard_location": null,
                             "pickup_facility_lfd_on": null
                           },
                           "relationships": {
@@ -3794,9 +3785,6 @@
                             "inland_destination_eta_at": null,
                             "inland_destination_ata_at": null,
                             "inland_destination_rail_unloaded_at": null,
-                            "pickup_facility_holds": null,
-                            "pickup_facility_fees": null,
-                            "pickup_facility_yard_location": null,
                             "pickup_facility_lfd_on": null
                           },
                           "relationships": {
@@ -3982,9 +3970,6 @@
                             "inland_destination_eta_at": "2024-07-07T08:00:00Z",
                             "inland_destination_ata_at": null,
                             "inland_destination_rail_unloaded_at": null,
-                            "pickup_facility_holds": null,
-                            "pickup_facility_fees": null,
-                            "pickup_facility_yard_location": null,
                             "pickup_facility_lfd_on": null
                           },
                           "relationships": {
@@ -4117,9 +4102,6 @@
                             "inland_destination_eta_at": "2024-07-04T22:00:00Z",
                             "inland_destination_ata_at": null,
                             "inland_destination_rail_unloaded_at": null,
-                            "pickup_facility_holds": null,
-                            "pickup_facility_fees": null,
-                            "pickup_facility_yard_location": null,
                             "pickup_facility_lfd_on": null
                           },
                           "relationships": {
@@ -4414,9 +4396,6 @@
                           "inland_destination_eta_at": null,
                           "inland_destination_ata_at": null,
                           "inland_destination_rail_unloaded_at": null,
-                          "pickup_facility_holds": null,
-                          "pickup_facility_fees": null,
-                          "pickup_facility_yard_location": null,
                           "pickup_facility_lfd_on": null
                         },
                         "relationships": {
@@ -6049,9 +6028,6 @@
               "inland_destination_eta_at": null,
               "inland_destination_ata_at": "2022-02-15T01:12:00Z",
               "inland_destination_rail_unloaded_at": "2022-02-15T07:54:00Z",
-              "pickup_facility_holds": null,
-              "pickup_facility_fees": null,
-              "pickup_facility_yard_location": null,
               "pickup_facility_lfd_on": null
             },
             "relationships": {
@@ -6333,24 +6309,6 @@
               "inland_destination_rail_unloaded_at": {
                 "type": "string",
                 "format": "date-time",
-                "nullable": true
-              },
-              "pickup_facility_holds": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "nullable": true
-              },
-              "pickup_facility_fees": {
-                "type": "array",
-                "items": {
-                  "type": "object"
-                },
-                "nullable": true
-              },
-              "pickup_facility_yard_location": {
-                "type": "string",
                 "nullable": true
               },
               "pickup_facility_lfd_on": {
