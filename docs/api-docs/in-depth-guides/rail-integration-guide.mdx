@@ -84,9 +84,7 @@ graph LR
     E --> F[Empty Return]
 ``` */}
 
-In addition, there are events that update you on the status of your container at the rail terminal, marking it as available or unavailable.  Some of these events come directly from the carriers, while others we generate when we see the fees and holds on your container change.
-
-```mermaid
+{/* ```mermaid
 graph LR
     C[Previous events] --> D[Rail Unloaded]
     D --> G[Available for Pickup]
@@ -95,7 +93,7 @@ graph LR
     H --> G
     H -- Holds and Fees Updated --> H
     G --> E[Full Out]
-```
+``` */}
 
 ### Webhook Notifications
 
@@ -115,9 +113,6 @@ There's also a set of events that are triggered when the status of the container
 
 | Transport Event | Webhook Notification | Description | Example |
 |----------------|----------------------|-------------|---------|
-| Available for Pickup | `container.transport.available`     | (Unreleased) The container is available for pickup at the rail terminal. | - |
-| Not Available  | `container.transport.not_available` | (Unreleased) The container is not available for pickup at the rail terminal. | - |
-| Holds and Fees Updated | `container.transport.holds_and_fees_updated` | (Unreleased) The holds and fees for the container at the rail terminal have been changed, but not fully cleared. | - |
 | Full Out       | `container.transport.full_out`      | The full container leaves the rail terminal. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-full-out" target="_blank">Example</a> |
 | Empty In       | `container.transport.empty_in`      | The empty container is returned to the terminal. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-empty-in" target="_blank">Example</a> |
 
@@ -135,16 +130,12 @@ The following are new attributes that are specific to rail container tracking.
 
 - **pod_rail_loaded_at**: Time when the container is loaded onto a railcar at the POD.
 - **pod_rail_departed_at**: Time when the container departs from the POD.
-- **inland_destination_eta_at**: Estimated Time of Arrival at the destination terminal.
-- **inland_destination_ata_at**: Actual Time of Arrival at the destination terminal.
-- **inland_destination_rail_unloaded_at**: Time when the container is unloaded from the rail terminal.
-- **pickup_facility_holds**: Holds placed on the container at the rail terminal.
-- **pickup_facility_fees**: Fees associated with the container at the rail terminal.
-- **pickup_facility_yard_location**: Yard location of the container at the rail terminal.
-- **pickup_facility_lfd_on**: Last Free Day for demurrage charges.
-- **pickup_rail_carrier_scac**: SCAC code of the rail carrier that picks up the container from the POD (this could be different than the rail carrier that delivers to the destination terminal). {/* Linear ticket to rename: https://linear.app/terminal49/issue/DATA-2767/rename-pickup-rail-carrier-scac */}
-{/* Linear ticket to add matching delivery/destination rail carrier scac: https://linear.app/terminal49/issue/DATA-2768/add-destination-rail-carrier-scac-to-serializer */}
-
+- **ind_eta_at**: Estimated Time of Arrival at the inland destination.
+- **ind_ata_at**: Actual Time of Arrival at the inland destination.
+- **ind_rail_unloaded_at**: Time when the container is unloaded from rail at the inland destination.
+- **ind_facility_lfd_on**: Last Free Day for demurrage charges at the inland destination terminal.
+- **pod_rail_carrier_scac**: SCAC code of the rail carrier that picks up the container from the POD (this could be different than the rail carrier that delivers to the inland destination).
+- **ind_rail_carrier_scac**: SCAC code of the rail carrier that delivers the container to the inland destination.
 
 {/* TODO: Look at the other container attributes that could be fed via rail but are currently shipping-line-only.  Such as :current_issues, :pickup_appointment_at, :availability_known, :available_for_pickup  */}
 
