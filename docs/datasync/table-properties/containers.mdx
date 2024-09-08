@@ -1,6 +1,8 @@
 ---
-title: Containers
+title: Containers (deprecated)
 ---
+_This is a deprecated version of the `containers` table, used by DataSync customers before September 2024_
+
 The `containers` table contains 1 row per container (`container_id` is the unique key).
 
 Each container is part of 1 shipment (`shipment_id`).
@@ -22,6 +24,10 @@ This is a large table with denormalized columns to make it easy to use for repor
 | customer_name                   | Name of the customer                                                                                           | text      | No          |
 | shipping_line_scac              | Standard carrier alpha numeric code of the shipping line                                                       | text      | No          |
 | shipping_line_name              | Name of the shipping line                                                                                      | text      | No          |
+| origin_country_code             | Origin country code, populated only if the Empty Out event happens at a different location from the POL        | text      | No          |
+| origin_locode                   | Origin UN/LOCODE, populated only if the Empty Out event happens at a different location from the POL           | text      | No          |
+| origin_city                     | Origin city, populated only if the Empty Out event happens at a different location from the POL                | text      | No          |
+| origin_timezone                 | Origin time zone, populated only if the Empty Out event happens at a different location from the POL           | text      | No          |
 | pol_country_code                | Port of Lading country code                                                                                    | text      | No          |
 | pol_locode                      | Port of Lading UN/LOCODE                                                                                       | text      | No          |
 | pol_city                        | Port of Lading city                                                                                            | text      | No          |
@@ -40,10 +46,18 @@ This is a large table with denormalized columns to make it easy to use for repor
 | destination_terminal_firms_code | Destination terminal firms code                                                                                | text      | No          |
 | destination_terminal_nickname   | Destination terminal nickname                                                                                  | text      | No          |
 | destination_terminal_name       | Destination terminal name                                                                                      | text      | No          |
-| pol_empty_out_at                | Port of Lading Empty Out, as a UTC timestamp                                                                   | timestamp | No          |
-| pol_empty_out_at_local          | Port of Lading Empty Out, as a string in the POL local time zone                                               | text      | No          |
-| pol_full_in_at                  | Port of Lading Full In event, as a UTC timestamp                                                               | timestamp | No          |
-| pol_full_in_at_local            | Port of Lading Full In event, as a string in the POL local time zone                                           | text      | No          |
+| pol_empty_out_at                | Empty Out, as a UTC timestamp                                                                                  | timestamp | No          |
+| pol_empty_out_at_local          | Empty Out, as a string in the POL local time zone                                                              | text      | No          |
+| pol_full_in_at                  | Full In event, as a UTC timestamp                                                                              | timestamp | No          |
+| pol_full_in_at_local            | Full In event, as a string in the POL local time zone                                                          | text      | No          |
+| origin_rail_loaded_at           | Origin Rail Loaded, as a UTC timestamp                                                                         | timestamp | No          |
+| origin_rail_loaded_at_local     | Origin Rail Loaded, as a string in the origin local time zone                                                  | text      | No          |
+| origin_rail_departed_at         | Origin Rail Departed, as a UTC timestamp                                                                       | timestamp | No          |
+| origin_rail_departed_at_local   | Origin Rail Departed, as a string in the origin local time zone                                                | text      | No          |
+| pol_rail_arrived_at             | Port of Lading Rail Arrived, as a UTC timestamp                                                                | timestamp | No          |
+| pol_rail_arrived_at_local       | Port of Lading Rail Arrived, as a string in the origin local time zone                                         | text      | No          |
+| pol_rail_unloaded_at            | Port of Lading Rail Unloaded, as a UTC timestamp                                                               | timestamp | No          |
+| pol_rail_unloaded_at_local      | Port of Lading Rail Unloaded, as a string in the origin local time zone                                        | text      | No          |
 | pol_loaded_at                   | Port of Lading Loaded event, as a UTC timestamp                                                                | timestamp | No          |
 | pol_loaded_at_local             | Port of Lading Loaded event, as a string in the POL local time zone                                            | text      | No          |
 | pol_etd_at                      | Port of Lading Estimated Time of Departure, as a UTC timestamp                                                 | timestamp | No          |
@@ -70,6 +84,8 @@ This is a large table with denormalized columns to make it easy to use for repor
 | destination_eta_at_local        | Destination Estimated Time of Arrival, as a string in the Destination local time zone                          | text      | No          |
 | destination_arrived_at          | Destination Actual Time of Arrival, as a UTC timestamp                                                         | timestamp | No          |
 | destination_arrived_at_local    | Destination Actual Time of Arrival, as a string in the Destination local time zone                             | text      | No          |
+| rail_unloaded_at                | Destination Rail Unloaded, as a UTC timestamp                                                                  | timestamp | No          |
+| rail_unloaded_at_local          | Destination Rail Unloaded, as a string in the Destination local time zone                                      | text      | No          |
 | destination_full_out_at         | Destination Full Out event, as a UTC timestamp                                                                 | timestamp | No          |
 | destination_full_out_at_local   | Destination Full Out event, as a string in the Destination local time zone                                     | text      | No          |
 | empty_terminated_at             | Container Empty Returned event, as a UTC timestamp                                                             | timestamp | No          |
