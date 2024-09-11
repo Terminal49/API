@@ -15,8 +15,8 @@ _Columns marked with * are only included with the Intermodal Rail product._
 
 | COLUMN NAME                     | DESCRIPTION                                                                                                            | TYPE      |
 |---------------------------------|------------------------------------------------------------------------------------------------------------------------|-----------|
-| `container_id`                  | Container ID. This is the unique key of the table.                                                                     | _text_    |
-| `container_number`                | Container number                                                                                                     | _text_    |
+| `container_id`                  | Container ID. This is the unique key of the table.                                                                     | `text`    |
+| `container_number`                | Container number                                                                                                     | `text`    |
 | shipment_id                     | Shipment ID associated to the container                                                                                | text      |
 | shipment_bill_of_lading_number  | Shipment number from the tracking request                                                                              | text      |
 | shipment_normalized_number      | The normalized version of the shipment number used for querying the carrier                                            | text      |
@@ -65,7 +65,7 @@ _Columns marked with * are only included with the Intermodal Rail product._
 | pod_discharged_at_local         | Port of Discharge Discharged event, as a string in the POD local time zone                                             | text      |
 | pod_last_free_day_on            | Current Last Free Day at the POD terminal, as a UTC timestamp <br /><br /> Named `pickup_lfd` in the API               | timestamp |
 | pod_last_free_day_on_local      | Current Last Free Day at the POD terminal, as a string in the POD local time zone                                      | text      |
-| pod_pickup_appointment_at       | Port of Discharge Pickup Appointment, as a UTC timestamp (named pickup_appointment_at in the API)                      | timestamp |
+| pod_pickup_appointment_at       | Port of Discharge Pickup Appointment, as a UTC timestamp <br /><br /> named `pickup_appointment_at` in the API         | timestamp |
 | pod_pickup_appointment_at_local | Port of Discharge Pickup Appointment, as a string in the POD local time zone                                           | text      |
 | pod_full_out_at                 | Port of Discharge Full Out event, as a UTC timestamp                                                                   | timestamp |
 | pod_full_out_at_local           | Port of Discharge Full Out event, as a string in the POD local time zone                                               | text      |
@@ -75,13 +75,13 @@ _Columns marked with * are only included with the Intermodal Rail product._
 | ind_rail_carrier_scac*          | SCAC of the rail carrier at the inland destination                                                                     | text      |
 | ind_eta_at*                     | Inland Destination Estimated Time of Arrival, as a UTC timestamp                                                       | timestamp |
 | ind_eta_at_local*               | Inland Destination Estimated Time of Arrival, as a string in the Inland Destination local time zone                    | text      |
-| ind_arrived_at*                 | Inland Destination Actual Time of Arrival, as a UTC timestamp (named ind_ata_at in the API)                            | timestamp |
+| ind_arrived_at*                 | Inland Destination Actual Time of Arrival, as a UTC timestamp <br /><br /> named `ind_ata_at` in the API                 | timestamp |
 | ind_arrived_at_local*           | Inland Destination Actual Time of Arrival, as a string in the Inland Destination local time zone                       | text      |
 | ind_rail_unloaded_at*           | Inland Destination Rail Unloaded, as a UTC timestamp                                                                   | timestamp |
 | ind_rail_unloaded_at_local*     | Inland Destination Rail Unloaded, as a string in the Inland Destination local time zone                                | text      |
-| ind_last_free_day_on*           | Last Free Day at the inland destination facility, as a UTC timestamp (named ind_facility_lfd_on in the API)            | timestamp |
+| ind_last_free_day_on*           | Last Free Day at the inland destination facility, as a UTC timestamp <br /><br /> named `ind_facility_lfd_on` in the API | timestamp |
 | ind_last_free_day_on_local*     | Last Free Day at the inland destination facility, as a string in the inland estination local time zone                 | text      |
-| ind_full_out_at                 | Inland Destination Full Out event, as a UTC timestamp (named final_destination_full_out_at in the API)                 | timestamp |
+| ind_full_out_at                 | Inland Destination Full Out event, as a UTC timestamp <br /><br /> named `final_destination_full_out_at` in the API      | timestamp |
 | ind_full_out_at_local           | Inland Destination Full Out event, as a string in the Inland Destination local time zone                               | text      |
 | empty_terminated_at             | Container Empty Returned event, as a UTC timestamp                                                                     | timestamp |
 | empty_terminated_at_local       | Container Empty Returned event, as a string in the POD local time zone                                                 | text      |
