@@ -10,110 +10,110 @@ Each container is part of 1 shipment (`shipment_id`).
 This is a large table with denormalized columns to make it easy to use for reporting purposes.
 
 
-| COLUMN NAME                     | DESCRIPTION                                                                                                    | DATA TYPE |
-|---------------------------------|----------------------------------------------------------------------------------------------------------------|-----------|
-| container_id                    | Container ID. This is the unique key of the table.                                                             | text      |
-| container_number                | Container number                                                                                               | text      |
-| shipment_id                     | Shipment ID associated to the container                                                                        | text      |
-| shipment_bill_of_lading_number  | Shipment number from the tracking request                                                                      | text      |
-| shipment_normalized_number      | The normalized version of the shipment number used for querying the carrier                                    | text      |
-| shipment_reference_numbers      | Reference numbers of the shipment, concatenated                                                                | text      |
-| container_reference_numbers     | Reference numbers of the container, concatenated                                                               | text      |
-| shipment_tags                   | Tags added to the shipment, sorted by alphabetical order, concatenated and separated by a comma                | text      |
-| customer_id                     | Account ID of the customer                                                                                     | text      |
-| customer_name                   | Name of the customer                                                                                           | text      |
-| shipping_line_scac              | Standard carrier alpha numeric code of the shipping line                                                       | text      |
-| shipping_line_name              | Name of the shipping line                                                                                      | text      |
-| origin_country_code             | Origin country code, populated only if the Empty Out event happens at a different location from the POL        | text      |
-| origin_locode                   | Origin UN/LOCODE, populated only if the Empty Out event happens at a different location from the POL           | text      |
-| origin_city                     | Origin city, populated only if the Empty Out event happens at a different location from the POL                | text      |
-| origin_timezone                 | Origin time zone, populated only if the Empty Out event happens at a different location from the POL           | text      |
-| pol_country_code                | Port of Lading country code                                                                                    | text      |
-| pol_locode                      | Port of Lading UN/LOCODE                                                                                       | text      |
-| pol_city                        | Port of Lading city                                                                                            | text      |
-| pol_timezone                    | Port of Lading time zone                                                                                       | text      |
-| pod_country_code                | Port of Discharge country code                                                                                 | text      |
-| pod_locode                      | Port of Discharge UN/LOCODE                                                                                    | text      |
-| pod_city                        | Port of Discharge city                                                                                         | text      |
-| pod_timezone                    | Port of Discharge time zone                                                                                    | text      |
-| pod_terminal_firms_code         | Port of Discharge terminal firms code                                                                          | text      |
-| pod_terminal_nickname           | Port of Discharge terminal nickname                                                                            | text      |
-| pod_terminal_name               | Port of Discharge terminal name                                                                                | text      |
-| destination_country_code        | Destination country code                                                                                       | text      |
-| destination_locode              | Destination UN/LOCODE                                                                                          | text      |
-| destination_city                | Destination city                                                                                               | text      |
-| destination_timezone            | Destination time zone                                                                                          | text      |
-| destination_terminal_firms_code | Destination terminal firms code                                                                                | text      |
-| destination_terminal_nickname   | Destination terminal nickname                                                                                  | text      |
-| destination_terminal_name       | Destination terminal name                                                                                      | text      |
-| pol_empty_out_at                | Empty Out, as a UTC timestamp                                                                                  | timestamp |
-| pol_empty_out_at_local          | Empty Out, as a string in the POL local time zone                                                              | text      |
-| pol_full_in_at                  | Full In event, as a UTC timestamp                                                                              | timestamp |
-| pol_full_in_at_local            | Full In event, as a string in the POL local time zone                                                          | text      |
-| origin_rail_loaded_at           | Origin Rail Loaded, as a UTC timestamp                                                                         | timestamp |
-| origin_rail_loaded_at_local     | Origin Rail Loaded, as a string in the origin local time zone                                                  | text      |
-| origin_rail_departed_at         | Origin Rail Departed, as a UTC timestamp                                                                       | timestamp |
-| origin_rail_departed_at_local   | Origin Rail Departed, as a string in the origin local time zone                                                | text      |
-| pol_rail_arrived_at             | Port of Lading Rail Arrived, as a UTC timestamp                                                                | timestamp |
-| pol_rail_arrived_at_local       | Port of Lading Rail Arrived, as a string in the origin local time zone                                         | text      |
-| pol_rail_unloaded_at            | Port of Lading Rail Unloaded, as a UTC timestamp                                                               | timestamp |
-| pol_rail_unloaded_at_local      | Port of Lading Rail Unloaded, as a string in the origin local time zone                                        | text      |
-| pol_loaded_at                   | Port of Lading Loaded event, as a UTC timestamp                                                                | timestamp |
-| pol_loaded_at_local             | Port of Lading Loaded event, as a string in the POL local time zone                                            | text      |
-| pol_etd_at                      | Port of Lading Estimated Time of Departure, as a UTC timestamp                                                 | timestamp |
-| pol_etd_at_local                | Port of Lading Estimated Time of Departure, as a string in the POL local time zone                             | text      |
-| pol_atd_at                      | Port of Lading Actual Time of Departure, as a UTC timestamp                                                    | timestamp |
-| pol_atd_at_local                | Port of Lading Actual Time of Departure, as a string in the POL local time zone                                | text      |
-| pod_eta_at                      | Port of Discharge Estimated Time of Arrival, as a UTC timestamp                                                | timestamp |
-| pod_eta_at_local                | Port of Discharge Estimated Time of Arrival, as a string in the POD local time zone                            | text      |
-| pod_arrived_at                  | Port of Discharge Actual Time of Arrival, as a UTC timestamp                                                   | timestamp |
-| pod_arrived_at_local            | Port of Discharge Actual Time of Arrival, as a string in the POD local time zone                               | text      |
-| pod_berthed_at                  | Port of Discharge Berthed event, as a UTC timestamp                                                            | timestamp |
-| pod_berthed_at_local            | Port of Discharge Berthed event, as a string in the POD local time zone                                        | text      |
-| pod_discharged_at               | Port of Discharge Discharged event, as a UTC timestamp                                                         | timestamp |
-| pod_discharged_at_local         | Port of Discharge Discharged event, as a string in the POD local time zone                                     | text      |
-| pod_last_free_day_on            | Current Last Free Day at the POD terminal, as a UTC timestamp                                                  | timestamp |
-| pod_last_free_day_on_local      | Current Last Free Day at the POD terminal, as a string in the POD local time zone                              | text      |
-| pod_pickup_appointment_at       | Port of Discharge Pickup Appointment, as a UTC timestamp                                                       | timestamp |
-| pod_pickup_appointment_at_local | Port of Discharge Pickup Appointment, as a string in the POD local time zone                                   | text      |
-| pod_full_out_at                 | Port of Discharge Full Out event, as a UTC timestamp                                                           | timestamp |
-| pod_full_out_at_local           | Port of Discharge Full Out event, as a string in the POD local time zone                                       | text      |
-| rail_departed_at                | First rail departure after the POD discharge, as a UTC timestamp                                               | timestamp |
-| rail_departed_at_local          | First rail departure after the POD discharge, as a string in the POD local time zone                           | text      |
-| destination_eta_at              | Destination Estimated Time of Arrival, as a UTC timestamp                                                      | timestamp |
-| destination_eta_at_local        | Destination Estimated Time of Arrival, as a string in the Destination local time zone                          | text      |
-| destination_arrived_at          | Destination Actual Time of Arrival, as a UTC timestamp                                                         | timestamp |
-| destination_arrived_at_local    | Destination Actual Time of Arrival, as a string in the Destination local time zone                             | text      |
-| rail_unloaded_at                | Destination Rail Unloaded, as a UTC timestamp                                                                  | timestamp |
-| rail_unloaded_at_local          | Destination Rail Unloaded, as a string in the Destination local time zone                                      | text      |
-| destination_full_out_at         | Destination Full Out event, as a UTC timestamp                                                                 | timestamp |
-| destination_full_out_at_local   | Destination Full Out event, as a string in the Destination local time zone                                     | text      |
-| empty_terminated_at             | Container Empty Returned event, as a UTC timestamp                                                             | timestamp |
-| empty_terminated_at_local       | Container Empty Returned event, as a string in the POD local time zone                                         | text      |
-| fees_at_pod_terminal            | Current fee amounts, in JSON format                                                                            | text      |
-| demurrage_at_pod_terminal       | Current demurrage amount owed                                                                                  | text      |
-| holds_at_pod_terminal           | Current terminal hold statuses, in JSON format                                                                 | text      |
-| freight_hold_at_pod_terminal    | Current freight hold, value is either Hold or empty                                                            | text      |
-| customs_hold_at_pod_terminal    | Current customs hold, value is either Hold or empty                                                            | text      |
-| usda_hold_at_pod_terminal       | Current USDA hold, value is either Hold or empty                                                               | text      |
-| tmf_hold_at_pod_terminal        | Current Traffic Mitigation Fee hold, value is either Hold or empty                                             | text      |
-| other_hold_at_pod_terminal      | Any other current hold, value is either Hold or empty                                                          | text      |
-| location_at_pod_terminal        | Location at port of discharge terminal                                                                         | text      |
-| availability_known              | Yes if Terminal49 is receiving availability status from the terminal, No otherwise.                            | text      |
-| available_for_pickup            | If availability_known is Yes, then Yes if the container is available to be picked up at terminal, No otherwise | text      |
-| equipment_length                | Length of the container                                                                                        | integer   |
-| equipment_type                  | Container type: Dry, Flat Rack, Open Top, Reefer, Tank, unknown                                                | text      |
-| equipment_height                | Container height: High Cube, Standard, unknown                                                                 | text      |
-| equipment                       | Concatenation of the equipment_length, equipment_type, and equipment_height                                    | text      |
-| weight_in_lbs                   | Weight of the containre in lbs                                                                                 | integer   |
-| seal_number                     | Seal number of the container                                                                                   | text      |
-| pod_full_out_chassis_number     | The chassis number used when container was picked up at POD, if available                                      | text      |
-| pod_voyage_number               | Voyage number of the vessel that arrived or will arrive at the POD                                             | text      |
-| pod_vessel_name                 | Name of the vessel that arrived or will arrive at the POD                                                      | text      |
-| pod_vessel_imo                  | IMO of the vessel that arrived or will arrive at the POD                                                       | text      |
-| terminal_checked_at             | When the terminal was last checked, as a UTC timestamp                                                         | timestamp |
-| line_tracking_last_succeeded_at | When the shipment information was last refreshed from the shipping line, as a UTC timestamp                    | timestamp |
-| line_tracking_stopped_at        | When the tracking of the container stopped, as a UTC timestamp                                                 | timestamp |
-| line_tracking_stopped_reason    | The reason Terminal49 stopped the tracking                                                                     | text      |
-| created_at                      | When the container was added, as a UTC timestamp                                                               | timestamp |
-| updated_at                      | When the container was last updated, as a UTC timestamp                                                        | timestamp |
+| COLUMN NAME                       | DESCRIPTION                                                                                                    | TYPE        |
+|-----------------------------------|----------------------------------------------------------------------------------------------------------------|-------------|
+| `container_id`                    | Container ID. This is the unique key of the table.                                                             | `text`      |
+| `container_number`                | Container number                                                                                               | `text`      |
+| `shipment_id`                     | Shipment ID associated to the container                                                                        | `text`      |
+| `shipment_bill_of_lading_number`  | Shipment number from the tracking request                                                                      | `text`      |
+| `shipment_normalized_number`      | The normalized version of the shipment number used for querying the carrier                                    | `text`      |
+| `shipment_reference_numbers`      | Reference numbers of the shipment, concatenated                                                                | `text`      |
+| `container_reference_numbers`     | Reference numbers of the container, concatenated                                                               | `text`      |
+| `shipment_tags`                   | Tags added to the shipment, sorted by alphabetical order, concatenated and separated by a comma                | `text`      |
+| `customer_id`                     | Account ID of the customer                                                                                     | `text`      |
+| `customer_name`                   | Name of the customer                                                                                           | `text`      |
+| `shipping_line_scac`              | Standard carrier alpha numeric code of the shipping line                                                       | `text`      |
+| `shipping_line_name`              | Name of the shipping line                                                                                      | `text`      |
+| `origin_country_code`             | Origin country code, populated only if the Empty Out event happens at a different location from the POL        | `text`      |
+| `origin_locode`                   | Origin UN/LOCODE, populated only if the Empty Out event happens at a different location from the POL           | `text`      |
+| `origin_city`                     | Origin city, populated only if the Empty Out event happens at a different location from the POL                | `text`      |
+| `origin_timezone`                 | Origin time zone, populated only if the Empty Out event happens at a different location from the POL           | `text`      |
+| `pol_country_code`                | Port of Lading country code                                                                                    | `text`      |
+| `pol_locode`                      | Port of Lading UN/LOCODE                                                                                       | `text`      |
+| `pol_city`                        | Port of Lading city                                                                                            | `text`      |
+| `pol_timezone`                    | Port of Lading time zone                                                                                       | `text`      |
+| `pod_country_code`                | Port of Discharge country code                                                                                 | `text`      |
+| `pod_locode`                      | Port of Discharge UN/LOCODE                                                                                    | `text`      |
+| `pod_city`                        | Port of Discharge city                                                                                         | `text`      |
+| `pod_timezone`                    | Port of Discharge time zone                                                                                    | `text`      |
+| `pod_terminal_firms_code`         | Port of Discharge terminal firms code                                                                          | `text`      |
+| `pod_terminal_nickname`           | Port of Discharge terminal nickname                                                                            | `text`      |
+| `pod_terminal_name`               | Port of Discharge terminal name                                                                                | `text`      |
+| `destination_country_code`        | Destination country code                                                                                       | `text`      |
+| `destination_locode`              | Destination UN/LOCODE                                                                                          | `text`      |
+| `destination_city`                | Destination city                                                                                               | `text`      |
+| `destination_timezone`            | Destination time zone                                                                                          | `text`      |
+| `destination_terminal_firms_code` | Destination terminal firms code                                                                                | `text`      |
+| `destination_terminal_nickname`   | Destination terminal nickname                                                                                  | `text`      |
+| `destination_terminal_name`       | Destination terminal name                                                                                      | `text`      |
+| `pol_empty_out_at`                | Empty Out, as a UTC timestamp                                                                                  | `timestamp` |
+| `pol_empty_out_at_local`          | Empty Out, as a string in the POL local time zone                                                              | `text`      |
+| `pol_full_in_at`                  | Full In event, as a UTC timestamp                                                                              | `timestamp` |
+| `pol_full_in_at_local`            | Full In event, as a string in the POL local time zone                                                          | `text`      |
+| `origin_rail_loaded_at`           | Origin Rail Loaded, as a UTC timestamp                                                                         | `timestamp` |
+| `origin_rail_loaded_at_local`     | Origin Rail Loaded, as a string in the origin local time zone                                                  | `text`      |
+| `origin_rail_departed_at`         | Origin Rail Departed, as a UTC timestamp                                                                       | `timestamp` |
+| `origin_rail_departed_at_local`   | Origin Rail Departed, as a string in the origin local time zone                                                | `text`      |
+| `pol_rail_arrived_at`             | Port of Lading Rail Arrived, as a UTC timestamp                                                                | `timestamp` |
+| `pol_rail_arrived_at_local`       | Port of Lading Rail Arrived, as a string in the origin local time zone                                         | `text`      |
+| `pol_rail_unloaded_at`            | Port of Lading Rail Unloaded, as a UTC timestamp                                                               | `timestamp` |
+| `pol_rail_unloaded_at_local`      | Port of Lading Rail Unloaded, as a string in the origin local time zone                                        | `text`      |
+| `pol_loaded_at`                   | Port of Lading Loaded event, as a UTC timestamp                                                                | `timestamp` |
+| `pol_loaded_at_local`             | Port of Lading Loaded event, as a string in the POL local time zone                                            | `text`      |
+| `pol_etd_at`                      | Port of Lading Estimated Time of Departure, as a UTC timestamp                                                 | `timestamp` |
+| `pol_etd_at_local`                | Port of Lading Estimated Time of Departure, as a string in the POL local time zone                             | `text`      |
+| `pol_atd_at`                      | Port of Lading Actual Time of Departure, as a UTC timestamp                                                    | `timestamp` |
+| `pol_atd_at_local`                | Port of Lading Actual Time of Departure, as a string in the POL local time zone                                | `text`      |
+| `pod_eta_at`                      | Port of Discharge Estimated Time of Arrival, as a UTC timestamp                                                | `timestamp` |
+| `pod_eta_at_local`                | Port of Discharge Estimated Time of Arrival, as a string in the POD local time zone                            | `text`      |
+| `pod_arrived_at`                  | Port of Discharge Actual Time of Arrival, as a UTC timestamp                                                   | `timestamp` |
+| `pod_arrived_at_local`            | Port of Discharge Actual Time of Arrival, as a string in the POD local time zone                               | `text`      |
+| `pod_berthed_at`                  | Port of Discharge Berthed event, as a UTC timestamp                                                            | `timestamp` |
+| `pod_berthed_at_local`            | Port of Discharge Berthed event, as a string in the POD local time zone                                        | `text`      |
+| `pod_discharged_at`               | Port of Discharge Discharged event, as a UTC timestamp                                                         | `timestamp` |
+| `pod_discharged_at_local`         | Port of Discharge Discharged event, as a string in the POD local time zone                                     | `text`      |
+| `pod_last_free_day_on`            | Current Last Free Day at the POD terminal, as a UTC timestamp                                                  | `timestamp` |
+| `pod_last_free_day_on_local`      | Current Last Free Day at the POD terminal, as a string in the POD local time zone                              | `text`      |
+| `pod_pickup_appointment_at`       | Port of Discharge Pickup Appointment, as a UTC timestamp                                                       | `timestamp` |
+| `pod_pickup_appointment_at_local` | Port of Discharge Pickup Appointment, as a string in the POD local time zone                                   | `text`      |
+| `pod_full_out_at`                 | Port of Discharge Full Out event, as a UTC timestamp                                                           | `timestamp` |
+| `pod_full_out_at_local`           | Port of Discharge Full Out event, as a string in the POD local time zone                                       | `text`      |
+| `rail_departed_at`                | First rail departure after the POD discharge, as a UTC timestamp                                               | `timestamp` |
+| `rail_departed_at_local`          | First rail departure after the POD discharge, as a string in the POD local time zone                           | `text`      |
+| `destination_eta_at`              | Destination Estimated Time of Arrival, as a UTC timestamp                                                      | `timestamp` |
+| `destination_eta_at_local`        | Destination Estimated Time of Arrival, as a string in the Destination local time zone                          | `text`      |
+| `destination_arrived_at`          | Destination Actual Time of Arrival, as a UTC timestamp                                                         | `timestamp` |
+| `destination_arrived_at_local`    | Destination Actual Time of Arrival, as a string in the Destination local time zone                             | `text`      |
+| `rail_unloaded_at`                | Destination Rail Unloaded, as a UTC timestamp                                                                  | `timestamp` |
+| `rail_unloaded_at_local`          | Destination Rail Unloaded, as a string in the Destination local time zone                                      | `text`      |
+| `destination_full_out_at`         | Destination Full Out event, as a UTC timestamp                                                                 | `timestamp` |
+| `destination_full_out_at_local`   | Destination Full Out event, as a string in the Destination local time zone                                     | `text`      |
+| `empty_terminated_at`             | Container Empty Returned event, as a UTC timestamp                                                             | `timestamp` |
+| `empty_terminated_at_local`       | Container Empty Returned event, as a string in the POD local time zone                                         | `text`      |
+| `fees_at_pod_terminal`            | Current fee amounts, in JSON format                                                                            | `text`      |
+| `demurrage_at_pod_terminal`       | Current demurrage amount owed                                                                                  | `text`      |
+| `holds_at_pod_terminal`           | Current terminal hold statuses, in JSON format                                                                 | `text`      |
+| `freight_hold_at_pod_terminal`    | Current freight hold, value is either Hold or empty                                                            | `text`      |
+| `customs_hold_at_pod_terminal`    | Current customs hold, value is either Hold or empty                                                            | `text`      |
+| `usda_hold_at_pod_terminal`       | Current USDA hold, value is either Hold or empty                                                               | `text`      |
+| `tmf_hold_at_pod_terminal`        | Current Traffic Mitigation Fee hold, value is either Hold or empty                                             | `text`      |
+| `other_hold_at_pod_terminal`      | Any other current hold, value is either Hold or empty                                                          | `text`      |
+| `location_at_pod_terminal`        | Location at port of discharge terminal                                                                         | `text`      |
+| `availability_known`              | Yes if Terminal49 is receiving availability status from the terminal, No otherwise.                            | `text`      |
+| `available_for_pickup`            | If availability_known is Yes, then Yes if the container is available to be picked up at terminal, No otherwise | `text`      |
+| `equipment_length`                | Length of the container                                                                                        | `integer`   |
+| `equipment_type`                  | Container type: Dry, Flat Rack, Open Top, Reefer, Tank, unknown                                                | `text`      |
+| `equipment_height`                | Container height: High Cube, Standard, unknown                                                                 | `text`      |
+| `equipment`                       | Concatenation of the equipment_length, equipment_type, and equipment_height                                    | `text`      |
+| `weight_in_lbs`                   | Weight of the containre in lbs                                                                                 | `integer`   |
+| `seal_number`                     | Seal number of the container                                                                                   | `text`      |
+| `pod_full_out_chassis_number`     | The chassis number used when container was picked up at POD, if available                                      | `text`      |
+| `pod_voyage_number`               | Voyage number of the vessel that arrived or will arrive at the POD                                             | `text`      |
+| `pod_vessel_name`                 | Name of the vessel that arrived or will arrive at the POD                                                      | `text`      |
+| `pod_vessel_imo`                  | IMO of the vessel that arrived or will arrive at the POD                                                       | `text`      |
+| `terminal_checked_at`             | When the terminal was last checked, as a UTC timestamp                                                         | `timestamp` |
+| `line_tracking_last_succeeded_at` | When the shipment information was last refreshed from the shipping line, as a UTC timestamp                    | `timestamp` |
+| `line_tracking_stopped_at`        | When the tracking of the container stopped, as a UTC timestamp                                                 | `timestamp` |
+| `line_tracking_stopped_reason`    | The reason Terminal49 stopped the tracking                                                                     | `text`      |
+| `created_at`                      | When the container was added, as a UTC timestamp                                                               | `timestamp` |
+| `updated_at`                      | When the container was last updated, as a UTC timestamp                                                        | `timestamp` |

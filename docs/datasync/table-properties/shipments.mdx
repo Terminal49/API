@@ -6,31 +6,31 @@ The `shipments` table contains 1 row per shipment (`shipment_id` is the unique k
 A shipment contains 1 or more containers.
 
 
-| COLUMN NAME                     | DESCRIPTION                                                                                     | DATA TYPE |
-|---------------------------------|-------------------------------------------------------------------------------------------------|-----------|
-| shipment_id                     | Shipment ID. This is the unique key of the table.                                               | text      |
-| shipping_line_scac              | Standard carrier alpha numeric code of the shipping line                                        | text      |
-| shipping_line_name              | Name of the shipping line                                                                       | text      |
-| bill_of_lading_number           | Shipment number from the tracking request                                                       | text      |
-| normalized_number               | The normalized version of the shipment number used for querying the carrier                     | text      |
-| reference_numbers               | Reference numbers of the shipment, contatenated                                                 | text      |
-| tags                            | Tags added to the shipment, sorted by alphabetical order, concatenated and separated by a comma | text      |
-| customer_id                     | Account ID of the customer                                                                      | text      |
-| customer_name                   | Name of the customer                                                                            | text      |
-| pol_locode                      | Port of Lading UN/LOCODE                                                                        | text      |
-| pod_locode                      | Port of Discharge UN/LOCODE                                                                     | text      |
-| pod_terminal_firms_code         | Port of Discharge terminal firms code                                                           | text      |
-| destination_locode              | Destination UN/LOCODE                                                                           | text      |
-| destination_terminal_firms_code | Destination terminal firms code                                                                 | text      |
-| pol_atd_at                      | Port of Lading Actual Time of Departure, as a UTC timestamp                                     | timestamp |
-| pol_etd_at                      | Port of Lading Estimated Time of Departure, as a UTC timestamp                                  | timestamp |
-| pod_eta_at                      | Port of Discharge Estimated Time of Arrival, as a UTC timestamp                                 | timestamp |
-| pod_arrived_at                  | Port of Discharge Actual Time of Arrival, as a UTC timestamp                                    | timestamp |
-| pod_voyage_number               | Voyage number of the vessel that arrived or will arrive at the POD                              | text      |
-| pod_vessel_name                 | Name of the vessel that arrived or will arrive at the POD                                       | text      |
-| pod_vessel_imo                  | IMO of the vessel that arrived or will arrive at the POD                                        | text      |
-| line_tracking_last_succeeded_at | When the shipment information was last refreshed from the shipping line, as a UTC timestamp     | timestamp |
-| line_tracking_stopped_at        | When the tracking of the shipment stopped, as a UTC timestamp                                   | timestamp |
-| line_tracking_stopped_reason    | Reason why the tracking of the shipment stopped                                                 | text      |
-| created_at                      | When the shipment was added, as a UTC timestamp                                                 | timestamp |
-| updated_at                      | When the shipment was last updated, as a UTC timestamp                                          | timestamp |
+| COLUMN NAME                       | DESCRIPTION                                                                                     | TYPE        |
+|-----------------------------------|-------------------------------------------------------------------------------------------------|-------------|
+| `shipment_id`                     | Shipment ID. This is the unique key of the table.                                               | `text`      |
+| `shipping_line_scac`              | Standard carrier alpha numeric code of the shipping line                                        | `text`      |
+| `shipping_line_name`              | Name of the shipping line                                                                       | `text`      |
+| `bill_of_lading_number`           | Shipment number from the tracking request                                                       | `text`      |
+| `normalized_number`               | The normalized version of the shipment number used for querying the carrier                     | `text`      |
+| `reference_numbers`               | Reference numbers of the shipment, contatenated                                                 | `text`      |
+| `tags`                            | Tags added to the shipment, sorted by alphabetical order, concatenated and separated by a comma | `text`      |
+| `customer_id`                     | Account ID of the customer                                                                      | `text`      |
+| `customer_name`                   | Name of the customer                                                                            | `text`      |
+| `pol_locode`                      | Port of Lading UN/LOCODE                                                                        | `text`      |
+| `pod_locode`                      | Port of Discharge UN/LOCODE                                                                     | `text`      |
+| `pod_terminal_firms_code`         | Port of Discharge terminal firms code                                                           | `text`      |
+| `destination_locode`              | Destination UN/LOCODE                                                                           | `text`      |
+| `destination_terminal_firms_code` | Destination terminal firms code                                                                 | `text`      |
+| `pol_atd_at`                      | Port of Lading Actual Time of Departure, as a UTC timestamp                                     | `timestamp` |
+| `pol_etd_at`                      | Port of Lading Estimated Time of Departure, as a UTC timestamp                                  | `timestamp` |
+| `pod_eta_at`                      | Port of Discharge Estimated Time of Arrival, as a UTC timestamp                                 | `timestamp` |
+| `pod_arrived_at`                  | Port of Discharge Actual Time of Arrival, as a UTC timestamp                                    | `timestamp` |
+| `pod_voyage_number`               | Voyage number of the vessel that arrived or will arrive at the POD                              | `text`      |
+| `pod_vessel_name`                 | Name of the vessel that arrived or will arrive at the POD                                       | `text`      |
+| `pod_vessel_imo`                  | IMO of the vessel that arrived or will arrive at the POD                                        | `text`      |
+| `line_tracking_last_succeeded_at` | When the shipment information was last refreshed from the shipping line, as a UTC timestamp     | `timestamp` |
+| `line_tracking_stopped_at`        | When the tracking of the shipment stopped, as a UTC timestamp                                   | `timestamp` |
+| `line_tracking_stopped_reason`    | Reason why the tracking of the shipment stopped                                                 | `text`      |
+| `created_at`                      | When the shipment was added, as a UTC timestamp                                                 | `timestamp` |
+| `updated_at`                      | When the shipment was last updated, as a UTC timestamp                                          | `timestamp` |
