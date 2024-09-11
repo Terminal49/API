@@ -7,9 +7,9 @@ Each container is part of 1 shipment (`shipment_id`).
 
 This is a large table with denormalized columns to make it easy to use for reporting purposes.
 
-For each event `timestamp`there are 2 columns :
+For each **event timestamp** there are 2 columns :
 - a `timestamp` type column in the UTC time zone (Universal Time Coordinated), e.g., `pol_loaded_at`.
-- a `text` type column in the local time zone of where the event happened, e.g., `pol_loaded_at_local`. The format is : `YYYY-MM-DD HH:MI:SS`. For example `2024-09-24 17:25:00` for 5:25 PM on September 24, 2024. Depending on the event, the time zone applied can be the one from the Port of Lading (`pol_timezone`), the Port of Discharge (`pod_timezone`), or the Inland Destination (`ind_timezone`).
+- a `text` type column in the local time zone of where the event happened, e.g., `pol_loaded_at_local`. The format of the text is : `YYYY-MM-DD HH:MI:SS`. For example `2024-09-24 17:25:00` for 5:25 PM on September 24, 2024. Depending on the event, the time zone applied can be the one from the Port of Lading (`pol_timezone`), the Port of Discharge (`pod_timezone`), or the Inland Destination (`ind_timezone`).
 
 _Columns marked with * are only included with the Intermodal Rail product._
 
