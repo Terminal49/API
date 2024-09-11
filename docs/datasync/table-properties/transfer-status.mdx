@@ -3,7 +3,7 @@ title: Transfer Status
 ---
 The `_transfer_status` is an additional technical table that identifies when each table was last updated by DataSync.
 
-| COLUMN NAME              | DESCRIPTION                                       | DATA TYPE | PRIMARY KEY |
-|--------------------------|---------------------------------------------------|-----------|-------------|
-| data_model_name          | Name of the table                                 | text      | Yes         |
-| transfer_last_updated_at | When the latest sync happened, as a UTC timestamp | timestamp | No          |
+| COLUMN NAME                | DESCRIPTION                                       | TYPE        |
+|----------------------------|---------------------------------------------------|-------------|
+| `data_model_name`          | Name of the table                                 | `text`      |
+| `transfer_last_updated_at` | When the latest sync happened, as a UTC timestamp | `timestamp` |
