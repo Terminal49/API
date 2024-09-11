@@ -13,10 +13,10 @@ For each event timestamp there are 2 columns :
 
 _Columns marked with * are only included with the Intermodal Rail product._
 
-| COLUMN NAME                     | DESCRIPTION                                                                                                            | DATA TYPE |
+| COLUMN NAME                     | DESCRIPTION                                                                                                            | TYPE      |
 |---------------------------------|------------------------------------------------------------------------------------------------------------------------|-----------|
-| container_id                    | Container ID. This is the unique key of the table.                                                                     | text      |
-| container_number                | Container number                                                                                                       | text      |
+| `container_id`                  | Container ID. This is the unique key of the table.                                                                     | _text_    |
+| `container_number`                | Container number                                                                                                     | _text_    |
 | shipment_id                     | Shipment ID associated to the container                                                                                | text      |
 | shipment_bill_of_lading_number  | Shipment number from the tracking request                                                                              | text      |
 | shipment_normalized_number      | The normalized version of the shipment number used for querying the carrier                                            | text      |
@@ -63,7 +63,7 @@ _Columns marked with * are only included with the Intermodal Rail product._
 | pod_berthed_at_local            | Port of Discharge Berthed event, as a string in the POD local time zone                                                | text      |
 | pod_discharged_at               | Port of Discharge Discharged event, as a UTC timestamp                                                                 | timestamp |
 | pod_discharged_at_local         | Port of Discharge Discharged event, as a string in the POD local time zone                                             | text      |
-| pod_last_free_day_on            | Current Last Free Day at the POD terminal, as a UTC timestamp <br /><br /> Named `pickup_lfd` in the API.                  | timestamp |
+| pod_last_free_day_on            | Current Last Free Day at the POD terminal, as a UTC timestamp <br /><br /> Named `pickup_lfd` in the API               | timestamp |
 | pod_last_free_day_on_local      | Current Last Free Day at the POD terminal, as a string in the POD local time zone                                      | text      |
 | pod_pickup_appointment_at       | Port of Discharge Pickup Appointment, as a UTC timestamp (named pickup_appointment_at in the API)                      | timestamp |
 | pod_pickup_appointment_at_local | Port of Discharge Pickup Appointment, as a string in the POD local time zone                                           | text      |
