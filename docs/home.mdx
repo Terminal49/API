@@ -3,33 +3,38 @@ title: Terminal49 Dev Documentation
 og:title: Terminal49 Home | API Documentation
 og:description: Learn about Terminal49's home features and API documentation for container and shipment tracking.
 ---
+
 We offer two fantastic ways to track your shipments from origin to destination.
 
-    1. [Terminal49 DataSync](/datasync/overview). Get tables full of fresh information delivered into your current data system. Easy to set up, and perfect for complementing your current data.
-    2. [Terminal49 API](/api-docs/getting-started/start-here). Connect directly with the API, pull data for specific shipments and containers, and get updates via webhooks.
+1. [Terminal49 DataSync](/datasync/overview). Get tables full of fresh information delivered into your current data system. Easy to set up, and perfect for complementing your current data.
+
+2. [Terminal49 API](/api-docs/getting-started/start-here). Connect directly with the API, pull data for specific shipments and containers, and get updates via webhooks.
 
 If you already have a data store that feeds the rest of your system, DataSync is probably what you want.
 
 ## What can I use Terminal49 data for?
+
 Here are just a few of the data points we return and possible use-cases.
 
 | DATA                                   | EXAMPLE USE CASE                                                         |
-|----------------------------------------|--------------------------------------------------------------------------|
+| -------------------------------------- | ------------------------------------------------------------------------ |
 | Destination ETA                        | Surface ETA changes to your relevant teams as they're reported           |
 | Last Free Day and terminal status¹     | Track containers approaching LFD and prioritize dispatching              |
 | Fees and holds at destination terminal | Clear your cargo to keep you containers moving                           |
 | Actual departure and arrival times     | Report journey times by route to compare your ocean carriers performance |
 
-_1. At container ports in the US_
+*1. At container ports in the US*
 
 ## How it works
+
 All you need to provide are your BOL numbers and SCACs. Terminal 49 will lookup the shipment with the carrier and populate shipment details including containers.
 
 Once the shipment is set up, Terminal 49 periodically checks with the carrier and the destination terminal.
 
 If any of the details of your shipment or containers change (for example - if the ETA changes) we'll ensure you're always kept up to date.
 
-    - If you're using DataSync, we'll update the data in your system
-    - If you're using the API, we'll post the shipment to the the webhook you provide
-    
+* If you're using DataSync, we'll update the data in your system
+
+* If you're using the API, we'll post the shipment to the the webhook you provide
+
 👈🏽 Please click API Docs or Data Sync on the left to get started!
