@@ -1261,6 +1261,12 @@
                         "relationships": {
                           "tracked_object": {
                             "data": null
+                          },
+                          "customer": {
+                            "data": {
+                              "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+                              "type": "party"
+                            }
                           }
                         },
                         "links": {
@@ -1390,6 +1396,31 @@
                           "scac"
                         ]
                       },
+                      "relationships": {
+                        "type": "object",
+                        "properties": {
+                          "customer": {
+                            "type": "object",
+                            "properties": {
+                              "data": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "party"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
                       "type": {
                         "enum": [
                           "tracking_request"
@@ -1419,6 +1450,14 @@
                           "camembert"
                         ],
                         "scac": "MSCU"
+                      },
+                      "relationships": {
+                        "customer": {
+                          "data": {
+                            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+                            "type": "party"
+                          }
+                        }
                       },
                       "type": "tracking_request"
                     }
@@ -1934,7 +1973,7 @@
         },
         "description": "Update a tracking request",
         "tags": [
-          "Tracking requests"
+          "Tracking Requests"
         ],
         "requestBody": {
           "content": {
@@ -7279,6 +7318,26 @@
                         "type": "string",
                         "enum": [
                           "shipment"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "customer": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "party"
                         ]
                       }
                     }
