@@ -1,0 +1,180 @@
+---
+title: Adding Customer to a Tracking Request
+---
+
+## Adding party for a customer
+For adding customer to a tracking request, you need to create a party first. You can create a party through the [API](/api-docs/api-reference/parties/create-a-party).
+
+Endpoint URL: https://api.terminal49.com/v2/parties
+
+```json Request
+{
+  "data": {
+    "type": "party",
+    "attributes": {
+      "company_name": "COMPANY NAME"
+    }
+  }
+}
+```
+
+After you send a **POST** request to create a party, you will receive a response with the Party ID. You can use this Party ID to add the customer to a tracking request.
+
+```json Response
+{
+  "data": {
+    "id": "PARTY_ID",
+    "type": "party",
+    "attributes": {
+      "company_name": "COMPANY NAME"
+    }
+  }
+}
+```
+
+## Adding customer to a tracking request
+
+To add customer to a tracking request you need to add party to the tracking request as a customer relationship while being created.
+
+Endpoint URL: https://api.terminal49.com/v2/tracking_requests
+
+```json Request
+{
+  "data": {
+    "type": "tracking_request",
+    "attributes": {
+      "request_type": "bill_of_lading",
+      "request_number": "MEDUFR030802",
+      "ref_numbers": [
+        "PO12345",
+        "HBL12345",
+        "CUSREF1234"
+      ],
+      "shipment_tags": [
+        "camembert"
+      ],
+      "scac": "MSCU"
+    },
+    "relationships": {
+      "customer": {
+        "data": {
+          "id": "PARTY_ID",
+          "type": "party"
+        }
+      }
+    }
+  }
+}
+```
+
+After you send a **POST** request to create a tracking request, you will receive a response with the Tracking Request ID and customer relationship. You can use this tracking request ID to track the shipment.
+
+```json Response
+{
+  "data": {
+    "id": "TRACKING_REQUEST_ID",
+    "type": "tracking_request",
+    "attributes": {
+      "request_type": "bill_of_lading",
+      "request_number": "MEDUFR030802",
+      "ref_numbers": [
+        "PO12345",
+        "HBL12345",
+        "CUSREF1234"
+      ],
+      "shipment_tags": [
+        "camembert"
+      ],
+      "scac": "MSCU"
+    },
+    "relationships": {
+      "tracked_object": {
+        "data": null
+      },
+      "customer": {
+        "data": {
+          "id": "PARTY_ID",
+          "type": "party"
+        }
+      }
+    },
+    "links": {
+      "self": "/v2/tracking_requests/TRACKING_REQUEST_ID"
+    }
+  }
+}
+```
+
+## Updating customer name
+You can update existing parties through the [API](/api-docs/api-reference/parties/update-a-party).
+
+Endpoint URL: https://api.terminal49.com/v2/parties/PARTY_ID
+
+```json Request
+{
+  "data": {
+    "id": "PARTY_ID",
+    "type": "party",
+    "attributes": {
+      "company_name": "NEW COMPANY NAME"
+    }
+  }
+}
+```
+
+After you send a **PATCH** request to update a party, you will receive a response with the updated company name. The customer name in the tracking requests and shipments that this customer is assigned to will be updated with the new company name.
+
+```json Response
+{
+  "data": {
+    "id": "PARTY_ID",
+    "type": "party",
+    "attributes": {
+      "company_name": "NEW COMPANY NAME"
+    }
+  }
+}
+```
+
+## Reading a party
+You can retrieve the details of an existing party through the [API](/api-docs/api-reference/parties/get-a-party).
+
+Endpoint URL: https://api.terminal49.com/v2/parties/PARTY_ID
+
+```json Response
+{
+  "data": {
+    "id": "PARTY_ID",
+    "type": "party",
+    "attributes": {
+      "company_name": "COMPANY NAME",
+    }
+  }
+}
+```
+
+## Listing all parties
+You can list all parties associated with your account through the [API](/api-docs/api-reference/parties/list-parties).
+
+Endpoint URL: https://api.terminal49.com/v2/parties
+
+```json Response
+{
+  "data": [
+    {
+      "id": "PARTY_ID_1",
+      "type": "party",
+      "attributes": {
+        "company_name": "COMPANY NAME 1",
+      }
+    },
+    {
+      "id": "PARTY_ID_2",
+      "type": "party",
+      "attributes": {
+        "company_name": "COMPANY NAME 2",
+      }
+    }
+  ]
+}
+```
