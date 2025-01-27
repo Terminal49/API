@@ -5688,6 +5688,37 @@
             }
           }
         },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "company_name": {
+                            "type": "string",
+                            "example": [
+                              "COMPANY NAME"
+                            ],
+                            "description": "The name of the company"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "tags": [
           "Parties"
         ]
