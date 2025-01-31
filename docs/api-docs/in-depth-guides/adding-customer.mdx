@@ -4,7 +4,7 @@ title: Adding Customer to a Tracking Request
 
 ## Why you would want to add a party to a tracking request?
 
-Adding a party to a tracking request allows you to associate customer information with the tracking request. This can help in organizing and managing your shipments more effectively.
+Adding a party to a tracking request allows you to associate customer information with the tracking request. The customer added to the tracking request will be assigned to the shipment when it is created, just like reference numbers and tags. This can help in organizing and managing your shipments more effectively.
 
 ## How to get the party ID?
 
@@ -17,7 +17,7 @@ You can either find an existing party or create a new one.
 
 You can list all parties associated with your account through the [API](/api-docs/api-reference/parties/list-parties).
 
-Endpoint URL: https://api.terminal49.com/v2/parties
+Endpoint: **GET** - https://api.terminal49.com/v2/parties
 
 ```json Response
 {
@@ -40,42 +40,13 @@ Endpoint URL: https://api.terminal49.com/v2/parties
 }
 ```
 
-## Adding party for a customer
-
-For adding a customer to a tracking request, you need to create a party first. You can create a party through the [API](/api-docs/api-reference/parties/create-a-party).
-
-Endpoint URL: https://api.terminal49.com/v2/parties
-
-```json Request
-{
-  "data": {
-    "type": "party",
-    "attributes": {
-      "company_name": "COMPANY NAME"
-    }
-  }
-}
-```
-
-After you send a **POST** request to create a party, you will receive a response with the Party ID. You can use this Party ID to add the customer to a tracking request.
-
-```json Response
-{
-  "data": {
-    "id": "PARTY_ID",
-    "type": "party",
-    "attributes": {
-      "company_name": "COMPANY NAME"
-    }
-  }
-}
-```
+After you get all the parties you would filter the parties by `company_name` to find the correct ID, either by looking through the list manually or using code to automate the process.
 
 ## How to add party to tracking request if you have the party ID?
 
-To add a customer to a tracking request, you need to add the party to the tracking request as a customer relationship while being created.
+To add a customer to a tracking request, you need to add the party to the tracking request as a customer relationship while being created. **Note** that a party cannot be added to a tracking request that has already been created.
 
-Endpoint URL: https://api.terminal49.com/v2/tracking_requests
+Endpoint: **POST** - https://api.terminal49.com/v2/tracking_requests
 
 ```json Request
 {
@@ -144,14 +115,45 @@ After you send a **POST** request to create a tracking request, you will receive
 }
 ```
 
+## Adding party for a customer
+
+For adding a customer to a tracking request, you need to create a party first. You can create a party through the [API](/api-docs/api-reference/parties/create-a-party).
+
+Endpoint: **POST** - https://api.terminal49.com/v2/parties
+
+```json Request
+{
+  "data": {
+    "type": "party",
+    "attributes": {
+      "company_name": "COMPANY NAME"
+    }
+  }
+}
+```
+
+After you send a **POST** request to create a party, you will receive a response with the Party ID. You can use this Party ID to add the customer to a tracking request.
+
+```json Response
+{
+  "data": {
+    "id": "PARTY_ID",
+    "type": "party",
+    "attributes": {
+      "company_name": "COMPANY NAME"
+    }
+  }
+}
+```
+
 ## Editing a party
 
 You can update existing parties through the [API](/api-docs/api-reference/parties/edit-a-party).
 
-Endpoint URL: https://api.terminal49.com/v2/parties/PARTY_ID
+Endpoint: **PATCH** - https://api.terminal49.com/v2/parties/PARTY_ID
 
 ## Reading a party
 
 You can retrieve the details of an existing party through the [API](/api-docs/api-reference/parties/get-a-party).
 
-Endpoint URL: https://api.terminal49.com/v2/parties/PARTY_ID
+Endpoint: **GET** -  https://api.terminal49.com/v2/parties/PARTY_ID
