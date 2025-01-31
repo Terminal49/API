@@ -5601,6 +5601,12 @@
                       "items": {
                         "$ref": "#/components/schemas/party"
                       }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
                     }
                   }
                 }
@@ -5608,6 +5614,25 @@
             }
           }
         },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "in": "query",
+            "name": "page[number]"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "default": 25
+            },
+            "in": "query",
+            "name": "page[size]",
+            "description": ""
+          }
+        ],
         "tags": [
           "Parties"
         ]
@@ -5625,6 +5650,9 @@
                   "properties": {
                     "data": {
                       "$ref": "#/components/schemas/party"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
                     }
                   }
                 },
@@ -5637,6 +5665,9 @@
                         "attributes": {
                           "company_name": "COMPANY NAME"
                         }
+                      },
+                      "links": {
+                        "self": "/v2/parties/ba4cb904-827f-4038-8e31-1e92b3356218"
                       }
                     }
                   }
@@ -5744,6 +5775,9 @@
                   "properties": {
                     "data": {
                       "$ref": "#/components/schemas/party"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
                     }
                   }
                 }
@@ -5770,6 +5804,9 @@
                   "properties": {
                     "data": {
                       "$ref": "#/components/schemas/party"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
                     }
                   }
                 }
@@ -6263,6 +6300,16 @@
           },
           "total": {
             "type": "integer"
+          }
+        }
+      },
+      "link-self": {
+        "title": "link",
+        "type": "object",
+        "properties": {
+          "self": {
+            "type": "string",
+            "format": "uri"
           }
         }
       },
