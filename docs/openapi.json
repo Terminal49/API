@@ -5873,9 +5873,7 @@
                         "properties": {
                           "company_name": {
                             "type": "string",
-                            "example": [
-                              "COMPANY NAME"
-                            ],
+                            "example": "COMPANY NAME",
                             "description": "The name of the company"
                           }
                         }
