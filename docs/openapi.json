@@ -1261,6 +1261,12 @@
                         "relationships": {
                           "tracked_object": {
                             "data": null
+                          },
+                          "customer": {
+                            "data": {
+                              "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+                              "type": "party"
+                            }
                           }
                         },
                         "links": {
@@ -1390,6 +1396,31 @@
                           "scac"
                         ]
                       },
+                      "relationships": {
+                        "type": "object",
+                        "properties": {
+                          "customer": {
+                            "type": "object",
+                            "properties": {
+                              "data": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "party"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
                       "type": {
                         "enum": [
                           "tracking_request"
@@ -1419,6 +1450,14 @@
                           "camembert"
                         ],
                         "scac": "MSCU"
+                      },
+                      "relationships": {
+                        "customer": {
+                          "data": {
+                            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+                            "type": "party"
+                          }
+                        }
                       },
                       "type": "tracking_request"
                     }
@@ -1934,7 +1973,7 @@
         },
         "description": "Update a tracking request",
         "tags": [
-          "Tracking requests"
+          "Tracking Requests"
         ],
         "requestBody": {
           "content": {
@@ -3393,7 +3432,7 @@
                   }
                 },
                 "examples": {
-                                    "Example List of containers": {
+                  "Example List of containers": {
                     "value": {
                       "data": [
                         {
@@ -5319,15 +5358,6 @@
           }
         },
         "operationId": "get-shipping_lines",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object"
-              }
-            }
-          }
-        },
         "description": "Return a list of shipping lines supported by Terminal49. \nN.B. There is no pagination for this endpoint."
       }
     },
@@ -5552,6 +5582,312 @@
         },
         "operationId": "get-terminal-id",
         "description": "Return the details of a single terminal."
+      }
+    },
+    "/parties": {
+      "get": {
+        "description": "Get a list of parties",
+        "operationId": "list-parties",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/party"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "in": "query",
+            "name": "page[number]"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "default": 25
+            },
+            "in": "query",
+            "name": "page[size]",
+            "description": ""
+          }
+        ],
+        "tags": [
+          "Parties"
+        ]
+      },
+      "post": {
+        "description": "Creates a new party",
+        "operationId": "post-party",
+        "responses": {
+          "201": {
+            "description": "Party Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/party"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                },
+                "examples": {
+                  "New Party": {
+                    "value": {
+                      "data": {
+                        "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                        "type": "party",
+                        "attributes": {
+                          "company_name": "COMPANY NAME"
+                        }
+                      },
+                      "links": {
+                        "self": "/v2/parties/ba4cb904-827f-4038-8e31-1e92b3356218"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "Error Examples": {
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "422",
+                          "source": {
+                            "pointer": "/data/attributes/company_name"
+                          },
+                          "title": "Unprocessable Entity",
+                          "detail": "Company name can't be blank"
+                        },
+                        {
+                          "status": "422",
+                          "source": {
+                            "pointer": "/data/attributes/customer"
+                          },
+                          "title": "Unprocessable Entity",
+                          "detail": "'XXXX' already exists in Account"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "company_name": {
+                            "type": "string",
+                            "example": "COMPANY NAME",
+                            "description": "The name of the company"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Parties"
+        ]
+      }
+    },
+    "/parties/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/party"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-parties-id",
+        "description": "Returns a party by it's given identifier",
+        "tags": [
+          "Parties"
+        ]
+      },
+      "patch": {
+        "description": "Updates a party",
+        "operationId": "edit-party",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/party"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "Error Examples": {
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "422",
+                          "source": {
+                            "pointer": "/data/attributes/company_name"
+                          },
+                          "title": "Unprocessable Entity",
+                          "detail": "Company name can't be blank"
+                        },
+                        {
+                          "status": "422",
+                          "source": {
+                            "pointer": "/data/attributes/customer"
+                          },
+                          "title": "Unprocessable Entity",
+                          "detail": "'XXXX' already exists in Account"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes"
+                    ],
+                    "properties": {
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "company_name": {
+                            "type": "string",
+                            "example": "COMPANY NAME",
+                            "description": "The name of the company"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Parties"
+        ]
       }
     }
   },
@@ -5965,6 +6301,16 @@
           }
         }
       },
+      "link-self": {
+        "title": "link",
+        "type": "object",
+        "properties": {
+          "self": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
       "links": {
         "title": "links",
         "type": "object",
@@ -6136,7 +6482,9 @@
           },
           "type": {
             "type": "string",
-            "enum": ["container"]
+            "enum": [
+              "container"
+            ]
           },
           "attributes": {
             "type": "object",
@@ -6165,12 +6513,22 @@
               },
               "equipment_length": {
                 "type": "integer",
-                "enum": [null, 10, 20, 40, 45],
+                "enum": [
+                  null,
+                  10,
+                  20,
+                  40,
+                  45
+                ],
                 "nullable": true
               },
               "equipment_height": {
                 "type": "string",
-                "enum": ["standard", "high_cube", null],
+                "enum": [
+                  "standard",
+                  "high_cube",
+                  null
+                ],
                 "nullable": true
               },
               "weight_in_lbs": {
@@ -6345,7 +6703,9 @@
                       },
                       "type": {
                         "type": "string",
-                        "enum": ["shipment"]
+                        "enum": [
+                          "shipment"
+                        ]
                       }
                     }
                   }
@@ -6362,7 +6722,9 @@
                       },
                       "type": {
                         "type": "string",
-                        "enum": ["terminal"]
+                        "enum": [
+                          "terminal"
+                        ]
                       }
                     }
                   }
@@ -6379,7 +6741,9 @@
                       },
                       "type": {
                         "type": "string",
-                        "enum": ["terminal"]
+                        "enum": [
+                          "terminal"
+                        ]
                       }
                     }
                   }
@@ -6398,7 +6762,9 @@
                         },
                         "type": {
                           "type": "string",
-                          "enum": ["transport_event"]
+                          "enum": [
+                            "transport_event"
+                          ]
                         }
                       }
                     }
@@ -6418,7 +6784,9 @@
                         },
                         "type": {
                           "type": "string",
-                          "enum": ["raw_event"]
+                          "enum": [
+                            "raw_event"
+                          ]
                         }
                       }
                     }
@@ -6428,7 +6796,11 @@
             }
           }
         },
-        "required": ["id", "type", "attributes"]
+        "required": [
+          "id",
+          "type",
+          "attributes"
+        ]
       },
       "port": {
         "title": "Port model",
@@ -7020,6 +7392,26 @@
                         "type": "string",
                         "enum": [
                           "shipment"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "customer": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "party"
                         ]
                       }
                     }
@@ -8099,6 +8491,37 @@
           }
         },
         "description": ""
+      },
+      "party": {
+        "title": "Party model",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "attributes": {
+            "type": "object",
+            "required": [
+              "company_name"
+            ],
+            "properties": {
+              "company_name": {
+                "type": "string",
+                "description": "Company name"
+              }
+            }
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "party"
+            ]
+          }
+        },
+        "required": [
+          "attributes"
+        ]
       }
     },
     "securitySchemes": {
