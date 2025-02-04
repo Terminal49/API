@@ -1,0 +1,280 @@
+---
+title: 3. List Your Shipments & Containers
+---
+## Shipment and Container Data in Terminal49
+
+After you've successfully made a tracking request, Terminal49 will begin to track shipments and store relevant information about that shipment on your behalf.
+
+The initial tracking request starts this process, collecting available data from Carriers and Terminals. Then, Terminal49 periodically checks for new updates and pulls data from the carriers and terminals to keep the data we store up to date.
+
+You can access data about shipments and containers on your tracked shipments at any time. We will introduce the basics of this method below.
+
+Keep in mind, however, that apart from initialization code, you would not usually access shipment data in this way. You would use Webhooks (described in the next section). A Webhook is another name for a web-based callback URL, or an HTTP Push API. They provide a method for an API to post a notification to your service. Specifically, a webhook is simply a URL that can receive HTTP POST Requests from the Terminal49 API.
+
+## List all your Tracked Shipments
+
+If your tracking request was successful, you will now be able to list your tracked shipments.
+
+**Try it below. Click "Headers" and replace YOUR_API_KEY with your API key.**
+
+Sometimes it may take a while for the tracking request to show up, but usually no more than a few minutes.
+
+If you had trouble adding your first shipment, try adding a few more.
+
+**We suggest copy and pasting the response returned into a text editor so you can examine it while continuing the tutorial.**
+
+```json http
+{
+  "method": "get",
+  "url": "https://api.terminal49.com/v2/shipments",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  }
+}
+```
+
+
+> ### Why so much JSON? (A note on JSON API)
+>The Terminal49 API is JSON:API compliant, which means that there are nifty libraries which can translate JSON into a fully fledged object model that can be used with an ORM. This is very powerful, but it also requires a larger, more structured payload to power the framework. The tradeoff, therefore, is that it's less convenient if you're parsing the JSON directly. Ultimately we strongly recommend you set yourself up with a good library to use JSON:API to its fullest extent. But for the purposes of understanding the API's fundamentals and getting your feet wet, we'll work with the data directly.
+
+## Authentication
+
+The API uses HTTP Bearer Token authentication.
+
+This means you send your API Key as your token in every request.
+
+Webhooks are associated with API tokens, and this is how Terminal49 knows who to return relevant shipment information to.
+
+
+## Anatomy of Shipments JSON Response
+
+Here's what you'll see come back after you get the /shipments endpoint.
+
+Note that for clarity I've deleted some of the data that is less useful right now, and replaced them with ellipses (...). Bolded areas are also mine to point out important data.
+
+The **Data** attribute contains an array of objects. Each object is of type "shipment" and includes attributes such as bill of lading number, port of lading, and so forth. Each Shipment object also has Relationships to structured data objects, for example, Ports and Terminals, as well as a list of Containers which are on this shipment.
+
+You can write code to access these structured elements from the API. The advantage of this approach is that Terminal49 cleans and enhances the data that is provided from the steamship line, meaning that you can access a pre-defined object definition for a specific port in Los Angeles.
+
+
+```jsx
+{
+  "data": [
+    {
+      /*  this is an internal id that you can use to query the API directly, i.e by hitting https://api.terminal49.com/v2/shipments/123456789 */
+      "id": "123456789",
+      // the object type is a shipment, per below.
+      "type": "shipment",
+      "attributes": {
+        // Your BOL number that you used in the tracking request
+        "bill_of_lading_number": "99999999",
+        ...
+        "shipping_line_scac": "MAEU",
+        "shipping_line_name": "Maersk",
+        "port_of_lading_locode": "INVTZ",
+        "port_of_lading_name": "Visakhapatnam",
+        ...
+      },
+      "relationships": {
+
+        "port_of_lading": {
+          "data": {
+            "id": "bde5465a-1160-4fde-a026-74df9c362f65",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "3d892622-def8-4155-94c5-91d91dc42219",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "99e1f6ba-a514-4355-8517-b4720bdc5f33",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "593f3782-cc24-46a9-a6ce-b2f1dbf3b6b9",
+              "type": "container"
+            }
+          ]
+        }
+      },
+      "links": {
+        // this is a link to this specific shipment in the API.   
+        "self": "/v2/shipments/7f8c52b2-c255-4252-8a82-f279061fc847"
+      }
+    },
+    ...
+    ],
+  ...
+}
+```
+
+## Sample Code: Listing Tracked Shipments in Google Sheets
+
+Below is code written in Google Apps Script that lists the current shipments into the current sheet of a spreadsheet. Google Apps Script is very similar to JavaScript.
+
+Because Google Apps Script does not have native JSON:API support, we need to parse the JSON directly, making this example an ideal real-world application of the API.
+
+
+```jsx
+function listTrackedShipments(){
+  // first we construct the request.
+  var options = {
+    "method" : "GET",
+    "headers" : {
+      "content-type": "application/vnd.api+json",
+      "authorization" : "Token YOUR_API_KEY"
+    },
+      "payload" : ""
+   };
+
+
+  try {
+    // note that UrlFetchApp is a function of Google Apps Script, not a standard JS function.
+    var response = UrlFetchApp.fetch("https://api.terminal49.com/v2/shipments", options);
+    var json = response.getContentText();
+    var shipments = JSON.parse(json)["data"];
+    var shipment_values = [];
+    shipment_values = extractShipmentValues(shipments);
+    listShipmentValues(shipment_values);
+  } catch (error){
+    //In JavaScript you would use console.log(), but Google Apps Script uses Logger.log().
+    Logger.log("error communicating with Terminal49 / shipments: " + error);
+  }
+}
+
+
+function extractShipmentValues(shipments){
+  var shipment_values = [];
+  shipments.forEach(function(shipment){
+      // iterating through the shipments.
+    shipment_values.push(extractShipmentData(shipment));
+  });
+  return shipment_values;
+}
+
+function extractShipmentData(shipment){
+   var shipment_val = [];
+   //for each shipment I'm extracting some of the key info i want to display.
+   shipment_val.push(shipment["attributes"]["shipping_line_scac"],
+                      shipment["attributes"]["shipping_line_name"],
+                      shipment["attributes"]["bill_of_lading_number"],
+                      shipment["attributes"]["pod_vessel_name"],  
+                      shipment["attributes"]["port_of_lading_name"],
+                      shipment["attributes"]["pol_etd_at"],
+                      shipment["attributes"]["pol_atd_at"],
+                      shipment["attributes"]["port_of_discharge_name"],
+                      shipment["attributes"]["pod_eta_at"],
+                      shipment["attributes"]["pod_ata_at"],
+                      shipment["relationships"]["containers"]["data"].length,
+                      shipment["id"]
+                    );
+  return shipment_val;
+}
+
+
+function listShipmentValues(shipment_values){
+// now, list the data in the spreadsheet.
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var homesheet = ss.getActiveSheet();
+  var STARTING_ROW = 1;
+  var MAX_TRACKED = 500;  
+  try {
+    // clear the contents of the sheet first. 
+    homesheet.getRange(STARTING_ROW,1,MAX_TRACKED,shipment_values[0].length).clearContent();
+    // now insert all the shipment values directly into the sheet.
+    homesheet.getRange(STARTING_ROW,1,shipment_values.length,shipment_values[0].length).setValues(shipment_values);
+  } catch (error){
+    Logger.log("there was an error in listShipmentValues: " + error);
+  }
+}
+```
+
+
+## List all your Tracked Containers
+
+You can also list out all of your Containers. Container data includes Terminal availability, last free day, and other logistical information that you might use for drayage operations at port.
+
+**Try it below. Click "Headers" and replace YOUR_API_KEY with your API key.**
+
+**We suggest copy and pasting the response returned into a text editor so you can examine it while continuing the tutorial.**
+
+
+```json http
+{
+  "method": "get",
+  "url": "https://api.terminal49.com/v2/containers",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  }
+}
+```
+
+## Anatomy of Containers JSON Response
+Now that you've got a list of containers, let's examine the response you've received.
+
+```jsx
+// We have an array of objects in the data returned.
+  "data": [
+    {
+      //
+      "id": "internalid",
+      // this object is of type Container.
+      "type": "container",
+      "attributes": {
+
+        // Here is your container number
+        "number": "OOLU-xxxx",
+        // Seal Numbers aren't always returned by the carrier.
+        "seal_number": null,
+        "created_at": "2020-09-13T19:16:47Z",
+        "equipment_type": "reefer",
+        "equipment_length": null,
+        "equipment_height": null,
+        "weight_in_lbs": 54807,
+
+        //currently no known fees; this list will expand.
+        "fees_at_pod_terminal": [],
+        "holds_at_pod_terminal": [],
+        // here is your last free day.
+        "pickup_lfd": "2020-09-17T07:00:00Z",
+        "pickup_appointment_at": null,
+        "availability_known": true,
+        "available_for_pickup": false,
+        "pod_arrived_at": "2020-09-13T22:05:00Z",
+        "pod_discharged_at": "2020-09-15T05:27:00Z",
+        "location_at_pod_terminal": "CC1-162-B-3(Deck)",
+        "final_destination_full_out_at": null,
+        "pod_full_out_at": "2020-09-18T10:30:00Z",
+        "empty_terminated_at": null
+      },
+      "relationships": {
+        // linking back to the shipment object, found above.
+        "shipment": {
+          "data": {
+            "id": "894befec-e7e2-4e48-ab97-xxxxxxxxx",
+            "type": "shipment"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "39d09f18-cf98-445b-b6dc-xxxxxxxxx",
+            "type": "terminal"
+          }
+        },
+        ...
+      }
+    },
+    ...
+```
