@@ -1255,6 +1255,7 @@
                           "scac": "MSCU",
                           "ref_numbers": [],
                           "created_at": "2020-04-04T16:13:35-07:00",
+                          "updated_at": "2020-04-04T17:13:35-07:00",
                           "status": "pending",
                           "failed_reason": null
                         },
@@ -1711,6 +1712,7 @@
                           "scac": "MSCU",
                           "ref_numbers": [],
                           "created_at": "2020-04-04T16:13:35-07:00",
+                          "updated_at": "2020-04-04T17:13:35-07:00",
                           "status": "created",
                           "failed_reason": null
                         },
@@ -1805,6 +1807,7 @@
                           "ref_numbers": [],
                           "shipment_tags": [],
                           "created_at": "2021-07-27T16:44:14Z",
+                          "updated_at": "2021-07-27T17:44:14Z",
                           "status": "created",
                           "failed_reason": null,
                           "is_retrying": false,
@@ -2569,6 +2572,7 @@
                             "scac": "MSCU",
                             "ref_numbers": [],
                             "created_at": "2020-09-11T21:25:34Z",
+                            "updated_at": "2020-09-11T22:25:34Z",
                             "status": "created",
                             "failed_reason": null,
                             "is_retrying": false,
@@ -7354,6 +7358,10 @@
                 "maxLength": 4
               },
               "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
                 "type": "string",
                 "format": "date-time"
               },
