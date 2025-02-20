@@ -8,7 +8,10 @@ The `transport_events` table contains 1 row per event (`id`is the unique key).
 An event is associated to a specific container (`container_id` is the foreign key).
 
 An event is a specific milestone in the container lifecycle: for example, when the container was loaded at the Port of Lading, or when the vessel arrived at the Port of Discharge.
-These events are provided as columns in the `containers` DataSync table, and as rows here in the `transport_events` table. You can use one or the other based on what is most practical for you. The `transport_events` table includes the transshipment events, which are not part of the `containers` table columns.
+
+These events are provided as columns in the `containers` DataSync table, and as rows here in the `transport_events` table. You can use one or the other based on what is most practical for you.
+
+The `transport_events` table includes the transshipment events, which are not part of the `containers` table columns.
 
 This table does not provide any estimated future events.
 
