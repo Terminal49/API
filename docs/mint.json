@@ -104,6 +104,7 @@
         "datasync/table-properties/containers_rail",
         "datasync/table-properties/shipments",
         "datasync/table-properties/tracking-requests",
+        "datasync/table-properties/transport-events",
         "datasync/table-properties/transfer-status",
         "datasync/table-properties/containers"
       ]

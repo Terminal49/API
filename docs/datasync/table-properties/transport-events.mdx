@@ -1,0 +1,48 @@
+---
+title: Transport Events
+og:title: Transport Events Table Properties | Terminal49 Datasync
+og:description: View transport events table properties with Terminal49's Datasync to manage shipment tracking.
+---
+The `transport_events` table contains 1 row per event (`id`is the unique key).
+
+An event is associated to a specific container (`container_id` is the foreign key).
+
+An event is a specific milestone in the container lifecycle: for example, when the container was loaded at the Port of Lading, or when the vessel arrived at the Port of Discharge.
+These events are provided as columns in the `containers` DataSync table, and as rows here in the `transport_events` table. You can use one or the other based on what is most practical for you. The `transport_events` table includes the transshipment events, which are not part of the `containers` table columns.
+
+This table does not provide any estimated future events.
+
+_The `transport_events` table is currently only provided to DataSync customers who request it._
+
+_Rail events from the POD to the inland destination are only provided in the Intermodal Rail product : rail_loaded, rail_departed, rail_arrived, arrived_at_inland_destination, rail_unloaded, pickup_lfd.changed._
+
+| COLUMN NAME               | DESCRIPTION                                                                                   | TYPE        |
+|---------------------------|-----------------------------------------------------------------------------------------------|-------------|
+| `id`                      | Transport Event ID. This is the unique key of the table.                                      | `text`      |
+| `event`                   | Name of the transport event. For example: container.transport.vessel_departed                 | `text`      |
+| `event_timestamp`         | When the event happened, as a UTC timestamp                                                   | `timestamp` |
+| `event_timestamp_local`   | When the event happened, as a string in the local time zone                                   | `text`      |
+| `container_id`            | ID of the container the event is associated to                                                | `text`      |
+| `container_number`        | Number of the container the event is associated to                                            | `text`      |
+| `shipment_id`             | ID of the shipment the event is associated to                                                 | `text`      |
+| `shipment_number`         | Number of the shipment the event is associated to                                             | `text`      |
+| `port_metro_id`           | ID of the location where the event happened                                                   | `text`      |
+| `port_metro_locode`       | Locode of the location where the event happened                                               | `text`      |
+| `port_metro_country_code` | Country code of the location where the event happened                                         | `text`      |
+| `port_metro_city`         | Name of the location where the event happened                                                 | `text`      |
+| `port_metro_time_zone`    | Name of the time zone where the event happened                                                | `text`      |
+| `facility_id`             | ID of the facility (terminal) where the event happened                                        | `text`      |
+| `facility_firms_code`     | Firms code of the facility (terminal) where the event happened                                | `text`      |
+| `facility_nickname`       | Nickname of the facility (terminal) where the event happened                                  | `text`      |
+| `facility_name`           | Name of the facility (terminal) where the event happened                                      | `text`      |
+| `vessel_id`               | ID of the vessel associated to the event                                                      | `text`      |
+| `vessel_name`             | Name of the vessel associated to the event                                                    | `text`      |
+| `vessel_imo`              | IMO of the vessel associated to the event                                                     | `text`      |
+| `vessel_mmsi`             | MMSI of the vessel associated to the event                                                    | `text`      |
+| `voyage_number`           | Voyage number associated to the event                                                         | `text`      |
+| `data_source_label`       | Data source of the event: shipping_line, terminal, ais, rail, t49_operations_team, user_input | `text`      |
+| `invalidated_at`          | When the event was marked as invalid, as a UTC timestamp                                      | `timestamp` |
+| `invalidation_reason`     | Reason why the event was marked as invalid                                                    | `text`      |
+| `previous_version_id`     | If the event replaces an invalidated event, this is the ID of the invalidated event           | `text`      |
+| `created_at`              | When the event was originally added, as a UTC timestamp                                       | `timestamp` |
+| `updated_at`              | When the event was updated, as a UTC timestamp                                                | `timestamp` |
