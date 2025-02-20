@@ -18,18 +18,33 @@ Once you have the API Key, you can embed the map on your website.
 1. Copy and paste the code below and insert it on your website.
 Once loaded, this will make the map code available through the global `window` object.
 
+Just before the closing `</head>` tag, add the following link tag to load the map styles.
+
 ```html
-<link rel="stylesheet" href="https://map.terminal49.com/bundle.css" />
-<script defer src="https://map.terminal49.com/bundle.js"></script>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://map.terminal49.com/bundle.css" />
+</head>
 ```
 
-2. Define a container where you want the map to be displayed. 
+Just before the closing `</body>` tag, add the following script tag to load the map code.
+
+```html
+<body>
+  <!-- Other tags -->
+  <script src="https://map.terminal49.com/bundle.js"></script>
+</body>
+```
+
+2. Define a container where you want the map to be displayed.
 
 ```html
 <div id="map"></div>
 ```
 
-3. After the code is loaded, you can use the `window.TntMap` class to create a map instance. 
+3. After the code is loaded, you can use the `window.TntMap` class to create a map instance.
 
 ```javascript
 const map = new window.TntMap("#map", {
@@ -37,9 +52,9 @@ const map = new window.TntMap("#map", {
 });
 ```
 
-Notice that the `authToken` option is required. This is where you pass your Publishable API key. 
+Notice that the `authToken` option is required. This is where you pass your Publishable API key.
 
-4. Start the map. 
+4. Start the map.
 This tells the map to initialize and hook into the element designated during initialization.
 
 ```javascript
@@ -49,7 +64,7 @@ await map.start();
 5. Final step: load a container. You can pass shipment and container ids to the map where it'll fetch the data and display it.
 
 ```javascript
-await map.load(shipmentId, containerId)
+await map.load(shipmentId, containerId);
 ```
 
 6. Putting it all together, here is the javascript code that you need to embed the map on your website.
@@ -60,8 +75,35 @@ const map = new window.TntMap("#map", {
 });
 
 await map.start();
+await map.load(shipmentId, containerId);
+```
 
-await map.load(shipmentId, containerId)
+If you want to use inside the browser you can use the IIFE pattern.
+
+```javascript
+<script>
+  (async () => {
+    const map = new window.TntMap("#map", {
+      authToken: publishableApiKey,
+    });
+
+    await map.start();
+    await map.load(shipmentId, containerId);
+  })();
+</script>
+```
+
+Or you can use module attribute to use top-level async/await.
+
+```javascript
+<script type="module">
+  const map = new window.TntMap("#map", {
+    authToken: publishableApiKey,
+  });
+
+  await map.start();
+  await map.load(shipmentId, containerId);
+</script>
 ```
 
 ![terminal49-map.png](/images/terminal49-map.png)
