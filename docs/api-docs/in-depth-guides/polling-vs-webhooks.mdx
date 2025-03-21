@@ -1,0 +1,276 @@
+---
+title: Polling vs. Webhooks
+description: Compare the two approaches for receiving updates from Terminal49's API and choose the best one for your integration.
+---
+
+# Polling vs. Webhooks in Terminal49
+
+There are two primary methods for getting updates from Terminal49's API: **polling** and **webhooks**. This guide explains both approaches, their trade-offs, and helps you choose the best option for your integration.
+
+## Understanding Both Approaches
+
+<CardGroup cols={2}>
+  <Card title="Polling" icon="rotate" color="#0D96F2">
+    Your system periodically makes API requests to check for updates.
+  </Card>
+  <Card title="Webhooks" icon="bell" color="#0D96F2">
+    Terminal49 proactively sends updates to your system when changes occur.
+  </Card>
+</CardGroup>
+
+## Polling: The Pull Approach
+
+Polling involves your application regularly querying the Terminal49 API to check for updates on your tracked shipments and containers.
+
+<CodeGroup>
+  <Code title="Polling Example" lang="javascript">
+    // Example of polling in JavaScript
+    async function pollForUpdates() {
+      try {
+        const response = await fetch('https://api.terminal49.com/v2/containers/ABC123', {
+          headers: {
+            'Authorization': 'Token YOUR_API_KEY'
+          }
+        });
+        const container = await response.json();
+
+        // Process container data
+        updateContainerStatus(container);
+
+      } catch (error) {
+        console.error('Error polling for updates:', error);
+      }
+    }
+
+    // Poll every 15 minutes
+    setInterval(pollForUpdates, 15 * 60 * 1000);
+  </Code>
+</CodeGroup>
+
+### When to Use Polling
+
+<Accordion title="Simpler Implementation">
+  Polling may be easier to implement initially, especially if you're working with a system that doesn't support receiving external HTTP requests or if you're behind a firewall that blocks incoming traffic.
+</Accordion>
+
+<Accordion title="Development & Testing">
+  During development or for simple proof-of-concept integrations, polling can be a quick way to get started.
+</Accordion>
+
+<Accordion title="Occasional Updates">
+  If you only need to check container status once or twice a day, polling might be sufficient.
+</Accordion>
+
+### Disadvantages of Polling
+
+<Warning>
+  Polling can lead to delayed notifications, excessive API usage, and missed updates if your polling interval is too long.
+</Warning>
+
+- **Delayed Updates**: You only receive updates when you poll, which could be minutes or hours after an event occurred.
+- **Increased API Usage**: Frequent polling consumes more API resources.
+- **Potential Rate Limiting**: Very frequent polling could trigger rate limits.
+- **Missed Events**: If you poll infrequently, you might miss intermediate state changes.
+
+## Webhooks: The Push Approach
+
+Webhooks allow Terminal49 to push real-time updates to your system whenever a change occurs, without you having to ask for them.
+
+<CodeGroup>
+  <Code title="Webhook Setup" lang="javascript">
+    // Creating a webhook endpoint in Node.js (Express)
+    const express = require('express');
+    const app = express();
+    app.use(express.json());
+
+    app.post('/terminal49-webhook', (req, res) => {
+      const event = req.body.data.attributes.event;
+      const reference = req.body.data.relationships.reference_object.data;
+
+      console.log(`Received ${event} for ${reference.type} ${reference.id}`);
+
+      // Process the webhook notification
+      processWebhookEvent(req.body);
+
+      // Always return a success response
+      res.status(200).send('Webhook received');
+    });
+
+    app.listen(3000, () => {
+      console.log('Webhook server running on port 3000');
+    });
+  </Code>
+
+  <Code title="Webhook Registration" lang="javascript">
+    // Registering a webhook with Terminal49 API
+    async function registerWebhook() {
+      try {
+        const response = await fetch('https://api.terminal49.com/v2/webhooks', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Token YOUR_API_KEY',
+            'Content-Type': 'application/vnd.api+json'
+          },
+          body: JSON.stringify({
+            data: {
+              type: "webhook",
+              attributes: {
+                url: "https://your-domain.com/terminal49-webhook",
+                event_types: [
+                  "container.transport.vessel_arrived",
+                  "container.transport.vessel_discharged",
+                  "container.pickup_lfd.changed",
+                  "tracking_request.succeeded",
+                  "tracking_request.failed"
+                ]
+              }
+            }
+          })
+        });
+
+        const webhook = await response.json();
+        console.log('Webhook registered:', webhook);
+
+      } catch (error) {
+        console.error('Error registering webhook:', error);
+      }
+    }
+  </Code>
+</CodeGroup>
+
+### When to Use Webhooks
+
+<Accordion title="Real-Time Updates">
+  If you need immediate notifications about changes (like container arrivals, customs holds, or last free day changes), webhooks are essential.
+</Accordion>
+
+<Accordion title="Production Systems">
+  For production-grade integrations, webhooks provide the most reliable and efficient way to receive updates.
+</Accordion>
+
+<Accordion title="High-Volume Tracking">
+  If you're tracking many containers, webhooks prevent you from having to poll the status of each one repeatedly.
+</Accordion>
+
+### Implementing Webhooks Successfully
+
+For webhooks to work correctly, you need:
+
+1. **A publicly accessible endpoint** that can receive HTTP POST requests
+2. **Proper webhook handling** including:
+   - Responding with HTTP 200, 201, 202, or 204 status codes
+   - Processing webhook notifications asynchronously when possible
+   - Proper error handling and retry logic
+3. **Security considerations**:
+   - Validate the webhook payload
+   - Use HTTPS for your endpoint
+   - Consider IP filtering if available
+
+<Tip>
+  During development, you can use tools like [ngrok](https://ngrok.com/) to expose your local development environment to the internet for testing webhooks.
+</Tip>
+
+## Recommended Approach: Webhooks with Polling Fallback
+
+The recommended approach for Terminal49 integration is to:
+
+1. **Primary: Set up webhooks** for real-time notifications
+2. **Secondary: Implement polling** as a fallback to verify data or recover from missed webhooks
+
+<Frame>
+  ![Webhook with Polling Fallback](/images/webhook-with-polling-fallback.png)
+</Frame>
+
+This hybrid approach ensures you get the benefits of real-time updates while having a safety net to verify data integrity.
+
+## Example: Hybrid Implementation
+
+<CodeGroup>
+  <Code title="Hybrid Approach" lang="javascript">
+    // 1. Set up webhooks (primary method)
+    // See webhook registration example above
+
+    // 2. Implement periodic verification (fallback)
+    async function verifyContainerStatus() {
+      // Poll at a much lower frequency (e.g., once per day)
+      // to verify data and catch any potentially missed webhooks
+      try {
+        const response = await fetch('https://api.terminal49.com/v2/containers?filter[updated_since]=24h', {
+          headers: {
+            'Authorization': 'Token YOUR_API_KEY'
+          }
+        });
+
+        const data = await response.json();
+        const containers = data.data;
+
+        // Verify each container against your local database
+        for (const container of containers) {
+          verifyContainerData(container);
+        }
+
+      } catch (error) {
+        console.error('Error verifying container status:', error);
+      }
+    }
+
+    // Run verification once per day
+    setInterval(verifyContainerStatus, 24 * 60 * 60 * 1000);
+  </Code>
+</CodeGroup>
+
+## Summary Comparison
+
+<Table>
+  <Thead>
+    <Tr>
+      <Th>Feature</Th>
+      <Th>Polling</Th>
+      <Th>Webhooks</Th>
+    </Tr>
+  </Thead>
+  <Tbody>
+    <Tr>
+      <Td>Update Timeliness</Td>
+      <Td>Delayed (depends on polling interval)</Td>
+      <Td>Real-time</Td>
+    </Tr>
+    <Tr>
+      <Td>API Usage</Td>
+      <Td>Higher (regular requests)</Td>
+      <Td>Lower (on-demand updates)</Td>
+    </Tr>
+    <Tr>
+      <Td>Implementation Complexity</Td>
+      <Td>Simple</Td>
+      <Td>Moderate (requires public endpoint)</Td>
+    </Tr>
+    <Tr>
+      <Td>Server Requirements</Td>
+      <Td>None (client-initiated)</Td>
+      <Td>Public HTTP endpoint</Td>
+    </Tr>
+    <Tr>
+      <Td>Good For</Td>
+      <Td>Development, testing, simple use cases</Td>
+      <Td>Production systems, real-time requirements</Td>
+    </Tr>
+  </Tbody>
+</Table>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Set Up Webhooks" icon="bell" href="/api-docs/in-depth-guides/webhooks">
+    Learn how to implement webhooks for real-time updates.
+  </Card>
+  <Card title="Webhook Retries" icon="rotate" href="/api-docs/useful-info/tracking-request-retrying">
+    Understand how Terminal49 handles webhook delivery retries.
+  </Card>
+  <Card title="API Best Practices" icon="code" href="/api-docs/in-depth-guides/quickstart">
+    Follow our recommended practices for efficient API usage.
+  </Card>
+  <Card title="Test Numbers" icon="vial" href="/api-docs/useful-info/test-numbers">
+    Use test tracking numbers to simulate events for webhook testing.
+  </Card>
+</CardGroup>
