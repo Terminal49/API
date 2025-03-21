@@ -1,5 +1,308 @@
 ---
+title: Create a Tracking Request
+description: Submit a new tracking request to monitor ocean shipments via bill of lading, booking number, or container number.
 og:title: Create a Tracking Request | Terminal49 API Documentation
-og:description: Create tracking requests via Terminal49's API for accurate shipment tracking and notifications.
+og:description: Create tracking requests via Terminal49's API for accurate shipment tracking and real-time notifications.
 openapi: post /tracking_requests
 ---
+
+## Endpoint Purpose
+Submitting a tracking request tells Terminal49 to start monitoring a specific shipment for you. This is typically the first step in the tracking workflow.
+
+## Business Use Cases
+- **Initial Tracking Setup**: Start tracking a new container shipment when you receive a bill of lading or booking confirmation.
+- **Customer Onboarding**: Quickly set up tracking for a customer's shipments when they provide their shipping documents.
+- **Bulk Import**: Programmatically submit multiple tracking requests to monitor your entire inventory in transit.
+
+## Example Scenarios
+
+<Tabs>
+  <Tab title="Track by Bill of Lading">
+    <CodeGroup>
+      <Code title="Request" lang="json">
+        {
+          "data": {
+            "type": "tracking_request",
+            "attributes": {
+              "request_type": "bill_of_lading", // Type of tracking number
+              "request_number": "MAEU9736478", // Bill of lading number from the carrier
+              "scac": "MAEU" // Shipping line SCAC code (Maersk in this case)
+            }
+          }
+        }
+      </Code>
+      <Code title="Response" lang="json">
+        {
+          "data": {
+            "id": "b9c6a3e0-411e-4378-b93c-aacea42a673e",
+            "type": "tracking_request",
+            "attributes": {
+              "request_type": "bill_of_lading",
+              "request_number": "MAEU9736478",
+              "scac": "MAEU",
+              "status": "pending", // Request is being processed
+              "failed_reason": null,
+              "created_at": "2023-05-15T14:23:12Z",
+              "updated_at": "2023-05-15T14:23:12Z"
+            },
+            "relationships": {
+              "shipment": {
+                "data": null // Will be populated when tracking succeeds
+              }
+            }
+          }
+        }
+      </Code>
+    </CodeGroup>
+
+    **Notes:**
+    - The bill of lading is typically the most reliable identifier for tracking shipments.
+    - The `status` will initially be `pending` while Terminal49 processes your request.
+    - Once processing completes, you'll receive a webhook notification and the status will change to `succeeded` or `failed`.
+  </Tab>
+
+  <Tab title="Track by Container Number">
+    <CodeGroup>
+      <Code title="Request" lang="json">
+        {
+          "data": {
+            "type": "tracking_request",
+            "attributes": {
+              "request_type": "container", // Tracking by container number
+              "request_number": "MSCU1234567", // Container number
+              "scac": "MSCU" // Shipping line SCAC code (MSC in this case)
+            }
+          }
+        }
+      </Code>
+      <Code title="Response" lang="json">
+        {
+          "data": {
+            "id": "f7c9b5d2-311e-4378-a91c-bbcea42a785f",
+            "type": "tracking_request",
+            "attributes": {
+              "request_type": "container",
+              "request_number": "MSCU1234567",
+              "scac": "MSCU",
+              "status": "pending",
+              "failed_reason": null,
+              "created_at": "2023-05-15T15:45:22Z",
+              "updated_at": "2023-05-15T15:45:22Z"
+            },
+            "relationships": {
+              "shipment": {
+                "data": null
+              }
+            }
+          }
+        }
+      </Code>
+    </CodeGroup>
+
+    **Notes:**
+    - Container number tracking support varies between carriers. Refer to the Carrier Data Matrix to verify support.
+    - Container numbers should include the carrier prefix (e.g., MSCU for MSC containers).
+    - Container tracking can sometimes fail if the container is very new or not yet associated with a booking in the carrier's system.
+  </Tab>
+
+  <Tab title="Using Test Numbers">
+    <CodeGroup>
+      <Code title="Request" lang="json">
+        {
+          "data": {
+            "type": "tracking_request",
+            "attributes": {
+              "request_type": "bill_of_lading",
+              "request_number": "TEST-TR-SUCCEEDED", // Test number that will always succeed
+              "scac": "TEST" // Special SCAC for test requests
+            }
+          }
+        }
+      </Code>
+      <Code title="Response" lang="json">
+        {
+          "data": {
+            "id": "e8d7c6b5-211d-4378-a81b-aacfa42a895e",
+            "type": "tracking_request",
+            "attributes": {
+              "request_type": "bill_of_lading",
+              "request_number": "TEST-TR-SUCCEEDED",
+              "scac": "TEST",
+              "status": "pending",
+              "failed_reason": null,
+              "created_at": "2023-05-15T16:30:45Z",
+              "updated_at": "2023-05-15T16:30:45Z"
+            },
+            "relationships": {
+              "shipment": {
+                "data": null
+              }
+            }
+          }
+        }
+      </Code>
+    </CodeGroup>
+
+    **Notes:**
+    - Using test numbers is perfect for development and testing your integration.
+    - `TEST-TR-SUCCEEDED` will always trigger a successful tracking response.
+    - `TEST-TR-FAILED` will always trigger a failed tracking response.
+    - These test numbers will trigger corresponding webhook events for complete testing.
+  </Tab>
+
+  <Tab title="Error Handling">
+    <CodeGroup>
+      <Code title="Request" lang="json">
+        {
+          "data": {
+            "type": "tracking_request",
+            "attributes": {
+              "request_type": "bill_of_lading",
+              "request_number": "INVALID-FORMAT", // Invalid bill of lading format
+              "scac": "UNKNOWN" // Non-existent SCAC code
+            }
+          }
+        }
+      </Code>
+      <Code title="Response" lang="json">
+        {
+          "errors": [
+            {
+              "status": "422",
+              "title": "Invalid SCAC",
+              "detail": "The SCAC 'UNKNOWN' is not supported.",
+              "source": {
+                "pointer": "/data/attributes/scac"
+              }
+            }
+          ]
+        }
+      </Code>
+    </CodeGroup>
+
+    **Notes:**
+    - This example shows a validation error for an invalid SCAC code.
+    - Common errors include invalid SCAC codes, improperly formatted request numbers, or duplicate tracking requests.
+    - For a complete list of supported SCACs, refer to the Carrier Data Matrix.
+  </Tab>
+</Tabs>
+
+## Key Response Fields
+
+<ResponseField name="id" type="string">
+  Unique identifier for the tracking request. Store this to check status later.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current status of the tracking request. Possible values:
+  - `pending`: Request is being processed
+  - `succeeded`: Container/shipment located and tracking established
+  - `failed`: Unable to track the shipment (see failed_reason)
+  - `awaiting_manifest`: Bill of lading is valid but not yet available in the carrier's system
+  - `tracking_stopped`: Tracking has been stopped for this request
+</ResponseField>
+
+<ResponseField name="failed_reason" type="string">
+  If status is "failed", this field provides the reason. Common values:
+  - `duplicate`: Shipment already exists in Terminal49
+  - `not_found`: Shipping line couldn't find the tracking number
+  - `retries_exhausted`: Maximum retries reached without success
+  - `invalid_number`: Improperly formatted tracking number
+
+  <Note>
+    See the [Tracking Request Lifecycle](/api-docs/in-depth-guides/tracking-request-lifecycle) guide for a complete list of failure reasons.
+  </Note>
+</ResponseField>
+
+<ResponseField name="relationships.shipment" type="object">
+  When the tracking request succeeds, this contains a reference to the created shipment.
+
+  <Expandable title="Properties">
+    <ResponseField name="data.id" type="string">
+      ID of the linked shipment that you can use to retrieve full shipment details.
+    </ResponseField>
+
+    <ResponseField name="data.type" type="string">
+      Always "shipment" for successful tracking requests.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Related Webhook Events
+
+When creating a tracking request, you may receive the following webhook events:
+
+<Card title="tracking_request.succeeded">
+  Sent when Terminal49 successfully locates your shipment and begins tracking it. The notification includes details about the created shipment and its containers.
+</Card>
+
+<Card title="tracking_request.failed">
+  Sent when Terminal49 is unable to locate your shipment after all retry attempts. Includes the failed_reason to help troubleshoot.
+</Card>
+
+<Card title="tracking_request.awaiting_manifest">
+  Sent when the bill of lading number is valid but the shipment data is not yet available in the carrier's system. Terminal49 will continue checking daily.
+</Card>
+
+## Related Guides & Tutorials
+
+<CardGroup cols={2}>
+  <Card title="Tracking Request Lifecycle" icon="book" href="/api-docs/in-depth-guides/tracking-request-lifecycle">
+    Learn about the full lifecycle of a tracking request, including all possible statuses and failure reasons.
+  </Card>
+  <Card title="Setting Up Webhooks" icon="bell" href="/api-docs/in-depth-guides/webhooks">
+    Learn how to set up webhooks to receive real-time notifications about your tracking requests.
+  </Card>
+  <Card title="Test Numbers" icon="vial" href="/api-docs/useful-info/test-numbers">
+    Complete list of test tracking numbers you can use during development.
+  </Card>
+  <Card title="Bulk Tracking Tutorial" icon="code" href="/api-docs/tutorials/bulk-tracking">
+    Learn how to efficiently submit and manage multiple tracking requests.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="My tracking request is stuck in 'pending' status">
+    **Problem**: Your tracking request has been in "pending" status for an extended period.
+
+    **Solution**:
+    1. Terminal49 retries tracking requests up to 14 times over 24 hours.
+    2. Check that the SCAC and request number are correct.
+    3. For bill of lading numbers, note that they may remain in "awaiting_manifest" status for up to 7 days.
+    4. If the issue persists beyond 24 hours, contact support@terminal49.com.
+  </Accordion>
+
+  <Accordion title="Tracking request failed with 'not_found'">
+    **Problem**: Your tracking request failed with reason "not_found".
+
+    **Solution**:
+    1. Verify the tracking number format is correct (no spaces, proper prefixes).
+    2. Confirm you're using the correct SCAC code for the carrier.
+    3. For newly issued bills of lading, try again in 24-48 hours as it may take time to appear in the carrier's system.
+    4. If using a container number, check if the carrier supports container tracking in the Carrier Data Matrix.
+  </Accordion>
+
+  <Accordion title="I received a duplicate error">
+    **Problem**: Your tracking request failed with reason "duplicate".
+
+    **Solution**:
+    1. The shipment is already being tracked in Terminal49.
+    2. Use `GET /shipments` with a filter to find the existing shipment:
+
+    ```bash
+    GET /shipments?filter[bill_of_lading_number]=MAEU9736478
+    ```
+
+    3. You can access the existing shipment data instead of creating a new tracking request.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  For the fastest tracking setup, use the master bill of lading (MBL) number from the carrier. House bills of lading (HBL) are not supported.
+</Note>
+
+<Warning>
+  Container number tracking is not supported by all carriers. Always check the Carrier Data Matrix before implementing container tracking.
+</Warning>
