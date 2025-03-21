@@ -61,6 +61,7 @@
       "group": "Getting Started",
       "pages": [
         "api-docs/getting-started/start-here",
+        "api-docs/getting-started/capabilities-overview",
         "api-docs/getting-started/tracking-shipments-and-containers",
         "api-docs/getting-started/list-shipments-and-containers",
         "api-docs/getting-started/receive-status-updates"
@@ -70,6 +71,8 @@
       "group": "In Depth Guides",
       "pages": [
         "api-docs/in-depth-guides/quickstart",
+        "api-docs/in-depth-guides/json-api-guide",
+        "api-docs/in-depth-guides/polling-vs-webhooks",
         "api-docs/in-depth-guides/webhooks",
         "api-docs/in-depth-guides/including-resources",
         "api-docs/in-depth-guides/adding-customer",

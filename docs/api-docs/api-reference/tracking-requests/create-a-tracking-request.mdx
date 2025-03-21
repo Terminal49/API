@@ -20,38 +20,42 @@ Submitting a tracking request tells Terminal49 to start monitoring a specific sh
   <Tab title="Track by Bill of Lading">
     <CodeGroup>
       <Code title="Request" lang="json">
-        {
-          "data": {
-            "type": "tracking_request",
-            "attributes": {
-              "request_type": "bill_of_lading", // Type of tracking number
-              "request_number": "MAEU9736478", // Bill of lading number from the carrier
-              "scac": "MAEU" // Shipping line SCAC code (Maersk in this case)
-            }
-          }
-        }
+```json
+{
+  "data": {
+    "type": "tracking_request",
+    "attributes": {
+      "request_type": "bill_of_lading",
+      "request_number": "MAEU9736478",
+      "scac": "MAEU"
+    }
+  }
+}
+```
       </Code>
       <Code title="Response" lang="json">
-        {
-          "data": {
-            "id": "b9c6a3e0-411e-4378-b93c-aacea42a673e",
-            "type": "tracking_request",
-            "attributes": {
-              "request_type": "bill_of_lading",
-              "request_number": "MAEU9736478",
-              "scac": "MAEU",
-              "status": "pending", // Request is being processed
-              "failed_reason": null,
-              "created_at": "2023-05-15T14:23:12Z",
-              "updated_at": "2023-05-15T14:23:12Z"
-            },
-            "relationships": {
-              "shipment": {
-                "data": null // Will be populated when tracking succeeds
-              }
-            }
-          }
-        }
+```json
+{
+  "data": {
+    "id": "b9c6a3e0-411e-4378-b93c-aacea42a673e",
+    "type": "tracking_request",
+    "attributes": {
+      "request_type": "bill_of_lading",
+      "request_number": "MAEU9736478",
+      "scac": "MAEU",
+      "status": "pending",
+      "failed_reason": null,
+      "created_at": "2023-05-15T14:23:12Z",
+      "updated_at": "2023-05-15T14:23:12Z"
+    },
+    "relationships": {
+      "shipment": {
+        "data": null
+      }
+    }
+  }
+}
+```
       </Code>
     </CodeGroup>
 
