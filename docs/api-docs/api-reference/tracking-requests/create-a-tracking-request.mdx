@@ -18,46 +18,41 @@ Submitting a tracking request tells Terminal49 to start monitoring a specific sh
 
 <Tabs>
   <Tab title="Track by Bill of Lading">
-    <CodeGroup>
-      <Code title="Request" lang="json">
-```json
-{
-  "data": {
-    "type": "tracking_request",
-    "attributes": {
-      "request_type": "bill_of_lading",
-      "request_number": "MAEU9736478",
-      "scac": "MAEU"
-    }
-  }
-}
-```
-      </Code>
-      <Code title="Response" lang="json">
-```json
-{
-  "data": {
-    "id": "b9c6a3e0-411e-4378-b93c-aacea42a673e",
-    "type": "tracking_request",
-    "attributes": {
-      "request_type": "bill_of_lading",
-      "request_number": "MAEU9736478",
-      "scac": "MAEU",
-      "status": "pending",
-      "failed_reason": null,
-      "created_at": "2023-05-15T14:23:12Z",
-      "updated_at": "2023-05-15T14:23:12Z"
-    },
-    "relationships": {
-      "shipment": {
-        "data": null
+    ```json title="Request"
+    {
+      "data": {
+        "type": "tracking_request",
+        "attributes": {
+          "request_type": "bill_of_lading",
+          "request_number": "MAEU9736478",
+          "scac": "MAEU"
+        }
       }
     }
-  }
-}
-```
-      </Code>
-    </CodeGroup>
+    ```
+
+    ```json title="Response"
+    {
+      "data": {
+        "id": "b9c6a3e0-411e-4378-b93c-aacea42a673e",
+        "type": "tracking_request",
+        "attributes": {
+          "request_type": "bill_of_lading",
+          "request_number": "MAEU9736478",
+          "scac": "MAEU",
+          "status": "pending",
+          "failed_reason": null,
+          "created_at": "2023-05-15T14:23:12Z",
+          "updated_at": "2023-05-15T14:23:12Z"
+        },
+        "relationships": {
+          "shipment": {
+            "data": null
+          }
+        }
+      }
+    }
+    ```
 
     **Notes:**
     - The bill of lading is typically the most reliable identifier for tracking shipments.
@@ -66,42 +61,41 @@ Submitting a tracking request tells Terminal49 to start monitoring a specific sh
   </Tab>
 
   <Tab title="Track by Container Number">
-    <CodeGroup>
-      <Code title="Request" lang="json">
-        {
-          "data": {
-            "type": "tracking_request",
-            "attributes": {
-              "request_type": "container", // Tracking by container number
-              "request_number": "MSCU1234567", // Container number
-              "scac": "MSCU" // Shipping line SCAC code (MSC in this case)
-            }
+    ```json title="Request"
+    {
+      "data": {
+        "type": "tracking_request",
+        "attributes": {
+          "request_type": "container",
+          "request_number": "MSCU1234567",
+          "scac": "MSCU"
+        }
+      }
+    }
+    ```
+
+    ```json title="Response"
+    {
+      "data": {
+        "id": "f7c9b5d2-311e-4378-a91c-bbcea42a785f",
+        "type": "tracking_request",
+        "attributes": {
+          "request_type": "container",
+          "request_number": "MSCU1234567",
+          "scac": "MSCU",
+          "status": "pending",
+          "failed_reason": null,
+          "created_at": "2023-05-15T15:45:22Z",
+          "updated_at": "2023-05-15T15:45:22Z"
+        },
+        "relationships": {
+          "shipment": {
+            "data": null
           }
         }
-      </Code>
-      <Code title="Response" lang="json">
-        {
-          "data": {
-            "id": "f7c9b5d2-311e-4378-a91c-bbcea42a785f",
-            "type": "tracking_request",
-            "attributes": {
-              "request_type": "container",
-              "request_number": "MSCU1234567",
-              "scac": "MSCU",
-              "status": "pending",
-              "failed_reason": null,
-              "created_at": "2023-05-15T15:45:22Z",
-              "updated_at": "2023-05-15T15:45:22Z"
-            },
-            "relationships": {
-              "shipment": {
-                "data": null
-              }
-            }
-          }
-        }
-      </Code>
-    </CodeGroup>
+      }
+    }
+    ```
 
     **Notes:**
     - Container number tracking support varies between carriers. Refer to the Carrier Data Matrix to verify support.
@@ -110,42 +104,41 @@ Submitting a tracking request tells Terminal49 to start monitoring a specific sh
   </Tab>
 
   <Tab title="Using Test Numbers">
-    <CodeGroup>
-      <Code title="Request" lang="json">
-        {
-          "data": {
-            "type": "tracking_request",
-            "attributes": {
-              "request_type": "bill_of_lading",
-              "request_number": "TEST-TR-SUCCEEDED", // Test number that will always succeed
-              "scac": "TEST" // Special SCAC for test requests
-            }
+    ```json title="Request"
+    {
+      "data": {
+        "type": "tracking_request",
+        "attributes": {
+          "request_type": "bill_of_lading",
+          "request_number": "TEST-TR-SUCCEEDED",
+          "scac": "TEST"
+        }
+      }
+    }
+    ```
+
+    ```json title="Response"
+    {
+      "data": {
+        "id": "e8d7c6b5-211d-4378-a81b-aacfa42a895e",
+        "type": "tracking_request",
+        "attributes": {
+          "request_type": "bill_of_lading",
+          "request_number": "TEST-TR-SUCCEEDED",
+          "scac": "TEST",
+          "status": "pending",
+          "failed_reason": null,
+          "created_at": "2023-05-15T16:30:45Z",
+          "updated_at": "2023-05-15T16:30:45Z"
+        },
+        "relationships": {
+          "shipment": {
+            "data": null
           }
         }
-      </Code>
-      <Code title="Response" lang="json">
-        {
-          "data": {
-            "id": "e8d7c6b5-211d-4378-a81b-aacfa42a895e",
-            "type": "tracking_request",
-            "attributes": {
-              "request_type": "bill_of_lading",
-              "request_number": "TEST-TR-SUCCEEDED",
-              "scac": "TEST",
-              "status": "pending",
-              "failed_reason": null,
-              "created_at": "2023-05-15T16:30:45Z",
-              "updated_at": "2023-05-15T16:30:45Z"
-            },
-            "relationships": {
-              "shipment": {
-                "data": null
-              }
-            }
-          }
-        }
-      </Code>
-    </CodeGroup>
+      }
+    }
+    ```
 
     **Notes:**
     - Using test numbers is perfect for development and testing your integration.
@@ -155,34 +148,33 @@ Submitting a tracking request tells Terminal49 to start monitoring a specific sh
   </Tab>
 
   <Tab title="Error Handling">
-    <CodeGroup>
-      <Code title="Request" lang="json">
+    ```json title="Request"
+    {
+      "data": {
+        "type": "tracking_request",
+        "attributes": {
+          "request_type": "bill_of_lading",
+          "request_number": "INVALID-FORMAT",
+          "scac": "UNKNOWN"
+        }
+      }
+    }
+    ```
+
+    ```json title="Response"
+    {
+      "errors": [
         {
-          "data": {
-            "type": "tracking_request",
-            "attributes": {
-              "request_type": "bill_of_lading",
-              "request_number": "INVALID-FORMAT", // Invalid bill of lading format
-              "scac": "UNKNOWN" // Non-existent SCAC code
-            }
+          "status": "422",
+          "title": "Invalid SCAC",
+          "detail": "The SCAC 'UNKNOWN' is not supported.",
+          "source": {
+            "pointer": "/data/attributes/scac"
           }
         }
-      </Code>
-      <Code title="Response" lang="json">
-        {
-          "errors": [
-            {
-              "status": "422",
-              "title": "Invalid SCAC",
-              "detail": "The SCAC 'UNKNOWN' is not supported.",
-              "source": {
-                "pointer": "/data/attributes/scac"
-              }
-            }
-          ]
-        }
-      </Code>
-    </CodeGroup>
+      ]
+    }
+    ```
 
     **Notes:**
     - This example shows a validation error for an invalid SCAC code.

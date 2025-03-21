@@ -24,9 +24,7 @@ Webhooks provide real-time notifications about changes to your shipments and con
 
 First, you need to create an endpoint on your server that can receive POST requests. Here's an example using Node.js with Express:
 
-<CodeGroup>
-  <Code title="Webhook Endpoint" lang="javascript">
-```javascript
+```javascript title="Webhook Endpoint"
 const express = require('express');
 const app = express();
 app.use(express.json());
@@ -73,8 +71,6 @@ app.listen(3000, () => {
   console.log('Webhook server running on port 3000');
 });
 ```
-  </Code>
-</CodeGroup>
 
 <Tip>
   Your webhook endpoint must be publicly accessible over the internet for Terminal49 to send notifications to it. During development, you can use tools like [ngrok](https://ngrok.com/) to create a temporary public URL.
@@ -84,9 +80,7 @@ app.listen(3000, () => {
 
 Once your endpoint is ready, register it with Terminal49's API:
 
-<CodeGroup>
-  <Code title="Register Webhook" lang="javascript">
-```javascript
+```javascript title="Register Webhook"
 async function registerWebhook() {
   try {
     const response = await fetch('https://api.terminal49.com/v2/webhooks', {
@@ -124,10 +118,8 @@ async function registerWebhook() {
   }
 }
 ```
-  </Code>
 
-  <Code title="cURL Example" lang="bash">
-```bash
+```bash title="cURL Example"
 curl -X POST \
   https://api.terminal49.com/v2/webhooks \
   -H 'Authorization: Token YOUR_API_KEY' \
@@ -150,16 +142,12 @@ curl -X POST \
     }
   }'
 ```
-  </Code>
-</CodeGroup>
 
 ### Step 3: Verify and Test Your Webhook
 
 After registering, you can test your webhook using Terminal49's test tracking numbers:
 
-<CodeGroup>
-  <Code title="Test Webhook" lang="javascript">
-```javascript
+```javascript title="Test Webhook"
 async function testWebhook() {
   try {
     // Create a tracking request with a test number
@@ -188,8 +176,6 @@ async function testWebhook() {
   }
 }
 ```
-  </Code>
-</CodeGroup>
 
 ## Managing Webhooks
 
@@ -197,9 +183,7 @@ async function testWebhook() {
 
 You can retrieve a list of all registered webhooks:
 
-<CodeGroup>
-  <Code title="List Webhooks" lang="javascript">
-```javascript
+```javascript title="List Webhooks"
 async function listWebhooks() {
   try {
     const response = await fetch('https://api.terminal49.com/v2/webhooks', {
@@ -218,16 +202,12 @@ async function listWebhooks() {
   }
 }
 ```
-  </Code>
-</CodeGroup>
 
 ### Updating a Webhook
 
 To update an existing webhook (e.g., to change the URL or event types):
 
-<CodeGroup>
-  <Code title="Update Webhook" lang="javascript">
-```javascript
+```javascript title="Update Webhook"
 async function updateWebhook(webhookId) {
   try {
     const response = await fetch(`https://api.terminal49.com/v2/webhooks/${webhookId}`, {
@@ -262,16 +242,12 @@ async function updateWebhook(webhookId) {
   }
 }
 ```
-  </Code>
-</CodeGroup>
 
 ### Deleting a Webhook
 
-To stop receiving webhook notifications:
+If you no longer need a webhook, you can delete it:
 
-<CodeGroup>
-  <Code title="Delete Webhook" lang="javascript">
-```javascript
+```javascript title="Delete Webhook"
 async function deleteWebhook(webhookId) {
   try {
     const response = await fetch(`https://api.terminal49.com/v2/webhooks/${webhookId}`, {
@@ -282,7 +258,7 @@ async function deleteWebhook(webhookId) {
     });
 
     if (response.status === 204) {
-      console.log(`Webhook ${webhookId} successfully deleted`);
+      console.log('Webhook deleted successfully');
       return true;
     } else {
       console.error('Failed to delete webhook:', response.status);
@@ -295,8 +271,51 @@ async function deleteWebhook(webhookId) {
   }
 }
 ```
-  </Code>
-</CodeGroup>
+
+## Webhook Payload Structure
+
+When an event occurs, Terminal49 sends a webhook notification with a JSON:API structured payload:
+
+```json title="Example Payload"
+{
+  "data": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "type": "webhook_notification",
+    "attributes": {
+      "event": "container.transport.vessel_arrived",
+      "created_at": "2023-05-15T14:23:12Z"
+    },
+    "relationships": {
+      "reference_object": {
+        "data": {
+          "id": "789e4567-e89b-12d3-a456-426614174000",
+          "type": "container"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "789e4567-e89b-12d3-a456-426614174000",
+      "type": "container",
+      "attributes": {
+        "number": "MSCU1234567",
+        "seal_number": "SEAL123456",
+        "created_at": "2023-05-10T10:23:12Z",
+        "updated_at": "2023-05-15T14:23:12Z"
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "456e4567-e89b-12d3-a456-426614174000",
+            "type": "shipment"
+          }
+        }
+      }
+    }
+  ]
+}
+```
 
 ## Webhook Event Types
 
@@ -323,61 +342,6 @@ Terminal49 supports multiple event types that you can subscribe to:
   - `shipment.created`: A new shipment is created in the system
   - `shipment.updated`: A shipment's details have been updated
 </Accordion>
-
-## Webhook Payload Structure
-
-All webhook notifications follow the JSON:API format. Here's a typical webhook payload structure:
-
-<CodeGroup>
-  <Code title="Example Payload" lang="json">
-```json
-{
-  "data": {
-    "id": "9c5d91d1-f67d-4e5c-bbf5-c7c71a36fb23",
-    "type": "webhook_notification",
-    "attributes": {
-      "event": "container.transport.vessel_arrived",
-      "created_at": "2023-05-15T21:13:24Z"
-    },
-    "relationships": {
-      "reference_object": {
-        "data": {
-          "id": "b0a875ba-4ada-4f38-8765-53c59cec72a8",
-          "type": "container"
-        }
-      }
-    }
-  },
-  "included": [
-    {
-      "id": "b0a875ba-4ada-4f38-8765-53c59cec72a8",
-      "type": "container",
-      "attributes": {
-        "number": "ABCD1234567",
-        "seal_number": "SL123456",
-        "created_at": "2023-05-10T15:34:12Z",
-        "updated_at": "2023-05-15T21:13:20Z"
-      },
-      "relationships": {
-        "terminal": {
-          "data": {
-            "id": "7fa33ba6-2a50-4c5b-9889-3e814b7e9218",
-            "type": "terminal"
-          }
-        },
-        "shipment": {
-          "data": {
-            "id": "ae12fe45-0dc3-4a78-99b1-6fe08c58cbcf",
-            "type": "shipment"
-          }
-        }
-      }
-    }
-  ]
-}
-```
-  </Code>
-</CodeGroup>
 
 ## Best Practices
 
