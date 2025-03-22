@@ -35,6 +35,7 @@
               "api-docs/in-depth-guides/quickstart",
               "api-docs/in-depth-guides/json-api-guide",
               "api-docs/in-depth-guides/authentication",
+              "api-docs/in-depth-guides/error-handling",
               "api-docs/in-depth-guides/polling-vs-webhooks",
               "api-docs/in-depth-guides/webhooks",
               "api-docs/in-depth-guides/including-resources",

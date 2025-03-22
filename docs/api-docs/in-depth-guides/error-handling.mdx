@@ -1,0 +1,462 @@
+---
+title: Error Handling
+description: Learn how to effectively handle and troubleshoot errors in Terminal49's API
+icon: "triangle-exclamation"
+---
+
+# Error Handling and Troubleshooting
+
+This guide explains how Terminal49's API reports errors and provides strategies for troubleshooting and handling them effectively in your applications.
+
+## Understanding Error Responses
+
+Terminal49's API follows the JSON:API specification for error responses. When an error occurs, the API returns:
+
+1. An appropriate HTTP status code
+2. A JSON response with detailed error information
+
+```json
+{
+  "errors": [
+    {
+      "status": "422",
+      "title": "Invalid attribute",
+      "detail": "The SCAC 'UNKNOWN' is not supported.",
+      "source": {
+        "pointer": "/data/attributes/scac"
+      },
+      "code": "unsupported_scac"
+    }
+  ]
+}
+```
+
+### Error Object Properties
+
+Each error object in the `errors` array includes:
+
+<ResponseField name="status" type="string">
+  The HTTP status code for this particular error (as a string).
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  A short, human-readable summary of the problem.
+</ResponseField>
+
+<ResponseField name="detail" type="string">
+  A human-readable explanation with specific details about the error.
+</ResponseField>
+
+<ResponseField name="source" type="object">
+  Information about the source of the error:
+  - `pointer`: A JSON Pointer to the specific field that caused the error (e.g., "/data/attributes/scac")
+</ResponseField>
+
+<ResponseField name="code" type="string">
+  A machine-readable error code that can be used for programmatic handling (not always present).
+</ResponseField>
+
+## Common HTTP Status Codes
+
+| Status Code | Meaning | Typical Causes |
+|-------------|---------|----------------|
+| 400 Bad Request | The request was malformed or invalid | Invalid JSON, missing required fields |
+| 401 Unauthorized | Authentication failed | Invalid or missing API key |
+| 403 Forbidden | Permission denied | Your API key doesn't have access to the requested resource |
+| 404 Not Found | Resource not found | The requested ID doesn't exist |
+| 422 Unprocessable Entity | Validation errors | Input validation failed |
+| 429 Too Many Requests | Rate limit exceeded | You've made too many requests in a short period |
+| 500, 502, 503 | Server errors | Problem on Terminal49's side |
+
+## Common Error Types and Solutions
+
+### Authentication Errors (401)
+
+**Example:**
+```json
+{
+  "errors": [
+    {
+      "status": "401",
+      "title": "Unauthorized",
+      "detail": "Invalid API key provided"
+    }
+  ]
+}
+```
+
+**Solutions:**
+1. Check that you're including the `Authorization` header with the correct format: `Token YOUR_API_KEY`
+2. Verify your API key is active in the [Developer Settings](https://app.terminal49.com/developers/api-keys)
+3. Make sure the API key hasn't been disabled
+
+### Validation Errors (422)
+
+**Example:**
+```json
+{
+  "errors": [
+    {
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/request_number"
+      },
+      "title": "Unprocessable Entity",
+      "detail": "Request number 'ABCD1234567' with scac 'MAEU' already exists in a tracking_request with a pending or created status",
+      "code": "duplicate"
+    }
+  ]
+}
+```
+
+**Solutions:**
+1. Check the `pointer` field to identify which attribute caused the error
+2. Review the `detail` message for specific information about the validation failure
+3. For duplicate tracking requests, check if the shipment is already being tracked
+4. Verify SCAC codes against the [supported carriers list](https://app.terminal49.com/developers/carrier-data)
+
+### Resource Not Found (404)
+
+**Example:**
+```json
+{
+  "errors": [
+    {
+      "status": "404",
+      "title": "Not Found",
+      "detail": "Couldn't find Shipment with ID=123e4567-e89b-12d3-a456-426614174000"
+    }
+  ]
+}
+```
+
+**Solutions:**
+1. Verify the ID you're using exists and is correctly formatted
+2. Check if the resource might have been deleted
+3. Confirm you're using the correct endpoint for the resource type
+
+### Rate Limiting (429)
+
+**Example:**
+```json
+{
+  "errors": [
+    {
+      "status": "429",
+      "title": "Too Many Requests",
+      "detail": "Rate limit exceeded. Please wait and try again later."
+    }
+  ]
+}
+```
+
+**Solutions:**
+1. Implement retry logic with exponential backoff
+2. Spread requests over a longer period
+3. Contact Terminal49 support if you need a higher rate limit for your use case
+
+## Implementing Effective Error Handling
+
+### JavaScript Example
+
+```javascript
+async function makeApiRequest(endpoint, method = 'GET', data = null) {
+  try {
+    const options = {
+      method,
+      headers: {
+        'Authorization': `Token ${API_KEY}`,
+        'Content-Type': 'application/vnd.api+json'
+      }
+    };
+
+    if (data && (method === 'POST' || method === 'PATCH')) {
+      options.body = JSON.stringify(data);
+    }
+
+    const response = await fetch(`https://api.terminal49.com/v2/${endpoint}`, options);
+    const responseData = await response.json();
+
+    // Check if the response contains errors
+    if (!response.ok) {
+      // Process errors
+      if (responseData.errors) {
+        const error = responseData.errors[0];
+
+        switch (response.status) {
+          case 401:
+            throw new Error(`Authentication error: ${error.detail}`);
+          case 404:
+            throw new Error(`Resource not found: ${error.detail}`);
+          case 422:
+            const field = error.source?.pointer?.split('/').pop() || 'unknown field';
+            throw new Error(`Validation error in ${field}: ${error.detail}`);
+          case 429:
+            // Implement retry with exponential backoff
+            throw new Error(`Rate limit exceeded: ${error.detail}`);
+          default:
+            throw new Error(`API error ${response.status}: ${error.detail}`);
+        }
+      }
+
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    return responseData;
+  } catch (error) {
+    console.error('API request failed:', error);
+    throw error;
+  }
+}
+```
+
+### PHP Example
+
+```php
+<?php
+function makeApiRequest($endpoint, $method = 'GET', $data = null) {
+    $ch = curl_init();
+    $url = "https://api.terminal49.com/v2/{$endpoint}";
+
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: Token ' . API_KEY,
+        'Content-Type: application/vnd.api+json',
+        'Accept: application/vnd.api+json'
+    ]);
+
+    if ($method !== 'GET') {
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        if ($data) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        }
+    }
+
+    $response = curl_exec($ch);
+    $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $responseData = json_decode($response, true);
+
+    if ($statusCode >= 400) {
+        // Handle errors
+        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+            $error = $responseData['errors'][0];
+            $errorMessage = $error['detail'] ?? 'Unknown error';
+
+            switch ($statusCode) {
+                case 401:
+                    throw new Exception("Authentication error: {$errorMessage}");
+                case 404:
+                    throw new Exception("Resource not found: {$errorMessage}");
+                case 422:
+                    $pointer = $error['source']['pointer'] ?? '';
+                    $field = array_pop(explode('/', $pointer)) ?: 'unknown field';
+                    throw new Exception("Validation error in {$field}: {$errorMessage}");
+                case 429:
+                    // Implement retry logic
+                    throw new Exception("Rate limit exceeded: {$errorMessage}");
+                default:
+                    throw new Exception("API error {$statusCode}: {$errorMessage}");
+            }
+        }
+
+        throw new Exception("API request failed with status {$statusCode}");
+    }
+
+    return $responseData;
+}
+?>
+```
+
+### Python Example
+
+```python
+import requests
+import time
+from requests.exceptions import HTTPError
+
+def make_api_request(endpoint, method='GET', data=None, max_retries=3):
+    url = f"https://api.terminal49.com/v2/{endpoint}"
+    headers = {
+        'Authorization': f'Token {API_KEY}',
+        'Content-Type': 'application/vnd.api+json',
+        'Accept': 'application/vnd.api+json'
+    }
+
+    retries = 0
+    while retries < max_retries:
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers)
+            elif method == 'POST':
+                response = requests.post(url, headers=headers, json=data)
+            elif method == 'PATCH':
+                response = requests.patch(url, headers=headers, json=data)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers)
+            else:
+                raise ValueError(f"Unsupported HTTP method: {method}")
+
+            response.raise_for_status()
+            return response.json()
+
+        except HTTPError as http_err:
+            # Try to parse error response
+            try:
+                error_data = response.json()
+                if 'errors' in error_data and error_data['errors']:
+                    error = error_data['errors'][0]
+                    error_detail = error.get('detail', 'No detail provided')
+
+                    if response.status_code == 401:
+                        raise Exception(f"Authentication error: {error_detail}")
+                    elif response.status_code == 404:
+                        raise Exception(f"Resource not found: {error_detail}")
+                    elif response.status_code == 422:
+                        pointer = error.get('source', {}).get('pointer', '')
+                        field = pointer.split('/')[-1] if pointer else 'unknown field'
+                        raise Exception(f"Validation error in {field}: {error_detail}")
+                    elif response.status_code == 429:
+                        # Rate limit - implement retry with backoff
+                        wait_time = min(2 ** retries, 60)
+                        print(f"Rate limit exceeded. Retrying in {wait_time} seconds...")
+                        time.sleep(wait_time)
+                        retries += 1
+                        continue
+            except ValueError:
+                # Response wasn't valid JSON
+                pass
+
+            # If we get here, either it wasn't a JSON response or we want to re-raise
+            if response.status_code != 429 or retries >= max_retries - 1:
+                raise Exception(f"API error {response.status_code}: {response.text}")
+
+        retries += 1
+
+    raise Exception("Maximum retry attempts reached")
+```
+
+## Retry Strategies
+
+For intermittent errors and rate limiting, implementing a retry strategy is essential:
+
+### Exponential Backoff
+
+```javascript
+async function makeRequestWithRetry(endpoint, method = 'GET', data = null, maxRetries = 3) {
+  let retries = 0;
+
+  while (retries < maxRetries) {
+    try {
+      return await makeApiRequest(endpoint, method, data);
+    } catch (error) {
+      retries++;
+
+      // If it's not a retriable error or we've used all retries, throw
+      if (
+        !error.message.includes('Rate limit exceeded') ||
+        retries >= maxRetries
+      ) {
+        throw error;
+      }
+
+      // Exponential backoff with jitter
+      const delay = Math.min(1000 * 2 ** retries + Math.random() * 1000, 60000);
+      console.log(`Retrying after ${delay}ms (attempt ${retries} of ${maxRetries})...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+```
+
+## Error Scenarios and Solutions
+
+### Duplicate Tracking Requests
+
+**Error:**
+```json
+{
+  "errors": [
+    {
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/request_number"
+      },
+      "title": "Unprocessable Entity",
+      "detail": "Request number 'MAEU1234567' with scac 'MAEU' already exists in a tracking_request with a pending or created status",
+      "code": "duplicate"
+    }
+  ]
+}
+```
+
+**Solution:**
+When you receive a duplicate error, you should:
+1. Look up the existing tracking request using the `GET /tracking_requests` endpoint with appropriate filters
+2. Use the ID of the existing request to fetch its current status
+3. If needed, you can update the existing tracking request rather than creating a new one
+
+### Unsupported Carrier
+
+**Error:**
+```json
+{
+  "errors": [
+    {
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/scac"
+      },
+      "title": "Unprocessable Entity",
+      "detail": "Scac 'ABCD' is not supported",
+      "code": "unsupported_scac"
+    }
+  ]
+}
+```
+
+**Solution:**
+1. Reference the [Carrier Data Matrix](https://app.terminal49.com/developers/carrier-data) for a list of supported carriers
+2. Double-check the SCAC code format (usually 4 uppercase letters)
+3. If you need support for a specific carrier, contact Terminal49
+
+## Best Practices for Error Handling
+
+1. **Always check for error responses**
+   - Parse the response body to look for the `errors` array
+   - Handle both HTTP errors and JSON:API formatted errors
+
+2. **Log detailed error information**
+   - Include the status code, error title, error detail, and any source information
+   - Add context from your application (e.g., what operation was being attempted)
+
+3. **Implement appropriate retry logic**
+   - Use exponential backoff for rate limiting (429) errors
+   - Don't retry for validation (422) or authentication (401) errors
+
+4. **Present user-friendly error messages**
+   - Translate technical API errors to understandable messages for end-users
+   - Provide actionable guidance when possible
+
+5. **Monitor error rates**
+   - Set up alerts for unusual error patterns
+   - Keep track of error frequency to identify potential issues with your integration
+
+## Getting Help
+
+If you encounter persistent errors that you can't resolve:
+
+1. Check the [API Documentation](https://api.docs.terminal49.com/) for endpoint-specific requirements
+2. Ensure you're using the latest version of the API
+3. Contact Terminal49 support at [support@terminal49.com](mailto:support@terminal49.com) with:
+   - The full error response (with headers if possible)
+   - A description of what you were trying to do
+   - Any relevant request IDs or resource IDs
+
+## Next Steps
+
+- Learn about [Authentication](/api-docs/in-depth-guides/authentication) to avoid auth-related errors
+- Explore the [JSON:API Guide](/api-docs/in-depth-guides/json-api-guide) to better understand API responses
+- Read about [Webhooks](/api-docs/in-depth-guides/webhooks) for asynchronous event handling
