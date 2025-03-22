@@ -56,89 +56,6 @@ Each error object in the `errors` array includes:
   A machine-readable error code that can be used for programmatic handling (not always present).
 </ResponseField>
 
-## Why JSON:API?
-
-<Accordion title="Benefits of JSON:API for Shipping Data" icon="ship">
-  Terminal49 uses the JSON:API specification for a number of important reasons that directly benefit developers working with shipping and container tracking data:
-
-  ### Standardized Relationships for Complex Shipping Data
-
-  Shipping data is inherently relational - containers belong to shipments, shipments have transport events, containers have tracking events, and all these relate to carriers, terminals, and vessels. JSON:API excels at representing these complex relationships through:
-
-  - **Consistent Structure**: Every response follows the same pattern, making data predictable and easy to parse
-  - **Clear Resource Relationships**: Explicit definition of how resources like shipments, containers, and events relate to each other
-  - **Compound Documents**: The ability to include related resources in a single request, eliminating the need for multiple API calls
-
-  ### Efficient Data Loading for Shipping Operations
-
-  JSON:API's approach to related data is particularly valuable for shipping operations:
-
-  ```json
-  {
-    "data": {
-      "id": "123",
-      "type": "shipment",
-      "attributes": {
-        "bill_of_lading_number": "MAEU1234567",
-        "carrier_name": "Maersk"
-      },
-      "relationships": {
-        "containers": {
-          "data": [
-            { "id": "456", "type": "container" }
-          ]
-        }
-      }
-    },
-    "included": [
-      {
-        "id": "456",
-        "type": "container",
-        "attributes": {
-          "number": "MRKU1234567",
-          "size_type": "40HC"
-        }
-      }
-    ]
-  }
-  ```
-
-  This allows Terminal49 to deliver a complete picture of your shipping data in fewer requests, which means:
-
-  - **Reduced API Calls**: Get containers and their shipments in a single request
-  - **Minimized Latency**: Critical for time-sensitive logistics operations
-  - **Lower Bandwidth**: Only request the related objects you need, when you need them
-
-  ### Standardized Error Handling
-
-  As detailed throughout this guide, JSON:API provides a consistent format for error responses, making it easier to:
-
-  - **Identify Issues**: Clearly pinpoint which field or relationship has an error
-  - **Implement Error Handling**: Write consistent error handling logic across your application
-  - **Debug Problems**: Receive detailed information about what went wrong and why
-
-  ### Client Library Support
-
-  Instead of writing custom code to parse JSON:API responses, you can leverage ready-made libraries for most programming languages:
-
-  - **JavaScript/TypeScript**: [jsonapi-typescript](https://github.com/juniskane/jsonapi-typescript), [json-api-serializer](https://github.com/SeyZ/jsonapi-serializer)
-  - **Python**: [jsonapi-client](https://github.com/qvantel/jsonapi-client), [marshmallow-jsonapi](https://github.com/marshmallow-code/marshmallow-jsonapi)
-  - **Ruby**: [jsonapi-resources](https://github.com/cerebris/jsonapi-resources), [jsonapi-serializer](https://github.com/jsonapi-serializer/jsonapi-serializer)
-  - **PHP**: [jsonapi-client-php](https://github.com/art-of-coding/json-api-client), [laravel-json-api](https://github.com/laravel-json-api/laravel)
-  - **Go**: [jsonapi](https://github.com/google/jsonapi), [go-jsonapi](https://github.com/connor4312/go-jsonapi)
-  - **Java**: [crnk](https://github.com/crnk-project/crnk-framework), [katharsis](https://github.com/katharsis-project/katharsis-framework)
-
-  These libraries handle the complex aspects of Terminal49's shipping data, providing benefits such as:
-
-  - **Automatic Relationship Resolution**: Easily navigate from shipments to containers and events without manual mapping
-  - **Type Conversion**: Convert API responses into native language objects/models
-  - **Query Building**: Construct complex API queries with simple, intuitive methods
-  - **Consistent Updates**: Standardized methods for creating and updating resources
-  - **Error Handling**: Built-in support for JSON:API error formats
-
-  Using these libraries can reduce development time by up to 50% when working with complex shipping data structures, allowing you to focus on your business logic rather than API parsing details.
-</Accordion>
-
 ## Common HTTP Status Codes
 
 | Status Code | Meaning | Typical Causes |
@@ -240,301 +157,164 @@ Each error object in the `errors` array includes:
   </Accordion>
 </AccordionGroup>
 
-## Implementing Effective Error Handling
-
-<AccordionGroup>
-  <Accordion title="JavaScript Example" icon="js">
-    ```javascript
-    async function makeApiRequest(endpoint, method = 'GET', data = null) {
-      try {
-        const options = {
-          method,
-          headers: {
-            'Authorization': `Token ${API_KEY}`,
-            'Content-Type': 'application/vnd.api+json'
-          }
-        };
-
-        if (data && (method === 'POST' || method === 'PATCH')) {
-          options.body = JSON.stringify(data);
-        }
-
-        const response = await fetch(`https://api.terminal49.com/v2/${endpoint}`, options);
-        const responseData = await response.json();
-
-        // Check if the response contains errors
-        if (!response.ok) {
-          // Process errors
-          if (responseData.errors) {
-            const error = responseData.errors[0];
-
-            switch (response.status) {
-              case 401:
-                throw new Error(`Authentication error: ${error.detail}`);
-              case 404:
-                throw new Error(`Resource not found: ${error.detail}`);
-              case 422:
-                const field = error.source?.pointer?.split('/').pop() || 'unknown field';
-                throw new Error(`Validation error in ${field}: ${error.detail}`);
-              case 429:
-                // Implement retry with exponential backoff
-                throw new Error(`Rate limit exceeded: ${error.detail}`);
-              default:
-                throw new Error(`API error ${response.status}: ${error.detail}`);
-            }
-          }
-
-          throw new Error(`API request failed with status ${response.status}`);
-        }
-
-        return responseData;
-      } catch (error) {
-        console.error('API request failed:', error);
-        throw error;
-      }
-    }
-    ```
-  </Accordion>
-
-  <Accordion title="PHP Example" icon="php">
-    ```php
-    <?php
-    function makeApiRequest($endpoint, $method = 'GET', $data = null) {
-        $ch = curl_init();
-        $url = "https://api.terminal49.com/v2/{$endpoint}";
-
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Token ' . API_KEY,
-            'Content-Type: application/vnd.api+json',
-            'Accept: application/vnd.api+json'
-        ]);
-
-        if ($method !== 'GET') {
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-            if ($data) {
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-            }
-        }
-
-        $response = curl_exec($ch);
-        $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        $responseData = json_decode($response, true);
-
-        if ($statusCode >= 400) {
-            // Handle errors
-            if (isset($responseData['errors']) && !empty($responseData['errors'])) {
-                $error = $responseData['errors'][0];
-                $errorMessage = $error['detail'] ?? 'Unknown error';
-
-                switch ($statusCode) {
-                    case 401:
-                        throw new Exception("Authentication error: {$errorMessage}");
-                    case 404:
-                        throw new Exception("Resource not found: {$errorMessage}");
-                    case 422:
-                        $pointer = $error['source']['pointer'] ?? '';
-                        $field = array_pop(explode('/', $pointer)) ?: 'unknown field';
-                        throw new Exception("Validation error in {$field}: {$errorMessage}");
-                    case 429:
-                        // Implement retry logic
-                        throw new Exception("Rate limit exceeded: {$errorMessage}");
-                    default:
-                        throw new Exception("API error {$statusCode}: {$errorMessage}");
-                }
-            }
-
-            throw new Exception("API request failed with status {$statusCode}");
-        }
-
-        return $responseData;
-    }
-    ?>
-    ```
-  </Accordion>
-
-  <Accordion title="Python Example" icon="python">
-    ```python
-    import requests
-    import time
-    from requests.exceptions import HTTPError
-
-    def make_api_request(endpoint, method='GET', data=None, max_retries=3):
-        url = f"https://api.terminal49.com/v2/{endpoint}"
-        headers = {
-            'Authorization': f'Token {API_KEY}',
-            'Content-Type': 'application/vnd.api+json',
-            'Accept': 'application/vnd.api+json'
-        }
-
-        retries = 0
-        while retries < max_retries:
-            try:
-                if method == 'GET':
-                    response = requests.get(url, headers=headers)
-                elif method == 'POST':
-                    response = requests.post(url, headers=headers, json=data)
-                elif method == 'PATCH':
-                    response = requests.patch(url, headers=headers, json=data)
-                elif method == 'DELETE':
-                    response = requests.delete(url, headers=headers)
-                else:
-                    raise ValueError(f"Unsupported HTTP method: {method}")
-
-                response.raise_for_status()
-                return response.json()
-
-            except HTTPError as http_err:
-                # Try to parse error response
-                try:
-                    error_data = response.json()
-                    if 'errors' in error_data and error_data['errors']:
-                        error = error_data['errors'][0]
-                        error_detail = error.get('detail', 'No detail provided')
-
-                        if response.status_code == 401:
-                            raise Exception(f"Authentication error: {error_detail}")
-                        elif response.status_code == 404:
-                            raise Exception(f"Resource not found: {error_detail}")
-                        elif response.status_code == 422:
-                            pointer = error.get('source', {}).get('pointer', '')
-                            field = pointer.split('/')[-1] if pointer else 'unknown field'
-                            raise Exception(f"Validation error in {field}: {error_detail}")
-                        elif response.status_code == 429:
-                            # Rate limit - implement retry with backoff
-                            wait_time = min(2 ** retries, 60)
-                            print(f"Rate limit exceeded. Retrying in {wait_time} seconds...")
-                            time.sleep(wait_time)
-                            retries += 1
-                            continue
-                except ValueError:
-                    # Response wasn't valid JSON
-                    pass
-
-                # If we get here, either it wasn't a JSON response or we want to re-raise
-                if response.status_code != 429 or retries >= max_retries - 1:
-                    raise Exception(f"API error {response.status_code}: {response.text}")
-
-            retries += 1
-
-        raise Exception("Maximum retry attempts reached")
-    ```
-  </Accordion>
-
-  <Accordion title="Retry Strategy with Exponential Backoff" icon="rotate">
-    ```javascript
-    async function makeRequestWithRetry(endpoint, method = 'GET', data = null, maxRetries = 3) {
-      let retries = 0;
-
-      while (retries < maxRetries) {
-        try {
-          return await makeApiRequest(endpoint, method, data);
-        } catch (error) {
-          retries++;
-
-          // If it's not a retriable error or we've used all retries, throw
-          if (
-            !error.message.includes('Rate limit exceeded') ||
-            retries >= maxRetries
-          ) {
-            throw error;
-          }
-
-          // Exponential backoff with jitter
-          const delay = Math.min(1000 * 2 ** retries + Math.random() * 1000, 60000);
-          console.log(`Retrying after ${delay}ms (attempt ${retries} of ${maxRetries})...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
-    }
-    ```
-  </Accordion>
-</AccordionGroup>
-
 ## Common Error Scenarios
 
-<AccordionGroup>
-  <Accordion title="Duplicate Tracking Requests" icon="copy">
-    **Error:**
-    ```json
+### Duplicate Tracking Requests
+
+**Error:**
+```json
+{
+  "errors": [
     {
-      "errors": [
-        {
-          "status": "422",
-          "source": {
-            "pointer": "/data/attributes/request_number"
-          },
-          "title": "Unprocessable Entity",
-          "detail": "Request number 'MAEU1234567' with scac 'MAEU' already exists in a tracking_request with a pending or created status",
-          "code": "duplicate"
-        }
-      ]
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/request_number"
+      },
+      "title": "Unprocessable Entity",
+      "detail": "Request number 'MAEU1234567' with scac 'MAEU' already exists in a tracking_request with a pending or created status",
+      "code": "duplicate"
     }
-    ```
+  ]
+}
+```
 
-    **Solution:**
-    When you receive a duplicate error, you should:
-    1. Look up the existing tracking request using the `GET /tracking_requests` endpoint with appropriate filters
-    2. Use the ID of the existing request to fetch its current status
-    3. If needed, you can update the existing tracking request rather than creating a new one
-  </Accordion>
+**Solution:**
+When you receive a duplicate error, you should:
+1. Look up the existing tracking request using the `GET /tracking_requests` endpoint with appropriate filters
+2. Use the ID of the existing request to fetch its current status
+3. If needed, you can update the existing tracking request rather than creating a new one
 
-  <Accordion title="Unsupported Carrier" icon="ship">
-    **Error:**
-    ```json
+### Unsupported Carrier
+
+**Error:**
+```json
+{
+  "errors": [
     {
-      "errors": [
-        {
-          "status": "422",
-          "source": {
-            "pointer": "/data/attributes/scac"
-          },
-          "title": "Unprocessable Entity",
-          "detail": "Scac 'ABCD' is not supported",
-          "code": "unsupported_scac"
-        }
-      ]
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/scac"
+      },
+      "title": "Unprocessable Entity",
+      "detail": "Scac 'ABCD' is not supported",
+      "code": "unsupported_scac"
     }
-    ```
+  ]
+}
+```
 
-    **Solution:**
-    1. Reference the [Carrier Data Matrix](https://app.terminal49.com/developers/carrier-data) for a list of supported carriers
-    2. Double-check the SCAC code format (usually 4 uppercase letters)
-    3. If you need support for a specific carrier, contact Terminal49
-  </Accordion>
-</AccordionGroup>
+**Solution:**
+1. Reference the [Carrier Data Matrix](https://app.terminal49.com/developers/carrier-data) for a list of supported carriers
+2. Double-check the SCAC code format (usually 4 uppercase letters)
+3. If you need support for a specific carrier, contact Terminal49
+
+## Implementing Effective Error Handling
+
+### JavaScript Example
+
+```javascript
+async function makeApiRequest(endpoint, method = 'GET', data = null) {
+  try {
+    const options = {
+      method,
+      headers: {
+        'Authorization': `Token ${API_KEY}`,
+        'Content-Type': 'application/vnd.api+json'
+      }
+    };
+
+    if (data && (method === 'POST' || method === 'PATCH')) {
+      options.body = JSON.stringify(data);
+    }
+
+    const response = await fetch(`https://api.terminal49.com/v2/${endpoint}`, options);
+    const responseData = await response.json();
+
+    // Check if the response contains errors
+    if (!response.ok) {
+      // Process errors
+      if (responseData.errors) {
+        const error = responseData.errors[0];
+
+        switch (response.status) {
+          case 401:
+            throw new Error(`Authentication error: ${error.detail}`);
+          case 404:
+            throw new Error(`Resource not found: ${error.detail}`);
+          case 422:
+            const field = error.source?.pointer?.split('/').pop() || 'unknown field';
+            throw new Error(`Validation error in ${field}: ${error.detail}`);
+          case 429:
+            // Implement retry with exponential backoff
+            throw new Error(`Rate limit exceeded: ${error.detail}`);
+          default:
+            throw new Error(`API error ${response.status}: ${error.detail}`);
+        }
+      }
+
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    return responseData;
+  } catch (error) {
+    console.error('API request failed:', error);
+    throw error;
+  }
+}
+```
+
+## Retry Strategy
+
+When dealing with rate limiting or transient errors, implementing a retry strategy with exponential backoff is essential:
+
+```javascript
+async function makeRequestWithRetry(endpoint, method = 'GET', data = null, maxRetries = 3) {
+  let retries = 0;
+
+  while (retries < maxRetries) {
+    try {
+      return await makeApiRequest(endpoint, method, data);
+    } catch (error) {
+      retries++;
+
+      // If it's not a retriable error or we've used all retries, throw
+      if (
+        !error.message.includes('Rate limit exceeded') ||
+        retries >= maxRetries
+      ) {
+        throw error;
+      }
+
+      // Exponential backoff with jitter
+      const delay = Math.min(1000 * 2 ** retries + Math.random() * 1000, 60000);
+      console.log(`Retrying after ${delay}ms (attempt ${retries} of ${maxRetries})...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+```
 
 ## Best Practices for Error Handling
 
-<AccordionGroup>
-  <Accordion title="Always Check for Error Responses" icon="check-double">
-    - Parse the response body to look for the `errors` array
-    - Handle both HTTP errors and JSON:API formatted errors
-  </Accordion>
+1. **Always check for error responses**
+   - Parse the response body to look for the `errors` array
+   - Handle both HTTP errors and JSON:API formatted errors
 
-  <Accordion title="Log Detailed Error Information" icon="file-lines">
-    - Include the status code, error title, error detail, and any source information
-    - Add context from your application (e.g., what operation was being attempted)
-  </Accordion>
+2. **Log detailed error information**
+   - Include the status code, error title, error detail, and any source information
+   - Add context from your application (e.g., what operation was being attempted)
 
-  <Accordion title="Implement Appropriate Retry Logic" icon="arrow-rotate-right">
-    - Use exponential backoff for rate limiting (429) errors
-    - Don't retry for validation (422) or authentication (401) errors
-  </Accordion>
+3. **Implement appropriate retry logic**
+   - Use exponential backoff for rate limiting (429) errors
+   - Don't retry for validation (422) or authentication (401) errors
 
-  <Accordion title="Present User-Friendly Error Messages" icon="user">
-    - Translate technical API errors to understandable messages for end-users
-    - Provide actionable guidance when possible
-  </Accordion>
+4. **Present user-friendly error messages**
+   - Translate technical API errors to understandable messages for end-users
+   - Provide actionable guidance when possible
 
-  <Accordion title="Monitor Error Rates" icon="chart-line">
-    - Set up alerts for unusual error patterns
-    - Keep track of error frequency to identify potential issues with your integration
-  </Accordion>
-</AccordionGroup>
+5. **Monitor error rates**
+   - Set up alerts for unusual error patterns
+   - Keep track of error frequency to identify potential issues with your integration
 
 ## Getting Help
 
