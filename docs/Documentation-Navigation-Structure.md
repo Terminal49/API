@@ -27,16 +27,11 @@ This section helps users understand how to integrate Terminal49 into their syste
 
 #### Group: Guides
 - Use Cases (`api-docs/in-depth-guides/use-cases`)
-- JSON:API Guide (`api-docs/in-depth-guides/json-api-guide`)
-- Authentication (`api-docs/in-depth-guides/authentication`)
-- Error Handling (`api-docs/in-depth-guides/error-handling`)
-- Rate Limiting (`api-docs/in-depth-guides/rate-limiting`)
 - Polling vs. Webhooks (`api-docs/in-depth-guides/polling-vs-webhooks`)
 - Webhooks (`api-docs/in-depth-guides/webhooks`)
 - Tracking Shipments and Containers (`api-docs/getting-started/tracking-shipments-and-containers`)
 - List Shipments and Containers (`api-docs/getting-started/list-shipments-and-containers`)
 - Receive Status Updates (`api-docs/getting-started/receive-status-updates`)
-- Including Resources (`api-docs/in-depth-guides/including-resources`)
 - Adding Customer (`api-docs/in-depth-guides/adding-customer`)
 - Tracking Request Lifecycle (`api-docs/in-depth-guides/tracking-request-lifecycle`)
 - Event Timestamps (`api-docs/in-depth-guides/event-timestamps`)
@@ -56,6 +51,13 @@ This section helps users understand how to integrate Terminal49 into their syste
 This section provides detailed technical documentation for specific API endpoints.
 
 ### Groups and Pages
+
+#### Group: API Concepts
+- Authentication (`api-docs/in-depth-guides/authentication`)
+- Error Handling (`api-docs/in-depth-guides/error-handling`)
+- Rate Limiting (`api-docs/in-depth-guides/rate-limiting`)
+- JSON:API Guide (`api-docs/in-depth-guides/json-api-guide`)
+- Including Resources (`api-docs/in-depth-guides/including-resources`)
 
 #### Group: Shipments
 - List Shipments (`api-docs/api-reference/shipments/list-shipments`)
@@ -137,22 +139,23 @@ This section covers Terminal49's data warehouse integration solution.
 ## Notes on Structure
 
 1. **Integration Guide to API Reference Flow**:
-   - The Integration Guide introduces concepts, use cases, and patterns.
-   - Users then move to API Reference for specific implementation details.
-   - This creates a natural learning progression from high-level to specific details.
+   - The Integration Guide introduces high-level concepts, use cases, and integration patterns.
+   - The API Reference contains technical implementation details including API concepts and endpoints.
+   - This creates a natural learning progression from business problems to technical solutions.
 
 2. **Use Case Focus**:
    - The Use Cases document in the Integration Guide helps users understand real-world applications.
-   - Each use case can link to specific API endpoints in the Reference section.
+   - API concepts in the API Reference tab support technical implementation of these use cases.
 
-3. **DataSync Integration**:
-   - The DataSync tab provides a separate but related product offering.
-   - Could potentially add cross-references between API use cases and when DataSync might be more appropriate.
+3. **Clear Separation of Concerns**:
+   - Integration Guide: Focuses on "why" and "what" (business problems, use cases, general patterns)
+   - API Reference: Focuses on "how" (technical implementations, API details, specifications)
+   - DataSync: Dedicated to the data warehouse integration solution
 
 4. **Naming Conventions**:
    - Groups use clear, descriptive names.
    - Page titles are consistently formatted.
 
 5. **Potential Improvements**:
-   - Consider organizing the Guides section into subcategories as it grows.
-   - Group related guides (e.g., authentication, error handling, and rate limiting might form a "Best Practices" subgroup).
+   - Consider organizing the Guides section in the Integration Guide into subcategories as it grows.
+   - Add cross-references between use cases in the Integration Guide and corresponding API endpoints in the Reference section.
