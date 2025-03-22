@@ -20,15 +20,16 @@
             ]
           },
           {
-            "group": "Getting Started",
+            "group": "Overview",
             "pages": [
               "api-docs/overview",
-              "api-docs/in-depth-guides/use-cases"
+              "api-docs/in-depth-guides/quickstart"
             ]
           },
           {
             "group": "Guides",
             "pages": [
+              "api-docs/in-depth-guides/use-cases",
               "api-docs/in-depth-guides/polling-vs-webhooks",
               "api-docs/in-depth-guides/webhooks",
               "api-docs/getting-started/tracking-shipments-and-containers",
@@ -37,12 +38,15 @@
               "api-docs/in-depth-guides/adding-customer",
               "api-docs/in-depth-guides/tracking-request-lifecycle",
               "api-docs/in-depth-guides/event-timestamps",
+              "api-docs/in-depth-guides/terminal49-map",
+              "api-docs/in-depth-guides/terminal49-widget",
               "api-docs/in-depth-guides/rail-integration-guide"
             ]
           },
           {
             "group": "Useful Info",
             "pages": [
+              "api-docs/useful-info/api-data-sources-availability",
               "api-docs/useful-info/pricing",
               "api-docs/useful-info/test-numbers",
               "api-docs/useful-info/tracking-request-retrying",
@@ -57,7 +61,6 @@
           {
             "group": "API Concepts",
             "pages": [
-              "api-docs/in-depth-guides/quickstart",
               "api-docs/in-depth-guides/authentication",
               "api-docs/in-depth-guides/error-handling",
               "api-docs/in-depth-guides/rate-limiting",
@@ -157,6 +160,35 @@
         ]
       },
       {
+        "tab": "DataSync",
+        "groups": [
+          {
+            "group": " ",
+            "pages": [
+              "datasync/home"
+            ]
+          },
+          {
+            "group": " ",
+            "pages": [
+              "datasync/overview",
+              "datasync/supported-destinations"
+            ]
+          },
+          {
+            "group": "Table Properties",
+            "pages": [
+              "datasync/table-properties/containers_rail",
+              "datasync/table-properties/shipments",
+              "datasync/table-properties/tracking-requests",
+              "datasync/table-properties/transport-events",
+              "datasync/table-properties/transfer-status",
+              "datasync/table-properties/containers"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "Data Sources",
         "groups": [
           {
@@ -199,35 +231,6 @@
             "group": "Track & Trace Widget",
             "pages": [
               "api-docs/in-depth-guides/terminal49-widget"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "DataSync",
-        "groups": [
-          {
-            "group": " ",
-            "pages": [
-              "datasync/home"
-            ]
-          },
-          {
-            "group": " ",
-            "pages": [
-              "datasync/overview",
-              "datasync/supported-destinations"
-            ]
-          },
-          {
-            "group": "Table Properties",
-            "pages": [
-              "datasync/table-properties/containers_rail",
-              "datasync/table-properties/shipments",
-              "datasync/table-properties/tracking-requests",
-              "datasync/table-properties/transport-events",
-              "datasync/table-properties/transfer-status",
-              "datasync/table-properties/containers"
             ]
           }
         ]
