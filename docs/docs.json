@@ -16,12 +16,13 @@
           {
             "group": " ",
             "pages": [
-              "api-docs/overview"
+              "home"
             ]
           },
           {
             "group": "Getting Started",
             "pages": [
+              "api-docs/overview",
               "api-docs/in-depth-guides/use-cases"
             ]
           },
