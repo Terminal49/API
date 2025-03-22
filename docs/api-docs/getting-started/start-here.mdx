@@ -1,23 +1,99 @@
 ---
 title: 1. Start Here
+description: Begin your journey with Terminal49's API for comprehensive ocean freight tracking.
 ---
-So you want to start tracking your ocean shipments and containers and you have a few BL numbers. Follow the guide.
 
-Our API responses use [JSONAPI](https://jsonapi.org/) schema. There are [client libraries](https://jsonapi.org/implementations/#client-libraries) available in almost every language. Our API should work with these libs out of the box.
+# Getting Started with Terminal49 API
 
-Our APIs can be used with any HTTP client; choose your favorite! We love Postman, it's a friendly graphical interface to a powerful cross-platform HTTP client. Best of all it has support for the OpenAPI specs that we publish with all our APIs. We have created a collection of requests for you to easily test the API endpoints with your API Key. Link to the collection below.
+Terminal49's API gives you programmatic access to real-time ocean freight tracking data across multiple carriers. With our API, you can monitor containers from origin to destination, receive event notifications, access terminal availability information, and much more.
 
-<Card icon = "caret-right" href="https://app.getpostman.com/run-collection/4989da1ade6756b2f636#?env%5Bproduction%5D=W3sia2V5IjoiYmFzZVVybCIsInZhbHVlIjoiaHR0cHM6Ly9hcGkudGVybWluYWw0OS5jb20vdjIiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6IkFQSV9UT0tFTiIsInZhbHVlIjoiIiwiZW5hYmxlZCI6dHJ1ZX1d">
-**Run in Postman**
+## What Can You Do With Terminal49's API?
+
+<CardGroup cols={2}>
+  <Card title="Track Shipments & Containers" icon="ship" href="/api-docs/getting-started/tracking-shipments-and-containers">
+    Monitor shipments using bill of lading, booking, or container numbers across major ocean carriers.
+  </Card>
+  <Card title="Receive Real-Time Updates" icon="bell" href="/api-docs/getting-started/receive-status-updates">
+    Get notified via webhooks when containers arrive, encounter holds, or change status.
+  </Card>
+  <Card title="Access Container Details" icon="box" href="/api-docs/getting-started/list-shipments-and-containers">
+    Retrieve comprehensive container information including status, location, and last free day.
+  </Card>
+  <Card title="View Our API Capabilities" icon="code" href="/api-docs/getting-started/capabilities-overview">
+    Explore all features and use cases of Terminal49's API.
+  </Card>
+</CardGroup>
+
+<Note>
+  New to Terminal49? Check out our [Capabilities Overview](/api-docs/getting-started/capabilities-overview) for a comprehensive look at what our API can do for your logistics operations.
+</Note>
+
+## API Basics
+
+Our API follows the [JSON:API](https://jsonapi.org/) specification, providing a standardized way to request and manipulate resources. This makes our API predictable and easier to work with.
+
+<Accordion title="Understanding JSON:API">
+  All Terminal49 API responses follow the JSON:API structure:
+
+  ```json
+  {
+    "data": {
+      "id": "123",
+      "type": "shipment",
+      "attributes": {
+        "bill_of_lading_number": "MAEU9736478",
+        // Other shipment attributes
+      },
+      "relationships": {
+        "containers": {
+          "data": [
+            { "id": "456", "type": "container" }
+          ]
+        }
+      }
+    }
+  }
+  ```
+
+  For more details, see our [JSON:API Guide](/api-docs/in-depth-guides/json-api-guide).
+</Accordion>
+
+There are [client libraries](https://jsonapi.org/implementations/#client-libraries) available in almost every language. Our API should work with these libraries out of the box, making integration easier.
+
+## Tools to Get Started
+
+Our APIs can be used with any HTTP client. We've created a Postman collection so you can quickly test endpoints with your API key:
+
+<Card icon="caret-right" href="https://app.getpostman.com/run-collection/4989da1ade6756b2f636#?env%5Bproduction%5D=W3sia2V5IjoiYmFzZVVybCIsInZhbHVlIjoiaHR0cHM6Ly9hcGkudGVybWluYWw0OS5jb20vdjIiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6IkFQSV9UT0tFTiIsInZhbHVlIjoiIiwiZW5hYmxlZCI6dHJ1ZX1d">
+  **Run in Postman**
 </Card>
 
-***
 ## Get an API Key
+
 Sign in to your Terminal49 account and go to your [developer portal](https://app.terminal49.com/developers/api-keys) page to get your API key.
 
 ### Authentication
-When passing your API key it should be prefixed with `Token`. For example, if your API Key is 'ABC123' then your Authorization header would look like:
+
+When passing your API key, it should be prefixed with `Token`. For example, if your API Key is 'ABC123' then your Authorization header would look like:
 
 ```
 "Authorization": "Token ABC123"
 ```
+
+## Next Steps
+
+<Steps>
+  <Step title="Create Tracking Requests">
+    Submit tracking requests for your [shipments and containers](/api-docs/getting-started/tracking-shipments-and-containers).
+  </Step>
+  <Step title="Set Up Webhooks">
+    Configure [webhooks](/api-docs/in-depth-guides/webhooks) to receive real-time updates.
+  </Step>
+  <Step title="Explore the API">
+    Browse our [API reference](/api-docs/api-reference) for all available endpoints.
+  </Step>
+</Steps>
+
+<Tip>
+  For the fastest start, check out our [Quickstart Guide](/api-docs/in-depth-guides/quickstart) which will get you up and running with minimal effort.
+</Tip>
