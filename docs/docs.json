@@ -3,7 +3,7 @@
   "theme": "palm",
   "name": "Terminal 49",
   "colors": {
-    "primary": "#00A2FF",
+    "primary": "#2bc983",
     "light": "#52bfff",
     "dark": "#00A2FF"
   },
@@ -13,12 +13,6 @@
       {
         "tab": "Integration Guide",
         "groups": [
-          {
-            "group": " ",
-            "pages": [
-              "home"
-            ]
-          },
           {
             "group": "Overview",
             "pages": [
@@ -84,7 +78,8 @@
               "api-docs/api-reference/tracking-requests/list-tracking-requests",
               "api-docs/api-reference/tracking-requests/create-a-tracking-request",
               "api-docs/api-reference/tracking-requests/get-a-single-tracking-request",
-              "api-docs/api-reference/tracking-requests/edit-a-tracking-request"
+              "api-docs/api-reference/tracking-requests/edit-a-tracking-request",
+              "api-docs/improved/tracking-request-example"
             ]
           },
           {
