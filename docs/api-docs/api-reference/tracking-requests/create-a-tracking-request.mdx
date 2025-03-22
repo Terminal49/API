@@ -16,8 +16,8 @@ Submitting a tracking request tells Terminal49 to start monitoring a specific sh
 
 ## Example Scenarios
 
-<Tabs>
-  <Tab title="Track by Bill of Lading">
+<AccordionGroup>
+  <Accordion title="Track by Bill of Lading">
     ```json title="Request"
     {
       "data": {
@@ -58,9 +58,9 @@ Submitting a tracking request tells Terminal49 to start monitoring a specific sh
     - The bill of lading is typically the most reliable identifier for tracking shipments.
     - The `status` will initially be `pending` while Terminal49 processes your request.
     - Once processing completes, you'll receive a webhook notification and the status will change to `succeeded` or `failed`.
-  </Tab>
+  </Accordion>
 
-  <Tab title="Track by Container Number">
+  <Accordion title="Track by Container Number">
     ```json title="Request"
     {
       "data": {
@@ -101,9 +101,9 @@ Submitting a tracking request tells Terminal49 to start monitoring a specific sh
     - Container number tracking support varies between carriers. Refer to the Carrier Data Matrix to verify support.
     - Container numbers should include the carrier prefix (e.g., MSCU for MSC containers).
     - Container tracking can sometimes fail if the container is very new or not yet associated with a booking in the carrier's system.
-  </Tab>
+  </Accordion>
 
-  <Tab title="Using Test Numbers">
+  <Accordion title="Using Test Numbers">
     ```json title="Request"
     {
       "data": {
@@ -145,9 +145,9 @@ Submitting a tracking request tells Terminal49 to start monitoring a specific sh
     - `TEST-TR-SUCCEEDED` will always trigger a successful tracking response.
     - `TEST-TR-FAILED` will always trigger a failed tracking response.
     - These test numbers will trigger corresponding webhook events for complete testing.
-  </Tab>
+  </Accordion>
 
-  <Tab title="Error Handling">
+  <Accordion title="Error Handling">
     ```json title="Request"
     {
       "data": {
@@ -180,8 +180,8 @@ Submitting a tracking request tells Terminal49 to start monitoring a specific sh
     - This example shows a validation error for an invalid SCAC code.
     - Common errors include invalid SCAC codes, improperly formatted request numbers, or duplicate tracking requests.
     - For a complete list of supported SCACs, refer to the Carrier Data Matrix.
-  </Tab>
-</Tabs>
+  </Accordion>
+</AccordionGroup>
 
 ## Key Response Fields
 
@@ -292,6 +292,122 @@ When creating a tracking request, you may receive the following webhook events:
     ```
 
     3. You can access the existing shipment data instead of creating a new tracking request.
+  </Accordion>
+</AccordionGroup>
+
+<AccordionGroup>
+  <Accordion title="Track by Booking Number">
+    **Scenario**: You want to create a tracking request using a booking number.
+
+    **Example**:
+    ```json
+    {
+      "data": {
+        "attributes": {
+          "request_type": "booking_number",
+          "request_number": "OOLU8324567",
+          "scac": "OOLU"
+        },
+        "type": "tracking_request"
+      }
+    }
+    ```
+
+    **Notes**:
+    - Booking numbers are typically issued by the carrier early in the shipping process
+    - Using booking numbers allows you to start tracking earlier in the shipping lifecycle
+    - Booking number format varies by carrier (e.g., OOLU prefix for ONE Line bookings)
+  </Accordion>
+
+  <Accordion title="Including Reference Numbers">
+    **Scenario**: You want to add your own reference numbers to help identify the shipment.
+
+    **Example**:
+    ```json
+    {
+      "data": {
+        "attributes": {
+          "request_type": "bill_of_lading",
+          "request_number": "MEDUFR030802",
+          "scac": "MSCU",
+          "ref_numbers": [
+            "PO12345",
+            "HBL12345",
+            "INV9876"
+          ]
+        },
+        "type": "tracking_request"
+      }
+    }
+    ```
+
+    **Notes**:
+    - Reference numbers can include purchase orders, house bills of lading, invoice numbers, etc.
+    - You can add multiple reference numbers to a single tracking request
+    - These numbers will be searchable later through the API and UI
+    - You can use reference numbers to link shipments to your internal systems
+  </Accordion>
+
+  <Accordion title="Adding Tags">
+    **Scenario**: You want to categorize your shipments with tags for easier filtering.
+
+    **Example**:
+    ```json
+    {
+      "data": {
+        "attributes": {
+          "request_type": "bill_of_lading",
+          "request_number": "MAEU9736478",
+          "scac": "MAEU",
+          "shipment_tags": [
+            "priority",
+            "electronics",
+            "q2-2023"
+          ]
+        },
+        "type": "tracking_request"
+      }
+    }
+    ```
+
+    **Notes**:
+    - Tags provide a flexible way to group and categorize shipments
+    - Common uses include priority levels, product categories, or time periods
+    - Tags can be used for filtering when listing shipments
+    - You can add or remove tags later using the Edit Shipment endpoint
+  </Accordion>
+
+  <Accordion title="Associating with a Customer">
+    **Scenario**: You're tracking shipments on behalf of your customers and want to associate shipments with specific customers.
+
+    **Example**:
+    ```json
+    {
+      "data": {
+        "attributes": {
+          "request_type": "bill_of_lading",
+          "request_number": "MAEU9736478",
+          "scac": "MAEU"
+        },
+        "relationships": {
+          "customer": {
+            "data": {
+              "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+              "type": "party"
+            }
+          }
+        },
+        "type": "tracking_request"
+      }
+    }
+    ```
+
+    **Notes**:
+    - The customer must first be created using the Parties API
+    - The customer ID is used to link the shipment to the specific customer
+    - This association enables filtering shipments by customer
+    - Customer information will be included in webhook notifications when using appropriate includes
+    - See the [Adding Customer guide](/api-docs/in-depth-guides/adding-customer) for more details
   </Accordion>
 </AccordionGroup>
 
