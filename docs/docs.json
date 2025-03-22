@@ -20,31 +20,28 @@
             ]
           },
           {
-            "group": "Getting Started",
-            "pages": [
-              "api-docs/getting-started/start-here",
-              "api-docs/getting-started/capabilities-overview",
-              "api-docs/getting-started/tracking-shipments-and-containers",
-              "api-docs/getting-started/list-shipments-and-containers",
-              "api-docs/getting-started/receive-status-updates"
-            ]
-          },
-          {
             "group": "In Depth Guides",
             "pages": [
-              "api-docs/in-depth-guides/quickstart",
+              "api-docs/in-depth-guides/api-quick-start",
+              "api-docs/in-depth-guides/common-workflows",
               "api-docs/in-depth-guides/json-api-guide",
               "api-docs/in-depth-guides/authentication",
               "api-docs/in-depth-guides/error-handling",
+              "api-docs/in-depth-guides/rate-limiting",
               "api-docs/in-depth-guides/polling-vs-webhooks",
               "api-docs/in-depth-guides/webhooks",
+              "api-docs/getting-started/capabilities-overview",
+              "api-docs/getting-started/tracking-shipments-and-containers",
+              "api-docs/getting-started/list-shipments-and-containers",
+              "api-docs/getting-started/receive-status-updates",
               "api-docs/in-depth-guides/including-resources",
               "api-docs/in-depth-guides/adding-customer",
               "api-docs/in-depth-guides/tracking-request-lifecycle",
               "api-docs/in-depth-guides/event-timestamps",
               "api-docs/in-depth-guides/terminal49-map",
               "api-docs/in-depth-guides/terminal49-widget",
-              "api-docs/in-depth-guides/rail-integration-guide"
+              "api-docs/in-depth-guides/rail-integration-guide",
+              "api-docs/in-depth-guides/quickstart"
             ]
           },
           {
@@ -226,6 +223,10 @@
     {
       "source": "/api-docs/getting-started/recieve-status-updates",
       "destination": "/api-docs/getting-started/receive-status-updates"
+    },
+    {
+      "source": "/api-docs/getting-started/start-here",
+      "destination": "/api-docs/in-depth-guides/api-quick-start"
     }
   ]
 }

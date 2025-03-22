@@ -4,11 +4,13 @@
 - Update authentication guide ✅
 - Develop error handling and troubleshooting documentation ✅
 - Update the navigation structure in docs.json ✅
+- Create a rate limiting guide explaining quotas and best practices ✅
+- Create a "Common Workflows" guide with end-to-end examples ✅
+- Create comprehensive API Quick Start guide ✅
+- Enhance JSON:API guide with practical examples ✅
+- Reorganize documentation structure by moving Getting Started content into guides ✅
 
 ### To Do:
-- Create a rate limiting guide explaining quotas and best practices
-- Enhance JSON:API guide with more practical examples
 - Develop pagination examples and best practices
 - Add more language-specific code examples (Ruby, Go, etc.)
-- Create a "Common Workflows" guide with end-to-end examples
 - Improve OpenAPI specification
