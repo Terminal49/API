@@ -37,7 +37,7 @@
               {
                 "name": "Authentication",
                 "icon": "key",
-                "url": "api-docs/in-depth-guides/authentication"
+                "path": "api-docs/in-depth-guides/authentication"
               },
               "api-docs/in-depth-guides/polling-vs-webhooks",
               "api-docs/in-depth-guides/webhooks",
