@@ -37,15 +37,12 @@
               "api-docs/in-depth-guides/adding-customer",
               "api-docs/in-depth-guides/tracking-request-lifecycle",
               "api-docs/in-depth-guides/event-timestamps",
-              "api-docs/in-depth-guides/terminal49-map",
-              "api-docs/in-depth-guides/terminal49-widget",
               "api-docs/in-depth-guides/rail-integration-guide"
             ]
           },
           {
             "group": "Useful Info",
             "pages": [
-              "api-docs/useful-info/api-data-sources-availability",
               "api-docs/useful-info/pricing",
               "api-docs/useful-info/test-numbers",
               "api-docs/useful-info/tracking-request-retrying",
@@ -155,6 +152,53 @@
               "api-docs/api-reference/parties/create-a-party",
               "api-docs/api-reference/parties/get-a-party",
               "api-docs/api-reference/parties/edit-a-party"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Data Sources",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-docs/data-sources/overview",
+              "api-docs/useful-info/api-data-sources-availability"
+            ]
+          },
+          {
+            "group": "Ocean Carriers",
+            "pages": []
+          },
+          {
+            "group": "Rail Carriers",
+            "pages": []
+          },
+          {
+            "group": "Terminals",
+            "pages": []
+          }
+        ]
+      },
+      {
+        "tab": "Embedding",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-docs/embedding/overview"
+            ]
+          },
+          {
+            "group": "Embeddable Map",
+            "pages": [
+              "api-docs/in-depth-guides/terminal49-map"
+            ]
+          },
+          {
+            "group": "Track & Trace Widget",
+            "pages": [
+              "api-docs/in-depth-guides/terminal49-widget"
             ]
           }
         ]

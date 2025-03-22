@@ -1,0 +1,85 @@
+---
+title: Data Sources Overview
+description: Learn about Terminal49's data sources, data quality, and availability for comprehensive container tracking.
+icon: "database"
+---
+
+# Terminal49 Data Sources
+
+Terminal49 aggregates data from multiple sources to provide comprehensive visibility into container shipments. This overview introduces our data sources and helps you understand data availability and quality considerations.
+
+## Our Data Ecosystem
+
+<CardGroup cols={2}>
+  <Card title="Ocean Carriers" icon="ship" color="#0D96F2">
+    Data from major steamship lines including bills of lading, bookings, vessel ETAs, containers, and milestones.
+  </Card>
+  <Card title="Terminal Operators" icon="warehouse" color="#0D96F2">
+    Container availability, last free day, holds, fees, and other terminal-specific information.
+  </Card>
+  <Card title="Rail Carriers" icon="train" color="#0D96F2">
+    Container milestones for rail transport including rail loading, departure, arrival, and unloading events.
+  </Card>
+  <Card title="AIS Vessel Tracking" icon="satellite-dish" color="#0D96F2">
+    Vessel details and real-time location tracking through Automatic Identification System data.
+  </Card>
+</CardGroup>
+
+## Data Integration Approach
+
+Terminal49 takes raw data from various sources and transforms it into a standardized format to provide a consistent experience across carriers and terminals. Our approach includes:
+
+1. **Normalization** - Converting different formats and terms into a consistent schema
+2. **Enrichment** - Adding context and relationships between data points
+3. **Validation** - Checking for errors and inconsistencies
+4. **Standardization** - Using common formats for dates, locations, and status information
+
+## Coverage and Limitations
+
+While Terminal49 strives to provide comprehensive data, availability varies by source:
+
+<Accordion title="Ocean Carrier Coverage">
+  We support all major ocean carriers including Maersk, MSC, CMA CGM, COSCO, Hapag-Lloyd, ONE, Evergreen, and many more. Each carrier provides different data points with varying quality and timeliness.
+
+  [View detailed carrier coverage](/api-docs/useful-info/api-data-sources-availability#supported-ocean-carriers)
+</Accordion>
+
+<Accordion title="Terminal Coverage">
+  Terminal49 integrates with terminals at major ports across North America, Europe, and Asia. Terminal data quality varies significantly by location.
+
+  [View detailed terminal coverage](/api-docs/useful-info/api-data-sources-availability#ports-and-terminals)
+</Accordion>
+
+<Accordion title="Rail Carrier Coverage">
+  We support all Class 1 North American railroads, including BNSF, CN, CP, CSX, NS, and UP. Rail data is standardized across carriers but certain event types may only be available from specific rail providers.
+
+  [View detailed rail coverage](/api-docs/useful-info/api-data-sources-availability#rail-carriers)
+</Accordion>
+
+## Data Quality Considerations
+
+When building applications with Terminal49 data, consider these data quality factors:
+
+- **Timeliness** - Data latency varies by source; carrier updates might take several hours while terminal data is typically more real-time
+- **Completeness** - Not all data fields are available from all sources (see [Known Issues](/api-docs/useful-info/api-data-sources-availability#known-issues-ocean))
+- **Accuracy** - ETAs and availability predictions are based on carrier and terminal inputs and can change
+- **Consistency** - Terminal49 normalizes data, but underlying source inconsistencies may occasionally surface
+
+## Getting Started with Terminal49 Data
+
+<Steps>
+  <Step title="Understand Data Sources">
+    Review the [detailed data sources documentation](/api-docs/useful-info/api-data-sources-availability) to understand which data points are consistently available.
+  </Step>
+  <Step title="Build with Resilience">
+    Design your integration to handle missing or delayed data from certain sources.
+  </Step>
+  <Step title="Use Terminal49's Normalization">
+    Leverage our standardized data formats rather than trying to parse raw carrier or terminal data.
+  </Step>
+  <Step title="Implement Webhooks">
+    Use webhooks to receive real-time updates when data changes rather than frequent polling.
+  </Step>
+</Steps>
+
+For a detailed breakdown of supported data fields and their availability, see our [API Data Sources and Availability](/api-docs/useful-info/api-data-sources-availability) documentation.
