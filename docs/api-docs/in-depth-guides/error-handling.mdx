@@ -70,379 +70,388 @@ Each error object in the `errors` array includes:
 
 ## Common Error Types and Solutions
 
-### Authentication Errors (401)
-
-**Example:**
-```json
-{
-  "errors": [
+<AccordionGroup>
+  <Accordion title="Authentication Errors (401)" icon="lock">
+    **Example:**
+    ```json
     {
-      "status": "401",
-      "title": "Unauthorized",
-      "detail": "Invalid API key provided"
+      "errors": [
+        {
+          "status": "401",
+          "title": "Unauthorized",
+          "detail": "Invalid API key provided"
+        }
+      ]
     }
-  ]
-}
-```
+    ```
 
-**Solutions:**
-1. Check that you're including the `Authorization` header with the correct format: `Token YOUR_API_KEY`
-2. Verify your API key is active in the [Developer Settings](https://app.terminal49.com/developers/api-keys)
-3. Make sure the API key hasn't been disabled
+    **Solutions:**
+    1. Check that you're including the `Authorization` header with the correct format: `Token YOUR_API_KEY`
+    2. Verify your API key is active in the [Developer Settings](https://app.terminal49.com/developers/api-keys)
+    3. Make sure the API key hasn't been disabled
+  </Accordion>
 
-### Validation Errors (422)
-
-**Example:**
-```json
-{
-  "errors": [
+  <Accordion title="Validation Errors (422)" icon="check-to-slot">
+    **Example:**
+    ```json
     {
-      "status": "422",
-      "source": {
-        "pointer": "/data/attributes/request_number"
-      },
-      "title": "Unprocessable Entity",
-      "detail": "Request number 'ABCD1234567' with scac 'MAEU' already exists in a tracking_request with a pending or created status",
-      "code": "duplicate"
+      "errors": [
+        {
+          "status": "422",
+          "source": {
+            "pointer": "/data/attributes/request_number"
+          },
+          "title": "Unprocessable Entity",
+          "detail": "Request number 'ABCD1234567' with scac 'MAEU' already exists in a tracking_request with a pending or created status",
+          "code": "duplicate"
+        }
+      ]
     }
-  ]
-}
-```
+    ```
 
-**Solutions:**
-1. Check the `pointer` field to identify which attribute caused the error
-2. Review the `detail` message for specific information about the validation failure
-3. For duplicate tracking requests, check if the shipment is already being tracked
-4. Verify SCAC codes against the [supported carriers list](https://app.terminal49.com/developers/carrier-data)
+    **Solutions:**
+    1. Check the `pointer` field to identify which attribute caused the error
+    2. Review the `detail` message for specific information about the validation failure
+    3. For duplicate tracking requests, check if the shipment is already being tracked
+    4. Verify SCAC codes against the [supported carriers list](https://app.terminal49.com/developers/carrier-data)
+  </Accordion>
 
-### Resource Not Found (404)
-
-**Example:**
-```json
-{
-  "errors": [
+  <Accordion title="Resource Not Found (404)" icon="magnifying-glass">
+    **Example:**
+    ```json
     {
-      "status": "404",
-      "title": "Not Found",
-      "detail": "Couldn't find Shipment with ID=123e4567-e89b-12d3-a456-426614174000"
+      "errors": [
+        {
+          "status": "404",
+          "title": "Not Found",
+          "detail": "Couldn't find Shipment with ID=123e4567-e89b-12d3-a456-426614174000"
+        }
+      ]
     }
-  ]
-}
-```
+    ```
 
-**Solutions:**
-1. Verify the ID you're using exists and is correctly formatted
-2. Check if the resource might have been deleted
-3. Confirm you're using the correct endpoint for the resource type
+    **Solutions:**
+    1. Verify the ID you're using exists and is correctly formatted
+    2. Check if the resource might have been deleted
+    3. Confirm you're using the correct endpoint for the resource type
+  </Accordion>
 
-### Rate Limiting (429)
-
-**Example:**
-```json
-{
-  "errors": [
+  <Accordion title="Rate Limiting (429)" icon="gauge-high">
+    **Example:**
+    ```json
     {
-      "status": "429",
-      "title": "Too Many Requests",
-      "detail": "Rate limit exceeded. Please wait and try again later."
+      "errors": [
+        {
+          "status": "429",
+          "title": "Too Many Requests",
+          "detail": "Rate limit exceeded. Please wait and try again later."
+        }
+      ]
     }
-  ]
-}
-```
+    ```
 
-**Solutions:**
-1. Implement retry logic with exponential backoff
-2. Spread requests over a longer period
-3. Contact Terminal49 support if you need a higher rate limit for your use case
+    **Solutions:**
+    1. Implement retry logic with exponential backoff
+    2. Spread requests over a longer period
+    3. Contact Terminal49 support if you need a higher rate limit for your use case
+  </Accordion>
+</AccordionGroup>
 
 ## Implementing Effective Error Handling
 
-### JavaScript Example
+<AccordionGroup>
+  <Accordion title="JavaScript Example" icon="js">
+    ```javascript
+    async function makeApiRequest(endpoint, method = 'GET', data = null) {
+      try {
+        const options = {
+          method,
+          headers: {
+            'Authorization': `Token ${API_KEY}`,
+            'Content-Type': 'application/vnd.api+json'
+          }
+        };
 
-```javascript
-async function makeApiRequest(endpoint, method = 'GET', data = null) {
-  try {
-    const options = {
-      method,
-      headers: {
-        'Authorization': `Token ${API_KEY}`,
-        'Content-Type': 'application/vnd.api+json'
-      }
-    };
-
-    if (data && (method === 'POST' || method === 'PATCH')) {
-      options.body = JSON.stringify(data);
-    }
-
-    const response = await fetch(`https://api.terminal49.com/v2/${endpoint}`, options);
-    const responseData = await response.json();
-
-    // Check if the response contains errors
-    if (!response.ok) {
-      // Process errors
-      if (responseData.errors) {
-        const error = responseData.errors[0];
-
-        switch (response.status) {
-          case 401:
-            throw new Error(`Authentication error: ${error.detail}`);
-          case 404:
-            throw new Error(`Resource not found: ${error.detail}`);
-          case 422:
-            const field = error.source?.pointer?.split('/').pop() || 'unknown field';
-            throw new Error(`Validation error in ${field}: ${error.detail}`);
-          case 429:
-            // Implement retry with exponential backoff
-            throw new Error(`Rate limit exceeded: ${error.detail}`);
-          default:
-            throw new Error(`API error ${response.status}: ${error.detail}`);
+        if (data && (method === 'POST' || method === 'PATCH')) {
+          options.body = JSON.stringify(data);
         }
-      }
 
-      throw new Error(`API request failed with status ${response.status}`);
-    }
+        const response = await fetch(`https://api.terminal49.com/v2/${endpoint}`, options);
+        const responseData = await response.json();
 
-    return responseData;
-  } catch (error) {
-    console.error('API request failed:', error);
-    throw error;
-  }
-}
-```
+        // Check if the response contains errors
+        if (!response.ok) {
+          // Process errors
+          if (responseData.errors) {
+            const error = responseData.errors[0];
 
-### PHP Example
+            switch (response.status) {
+              case 401:
+                throw new Error(`Authentication error: ${error.detail}`);
+              case 404:
+                throw new Error(`Resource not found: ${error.detail}`);
+              case 422:
+                const field = error.source?.pointer?.split('/').pop() || 'unknown field';
+                throw new Error(`Validation error in ${field}: ${error.detail}`);
+              case 429:
+                // Implement retry with exponential backoff
+                throw new Error(`Rate limit exceeded: ${error.detail}`);
+              default:
+                throw new Error(`API error ${response.status}: ${error.detail}`);
+            }
+          }
 
-```php
-<?php
-function makeApiRequest($endpoint, $method = 'GET', $data = null) {
-    $ch = curl_init();
-    $url = "https://api.terminal49.com/v2/{$endpoint}";
-
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Authorization: Token ' . API_KEY,
-        'Content-Type: application/vnd.api+json',
-        'Accept: application/vnd.api+json'
-    ]);
-
-    if ($method !== 'GET') {
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        if ($data) {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+          throw new Error(`API request failed with status ${response.status}`);
         }
+
+        return responseData;
+      } catch (error) {
+        console.error('API request failed:', error);
+        throw error;
+      }
     }
+    ```
+  </Accordion>
 
-    $response = curl_exec($ch);
-    $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+  <Accordion title="PHP Example" icon="php">
+    ```php
+    <?php
+    function makeApiRequest($endpoint, $method = 'GET', $data = null) {
+        $ch = curl_init();
+        $url = "https://api.terminal49.com/v2/{$endpoint}";
 
-    $responseData = json_decode($response, true);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Token ' . API_KEY,
+            'Content-Type: application/vnd.api+json',
+            'Accept: application/vnd.api+json'
+        ]);
 
-    if ($statusCode >= 400) {
-        // Handle errors
-        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
-            $error = $responseData['errors'][0];
-            $errorMessage = $error['detail'] ?? 'Unknown error';
-
-            switch ($statusCode) {
-                case 401:
-                    throw new Exception("Authentication error: {$errorMessage}");
-                case 404:
-                    throw new Exception("Resource not found: {$errorMessage}");
-                case 422:
-                    $pointer = $error['source']['pointer'] ?? '';
-                    $field = array_pop(explode('/', $pointer)) ?: 'unknown field';
-                    throw new Exception("Validation error in {$field}: {$errorMessage}");
-                case 429:
-                    // Implement retry logic
-                    throw new Exception("Rate limit exceeded: {$errorMessage}");
-                default:
-                    throw new Exception("API error {$statusCode}: {$errorMessage}");
+        if ($method !== 'GET') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+            if ($data) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
             }
         }
 
-        throw new Exception("API request failed with status {$statusCode}");
+        $response = curl_exec($ch);
+        $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $responseData = json_decode($response, true);
+
+        if ($statusCode >= 400) {
+            // Handle errors
+            if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+                $error = $responseData['errors'][0];
+                $errorMessage = $error['detail'] ?? 'Unknown error';
+
+                switch ($statusCode) {
+                    case 401:
+                        throw new Exception("Authentication error: {$errorMessage}");
+                    case 404:
+                        throw new Exception("Resource not found: {$errorMessage}");
+                    case 422:
+                        $pointer = $error['source']['pointer'] ?? '';
+                        $field = array_pop(explode('/', $pointer)) ?: 'unknown field';
+                        throw new Exception("Validation error in {$field}: {$errorMessage}");
+                    case 429:
+                        // Implement retry logic
+                        throw new Exception("Rate limit exceeded: {$errorMessage}");
+                    default:
+                        throw new Exception("API error {$statusCode}: {$errorMessage}");
+                }
+            }
+
+            throw new Exception("API request failed with status {$statusCode}");
+        }
+
+        return $responseData;
     }
+    ?>
+    ```
+  </Accordion>
 
-    return $responseData;
-}
-?>
-```
+  <Accordion title="Python Example" icon="python">
+    ```python
+    import requests
+    import time
+    from requests.exceptions import HTTPError
 
-### Python Example
+    def make_api_request(endpoint, method='GET', data=None, max_retries=3):
+        url = f"https://api.terminal49.com/v2/{endpoint}"
+        headers = {
+            'Authorization': f'Token {API_KEY}',
+            'Content-Type': 'application/vnd.api+json',
+            'Accept': 'application/vnd.api+json'
+        }
 
-```python
-import requests
-import time
-from requests.exceptions import HTTPError
-
-def make_api_request(endpoint, method='GET', data=None, max_retries=3):
-    url = f"https://api.terminal49.com/v2/{endpoint}"
-    headers = {
-        'Authorization': f'Token {API_KEY}',
-        'Content-Type': 'application/vnd.api+json',
-        'Accept': 'application/vnd.api+json'
-    }
-
-    retries = 0
-    while retries < max_retries:
-        try:
-            if method == 'GET':
-                response = requests.get(url, headers=headers)
-            elif method == 'POST':
-                response = requests.post(url, headers=headers, json=data)
-            elif method == 'PATCH':
-                response = requests.patch(url, headers=headers, json=data)
-            elif method == 'DELETE':
-                response = requests.delete(url, headers=headers)
-            else:
-                raise ValueError(f"Unsupported HTTP method: {method}")
-
-            response.raise_for_status()
-            return response.json()
-
-        except HTTPError as http_err:
-            # Try to parse error response
+        retries = 0
+        while retries < max_retries:
             try:
-                error_data = response.json()
-                if 'errors' in error_data and error_data['errors']:
-                    error = error_data['errors'][0]
-                    error_detail = error.get('detail', 'No detail provided')
+                if method == 'GET':
+                    response = requests.get(url, headers=headers)
+                elif method == 'POST':
+                    response = requests.post(url, headers=headers, json=data)
+                elif method == 'PATCH':
+                    response = requests.patch(url, headers=headers, json=data)
+                elif method == 'DELETE':
+                    response = requests.delete(url, headers=headers)
+                else:
+                    raise ValueError(f"Unsupported HTTP method: {method}")
 
-                    if response.status_code == 401:
-                        raise Exception(f"Authentication error: {error_detail}")
-                    elif response.status_code == 404:
-                        raise Exception(f"Resource not found: {error_detail}")
-                    elif response.status_code == 422:
-                        pointer = error.get('source', {}).get('pointer', '')
-                        field = pointer.split('/')[-1] if pointer else 'unknown field'
-                        raise Exception(f"Validation error in {field}: {error_detail}")
-                    elif response.status_code == 429:
-                        # Rate limit - implement retry with backoff
-                        wait_time = min(2 ** retries, 60)
-                        print(f"Rate limit exceeded. Retrying in {wait_time} seconds...")
-                        time.sleep(wait_time)
-                        retries += 1
-                        continue
-            except ValueError:
-                # Response wasn't valid JSON
-                pass
+                response.raise_for_status()
+                return response.json()
 
-            # If we get here, either it wasn't a JSON response or we want to re-raise
-            if response.status_code != 429 or retries >= max_retries - 1:
-                raise Exception(f"API error {response.status_code}: {response.text}")
+            except HTTPError as http_err:
+                # Try to parse error response
+                try:
+                    error_data = response.json()
+                    if 'errors' in error_data and error_data['errors']:
+                        error = error_data['errors'][0]
+                        error_detail = error.get('detail', 'No detail provided')
 
-        retries += 1
+                        if response.status_code == 401:
+                            raise Exception(f"Authentication error: {error_detail}")
+                        elif response.status_code == 404:
+                            raise Exception(f"Resource not found: {error_detail}")
+                        elif response.status_code == 422:
+                            pointer = error.get('source', {}).get('pointer', '')
+                            field = pointer.split('/')[-1] if pointer else 'unknown field'
+                            raise Exception(f"Validation error in {field}: {error_detail}")
+                        elif response.status_code == 429:
+                            # Rate limit - implement retry with backoff
+                            wait_time = min(2 ** retries, 60)
+                            print(f"Rate limit exceeded. Retrying in {wait_time} seconds...")
+                            time.sleep(wait_time)
+                            retries += 1
+                            continue
+                except ValueError:
+                    # Response wasn't valid JSON
+                    pass
 
-    raise Exception("Maximum retry attempts reached")
-```
+                # If we get here, either it wasn't a JSON response or we want to re-raise
+                if response.status_code != 429 or retries >= max_retries - 1:
+                    raise Exception(f"API error {response.status_code}: {response.text}")
 
-## Retry Strategies
+            retries += 1
 
-For intermittent errors and rate limiting, implementing a retry strategy is essential:
+        raise Exception("Maximum retry attempts reached")
+    ```
+  </Accordion>
 
-### Exponential Backoff
+  <Accordion title="Retry Strategy with Exponential Backoff" icon="rotate">
+    ```javascript
+    async function makeRequestWithRetry(endpoint, method = 'GET', data = null, maxRetries = 3) {
+      let retries = 0;
 
-```javascript
-async function makeRequestWithRetry(endpoint, method = 'GET', data = null, maxRetries = 3) {
-  let retries = 0;
+      while (retries < maxRetries) {
+        try {
+          return await makeApiRequest(endpoint, method, data);
+        } catch (error) {
+          retries++;
 
-  while (retries < maxRetries) {
-    try {
-      return await makeApiRequest(endpoint, method, data);
-    } catch (error) {
-      retries++;
+          // If it's not a retriable error or we've used all retries, throw
+          if (
+            !error.message.includes('Rate limit exceeded') ||
+            retries >= maxRetries
+          ) {
+            throw error;
+          }
 
-      // If it's not a retriable error or we've used all retries, throw
-      if (
-        !error.message.includes('Rate limit exceeded') ||
-        retries >= maxRetries
-      ) {
-        throw error;
+          // Exponential backoff with jitter
+          const delay = Math.min(1000 * 2 ** retries + Math.random() * 1000, 60000);
+          console.log(`Retrying after ${delay}ms (attempt ${retries} of ${maxRetries})...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
-
-      // Exponential backoff with jitter
-      const delay = Math.min(1000 * 2 ** retries + Math.random() * 1000, 60000);
-      console.log(`Retrying after ${delay}ms (attempt ${retries} of ${maxRetries})...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
     }
-  }
-}
-```
+    ```
+  </Accordion>
+</AccordionGroup>
 
-## Error Scenarios and Solutions
+## Common Error Scenarios
 
-### Duplicate Tracking Requests
-
-**Error:**
-```json
-{
-  "errors": [
+<AccordionGroup>
+  <Accordion title="Duplicate Tracking Requests" icon="copy">
+    **Error:**
+    ```json
     {
-      "status": "422",
-      "source": {
-        "pointer": "/data/attributes/request_number"
-      },
-      "title": "Unprocessable Entity",
-      "detail": "Request number 'MAEU1234567' with scac 'MAEU' already exists in a tracking_request with a pending or created status",
-      "code": "duplicate"
+      "errors": [
+        {
+          "status": "422",
+          "source": {
+            "pointer": "/data/attributes/request_number"
+          },
+          "title": "Unprocessable Entity",
+          "detail": "Request number 'MAEU1234567' with scac 'MAEU' already exists in a tracking_request with a pending or created status",
+          "code": "duplicate"
+        }
+      ]
     }
-  ]
-}
-```
+    ```
 
-**Solution:**
-When you receive a duplicate error, you should:
-1. Look up the existing tracking request using the `GET /tracking_requests` endpoint with appropriate filters
-2. Use the ID of the existing request to fetch its current status
-3. If needed, you can update the existing tracking request rather than creating a new one
+    **Solution:**
+    When you receive a duplicate error, you should:
+    1. Look up the existing tracking request using the `GET /tracking_requests` endpoint with appropriate filters
+    2. Use the ID of the existing request to fetch its current status
+    3. If needed, you can update the existing tracking request rather than creating a new one
+  </Accordion>
 
-### Unsupported Carrier
-
-**Error:**
-```json
-{
-  "errors": [
+  <Accordion title="Unsupported Carrier" icon="ship">
+    **Error:**
+    ```json
     {
-      "status": "422",
-      "source": {
-        "pointer": "/data/attributes/scac"
-      },
-      "title": "Unprocessable Entity",
-      "detail": "Scac 'ABCD' is not supported",
-      "code": "unsupported_scac"
+      "errors": [
+        {
+          "status": "422",
+          "source": {
+            "pointer": "/data/attributes/scac"
+          },
+          "title": "Unprocessable Entity",
+          "detail": "Scac 'ABCD' is not supported",
+          "code": "unsupported_scac"
+        }
+      ]
     }
-  ]
-}
-```
+    ```
 
-**Solution:**
-1. Reference the [Carrier Data Matrix](https://app.terminal49.com/developers/carrier-data) for a list of supported carriers
-2. Double-check the SCAC code format (usually 4 uppercase letters)
-3. If you need support for a specific carrier, contact Terminal49
+    **Solution:**
+    1. Reference the [Carrier Data Matrix](https://app.terminal49.com/developers/carrier-data) for a list of supported carriers
+    2. Double-check the SCAC code format (usually 4 uppercase letters)
+    3. If you need support for a specific carrier, contact Terminal49
+  </Accordion>
+</AccordionGroup>
 
 ## Best Practices for Error Handling
 
-1. **Always check for error responses**
-   - Parse the response body to look for the `errors` array
-   - Handle both HTTP errors and JSON:API formatted errors
+<AccordionGroup>
+  <Accordion title="Always Check for Error Responses" icon="check-double">
+    - Parse the response body to look for the `errors` array
+    - Handle both HTTP errors and JSON:API formatted errors
+  </Accordion>
 
-2. **Log detailed error information**
-   - Include the status code, error title, error detail, and any source information
-   - Add context from your application (e.g., what operation was being attempted)
+  <Accordion title="Log Detailed Error Information" icon="file-lines">
+    - Include the status code, error title, error detail, and any source information
+    - Add context from your application (e.g., what operation was being attempted)
+  </Accordion>
 
-3. **Implement appropriate retry logic**
-   - Use exponential backoff for rate limiting (429) errors
-   - Don't retry for validation (422) or authentication (401) errors
+  <Accordion title="Implement Appropriate Retry Logic" icon="arrow-rotate-right">
+    - Use exponential backoff for rate limiting (429) errors
+    - Don't retry for validation (422) or authentication (401) errors
+  </Accordion>
 
-4. **Present user-friendly error messages**
-   - Translate technical API errors to understandable messages for end-users
-   - Provide actionable guidance when possible
+  <Accordion title="Present User-Friendly Error Messages" icon="user">
+    - Translate technical API errors to understandable messages for end-users
+    - Provide actionable guidance when possible
+  </Accordion>
 
-5. **Monitor error rates**
-   - Set up alerts for unusual error patterns
-   - Keep track of error frequency to identify potential issues with your integration
+  <Accordion title="Monitor Error Rates" icon="chart-line">
+    - Set up alerts for unusual error patterns
+    - Keep track of error frequency to identify potential issues with your integration
+  </Accordion>
+</AccordionGroup>
 
 ## Getting Help
 
