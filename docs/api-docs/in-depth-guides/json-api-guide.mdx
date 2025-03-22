@@ -75,18 +75,32 @@ JSON:API provides a consistent format for error responses, making it easier to:
 - **Implement Error Handling**: Write consistent error handling logic across your application
 - **Debug Problems**: Receive detailed information about what went wrong and why
 
-### Client Library Support
+## Client Libraries <Icon name="puzzle-piece" />
 
 Instead of writing custom code to parse JSON:API responses, you can leverage ready-made libraries for most programming languages:
 
-- **JavaScript/TypeScript**: [jsonapi-typescript](https://github.com/juniskane/jsonapi-typescript), [json-api-serializer](https://github.com/SeyZ/jsonapi-serializer)
-- **Python**: [jsonapi-client](https://github.com/qvantel/jsonapi-client), [marshmallow-jsonapi](https://github.com/marshmallow-code/marshmallow-jsonapi)
-- **Ruby**: [jsonapi-resources](https://github.com/cerebris/jsonapi-resources), [jsonapi-serializer](https://github.com/jsonapi-serializer/jsonapi-serializer)
-- **PHP**: [jsonapi-client-php](https://github.com/art-of-coding/json-api-client), [laravel-json-api](https://github.com/laravel-json-api/laravel)
-- **Go**: [jsonapi](https://github.com/google/jsonapi), [go-jsonapi](https://github.com/connor4312/go-jsonapi)
-- **Java**: [crnk](https://github.com/crnk-project/crnk-framework), [katharsis](https://github.com/katharsis-project/katharsis-framework)
+<CardGroup cols={3}>
+  <Card title="JavaScript" icon="js" href="https://github.com/json-api/json-api">
+    JSON:API libraries for JavaScript
+  </Card>
+  <Card title="Ruby" icon="gem" href="https://github.com/jsonapi-rb/jsonapi-rb">
+    jsonapi-rb for Ruby applications
+  </Card>
+  <Card title="Python" icon="python" href="https://github.com/django-json-api/django-rest-framework-json-api">
+    JSON:API libraries for Python
+  </Card>
+  <Card title="PHP" icon="php" href="https://github.com/art-of-coding/json-api-client">
+    PHP client libraries for JSON:API
+  </Card>
+  <Card title="Go" icon="golang" href="https://github.com/google/jsonapi">
+    Go implementations of JSON:API
+  </Card>
+  <Card title="Java" icon="java" href="https://github.com/crnk-project/crnk-framework">
+    Java frameworks for JSON:API
+  </Card>
+</CardGroup>
 
-These libraries handle the complex aspects of Terminal49's shipping data, providing benefits such as:
+These libraries provide significant benefits when working with Terminal49's API:
 
 - **Automatic Relationship Resolution**: Easily navigate from shipments to containers and events without manual mapping
 - **Type Conversion**: Convert API responses into native language objects/models
@@ -292,24 +306,6 @@ Each error object contains:
 <ResponseField name="source" type="object">
   An object containing references to the source of the error. The `pointer` field typically contains a JSON Pointer to the specific field that caused the error.
 </ResponseField>
-
-## JSON:API Libraries
-
-Since Terminal49 uses standard JSON:API, you can leverage client libraries for your preferred programming language to make working with our API easier:
-
-<CardGroup cols={3}>
-  <Card title="JavaScript" icon="js" href="https://github.com/json-api/json-api">
-    JSON:API libraries for JavaScript
-  </Card>
-  <Card title="Ruby" icon="gem" href="https://github.com/jsonapi-rb/jsonapi-rb">
-    jsonapi-rb for Ruby applications
-  </Card>
-  <Card title="Python" icon="python" href="https://github.com/django-json-api/django-rest-framework-json-api">
-    JSON:API libraries for Python
-  </Card>
-</CardGroup>
-
-Using a library helps handle the resource structure, relationship management, and error parsing automatically.
 
 ## Tips for Working with Terminal49's JSON:API
 
