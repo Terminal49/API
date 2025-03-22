@@ -22,9 +22,7 @@ There are two primary methods for getting updates from Terminal49's API: **polli
 
 Polling involves your application regularly querying the Terminal49 API to check for updates on your tracked shipments and containers.
 
-<CodeGroup>
-  <Code title="Polling Example" lang="javascript">
-```javascript
+```javascript title="Polling Example"
 // Example of polling in JavaScript
 async function pollForUpdates() {
   try {
@@ -46,8 +44,6 @@ async function pollForUpdates() {
 // Poll every 15 minutes
 setInterval(pollForUpdates, 15 * 60 * 1000);
 ```
-  </Code>
-</CodeGroup>
 
 ### When to Use Polling
 
@@ -78,9 +74,7 @@ setInterval(pollForUpdates, 15 * 60 * 1000);
 
 Webhooks allow Terminal49 to push real-time updates to your system whenever a change occurs, without you having to ask for them.
 
-<CodeGroup>
-  <Code title="Webhook Setup" lang="javascript">
-```javascript
+```javascript title="Webhook Setup"
 // Creating a webhook endpoint in Node.js (Express)
 const express = require('express');
 const app = express();
@@ -103,10 +97,8 @@ app.listen(3000, () => {
   console.log('Webhook server running on port 3000');
 });
 ```
-  </Code>
 
-  <Code title="Webhook Registration" lang="javascript">
-```javascript
+```javascript title="Webhook Registration"
 // Registering a webhook with Terminal49 API
 async function registerWebhook() {
   try {
@@ -141,8 +133,6 @@ async function registerWebhook() {
   }
 }
 ```
-  </Code>
-</CodeGroup>
 
 ### When to Use Webhooks
 
@@ -191,9 +181,7 @@ This hybrid approach ensures you get the benefits of real-time updates while hav
 
 ## Example: Hybrid Implementation
 
-<CodeGroup>
-  <Code title="Hybrid Approach" lang="javascript">
-```javascript
+```javascript title="Hybrid Approach"
 // 1. Set up webhooks (primary method)
 // See webhook registration example above
 
@@ -224,8 +212,6 @@ async function verifyContainerStatus() {
 // Run verification once per day
 setInterval(verifyContainerStatus, 24 * 60 * 60 * 1000);
 ```
-  </Code>
-</CodeGroup>
 
 ## Summary Comparison
 
