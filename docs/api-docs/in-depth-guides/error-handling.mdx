@@ -56,6 +56,72 @@ Each error object in the `errors` array includes:
   A machine-readable error code that can be used for programmatic handling (not always present).
 </ResponseField>
 
+## Why JSON:API?
+
+<Accordion title="Benefits of JSON:API for Shipping Data" icon="ship">
+  Terminal49 uses the JSON:API specification for a number of important reasons that directly benefit developers working with shipping and container tracking data:
+
+  ### Standardized Relationships for Complex Shipping Data
+
+  Shipping data is inherently relational - containers belong to shipments, shipments have transport events, containers have tracking events, and all these relate to carriers, terminals, and vessels. JSON:API excels at representing these complex relationships through:
+
+  - **Consistent Structure**: Every response follows the same pattern, making data predictable and easy to parse
+  - **Clear Resource Relationships**: Explicit definition of how resources like shipments, containers, and events relate to each other
+  - **Compound Documents**: The ability to include related resources in a single request, eliminating the need for multiple API calls
+
+  ### Efficient Data Loading for Shipping Operations
+
+  JSON:API's approach to related data is particularly valuable for shipping operations:
+
+  ```json
+  {
+    "data": {
+      "id": "123",
+      "type": "shipment",
+      "attributes": {
+        "bill_of_lading_number": "MAEU1234567",
+        "carrier_name": "Maersk"
+      },
+      "relationships": {
+        "containers": {
+          "data": [
+            { "id": "456", "type": "container" }
+          ]
+        }
+      }
+    },
+    "included": [
+      {
+        "id": "456",
+        "type": "container",
+        "attributes": {
+          "number": "MRKU1234567",
+          "size_type": "40HC"
+        }
+      }
+    ]
+  }
+  ```
+
+  This allows Terminal49 to deliver a complete picture of your shipping data in fewer requests, which means:
+
+  - **Reduced API Calls**: Get containers and their shipments in a single request
+  - **Minimized Latency**: Critical for time-sensitive logistics operations
+  - **Lower Bandwidth**: Only request the related objects you need, when you need them
+
+  ### Standardized Error Handling
+
+  As detailed throughout this guide, JSON:API provides a consistent format for error responses, making it easier to:
+
+  - **Identify Issues**: Clearly pinpoint which field or relationship has an error
+  - **Implement Error Handling**: Write consistent error handling logic across your application
+  - **Debug Problems**: Receive detailed information about what went wrong and why
+
+  ### Client Library Support
+
+  Many languages have JSON:API client libraries that can automatically parse responses and handle the relationship mapping, making your code cleaner and more maintainable when working with complex shipping data hierarchies.
+</Accordion>
+
 ## Common HTTP Status Codes
 
 | Status Code | Meaning | Typical Causes |
