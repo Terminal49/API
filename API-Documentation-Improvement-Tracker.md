@@ -5,7 +5,7 @@
 | Category | Status | Completion % |
 |----------|--------|--------------|
 | Getting Started | In Progress | 75% |
-| In-Depth Guides | In Progress | 50% |
+| In-Depth Guides | In Progress | 60% |
 | API Reference Examples | In Progress | 25% |
 | Tutorials | Not Started | 0% |
 | General Documentation | In Progress | 40% |
@@ -19,8 +19,9 @@
 | `docs/api-docs/in-depth-guides/json-api-guide.mdx` | New | Created comprehensive guide explaining JSON:API concepts, structure, and how Terminal49 implements the specification |
 | `docs/api-docs/in-depth-guides/polling-vs-webhooks.mdx` | New | Added comparison guide detailing the differences, advantages, and use cases for polling vs webhooks |
 | `docs/api-docs/in-depth-guides/webhooks.mdx` | New | Created detailed guide for webhook implementation including endpoint setup, registration, testing, and management |
+| `docs/api-docs/in-depth-guides/authentication.mdx` | New | Created comprehensive authentication guide with API key management, examples in multiple languages, security best practices |
 | `docs/api-docs/api-reference/tracking-requests/create-a-tracking-request.mdx` | Updated | Enhanced documentation with clearer examples, added business use cases, improved response explanations |
-| `docs/mint.json` | Updated | Updated navigation structure to include new guides and improve organization |
+| `docs/docs.json` | Updated | Updated navigation structure to include new guides and improve organization |
 
 ## Completed Updates
 
@@ -30,21 +31,20 @@
 - [x] Updated tracking request documentation in `docs/api-docs/api-reference/tracking-requests/create-a-tracking-request.mdx`
 - [x] Created "Polling vs. Webhooks" comparison guide in `docs/api-docs/in-depth-guides/polling-vs-webhooks.mdx`
 - [x] Created Webhook implementation guide in `docs/api-docs/in-depth-guides/webhooks.mdx`
+- [x] Created Authentication guide in `docs/api-docs/in-depth-guides/authentication.mdx`
 - [x] Fixed MDX parsing errors to ensure compatibility with Mintlify
 
 ## In Progress
 
 - [ ] Updating webhook API reference documentation
 - [ ] Creating Terminal49 data model guide
-- [ ] Developing authentication and authorization guide
 - [ ] Improving error handling documentation
 
 ## Next Steps
 
 1. **Immediate Focus (Next 48 hours):**
-   - Complete the authentication guide with detailed token management examples
    - Develop error handling and troubleshooting documentation
-   - Add examples in multiple programming languages
+   - Add examples in multiple programming languages for remaining endpoints
 
 2. **Medium Priority (Next Week):**
    - Enhance all endpoint documentation with consistent format and examples

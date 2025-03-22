@@ -1,0 +1,204 @@
+---
+title: Authentication Guide
+description: Learn how to authenticate with Terminal49's API and manage your API keys securely.
+---
+
+# Authentication with Terminal49
+
+This guide covers everything you need to know about authentication with Terminal49's API, including obtaining API keys, implementing authentication in your code, and security best practices.
+
+## How Terminal49 Authentication Works
+
+Terminal49 uses a token-based authentication system. Each request to the API must include an API key in the request headers to authenticate the request.
+
+<Note>
+  Authentication is required for all API endpoints except for the documentation and health check endpoints.
+</Note>
+
+## Getting Your API Key
+
+To obtain an API key:
+
+1. Sign in to your Terminal49 account
+2. Navigate to [Developer Settings](https://app.terminal49.com/developers/api-keys)
+3. Click "Generate New API Key"
+4. Name your key based on its intended use (e.g., "Production Integration" or "Development Testing")
+5. Copy and securely store your API key - you won't be able to view it again
+
+<Warning>
+  API keys grant access to your data and should be kept secure. Never share your API key or commit it to version control systems.
+</Warning>
+
+## Using Your API Key
+
+When making requests to the Terminal49 API, you need to include your API key in the `Authorization` header of each request with the prefix `Token`.
+
+```
+Authorization: Token YOUR_API_KEY
+```
+
+Here's how to include the Authorization header in different programming languages:
+
+```javascript title="JavaScript/Node.js"
+// Using fetch API
+const response = await fetch('https://api.terminal49.com/v2/shipments', {
+  headers: {
+    'Authorization': 'Token YOUR_API_KEY',
+    'Content-Type': 'application/vnd.api+json'
+  }
+});
+
+// Using Axios
+const axios = require('axios');
+axios.get('https://api.terminal49.com/v2/shipments', {
+  headers: {
+    'Authorization': 'Token YOUR_API_KEY',
+    'Content-Type': 'application/vnd.api+json'
+  }
+});
+```
+
+```python title="Python"
+import requests
+
+url = "https://api.terminal49.com/v2/shipments"
+headers = {
+    "Authorization": "Token YOUR_API_KEY",
+    "Content-Type": "application/vnd.api+json"
+}
+
+response = requests.get(url, headers=headers)
+```
+
+```ruby title="Ruby"
+require 'net/http'
+require 'uri'
+require 'json'
+
+uri = URI.parse('https://api.terminal49.com/v2/shipments')
+request = Net::HTTP::Get.new(uri)
+request['Authorization'] = 'Token YOUR_API_KEY'
+request['Content-Type'] = 'application/vnd.api+json'
+
+response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+  http.request(request)
+end
+```
+
+```csharp title="C#"
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+class Program
+{
+    static async Task Main()
+    {
+        using var client = new HttpClient();
+        client.DefaultRequestHeaders.Add("Authorization", "Token YOUR_API_KEY");
+        client.DefaultRequestHeaders.Add("Content-Type", "application/vnd.api+json");
+
+        var response = await client.GetAsync("https://api.terminal49.com/v2/shipments");
+        var content = await response.Content.ReadAsStringAsync();
+        Console.WriteLine(content);
+    }
+}
+```
+
+## API Key Management Best Practices
+
+### Security Recommendations
+
+1. **Store API keys securely**: Use environment variables or a secure vault instead of hardcoding them
+2. **Implement key rotation**: Regularly rotate your API keys (e.g., every 90 days)
+3. **Use separate keys**: Use different API keys for development, staging, and production environments
+4. **Limit access**: Only share API keys with team members who need them
+5. **Monitor usage**: Regularly review your API usage for unusual patterns
+
+### Environment Variables
+
+Using environment variables is one of the safest ways to handle API keys in your applications:
+
+```javascript title="Node.js with dotenv"
+// Install dotenv: npm install dotenv
+require('dotenv').config();
+
+const apiKey = process.env.TERMINAL49_API_KEY;
+
+const response = await fetch('https://api.terminal49.com/v2/shipments', {
+  headers: {
+    'Authorization': `Token ${apiKey}`,
+    'Content-Type': 'application/vnd.api+json'
+  }
+});
+```
+
+```python title="Python with dotenv"
+# Install python-dotenv: pip install python-dotenv
+import os
+from dotenv import load_dotenv
+import requests
+
+load_dotenv()
+api_key = os.getenv("TERMINAL49_API_KEY")
+
+url = "https://api.terminal49.com/v2/shipments"
+headers = {
+    "Authorization": f"Token {api_key}",
+    "Content-Type": "application/vnd.api+json"
+}
+
+response = requests.get(url, headers=headers)
+```
+
+### Example .env File
+
+```
+# .env file (add to .gitignore)
+TERMINAL49_API_KEY=your_api_key_here
+```
+
+<Warning>
+  Always add your .env file to .gitignore to prevent accidentally committing it to version control.
+</Warning>
+
+## Troubleshooting Authentication Issues
+
+### Common Error Responses
+
+| HTTP Status | Message | Possible Cause |
+|-------------|---------|----------------|
+| 401 Unauthorized | "Invalid API Key" | The API key is incorrect or has been revoked |
+| 401 Unauthorized | "Missing API Key" | No Authorization header was provided |
+| 403 Forbidden | "Insufficient permissions" | The API key doesn't have permission for the requested action |
+
+### Debugging Tips
+
+1. **Check the Authorization header**: Ensure it's properly formatted as `Token YOUR_API_KEY`
+2. **Verify the API key**: Check that you're using the correct API key for the environment
+3. **Test with curl**: Try a simple curl request to isolate authentication issues
+
+```bash title="curl Example"
+curl -H "Authorization: Token YOUR_API_KEY" \
+     -H "Content-Type: application/vnd.api+json" \
+     https://api.terminal49.com/v2/shipments
+```
+
+## Revoking API Keys
+
+If an API key is compromised or no longer needed:
+
+1. Sign in to your Terminal49 account
+2. Navigate to [Developer Settings](https://app.terminal49.com/developers/api-keys)
+3. Find the API key you want to revoke
+4. Click "Revoke Key"
+
+<Warning>
+  Revoking an API key is immediate and permanent. Any applications using the key will lose access to the API.
+</Warning>
+
+## Next Steps
+
+- Learn about [Webhooks](/api-docs/in-depth-guides/webhooks) for real-time updates
+- Explore the [JSON:API Guide](/api-docs/in-depth-guides/json-api-guide) to understand the API response format
+- Start [Tracking Shipments and Containers](/api-docs/getting-started/tracking-shipments-and-containers)
