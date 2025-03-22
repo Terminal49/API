@@ -34,11 +34,7 @@
             "pages": [
               "api-docs/in-depth-guides/quickstart",
               "api-docs/in-depth-guides/json-api-guide",
-              {
-                "name": "Authentication",
-                "icon": "key",
-                "path": "api-docs/in-depth-guides/authentication"
-              },
+              "api-docs/in-depth-guides/authentication",
               "api-docs/in-depth-guides/polling-vs-webhooks",
               "api-docs/in-depth-guides/webhooks",
               "api-docs/in-depth-guides/including-resources",
