@@ -1,0 +1,131 @@
+---
+title: Terminal49 Integration Overview
+description: A comprehensive overview of Terminal49's integration options, capabilities, and use cases for container tracking and visibility.
+icon: "ship"
+---
+
+# Terminal49 Integration Overview
+
+Terminal49 provides comprehensive container tracking and visibility solutions through multiple integration options. This overview will help you understand what's possible and how to choose the right approach for your business needs.
+
+## Integration Options
+
+<CardGroup cols={2}>
+  <Card title="API Integration" icon="code" color="#0D96F2">
+    Connect directly with our API to track specific shipments and containers, and receive real-time updates via webhooks. Ideal for custom workflows and applications.
+
+    [Learn More](/api-docs/in-depth-guides/use-cases)
+  </Card>
+  <Card title="DataSync" icon="database" color="#0D96F2">
+    Get tables of fresh information delivered directly into your existing data systems. Easy to set up and perfect for complementing your current data infrastructure.
+
+    [Learn More](/datasync/overview)
+  </Card>
+</CardGroup>
+
+If you already have a data store that feeds the rest of your system, DataSync is likely your best option. If you need more granular control or custom workflows, direct API integration is recommended.
+
+## Core Capabilities
+
+<CardGroup cols={2}>
+  <Card title="Shipment Tracking" icon="ship" color="#0D96F2">
+    Track containers and shipments across their entire journey using bill of lading, booking, or container numbers.
+  </Card>
+  <Card title="Event Notifications" icon="bell" color="#0D96F2">
+    Receive real-time updates when shipment status changes, from origin to destination.
+  </Card>
+  <Card title="Reference Data" icon="database" color="#0D96F2">
+    Access standardized data about carriers, ports, terminals, and more for consistent reporting.
+  </Card>
+  <Card title="Container Details" icon="box" color="#0D96F2">
+    Get comprehensive container information including status, location, free time, and holds.
+  </Card>
+</CardGroup>
+
+## What Can I Use Terminal49 Data For?
+
+Here are just a few of the data points we provide and their possible use-cases:
+
+| DATA                                   | EXAMPLE USE CASE                                                         |
+|----------------------------------------|--------------------------------------------------------------------------|
+| Destination ETA                        | Surface ETA changes to your relevant teams as they're reported           |
+| Last Free Day and terminal status¹     | Track containers approaching LFD and prioritize dispatching              |
+| Fees and holds at destination terminal | Clear your cargo to keep your containers moving                          |
+| Actual departure and arrival times     | Report journey times by route to compare your ocean carriers' performance|
+
+_1. At container ports in the US_
+
+## End-to-End Visibility
+
+Terminal49 provides visibility across the entire container journey:
+
+<Steps>
+  <Step title="Origin Events">
+    Track empty container pickup, loading, and departure from origin port.
+  </Step>
+  <Step title="Ocean Transit">
+    Follow vessel movements and receive ETA updates throughout the journey.
+  </Step>
+  <Step title="Port Arrival">
+    Get notified when the vessel arrives, berths, and when containers are discharged.
+  </Step>
+  <Step title="Terminal Status">
+    Monitor container availability, customs status, holds, and last free day information.
+  </Step>
+  <Step title="Inland Movement">
+    Track rail departures, arrivals, and final delivery events to inland destinations.
+  </Step>
+</Steps>
+
+## How It Works
+
+<Frame>
+  ![Terminal49 Integration Flow Diagram](/images/api-flow-diagram.png)
+</Frame>
+
+1. **Submit tracking information** using bill of lading, booking, or container numbers
+2. **Terminal49 monitors** these shipments by aggregating data from multiple sources
+3. **Your systems receive updates** through webhooks or DataSync when any change occurs
+4. **Access additional information** as needed through the API or your data warehouse
+
+## Common Use Cases
+
+<CardGroup cols={2}>
+  <Card title="TMS Integration" icon="computer" color="#0D96F2">
+    Connect Terminal49 to your Transportation Management System for real-time visibility without manual tracking.
+  </Card>
+
+  <Card title="Customer Notifications" icon="envelope" color="#0D96F2">
+    Build automated alerts to notify customers about shipment status changes, delays, or container availability.
+  </Card>
+
+  <Card title="Drayage Optimization" icon="truck" color="#0D96F2">
+    Prioritize container pickups based on last free day information to avoid demurrage charges.
+  </Card>
+
+  <Card title="Exception Management" icon="exclamation-triangle" color="#0D96F2">
+    Identify and resolve customs holds, freight issues, or delays that require intervention.
+  </Card>
+</CardGroup>
+
+## Get Started
+
+Ready to start integrating with Terminal49? Choose your path:
+
+<CardGroup cols={2}>
+  <Card title="Explore Use Cases" icon="lightbulb" color="#0D96F2" href="/api-docs/in-depth-guides/use-cases">
+    See how businesses are using Terminal49 to solve real logistics challenges.
+  </Card>
+
+  <Card title="API Integration" icon="code" color="#0D96F2" href="/api-docs/in-depth-guides/quickstart">
+    Start building with our API for custom workflows and real-time updates.
+  </Card>
+
+  <Card title="DataSync Setup" icon="database" color="#0D96F2" href="/datasync/overview">
+    Learn how to get Terminal49 data delivered directly to your data systems.
+  </Card>
+
+  <Card title="Contact Us" icon="phone" color="#0D96F2" href="https://www.terminal49.com/contact/">
+    Our team is here to help you get the most out of Terminal49.
+  </Card>
+</CardGroup>
