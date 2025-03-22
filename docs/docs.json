@@ -17,7 +17,8 @@
             "group": "Overview",
             "pages": [
               "api-docs/overview",
-              "api-docs/in-depth-guides/quickstart"
+              "api-docs/in-depth-guides/quickstart",
+              "api-docs/getting-started/tracking"
             ]
           },
           {
@@ -26,7 +27,6 @@
               "api-docs/in-depth-guides/use-cases",
               "api-docs/in-depth-guides/polling-vs-webhooks",
               "api-docs/in-depth-guides/webhooks",
-              "api-docs/getting-started/tracking-shipments-and-containers",
               "api-docs/getting-started/list-shipments-and-containers",
               "api-docs/getting-started/receive-status-updates",
               "api-docs/in-depth-guides/adding-customer",
