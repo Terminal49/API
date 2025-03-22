@@ -11,7 +11,7 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "API Docs",
+        "tab": "Integration Guide",
         "groups": [
           {
             "group": " ",
@@ -30,16 +30,11 @@
             "group": "Guides",
             "pages": [
               "api-docs/in-depth-guides/use-cases",
-              "api-docs/in-depth-guides/json-api-guide",
-              "api-docs/in-depth-guides/authentication",
-              "api-docs/in-depth-guides/error-handling",
-              "api-docs/in-depth-guides/rate-limiting",
               "api-docs/in-depth-guides/polling-vs-webhooks",
               "api-docs/in-depth-guides/webhooks",
               "api-docs/getting-started/tracking-shipments-and-containers",
               "api-docs/getting-started/list-shipments-and-containers",
               "api-docs/getting-started/receive-status-updates",
-              "api-docs/in-depth-guides/including-resources",
               "api-docs/in-depth-guides/adding-customer",
               "api-docs/in-depth-guides/tracking-request-lifecycle",
               "api-docs/in-depth-guides/event-timestamps",
@@ -56,6 +51,21 @@
               "api-docs/useful-info/test-numbers",
               "api-docs/useful-info/tracking-request-retrying",
               "api-docs/useful-info/webhook-events-examples"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "API Concepts",
+            "pages": [
+              "api-docs/in-depth-guides/authentication",
+              "api-docs/in-depth-guides/error-handling",
+              "api-docs/in-depth-guides/rate-limiting",
+              "api-docs/in-depth-guides/json-api-guide",
+              "api-docs/in-depth-guides/including-resources"
             ]
           },
           {
