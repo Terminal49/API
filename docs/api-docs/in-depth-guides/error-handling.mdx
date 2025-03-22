@@ -119,7 +119,24 @@ Each error object in the `errors` array includes:
 
   ### Client Library Support
 
-  Many languages have JSON:API client libraries that can automatically parse responses and handle the relationship mapping, making your code cleaner and more maintainable when working with complex shipping data hierarchies.
+  Instead of writing custom code to parse JSON:API responses, you can leverage ready-made libraries for most programming languages:
+
+  - **JavaScript/TypeScript**: [jsonapi-typescript](https://github.com/juniskane/jsonapi-typescript), [json-api-serializer](https://github.com/SeyZ/jsonapi-serializer)
+  - **Python**: [jsonapi-client](https://github.com/qvantel/jsonapi-client), [marshmallow-jsonapi](https://github.com/marshmallow-code/marshmallow-jsonapi)
+  - **Ruby**: [jsonapi-resources](https://github.com/cerebris/jsonapi-resources), [jsonapi-serializer](https://github.com/jsonapi-serializer/jsonapi-serializer)
+  - **PHP**: [jsonapi-client-php](https://github.com/art-of-coding/json-api-client), [laravel-json-api](https://github.com/laravel-json-api/laravel)
+  - **Go**: [jsonapi](https://github.com/google/jsonapi), [go-jsonapi](https://github.com/connor4312/go-jsonapi)
+  - **Java**: [crnk](https://github.com/crnk-project/crnk-framework), [katharsis](https://github.com/katharsis-project/katharsis-framework)
+
+  These libraries handle the complex aspects of Terminal49's shipping data, providing benefits such as:
+
+  - **Automatic Relationship Resolution**: Easily navigate from shipments to containers and events without manual mapping
+  - **Type Conversion**: Convert API responses into native language objects/models
+  - **Query Building**: Construct complex API queries with simple, intuitive methods
+  - **Consistent Updates**: Standardized methods for creating and updating resources
+  - **Error Handling**: Built-in support for JSON:API error formats
+
+  Using these libraries can reduce development time by up to 50% when working with complex shipping data structures, allowing you to focus on your business logic rather than API parsing details.
 </Accordion>
 
 ## Common HTTP Status Codes
