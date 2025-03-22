@@ -4,26 +4,50 @@ description: A comprehensive overview of Terminal49's integration options, capab
 icon: "ship"
 ---
 
+<Note>
+Get real-time container tracking visibility across ocean carriers, terminals, and rail carriers in one unified API. Start tracking your first container in minutes.
+</Note>
+
 # Terminal49 Integration Overview
 
 Terminal49 provides comprehensive container tracking and visibility solutions through multiple integration options. This overview will help you understand what's possible and how to choose the right approach for your business needs.
 
-## Container visibility integration options
+<Tabs>
+  <Tab title="API Integration">
+    <Frame>
+      <img src="/images/api-flow-diagram.png" alt="Terminal49 API Integration Flow" />
+    </Frame>
 
-<CardGroup cols={2}>
-  <Card title="API Integration" icon="code" color="#0D96F2">
-    Connect directly with our API to track specific shipments and containers, and receive real-time updates via webhooks. Ideal for custom workflows and applications.
+    Connect directly with our RESTful API to track specific shipments and containers, and receive real-time updates via webhooks.
 
-    [Learn More](/api-docs/in-depth-guides/use-cases)
-  </Card>
-  <Card title="DataSync" icon="database" color="#0D96F2">
+    **Best for:**
+    - Custom workflows and applications
+    - Fine-grained control over tracking
+    - Real-time event notifications
+    - Integration with your own systems
+
+    [Explore API Documentation](/api-docs/in-depth-guides/quickstart)
+  </Tab>
+  <Tab title="DataSync">
+    <Frame>
+      <img src="/images/datasync-flow.png" alt="Terminal49 DataSync Flow" />
+    </Frame>
+
     Get tables of fresh information delivered directly into your existing data systems. Easy to set up and perfect for complementing your current data infrastructure.
 
-    [Learn More](/datasync/overview)
-  </Card>
-</CardGroup>
+    **Best for:**
+    - Data warehouse integration
+    - Business intelligence tools
+    - Custom reporting
+    - Bulk historical analysis
 
+    [Learn About DataSync](/datasync/overview)
+  </Tab>
+</Tabs>
+
+<Tip>
 If you already have a data store that feeds the rest of your system, DataSync is likely your best option. If you need more granular control or custom workflows, direct API integration is recommended.
+</Tip>
 
 ## Core Capabilities
 
@@ -83,27 +107,53 @@ If you already have a data store that feeds the rest of your system, DataSync is
   </Card>
 </CardGroup>
 
-Our customers integrate Terminal49 data into their TMS, ERP, and customer portals to provide better visibility across the entire container journey. From proactively managing exceptions to optimizing pickup schedules, Terminal49 helps you maintain control over your supply chain.
+<Accordion title="How our customers use Terminal49">
+  Our customers integrate Terminal49 data into their TMS, ERP, and customer portals to provide better visibility across the entire container journey. From proactively managing exceptions to optimizing pickup schedules, Terminal49 helps you maintain control over your supply chain.
+
+  **Common integration patterns:**
+  - **Direct API integration** with your TMS or logistics platform
+  - **Custom portals** powered by our API for your customers
+  - **Automated notifications** for key stakeholders about shipment status
+  - **Exception dashboards** to highlight containers needing attention
+  - **Data feeds** into your data warehouse for analytics and reporting
+</Accordion>
 
 ## End-to-End Visibility
 
-Terminal49 provides visibility across the entire container journey:
+<Info>
+  Terminal49 provides continuous visibility across the entire container journey, from origin to destination.
+</Info>
 
 <Steps>
   <Step title="Origin Events">
-    Track empty container pickup, loading, and departure from origin port.
+    <div className="flex items-center gap-2">
+      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600">Origin</span>
+      Track empty container pickup, loading, and departure from origin port.
+    </div>
   </Step>
   <Step title="Ocean Transit">
-    Follow vessel movements and receive ETA updates throughout the journey.
+    <div className="flex items-center gap-2">
+      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600">Ocean</span>
+      Follow vessel movements and receive ETA updates throughout the journey.
+    </div>
   </Step>
   <Step title="Port Arrival">
-    Get notified when the vessel arrives, berths, and when containers are discharged.
+    <div className="flex items-center gap-2">
+      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600">Port</span>
+      Get notified when the vessel arrives, berths, and when containers are discharged.
+    </div>
   </Step>
   <Step title="Terminal Status">
-    Monitor container availability, customs status, holds, and last free day information.
+    <div className="flex items-center gap-2">
+      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600">Terminal</span>
+      Monitor container availability, customs status, holds, and last free day information.
+    </div>
   </Step>
   <Step title="Inland Movement">
-    Track rail departures, arrivals, and final delivery events to inland destinations.
+    <div className="flex items-center gap-2">
+      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600">Inland</span>
+      Track rail departures, arrivals, and final delivery events to inland destinations.
+    </div>
   </Step>
 </Steps>
 
@@ -113,14 +163,46 @@ Terminal49 provides visibility across the entire container journey:
   ![Terminal49 Integration Flow Diagram](/images/api-flow-diagram.png)
 </Frame>
 
-1. **Submit tracking information** using bill of lading, booking, or container numbers
-2. **Terminal49 monitors** these shipments by aggregating data from multiple sources
-3. **Your systems receive updates** through webhooks or DataSync when any change occurs
-4. **Access additional information** as needed through the API or your data warehouse
+<Steps>
+  <Step title="Submit tracking information">
+    Provide bill of lading, booking, or container numbers to track your shipments
+  </Step>
+  <Step title="Terminal49 monitors your shipments">
+    Our system aggregates data from multiple sources including carriers, terminals, and rail operators
+  </Step>
+  <Step title="Receive real-time updates">
+    Your systems receive updates through webhooks or DataSync when any change occurs
+  </Step>
+  <Step title="Access additional information">
+    Query the API or your data warehouse for detailed information as needed
+  </Step>
+</Steps>
+
+## Quick Start
+
+```bash
+# Track a container using cURL
+curl -X POST "https://api.terminal49.com/v2/tracking_requests" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "tracking_request",
+      "attributes": {
+        "reference_number": "MSCU1234567",
+        "reference_type": "container"
+      }
+    }
+  }'
+```
+
+<Tip>
+  Get your API key by [signing up for an account](https://app.terminal49.com/register) and navigating to the API section.
+</Tip>
 
 ## Common Use Cases
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card title="TMS Integration" icon="computer" color="#0D96F2">
     Connect Terminal49 to your Transportation Management System for real-time visibility without manual tracking.
   </Card>
@@ -136,6 +218,14 @@ Terminal49 provides visibility across the entire container journey:
   <Card title="Exception Management" icon="exclamation-triangle" color="#0D96F2">
     Identify and resolve customs holds, freight issues, or delays that require intervention.
   </Card>
+
+  <Card title="Rail Tracking" icon="train" color="#0D96F2">
+    Monitor containers on rail to coordinate inland pickups efficiently.
+  </Card>
+
+  <Card title="Data Analysis" icon="chart-line" color="#0D96F2">
+    Analyze carrier performance, transit times, and dwell times to optimize your supply chain.
+  </Card>
 </CardGroup>
 
 ## Get Started
@@ -143,16 +233,16 @@ Terminal49 provides visibility across the entire container journey:
 Ready to start integrating with Terminal49? Choose your path:
 
 <CardGroup cols={2}>
-  <Card title="Explore Use Cases" icon="lightbulb" color="#0D96F2" href="/api-docs/in-depth-guides/use-cases">
+  <Card title="Read the Quick Start Guide" icon="lightbulb" color="#0D96F2" href="/api-docs/in-depth-guides/quickstart">
+    Follow our step-by-step guide to start tracking your first container in minutes.
+  </Card>
+
+  <Card title="Explore Use Cases" icon="book" color="#0D96F2" href="/api-docs/in-depth-guides/use-cases">
     See how businesses are using Terminal49 to solve real logistics challenges.
   </Card>
 
-  <Card title="API Integration" icon="code" color="#0D96F2" href="/api-docs/in-depth-guides/quickstart">
-    Start building with our API for custom workflows and real-time updates.
-  </Card>
-
-  <Card title="DataSync Setup" icon="database" color="#0D96F2" href="/datasync/overview">
-    Learn how to get Terminal49 data delivered directly to your data systems.
+  <Card title="API Reference" icon="code" color="#0D96F2" href="/api-docs/api-reference/tracking-requests/create-a-tracking-request">
+    Dive into the technical documentation for Terminal49's API endpoints.
   </Card>
 
   <Card title="Contact Us" icon="phone" color="#0D96F2" href="https://www.terminal49.com/contact/">
