@@ -298,7 +298,11 @@
       "destination": "/api-docs/overview"
     },
     {
-      "source": "home",
+      "source": "/",
+      "destination": "/api-docs/overview"
+    },
+    {
+      "source": "/home",
       "destination": "/api-docs/overview"
     }
   ]
