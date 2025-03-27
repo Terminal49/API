@@ -1,12 +1,12 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { APIResource } from '../resource';
+import { APIResource } from '../core/resource';
 import * as MetroAreasAPI from './metro-areas';
 import * as PortsAPI from './ports';
 import * as ShipmentsAPI from './shipments';
 import * as TerminalsAPI from './terminals';
 import * as VesselsAPI from './vessels';
-import { APIPromise } from '../api-promise';
+import { APIPromise } from '../core/api-promise';
 import { RequestOptions } from '../internal/request-options';
 import { path } from '../internal/utils/path';
 

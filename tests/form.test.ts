@@ -1,5 +1,5 @@
 import { multipartFormRequestOptions, createForm } from 'terminal49/internal/uploads';
-import { toFile } from 'terminal49/uploads';
+import { toFile } from 'terminal49/core/uploads';
 
 describe('form data validation', () => {
   test('valid values do not error', async () => {

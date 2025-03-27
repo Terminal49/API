@@ -2,8 +2,8 @@
 
 export { Terminal49 as default } from './client';
 
-export { type Uploadable, toFile } from './uploads';
-export { APIPromise } from './api-promise';
+export { type Uploadable, toFile } from './core/uploads';
+export { APIPromise } from './core/api-promise';
 export { Terminal49, type ClientOptions } from './client';
 export {
   Terminal49Error,
@@ -19,4 +19,4 @@ export {
   InternalServerError,
   PermissionDeniedError,
   UnprocessableEntityError,
-} from './error';
+} from './core/error';

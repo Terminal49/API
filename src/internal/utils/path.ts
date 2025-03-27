@@ -1,4 +1,4 @@
-import { Terminal49Error } from '../../error';
+import { Terminal49Error } from '../../core/error';
 
 /**
  * Percent-encode everything that isn't safe to have in a path without encoding safe chars.

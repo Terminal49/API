@@ -1,6 +1,6 @@
 import fs from 'fs';
 import type { ResponseLike } from 'terminal49/internal/to-file';
-import { toFile } from 'terminal49/uploads';
+import { toFile } from 'terminal49/core/uploads';
 import { File } from 'node:buffer';
 
 class MyClass {
@@ -97,7 +97,7 @@ describe('missing File error message', () => {
   });
 
   test('is thrown', async () => {
-    const uploads = await import('terminal49/uploads');
+    const uploads = await import('terminal49/core/uploads');
     await expect(
       uploads.toFile(mockResponse({ url: 'https://example.com/my/audio.mp3' })),
     ).rejects.toMatchInlineSnapshot(
