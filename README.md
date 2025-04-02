@@ -30,9 +30,9 @@ const client = new Terminal49({
 });
 
 async function main() {
-  const shipment = await client.shipments.list();
+  const shipments = await client.shipments.list();
 
-  console.log(shipment.data);
+  console.log(shipments.data);
 }
 
 main();
@@ -51,7 +51,7 @@ const client = new Terminal49({
 });
 
 async function main() {
-  const shipment: Terminal49.ShipmentListResponse = await client.shipments.list();
+  const shipments: Terminal49.ShipmentListResponse = await client.shipments.list();
 }
 
 main();
@@ -68,7 +68,7 @@ a subclass of `APIError` will be thrown:
 <!-- prettier-ignore -->
 ```ts
 async function main() {
-  const shipment = await client.shipments.list().catch(async (err) => {
+  const shipments = await client.shipments.list().catch(async (err) => {
     if (err instanceof Terminal49.APIError) {
       console.log(err.status); // 400
       console.log(err.name); // BadRequestError
@@ -155,9 +155,9 @@ const response = await client.shipments.list().asResponse();
 console.log(response.headers.get('X-My-Header'));
 console.log(response.statusText); // access the underlying Response object
 
-const { data: shipment, response: raw } = await client.shipments.list().withResponse();
+const { data: shipments, response: raw } = await client.shipments.list().withResponse();
 console.log(raw.headers.get('X-My-Header'));
-console.log(shipment.data);
+console.log(shipments.data);
 ```
 
 ### Logging
