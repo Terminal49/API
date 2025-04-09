@@ -2131,7 +2131,8 @@
                                 "container.pod_terminal_changed",
                                 "container.transport.arrived_at_inland_destination",
                                 "container.transport.estimated.arrived_at_inland_destination",
-                                "container.pickup_lfd.changed"
+                                "container.pickup_lfd.changed",
+                                "container.transport.available"
                               ]
                             }
                           },
@@ -2349,7 +2350,8 @@
                                 "container.pod_terminal_changed",
                                 "container.transport.arrived_at_inland_destination",
                                 "container.transport.estimated.arrived_at_inland_destination",
-                                "container.pickup_lfd.changed"
+                                "container.pickup_lfd.changed",
+                                "container.transport.available"
                               ],
                               "example": "tracking_request.succeeded"
                             }
@@ -2427,7 +2429,8 @@
                           "container.pod_terminal_changed",
                           "container.transport.arrived_at_inland_destination",
                           "container.transport.estimated.arrived_at_inland_destination",
-                          "container.pickup_lfd.changed"
+                          "container.pickup_lfd.changed",
+                          "container.transport.available"
                         ],
                         "active": true
                       },
@@ -3341,7 +3344,8 @@
                 "container.pod_terminal_changed",
                 "container.transport.arrived_at_inland_destination",
                 "container.transport.estimated.arrived_at_inland_destination",
-                "container.pickup_lfd.changed"
+                "container.pickup_lfd.changed",
+                "container.transport.available"
               ],
               "example": "container.transport.full_out"
             },
@@ -7501,7 +7505,8 @@
                     "container.pod_terminal_changed",
                     "container.transport.arrived_at_inland_destination",
                     "container.transport.estimated.arrived_at_inland_destination",
-                    "container.pickup_lfd.changed"
+                    "container.pickup_lfd.changed",
+                    "container.transport.available"
                   ]
                 }
               },
@@ -7650,7 +7655,8 @@
                   "container.transport.vessel_berthed",
                   "container.transport.arrived_at_inland_destination",
                   "container.transport.estimated.arrived_at_inland_destination",
-                  "container.pickup_lfd.changed"
+                  "container.pickup_lfd.changed",
+                  "container.transport.available"
                 ]
               },
               "voyage_number": {
@@ -8002,7 +8008,8 @@
                   "container.pod_terminal_changed",
                   "container.transport.arrived_at_inland_destination",
                   "container.transport.estimated.arrived_at_inland_destination",
-                  "container.pickup_lfd.changed"
+                  "container.pickup_lfd.changed",
+                  "container.transport.available"
                 ]
               },
               "delivery_status": {
@@ -8287,7 +8294,8 @@
                   "empty_in",
                   "vgm_received",
                   "carrier_release",
-                  "customs_release"
+                  "customs_release",
+                  "available"
                 ],
                 "description": "Normalized string representing the event",
                 "nullable": true

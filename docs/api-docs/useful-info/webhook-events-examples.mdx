@@ -8237,3 +8237,40 @@ og:description: Get examples of webhook events using Terminal49's API to enhance
   ]
 }
 ```
+
+## container.transport.available
+
+```json
+{
+  "data": {
+    "id": "fb111726-d489-4ef7-bac9-d39f2cbe66ba",
+    "type": "webhook_notification",
+    "attributes": {
+      "id": "fb111726-d489-4ef7-bac9-d39f2cbe66ba",
+      "event": "container.transport.available",
+      "delivery_status": "failed",
+      "created_at": "2025-02-26T12:51:52Z"
+    },
+    "relationships": {
+      "reference_object": {
+        "data": {
+          "id": "7adced6b-0ae4-4554-8c51-f85e58e57eb7",
+          "type": "transport_event"
+        }
+      },
+      "webhook": {
+        "data": {
+          "id": "91357e6c-43f9-49c2-b052-a2941a003751",
+          "type": "webhook"
+        }
+      },
+      "webhook_notification_logs": {
+        "data": []
+      }
+    }
+  },
+  "links": {
+    "self": "https://api.terminal49.com/v2/webhook_notifications/fb111726-d489-4ef7-bac9-d39f2cbe66ba"
+  }
+}
+```
