@@ -72,7 +72,7 @@ describe('resource webhookNotifications', () => {
     // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
     await expect(
       client.webhookNotifications.getExamples(
-        { event: 'container.transport.vessel_arrived' },
+        { event: 'container.transport.full_out' },
         { path: '/_stainless_unknown_path' },
       ),
     ).rejects.toThrow(Terminal49.NotFoundError);
