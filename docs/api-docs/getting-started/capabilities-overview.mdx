@@ -1,0 +1,181 @@
+---
+title: Terminal49 API Capabilities Overview
+description: A comprehensive overview of all features and capabilities available through the Terminal49 API.
+---
+
+# Terminal49 API Capabilities
+
+Terminal49's API provides end-to-end ocean freight visibility through a collection of endpoints that deliver real-time tracking data, reference information, and event notifications. This overview will help you understand what's possible and how each feature fits into your logistics workflows.
+
+## Core Capabilities
+
+<CardGroup cols={2}>
+  <Card title="Shipment Tracking" icon="ship" color="#0D96F2">
+    Track containers and shipments across their entire journey using bill of lading, booking, or container numbers.
+  </Card>
+  <Card title="Event Notifications" icon="bell" color="#0D96F2">
+    Receive real-time updates via webhooks when shipment status changes, from origin to destination.
+  </Card>
+  <Card title="Reference Data" icon="database" color="#0D96F2">
+    Access standardized data about carriers, ports, terminals, and more for consistent reporting.
+  </Card>
+  <Card title="Container Details" icon="box" color="#0D96F2">
+    Get comprehensive container information including status, location, free time, and holds.
+  </Card>
+</CardGroup>
+
+## End-to-End Visibility
+
+Terminal49 provides visibility across the entire container journey:
+
+<Steps>
+  <Step title="Origin Events">
+    Track empty container pickup, loading, and departure from origin port.
+  </Step>
+  <Step title="Ocean Transit">
+    Follow vessel movements and receive ETA updates throughout the journey.
+  </Step>
+  <Step title="Port Arrival">
+    Get notified when the vessel arrives, berths, and when containers are discharged.
+  </Step>
+  <Step title="Terminal Status">
+    Monitor container availability, customs status, holds, and last free day information.
+  </Step>
+  <Step title="Inland Movement">
+    Track rail departures, arrivals, and final delivery events to inland destinations.
+  </Step>
+</Steps>
+
+## Key Differentiators
+
+<AccordionGroup>
+  <Accordion title="Normalized Data Across Carriers">
+    Terminal49 standardizes data from different carriers into a single consistent format. For example, each carrier might report a container discharge event differently, but Terminal49 normalizes these into the same event type (`container.transport.vessel_discharged`) with standardized timestamps and location formats.
+
+    **Business Benefit**: Build once, track across all carriers without custom integration for each shipping line.
+  </Accordion>
+
+  <Accordion title="Real-Time Events via Webhooks">
+    Instead of constantly polling for updates, Terminal49 notifies you via webhooks when meaningful events occur. This includes status changes, ETA updates, terminal holds, and changes to last free day.
+
+    **Business Benefit**: Respond immediately to delays, holds, or availability changes, reducing demurrage costs and improving planning.
+  </Accordion>
+
+  <Accordion title="Comprehensive Last Free Day Tracking">
+    Terminal49 actively monitors and notifies you of changes to Last Free Day (LFD) - the date by which containers must be picked up to avoid storage fees. This data is often buried in terminal websites and subject to change.
+
+    **Business Benefit**: Avoid costly demurrage fees by prioritizing pickups based on accurate LFD information.
+  </Accordion>
+
+  <Accordion title="Detailed Exception Data">
+    The API provides comprehensive information about holds (customs, freight, terminal) and other exceptions that may delay pickup.
+
+    **Business Benefit**: Proactively address holds and plan alternative shipments when delays occur.
+  </Accordion>
+</AccordionGroup>
+
+## How It Works
+
+<Frame>
+  ![Terminal49 API Flow Diagram](/images/api-flow-diagram.png)
+</Frame>
+
+1. **Submit tracking requests** using bill of lading, booking, or container numbers
+2. **Terminal49 monitors** these shipments by aggregating data from multiple sources
+3. **Your systems receive updates** through webhooks when any change occurs
+4. **Query additional information** as needed using the REST API endpoints
+
+## Available Data Points
+
+Here are key data points available through the Terminal49 API:
+
+<Tabs>
+  <Tab title="Shipment Data">
+    - Bill of lading numbers
+    - Booking numbers
+    - Port of loading/discharge
+    - Shipper/consignee information
+    - Vessel assignments
+    - Estimated dates (departure, arrival)
+    - Associated containers
+  </Tab>
+
+  <Tab title="Container Data">
+    - Container numbers and size/type
+    - Current location and status
+    - Last free day information
+    - Terminal availability
+    - Customs/terminal/freight holds
+    - Transport events history
+    - Pickup appointments
+  </Tab>
+
+  <Tab title="Event Data">
+    - Vessel departures and arrivals
+    - Container loading/discharge
+    - Customs and terminal holds
+    - Availability changes
+    - Last free day updates
+    - Rail movements
+    - Terminal cutoffs
+  </Tab>
+
+  <Tab title="Reference Data">
+    - Shipping lines (with SCAC codes)
+    - Terminals and ports
+    - Vessels and voyages
+    - Metro areas
+    - Standardized location formats
+  </Tab>
+</Tabs>
+
+## Common Use Cases
+
+<CardGroup cols={2}>
+  <Card title="TMS Integration" icon="computer" color="#0D96F2">
+    Connect Terminal49 to your Transportation Management System for real-time visibility without manual tracking.
+  </Card>
+
+  <Card title="Customer Notifications" icon="envelope" color="#0D96F2">
+    Build automated alerts to notify customers about shipment status changes, delays, or container availability.
+  </Card>
+
+  <Card title="Drayage Optimization" icon="truck" color="#0D96F2">
+    Prioritize container pickups based on last free day information to avoid demurrage charges.
+  </Card>
+
+  <Card title="Exception Management" icon="exclamation-triangle" color="#0D96F2">
+    Identify and resolve customs holds, freight issues, or delays that require intervention.
+  </Card>
+
+  <Card title="Shipment Dashboards" icon="chart-line" color="#0D96F2">
+    Build real-time dashboards showing shipment status across your supply chain.
+  </Card>
+
+  <Card title="Delivery Planning" icon="calendar" color="#0D96F2">
+    Plan warehouse staffing and inventory based on accurate container arrival predictions.
+  </Card>
+</CardGroup>
+
+## Getting Started
+
+Ready to start integrating with Terminal49? Here's how to begin:
+
+<Steps>
+  <Step title="Get API Access">
+    [Sign up for Terminal49](https://app.terminal49.com/signup) and get your API key from the [developer portal](https://app.terminal49.com/developers/api-keys).
+  </Step>
+  <Step title="Submit Your First Tracking Request">
+    Follow our [quick start guide](/api-docs/getting-started/tracking-shipments-and-containers) to submit your first tracking request.
+  </Step>
+  <Step title="Set Up Webhooks">
+    Configure [webhooks](/api-docs/in-depth-guides/webhooks) to receive real-time updates about your shipments.
+  </Step>
+  <Step title="Explore the API">
+    Browse our [API reference](/api-docs/api-reference) to discover all available endpoints.
+  </Step>
+</Steps>
+
+<Card title="Need Help?" icon="question-circle" color="#0D96F2">
+  Our team is here to help you get the most out of Terminal49. Contact us at [support@terminal49.com](mailto:support@terminal49.com) with any questions about our API capabilities.
+</Card>

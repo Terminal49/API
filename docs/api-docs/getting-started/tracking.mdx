@@ -1,0 +1,564 @@
+---
+title: Complete Tracking Guide
+description: Learn about all methods of tracking shipments in Terminal49, tracking request lifecycle, and available API endpoints.
+icon: "magnifying-glass-chart"
+---
+
+# Complete Tracking Guide
+
+Tracking is a core function of Terminal49's platform. This guide covers all aspects of tracking shipments and containers, from initiating tracking through various methods to understanding the tracking request lifecycle and managing tracking data.
+
+## Tracking Methods
+
+Terminal49 offers multiple ways to start tracking your shipments:
+
+<CardGroup cols={3}>
+  <Card title="API Integration" icon="code">
+    Use the Tracking Request API to programmatically submit container numbers, bills of lading, or booking numbers for tracking.
+  </Card>
+  <Card title="Dashboard Interface" icon="browser">
+    Manually enter tracking numbers through Terminal49's web dashboard for immediate tracking.
+  </Card>
+  <Card title="Bulk CSV Upload" icon="file-csv">
+    Email CSV files with multiple tracking references to quickly set up tracking for multiple shipments at once.
+  </Card>
+</CardGroup>
+
+### API Integration
+
+The most flexible way to integrate tracking into your systems is via the Terminal49 API. Submit tracking requests programmatically using the Tracking Request endpoint:
+
+```bash
+POST /v2/tracking_requests
+```
+
+This method is ideal for:
+- Real-time tracking initiation from your TMS or other internal systems
+- Automated tracking workflows
+- High-volume tracking needs
+- Custom reference data and shipment organization
+
+[Detailed API Reference →](/api-docs/api-reference/tracking-requests/create-a-tracking-request)
+
+### Dashboard Interface
+
+For manual tracking or lower volumes, Terminal49's web dashboard offers a user-friendly interface:
+
+1. Log in to your Terminal49 account
+2. Navigate to the "Track" section
+3. Enter your tracking number(s) and select the carrier
+4. Click "Track" to begin monitoring
+
+This method is ideal for:
+- Quick one-off tracking needs
+- Small shipment volumes
+- Testing or verification purposes
+- Users who prefer a visual interface
+
+### Bulk CSV Upload
+
+For setting up tracking for multiple shipments at once:
+
+1. Prepare a CSV file with columns for tracking numbers, carrier codes, and optional reference numbers
+2. Email the CSV file to imports@terminal49.com
+3. Terminal49 will process the file and begin tracking all shipments
+
+This method is ideal for:
+- Initial onboarding of many shipments
+- Regular batch imports from other systems
+- Scheduled tracking updates
+
+<Note>
+  Contact your Terminal49 account manager for the exact CSV format requirements and processing schedule.
+</Note>
+
+## Trackable Reference Types
+
+Terminal49 supports tracking using three primary reference types:
+
+<AccordionGroup>
+  <Accordion title="Master Bill of Lading (MBL)">
+    <p>The master bill of lading is issued by the ocean carrier and serves as the contract of carriage.</p>
+
+    **Format Examples:**
+    - Maersk: MAEU9736478
+    - MSC: MSDUV4812756
+    - CMA CGM: CMDUV0946721
+
+    **Best Practices:**
+    - MBL is typically the most reliable reference for tracking
+    - Include the carrier's SCAC code when submitting
+    - Some carriers may not make shipment data available immediately after issuing the MBL
+
+    **Coverage:**
+    - Supported by all major ocean carriers
+    - Provides visibility from origin to destination
+    - Typically covers all containers in a shipment
+  </Accordion>
+
+  <Accordion title="Booking Number">
+    <p>A booking number is assigned by the carrier when space is reserved on a vessel.</p>
+
+    **Format Examples:**
+    - Maersk: MAEU785421
+    - ONE: OOLU3456723
+    - Hapag-Lloyd: HLCUEUR6703426
+
+    **Best Practices:**
+    - Use booking numbers to begin tracking earlier in the shipping lifecycle
+    - Some carriers include their SCAC code at the beginning of booking numbers
+    - Booking numbers may be replaced by bills of lading once issued
+
+    **Coverage:**
+    - Available earlier than bills of lading
+    - May provide limited information until container assignment
+    - Supported by most major carriers (see Carrier Data Matrix for details)
+  </Accordion>
+
+  <Accordion title="Container Number">
+    <p>A container number uniquely identifies a specific shipping container.</p>
+
+    **Format Examples:**
+    - MSCU1234567
+    - CMAU7654321
+    - OOLU8765432
+
+    **Best Practices:**
+    - Container numbers follow ISO 6346 format (4 letters + 7 numbers)
+    - Always include the carrier prefix (first 4 characters)
+    - For multi-container shipments, you'll need to track each container separately
+
+    **Coverage:**
+    - Container level detail provides the most granular tracking
+    - Not supported by all carriers (check Carrier Data Matrix)
+    - May not be available until containers are assigned to a booking
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  House Bill of Lading (HBL) numbers issued by freight forwarders are not directly supported for tracking. You must use the Master Bill of Lading (MBL) from the ocean carrier.
+</Warning>
+
+## Tracking Request API Details
+
+When using the API to create tracking requests, you can provide a wealth of additional information to enhance your tracking experience:
+
+### Basic Required Parameters
+
+```json
+{
+  "data": {
+    "type": "tracking_request",
+    "attributes": {
+      "request_type": "bill_of_lading",
+      "request_number": "MAEU9736478",
+      "scac": "MAEU"
+    }
+  }
+}
+```
+
+### Optional Organizational Parameters
+
+<ParamField body="data.attributes.ref_numbers" type="array">
+  An array of your own reference numbers like purchase orders, SKUs, or internal IDs that help you identify this shipment in your systems
+</ParamField>
+
+<ParamField body="data.attributes.shipment_tags" type="array">
+  Tags for categorizing shipments (e.g., "priority", "fragile", "q2-2023") that can be used for filtering
+</ParamField>
+
+### Relationship Parameters
+
+You can associate the shipment with a customer by establishing a relationship:
+
+```json
+{
+  "data": {
+    "type": "tracking_request",
+    "attributes": {
+      "request_type": "bill_of_lading",
+      "request_number": "MAEU9736478",
+      "scac": "MAEU"
+    },
+    "relationships": {
+      "customer": {
+        "data": {
+          "id": "a9e52f3d-2fa9-467c-8deb-09e90dac2f0b",
+          "type": "party"
+        }
+      }
+    }
+  }
+}
+```
+
+<Note>
+  The customer must be created first using the Parties API before it can be referenced in a tracking request.
+</Note>
+
+### Example Scenarios
+
+<AccordionGroup>
+  <Accordion title="Track by Booking Number">
+    ```json
+    {
+      "data": {
+        "attributes": {
+          "request_type": "booking",
+          "request_number": "OOLU8324567",
+          "scac": "OOLU"
+        },
+        "type": "tracking_request"
+      }
+    }
+    ```
+
+    **Notes**:
+    - Booking numbers are typically issued by the carrier early in the shipping process
+    - Using booking numbers allows you to start tracking earlier in the shipping lifecycle
+    - Booking number format varies by carrier (e.g., OOLU prefix for ONE Line bookings)
+  </Accordion>
+
+  <Accordion title="Including Reference Numbers">
+    ```json
+    {
+      "data": {
+        "attributes": {
+          "request_type": "bill_of_lading",
+          "request_number": "MEDUFR030802",
+          "scac": "MSCU",
+          "ref_numbers": [
+            "PO12345",
+            "HBL12345",
+            "INV9876"
+          ]
+        },
+        "type": "tracking_request"
+      }
+    }
+    ```
+
+    **Notes**:
+    - Reference numbers can include purchase orders, house bills of lading, invoice numbers, etc.
+    - You can add multiple reference numbers to a single tracking request
+    - These numbers will be searchable later through the API and UI
+    - You can use reference numbers to link shipments to your internal systems
+  </Accordion>
+
+  <Accordion title="Adding Tags">
+    ```json
+    {
+      "data": {
+        "attributes": {
+          "request_type": "bill_of_lading",
+          "request_number": "MAEU9736478",
+          "scac": "MAEU",
+          "shipment_tags": [
+            "priority",
+            "electronics",
+            "q2-2023"
+          ]
+        },
+        "type": "tracking_request"
+      }
+    }
+    ```
+
+    **Notes**:
+    - Tags provide a flexible way to group and categorize shipments
+    - Common uses include priority levels, product categories, or time periods
+    - Tags can be used for filtering when listing shipments
+    - You can add or remove tags later using the Edit Shipment endpoint
+  </Accordion>
+
+  <Accordion title="Associating with a Customer">
+    ```json
+    {
+      "data": {
+        "attributes": {
+          "request_type": "bill_of_lading",
+          "request_number": "MAEU9736478",
+          "scac": "MAEU"
+        },
+        "relationships": {
+          "customer": {
+            "data": {
+              "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+              "type": "party"
+            }
+          }
+        },
+        "type": "tracking_request"
+      }
+    }
+    ```
+
+    **Notes**:
+    - The customer must first be created using the Parties API
+    - The customer ID is used to link the shipment to the specific customer
+    - This association enables filtering shipments by customer
+    - Customer information will be included in webhook notifications when using appropriate includes
+    - See the [Adding Customer guide](/api-docs/in-depth-guides/adding-customer) for more details
+  </Accordion>
+</AccordionGroup>
+
+## Tracking Request Lifecycle
+
+When you submit a tracking request, it goes through several possible states:
+
+<img
+  src="/images/tracking-request-lifecycle.png"
+  alt="Tracking Request Lifecycle"
+/>
+
+### Status Transitions
+
+<CardGroup cols={2}>
+  <Card title="Pending" icon="clock">
+    Initial state when a tracking request is first submitted. Terminal49 is processing your request and attempting to locate the shipment.
+  </Card>
+  <Card title="Succeeded" icon="check">
+    The shipment was successfully located and is now being tracked. A shipment object has been created.
+  </Card>
+  <Card title="Failed" icon="xmark">
+    Unable to locate the shipment after multiple attempts. Check the failed_reason for details.
+  </Card>
+  <Card title="Awaiting Manifest" icon="calendar">
+    The bill of lading number appears valid, but the shipment data isn't yet available in the carrier's system. Terminal49 will continue checking daily.
+  </Card>
+  <Card title="Tracking Stopped" icon="hand">
+    Tracking has been manually or automatically stopped for this request.
+  </Card>
+</CardGroup>
+
+### Common Failure Reasons
+
+<AccordionGroup>
+  <Accordion title="not_found">
+    The carrier could not locate the shipment using the provided reference number.
+
+    **Troubleshooting:**
+    - Verify the reference number format and carrier code
+    - For new bookings or bills of lading, wait 24-48 hours and try again
+    - Check if the carrier supports the reference type you're using
+  </Accordion>
+
+  <Accordion title="duplicate">
+    The shipment is already being tracked in Terminal49.
+
+    **Troubleshooting:**
+    - Search for the existing shipment using the List Shipments endpoint
+    - Use filters to find the shipment by reference number
+    - Use the existing shipment data instead of creating a new tracking request
+  </Accordion>
+
+  <Accordion title="invalid_number">
+    The reference number format does not match what the carrier expects.
+
+    **Troubleshooting:**
+    - Check for typos and correct formatting
+    - Ensure you're including any required prefixes
+    - Verify with shipping documents that the number is correct
+  </Accordion>
+
+  <Accordion title="retries_exhausted">
+    Terminal49 has attempted to locate the shipment multiple times without success.
+
+    **Troubleshooting:**
+    - Verify the reference number and carrier are correct
+    - For new shipments, wait a few days and submit a new tracking request
+    - Consider using a different reference type if available
+  </Accordion>
+</AccordionGroup>
+
+For a complete list of failure reasons and detailed troubleshooting, see the [Tracking Request Lifecycle guide](/api-docs/in-depth-guides/tracking-request-lifecycle).
+
+## Tracking Request Webhooks
+
+Terminal49 sends webhook notifications at key points in the tracking request lifecycle:
+
+<AccordionGroup>
+  <Accordion title="tracking_request.succeeded">
+    Sent when a tracking request successfully locates a shipment and begins tracking.
+
+    **Payload includes:**
+    - Tracking request details (ID, reference number, type)
+    - Newly created shipment information
+    - Container details when included in the request
+
+    **Common uses:**
+    - Update your systems to indicate active tracking
+    - Store the shipment ID for future API calls
+    - Notify internal teams that tracking has begun
+  </Accordion>
+
+  <Accordion title="tracking_request.failed">
+    Sent when a tracking request fails to locate a shipment after all retry attempts.
+
+    **Payload includes:**
+    - Tracking request details
+    - Failure reason code
+    - Detailed error message
+
+    **Common uses:**
+    - Trigger alerts for manual investigation
+    - Implement automatic retry strategies based on failure reason
+    - Update internal systems with failure status
+  </Accordion>
+
+  <Accordion title="tracking_request.awaiting_manifest">
+    Sent when a bill of lading number is valid but the shipment is not yet in the carrier's system.
+
+    **Payload includes:**
+    - Tracking request details
+    - Status information
+
+    **Common uses:**
+    - Update systems to show "pending" status
+    - Set reminders to check status in a few days
+    - Notify stakeholders about the delay
+  </Accordion>
+
+  <Accordion title="tracking_request.tracking_stopped">
+    Sent when tracking has been stopped for a request.
+
+    **Payload includes:**
+    - Tracking request details
+    - Reason for stopping (if available)
+
+    **Common uses:**
+    - Update internal systems
+    - Archive shipment records
+    - Trigger cleanup processes
+  </Accordion>
+</AccordionGroup>
+
+Learn more about setting up and managing webhooks in the [Webhooks guide](/api-docs/in-depth-guides/webhooks).
+
+## Managing Tracking Requests
+
+### Listing and Searching Tracking Requests
+
+Use the tracking requests index endpoint to retrieve existing tracking requests:
+
+```
+GET /v2/tracking_requests
+```
+
+Filter by various attributes:
+
+```
+GET /v2/tracking_requests?filter[status]=pending
+GET /v2/tracking_requests?filter[request_number]=MAEU9736478
+GET /v2/tracking_requests?filter[created_at][gt]=2023-01-01T00:00:00Z
+```
+
+Sort results:
+
+```
+GET /v2/tracking_requests?sort=-created_at
+```
+
+Include related resources:
+
+```
+GET /v2/tracking_requests?include=shipment
+```
+
+### Starting and Stopping Tracking
+
+#### Starting Tracking
+
+To start tracking a new shipment, use the create tracking request endpoint:
+
+```
+POST /v2/tracking_requests
+```
+
+#### Stopping Tracking
+
+To stop tracking a shipment, use the stop tracking endpoint:
+
+```
+POST /v2/shipments/{shipment_id}/stop_tracking
+```
+
+<Note>
+  Stopping tracking means Terminal49 will no longer fetch updates for this shipment. This is useful for completed shipments or when you no longer need to monitor a shipment.
+</Note>
+
+## Testing and Development
+
+Terminal49 provides test tracking numbers for development and integration testing:
+
+<AccordionGroup>
+  <Accordion title="Test Tracking Numbers">
+    Use these special test numbers with the SCAC code "TEST" to simulate different scenarios:
+
+    - `TEST-TR-SUCCEEDED` - Always succeeds and creates a test shipment
+    - `TEST-TR-FAILED` - Always fails with a "not_found" reason
+    - `TEST-TR-AWAITING-MANIFEST` - Simulates an awaiting manifest state
+    - `TEST-TR-DELAYED` - Simulates a delayed processing state before succeeding
+
+    Example:
+    ```json
+    {
+      "data": {
+        "type": "tracking_request",
+        "attributes": {
+          "request_type": "bill_of_lading",
+          "request_number": "TEST-TR-SUCCEEDED",
+          "scac": "TEST"
+        }
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Sandbox Environment">
+    Terminal49 provides a sandbox environment for testing your integration without affecting production data:
+
+    - Base URL: `https://sandbox-api.terminal49.com/v2`
+    - Requires a separate sandbox API key
+    - Simulates real-world scenarios with predictable outcomes
+    - Supports all the same endpoints as production
+
+    Contact your Terminal49 account manager to request sandbox access.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+1. **Provide SCAC codes**: Always include the carrier's SCAC code to improve tracking success rates.
+
+2. **Use webhooks**: Set up webhook notifications instead of polling for status updates.
+
+3. **Handle retries**: Implement a reasonable retry strategy for failed tracking requests.
+
+4. **Track early**: Start tracking as soon as you have a booking number or bill of lading.
+
+5. **Add reference data**: Include your own reference numbers and tags to make shipments easily identifiable.
+
+6. **Test thoroughly**: Use the test tracking numbers to validate your integration.
+
+7. **Track by MBL when possible**: Master Bills of Lading generally provide the most reliable tracking.
+
+8. **Check carrier support**: Refer to the Carrier Data Matrix to verify which tracking methods are supported by each carrier.
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Tracking Request API Reference" icon="book" href="/api-docs/api-reference/tracking-requests/create-a-tracking-request">
+    Detailed API documentation for the tracking request endpoint.
+  </Card>
+  <Card title="Webhook Setup Guide" icon="bell" href="/api-docs/in-depth-guides/webhooks">
+    Learn how to configure webhooks to receive tracking updates.
+  </Card>
+  <Card title="Carrier Data Matrix" icon="table" href="/api-docs/useful-info/api-data-sources-availability">
+    See which carriers support which tracking methods.
+  </Card>
+  <Card title="Managing Customers" icon="users" href="/api-docs/in-depth-guides/adding-customer">
+    Learn how to associate customers with tracking requests.
+  </Card>
+</CardGroup>

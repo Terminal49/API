@@ -1,0 +1,996 @@
+---
+title: Common Workflows
+description: Learn how to implement the most common logistics workflows with Terminal49's API, including container tracking, ETA monitoring, and hold management.
+icon: "arrows-split-up-and-left"
+---
+
+# Common Workflows
+
+This guide demonstrates how to implement the most common logistics workflows with Terminal49's API. For each workflow, we'll show two approaches:
+
+1. **Request-based approach**: Proactively querying the API
+2. **Event-driven approach**: Receiving webhook notifications (recommended)
+
+<Note>
+  The event-driven webhook approach is recommended for production environments as it is more efficient and ensures you get real-time updates.
+</Note>
+
+## Getting Container ETAs
+
+One of the most common needs is knowing when containers will arrive at their destination port.
+
+### Request-Based Approach
+
+You can query the shipment data to get the current ETA:
+
+<CodeGroup>
+```bash
+# Using cURL
+curl -X GET "https://api.terminal49.com/v2/shipments/7a8f8d5e-4c7d-4f8c-9b2a-3c6d8e9f0a1b" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json"
+```
+
+```javascript
+// Using JavaScript
+const shipmentId = '7a8f8d5e-4c7d-4f8c-9b2a-3c6d8e9f0a1b';
+const response = await fetch(`https://api.terminal49.com/v2/shipments/${shipmentId}`, {
+  headers: {
+    'Authorization': `Token ${YOUR_API_KEY}`,
+    'Content-Type': 'application/vnd.api+json'
+  }
+});
+
+const result = await response.json();
+const eta = result.data.attributes.estimated_port_arrival_date;
+console.log(`Container will arrive on: ${new Date(eta).toLocaleString()}`);
+```
+
+```ruby
+# Using Ruby
+require 'httparty'
+
+shipment_id = '7a8f8d5e-4c7d-4f8c-9b2a-3c6d8e9f0a1b'
+headers = {
+  'Authorization' => "Token YOUR_API_KEY",
+  'Content-Type' => 'application/vnd.api+json'
+}
+
+response = HTTParty.get(
+  "https://api.terminal49.com/v2/shipments/#{shipment_id}",
+  headers: headers
+)
+
+data = JSON.parse(response.body)
+eta = data['data']['attributes']['estimated_port_arrival_date']
+puts "Container will arrive on: #{eta}"
+```
+</CodeGroup>
+
+### Event-Driven Approach (Recommended)
+
+Register a webhook to be notified when ETAs change:
+
+1. Register a webhook for ETA change events:
+
+<CodeGroup>
+```bash
+# Using cURL
+curl -X POST "https://api.terminal49.com/v2/webhooks" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "webhook",
+      "attributes": {
+        "url": "https://your-server.com/webhook",
+        "active": true,
+        "events": ["shipment.estimated_arrival_change"]
+      }
+    }
+  }'
+```
+
+```javascript
+// Using JavaScript
+const response = await fetch('https://api.terminal49.com/v2/webhooks', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Token ${YOUR_API_KEY}`,
+    'Content-Type': 'application/vnd.api+json'
+  },
+  body: JSON.stringify({
+    data: {
+      type: 'webhook',
+      attributes: {
+        url: 'https://your-server.com/webhook',
+        active: true,
+        events: ['shipment.estimated_arrival_change']
+      }
+    }
+  })
+});
+```
+</CodeGroup>
+
+2. Implement a webhook handler to process ETA change notifications:
+
+```javascript
+// Node.js with Express example
+app.post('/webhook', (req, res) => {
+  const event = req.body;
+
+  if (event.type === 'shipment.estimated_arrival_change') {
+    const shipment = event.data;
+    const bol = shipment.attributes.bill_of_lading_number;
+    const newEta = new Date(shipment.attributes.estimated_port_arrival_date);
+    const previousEta = new Date(shipment.attributes.previous_estimated_port_arrival_date);
+
+    // Calculate the difference in days
+    const diffDays = Math.round((newEta - previousEta) / (1000 * 60 * 60 * 24));
+    const direction = diffDays >= 0 ? 'delayed' : 'advanced';
+
+    console.log(`ETA Update: Shipment ${bol} has been ${direction} by ${Math.abs(diffDays)} days.`);
+    console.log(`New ETA: ${newEta.toLocaleString()}`);
+
+    // Here you could:
+    // 1. Update your database
+    // 2. Notify stakeholders via email/SMS
+    // 3. Update planning systems
+
+    // Example email notification
+    sendEmail({
+      to: 'logistics@yourcompany.com',
+      subject: `ETA Update: Shipment ${bol} ${direction} by ${Math.abs(diffDays)} days`,
+      body: `The estimated arrival date for shipment ${bol} has changed from ${previousEta.toLocaleString()} to ${newEta.toLocaleString()}.`
+    });
+  }
+
+  res.status(200).send('Event received');
+});
+```
+
+<a name="container-availability"></a>
+## Container Availability Monitoring
+
+Knowing when a container is available for pickup is critical for drayage planning and avoiding detention fees.
+
+### Request-Based Approach
+
+Poll the container endpoint to check availability status:
+
+<CodeGroup>
+```bash
+# Using cURL
+curl -X GET "https://api.terminal49.com/v2/containers/e5g4h8i2-4f8c-9b2a-3c6d8e9f0a1b" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json"
+```
+
+```javascript
+// Using JavaScript
+const containerId = 'e5g4h8i2-4f8c-9b2a-3c6d8e9f0a1b';
+const response = await fetch(`https://api.terminal49.com/v2/containers/${containerId}`, {
+  headers: {
+    'Authorization': `Token ${YOUR_API_KEY}`,
+    'Content-Type': 'application/vnd.api+json'
+  }
+});
+
+const result = await response.json();
+const container = result.data;
+
+if (container.attributes.available_for_pickup) {
+  console.log(`Container ${container.attributes.number} is available for pickup!`);
+  console.log(`Last free day: ${container.attributes.last_free_day}`);
+} else {
+  console.log(`Container ${container.attributes.number} is not yet available.`);
+  console.log(`Current status: ${container.attributes.status}`);
+}
+```
+</CodeGroup>
+
+### Event-Driven Approach (Recommended)
+
+Register a webhook to receive notifications when container availability changes:
+
+1. Register a webhook for container availability events:
+
+<CodeGroup>
+```bash
+# Using cURL
+curl -X POST "https://api.terminal49.com/v2/webhooks" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "webhook",
+      "attributes": {
+        "url": "https://your-server.com/webhook",
+        "active": true,
+        "events": ["container.available_for_pickup", "container.availability_changed"]
+      }
+    }
+  }'
+```
+
+```javascript
+// Using JavaScript
+const response = await fetch('https://api.terminal49.com/v2/webhooks', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Token ${YOUR_API_KEY}`,
+    'Content-Type': 'application/vnd.api+json'
+  },
+  body: JSON.stringify({
+    data: {
+      type: 'webhook',
+      attributes: {
+        url: 'https://your-server.com/webhook',
+        active: true,
+        events: ['container.available_for_pickup', 'container.availability_changed']
+      }
+    }
+  })
+});
+```
+</CodeGroup>
+
+2. Implement a webhook handler for availability notifications:
+
+```javascript
+// Node.js handler
+app.post('/webhook', (req, res) => {
+  const event = req.body;
+
+  if (event.type === 'container.available_for_pickup') {
+    const container = event.data;
+    const number = container.attributes.number;
+    const lastFreeDay = new Date(container.attributes.last_free_day);
+    const daysUntilFee = Math.ceil((lastFreeDay - new Date()) / (1000 * 60 * 60 * 24));
+
+    console.log(`Container ${number} is now available for pickup!`);
+    console.log(`Last free day: ${lastFreeDay.toLocaleDateString()}`);
+    console.log(`Days until storage fees: ${daysUntilFee}`);
+
+    // Notify drayage team
+    sendNotification({
+      team: 'drayage',
+      priority: 'high',
+      message: `Container ${number} is ready for pickup. Last free day: ${lastFreeDay.toLocaleDateString()}`
+    });
+
+    // Add to pickup schedule
+    addToPickupSchedule({
+      containerNumber: number,
+      availableFrom: new Date(),
+      lastFreeDay: lastFreeDay,
+      terminal: container.attributes.terminal_name,
+      size: container.attributes.size_type
+    });
+  }
+
+  else if (event.type === 'container.availability_changed') {
+    const container = event.data;
+
+    if (!container.attributes.available_for_pickup) {
+      console.log(`Container ${container.attributes.number} is no longer available for pickup!`);
+      console.log(`Current status: ${container.attributes.status}`);
+
+      // Remove from pickup schedule or mark as unavailable
+      updatePickupSchedule({
+        containerNumber: container.attributes.number,
+        available: false,
+        reason: container.attributes.status
+      });
+    }
+  }
+
+  res.status(200).send('Event received');
+});
+```
+
+<a name="terminal-holds"></a>
+## Terminal Hold Detection
+
+Detecting and addressing holds early can prevent delays in container pickup.
+
+### Request-Based Approach
+
+Query the container's holds to check for any active holds:
+
+<CodeGroup>
+```bash
+# Using cURL
+curl -X GET "https://api.terminal49.com/v2/containers/e5g4h8i2-4f8c-9b2a-3c6d8e9f0a1b?include=holds" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json"
+```
+
+```javascript
+// Using JavaScript
+const containerId = 'e5g4h8i2-4f8c-9b2a-3c6d8e9f0a1b';
+const response = await fetch(`https://api.terminal49.com/v2/containers/${containerId}?include=holds`, {
+  headers: {
+    'Authorization': `Token ${YOUR_API_KEY}`,
+    'Content-Type': 'application/vnd.api+json'
+  }
+});
+
+const result = await response.json();
+const container = result.data;
+
+// Check if the container has holds
+const hasHolds = container.relationships.holds &&
+                 container.relationships.holds.data &&
+                 container.relationships.holds.data.length > 0;
+
+if (hasHolds) {
+  console.log(`Container ${container.attributes.number} has holds!`);
+
+  // Extract hold details from included data
+  const holds = result.included.filter(item => item.type === 'hold');
+
+  holds.forEach(hold => {
+    console.log(`Hold type: ${hold.attributes.type}`);
+    console.log(`Hold reason: ${hold.attributes.reason}`);
+    console.log(`Applied at: ${new Date(hold.attributes.created_at).toLocaleString()}`);
+  });
+} else {
+  console.log(`Container ${container.attributes.number} has no holds.`);
+}
+```
+</CodeGroup>
+
+### Event-Driven Approach (Recommended)
+
+Set up a webhook to be notified when a hold is applied or removed:
+
+1. Register a webhook for hold events:
+
+<CodeGroup>
+```bash
+# Using cURL
+curl -X POST "https://api.terminal49.com/v2/webhooks" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "webhook",
+      "attributes": {
+        "url": "https://your-server.com/webhook",
+        "active": true,
+        "events": ["container.hold.created", "container.hold.removed"]
+      }
+    }
+  }'
+```
+
+```javascript
+// Using JavaScript
+const response = await fetch('https://api.terminal49.com/v2/webhooks', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Token ${YOUR_API_KEY}`,
+    'Content-Type': 'application/vnd.api+json'
+  },
+  body: JSON.stringify({
+    data: {
+      type: 'webhook',
+      attributes: {
+        url: 'https://your-server.com/webhook',
+        active: true,
+        events: ['container.hold.created', 'container.hold.removed']
+      }
+    }
+  })
+});
+```
+</CodeGroup>
+
+2. Implement a webhook handler for hold notifications:
+
+```javascript
+// Node.js handler
+app.post('/webhook', (req, res) => {
+  const event = req.body;
+
+  if (event.type === 'container.hold.created') {
+    const hold = event.data;
+    const container = event.included.find(item =>
+      item.type === 'container' && item.id === hold.relationships.container.data.id
+    );
+
+    const containerNumber = container.attributes.number;
+    const holdType = hold.attributes.type;
+    const holdReason = hold.attributes.reason;
+
+    console.log(`New hold detected on container ${containerNumber}!`);
+    console.log(`Hold type: ${holdType}`);
+    console.log(`Hold reason: ${holdReason}`);
+
+    // Different actions based on hold type
+    if (holdType === 'customs') {
+      // Notify customs broker
+      notifyCustomsBroker({
+        containerNumber,
+        holdType,
+        holdReason,
+        priority: 'urgent'
+      });
+    } else if (holdType === 'freight') {
+      // Notify accounting department
+      notifyAccounting({
+        containerNumber,
+        holdType,
+        holdReason,
+        message: 'Payment required to release container'
+      });
+    } else {
+      // Generic notification
+      notifyLogisticsTeam({
+        containerNumber,
+        holdType,
+        holdReason
+      });
+    }
+  }
+
+  else if (event.type === 'container.hold.removed') {
+    const hold = event.data;
+    const container = event.included.find(item =>
+      item.type === 'container' && item.id === hold.relationships.container.data.id
+    );
+
+    const containerNumber = container.attributes.number;
+    const holdType = hold.attributes.type;
+
+    console.log(`Hold removed from container ${containerNumber}!`);
+    console.log(`Hold type: ${holdType} has been cleared`);
+
+    // Notify relevant teams
+    notifyTeams({
+      containerNumber,
+      message: `The ${holdType} hold has been removed. Container can now proceed.`,
+      priority: 'high'
+    });
+
+    // Check if container is now available for pickup
+    if (container.attributes.available_for_pickup) {
+      addToPickupSchedule({
+        containerNumber,
+        availableFrom: new Date(),
+        terminal: container.attributes.terminal_name
+      });
+    }
+  }
+
+  res.status(200).send('Event received');
+});
+```
+
+<a name="last-free-day"></a>
+## Last Free Day Tracking
+
+Tracking Last Free Day (LFD) is essential for avoiding storage fees.
+
+### Request-Based Approach
+
+Query containers and check their last free days:
+
+<CodeGroup>
+```bash
+# Using cURL
+curl -X GET "https://api.terminal49.com/v2/containers?filter[status]=available_for_pickup" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json"
+```
+
+```javascript
+// Using JavaScript
+const today = new Date();
+const threeDaysFromNow = new Date(today);
+threeDaysFromNow.setDate(today.getDate() + 3);
+
+const response = await fetch('https://api.terminal49.com/v2/containers?filter[status]=available_for_pickup', {
+  headers: {
+    'Authorization': `Token ${YOUR_API_KEY}`,
+    'Content-Type': 'application/vnd.api+json'
+  }
+});
+
+const result = await response.json();
+const containers = result.data;
+
+// Find containers with upcoming last free days
+const upcomingLFDs = containers.filter(container => {
+  const lastFreeDay = new Date(container.attributes.last_free_day);
+  return lastFreeDay > today && lastFreeDay <= threeDaysFromNow;
+});
+
+if (upcomingLFDs.length > 0) {
+  console.log(`Found ${upcomingLFDs.length} containers with LFD in the next 3 days:`);
+
+  upcomingLFDs.forEach(container => {
+    const lfd = new Date(container.attributes.last_free_day);
+    const daysRemaining = Math.ceil((lfd - today) / (1000 * 60 * 60 * 24));
+
+    console.log(`Container ${container.attributes.number}: LFD in ${daysRemaining} days (${lfd.toLocaleDateString()})`);
+    console.log(`Terminal: ${container.attributes.terminal_name}`);
+    console.log(`Size: ${container.attributes.size_type}`);
+    console.log('---');
+  });
+
+  // Prioritize containers with the earliest LFDs
+  upcomingLFDs.sort((a, b) =>
+    new Date(a.attributes.last_free_day) - new Date(b.attributes.last_free_day)
+  );
+
+  // Create pickup schedule based on LFD
+  createPickupSchedule(upcomingLFDs);
+}
+```
+</CodeGroup>
+
+### Event-Driven Approach (Recommended)
+
+Set up a webhook for last free day changes and implement an automated daily check:
+
+1. Register a webhook for last free day updates:
+
+<CodeGroup>
+```bash
+# Using cURL
+curl -X POST "https://api.terminal49.com/v2/webhooks" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "webhook",
+      "attributes": {
+        "url": "https://your-server.com/webhook",
+        "active": true,
+        "events": ["container.last_free_day_change"]
+      }
+    }
+  }'
+```
+
+```javascript
+// Using JavaScript
+const response = await fetch('https://api.terminal49.com/v2/webhooks', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Token ${YOUR_API_KEY}`,
+    'Content-Type': 'application/vnd.api+json'
+  },
+  body: JSON.stringify({
+    data: {
+      type: 'webhook',
+      attributes: {
+        url: 'https://your-server.com/webhook',
+        active: true,
+        events: ['container.last_free_day_change']
+      }
+    }
+  })
+});
+```
+</CodeGroup>
+
+2. Implement a webhook handler for LFD changes and daily checks:
+
+```javascript
+// Node.js handler for webhook events
+app.post('/webhook', (req, res) => {
+  const event = req.body;
+
+  if (event.type === 'container.last_free_day_change') {
+    const container = event.data;
+    const newLFD = new Date(container.attributes.last_free_day);
+    const previousLFD = container.attributes.previous_last_free_day ?
+                       new Date(container.attributes.previous_last_free_day) : null;
+
+    console.log(`Last Free Day updated for container ${container.attributes.number}`);
+
+    if (previousLFD) {
+      const diffDays = Math.round((newLFD - previousLFD) / (1000 * 60 * 60 * 24));
+      const direction = diffDays >= 0 ? 'extended' : 'reduced';
+
+      console.log(`LFD has been ${direction} by ${Math.abs(diffDays)} days`);
+      console.log(`Old LFD: ${previousLFD.toLocaleDateString()}`);
+      console.log(`New LFD: ${newLFD.toLocaleDateString()}`);
+    } else {
+      console.log(`LFD set to ${newLFD.toLocaleDateString()}`);
+    }
+
+    // Update pickup schedule
+    updatePickupPriority({
+      containerNumber: container.attributes.number,
+      lastFreeDay: newLFD,
+      terminal: container.attributes.terminal_name
+    });
+
+    // Calculate days remaining
+    const today = new Date();
+    const daysRemaining = Math.ceil((newLFD - today) / (1000 * 60 * 60 * 24));
+
+    // Send notifications based on urgency
+    if (daysRemaining <= 1) {
+      // URGENT: Last free day is today or tomorrow
+      sendUrgentNotification({
+        containerNumber: container.attributes.number,
+        message: `URGENT: Last free day is ${daysRemaining === 0 ? 'TODAY' : 'TOMORROW'}`,
+        terminal: container.attributes.terminal_name
+      });
+    } else if (daysRemaining <= 3) {
+      // High priority: Last free day within 3 days
+      sendPriorityNotification({
+        containerNumber: container.attributes.number,
+        message: `Last free day in ${daysRemaining} days`,
+        terminal: container.attributes.terminal_name
+      });
+    }
+  }
+
+  res.status(200).send('Event received');
+});
+
+// Daily scheduled check function (run via cron job)
+async function checkUpcomingLastFreeDays() {
+  const today = new Date();
+
+  try {
+    const response = await fetch('https://api.terminal49.com/v2/containers?filter[status]=available_for_pickup', {
+      headers: {
+        'Authorization': `Token ${process.env.API_KEY}`,
+        'Content-Type': 'application/vnd.api+json'
+      }
+    });
+
+    const result = await response.json();
+    const containers = result.data;
+
+    // Group containers by days until last free day
+    const lfdGroups = {
+      today: [],
+      tomorrow: [],
+      twoDays: [],
+      threeDays: [],
+      fourToSeven: [],
+      overOneWeek: []
+    };
+
+    containers.forEach(container => {
+      if (!container.attributes.last_free_day) return;
+
+      const lfd = new Date(container.attributes.last_free_day);
+      const daysRemaining = Math.ceil((lfd - today) / (1000 * 60 * 60 * 24));
+
+      if (daysRemaining <= 0) {
+        lfdGroups.today.push(container);
+      } else if (daysRemaining === 1) {
+        lfdGroups.tomorrow.push(container);
+      } else if (daysRemaining === 2) {
+        lfdGroups.twoDays.push(container);
+      } else if (daysRemaining === 3) {
+        lfdGroups.threeDays.push(container);
+      } else if (daysRemaining <= 7) {
+        lfdGroups.fourToSeven.push(container);
+      } else {
+        lfdGroups.overOneWeek.push(container);
+      }
+    });
+
+    // Send daily summary report
+    sendDailyLFDReport({
+      urgent: [...lfdGroups.today, ...lfdGroups.tomorrow],
+      priority: [...lfdGroups.twoDays, ...lfdGroups.threeDays],
+      upcoming: lfdGroups.fourToSeven,
+      later: lfdGroups.overOneWeek
+    });
+
+    // Take immediate action for urgent containers
+    if (lfdGroups.today.length > 0) {
+      lfdGroups.today.forEach(container => {
+        sendUrgentPickupRequest({
+          containerNumber: container.attributes.number,
+          terminal: container.attributes.terminal_name,
+          message: 'URGENT: Last free day is TODAY. Immediate pickup required.'
+        });
+      });
+    }
+  } catch (error) {
+    console.error('Error checking last free days:', error);
+  }
+}
+```
+
+## Vessel Arrival Monitoring
+
+Tracking vessel arrivals helps with resource planning and customer updates.
+
+### Request-Based Approach
+
+Query the shipment for its vessel and voyage information:
+
+<CodeGroup>
+```bash
+# Using cURL
+curl -X GET "https://api.terminal49.com/v2/shipments/7a8f8d5e-4c7d-4f8c-9b2a-3c6d8e9f0a1b" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json"
+```
+
+```javascript
+// Using JavaScript
+const shipmentId = '7a8f8d5e-4c7d-4f8c-9b2a-3c6d8e9f0a1b';
+const response = await fetch(`https://api.terminal49.com/v2/shipments/${shipmentId}`, {
+  headers: {
+    'Authorization': `Token ${YOUR_API_KEY}`,
+    'Content-Type': 'application/vnd.api+json'
+  }
+});
+
+const result = await response.json();
+const shipment = result.data;
+
+console.log(`Vessel: ${shipment.attributes.vessel_name}`);
+console.log(`Voyage: ${shipment.attributes.voyage}`);
+console.log(`Estimated arrival: ${new Date(shipment.attributes.estimated_port_arrival_date).toLocaleString()}`);
+console.log(`Port of discharge: ${shipment.attributes.port_of_discharge_name}`);
+
+// Calculate days until arrival
+const today = new Date();
+const arrivalDate = new Date(shipment.attributes.estimated_port_arrival_date);
+const daysUntilArrival = Math.ceil((arrivalDate - today) / (1000 * 60 * 60 * 24));
+
+console.log(`Days until arrival: ${daysUntilArrival}`);
+```
+</CodeGroup>
+
+### Event-Driven Approach (Recommended)
+
+Set up webhooks to be notified of vessel arrival and changes:
+
+1. Register a webhook for vessel events:
+
+<CodeGroup>
+```bash
+# Using cURL
+curl -X POST "https://api.terminal49.com/v2/webhooks" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "webhook",
+      "attributes": {
+        "url": "https://your-server.com/webhook",
+        "active": true,
+        "events": [
+          "shipment.vessel_arrived",
+          "shipment.vessel_name_change",
+          "shipment.estimated_arrival_change"
+        ]
+      }
+    }
+  }'
+```
+
+```javascript
+// Using JavaScript
+const response = await fetch('https://api.terminal49.com/v2/webhooks', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Token ${YOUR_API_KEY}`,
+    'Content-Type': 'application/vnd.api+json'
+  },
+  body: JSON.stringify({
+    data: {
+      type: 'webhook',
+      attributes: {
+        url: 'https://your-server.com/webhook',
+        active: true,
+        events: [
+          'shipment.vessel_arrived',
+          'shipment.vessel_name_change',
+          'shipment.estimated_arrival_change'
+        ]
+      }
+    }
+  })
+});
+```
+</CodeGroup>
+
+2. Implement a webhook handler for vessel events:
+
+```javascript
+// Node.js handler
+app.post('/webhook', (req, res) => {
+  const event = req.body;
+  const shipment = event.data;
+
+  if (event.type === 'shipment.vessel_arrived') {
+    console.log(`Vessel ${shipment.attributes.vessel_name} has arrived at ${shipment.attributes.port_of_discharge_name}!`);
+
+    // Notify stakeholders of vessel arrival
+    notifyCustomer({
+      shipmentId: shipment.id,
+      bolNumber: shipment.attributes.bill_of_lading_number,
+      message: `Your shipment has arrived at ${shipment.attributes.port_of_discharge_name} on vessel ${shipment.attributes.vessel_name}.`,
+      estimatedAvailability: 'Typically 2-3 days after vessel arrival'
+    });
+
+    // Begin monitoring container availability
+    startAvailabilityMonitoring(shipment.id);
+  }
+
+  else if (event.type === 'shipment.vessel_name_change') {
+    console.log(`Vessel change for shipment ${shipment.attributes.bill_of_lading_number}!`);
+    console.log(`New vessel: ${shipment.attributes.vessel_name}`);
+    console.log(`New voyage: ${shipment.attributes.voyage}`);
+
+    // Notify operations team
+    notifyOperations({
+      shipmentId: shipment.id,
+      bolNumber: shipment.attributes.bill_of_lading_number,
+      message: `Vessel change: Now on ${shipment.attributes.vessel_name} voyage ${shipment.attributes.voyage}`,
+      newETA: shipment.attributes.estimated_port_arrival_date
+    });
+  }
+
+  else if (event.type === 'shipment.estimated_arrival_change') {
+    const newArrival = new Date(shipment.attributes.estimated_port_arrival_date);
+    const previousArrival = shipment.attributes.previous_estimated_port_arrival_date ?
+                           new Date(shipment.attributes.previous_estimated_port_arrival_date) : null;
+
+    if (previousArrival) {
+      const diffDays = Math.round((newArrival - previousArrival) / (1000 * 60 * 60 * 24));
+      const direction = diffDays >= 0 ? 'delayed' : 'advanced';
+
+      console.log(`Vessel ${shipment.attributes.vessel_name} has been ${direction} by ${Math.abs(diffDays)} days`);
+      console.log(`New ETA: ${newArrival.toLocaleDateString()}`);
+
+      // Update pick-up planning based on new ETA
+      updatePickupPlanning({
+        shipmentId: shipment.id,
+        bolNumber: shipment.attributes.bill_of_lading_number,
+        newETA: newArrival,
+        diffDays
+      });
+
+      // Notify customer of significant changes (more than 1 day)
+      if (Math.abs(diffDays) > 1) {
+        notifyCustomer({
+          shipmentId: shipment.id,
+          bolNumber: shipment.attributes.bill_of_lading_number,
+          message: `Your shipment on ${shipment.attributes.vessel_name} has been ${direction} by ${Math.abs(diffDays)} days. New estimated arrival: ${newArrival.toLocaleDateString()}`,
+          previousETA: previousArrival.toLocaleDateString(),
+          newETA: newArrival.toLocaleDateString()
+        });
+      }
+    }
+  }
+
+  res.status(200).send('Event received');
+});
+```
+
+## Using Webhooks for Multiple Workflows
+
+For production environments, you'll likely want to track multiple event types with a single webhook. Here's how to set it up:
+
+1. Register a webhook for all relevant event types:
+
+```javascript
+// Using JavaScript
+const response = await fetch('https://api.terminal49.com/v2/webhooks', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Token ${YOUR_API_KEY}`,
+    'Content-Type': 'application/vnd.api+json'
+  },
+  body: JSON.stringify({
+    data: {
+      type: 'webhook',
+      attributes: {
+        url: 'https://your-server.com/webhook',
+        active: true,
+        events: [
+          // Shipment events
+          'shipment.estimated_arrival_change',
+          'shipment.vessel_arrived',
+          'shipment.vessel_name_change',
+
+          // Container events
+          'container.available_for_pickup',
+          'container.availability_changed',
+          'container.last_free_day_change',
+          'container.hold.created',
+          'container.hold.removed',
+
+          // Tracking request events
+          'tracking_request.succeeded',
+          'tracking_request.failed'
+        ]
+      }
+    }
+  })
+});
+```
+
+2. Implement a comprehensive webhook handler:
+
+```javascript
+// Node.js handler with comprehensive event routing
+app.post('/webhook', (req, res) => {
+  const event = req.body;
+  console.log(`Received event: ${event.type}`);
+
+  // Route the event to the appropriate handler based on event type
+  switch (event.type) {
+    // Shipment events
+    case 'shipment.estimated_arrival_change':
+      handleETAChange(event);
+      break;
+    case 'shipment.vessel_arrived':
+      handleVesselArrival(event);
+      break;
+    case 'shipment.vessel_name_change':
+      handleVesselChange(event);
+      break;
+
+    // Container events
+    case 'container.available_for_pickup':
+      handleContainerAvailable(event);
+      break;
+    case 'container.availability_changed':
+      handleAvailabilityChange(event);
+      break;
+    case 'container.last_free_day_change':
+      handleLFDChange(event);
+      break;
+    case 'container.hold.created':
+      handleHoldCreated(event);
+      break;
+    case 'container.hold.removed':
+      handleHoldRemoved(event);
+      break;
+
+    // Tracking request events
+    case 'tracking_request.succeeded':
+      handleTrackingSuccess(event);
+      break;
+    case 'tracking_request.failed':
+      handleTrackingFailure(event);
+      break;
+
+    default:
+      console.log(`Unhandled event type: ${event.type}`);
+  }
+
+  // Always acknowledge receipt of the webhook
+  res.status(200).send('Event received');
+});
+
+// Individual handler functions (implementation details omitted for brevity)
+function handleETAChange(event) {
+  // Implementation for ETA changes
+}
+
+function handleVesselArrival(event) {
+  // Implementation for vessel arrivals
+}
+
+// And so on for each event type...
+```
+
+## Next Steps
+
+Now that you understand the common workflows, you can:
+
+1. **Customize these examples** for your specific business needs
+2. **Combine multiple workflows** to create comprehensive logistics applications
+3. **Explore our API reference** for more details on available endpoints and parameters
+4. **Check out our [JSON:API Guide](/api-docs/in-depth-guides/json-api-guide)** to learn how to efficiently request related resources
