@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - jeffrey/data-5807-update-postman-collection-automatically
     paths:
       # ONLY trigger if the generated collection file itself changes on the target branch
       - 'Terminal49-API.postman_collection.json'
@@ -24,7 +25,7 @@ jobs:
       - name: Update Postman Collection via API
         env:
           POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
-          POSTMAN_COLLECTION_UID: 9bcc557f-7a58-4fce-86be-d799fee4e31b # Our collection UID
+          POSTMAN_COLLECTION_UID: 26830108-7c90c1cf-358d-44b6-9e64-0647c12b555b
           COLLECTION_FILE: Terminal49-API.postman_collection.json
         run: |
           echo "Attempting to update Postman collection (UID: $POSTMAN_COLLECTION_UID) from branch ${{ github.ref_name }}..."
