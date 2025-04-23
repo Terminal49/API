@@ -11,7 +11,7 @@
     "description": "The Terminal 49 API offers a convenient way to programmatically track your shipments from origin to destination.",
     "x-label": "Beta",
     "termsOfService": "https://www.terminal49.com/terms"
-  },
+  },  
   "servers": [
     {
       "url": "https://api.terminal49.com/v2",
