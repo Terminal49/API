@@ -2,26 +2,30 @@ name: Deploy Postman Collection
 
 on:
   workflow_run:
-    workflows: ["Generate Postman Collection"] # Name of the workflow file to watch
+    workflows: ["Generate Postman Collection"]
     types:
-      - completed # Trigger only when the workflow finishes
+      - completed
+    # branches:
+    #   - main # Directly filter for master branch here
 
 jobs:
   deploy-to-postman:
     runs-on: ubuntu-latest
-    # Add the condition here at the job level
-    if: |
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.conclusion == 'success' &&
-      (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'jeffrey/data-5807-update-postman-collection-automatically')
-
-    permissions:
-      contents: read # Only need read permission to check out the file
+    # Simpler conditional check
+    if: github.event.workflow_run.conclusion == 'success'
+    
     steps:
-      - name: Checkout repository at specific commit
+      - name: Debug Workflow Run Event
+        run: |
+          echo "Triggered by workflow: ${{ github.event.workflow_run.name }}"
+          echo "Workflow conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "Workflow branch: ${{ github.event.workflow_run.head_branch }}"
+          echo "Workflow commit: ${{ github.event.workflow_run.head_sha }}"
+      
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }} # Checkout the commit that triggered the completed workflow
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Install jq # For JSON manipulation
         run: sudo apt-get update && sudo apt-get install -y jq
