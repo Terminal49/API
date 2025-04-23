@@ -2,20 +2,21 @@ name: Generate Postman Collection
 
 on:
   push:
+    # No branch filter here - runs on all branches
     paths:
-      - 'docs/openapi.json' # Only trigger on changes to this file
+      - 'docs/openapi.json' # Only trigger on changes to the source spec
 
 jobs:
   generate-collection:
     runs-on: ubuntu-latest
     permissions:
-      # Required to checkout the code
+      # Required to checkout the code and commit back
       contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Fetch full history to allow proper diff and commit attribution
+          # Fetch full history needed for diff and commit
           fetch-depth: 0
 
       - name: Set up Node.js
@@ -36,20 +37,28 @@ jobs:
           openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,parametersResolution=Example
 
       - name: Commit changes
+        id: commit # Give step an ID to check output later
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add Terminal49-API.postman_collection.json
           # Check if there are changes to commit
-          # If git diff is quiet (no changes), exit code is 0. If changes, exit code is 1.
-          # The '||' means the commit command only runs if the diff command fails (finds changes)
-          git diff --quiet --cached || git commit -m "chore: Auto-generate Postman collection from openapi.json"
+          if git diff --quiet --cached; then
+            echo "No changes detected in generated collection."
+            echo "committed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Generated collection changed. Committing..."
+            # Use [skip ci] to prevent potential loops if other actions trigger on commits
+            git commit -m "chore: Auto-generate Postman collection from openapi.json [skip ci]"
+            echo "committed=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Push changes
+        # Only push if the commit step actually made a commit
+        if: steps.commit.outputs.committed == 'true'
         run: |
-          # Only push if the commit step actually happened (check HEAD vs origin/master)
-          if ! git diff --quiet HEAD origin/${{ github.ref_name }}; then
-            git push origin HEAD:${{ github.ref_name }}
-          else
-            echo "No changes to push."
-          fi
+          echo "Pushing updated collection to ${{ github.ref_name }}..."
+          # Use github.ref_name to push to the correct branch the workflow ran on
+          git push origin HEAD:${{ github.ref_name }}
+
+      # No deployment logic here

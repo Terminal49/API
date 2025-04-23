@@ -1,23 +1,27 @@
 name: Deploy Postman Collection
 
 on:
-  push:
-    branches:
-      - main
-      - jeffrey/data-5807-update-postman-collection-automatically
-    paths:
-      # ONLY trigger if the generated collection file itself changes on the target branch
-      - 'Terminal49-API.postman_collection.json'
+  workflow_run:
+    workflows: ["Generate Postman Collection"] # Name of the workflow file to watch
+    types:
+      - completed # Trigger only when the workflow finishes
 
 jobs:
   deploy-to-postman:
     runs-on: ubuntu-latest
-    # No write permissions needed here, only reading the checked-out file
+    # Add the condition here at the job level
+    if: |
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'jeffrey/data-5807-update-postman-collection-automatically')
+
     permissions:
-      contents: read
+      contents: read # Only need read permission to check out the file
     steps:
-      - name: Checkout repository # Need the collection file from the commit
+      - name: Checkout repository at specific commit
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }} # Checkout the commit that triggered the completed workflow
 
       - name: Install jq # For JSON manipulation
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -25,10 +29,11 @@ jobs:
       - name: Update Postman Collection via API
         env:
           POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
-          POSTMAN_COLLECTION_UID: 26830108-7c90c1cf-358d-44b6-9e64-0647c12b555b
+          POSTMAN_COLLECTION_UID: 26830108-7c90c1cf-358d-44b6-9e64-0647c12b555b # Your collection UID
+          # Assuming the file is checked out or downloaded to this name
           COLLECTION_FILE: Terminal49-API.postman_collection.json
         run: |
-          echo "Attempting to update Postman collection (UID: $POSTMAN_COLLECTION_UID) from branch ${{ github.ref_name }}..."
+          echo "Deploy workflow triggered by completion of Generate workflow run ID ${{ github.event.workflow_run.id }} on commit ${{ github.event.workflow_run.head_sha }} for branch ${{ github.event.workflow_run.head_branch }}"
 
           # Check if API key is set
           if [ -z "$POSTMAN_API_KEY" ]; then
@@ -36,16 +41,19 @@ jobs:
             exit 1
           fi
 
-          # Check if collection file exists
+          # Check if collection file exists (critical after checkout)
           if [ ! -f "$COLLECTION_FILE" ]; then
-            echo "Error: Collection file $COLLECTION_FILE not found in checkout."
-            exit 1
+            echo "Error: Collection file '$COLLECTION_FILE' not found at commit ${{ github.event.workflow_run.head_sha }}. Was it generated and committed by the previous workflow?"
+            # It's possible the generate workflow found no changes and didn't commit/push.
+            # If that's okay, you might exit cleanly here instead of erroring.
+            # echo "Skipping deployment as collection file was not found (likely no changes were generated)."
+            # exit 0
+            exit 1 # Exiting with error as current setup expects a commit if triggered
           fi
 
-          # Construct the JSON payload using jq: { "collection": { ...file contents... } }
+          # Construct the JSON payload using jq
           JSON_PAYLOAD=$(jq --null-input --rawfile collection "$COLLECTION_FILE" '{ "collection": ($collection | fromjson) }')
 
-          # Check if jq succeeded
           if [ $? -ne 0 ]; then
             echo "Error: jq failed to process $COLLECTION_FILE. Is it valid JSON?"
             exit 1
@@ -57,10 +65,9 @@ jobs:
           --header "X-Api-Key: $POSTMAN_API_KEY" \
           --data "$JSON_PAYLOAD"
 
-          # Check if curl succeeded
           if [ $? -eq 0 ]; then
             echo "Postman collection update request sent successfully."
           else
             echo "Error: Failed to update Postman collection via API. Check curl output above."
-            exit 1 # Make the workflow step fail
+            exit 1
           fi
