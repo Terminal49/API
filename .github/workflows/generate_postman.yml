@@ -1,0 +1,55 @@
+name: Generate Postman Collection
+
+on:
+  push:
+    paths:
+      - 'docs/openapi.json' # Only trigger on changes to this file
+
+jobs:
+  generate-collection:
+    runs-on: ubuntu-latest
+    permissions:
+      # Required to checkout the code
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history to allow proper diff and commit attribution
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Use a current LTS version
+
+      - name: Install openapi-to-postmanv2
+        run: npm install -g openapi-to-postmanv2
+
+      - name: Generate Postman Collection
+        run: |
+          # Run the converter
+          # -s: source OpenAPI file
+          # -o: output Postman collection file
+          # -p: pretty-print the output JSON
+          # -O: specify converter options (folderStrategy=Tags attempts a flatter structure)
+          openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,parametersResolution=Example
+
+      - name: Commit changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add Terminal49-API.postman_collection.json
+          # Check if there are changes to commit
+          # If git diff is quiet (no changes), exit code is 0. If changes, exit code is 1.
+          # The '||' means the commit command only runs if the diff command fails (finds changes)
+          git diff --quiet --cached || git commit -m "chore: Auto-generate Postman collection from openapi.json"
+
+      - name: Push changes
+        run: |
+          # Only push if the commit step actually happened (check HEAD vs origin/master)
+          if ! git diff --quiet HEAD origin/${{ github.ref_name }}; then
+            git push origin HEAD:${{ github.ref_name }}
+          else
+            echo "No changes to push."
+          fi
