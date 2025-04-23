@@ -1,0 +1,65 @@
+name: Deploy Postman Collection
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      # ONLY trigger if the generated collection file itself changes on the target branch
+      - 'Terminal49-API.postman_collection.json'
+
+jobs:
+  deploy-to-postman:
+    runs-on: ubuntu-latest
+    # No write permissions needed here, only reading the checked-out file
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository # Need the collection file from the commit
+        uses: actions/checkout@v4
+
+      - name: Install jq # For JSON manipulation
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Update Postman Collection via API
+        env:
+          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+          POSTMAN_COLLECTION_UID: 9bcc557f-7a58-4fce-86be-d799fee4e31b # Our collection UID
+          COLLECTION_FILE: Terminal49-API.postman_collection.json
+        run: |
+          echo "Attempting to update Postman collection (UID: $POSTMAN_COLLECTION_UID) from branch ${{ github.ref_name }}..."
+
+          # Check if API key is set
+          if [ -z "$POSTMAN_API_KEY" ]; then
+            echo "Error: POSTMAN_API_KEY secret is not set."
+            exit 1
+          fi
+
+          # Check if collection file exists
+          if [ ! -f "$COLLECTION_FILE" ]; then
+            echo "Error: Collection file $COLLECTION_FILE not found in checkout."
+            exit 1
+          fi
+
+          # Construct the JSON payload using jq: { "collection": { ...file contents... } }
+          JSON_PAYLOAD=$(jq --null-input --rawfile collection "$COLLECTION_FILE" '{ "collection": ($collection | fromjson) }')
+
+          # Check if jq succeeded
+          if [ $? -ne 0 ]; then
+            echo "Error: jq failed to process $COLLECTION_FILE. Is it valid JSON?"
+            exit 1
+          fi
+
+          # Make the API call
+          curl --location --fail --request PUT "https://api.getpostman.com/collections/$POSTMAN_COLLECTION_UID" \
+          --header 'Content-Type: application/json' \
+          --header "X-Api-Key: $POSTMAN_API_KEY" \
+          --data "$JSON_PAYLOAD"
+
+          # Check if curl succeeded
+          if [ $? -eq 0 ]; then
+            echo "Postman collection update request sent successfully."
+          else
+            echo "Error: Failed to update Postman collection via API. Check curl output above."
+            exit 1 # Make the workflow step fail
+          fi
