@@ -77,12 +77,14 @@ jobs:
             exit 1
           fi
           
-          # Make the API call
-          echo "Sending updated collection to Postman API..."
+          # Save the payload to a file instead of trying to pass it directly
+          echo "$JSON_PAYLOAD" > postman_payload.json
+          
+          # Use the file with curl instead of passing the data directly
           curl --location --fail --request PUT "https://api.getpostman.com/collections/$POSTMAN_COLLECTION_UID" \
           --header 'Content-Type: application/json' \
           --header "X-Api-Key: $POSTMAN_API_KEY" \
-          --data "$JSON_PAYLOAD"
+          --data @postman_payload.json
           
           if [ $? -eq 0 ]; then
             echo "✅ Postman collection update request sent successfully."
