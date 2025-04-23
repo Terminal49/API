@@ -55,10 +55,10 @@ jobs:
           
       # Deploy to Postman API - only if we're on master/main branch AND changes were committed
       - name: Deploy to Postman API
-        if: steps.commit.outputs.committed == 'true' # && github.ref == 'refs/heads/master'
+        if: steps.commit.outputs.committed == 'true' && github.ref == 'refs/heads/master'
         env:
           POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
-          POSTMAN_COLLECTION_UID: 26830108-7c90c1cf-358d-44b6-9e64-0647c12b555b
+          POSTMAN_COLLECTION_UID: 9bcc557f-7a58-4fce-86be-d799fee4e31b
         run: |
           echo "On master branch with changes to collection - deploying to Postman API..."
           
