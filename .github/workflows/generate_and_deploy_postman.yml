@@ -1,0 +1,94 @@
+name: Generate and Deploy Postman Collection
+
+on:
+  push:
+    paths:
+      - 'docs/openapi.json' # Only trigger on changes to this file
+
+jobs:
+  generate-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for committing back to the repo
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for proper diffing
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install openapi-to-postmanv2
+        run: npm install -g openapi-to-postmanv2
+
+      - name: Install jq (for Postman API call)
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Generate Postman Collection
+        run: |
+          echo "Generating Postman collection from OpenAPI spec..."
+          openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags
+
+      - name: Commit changes
+        id: commit
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add Terminal49-API.postman_collection.json
+          if git diff --quiet --cached; then
+            echo "No changes detected in generated collection."
+            echo "committed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Generated collection changed. Committing..."
+            git commit -m "chore: Auto-generate Postman collection from openapi.json [skip ci]"
+            echo "committed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push changes
+        if: steps.commit.outputs.committed == 'true'
+        run: |
+          echo "Pushing updated collection to ${{ github.ref_name }}..."
+          git push origin HEAD:${{ github.ref_name }}
+          
+      # Deploy to Postman API - only if we're on master/main branch AND changes were committed
+      - name: Deploy to Postman API
+        if: steps.commit.outputs.committed == 'true' && github.ref == 'refs/heads/main'
+        env:
+          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+          POSTMAN_COLLECTION_UID: 9bcc557f-7a58-4fce-86be-d799fee4e31b
+        run: |
+          echo "On main branch with changes to collection - deploying to Postman API..."
+          
+          # Verify collection file exists (it should, but check anyway)
+          if [ ! -f "Terminal49-API.postman_collection.json" ]; then
+            echo "Error: Collection file not found!"
+            exit 1
+          fi
+          
+          # Construct the JSON payload
+          JSON_PAYLOAD=$(jq --null-input --rawfile collection "Terminal49-API.postman_collection.json" '{ "collection": ($collection | fromjson) }')
+          
+          # Check if jq succeeded
+          if [ $? -ne 0 ]; then
+            echo "Error: jq failed to process the collection file. Is it valid JSON?"
+            exit 1
+          fi
+          
+          # Save the payload to a file instead of trying to pass it directly
+          echo "$JSON_PAYLOAD" > postman_payload.json
+          
+          # Use the file with curl instead of passing the data directly
+          curl --location --fail --request PUT "https://api.getpostman.com/collections/$POSTMAN_COLLECTION_UID" \
+          --header 'Content-Type: application/json' \
+          --header "X-Api-Key: $POSTMAN_API_KEY" \
+          --data @postman_payload.json
+          
+          if [ $? -eq 0 ]; then
+            echo "✅ Postman collection update request sent successfully."
+          else
+            echo "❌ Error: Failed to update Postman collection via API."
+            exit 1
+          fi 

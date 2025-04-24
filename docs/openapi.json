@@ -8,7 +8,7 @@
       "url": "https://www.terminal49.com",
       "email": "support@terminal49.com"
     },
-    "description": "The Terminal 49 API offers a convenient way to programmatically track your shipments from origin to destination.",
+    "description": "The Terminal 49 API offers a convenient way to programmatically track your shipments from origin to destination.\n\nPlease enter your API key into the \"Variables\" tab before using these endpoints within Postman",
     "x-label": "Beta",
     "termsOfService": "https://www.terminal49.com/terms"
   },
