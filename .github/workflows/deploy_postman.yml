@@ -3,7 +3,8 @@ name: Deploy Postman Collection
 on:
   push:
     branches:
-      - 'main'
+      - main
+  workflow_dispatch:  # Add this to enable manual triggering
 
 jobs:
   deploy-postman-collection:
