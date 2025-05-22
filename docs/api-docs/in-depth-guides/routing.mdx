@@ -78,12 +78,6 @@ The Vessel Tracking API delivers precise location data for vessels:
 -   **Predicted Future Positions:** Calculated using advanced algorithms, typically marked as `estimated: true`.
 -   **Vessel Details:** Includes vessel name, IMO, MMSI, current speed, and heading.
 
-### Webhook Notifications for ETAs
-
-Terminal49 proactively informs you about changes to Estimated Times of Arrival (ETAs) for your shipments, including those at transshipment ports and the final port of discharge, via webhooks.
--   **Notification:** You will receive a webhook notification each time a relevant ETA for your container changes.
--   **Recommendation:** It is highly recommended to log all ETA changes received via webhooks on your side to build a comprehensive timeline and history of shipment progress. For details on available webhook events and their payloads, please refer to our [Webhook Events Examples documentation](/api-docs/useful-info/webhook-events-examples).
-
 ## Use Cases
 
 Integrating Terminal49's Vessel and Container Route APIs enables a variety of advanced tracking and analytical capabilities:
@@ -110,26 +104,4 @@ You can programmatically access detailed container route and vessel tracking dat
 
 -   **Polling Intervals for AIS Data:** For vessel positions via AIS (latitude/longitude), which are not sent via webhook by default, we recommend querying the Vessel Tracking API as frequently as you need, up to once per hour. This ensures near real-time visibility without overburdening systems.
     -   *Note: Custom webhook setups for AIS data may be possible for specific use cases; please discuss with our team if this is a requirement.*
--   **Logging ETAs via Webhooks:** As mentioned, Terminal49 proactively sends updates via webhook whenever ETAs change. It is crucial to subscribe to these webhooks and store all updates to maintain a comprehensive and accurate shipment timeline.
 -   **Data Utilization:** Combine data from the Container Route API and Vessel Tracking API to build powerful internal dashboards, analytics, and customer-facing tracking solutions.
-
-## Frequently Asked Questions
-
-1.  **Do you provide ETD, ETA, and actual arrival/departure information for every leg of a shipment, including transshipment events?**
-    Yes:
-    -   Actual Times of Arrival (ATA) and Departure (ATD) are available for all legs of the shipment.
-    -   Estimated Times of Arrival (ETA) and Departure (ETD) are available for all legs of the shipment from the point tracking is initiated. These cannot be retrieved retroactively for periods before tracking started.
-    -   For each transshipment node, the Container Route API provides:
-        -   Inbound Vessel & Voyage details
-        -   Outbound Vessel & Voyage details
-        -   Inbound ETA and ATA
-        -   Outbound ETD and ATD
-
-2.  **Can you provide predicted future route information with lat/long coordinates for each leg?**
-    Yes, predicted future latitude/longitude coordinates for vessels are available via the Vessel Tracking API. Refer to the [Get Vessel Future Positions API documentation](/api-docs/api-reference/vessels/get-vessel-future-positions) for details.
-
-3.  **Can you provide GPS/AIS data for containers at the shipment level?**
-    Yes, latitude/longitude data derived from vessel AIS is available for all containers tracked on Terminal49 via the Vessel Tracking API. As this is not typically sent via webhook by default, we recommend querying the API (up to once per hour).
-
-4.  **What is the source of the ETAs provided?**
-    Terminal49 primarily utilizes Carrier ETAs. Currently, AIS-derived ETAs are not passed via the API.
