@@ -8915,7 +8915,6 @@
                 "enum": [
                   "vessel",
                   "rail",
-                  "truck",
                   null
                 ]
               },
@@ -8945,7 +8944,6 @@
                 "enum": [
                   "vessel",
                   "rail",
-                  "truck",
                   null
                 ]
               },
@@ -9060,7 +9058,8 @@
                       "type": {
                         "type": "string",
                         "enum": [
-                          "port"
+                          "port",
+                          "terminal"
                         ]
                       }
                     }
@@ -9081,7 +9080,8 @@
                       "type": {
                         "type": "string",
                         "enum": [
-                          "terminal"
+                          "terminal",
+                          "port"
                         ]
                       }
                     }
