@@ -5336,6 +5336,63 @@
         ]
       }
     },
+    "/containers/{id}/route": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get container route",
+        "tags": [
+          "Containers",
+          "Routing (Paid)"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/route"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/port"
+                          },
+                          {
+                            "$ref": "#/components/schemas/vessel"
+                          },
+                          {
+                            "$ref": "#/components/schemas/route_location"
+                          },
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-containers-id-route",
+        "description": "Retrieves the route details for a container including all port calls and vessel changes."
+      }
+    },
     "/shipping_lines": {
       "get": {
         "summary": "Shipping Lines",
@@ -5553,6 +5610,162 @@
         "operationId": "get-vessels-imo",
         "description": "Returns a vessel by the given IMO number.",
         "x-internal": true
+      }
+    },
+    "/vessels/{id}/future_positions": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get vessel future positions",
+        "tags": [
+          "Routing (Paid)",
+          "Vessels"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/vessel_with_positions"
+                    },
+                    "links": {
+                      "type": "object",
+                      "properties": {
+                        "self": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-vessels-id-future-positions",
+        "description": "Returns estimated future positions for a vessel based on its current location and destination ports.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "query",
+            "name": "port_id",
+            "description": "The destination port id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "query",
+            "name": "previous_port_id",
+            "description": "The previous port id",
+            "required": true
+          }
+        ]
+      }
+    },
+    "/vessels/{id}/future_positions_with_coordinates": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get vessel future positions with coordinates",
+        "tags": [
+          "Routing (Paid)",
+          "Vessels"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/vessel_with_positions"
+                    },
+                    "links": {
+                      "type": "object",
+                      "properties": {
+                        "self": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-vessels-id-future-positions-with-coordinates",
+        "description": "Returns estimated future positions for a vessel based on specific coordinates and destination ports.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "query",
+            "name": "port_id",
+            "description": "The destination port id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "query",
+            "name": "previous_port_id",
+            "description": "The previous port id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "number"
+            },
+            "in": "query",
+            "name": "latitude",
+            "description": "Starting latitude coordinate",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "number"
+            },
+            "in": "query",
+            "name": "longitude",
+            "description": "Starting longitude coordinate",
+            "required": true
+          }
+        ]
       }
     },
     "/terminals/{id}": {
@@ -5909,6 +6122,12 @@
         "Webhooks",
         "Webhook Notifications",
         "Metro Areas"
+      ]
+    },
+    {
+      "name": "Routing (Paid)",
+      "tags": [
+        "Routing (Paid)"
       ]
     }
   ],
@@ -8538,6 +8757,444 @@
         "required": [
           "attributes"
         ]
+      },
+      "route": {
+        "title": "Route model",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "route"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "created_at",
+              "updated_at"
+            ]
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "cargo": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "container"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "type"
+                    ]
+                  }
+                }
+              },
+              "shipment": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "shipment"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "type"
+                    ]
+                  }
+                }
+              },
+              "route_locations": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "route_location"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "attributes",
+          "relationships"
+        ]
+      },
+      "route_location": {
+        "title": "Route Location model",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "route_location"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "inbound_scac": {
+                "type": "string",
+                "nullable": true,
+                "minLength": 4,
+                "maxLength": 4
+              },
+              "inbound_mode": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  "vessel",
+                  "rail",
+                  "truck",
+                  null
+                ]
+              },
+              "inbound_eta_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "inbound_ata_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "inbound_voyage_number": {
+                "type": "string",
+                "nullable": true
+              },
+              "outbound_scac": {
+                "type": "string",
+                "nullable": true,
+                "minLength": 4,
+                "maxLength": 4
+              },
+              "outbound_mode": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  "vessel",
+                  "rail",
+                  "truck",
+                  null
+                ]
+              },
+              "outbound_etd_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "outbound_atd_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "outbound_voyage_number": {
+                "type": "string",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "created_at",
+              "updated_at"
+            ]
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "route": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "route"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "type"
+                    ]
+                  }
+                }
+              },
+              "inbound_vessel": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "vessel"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "outbound_vessel": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "vessel"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "location": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "port"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "facility": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "terminal"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "attributes",
+          "relationships"
+        ]
+      },
+      "vessel_with_positions": {
+        "title": "Vessel with positions model",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "vessel"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the ship or vessel"
+              },
+              "imo": {
+                "type": "string",
+                "description": "International Maritime Organization (IMO) number",
+                "nullable": true
+              },
+              "mmsi": {
+                "type": "string",
+                "description": "Maritime Mobile Service Identity (MMSI)",
+                "nullable": true
+              },
+              "latitude": {
+                "type": "number",
+                "description": "The current latitude position of the vessel",
+                "nullable": true
+              },
+              "longitude": {
+                "type": "number",
+                "description": "The current longitude position of the vessel",
+                "nullable": true
+              },
+              "nautical_speed_knots": {
+                "type": "number",
+                "description": "The current speed of the ship in knots (nautical miles per hour)",
+                "nullable": true
+              },
+              "navigational_heading_degrees": {
+                "type": "number",
+                "description": "The current heading of the ship in degrees, where 0 is North, 90 is East, 180 is South, and 270 is West",
+                "nullable": true
+              },
+              "position_timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp of when the ship's position was last recorded, in ISO 8601 date and time format",
+                "nullable": true
+              },
+              "positions": {
+                "type": "array",
+                "description": "Array of estimated future positions",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "latitude": {
+                      "type": "number"
+                    },
+                    "longitude": {
+                      "type": "number"
+                    },
+                    "heading": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "estimated": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "latitude",
+                    "longitude",
+                    "timestamp",
+                    "estimated"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "attributes"
+        ]
       }
     },
     "securitySchemes": {
@@ -8579,6 +9236,9 @@
     },
     {
       "name": "Terminals"
+    },
+    {
+      "name": "Routing (Paid)"
     }
   ],
   "security": [
