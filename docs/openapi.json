@@ -5944,7 +5944,7 @@
                             "$ref": "#/components/schemas/vessel"
                           },
                           {
-                            "$ref": "#/components/schemas/route_location"
+                            "$ref": "#/components/schemas/RouteLocation"
                           }
                         ]
                       },
@@ -6097,7 +6097,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/vessel_with_future_positions"
+                  "$ref": "#/components/schemas/VesselWithFuturePositionsResponse"
                 }
               }
             }
@@ -6184,7 +6184,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/vessel_with_future_positions"
+                  "$ref": "#/components/schemas/VesselWithFuturePositionsResponse"
                 }
               }
             }
@@ -8955,7 +8955,7 @@
           "attributes"
         ]
       },
-      "route_location": {
+      "RouteLocation": {
         "title": "Route Location model",
         "type": "object",
         "description": "Represents a specific location (port or terminal) within a route, detailing inbound and outbound transport legs.",
@@ -9194,7 +9194,7 @@
           "attributes"
         ]
       },
-      "vessel_position": {
+      "PositionItem": {
         "title": "Position Item",
         "type": "object",
         "description": "A single geographical position with a timestamp.",
@@ -9234,7 +9234,7 @@
           "estimated"
         ]
       },
-      "vessel_with_positions": {
+      "VesselAttributesWithFuturePositions": {
         "title": "Vessel Attributes With Future Positions",
         "type": "object",
         "description": "Standard vessel attributes with an additional array of future estimated positions.",
@@ -9288,13 +9288,13 @@
           "positions": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/vessel_position"
+              "$ref": "#/components/schemas/PositionItem"
             },
             "description": "Array of estimated future geographical positions."
           }
         }
       },
-      "vessel_with_future_positions": {
+      "VesselWithFuturePositionsResponse": {
         "title": "Vessel With Future Positions Response",
         "type": "object",
         "description": "Response structure for vessel future positions endpoints.",
@@ -9313,7 +9313,7 @@
                 ]
               },
               "attributes": {
-                "$ref": "#/components/schemas/vessel_with_positions"
+                "$ref": "#/components/schemas/VesselAttributesWithFuturePositions"
               }
             },
             "required": [
