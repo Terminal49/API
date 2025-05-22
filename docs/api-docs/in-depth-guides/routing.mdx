@@ -1,0 +1,135 @@
+---
+title: 'Detailed Vessel and Container Route Data'
+description: 'This guide explains how to access detailed container shipment routes and vessel tracking data (historical and future positions) using Terminal49 APIs. This premium feature is available for paying customers.'
+mode: "wide"
+og:title: Vessel and Route API Guide | Terminal49 API Documentation
+og:description: 'Integrate detailed shipment routes and vessel GPS/AIS data with Terminal49 APIs for enhanced visibility. Available for paying customers.'
+---
+
+This technical article outlines how to use Terminal49's Container Route API and Vessel Tracking API to gain deep visibility into your container shipments. These APIs provide comprehensive data including intermediate legs, transshipment details, and precise vessel positions (historical and predicted).
+
+<aside>
+    ⚠️ **Premium Feature:** Access to the Container Route and Vessel Tracking APIs is a premium feature available to paying customers. These APIs are subject to additional terms of usage and pricing. If you are interested in using these APIs, please contact <a href="mailto:sales@terminal49.com">sales@terminal49.com</a>.
+</aside>
+
+For a broader overview of how Terminal49 provides shipment visibility, you might refer to our general product announcements or blog.
+
+## Table of Contents
+
+- [Overview of APIs](#overview-of-apis)
+  - [Container Route API](#container-route-api)
+  - [Vessel Tracking API](#vessel-tracking-api)
+- [Availability and Access](#availability-and-access)
+- [Key Data and Capabilities](#key-data-and-capabilities)
+  - [Container Route Data](#container-route-data)
+  - [Vessel Position Data](#vessel-position-data)
+  - [Webhook Notifications for ETAs](#webhook-notifications-for-etas)
+- [Use Cases](#use-cases)
+- [Integration via API Endpoints](#integration-via-api-endpoints)
+- [Recommendations and Best Practices](#recommendations-and-best-practices)
+- [Frequently Asked Questions](#frequently-asked-questions)
+
+## Overview of APIs
+
+Terminal49 offers a suite of powerful APIs to provide granular details about your container shipments. Two key components for advanced tracking are the Container Route API and the Vessel Tracking API.
+
+### Container Route API
+
+The Container Route API offers detailed information about each leg of your container's journey. This includes:
+- The original loading port.
+- All transshipment ports and transfer details.
+- The final unloading port.
+It provides insights into inbound and outbound vessels, voyage numbers, and critical timestamps for each segment of the shipment.
+
+### Vessel Tracking API
+
+The Vessel Tracking API provides access to historical and predicted future locations for the vessels involved in your shipments. Key features include:
+- Precise latitude and longitude coordinates.
+- Positions derived from vessel AIS (Automatic Identification System) data.
+- Future positions estimated using predictive route algorithms.
+This data is essential for building dynamic map visualizations of your shipments, similar to Terminal49’s Embedded Map.
+
+## Availability and Access
+
+The Container Route and Vessel Tracking APIs are premium features designed for customers requiring in-depth shipment visibility.
+- **Eligibility:** Available to paying Terminal49 customers.
+- **Pricing:** These APIs are subject to additional terms of usage.
+- **Contact:** To request access or learn more, please contact our sales team at <a href="mailto:sales@terminal49.com">sales@terminal49.com</a>.
+
+## Key Data and Capabilities
+
+### Container Route Data
+
+The Container Route API provides a wealth of information for each leg of a container's journey, including:
+-   **Inbound and Outbound Logistics:** SCAC codes, transport modes (e.g., vessel), and voyage numbers for both incoming and outgoing transport at each location.
+-   **Timestamps:**
+    -   Estimated Time of Arrival (ETA) and Actual Time of Arrival (ATA) for inbound transport.
+    -   Estimated Time of Departure (ETD) and Actual Time of Departure (ATD) for outbound transport.
+    -   *Note: Estimated milestones (ETA/ETD) are available from the time shipment tracking is initiated and cannot be retrieved retroactively for periods before tracking began.*
+-   **Location Details:** Comprehensive information about ports involved, including names, UN/LOCODEs, city, country, and coordinates.
+-   **Vessel Information:** Details of vessels used for each sea leg, including name, IMO, and MMSI.
+
+### Vessel Position Data
+
+The Vessel Tracking API delivers precise location data for vessels:
+-   **Coordinates:** Latitude and longitude for vessel positions.
+-   **Timestamps:** The specific time each position was recorded or predicted.
+-   **Historical Positions:** Derived from AIS data, typically marked as `estimated: false`.
+-   **Predicted Future Positions:** Calculated using advanced algorithms, typically marked as `estimated: true`.
+-   **Vessel Details:** Includes vessel name, IMO, MMSI, current speed, and heading.
+
+### Webhook Notifications for ETAs
+
+Terminal49 proactively informs you about changes to Estimated Times of Arrival (ETAs) for your shipments, including those at transshipment ports and the final port of discharge, via webhooks.
+-   **Notification:** You will receive a webhook notification each time a relevant ETA for your container changes.
+-   **Recommendation:** It is highly recommended to log all ETA changes received via webhooks on your side to build a comprehensive timeline and history of shipment progress. For details on available webhook events and their payloads, please refer to our [Webhook Events Examples documentation](/api-docs/useful-info/webhook-events-examples).
+
+## Use Cases
+
+Integrating Terminal49's Vessel and Container Route APIs enables a variety of advanced tracking and analytical capabilities:
+-   **Track Complete Shipment Journeys:** Monitor shipments across multiple legs, from origin to destination, including all transshipment points.
+-   **Identify Transshipment Details:** Gain clarity on ports, vessels, and voyage numbers involved in transshipments.
+-   **Obtain Detailed Timestamps:** Access ETDs, ETAs, ATDs, and ATAs for every leg of your shipments for precise planning and exception management.
+-   **Build Dynamic Shipment Visualizations:** Create rich, map-based visualizations of current and historical vessel movements, similar to Terminal49’s Embedded Map feature.
+-   **Predict Future Vessel Movements:** Utilize predicted vessel paths and future location coordinates for proactive logistics planning.
+
+## Integration via API Endpoints
+
+You can programmatically access detailed container route and vessel tracking data using the following API endpoints. These endpoints provide structured JSON responses containing the rich data attributes described earlier.
+
+-   **Container Route Location API:** Retrieve comprehensive route data for a specific container, including all legs, transshipments, and associated vessel information.
+    -   For endpoint details and to understand the response structure, see: [Get Container Route API Reference](/api-docs/api-reference/containers/get-container-route).
+
+-   **Vessel Tracking API:** Obtain historical and predicted future positions (latitude/longitude) for vessels.
+    -   To get future vessel positions based on various parameters, refer to:
+        -   [Get Vessel Future Positions with Coordinates](/api-docs/api-reference/vessels/get-vessel-future-positions-with-coordinates)
+        -   [Get Vessel Future Positions](/api-docs/api-reference/vessels/get-vessel-future-positions)
+    -   Historical positions can typically be fetched using similar vessel API endpoints by specifying past date ranges in the `from_timestamp` and `to_timestamp` parameters, as detailed in the API reference.
+
+## Recommendations and Best Practices
+
+-   **Polling Intervals for AIS Data:** For vessel positions via AIS (latitude/longitude), which are not sent via webhook by default, we recommend querying the Vessel Tracking API as frequently as you need, up to once per hour. This ensures near real-time visibility without overburdening systems.
+    -   *Note: Custom webhook setups for AIS data may be possible for specific use cases; please discuss with our team if this is a requirement.*
+-   **Logging ETAs via Webhooks:** As mentioned, Terminal49 proactively sends updates via webhook whenever ETAs change. It is crucial to subscribe to these webhooks and store all updates to maintain a comprehensive and accurate shipment timeline.
+-   **Data Utilization:** Combine data from the Container Route API and Vessel Tracking API to build powerful internal dashboards, analytics, and customer-facing tracking solutions.
+
+## Frequently Asked Questions
+
+1.  **Do you provide ETD, ETA, and actual arrival/departure information for every leg of a shipment, including transshipment events?**
+    Yes:
+    -   Actual Times of Arrival (ATA) and Departure (ATD) are available for all legs of the shipment.
+    -   Estimated Times of Arrival (ETA) and Departure (ETD) are available for all legs of the shipment from the point tracking is initiated. These cannot be retrieved retroactively for periods before tracking started.
+    -   For each transshipment node, the Container Route API provides:
+        -   Inbound Vessel & Voyage details
+        -   Outbound Vessel & Voyage details
+        -   Inbound ETA and ATA
+        -   Outbound ETD and ATD
+
+2.  **Can you provide predicted future route information with lat/long coordinates for each leg?**
+    Yes, predicted future latitude/longitude coordinates for vessels are available via the Vessel Tracking API. Refer to the [Get Vessel Future Positions API documentation](/api-docs/api-reference/vessels/get-vessel-future-positions) for details.
+
+3.  **Can you provide GPS/AIS data for containers at the shipment level?**
+    Yes, latitude/longitude data derived from vessel AIS is available for all containers tracked on Terminal49 via the Vessel Tracking API. As this is not typically sent via webhook by default, we recommend querying the API (up to once per hour).
+
+4.  **What is the source of the ETAs provided?**
+    Terminal49 primarily utilizes Carrier ETAs. Currently, AIS-derived ETAs are not passed via the API.
