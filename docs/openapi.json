@@ -5897,6 +5897,312 @@
           "Parties"
         ]
       }
+    },
+    "/containers/{id}/route": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the container."
+        }
+      ],
+      "get": {
+        "summary": "Get the latest route for a container",
+        "tags": [
+          "Containers",
+          "Routes (Paid Feature)"
+        ],
+        "description": "Retrieves the route for a specific container, including port calls, vessel details, and ETAs/ATDs for each leg. This is a paid feature. Please contact sales@terminal49.com for access.",
+        "operationId": "get-container-route",
+        "responses": {
+          "200": {
+            "description": "OK - Returns the route information for the container.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Route"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/port"
+                          },
+                          {
+                            "$ref": "#/components/schemas/vessel"
+                          },
+                          {
+                            "$ref": "#/components/schemas/RouteLocation"
+                          }
+                        ]
+                      },
+                      "description": "An array of related resources, such as ports, vessels, and route locations."
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "id": "3e374eba-2905-42e5-a830-bb16dc2a0166",
+                    "type": "route",
+                    "attributes": {
+                      "id": "3e374eba-2905-42e5-a830-bb16dc2a0166",
+                      "created_at": "2025-05-22T18:33:57Z",
+                      "updated_at": "2025-05-22T18:33:57Z"
+                    },
+                    "relationships": {
+                      "cargo": {
+                        "data": {
+                          "id": "00f07d72-9b6a-4610-9442-b65548ba62df",
+                          "type": "container"
+                        }
+                      },
+                      "shipment": {
+                        "data": {
+                          "id": "0083f046-e437-426f-9737-1e003e5fc2e0",
+                          "type": "shipment"
+                        }
+                      },
+                      "route_locations": {
+                        "data": [
+                          {
+                            "id": "265d8f15-9fa7-446e-b605-2aa6b4a89e1a",
+                            "type": "route_location"
+                          },
+                          {
+                            "id": "e6a31554-b17a-465f-b4f2-abfbf18d309e",
+                            "type": "route_location"
+                          },
+                          {
+                            "id": "d33784b5-8d47-42b3-a889-817e10bd03cb",
+                            "type": "route_location"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "included": [
+                    {
+                      "id": "4201ab42-c51f-48ac-b7a1-12146e02c6a2",
+                      "type": "port",
+                      "attributes": {
+                        "name": "Surabaya",
+                        "code": "IDSUB"
+                      }
+                    },
+                    {
+                      "id": "eccbf52f-de54-484c-bbf0-986162a544aa",
+                      "type": "vessel",
+                      "attributes": {
+                        "name": "JOANNA",
+                        "imo": "9204477"
+                      }
+                    },
+                    {
+                      "id": "265d8f15-9fa7-446e-b605-2aa6b4a89e1a",
+                      "type": "route_location",
+                      "attributes": {
+                        "outbound_scac": "ONEY",
+                        "outbound_mode": "vessel",
+                        "outbound_atd_at": "2025-05-22T10:14:56Z",
+                        "outbound_voyage_number": "026E"
+                      },
+                      "relationships": {
+                        "location": {
+                          "data": {
+                            "id": "4201ab42-c51f-48ac-b7a1-12146e02c6a2",
+                            "type": "port"
+                          }
+                        },
+                        "outbound_vessel": {
+                          "data": {
+                            "id": "eccbf52f-de54-484c-bbf0-986162a544aa",
+                            "type": "vessel"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - API key is missing or invalid."
+          },
+          "403": {
+            "description": "Forbidden - API key does not have permission for this feature or endpoint."
+          },
+          "404": {
+            "description": "Not Found - The container with the specified ID was not found."
+          }
+        }
+      }
+    },
+    "/vessels/{id}/future_positions": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the vessel."
+        },
+        {
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": "port_id",
+          "in": "query",
+          "required": true,
+          "description": "The ID of the destination port."
+        },
+        {
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": "previous_port_id",
+          "in": "query",
+          "required": true,
+          "description": "The ID of the origin (previous) port."
+        }
+      ],
+      "get": {
+        "summary": "Get future estimated positions for a vessel between two ports",
+        "tags": [
+          "Vessels",
+          "Routes (Paid Feature)"
+        ],
+        "description": "Retrieves an array of estimated future geographical positions for a vessel's route from a previous (origin) port to a specified next (destination) port. This is used when the vessel has not yet departed from the origin port. This is a paid feature. Please contact sales@terminal49.com for access.",
+        "operationId": "get-vessel-future-positions",
+        "responses": {
+          "200": {
+            "description": "OK - Returns the vessel details along with an array of future estimated positions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VesselWithFuturePositionsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - API key is missing or invalid."
+          },
+          "403": {
+            "description": "Forbidden - API key does not have permission for this feature or endpoint."
+          },
+          "404": {
+            "description": "Not Found - The vessel, port_id, or previous_port_id was not found."
+          },
+          "422": {
+            "description": "Unprocessable Entity - Missing required parameters or invalid parameter values."
+          }
+        }
+      }
+    },
+    "/vessels/{id}/future_positions_with_coordinates": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the vessel."
+        },
+        {
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": "port_id",
+          "in": "query",
+          "required": true,
+          "description": "The ID of the destination port."
+        },
+        {
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": "previous_port_id",
+          "in": "query",
+          "required": true,
+          "description": "The ID of the origin (previous) port."
+        },
+        {
+          "schema": {
+            "type": "number",
+            "format": "double"
+          },
+          "name": "latitude",
+          "in": "query",
+          "required": true,
+          "description": "The current latitude of the vessel."
+        },
+        {
+          "schema": {
+            "type": "number",
+            "format": "double"
+          },
+          "name": "longitude",
+          "in": "query",
+          "required": true,
+          "description": "The current longitude of the vessel."
+        }
+      ],
+      "get": {
+        "summary": "Get future estimated positions for a vessel from current coordinates to a port",
+        "tags": [
+          "Vessels",
+          "Routes (Paid Feature)"
+        ],
+        "description": "Retrieves an array of estimated future geographical positions for a vessel's route from its current specified coordinates to a destination port. This is used when the vessel is already en route between an origin (previous) port and the destination port. This is a paid feature. Please contact sales@terminal49.com for access.",
+        "operationId": "get-vessel-future-positions-with-coordinates",
+        "responses": {
+          "200": {
+            "description": "OK - Returns the vessel details along with an array of future estimated positions from the current coordinates.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VesselWithFuturePositionsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - API key is missing or invalid."
+          },
+          "403": {
+            "description": "Forbidden - API key does not have permission for this feature or endpoint."
+          },
+          "404": {
+            "description": "Not Found - The vessel, port_id, or previous_port_id was not found."
+          },
+          "422": {
+            "description": "Unprocessable Entity - Missing required parameters or invalid parameter values (e.g., latitude/longitude out of bounds)."
+          }
+        }
+      }
     }
   },
   "x-tagGroups": [
@@ -8538,6 +8844,497 @@
         "required": [
           "attributes"
         ]
+      },
+      "route": {
+        "title": "Route model",
+        "type": "object",
+        "description": "Represents the overall route of a cargo or container.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "route"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The unique identifier for the route (temporary)."
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp of when the route was created."
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp of when the route was last updated."
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "cargo": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "container"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "shipment": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "shipment"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "route_locations": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "route_location"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "attributes"
+        ]
+      },
+      "RouteLocation": {
+        "title": "Route Location model",
+        "type": "object",
+        "description": "Represents a specific location (port or terminal) within a route, detailing inbound and outbound transport legs.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "route_location"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "inbound_scac": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "SCAC code for the inbound carrier."
+              },
+              "inbound_mode": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "vessel",
+                  "rail",
+                  null
+                ],
+                "description": "Mode of transport for the inbound leg."
+              },
+              "inbound_eta_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time",
+                "description": "Estimated Time of Arrival for the inbound leg."
+              },
+              "inbound_ata_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time",
+                "description": "Actual Time of Arrival for the inbound leg."
+              },
+              "inbound_voyage_number": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Voyage number for the inbound vessel/transport."
+              },
+              "outbound_scac": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "SCAC code for the outbound carrier."
+              },
+              "outbound_mode": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "vessel",
+                  "rail",
+                  "truck",
+                  null
+                ],
+                "description": "Mode of transport for the outbound leg."
+              },
+              "outbound_etd_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time",
+                "description": "Estimated Time of Departure for the outbound leg."
+              },
+              "outbound_atd_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time",
+                "description": "Actual Time of Departure for the outbound leg."
+              },
+              "outbound_voyage_number": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Voyage number for the outbound vessel/transport."
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "route": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "route"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "inbound_vessel": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "vessel"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "outbound_vessel": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "vessel"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "location": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "port",
+                          "terminal"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "facility": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "terminal"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "attributes"
+        ]
+      },
+      "PositionItem": {
+        "title": "Position Item",
+        "type": "object",
+        "description": "A single geographical position with a timestamp.",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "description": "Latitude of the position."
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "description": "Longitude of the position."
+          },
+          "heading": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "integer",
+            "description": "Navigational heading in degrees (if available)."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the position."
+          },
+          "estimated": {
+            "type": "boolean",
+            "description": "Indicates if this position is an estimation."
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude",
+          "timestamp",
+          "estimated"
+        ]
+      },
+      "VesselAttributesWithFuturePositions": {
+        "title": "Vessel Attributes With Future Positions",
+        "type": "object",
+        "description": "Standard vessel attributes with an additional array of future estimated positions.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the ship or vessel",
+            "example": "ONE CYGNUS"
+          },
+          "imo": {
+            "type": "string",
+            "description": "International Maritime Organization (IMO) number",
+            "nullable": true,
+            "example": "9806081"
+          },
+          "mmsi": {
+            "type": "string",
+            "description": "Maritime Mobile Service Identity (MMSI)",
+            "nullable": true,
+            "example": "431073000"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "description": "The current latitude position of the vessel",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "description": "The current longitude position of the vessel",
+            "nullable": true
+          },
+          "nautical_speed_knots": {
+            "type": "number",
+            "format": "double",
+            "description": "The current speed of the ship in knots (nautical miles per hour)",
+            "nullable": true
+          },
+          "navigational_heading_degrees": {
+            "type": "integer",
+            "description": "The current heading of the ship in degrees",
+            "nullable": true
+          },
+          "position_timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp of when the ship's position was last recorded",
+            "nullable": true
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PositionItem"
+            },
+            "description": "Array of estimated future geographical positions."
+          }
+        }
+      },
+      "VesselWithFuturePositionsResponse": {
+        "title": "Vessel With Future Positions Response",
+        "type": "object",
+        "description": "Response structure for vessel future positions endpoints.",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "vessel"
+                ]
+              },
+              "attributes": {
+                "$ref": "#/components/schemas/VesselAttributesWithFuturePositions"
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "attributes"
+            ]
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
       }
     },
     "securitySchemes": {
@@ -8579,6 +9376,10 @@
     },
     {
       "name": "Terminals"
+    },
+    {
+      "name": "Routes (Paid Feature)",
+      "description": "Endpoints related to container and shipment routes. Access to these endpoints is a paid feature."
     }
   ],
   "security": [
