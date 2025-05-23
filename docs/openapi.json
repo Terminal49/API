@@ -5387,6 +5387,38 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden - Routing data feature is not enabled for this account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "example": "403"
+                          },
+                          "title": {
+                            "type": "string",
+                            "example": "Forbidden"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "example": "Routing data feature is not enabled for this account"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "operationId": "get-containers-id-route",
@@ -5653,10 +5685,42 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden - Routing data feature is not enabled for this account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "example": "403"
+                          },
+                          "title": {
+                            "type": "string",
+                            "example": "Forbidden"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "example": "Routing data feature is not enabled for this account"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "operationId": "get-vessels-id-future-positions",
-        "description": "Returns estimated future positions for a vessel based on its current location and destination ports.",
+        "description": "Returns estimated future positions for a vessel based on specific coordinates and destination ports.",
         "parameters": [
           {
             "schema": {
@@ -5715,6 +5779,38 @@
                         "self": {
                           "type": "string",
                           "format": "uri"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Routing data feature is not enabled for this account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "example": "403"
+                          },
+                          "title": {
+                            "type": "string",
+                            "example": "Forbidden"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "example": "Routing data feature is not enabled for this account"
+                          }
                         }
                       }
                     }
