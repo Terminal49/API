@@ -5720,7 +5720,7 @@
           }
         },
         "operationId": "get-vessels-id-future-positions",
-        "description": "Returns estimated future positions for a vessel based on specific coordinates and destination ports.",
+        "description": "Returns estimated future positions for a vessel traveling from one port to another. It should be used when the vessel has not yet departed from the origin port and the entire journey is in the future.",
         "parameters": [
           {
             "schema": {
@@ -5821,7 +5821,7 @@
           }
         },
         "operationId": "get-vessels-id-future-positions-with-coordinates",
-        "description": "Returns estimated future positions for a vessel based on specific coordinates and destination ports.",
+        "description": "Returns estimated future positions for a vessel based on specific coordinates and destination ports. It should be used when the vessel is already en route.",
         "parameters": [
           {
             "schema": {
