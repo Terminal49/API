@@ -5821,7 +5821,7 @@
           }
         },
         "operationId": "get-vessels-id-future-positions-with-coordinates",
-        "description": "Returns estimated future positions for a vessel based on specific coordinates and destination ports. It should be used when the vessel is already en route.",
+        "description": "Returns estimated future positions for a vessel based on specific coordinates and destination ports. It should be used when the vessel is already en route. <Note>This is a paid feature.</Note>",
         "parameters": [
           {
             "schema": {
