@@ -5821,7 +5821,7 @@
           }
         },
         "operationId": "get-vessels-id-future-positions-with-coordinates",
-        "description": "Returns estimated future positions for a vessel based on specific coordinates and destination ports. It should be used when the vessel is already en route. <Note>This is a paid feature.</Note>",
+        "description": "Returns estimated future positions for a vessel based on specific coordinates and destination ports. It should be used when the vessel is already en route. <Note>This is a paid feature. Please contact sales@terminal49.com. (Note)</Note> <Warning>This is a paid feature. Please contact sales@terminal49.com. (Warning)</Warning> <INfo>This is a paid feature. Please contact sales@terminal49.com. (Info)</Info> <Tip>This is a paid feature. Please contact sales@terminal49.com. (Tip)</Tip> <Check>This is a paid feature. Please contact sales@terminal49.com. (Check)</Check>",
         "parameters": [
           {
             "schema": {
