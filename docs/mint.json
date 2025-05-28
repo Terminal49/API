@@ -77,7 +77,8 @@
         "api-docs/in-depth-guides/event-timestamps",
         "api-docs/in-depth-guides/terminal49-map",
         "api-docs/in-depth-guides/terminal49-widget",
-        "api-docs/in-depth-guides/rail-integration-guide"
+        "api-docs/in-depth-guides/rail-integration-guide",
+        "api-docs/in-depth-guides/routing"
       ]
     },
     {
@@ -153,6 +154,7 @@
         "api-docs/api-reference/containers/list-containers",
         "api-docs/api-reference/containers/edit-a-container",
         "api-docs/api-reference/containers/get-a-container",
+        "api-docs/api-reference/containers/get-container-route",
         "api-docs/api-reference/containers/get-a-containers-raw-events",
         "api-docs/api-reference/containers/get-a-containers-transport-events"
       ]
@@ -180,7 +182,9 @@
       "group": "Vessels",
       "pages": [
         "api-docs/api-reference/vessels/get-a-vessel-using-the-id",
-        "api-docs/api-reference/vessels/get-a-vessel-using-the-imo"
+        "api-docs/api-reference/vessels/get-a-vessel-using-the-imo",
+        "api-docs/api-reference/vessels/get-vessel-future-positions",
+        "api-docs/api-reference/vessels/get-vessel-future-positions-with-coordinates"
       ]
     },
     {

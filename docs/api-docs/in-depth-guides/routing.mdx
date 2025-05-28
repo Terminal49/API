@@ -1,0 +1,318 @@
+---
+title: 'Vessel and Container Route Data'
+description: 'This guide explains how to access detailed container routes and vessel positions data (historical and future positions) using Terminal49 APIs.'
+mode: "wide"
+og:title: Vessel and Route API Guide | Terminal49 API Documentation
+og:description: 'Integrate detailed container routes and vessel positions data with Terminal49 APIs for enhanced visibility. Available for paying customers.'
+---
+
+This is a technical article describing how to use our Routing Data feature, using the map as an example.
+
+<Note>
+    Routing Data (Container Route and Vessel Positions APIs) is a paid feature. These APIs are subject to additional terms of usage and pricing. If you are interested in using these APIs, please contact <a href="mailto:sales@terminal49.com">sales@terminal49.com</a>.
+</Note>
+
+## Table of Contents
+
+- [Overview of APIs for Mapping](#overview-of-apis-for-mapping)
+- [Visualizing Your Container's Journey on a Map](#visualizing-your-container’s-journey-on-a-map)
+  - [Step 1: Plotting Port Locations](#step-1%3A-plotting-port-locations)
+  - [Step 2: Drawing Historical Vessel Paths (Actual Route Taken)](#step-2%3A-drawing-historical-vessel-paths-actual-route-taken)
+  - [Step 3: Drawing Predicted Future Vessel Paths](#step-3%3A-drawing-predicted-future-vessel-paths)
+    - [Using `GET /v2/vessels/{id}/future_positions_with_coordinates`](#using-get-%2Fv2%2Fvessels%2F%7Bid%7D%2Ffuture-positions-with-coordinates-for-vessels-currently-en-route)
+    - [Using `GET /v2/vessels/{id}/future_positions`](#using-get-%2Fv2%2Fvessels%2F%7Bid%7D%2Ffuture-positions-with-coordinates-for-vessels-currently-en-route)
+  - [Combining Data for a Complete Map](#combining-data-for-a-complete-map)
+- [Use Cases](#use-cases)
+- [Recommendations and Best Practices](#recommendations-and-best-practices)
+- [Frequently Asked Questions](#frequently-asked-questions)
+
+## Overview of APIs for Mapping
+
+Terminal49 offers a suite of powerful APIs to provide granular details about your container shipments and vessel locations.
+
+Two key components are:
+
+* **Container Route API:** Offers detailed information about each part of your container's journey, including port locations (latitude, longitude), vessels involved, and key timestamps. This is foundational for placing port markers on your map.
+* **Vessel Positions API:** Provides access to historical and predicted future positions for the vessels.
+
+## Visualizing Your Container's Journey on a Map
+
+To create a map visualization of a container's journey (similar to [the embeddable map](/api-docs/in-depth-guides/terminal49-map)), you'll typically combine data from several API endpoints. Here’s a step-by-step approach:
+
+### Step 1: Plotting Port Locations
+
+First, retrieve the overall route for the container. This will give you the sequence of ports the container will visit, along with their geographical coordinates.
+Use the `GET /v2/containers/{id}/route` endpoint. (See: [Get Container Route API Reference](/api-docs/api-reference/containers/get-container-route))
+
+![Port Locations from Container Route](/images/1_route_location_ports.png "Port Locations from Container Route")
+
+<Accordion title="API Request & Response Snippet for Port Locations">
+    ```shell Request
+    curl --request GET \
+      --url https://api.terminal49.com/v2/containers/ae1c0b10-3ec2-4292-a95a-483cd2755433/route \
+      --header "Authorization: Token YOUR_API_TOKEN"
+    ```
+    <Expandable title="Example Response Snippet (focus on port data)">
+      ```json
+      {
+        "data": {
+          "id": "0a14f30f-f63b-4112-9aad-f52e3a1d9bdf",
+          "type": "route",
+          "relationships": {
+            "route_locations": {
+              "data": [
+                { "id": "c781a624-a3bd-429a-85dd-9179c61eb57f", "type": "route_location" }, // POL: Pipavav
+                { "id": "92258580-8706-478e-a6dc-24e11f972507", "type": "route_location" }, // TS1: Jebel Ali
+                { "id": "7b6cc511-43f4-4037-9bdd-b0fe5fc0df8f", "type": "route_location" }  // TS2: Colombo
+                // ... more route locations
+              ]
+            }
+          }
+        },
+        "included": [
+          {
+            "id": "4115233f-10b7-4774-ad60-34c100b23760", // Matches a route_location's location data id
+            "type": "port",
+            "attributes": {
+              "name": "Pipavav (Victor) Port",
+              "code": "INPAV",
+              "latitude": "20.921010675",
+              "longitude": "71.509579681"
+            }
+          },
+          {
+            "id": "94892d07-ef8f-4f76-a860-97a398c2c177",
+            "type": "port",
+            "attributes": {
+              "name": "Jebel Ali",
+              "code": "AEJEA",
+              "latitude": "24.987353081",
+              "longitude": "55.059917502"
+            }
+          },
+          // ... other included items like vessels, other ports, and full route_location objects
+          {
+            "id": "c781a624-a3bd-429a-85dd-9179c61eb57f", // This is a route_location object
+            "type": "route_location",
+            "attributes": { /* ... ATD/ETA times, vessel info ... */ },
+            "relationships": {
+              "location": { // This links to the port object in 'included'
+                "data": { "id": "4115233f-10b7-4774-ad60-34c100b23760", "type": "port" }
+              },
+              "outbound_vessel": {
+                "data": { "id": "b868eaf8-9065-4fbe-9e72-f6154246b3c5", "type": "vessel" }
+              }
+            }
+          }
+        ]
+      }
+      ```
+    </Expandable>
+    **How to use:**
+    1. Parse the `data.relationships.route_locations.data` array to get the sequence of stops.
+    2. For each `route_location` object (found in `included` using its ID from the previous step), find its corresponding physical `location` (port) by looking up the `relationships.location.data.id` in the `included` array (where `type` is `port`).
+    3. Use the `latitude` and `longitude` from the port attributes to plot markers on your map (e.g., POL, TS1, TS2 as shown in the image).
+    4. Each `route_location` in `included` also contains valuable data like `outbound_atd_at`, `inbound_ata_at`, `outbound_vessel.id`, `inbound_vessel.id` etc., which you'll need for the next steps.
+</Accordion>
+
+### Step 2: Drawing Historical Vessel Paths (Actual Route Taken)
+
+For segments of the journey that have already been completed, you can draw the vessel's actual path using its historical positions.
+Use the `GET /v2/vessels/{id}?show_positions[from_timestamp]={departure_time}&show_positions[to_timestamp]={arrival_time}` endpoint. (See: [Get Vessel Positions API Reference](/api-docs/api-reference/vessels/get-a-vessel-using-the-id)
+
+![Historical Vessel Path](/images/2_vessel_positions_between_timeframe.png "Historical Vessel Path")
+
+<Accordion title="API Request & Response Snippet for Historical Paths">
+    ```shell Request (Example for MAERSK BALTIMORE from Pipavav ATD to Jebel Ali ATA)
+    # Vessel ID: b868eaf8-9065-4fbe-9e72-f6154246b3c5
+    # Pipavav (POL) ATD: 2025-05-18T00:48:06Z (from route_location c781a624...)
+    # Jebel Ali (TS1) ATA: 2025-05-21T09:50:00Z (from route_location 92258580...)
+    curl --request GET \
+      --url 'https://api.terminal49.com/v2/vessels/b868eaf8-9065-4fbe-9e72-f6154246b3c5?show_positions[from_timestamp]=2025-05-18T00:48:06Z&show_positions[to_timestamp]=2025-05-21T09:50:00Z' \
+      --header "Authorization: Token YOUR_API_TOKEN"
+    ```
+    <Expandable title="Example Response Snippet (focus on positions)">
+      ```json
+      {
+        "data": {
+          "id": "b868eaf8-9065-4fbe-9e72-f6154246b3c5",
+          "type": "vessel",
+          "attributes": {
+            "name": "MAERSK BALTIMORE",
+            "positions": [
+              { "latitude": 20.885, "longitude": 71.498333333, "heading": 195, "timestamp": "2025-05-18T00:48:06Z", "estimated": false },
+              // ... many more positions between the two ports
+              { "latitude": 25.026021667, "longitude": 55.067638333, "heading": 259, "timestamp": "2025-05-21T09:38:07Z", "estimated": false }
+            ]
+          }
+        }
+      }
+      ```
+    </Expandable>
+    **How to use:**
+    1. From the `/containers/{id}/route` response, for each completed leg (i.e., both ATD from origin and ATA at destination are known):
+       - Identify the `outbound_vessel.data.id` from the departure `route_location`.
+       - Use the `outbound_atd_at` (Actual Time of Departure) from the departure `route_location` as the `from_timestamp`.
+       - Use the `inbound_ata_at` (Actual Time of Arrival) from the arrival `route_location` as the `to_timestamp`.
+    2. Call the `/vessels/{vessel_id}?show_positions...` endpoint with these details.
+    3. The `attributes.positions` array will contain a series of latitude/longitude coordinates. Plot these coordinates as a connected solid line on your map to represent the vessel's actual historical path for that leg (like the green line from POL to TS1 in the image).
+</Accordion>
+
+### Step 3: Drawing Predicted Future Vessel Paths
+
+For segments that are currently underway or planned for the future, you can display predicted vessel paths. These are typically shown as dashed lines.
+
+#### Using `GET /v2/vessels/{id}/future_positions_with_coordinates` (For Vessels Currently En Route)
+
+This endpoint is used when the vessel **is currently en route** between two ports (e.g., has departed Port A but not yet arrived at Port B). It requires the vessel's current coordinates as input, in addition to the port of departure and the port of arrival for the leg. The output is a predicted path from the vessel's current location to the destination port.
+(See: [Get Vessel Future Positions with Coordinates API Reference](/api-docs/api-reference/vessels/get-vessel-future-positions-with-coordinates))
+
+![Future Vessel Path with Detailed Coordinates](/images/3_port_route_with_coords.png "Future Vessel Path from Current Position for an En Route Vessel")
+
+<Accordion title="API Request & Response Snippet for Detailed Future Paths (Vessel En Route)">
+    **How to use:**
+    1.  **Determine if vessel is en route:** From the `/containers/{id}/route` response, check if the leg has an `outbound_atd_at` from the origin port but no `inbound_ata_at` at the destination port yet.
+    2.  **Get Current Vessel Coordinates:**
+        * Identify the `outbound_vessel.data.id` from the departure `route_location`.
+        * Fetch the vessel's current details using `GET /v2/vessels/{vessel_id}`. The response will contain its latest `latitude`, `longitude`, and `position_timestamp` in the `attributes` section.
+           ```shell Example: Fetch current vessel data
+           curl --request GET \
+             --url https://api.terminal49.com/v2/vessels/{vessel_id} \
+             --header "Authorization: Token YOUR_API_TOKEN"
+           ```
+           <Expandable title="Example current vessel data response">
+           ```json
+           {
+             "data": {
+               "id": "50b58b30-acd6-45d3-a694-19664acb1518", // Example: TB QINGYUAN
+               "type": "vessel",
+               "attributes": {
+                 "name": "TB QINGYUAN",
+                 "latitude": 24.419361667, // Current latitude
+                 "longitude": 58.567603333, // Current longitude
+                 "position_timestamp": "2025-05-28T03:55:23Z"
+                 // ... other attributes
+               }
+             }
+           }
+           ```
+           </Expandable>
+    3.  **Call `future_positions_with_coordinates`:**
+        * Use the `location.data.id` of the original departure port for this leg (as `previous_port_id` or similar parameter, check API ref).
+        * Use the `location.data.id` of the final arrival port for this leg (as `port_id` or similar parameter).
+        * Include the fetched current `latitude` and `longitude` of the vessel in the request.
+    ```shell Hypothetical Request (e.g., TB QINGYUAN en route from Jebel Ali to Colombo)
+    # Vessel ID: 50b58b30-acd6-45d3-a694-19664acb1518 (TB QINGYUAN)
+    # Original Departure Port (Jebel Ali) ID: 94892d07-ef8f-4f76-a860-97a398c2c177
+    # Final Arrival Port (Colombo) ID: 818ef299-aed3-49c9-b3f7-7ee205f697f6
+    # Current Coords (example): lat=24.4193, lon=58.5676
+    curl --request GET \
+      --url 'https://api.terminal49.com/v2/vessels/50b58b30-acd6-45d3-a694-19664acb1518/future_positions_with_coordinates?previous_port_id=94892d07-ef8f-4f76-a860-97a398c2c177&port_id=818ef299-aed3-49c9-b3f7-7ee205f697f6&current_latitude=24.4193&current_longitude=58.5676' \
+      --header "Authorization: Token YOUR_API_TOKEN"
+    ```
+    <Expandable title="Example Response Snippet (focus on detailed positions from current location)">
+      ```json
+      {
+        "data": {
+          "id": "50b58b30-acd6-45d3-a694-19664acb1518",
+          "type": "vessel",
+          "attributes": {
+            "name": "TB QINGYUAN",
+            "positions": [
+              // Path starts from near current_latitude, current_longitude
+              { "latitude": 24.4193, "longitude": 58.5676, "timestamp": "...", "estimated": true },
+              // ... several intermediate estimated latitude/longitude points forming a path to Colombo
+              { "latitude": 6.942742853, "longitude": 79.851136851, "timestamp": "...", "estimated": true }  // Colombo
+            ]
+          }
+        }
+      }
+      ```
+    </Expandable>
+    4.  **Plot the path:** The `attributes.positions` array will provide a sequence of estimated coordinates starting from (or near) the vessel's current position. Plot these as a connected dashed line on your map (like the dashed line from the vessel's current position between TS1 and TS2, heading towards TS2 in the image).
+</Accordion>
+
+#### Using `GET /v2/vessels/{id}/future_positions` (For Legs Not Yet Started)
+
+This endpoint is used when the vessel **has not yet departed** from the origin port of a specific leg. It takes the origin port (Port A) and destination port (Port B) of the upcoming leg as input and predicts a path between them.
+(See: [Get Vessel Future Positions API Reference](/api-docs/api-reference/vessels/get-vessel-future-positions))
+
+![Future Vessel Path Between Ports](/images/4_port_route.png "Future Vessel Path for a Not-Yet-Started Leg")
+
+<Accordion title="API Request & Response Snippet for Future Paths Between Ports (Leg Not Started)">
+    **How to use:**
+    1.  **Determine if leg has not started:** From the `/containers/{id}/route` response, check if the leg has no `outbound_atd_at` from the origin port (or `outbound_etd_at` is in the future).
+    2.  **Identify vessel and ports:**
+        * Get the `outbound_vessel.data.id` that will perform this leg.
+        * Get the `location.data.id` of the departure port for this leg (as `previous_port_id`).
+        * Get the `location.data.id` of the arrival port for this leg (as `port_id`).
+    3.  **Call `future_positions`:**
+    ```shell Request (Example for CMA CGM COLUMBIA from Algeciras to Tanger Med - assuming not yet departed Algeciras)
+    # Vessel ID: 17189206-d585-4670-b6dd-0aa50fc30869 (CMA CGM COLUMBIA)
+    # Departure Port (Algeciras) ID: 0620b5e6-7621-408c-8b44-cf6f0d9a762c
+    # Arrival Port (Tanger Med) ID: f4ec11ea-8c5a-46f9-a213-9d976af04230
+    curl --request GET \
+      --url 'https://api.terminal49.com/v2/vessels/17189206-d585-4670-b6dd-0aa50fc30869/future_positions?port_id=f4ec11ea-8c5a-46f9-a213-9d976af04230&previous_port_id=0620b5e6-7621-408c-8b44-cf6f0d9a762c' \
+      --header "Authorization: Token YOUR_API_TOKEN"
+    ```
+    <Expandable title="Example Response Snippet (focus on positions from port to port)">
+      ```json
+      {
+        "data": {
+          "id": "17189206-d585-4670-b6dd-0aa50fc30869",
+          "type": "vessel",
+          "attributes": {
+            "name": "CMA CGM COLUMBIA",
+            "positions": [
+              // Path starts from Algeciras and goes to Tanger Med
+              { "latitude": 36.142537873, "longitude": -5.438306296, "heading": null, "timestamp": "...", "estimated": true }, // Algeciras
+              // ... intermediate points
+              { "latitude": 35.893832072, "longitude": -5.490968974, "heading": null, "timestamp": "...", "estimated": true }  // Tanger Med
+            ]
+          }
+        }
+      }
+      ```
+    </Expandable>
+    4.  **Plot the path:** The `attributes.positions` array will provide estimated coordinates for the full leg. Plot these as a connected dashed line on your map (like the dashed line from TS3 to TS4 in the image, assuming the vessel is still at TS3).
+</Accordion>
+
+### Combining Data for a Complete Map
+
+By iterating through the `route_locations` obtained from the initial `/containers/{id}/route` call:
+1.  Plot all port markers (Step 1).
+2.  For each leg of the journey:
+    * If the leg is completed (ATD and ATA are known), use the historical vessel positions API to draw a solid line (Step 2).
+    * If the leg is in progress or planned for the future (ATD known or ETD known, but ATA is not yet known or is in the future), use one of the future vessel positions APIs to draw a dashed line (Step 3).
+
+This approach allows you to build a comprehensive map view, dynamically showing completed paths with solid lines and future/in-progress paths with dashed lines, providing a clear visualization of the entire shipment journey.
+
+## Use Cases
+
+Integrating Terminal49's Vessel and Container Route APIs enables a variety of advanced capabilities:
+-   **Track Complete Shipment Journeys Visually:** Monitor shipments across multiple legs on a map, from the port of lading to the port of discharge, including all transshipment points.
+-   **Identify Transshipment Details Geographically:** Clearly see where transshipments occur and the routes taken between them.
+-   **Correlate Timestamps with Locations:** Visually connect ETDs, ETAs, ATDs, and ATAs for every leg with their geographical points on the map for precise planning and exception management.
+-   **Improve Internal Logistics Dashboards:** Offer your operations team a clear visual overview of all ongoing shipments and their current locations.
+
+## Recommendations and Best Practices
+
+-   **Polling Intervals:** For routing data and vessel positions we recommend refreshing up to once per hour.
+-   **Efficient Data Handling:** Cache previous vessel positions when possible, as it doesn't change. Focus polling on active vessel movements.
+-   **Error Handling:** Implement proper error handling for API requests, especially for future predictions which might not always be available for all routes or vessels.
+
+If you decide to create your own map:
+
+-   **Data Layering:** Consider layering information on your map. Start with basic port markers and paths, then add details like vessel names, ETAs, or status on hover or click.
+-   **Map Library Integration:** Use a robust mapping library (e.g., Leaflet, Mapbox GL) to handle the rendering of markers, lines, and map interactivity.
+
+## Frequently Asked Questions
+
+**Q: How up-to-date is the vessel position data?**
+A:  Vessel location data is updated every 15 minutes, although that does not guarantee there will be a new position every 15 minutes to factors like whether the vessel is transmitting or within range of a satellite or base station.
+
+**Q: How accurate are the future predictions?**
+Predicted future positions are based on algorithms and current data, and their accuracy can vary based on many factors such as temporary deviations, seasonality, or how frequently the shipping lane is used.
+
+**Q: What if a vessel deviates from the predicted path?**
+A: Predicted paths are estimates. The historical path (once available) will show the actual route taken. Regularly refreshing data for active shipments is key to getting the most accurate information.
