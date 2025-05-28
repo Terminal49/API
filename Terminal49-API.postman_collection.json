@@ -4357,7 +4357,7 @@
     ],
     "info": {
         "_postman_id": "54d3dd1f-0ab6-4f2e-9d83-23d837fc9ac0",
-        "name": "Terminal49 API Reference",
+        "name": "Terminal49 API Reference - Public",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
         "description": {
             "content": "The Terminal 49 API offers a convenient way to programmatically track your shipments from origin to destination.\n\nPlease enter your API key into the \"Variables\" tab before using these endpoints within Postman.\n\nContact Support:\n Name: Terminal49 API support\n Email: support@terminal49.com",
