@@ -9,18 +9,18 @@ og:description: 'Integrate detailed container routes and vessel positions data w
 This is a technical article describing how to use our Routing Data feature, using the map as an example.
 
 <Note>
-    ⚠️ **Premium Feature:** Routing Data (Container Route and Vessel Tracking APIs) is a paid feature. These APIs are subject to additional terms of usage and pricing. If you are interested in using these APIs, please contact <a href="mailto:sales@terminal49.com">sales@terminal49.com</a>.
+    ⚠️ Routing Data (Container Route and Vessel Tracking APIs) is a paid feature. These APIs are subject to additional terms of usage and pricing. If you are interested in using these APIs, please contact <a href="mailto:sales@terminal49.com">sales@terminal49.com</a>.
 </Note>
 
 ## Table of Contents
 
 - [Overview of APIs for Mapping](#overview-of-apis-for-mapping)
-- [Visualizing Your Container's Journey on a Map](#visualizing-your-shipments-journey-on-a-map)
-  - [Step 1: Plotting Port Locations](#step-1-plotting-port-locations)
-  - [Step 2: Drawing Historical Vessel Paths (Actual Route Taken)](#step-2-drawing-historical-vessel-paths-actual-route-taken)
-  - [Step 3: Drawing Predicted Future Vessel Paths](#step-3-drawing-predicted-future-vessel-paths)
-    - [Using `GET /v2/vessels/{id}/future_positions_with_coordinates`](#using-get-v2vesselsidfuture_positions_with_coordinates)
-    - [Using `GET /v2/vessels/{id}/future_positions`](#using-get-v2vesselsidfuture_positions)
+- [Visualizing Your Container's Journey on a Map](#visualizing-your-container’s-journey-on-a-map)
+  - [Step 1: Plotting Port Locations](#step-1%3A-plotting-port-locations)
+  - [Step 2: Drawing Historical Vessel Paths (Actual Route Taken)](#step-2%3A-drawing-historical-vessel-paths-actual-route-taken)
+  - [Step 3: Drawing Predicted Future Vessel Paths](#step-3%3A-drawing-predicted-future-vessel-paths)
+    - [Using `GET /v2/vessels/{id}/future_positions_with_coordinates`](#using-get-%2Fv2%2Fvessels%2F%7Bid%7D%2Ffuture-positions-with-coordinates-for-vessels-currently-en-route)
+    - [Using `GET /v2/vessels/{id}/future_positions`](#using-get-%2Fv2%2Fvessels%2F%7Bid%7D%2Ffuture-positions-with-coordinates-for-vessels-currently-en-route)
   - [Combining Data for a Complete Map](#combining-data-for-a-complete-map)
 - [Use Cases](#use-cases)
 - [Recommendations and Best Practices](#recommendations-and-best-practices)
@@ -35,7 +35,7 @@ Two key components are:
 * **Container Route API:** Offers detailed information about each part of your container's journey, including port locations (latitude, longitude), vessels involved, and key timestamps. This is foundational for placing port markers on your map.
 * **Vessel Tracking API:** Provides access to historical and predicted future positions for the vessels.
 
-## Visualizing Your Shipment's Journey on a Map
+## Visualizing Your Container's Journey on a Map
 
 To create a map visualization of a container's journey (similar to [the embeddable map](/api-docs/in-depth-guides/terminal49-map)), you'll typically combine data from several API endpoints. Here’s a step-by-step approach:
 
