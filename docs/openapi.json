@@ -5581,23 +5581,13 @@
         },
         {
           "schema": {
-            "type": "boolean",
-            "default": false
-          },
-          "name": "show_positions",
-          "in": "query",
-          "description": "Set to true to include historical position data. This is a paid feature.",
-          "required": false
-        },
-        {
-          "schema": {
             "type": "string",
             "format": "date-time",
             "example": "2025-05-20T00:00:00Z"
           },
-          "name": "from_timestamp",
+          "name": "show_positions[from_timestamp]",
           "in": "query",
-          "description": "ISO 8601 timestamp to filter positions from. Requires `show_positions` to be true.",
+          "description": "ISO 8601 timestamp to filter positions from. 7 days by default.",
           "required": false
         },
         {
@@ -5606,9 +5596,9 @@
             "format": "date-time",
             "example": "2025-05-24T00:00:00Z"
           },
-          "name": "to_timestamp",
+          "name": "show_positions[to_timestamp]",
           "in": "query",
-          "description": "ISO 8601 timestamp to filter positions up to. Requires `show_positions` to be true.",
+          "description": "ISO 8601 timestamp to filter positions up to. Current time by default.",
           "required": false
         }
       ],
@@ -5686,23 +5676,13 @@
         },
         {
           "schema": {
-            "type": "boolean",
-            "default": false
-          },
-          "name": "show_positions",
-          "in": "query",
-          "description": "Set to true to include historical position data. This is a paid feature.",
-          "required": false
-        },
-        {
-          "schema": {
             "type": "string",
             "format": "date-time",
             "example": "2025-05-20T00:00:00Z"
           },
-          "name": "from_timestamp",
+          "name": "show_positions[from_timestamp]",
           "in": "query",
-          "description": "ISO 8601 timestamp to filter positions from. Requires `show_positions` to be true.",
+          "description": "ISO 8601 timestamp to filter positions from. 7 days by default.",
           "required": false
         },
         {
@@ -5711,9 +5691,9 @@
             "format": "date-time",
             "example": "2025-05-24T00:00:00Z"
           },
-          "name": "to_timestamp",
+          "name": "show_positions[to_timestamp]",
           "in": "query",
-          "description": "ISO 8601 timestamp to filter positions up to. Requires `show_positions` to be true.",
+          "description": "ISO 8601 timestamp to filter positions up to. Current time by default.",
           "required": false
         }
       ],
