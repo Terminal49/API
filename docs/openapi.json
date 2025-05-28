@@ -5578,6 +5578,38 @@
           "name": "id",
           "in": "path",
           "required": true
+        },
+        {
+          "schema": {
+            "type": "boolean",
+            "default": false
+          },
+          "name": "show_positions",
+          "in": "query",
+          "description": "Set to true to include historical position data. This is a paid feature.",
+          "required": false
+        },
+        {
+          "schema": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-05-20T00:00:00Z"
+          },
+          "name": "from_timestamp",
+          "in": "query",
+          "description": "ISO 8601 timestamp to filter positions from. Requires `show_positions` to be true.",
+          "required": false
+        },
+        {
+          "schema": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-05-24T00:00:00Z"
+          },
+          "name": "to_timestamp",
+          "in": "query",
+          "description": "ISO 8601 timestamp to filter positions up to. Requires `show_positions` to be true.",
+          "required": false
         }
       ],
       "get": {
@@ -5600,10 +5632,46 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden - Feature not enabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "example": "403"
+                          },
+                          "source": {
+                            "type": "object",
+                            "nullable": true
+                          },
+                          "title": {
+                            "type": "string",
+                            "example": "Forbidden"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "example": "Routing data feature is not enabled for this account"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "operationId": "get-vessels-id",
-        "description": "Returns a vessel by it's given identifier"
+        "description": "Returns a vessel by id. <Note>`show_positions` is a paid feature. Please contact sales@terminal49.com.</Note>"
       }
     },
     "/vessels/{imo}": {
@@ -5615,6 +5683,38 @@
           "name": "imo",
           "in": "path",
           "required": true
+        },
+        {
+          "schema": {
+            "type": "boolean",
+            "default": false
+          },
+          "name": "show_positions",
+          "in": "query",
+          "description": "Set to true to include historical position data. This is a paid feature.",
+          "required": false
+        },
+        {
+          "schema": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-05-20T00:00:00Z"
+          },
+          "name": "from_timestamp",
+          "in": "query",
+          "description": "ISO 8601 timestamp to filter positions from. Requires `show_positions` to be true.",
+          "required": false
+        },
+        {
+          "schema": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-05-24T00:00:00Z"
+          },
+          "name": "to_timestamp",
+          "in": "query",
+          "description": "ISO 8601 timestamp to filter positions up to. Requires `show_positions` to be true.",
+          "required": false
         }
       ],
       "get": {
@@ -5637,10 +5737,46 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden - Feature not enabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "example": "403"
+                          },
+                          "source": {
+                            "type": "object",
+                            "nullable": true
+                          },
+                          "title": {
+                            "type": "string",
+                            "example": "Forbidden"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "example": "Routing data feature is not enabled for this account"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "operationId": "get-vessels-imo",
-        "description": "Returns a vessel by the given IMO number.",
+        "description": "Returns a vessel by the given IMO number. <Note>`show_positions` is a paid feature. Please contact sales@terminal49.com.</Note>",
         "x-internal": true
       }
     },
@@ -7922,6 +8058,38 @@
                 "description": "The timestamp of when the ship's position was last recorded, in ISO 8601 date and time format",
                 "nullable": true,
                 "example": "2023-07-28T14:01:37Z"
+              },
+              "positions": {
+                "type": "array",
+                "description": "An array of historical position data for the vessel. Only included if `show_positions` is true.",
+                "nullable": true,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "latitude": {
+                      "type": "number",
+                      "example": 1.477285
+                    },
+                    "longitude": {
+                      "type": "number",
+                      "example": 104.535533333
+                    },
+                    "heading": {
+                      "type": "number",
+                      "nullable": true,
+                      "example": 51
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-05-23T19:14:22Z"
+                    },
+                    "estimated": {
+                      "type": "boolean",
+                      "example": false
+                    }
+                  }
+                }
               }
             }
           }
