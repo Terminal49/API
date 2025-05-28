@@ -297,9 +297,8 @@ Integrating Terminal49's Vessel and Container Route APIs enables a variety of ad
 
 ## Recommendations and Best Practices
 
--   **Polling Intervals:** For vessel positions, which are not sent via webhook by default, we recommend querying the Vessel Tracking API as frequently as you need, up to once per hour for active vessels. This ensures near real-time visibility without overburdening systems.
-    -   *Note: Custom webhook setups may be possible for specific use cases; please discuss with our team if this is a requirement.*
--   **Efficient Data Handling:** Cache port location data when possible, as it changes infrequently. Focus polling on active vessel movements.
+-   **Polling Intervals:** For routing data and vessel positions we recommend refreshing up to once per hour.
+-   **Efficient Data Handling:** Cache previous vessel positions when possible, as it doesn't change. Focus polling on active vessel movements.
 -   **Error Handling:** Implement proper error handling for API requests, especially for future predictions which might not always be available for all routes or vessels.
 
 If you decide to create your own map:
@@ -310,7 +309,10 @@ If you decide to create your own map:
 ## Frequently Asked Questions
 
 **Q: How up-to-date is the vessel position data?**
-A: Historical data is typically updated frequently, often every few minutes up to an hour. Predicted future positions are based on algorithms and current data, and their accuracy can vary based on many factors.
+A:  Vessel location data is updated every 15 minutes, although that does not guarantee there will be a new position every 15 minutes to factors like whether the vessel is transmitting or within range of a satellite or base station.
+
+**Q: How accurate are the future predictions?**
+Predicted future positions are based on algorithms and current data, and their accuracy can vary based on many factors such as temporary deviations, seasonality, or how frequently the shipping lane is used.
 
 **Q: What if a vessel deviates from the predicted path?**
 A: Predicted paths are estimates. The historical path (once available) will show the actual route taken. Regularly refreshing data for active shipments is key to getting the most accurate information.
