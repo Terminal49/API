@@ -177,7 +177,7 @@ This endpoint is used when the vessel **is currently en route** between two port
         * Fetch the vessel's current details using `GET /v2/vessels/{vessel_id}`. The response will contain its latest `latitude`, `longitude`, and `position_timestamp` in the `attributes` section.
            ```shell Example: Fetch current vessel data
            curl --request GET \
-             --url [https://api.terminal49.com/v2/vessels/](https://api.terminal49.com/v2/vessels/){vessel_id} \
+             --url https://api.terminal49.com/v2/vessels/{vessel_id} \
              --header "Authorization: Token YOUR_API_TOKEN"
            ```
            <Expandable title="Example current vessel data response">
@@ -207,7 +207,7 @@ This endpoint is used when the vessel **is currently en route** between two port
     # Final Arrival Port (Colombo) ID: 818ef299-aed3-49c9-b3f7-7ee205f697f6
     # Current Coords (example): lat=24.4193, lon=58.5676
     curl --request GET \
-      --url '[https://api.terminal49.com/v2/vessels/50b58b30-acd6-45d3-a694-19664acb1518/future_positions_with_coordinates?previous_port_id=94892d07-ef8f-4f76-a860-97a398c2c177&port_id=818ef299-aed3-49c9-b3f7-7ee205f697f6&current_latitude=24.4193&current_longitude=58.5676](https://api.terminal49.com/v2/vessels/50b58b30-acd6-45d3-a694-19664acb1518/future_positions_with_coordinates?previous_port_id=94892d07-ef8f-4f76-a860-97a398c2c177&port_id=818ef299-aed3-49c9-b3f7-7ee205f697f6&current_latitude=24.4193&current_longitude=58.5676)' \
+      --url 'https://api.terminal49.com/v2/vessels/50b58b30-acd6-45d3-a694-19664acb1518/future_positions_with_coordinates?previous_port_id=94892d07-ef8f-4f76-a860-97a398c2c177&port_id=818ef299-aed3-49c9-b3f7-7ee205f697f6&current_latitude=24.4193&current_longitude=58.5676' \
       --header "Authorization: Token YOUR_API_TOKEN"
     ```
     <Expandable title="Example Response Snippet (focus on detailed positions from current location)">
@@ -252,7 +252,7 @@ This endpoint is used when the vessel **has not yet departed** from the origin p
     # Departure Port (Algeciras) ID: 0620b5e6-7621-408c-8b44-cf6f0d9a762c
     # Arrival Port (Tanger Med) ID: f4ec11ea-8c5a-46f9-a213-9d976af04230
     curl --request GET \
-      --url '[https://api.terminal49.com/v2/vessels/17189206-d585-4670-b6dd-0aa50fc30869/future_positions?port_id=f4ec11ea-8c5a-46f9-a213-9d976af04230&previous_port_id=0620b5e6-7621-408c-8b44-cf6f0d9a762c](https://api.terminal49.com/v2/vessels/17189206-d585-4670-b6dd-0aa50fc30869/future_positions?port_id=f4ec11ea-8c5a-46f9-a213-9d976af04230&previous_port_id=0620b5e6-7621-408c-8b44-cf6f0d9a762c)' \
+      --url 'https://api.terminal49.com/v2/vessels/17189206-d585-4670-b6dd-0aa50fc30869/future_positions?port_id=f4ec11ea-8c5a-46f9-a213-9d976af04230&previous_port_id=0620b5e6-7621-408c-8b44-cf6f0d9a762c' \
       --header "Authorization: Token YOUR_API_TOKEN"
     ```
     <Expandable title="Example Response Snippet (focus on positions from port to port)">
