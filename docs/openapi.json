@@ -5422,7 +5422,7 @@
           }
         },
         "operationId": "get-containers-id-route",
-        "description": "Retrieves the route details for a container including all port calls and vessel changes."
+        "description": "Retrieves the route details from the port of lading to the port of discharge, including transshipments. <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>"
       }
     },
     "/shipping_lines": {
@@ -5720,7 +5720,7 @@
           }
         },
         "operationId": "get-vessels-id-future-positions",
-        "description": "Returns estimated future positions for a vessel traveling from one port to another. It should be used when the vessel has not yet departed from the origin port and the entire journey is in the future.",
+        "description": "Returns the estimated route between two ports for a given vessel. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
         "parameters": [
           {
             "schema": {
@@ -5757,7 +5757,7 @@
         }
       ],
       "get": {
-        "summary": "Get vessel future positions with coordinates",
+        "summary": "Get vessel future positions from coordinates",
         "tags": [
           "Routing (Paid)",
           "Vessels"
@@ -5821,7 +5821,7 @@
           }
         },
         "operationId": "get-vessels-id-future-positions-with-coordinates",
-        "description": "Returns estimated future positions for a vessel based on specific coordinates and destination ports. It should be used when the vessel is already en route. <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
+        "description": "Returns the estimated route between two ports for a given vessel from a set of coordinates. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
         "parameters": [
           {
             "schema": {
