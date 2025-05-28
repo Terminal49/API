@@ -19,7 +19,7 @@ jobs:
       - name: Deploy to Postman API
         env:
           POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
-          POSTMAN_COLLECTION_UID: 9bcc557f-7a58-4fce-86be-d799fee4e31b
+          POSTMAN_COLLECTION_UID: 5900de09-f05a-4528-8b12-9ad1d0477023
         run: |
           echo "On main branch with changes to collection - deploying to Postman API..."
           
