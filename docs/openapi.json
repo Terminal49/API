@@ -603,6 +603,14 @@
             "in": "query",
             "name": "number",
             "description": "Search shipments by the original request tracking `request_number`"
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "filter[tracking_stopped]",
+            "description": "Filter shipments by whether they are still tracking or not"
           }
         ]
       }
