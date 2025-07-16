@@ -1,0 +1,151 @@
+---
+title: [Endpoint Name - e.g., "Create a Tracking Request"]
+description: [Brief description of what this endpoint does]
+og:title: [Endpoint Name] | Terminal49 API Documentation
+og:description: [SEO-friendly description about this endpoint]
+openapi: [method] [path] # e.g., post /tracking_requests
+---
+
+## Endpoint Purpose
+[1-2 sentences explaining what this endpoint is used for and when you would use it in your integration]
+
+## Business Use Cases
+[Brief explanation of common business scenarios where this endpoint is valuable]
+- **Use Case 1**: [e.g., "Initiate tracking for a new container shipment"]
+- **Use Case 2**: [e.g., "Set up automated monitoring for a customer's bill of lading"]
+
+## Example Scenarios
+
+<Tabs>
+  <Tab title="Basic Usage">
+    <CodeGroup>
+      <Code title="Request" lang="json">
+        {
+          // Request body with comments
+        }
+      </Code>
+      <Code title="Response" lang="json">
+        {
+          // Success response with comments
+        }
+      </Code>
+    </CodeGroup>
+
+    **Notes:**
+    - [Important information about this scenario]
+    - [Explanation of key response fields]
+  </Tab>
+
+  <Tab title="Alternative Scenario">
+    <CodeGroup>
+      <Code title="Request" lang="json">
+        {
+          // Request body for alternative scenario
+        }
+      </Code>
+      <Code title="Response" lang="json">
+        {
+          // Response showing different outcome
+        }
+      </Code>
+    </CodeGroup>
+
+    **Notes:**
+    - [Information specific to this scenario]
+    - [Business context for when you'd use this approach]
+  </Tab>
+
+  <Tab title="Error Handling">
+    <CodeGroup>
+      <Code title="Request" lang="json">
+        {
+          // Request that would trigger an error
+        }
+      </Code>
+      <Code title="Response" lang="json">
+        {
+          // Error response
+        }
+      </Code>
+    </CodeGroup>
+
+    **Notes:**
+    - [Explanation of what caused the error]
+    - [How to resolve this issue]
+  </Tab>
+</Tabs>
+
+## Key Response Fields
+
+<ResponseField name="field1" type="string">
+  [Explanation with business context]
+</ResponseField>
+
+<ResponseField name="field2" type="integer">
+  [Explanation with business context]
+</ResponseField>
+
+<ResponseField name="nested" type="object">
+  An object containing related information.
+
+  <Expandable title="Properties">
+    <ResponseField name="subfield1" type="string">
+      [Explanation of nested field]
+    </ResponseField>
+
+    <ResponseField name="subfield2" type="array">
+      [Explanation of nested array field]
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Related Webhook Events
+
+When using this endpoint, you may receive the following webhook events:
+
+<Card title="event.name">
+  [Description of when this event is triggered and what it contains]
+</Card>
+
+<Card title="event.name2">
+  [Description of when this event is triggered and what it contains]
+</Card>
+
+## Related Guides & Tutorials
+
+<CardGroup cols={2}>
+  <Card title="Related Guide" icon="book" href="/api-docs/in-depth-guides/guide-name">
+    [Brief description of related guide]
+  </Card>
+  <Card title="Tutorial Example" icon="code" href="/api-docs/tutorials/tutorial-name">
+    [Brief description of related tutorial]
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Common Issue 1">
+    **Problem**: [Description of common problem]
+
+    **Solution**: [Detailed steps to resolve]
+
+    ```json
+    // Example of correct usage
+    ```
+  </Accordion>
+
+  <Accordion title="Common Issue 2">
+    **Problem**: [Description of another common problem]
+
+    **Solution**: [Detailed steps to resolve]
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  [Important information or tips about using this endpoint effectively]
+</Note>
+
+<Warning>
+  [Critical warnings about potential pitfalls or limitations]
+</Warning>

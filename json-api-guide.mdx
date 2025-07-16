@@ -1,0 +1,255 @@
+---
+title: Understanding JSON:API
+description: Learn the basics of JSON:API and how it's implemented in Terminal49's API.
+---
+
+# JSON:API Guide
+
+Terminal49's API follows the [JSON:API specification](https://jsonapi.org/), a standard for building APIs in JSON. This guide will help you understand the key concepts and how to work with our API effectively.
+
+## What is JSON:API?
+
+JSON:API is a specification for how a client should request resources to be fetched or modified, and how a server should respond. It's designed to minimize both the number of requests and the amount of data transmitted between clients and servers.
+
+<Note>
+  The Terminal49 API conforms to the JSON:API v1.0 specification. This standardization makes our API more predictable and easier to work with once you understand the patterns.
+</Note>
+
+## JSON:API Structure
+
+### Basic Resource Objects
+
+All Terminal49 API responses follow this general structure:
+
+```json
+{
+  "data": {
+    "id": "123",
+    "type": "shipment",
+    "attributes": {
+      "bill_of_lading_number": "MAEU9736478",
+      "created_at": "2023-05-15T14:23:12Z"
+      // Other shipment attributes
+    },
+    "relationships": {
+      "containers": {
+        "data": [
+          { "id": "456", "type": "container" },
+          { "id": "789", "type": "container" }
+        ]
+      }
+    }
+  }
+}
+```
+
+The main components are:
+
+<ResponseField name="data" type="object">
+  The primary resource or collection of resources.
+</ResponseField>
+
+<ResponseField name="id" type="string">
+  A unique identifier for the resource.
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  The resource type (e.g., "shipment", "container", "tracking_request").
+</ResponseField>
+
+<ResponseField name="attributes" type="object">
+  The resource's properties (e.g., numbers, dates, status values).
+</ResponseField>
+
+<ResponseField name="relationships" type="object">
+  References to related resources (e.g., a shipment's containers).
+</ResponseField>
+
+### Collections of Resources
+
+When requesting multiple resources, the response structure is:
+
+```json
+{
+  "data": [
+    {
+      "id": "123",
+      "type": "shipment",
+      "attributes": { ... }
+    },
+    {
+      "id": "124",
+      "type": "shipment",
+      "attributes": { ... }
+    }
+  ],
+  "meta": {
+    "total_count": 45
+  },
+  "links": {
+    "self": "https://api.terminal49.com/v2/shipments?page[number]=1&page[size]=2",
+    "next": "https://api.terminal49.com/v2/shipments?page[number]=2&page[size]=2"
+  }
+}
+```
+
+<ResponseField name="meta" type="object">
+  Contains non-standard meta-information, like counts or pagination details.
+</ResponseField>
+
+<ResponseField name="links" type="object">
+  Contains links for pagination or related operations.
+</ResponseField>
+
+## Working with JSON:API in Terminal49
+
+### Creating Resources
+
+When creating a resource (like a tracking request), your request should follow this format:
+
+<CodeGroup>
+  <Code title="Request" lang="json">
+    {
+      "data": {
+        "type": "tracking_request",
+        "attributes": {
+          "request_type": "bill_of_lading",
+          "request_number": "MAEU9736478",
+          "scac": "MAEU"
+        }
+      }
+    }
+  </Code>
+</CodeGroup>
+
+Notice that:
+- The `type` field is required and must match the expected resource type
+- All properties go inside the `attributes` object
+- You don't specify an `id` for new resources (the server assigns it)
+
+### Including Related Resources
+
+One powerful feature of JSON:API is the ability to include related resources in a single request using the `include` parameter:
+
+```
+GET /shipments/123?include=containers,containers.transport_events
+```
+
+This returns the shipment with its containers and each container's transport events in one response:
+
+```json
+{
+  "data": {
+    "id": "123",
+    "type": "shipment",
+    "attributes": { ... },
+    "relationships": {
+      "containers": {
+        "data": [
+          { "id": "456", "type": "container" }
+        ]
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "456",
+      "type": "container",
+      "attributes": { ... },
+      "relationships": {
+        "transport_events": {
+          "data": [
+            { "id": "789", "type": "transport_event" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "789",
+      "type": "transport_event",
+      "attributes": { ... }
+    }
+  ]
+}
+```
+
+<ResponseField name="included" type="array">
+  Contains all the related resources referenced in the main resource's relationships.
+</ResponseField>
+
+### Error Handling
+
+Error responses also follow a standard format:
+
+```json
+{
+  "errors": [
+    {
+      "status": "422",
+      "title": "Invalid attribute",
+      "detail": "The SCAC 'UNKNOWN' is not supported.",
+      "source": {
+        "pointer": "/data/attributes/scac"
+      }
+    }
+  ]
+}
+```
+
+Each error object contains:
+
+<ResponseField name="status" type="string">
+  The HTTP status code relevant to the error.
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  A short, human-readable summary of the problem.
+</ResponseField>
+
+<ResponseField name="detail" type="string">
+  A human-readable explanation of the specific error.
+</ResponseField>
+
+<ResponseField name="source" type="object">
+  An object containing references to the source of the error. The `pointer` field typically contains a JSON Pointer to the specific field that caused the error.
+</ResponseField>
+
+## JSON:API Libraries
+
+Since Terminal49 uses standard JSON:API, you can leverage client libraries for your preferred programming language to make working with our API easier:
+
+<CardGroup cols={3}>
+  <Card title="JavaScript" icon="js" href="https://github.com/json-api/json-api">
+    JSON:API libraries for JavaScript
+  </Card>
+  <Card title="Ruby" icon="gem" href="https://github.com/jsonapi-rb/jsonapi-rb">
+    jsonapi-rb for Ruby applications
+  </Card>
+  <Card title="Python" icon="python" href="https://github.com/django-json-api/django-rest-framework-json-api">
+    JSON:API libraries for Python
+  </Card>
+</CardGroup>
+
+Using a library helps handle the resource structure, relationship management, and error parsing automatically.
+
+## Tips for Working with Terminal49's JSON:API
+
+- Always include the correct `Content-Type` header in your requests:
+  ```
+  Content-Type: application/vnd.api+json
+  ```
+
+- Use the `include` parameter to reduce the number of API calls when you need related resources
+
+- When creating or updating resources, remember that all properties must be inside the `attributes` object
+
+- For filtering collections, use the filter query parameter with the attribute name:
+  ```
+  GET /containers?filter[status]=arrived
+  ```
+
+- Pagination is handled via `page[number]` and `page[size]` query parameters
+
+<Note>
+  For a deeper understanding of JSON:API, check the [official specification](https://jsonapi.org/format/) or our [In-Depth Guides](/api-docs/in-depth-guides/including-resources) on working with Terminal49's API.
+</Note>

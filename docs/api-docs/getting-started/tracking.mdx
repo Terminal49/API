@@ -1,25 +1,24 @@
 ---
-title: Complete Tracking Guide
-description: Learn about all methods of tracking shipments in Terminal49, tracking request lifecycle, and available API endpoints.
-icon: "magnifying-glass-chart"
+title: Tracking Guide
+description: Learn about all methods of tracking shipments and containers in Terminal49, the tracking request lifecycle, and available API endpoints.
+icon: "container-storage"
 ---
-
-# Complete Tracking Guide
-
+<Tip>
 Tracking is a core function of Terminal49's platform. This guide covers all aspects of tracking shipments and containers, from initiating tracking through various methods to understanding the tracking request lifecycle and managing tracking data.
+</Tip>
 
 ## Tracking Methods
 
-Terminal49 offers multiple ways to start tracking your shipments:
+Terminal49 offers multiple ways to start tracking your shipments or containers:
 
 <CardGroup cols={3}>
-  <Card title="API Integration" icon="code">
+  <Card title="Terminal49 API" icon="code">
     Use the Tracking Request API to programmatically submit container numbers, bills of lading, or booking numbers for tracking.
   </Card>
-  <Card title="Dashboard Interface" icon="browser">
-    Manually enter tracking numbers through Terminal49's web dashboard for immediate tracking.
+  <Card title="Terminal49 Dashboard" icon="browser">
+    Manually enter tracking numbers or upload your spreadheet/CSV through Terminal49's web dashboard for immediate tracking.
   </Card>
-  <Card title="Bulk CSV Upload" icon="file-csv">
+  <Card title="Bulk CSV Upload via Email" icon="file-csv">
     Email CSV files with multiple tracking references to quickly set up tracking for multiple shipments at once.
   </Card>
 </CardGroup>
@@ -40,39 +39,7 @@ This method is ideal for:
 
 [Detailed API Reference →](/api-docs/api-reference/tracking-requests/create-a-tracking-request)
 
-### Dashboard Interface
-
-For manual tracking or lower volumes, Terminal49's web dashboard offers a user-friendly interface:
-
-1. Log in to your Terminal49 account
-2. Navigate to the "Track" section
-3. Enter your tracking number(s) and select the carrier
-4. Click "Track" to begin monitoring
-
-This method is ideal for:
-- Quick one-off tracking needs
-- Small shipment volumes
-- Testing or verification purposes
-- Users who prefer a visual interface
-
-### Bulk CSV Upload
-
-For setting up tracking for multiple shipments at once:
-
-1. Prepare a CSV file with columns for tracking numbers, carrier codes, and optional reference numbers
-2. Email the CSV file to imports@terminal49.com
-3. Terminal49 will process the file and begin tracking all shipments
-
-This method is ideal for:
-- Initial onboarding of many shipments
-- Regular batch imports from other systems
-- Scheduled tracking updates
-
-<Note>
-  Contact your Terminal49 account manager for the exact CSV format requirements and processing schedule.
-</Note>
-
-## Trackable Reference Types
+## Tracking Number Support
 
 Terminal49 supports tracking using three primary reference types:
 
@@ -138,6 +105,39 @@ Terminal49 supports tracking using three primary reference types:
 <Warning>
   House Bill of Lading (HBL) numbers issued by freight forwarders are not directly supported for tracking. You must use the Master Bill of Lading (MBL) from the ocean carrier.
 </Warning>
+
+### Dashboard Interface
+
+For manual tracking or lower volumes, Terminal49's web dashboard offers a user-friendly interface:
+
+1. Log in to your Terminal49 account
+2. Navigate to the "Track" section
+3. Enter your tracking number(s) and select the carrier
+4. Click "Track" to begin monitoring
+
+This method is ideal for:
+- Quick one-off tracking needs
+- Small shipment volumes
+- Testing or verification purposes
+- Users who prefer a visual interface
+### Bulk CSV Upload via Email
+
+For setting up tracking for multiple shipments at once:
+
+1. Prepare a CSV/spreadsheet file with your tracking details
+2. Email the file to track@terminal49.com
+3. Terminal49 will process the file and begin tracking all shipments
+
+For detailed instructions on CSV formatting options and requirements, see our [help documentation](https://help.terminal49.com/articles/4091681959-how-to-track-shipments-or-containers-via-email).
+
+This method is ideal for:
+- Initial onboarding of many shipments
+- Regular batch imports from other systems
+- Scheduled tracking updates
+- Teams that prefer working with spreadsheets
+
+
+
 
 ## Tracking Request API Details
 
