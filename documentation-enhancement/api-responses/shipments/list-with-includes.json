@@ -1,0 +1,520 @@
+{
+  "data": [
+    {
+      "id": "6d87a211-7205-43c5-af27-bd15865d3b43",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-15T21:05:13Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "CLAMCWPN4M093780",
+        "normalized_number": "CWPN4M093780",
+        "shipping_line_scac": "CLAM",
+        "shipping_line_name": "Crowley",
+        "shipping_line_short_name": "Crowley",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "HNPCR",
+        "port_of_lading_name": "Puerto Cortes",
+        "port_of_discharge_locode": "USILM",
+        "port_of_discharge_name": "Wilmington (NC)",
+        "pod_vessel_name": "QUETZAL",
+        "pod_vessel_imo": "9984247",
+        "pod_voyage_number": "NZV5076",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": null,
+        "pol_timezone": "America/Tegucigalpa",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-11T15:18:01Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T01:10:49Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T01:10:52Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/6d87a211-7205-43c5-af27-bd15865d3b43"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "dd5eab5e-71ad-4a8e-92e2-9c216bf0978a",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "b939d367-970a-4e8c-925e-d991dabca8ac",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "9d5e2433-5102-4e72-b7ff-01e38886a9d8",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "df008eee-8145-4edf-b857-c5d1be8604ce",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c0eb25ed-6ef5-4d1f-b67f-7f645a6ed726",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-15T21:05:04Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "CLAMCWPN4M093782",
+        "normalized_number": "CWPN4M093782",
+        "shipping_line_scac": "CLAM",
+        "shipping_line_name": "Crowley",
+        "shipping_line_short_name": "Crowley",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "HNPCR",
+        "port_of_lading_name": "Puerto Cortes",
+        "port_of_discharge_locode": "USILM",
+        "port_of_discharge_name": "Wilmington (NC)",
+        "pod_vessel_name": "QUETZAL",
+        "pod_vessel_imo": "9984247",
+        "pod_voyage_number": "NZV5076",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": null,
+        "pol_timezone": "America/Tegucigalpa",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-11T15:18:01Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T03:50:50Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T03:51:13Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/c0eb25ed-6ef5-4d1f-b67f-7f645a6ed726"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "dd5eab5e-71ad-4a8e-92e2-9c216bf0978a",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "b939d367-970a-4e8c-925e-d991dabca8ac",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "9d5e2433-5102-4e72-b7ff-01e38886a9d8",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "c669c515-f12e-4587-b0e2-72769c1efccd",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ce6dcbeb-f2f7-499c-b1ff-36888a825a69",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-15T15:03:15Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "CLAMCWPN4M075823",
+        "normalized_number": "CWPN4M075823",
+        "shipping_line_scac": "CLAM",
+        "shipping_line_name": "Crowley",
+        "shipping_line_short_name": "Crowley",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "HNPCR",
+        "port_of_lading_name": "Puerto Cortes",
+        "port_of_discharge_locode": "USILM",
+        "port_of_discharge_name": "Wilmington (NC)",
+        "pod_vessel_name": "QUETZAL",
+        "pod_vessel_imo": "9984247",
+        "pod_voyage_number": "NZV5076",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": null,
+        "pol_timezone": "America/Tegucigalpa",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-11T15:18:01Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T02:07:28Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T02:07:34Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/ce6dcbeb-f2f7-499c-b1ff-36888a825a69"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "dd5eab5e-71ad-4a8e-92e2-9c216bf0978a",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "b939d367-970a-4e8c-925e-d991dabca8ac",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "9d5e2433-5102-4e72-b7ff-01e38886a9d8",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "bdeda782-ce39-47f9-984b-87631994d2b5",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "included": [
+    {
+      "id": "df008eee-8145-4edf-b857-c5d1be8604ce",
+      "type": "container",
+      "attributes": {
+        "number": "CMCU4734230",
+        "seal_number": null,
+        "created_at": "2025-07-15T21:05:14Z",
+        "ref_numbers": [],
+        "pod_arrived_at": "2025-07-11T15:18:01Z",
+        "pod_discharged_at": null,
+        "final_destination_full_out_at": null,
+        "holds_at_pod_terminal": [],
+        "available_for_pickup": false,
+        "equipment_type": "dry",
+        "equipment_length": 45,
+        "equipment_height": "high_cube",
+        "pod_full_out_at": "2025-07-15T15:18:00Z",
+        "empty_terminated_at": null,
+        "terminal_checked_at": null,
+        "fees_at_pod_terminal": [],
+        "pickup_lfd": null,
+        "pickup_appointment_at": null,
+        "pod_full_out_chassis_number": null,
+        "location_at_pod_terminal": null,
+        "pod_last_tracking_request_at": null,
+        "shipment_last_tracking_request_at": "2025-07-16T01:10:52Z",
+        "rail_last_tracking_request_at": null,
+        "availability_known": false,
+        "pod_timezone": "America/New_York",
+        "final_destination_timezone": null,
+        "weight_in_lbs": 0.0,
+        "empty_terminated_timezone": "America/New_York",
+        "pod_rail_carrier_scac": null,
+        "ind_rail_carrier_scac": null,
+        "pod_rail_loaded_at": null,
+        "pod_rail_departed_at": null,
+        "ind_eta_at": null,
+        "ind_ata_at": null,
+        "ind_rail_unloaded_at": null,
+        "ind_facility_holds": null,
+        "ind_facility_fees": null,
+        "ind_facility_lfd_on": null,
+        "ssl_lfd": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "6d87a211-7205-43c5-af27-bd15865d3b43",
+            "type": "shipment"
+          }
+        },
+        "pickup_facility": {
+          "data": null
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "9d5e2433-5102-4e72-b7ff-01e38886a9d8",
+            "type": "terminal"
+          }
+        },
+        "transport_events": {
+          "data": [
+            {
+              "id": "aaaefaac-f214-479b-9438-e6a372d3b9e2",
+              "type": "transport_event"
+            },
+            {
+              "id": "e7fd55c5-1476-4816-92ab-1b8971c4bb06",
+              "type": "transport_event"
+            }
+          ]
+        },
+        "raw_events": {
+          "data": [
+            {
+              "id": "ff491cf8-c919-48e2-a800-f14a34b5ffef",
+              "type": "raw_event"
+            },
+            {
+              "id": "aed9d6ec-87ec-4cf3-bf06-49276e453660",
+              "type": "raw_event"
+            },
+            {
+              "id": "ba8a81fe-ed32-4de4-a87c-94f969e60e99",
+              "type": "raw_event"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c669c515-f12e-4587-b0e2-72769c1efccd",
+      "type": "container",
+      "attributes": {
+        "number": "CMCU4719528",
+        "seal_number": null,
+        "created_at": "2025-07-15T21:05:06Z",
+        "ref_numbers": [],
+        "pod_arrived_at": "2025-07-11T15:18:01Z",
+        "pod_discharged_at": null,
+        "final_destination_full_out_at": null,
+        "holds_at_pod_terminal": [],
+        "available_for_pickup": false,
+        "equipment_type": "dry",
+        "equipment_length": 45,
+        "equipment_height": "high_cube",
+        "pod_full_out_at": "2025-07-15T15:17:00Z",
+        "empty_terminated_at": null,
+        "terminal_checked_at": null,
+        "fees_at_pod_terminal": [],
+        "pickup_lfd": null,
+        "pickup_appointment_at": null,
+        "pod_full_out_chassis_number": null,
+        "location_at_pod_terminal": null,
+        "pod_last_tracking_request_at": null,
+        "shipment_last_tracking_request_at": "2025-07-16T03:51:13Z",
+        "rail_last_tracking_request_at": null,
+        "availability_known": false,
+        "pod_timezone": "America/New_York",
+        "final_destination_timezone": null,
+        "weight_in_lbs": 0.0,
+        "empty_terminated_timezone": "America/New_York",
+        "pod_rail_carrier_scac": null,
+        "ind_rail_carrier_scac": null,
+        "pod_rail_loaded_at": null,
+        "pod_rail_departed_at": null,
+        "ind_eta_at": null,
+        "ind_ata_at": null,
+        "ind_rail_unloaded_at": null,
+        "ind_facility_holds": null,
+        "ind_facility_fees": null,
+        "ind_facility_lfd_on": null,
+        "ssl_lfd": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "c0eb25ed-6ef5-4d1f-b67f-7f645a6ed726",
+            "type": "shipment"
+          }
+        },
+        "pickup_facility": {
+          "data": null
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "9d5e2433-5102-4e72-b7ff-01e38886a9d8",
+            "type": "terminal"
+          }
+        },
+        "transport_events": {
+          "data": [
+            {
+              "id": "c70b34f4-77ed-4970-a91f-604c7322ca8b",
+              "type": "transport_event"
+            },
+            {
+              "id": "8d325c6c-11d6-425b-a5ed-fd7eaf9b8a65",
+              "type": "transport_event"
+            }
+          ]
+        },
+        "raw_events": {
+          "data": [
+            {
+              "id": "449d878a-2add-48ad-adee-985ccbea7057",
+              "type": "raw_event"
+            },
+            {
+              "id": "24380a86-329b-4f4c-8c40-b04a8605c377",
+              "type": "raw_event"
+            },
+            {
+              "id": "df86b0ba-7fdc-4e99-b864-fb3c13435403",
+              "type": "raw_event"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "bdeda782-ce39-47f9-984b-87631994d2b5",
+      "type": "container",
+      "attributes": {
+        "number": "CMCU4702947",
+        "seal_number": null,
+        "created_at": "2025-07-15T15:03:15Z",
+        "ref_numbers": [],
+        "pod_arrived_at": "2025-07-11T15:18:01Z",
+        "pod_discharged_at": null,
+        "final_destination_full_out_at": null,
+        "holds_at_pod_terminal": [],
+        "available_for_pickup": false,
+        "equipment_type": "dry",
+        "equipment_length": 45,
+        "equipment_height": "high_cube",
+        "pod_full_out_at": "2025-07-15T11:32:00Z",
+        "empty_terminated_at": null,
+        "terminal_checked_at": null,
+        "fees_at_pod_terminal": [],
+        "pickup_lfd": null,
+        "pickup_appointment_at": null,
+        "pod_full_out_chassis_number": null,
+        "location_at_pod_terminal": null,
+        "pod_last_tracking_request_at": null,
+        "shipment_last_tracking_request_at": "2025-07-16T02:07:34Z",
+        "rail_last_tracking_request_at": null,
+        "availability_known": false,
+        "pod_timezone": "America/New_York",
+        "final_destination_timezone": null,
+        "weight_in_lbs": 0.0,
+        "empty_terminated_timezone": "America/New_York",
+        "pod_rail_carrier_scac": null,
+        "ind_rail_carrier_scac": null,
+        "pod_rail_loaded_at": null,
+        "pod_rail_departed_at": null,
+        "ind_eta_at": null,
+        "ind_ata_at": null,
+        "ind_rail_unloaded_at": null,
+        "ind_facility_holds": null,
+        "ind_facility_fees": null,
+        "ind_facility_lfd_on": null,
+        "ssl_lfd": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "ce6dcbeb-f2f7-499c-b1ff-36888a825a69",
+            "type": "shipment"
+          }
+        },
+        "pickup_facility": {
+          "data": null
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "9d5e2433-5102-4e72-b7ff-01e38886a9d8",
+            "type": "terminal"
+          }
+        },
+        "transport_events": {
+          "data": [
+            {
+              "id": "6978ad89-c2ca-4d98-9959-7694c28b2059",
+              "type": "transport_event"
+            },
+            {
+              "id": "d766782f-688c-4b80-bd38-f4637ab2263c",
+              "type": "transport_event"
+            }
+          ]
+        },
+        "raw_events": {
+          "data": [
+            {
+              "id": "e824a097-6b38-4915-b763-32daabef7403",
+              "type": "raw_event"
+            },
+            {
+              "id": "fbce79fa-524f-449f-af4d-6b7930a7c8bd",
+              "type": "raw_event"
+            },
+            {
+              "id": "5d9ea17c-ae18-4bc3-9b95-218ff7b51559",
+              "type": "raw_event"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "meta": {
+    "size": 3,
+    "total": 133035
+  },
+  "links": {
+    "self": "https://api.terminal49.com/v2/shipments?page%5Bsize%5D=3&include=containers",
+    "current": "https://api.terminal49.com/v2/shipments?include=containers&page[number]=1&page[size]=3",
+    "next": "https://api.terminal49.com/v2/shipments?include=containers&page[number]=2&page[size]=3",
+    "last": "https://api.terminal49.com/v2/shipments?include=containers&page[number]=44345&page[size]=3"
+  }
+}

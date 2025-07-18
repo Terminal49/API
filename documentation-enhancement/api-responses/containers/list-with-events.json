@@ -1,0 +1,2155 @@
+{
+  "data": [
+    {
+      "id": "b3f4f7e4-6f4b-4c89-8f54-10094565e4e7",
+      "type": "container",
+      "attributes": {
+        "number": "MSNU7926760",
+        "seal_number": null,
+        "created_at": "2025-07-11T15:02:52Z",
+        "ref_numbers": [],
+        "pod_arrived_at": "2025-07-08T21:17:25Z",
+        "pod_discharged_at": "2025-07-09T07:00:00Z",
+        "final_destination_full_out_at": null,
+        "holds_at_pod_terminal": [],
+        "available_for_pickup": false,
+        "equipment_type": "dry",
+        "equipment_length": 40,
+        "equipment_height": "high_cube",
+        "pod_full_out_at": null,
+        "empty_terminated_at": null,
+        "terminal_checked_at": "2025-07-16T04:20:50Z",
+        "fees_at_pod_terminal": [],
+        "pickup_lfd": "2025-09-06T07:00:00Z",
+        "pickup_appointment_at": null,
+        "pod_full_out_chassis_number": null,
+        "location_at_pod_terminal": "YARD K376E (Grounded)",
+        "pod_last_tracking_request_at": "2025-07-16T04:20:49Z",
+        "shipment_last_tracking_request_at": "2025-07-16T03:24:21Z",
+        "rail_last_tracking_request_at": "2025-07-16T03:59:29Z",
+        "availability_known": true,
+        "pod_timezone": "America/Los_Angeles",
+        "final_destination_timezone": "Indian/Reunion",
+        "weight_in_lbs": 0.0,
+        "empty_terminated_timezone": "Indian/Reunion",
+        "pod_rail_carrier_scac": "BNSF",
+        "ind_rail_carrier_scac": null,
+        "pod_rail_loaded_at": null,
+        "pod_rail_departed_at": null,
+        "ind_eta_at": null,
+        "ind_ata_at": null,
+        "ind_rail_unloaded_at": null,
+        "ind_facility_holds": null,
+        "ind_facility_fees": null,
+        "ind_facility_lfd_on": "2025-09-06T14:00:00Z",
+        "ssl_lfd": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "0e5a8e2f-fa53-4306-8f12-0a86a5ccb5e9",
+            "type": "shipment"
+          }
+        },
+        "pickup_facility": {
+          "data": null
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "e453c1e8-d893-4a14-8060-5f571a51d8b1",
+            "type": "terminal"
+          }
+        },
+        "transport_events": {
+          "data": [
+            {
+              "id": "3d996d4d-bb9c-434a-ac09-6b465cf72e67",
+              "type": "transport_event"
+            },
+            {
+              "id": "61954ade-e353-47a1-9438-1ae7d3e27501",
+              "type": "transport_event"
+            },
+            {
+              "id": "153217bc-e4d0-4a55-9b95-45c6355451d6",
+              "type": "transport_event"
+            },
+            {
+              "id": "8a7cc816-5082-4553-ad3e-79642c54b08a",
+              "type": "transport_event"
+            },
+            {
+              "id": "cfcc2b05-5a70-4b65-ab5c-f18141f581c8",
+              "type": "transport_event"
+            },
+            {
+              "id": "865b9cb3-fef3-48ec-8553-608edef5b9c9",
+              "type": "transport_event"
+            },
+            {
+              "id": "0c5f7dc0-e942-4e6e-bb40-bce4e7be6c5b",
+              "type": "transport_event"
+            },
+            {
+              "id": "59e7556a-49df-4475-bd2d-c295cc99a0ce",
+              "type": "transport_event"
+            },
+            {
+              "id": "c6df6d04-34d9-4da0-a743-5397a8b8ffae",
+              "type": "transport_event"
+            },
+            {
+              "id": "d30cd1ad-69c8-4daa-b3b4-859af45606d5",
+              "type": "transport_event"
+            }
+          ]
+        },
+        "raw_events": {
+          "data": [
+            {
+              "id": "929c4972-d666-44fa-86cd-77c0d8ea6c46",
+              "type": "raw_event"
+            },
+            {
+              "id": "ea3e8cdf-7a08-4207-b9e8-5571d6ced933",
+              "type": "raw_event"
+            },
+            {
+              "id": "674521ef-6c83-4de8-9254-f24a2b6f4201",
+              "type": "raw_event"
+            },
+            {
+              "id": "2780c866-5f7a-41d3-a5a9-5943a0d29a34",
+              "type": "raw_event"
+            },
+            {
+              "id": "62e53814-dab6-4b0d-a23c-f1b74e64af78",
+              "type": "raw_event"
+            },
+            {
+              "id": "6c9fc079-8fc7-4eaa-bdae-380e9b8a3e76",
+              "type": "raw_event"
+            },
+            {
+              "id": "d9a2346c-90cd-4f60-9e44-2ece9f805a1a",
+              "type": "raw_event"
+            },
+            {
+              "id": "38fd69dc-be21-4035-b5b6-cb82ebd00267",
+              "type": "raw_event"
+            },
+            {
+              "id": "f3e3ee50-045b-4d8f-a070-f0c8e7fdeffc",
+              "type": "raw_event"
+            },
+            {
+              "id": "2cd0319d-116b-46b5-afb7-07d8061f3a0b",
+              "type": "raw_event"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "584ebb17-e753-49d6-b411-3460897154fb",
+      "type": "container",
+      "attributes": {
+        "number": "HDMU2744338",
+        "seal_number": "24H1142418",
+        "created_at": "2025-06-20T14:02:51Z",
+        "ref_numbers": [],
+        "pod_arrived_at": null,
+        "pod_discharged_at": null,
+        "final_destination_full_out_at": null,
+        "holds_at_pod_terminal": [
+          {
+            "status": "hold",
+            "name": "freight",
+            "description": ""
+          },
+          {
+            "status": "hold",
+            "name": "customs",
+            "description": ""
+          }
+        ],
+        "available_for_pickup": false,
+        "equipment_type": "dry",
+        "equipment_length": 20,
+        "equipment_height": "standard",
+        "pod_full_out_at": null,
+        "empty_terminated_at": null,
+        "terminal_checked_at": "2025-07-16T04:20:49Z",
+        "fees_at_pod_terminal": [],
+        "pickup_lfd": null,
+        "pickup_appointment_at": null,
+        "pod_full_out_chassis_number": null,
+        "location_at_pod_terminal": "V-OMG081W",
+        "pod_last_tracking_request_at": "2025-07-16T04:20:44Z",
+        "shipment_last_tracking_request_at": "2025-07-16T00:41:07Z",
+        "rail_last_tracking_request_at": null,
+        "availability_known": true,
+        "pod_timezone": "America/New_York",
+        "final_destination_timezone": null,
+        "weight_in_lbs": 44699.0,
+        "empty_terminated_timezone": "America/New_York",
+        "pod_rail_carrier_scac": null,
+        "ind_rail_carrier_scac": null,
+        "pod_rail_loaded_at": null,
+        "pod_rail_departed_at": null,
+        "ind_eta_at": null,
+        "ind_ata_at": null,
+        "ind_rail_unloaded_at": null,
+        "ind_facility_holds": null,
+        "ind_facility_fees": null,
+        "ind_facility_lfd_on": null,
+        "ssl_lfd": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "8d14b518-114f-4086-8dd8-94523cdfed70",
+            "type": "shipment"
+          }
+        },
+        "pickup_facility": {
+          "data": null
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "f72f33ae-c1e9-49ab-811b-efafbbb3ce2f",
+            "type": "terminal"
+          }
+        },
+        "transport_events": {
+          "data": [
+            {
+              "id": "b4ab150d-f3af-4ec3-875c-bc87e20ded76",
+              "type": "transport_event"
+            },
+            {
+              "id": "c46b04fe-19ca-4d6a-8877-fb60802a502b",
+              "type": "transport_event"
+            },
+            {
+              "id": "5e0dc7b3-6ca0-447a-bd3b-59e8528d2dc2",
+              "type": "transport_event"
+            },
+            {
+              "id": "6e6b0964-c595-480b-a747-6f20a98d0496",
+              "type": "transport_event"
+            },
+            {
+              "id": "eca86f6f-6dcc-4065-8dad-128d96d632f0",
+              "type": "transport_event"
+            },
+            {
+              "id": "a806922c-a78a-49e3-afbf-9a2562b4bc7b",
+              "type": "transport_event"
+            },
+            {
+              "id": "27224d75-3727-4c82-b37a-afb852622b99",
+              "type": "transport_event"
+            },
+            {
+              "id": "deb8a87e-0c12-4289-8ae6-1a9d03f10890",
+              "type": "transport_event"
+            }
+          ]
+        },
+        "raw_events": {
+          "data": [
+            {
+              "id": "af035005-b1f8-4ae4-afa7-ef90c58e3bc8",
+              "type": "raw_event"
+            },
+            {
+              "id": "e49a7753-2f8a-416b-97c9-57226a351b25",
+              "type": "raw_event"
+            },
+            {
+              "id": "83796b53-8743-4ac7-899e-b7f40e55def9",
+              "type": "raw_event"
+            },
+            {
+              "id": "9b26ad10-f5e8-496e-941f-afa343cb6d49",
+              "type": "raw_event"
+            },
+            {
+              "id": "5a059ce0-bd78-4c52-99e7-c253f96c6ce2",
+              "type": "raw_event"
+            },
+            {
+              "id": "fe659845-3881-4079-bd7b-1f8e9e92ba6a",
+              "type": "raw_event"
+            },
+            {
+              "id": "a4d2ea00-561f-4b82-b56d-095d26aabc5e",
+              "type": "raw_event"
+            },
+            {
+              "id": "9a1e7ded-4fe0-465d-9ec8-0e4923b97c79",
+              "type": "raw_event"
+            },
+            {
+              "id": "ebf4f59d-fc25-4258-992e-850034652dfa",
+              "type": "raw_event"
+            },
+            {
+              "id": "01033af6-a486-4eed-a6fa-ba6f999b87fd",
+              "type": "raw_event"
+            },
+            {
+              "id": "d0f2ffe5-4361-45a6-a72b-51d28fef8ce5",
+              "type": "raw_event"
+            },
+            {
+              "id": "cae36709-f167-4a67-b6e8-707ae34ec318",
+              "type": "raw_event"
+            },
+            {
+              "id": "d40fd345-90eb-4d07-850c-c06dfa614b0d",
+              "type": "raw_event"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+      "type": "container",
+      "attributes": {
+        "number": "MRSU4904044",
+        "seal_number": null,
+        "created_at": "2025-07-09T15:01:40Z",
+        "ref_numbers": [],
+        "pod_arrived_at": "2025-07-05T07:45:21Z",
+        "pod_discharged_at": "2025-07-05T15:05:00Z",
+        "final_destination_full_out_at": null,
+        "holds_at_pod_terminal": [
+          {
+            "status": "hold",
+            "name": "other",
+            "description": "CBP$ - CBP Exam Handling Charge"
+          }
+        ],
+        "available_for_pickup": false,
+        "equipment_type": "dry",
+        "equipment_length": 40,
+        "equipment_height": "high_cube",
+        "pod_full_out_at": null,
+        "empty_terminated_at": null,
+        "terminal_checked_at": "2025-07-16T04:20:48Z",
+        "fees_at_pod_terminal": [
+          {
+            "type": "demurrage",
+            "amount": 2440.0,
+            "currency_code": "USD"
+          }
+        ],
+        "pickup_lfd": "2025-07-10T04:00:00Z",
+        "pickup_appointment_at": null,
+        "pod_full_out_chassis_number": null,
+        "location_at_pod_terminal": "Yard Grounded (G40710B1)",
+        "pod_last_tracking_request_at": "2025-07-16T04:20:43Z",
+        "shipment_last_tracking_request_at": "2025-07-16T00:20:28Z",
+        "rail_last_tracking_request_at": "2025-07-16T03:59:54Z",
+        "availability_known": true,
+        "pod_timezone": "America/New_York",
+        "final_destination_timezone": "America/New_York",
+        "weight_in_lbs": 0.0,
+        "empty_terminated_timezone": "America/New_York",
+        "pod_rail_carrier_scac": "CSXT",
+        "ind_rail_carrier_scac": "CSXT",
+        "pod_rail_loaded_at": null,
+        "pod_rail_departed_at": null,
+        "ind_eta_at": "2025-07-14T00:30:00Z",
+        "ind_ata_at": "2025-07-11T00:10:00Z",
+        "ind_rail_unloaded_at": null,
+        "ind_facility_holds": null,
+        "ind_facility_fees": null,
+        "ind_facility_lfd_on": null,
+        "ssl_lfd": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "pickup_facility": {
+          "data": {
+            "id": "fe2da7bc-b50d-4ed1-a225-ef78cff338a4",
+            "type": "terminal"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "f72f33ae-c1e9-49ab-811b-efafbbb3ce2f",
+            "type": "terminal"
+          }
+        },
+        "transport_events": {
+          "data": [
+            {
+              "id": "73c69c5d-9ea2-4b07-8517-b56baf7a6ac5",
+              "type": "transport_event"
+            },
+            {
+              "id": "19ed9bf9-24e0-4bc3-a34e-ef03e7dfdfed",
+              "type": "transport_event"
+            },
+            {
+              "id": "6cf4effe-8d6a-4567-b4a8-55f7dcce0784",
+              "type": "transport_event"
+            },
+            {
+              "id": "e26ced20-51c3-44aa-bf51-278421b6ba54",
+              "type": "transport_event"
+            },
+            {
+              "id": "5d30538e-038f-4800-a020-3b53e05e4e1f",
+              "type": "transport_event"
+            },
+            {
+              "id": "6d0e689a-4cba-46c9-bfcb-1b4a2bfc83d6",
+              "type": "transport_event"
+            },
+            {
+              "id": "297355d9-70f1-43b5-874c-0d6dc59beed2",
+              "type": "transport_event"
+            },
+            {
+              "id": "b0dc6944-9bf6-4e85-ab34-3dda81a87264",
+              "type": "transport_event"
+            },
+            {
+              "id": "0098a5d9-9c29-4b9a-9e50-3cb91df17f09",
+              "type": "transport_event"
+            },
+            {
+              "id": "afdc107d-3694-4ab6-ab9c-d6b3250e6aae",
+              "type": "transport_event"
+            },
+            {
+              "id": "0bf2bae7-77ec-4f76-ac22-84083391fabd",
+              "type": "transport_event"
+            },
+            {
+              "id": "3143ccc2-93ed-4089-9b37-e043fbd0639a",
+              "type": "transport_event"
+            },
+            {
+              "id": "43522b0a-df06-4377-94a0-e4b466efec79",
+              "type": "transport_event"
+            }
+          ]
+        },
+        "raw_events": {
+          "data": [
+            {
+              "id": "e2e5b756-60d6-41da-98df-4d9bc4b3bc0b",
+              "type": "raw_event"
+            },
+            {
+              "id": "684c56bd-9487-4600-96ee-eb055c244654",
+              "type": "raw_event"
+            },
+            {
+              "id": "a8bdd124-7391-41b2-a3f2-ee801d9838e8",
+              "type": "raw_event"
+            },
+            {
+              "id": "754583c2-61aa-46fd-a54c-a342d8f76f27",
+              "type": "raw_event"
+            },
+            {
+              "id": "ad8bda88-f760-460b-a5ee-32159c347783",
+              "type": "raw_event"
+            },
+            {
+              "id": "d1a8fe60-c96d-4bd8-a2d8-19e228087f03",
+              "type": "raw_event"
+            },
+            {
+              "id": "5ad8decb-aa38-4071-be6f-cdbb06864543",
+              "type": "raw_event"
+            },
+            {
+              "id": "0ad686da-96ec-4442-bf97-4c3a656ff9c7",
+              "type": "raw_event"
+            },
+            {
+              "id": "bb5146c2-fad1-438b-b597-f19f41791f2b",
+              "type": "raw_event"
+            },
+            {
+              "id": "e51086a2-6c63-4a46-8cf7-fc07baed51f7",
+              "type": "raw_event"
+            },
+            {
+              "id": "ed52fa86-1c2f-42db-95b0-cfeba7ebf43e",
+              "type": "raw_event"
+            },
+            {
+              "id": "5f33001e-874f-499f-9717-93ad960dc233",
+              "type": "raw_event"
+            },
+            {
+              "id": "7aefb0bb-59eb-4cd0-9dc3-e27771717f63",
+              "type": "raw_event"
+            },
+            {
+              "id": "20eb6305-e18c-4de5-8dc6-2aea0890fa52",
+              "type": "raw_event"
+            },
+            {
+              "id": "55d25110-d597-4de7-a51f-24adbf745933",
+              "type": "raw_event"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "included": [
+    {
+      "id": "3d996d4d-bb9c-434a-ac09-6b465cf72e67",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.pickup_lfd.changed",
+        "created_at": "2025-07-11T15:20:46Z",
+        "voyage_number": null,
+        "timestamp": "2025-07-11T15:19:10Z",
+        "data_source": "terminal",
+        "invalidated_at": null,
+        "location_locode": "USSEA",
+        "timezone": "America/Los_Angeles",
+        "value": "2025-09-06T14:00:00Z"
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "0e5a8e2f-fa53-4306-8f12-0a86a5ccb5e9",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "b3f4f7e4-6f4b-4c89-8f54-10094565e4e7",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": null
+        },
+        "source_event": {
+          "data": {
+            "id": "1f830afc-e2c7-454c-b7f4-4b0ea050072e",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "3d892622-def8-4155-94c5-91d91dc42219",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": {
+            "id": "e453c1e8-d893-4a14-8060-5f571a51d8b1",
+            "type": "terminal"
+          }
+        }
+      }
+    },
+    {
+      "id": "61954ade-e353-47a1-9438-1ae7d3e27501",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.feeder_loaded",
+        "created_at": "2025-07-11T15:03:16Z",
+        "voyage_number": null,
+        "timestamp": "2025-05-27T17:00:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "VNSGN",
+        "timezone": "Asia/Ho_Chi_Minh",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "0e5a8e2f-fa53-4306-8f12-0a86a5ccb5e9",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "b3f4f7e4-6f4b-4c89-8f54-10094565e4e7",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": null
+        },
+        "source_event": {
+          "data": {
+            "id": "674521ef-6c83-4de8-9254-f24a2b6f4201",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "1a69ef15-4a87-4e72-9ffd-febb46dbac79",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "153217bc-e4d0-4a55-9b95-45c6355451d6",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.feeder_discharged",
+        "created_at": "2025-07-11T15:03:16Z",
+        "voyage_number": null,
+        "timestamp": "2025-05-27T17:00:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "VNVUT",
+        "timezone": "Asia/Ho_Chi_Minh",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "0e5a8e2f-fa53-4306-8f12-0a86a5ccb5e9",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "b3f4f7e4-6f4b-4c89-8f54-10094565e4e7",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": null
+        },
+        "source_event": {
+          "data": {
+            "id": "2780c866-5f7a-41d3-a5a9-5943a0d29a34",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "519b14b8-9e9c-42da-bc96-0133f9679f2f",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": {
+            "id": "e5ef886e-92a5-43f6-aa08-b54c832a7318",
+            "type": "terminal"
+          }
+        }
+      }
+    },
+    {
+      "id": "8a7cc816-5082-4553-ad3e-79642c54b08a",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.vessel_loaded",
+        "created_at": "2025-07-11T15:03:16Z",
+        "voyage_number": "UK523A",
+        "timestamp": "2025-06-06T17:00:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "VNVUT",
+        "timezone": "Asia/Ho_Chi_Minh",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "0e5a8e2f-fa53-4306-8f12-0a86a5ccb5e9",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "b3f4f7e4-6f4b-4c89-8f54-10094565e4e7",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "d2bbb02d-4556-4fb7-b910-fc97be28cc19",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "62e53814-dab6-4b0d-a23c-f1b74e64af78",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "519b14b8-9e9c-42da-bc96-0133f9679f2f",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "cfcc2b05-5a70-4b65-ab5c-f18141f581c8",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.vessel_discharged",
+        "created_at": "2025-07-11T15:03:15Z",
+        "voyage_number": "523A",
+        "timestamp": "2025-07-09T07:00:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "USSEA",
+        "timezone": "America/Los_Angeles",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "0e5a8e2f-fa53-4306-8f12-0a86a5ccb5e9",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "b3f4f7e4-6f4b-4c89-8f54-10094565e4e7",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "d2bbb02d-4556-4fb7-b910-fc97be28cc19",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "2cd0319d-116b-46b5-afb7-07d8061f3a0b",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "3d892622-def8-4155-94c5-91d91dc42219",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": {
+            "id": "e453c1e8-d893-4a14-8060-5f571a51d8b1",
+            "type": "terminal"
+          }
+        }
+      }
+    },
+    {
+      "id": "865b9cb3-fef3-48ec-8553-608edef5b9c9",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.vessel_departed",
+        "created_at": "2025-07-11T15:03:09Z",
+        "voyage_number": "523A",
+        "timestamp": "2025-06-06T17:00:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "VNVUT",
+        "timezone": "Asia/Ho_Chi_Minh",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "0e5a8e2f-fa53-4306-8f12-0a86a5ccb5e9",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "b3f4f7e4-6f4b-4c89-8f54-10094565e4e7",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "d2bbb02d-4556-4fb7-b910-fc97be28cc19",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "6c9fc079-8fc7-4eaa-bdae-380e9b8a3e76",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "519b14b8-9e9c-42da-bc96-0133f9679f2f",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "0c5f7dc0-e942-4e6e-bb40-bce4e7be6c5b",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.vessel_berthed",
+        "created_at": "2025-07-11T15:03:04Z",
+        "voyage_number": "523A",
+        "timestamp": "2025-07-08T21:54:04Z",
+        "data_source": "ais",
+        "invalidated_at": null,
+        "location_locode": "USSEA",
+        "timezone": "America/Los_Angeles",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "0e5a8e2f-fa53-4306-8f12-0a86a5ccb5e9",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "b3f4f7e4-6f4b-4c89-8f54-10094565e4e7",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "d2bbb02d-4556-4fb7-b910-fc97be28cc19",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "3e786071-8a80-4816-9c7f-3bc6953bdc70",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "3d892622-def8-4155-94c5-91d91dc42219",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": {
+            "id": "e453c1e8-d893-4a14-8060-5f571a51d8b1",
+            "type": "terminal"
+          }
+        }
+      }
+    },
+    {
+      "id": "59e7556a-49df-4475-bd2d-c295cc99a0ce",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.vessel_arrived",
+        "created_at": "2025-07-11T15:03:03Z",
+        "voyage_number": "523A",
+        "timestamp": "2025-07-08T21:17:25Z",
+        "data_source": "ais",
+        "invalidated_at": null,
+        "location_locode": "USSEA",
+        "timezone": "America/Los_Angeles",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "0e5a8e2f-fa53-4306-8f12-0a86a5ccb5e9",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "b3f4f7e4-6f4b-4c89-8f54-10094565e4e7",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "d2bbb02d-4556-4fb7-b910-fc97be28cc19",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "7ab5cb91-c39a-4cf0-a22c-36356de62740",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "3d892622-def8-4155-94c5-91d91dc42219",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "c6df6d04-34d9-4da0-a743-5397a8b8ffae",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.full_in",
+        "created_at": "2025-07-11T15:03:02Z",
+        "voyage_number": null,
+        "timestamp": "2025-05-26T17:00:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "VNSGN",
+        "timezone": "Asia/Ho_Chi_Minh",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "0e5a8e2f-fa53-4306-8f12-0a86a5ccb5e9",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "b3f4f7e4-6f4b-4c89-8f54-10094565e4e7",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": null
+        },
+        "source_event": {
+          "data": {
+            "id": "ea3e8cdf-7a08-4207-b9e8-5571d6ced933",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "1a69ef15-4a87-4e72-9ffd-febb46dbac79",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "d30cd1ad-69c8-4daa-b3b4-859af45606d5",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.empty_out",
+        "created_at": "2025-07-11T15:03:02Z",
+        "voyage_number": null,
+        "timestamp": "2025-05-23T17:00:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "VNSGN",
+        "timezone": "Asia/Ho_Chi_Minh",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "0e5a8e2f-fa53-4306-8f12-0a86a5ccb5e9",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "b3f4f7e4-6f4b-4c89-8f54-10094565e4e7",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": null
+        },
+        "source_event": {
+          "data": {
+            "id": "929c4972-d666-44fa-86cd-77c0d8ea6c46",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "1a69ef15-4a87-4e72-9ffd-febb46dbac79",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "b4ab150d-f3af-4ec3-875c-bc87e20ded76",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.transshipment_departed",
+        "created_at": "2025-07-14T20:32:36Z",
+        "voyage_number": "0081E",
+        "timestamp": "2025-07-14T15:09:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "INNSA",
+        "timezone": "Asia/Kolkata",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "8d14b518-114f-4086-8dd8-94523cdfed70",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "584ebb17-e753-49d6-b411-3460897154fb",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "d06bdfca-9ede-4c07-9841-03e80ba6c085",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "cae36709-f167-4a67-b6e8-707ae34ec318",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "df48a152-d0b8-4d8b-8471-78b85dccfecc",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "c46b04fe-19ca-4d6a-8877-fb60802a502b",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.transshipment_loaded",
+        "created_at": "2025-07-14T04:27:15Z",
+        "voyage_number": "0081E",
+        "timestamp": "2025-07-14T01:58:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "INNSA",
+        "timezone": "Asia/Kolkata",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "8d14b518-114f-4086-8dd8-94523cdfed70",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "584ebb17-e753-49d6-b411-3460897154fb",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "d06bdfca-9ede-4c07-9841-03e80ba6c085",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "d0f2ffe5-4361-45a6-a72b-51d28fef8ce5",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "df48a152-d0b8-4d8b-8471-78b85dccfecc",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "5e0dc7b3-6ca0-447a-bd3b-59e8528d2dc2",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.transshipment_arrived",
+        "created_at": "2025-06-30T00:15:22Z",
+        "voyage_number": "0052W",
+        "timestamp": "2025-06-30T00:21:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "INNSA",
+        "timezone": "Asia/Kolkata",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "8d14b518-114f-4086-8dd8-94523cdfed70",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "584ebb17-e753-49d6-b411-3460897154fb",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "356c0c8e-cdae-4654-ad7d-efc517f6e74e",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "a4d2ea00-561f-4b82-b56d-095d26aabc5e",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "df48a152-d0b8-4d8b-8471-78b85dccfecc",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "6e6b0964-c595-480b-a747-6f20a98d0496",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.ssl_lfd.changed",
+        "created_at": "2025-06-21T00:12:39Z",
+        "voyage_number": null,
+        "timestamp": "2025-06-20T00:00:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": null,
+        "timezone": null,
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "8d14b518-114f-4086-8dd8-94523cdfed70",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "584ebb17-e753-49d6-b411-3460897154fb",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": null
+        },
+        "source_event": {
+          "data": {
+            "id": "5a059ce0-bd78-4c52-99e7-c253f96c6ce2",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": null
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "eca86f6f-6dcc-4065-8dad-128d96d632f0",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.feeder_arrived",
+        "created_at": "2025-06-20T14:02:53Z",
+        "voyage_number": "Barge",
+        "timestamp": "2025-05-31T23:10:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "CNNBG",
+        "timezone": "Asia/Shanghai",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "8d14b518-114f-4086-8dd8-94523cdfed70",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "584ebb17-e753-49d6-b411-3460897154fb",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": null
+        },
+        "source_event": {
+          "data": {
+            "id": "e49a7753-2f8a-416b-97c9-57226a351b25",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "2a90c27b-c2ee-45e2-892f-5c695d74e2d0",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "a806922c-a78a-49e3-afbf-9a2562b4bc7b",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.vessel_loaded",
+        "created_at": "2025-06-20T14:02:53Z",
+        "voyage_number": "0052W",
+        "timestamp": "2025-06-11T14:12:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "CNNBG",
+        "timezone": "Asia/Shanghai",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "8d14b518-114f-4086-8dd8-94523cdfed70",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "584ebb17-e753-49d6-b411-3460897154fb",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "356c0c8e-cdae-4654-ad7d-efc517f6e74e",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "83796b53-8743-4ac7-899e-b7f40e55def9",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "2a90c27b-c2ee-45e2-892f-5c695d74e2d0",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "27224d75-3727-4c82-b37a-afb852622b99",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.vessel_departed",
+        "created_at": "2025-06-20T14:02:53Z",
+        "voyage_number": "0074E",
+        "timestamp": "2025-06-12T02:46:20Z",
+        "data_source": "ais",
+        "invalidated_at": null,
+        "location_locode": "CNNBG",
+        "timezone": "Asia/Shanghai",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "8d14b518-114f-4086-8dd8-94523cdfed70",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "584ebb17-e753-49d6-b411-3460897154fb",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "356c0c8e-cdae-4654-ad7d-efc517f6e74e",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "2dbb8d8f-0b65-45a3-9a22-c4f0bea06388",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "2a90c27b-c2ee-45e2-892f-5c695d74e2d0",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "deb8a87e-0c12-4289-8ae6-1a9d03f10890",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.empty_out",
+        "created_at": "2025-06-20T14:02:52Z",
+        "voyage_number": null,
+        "timestamp": "2025-05-26T23:27:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "CNLYG",
+        "timezone": "Asia/Shanghai",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "8d14b518-114f-4086-8dd8-94523cdfed70",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "584ebb17-e753-49d6-b411-3460897154fb",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": null
+        },
+        "source_event": {
+          "data": {
+            "id": "af035005-b1f8-4ae4-afa7-ef90c58e3bc8",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "b68e7c64-beb3-43ad-9c51-9a1877c4f1fe",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "73c69c5d-9ea2-4b07-8517-b56baf7a6ac5",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.arrived_at_inland_destination",
+        "created_at": "2025-07-11T04:18:19Z",
+        "voyage_number": null,
+        "timestamp": "2025-07-11T00:10:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "USCVG",
+        "timezone": "America/New_York",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": null
+        },
+        "source_event": {
+          "data": {
+            "id": "20eb6305-e18c-4de5-8dc6-2aea0890fa52",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "94e0a725-7095-407d-a2a4-409c68ffa1a0",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": {
+            "id": "fe2da7bc-b50d-4ed1-a225-ef78cff338a4",
+            "type": "terminal"
+          }
+        }
+      }
+    },
+    {
+      "id": "19ed9bf9-24e0-4bc3-a34e-ef03e7dfdfed",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.estimated.arrived_at_inland_destination",
+        "created_at": "2025-07-09T15:03:47Z",
+        "voyage_number": null,
+        "timestamp": "2025-07-14T00:30:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "USCVG",
+        "timezone": "America/New_York",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": null
+        },
+        "source_event": {
+          "data": {
+            "id": "e2080ca6-6dfc-46a6-aa31-f708ea520971",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "94e0a725-7095-407d-a2a4-409c68ffa1a0",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": {
+            "id": "fe2da7bc-b50d-4ed1-a225-ef78cff338a4",
+            "type": "terminal"
+          }
+        }
+      }
+    },
+    {
+      "id": "6cf4effe-8d6a-4567-b4a8-55f7dcce0784",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.transshipment_departed",
+        "created_at": "2025-07-09T15:03:43Z",
+        "voyage_number": "522E",
+        "timestamp": "2025-06-06T16:15:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "KRPUS",
+        "timezone": "Asia/Seoul",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "f5ac4aab-a81b-4a1d-babc-24806354a871",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "0ad686da-96ec-4442-bf97-4c3a656ff9c7",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "f11d479d-5501-4b24-8703-4133f0b202b7",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "e26ced20-51c3-44aa-bf51-278421b6ba54",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.transshipment_loaded",
+        "created_at": "2025-07-09T15:03:42Z",
+        "voyage_number": null,
+        "timestamp": "2025-06-06T12:46:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "KRPUS",
+        "timezone": "Asia/Seoul",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "f5ac4aab-a81b-4a1d-babc-24806354a871",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "5ad8decb-aa38-4071-be6f-cdbb06864543",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "f11d479d-5501-4b24-8703-4133f0b202b7",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "5d30538e-038f-4800-a020-3b53e05e4e1f",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.transshipment_discharged",
+        "created_at": "2025-07-09T15:03:41Z",
+        "voyage_number": null,
+        "timestamp": "2025-05-31T12:06:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "KRPUS",
+        "timezone": "Asia/Seoul",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "89bc940b-01f5-4849-84d8-f1b59acd8a77",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "d1a8fe60-c96d-4bd8-a2d8-19e228087f03",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "f11d479d-5501-4b24-8703-4133f0b202b7",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "6d0e689a-4cba-46c9-bfcb-1b4a2bfc83d6",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.transshipment_arrived",
+        "created_at": "2025-07-09T15:03:41Z",
+        "voyage_number": "521N",
+        "timestamp": "2025-05-31T07:16:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "KRPUS",
+        "timezone": "Asia/Seoul",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "89bc940b-01f5-4849-84d8-f1b59acd8a77",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "ad8bda88-f760-460b-a5ee-32159c347783",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "f11d479d-5501-4b24-8703-4133f0b202b7",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "297355d9-70f1-43b5-874c-0d6dc59beed2",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.vessel_loaded",
+        "created_at": "2025-07-09T15:03:39Z",
+        "voyage_number": null,
+        "timestamp": "2025-05-28T11:52:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "TWKHH",
+        "timezone": "Asia/Taipei",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "89bc940b-01f5-4849-84d8-f1b59acd8a77",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "a8bdd124-7391-41b2-a3f2-ee801d9838e8",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "7c163146-f2b6-483c-ac66-377759490e86",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "b0dc6944-9bf6-4e85-ab34-3dda81a87264",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.vessel_discharged",
+        "created_at": "2025-07-09T15:03:38Z",
+        "voyage_number": "522E",
+        "timestamp": "2025-07-05T15:05:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "USNYC",
+        "timezone": "America/New_York",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "f5ac4aab-a81b-4a1d-babc-24806354a871",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "e51086a2-6c63-4a46-8cf7-fc07baed51f7",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": {
+            "id": "f72f33ae-c1e9-49ab-811b-efafbbb3ce2f",
+            "type": "terminal"
+          }
+        }
+      }
+    },
+    {
+      "id": "0098a5d9-9c29-4b9a-9e50-3cb91df17f09",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.vessel_departed",
+        "created_at": "2025-07-09T15:03:17Z",
+        "voyage_number": "522E",
+        "timestamp": "2025-05-28T20:35:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "TWKHH",
+        "timezone": "Asia/Taipei",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "89bc940b-01f5-4849-84d8-f1b59acd8a77",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "754583c2-61aa-46fd-a54c-a342d8f76f27",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "7c163146-f2b6-483c-ac66-377759490e86",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "afdc107d-3694-4ab6-ab9c-d6b3250e6aae",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.vessel_berthed",
+        "created_at": "2025-07-09T15:02:51Z",
+        "voyage_number": "522E",
+        "timestamp": "2025-07-05T09:26:40Z",
+        "data_source": "ais",
+        "invalidated_at": null,
+        "location_locode": "USNYC",
+        "timezone": "America/New_York",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "f5ac4aab-a81b-4a1d-babc-24806354a871",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "87e98bf8-41b2-421b-9696-e3dd59cc0f3d",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": {
+            "id": "f72f33ae-c1e9-49ab-811b-efafbbb3ce2f",
+            "type": "terminal"
+          }
+        }
+      }
+    },
+    {
+      "id": "0bf2bae7-77ec-4f76-ac22-84083391fabd",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.vessel_arrived",
+        "created_at": "2025-07-09T15:02:46Z",
+        "voyage_number": "522E",
+        "timestamp": "2025-07-05T07:45:21Z",
+        "data_source": "ais",
+        "invalidated_at": null,
+        "location_locode": "USNYC",
+        "timezone": "America/New_York",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": {
+            "id": "f5ac4aab-a81b-4a1d-babc-24806354a871",
+            "type": "vessel"
+          }
+        },
+        "source_event": {
+          "data": {
+            "id": "3aa9c8f0-f77d-4a3d-9fc0-3959a93a1889",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "3143ccc2-93ed-4089-9b37-e043fbd0639a",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.full_in",
+        "created_at": "2025-07-09T15:02:45Z",
+        "voyage_number": null,
+        "timestamp": "2025-05-19T06:33:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "TWKHH",
+        "timezone": "Asia/Taipei",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": null
+        },
+        "source_event": {
+          "data": {
+            "id": "684c56bd-9487-4600-96ee-eb055c244654",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "7c163146-f2b6-483c-ac66-377759490e86",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "43522b0a-df06-4377-94a0-e4b466efec79",
+      "type": "transport_event",
+      "attributes": {
+        "event": "container.transport.empty_out",
+        "created_at": "2025-07-09T15:02:45Z",
+        "voyage_number": null,
+        "timestamp": "2025-05-16T05:48:00Z",
+        "data_source": "shipping_line",
+        "invalidated_at": null,
+        "location_locode": "TWKHH",
+        "timezone": "Asia/Taipei",
+        "value": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "5300c184-0ce8-40f2-865e-ff09c1e9b0f0",
+            "type": "shipment"
+          }
+        },
+        "container": {
+          "data": {
+            "id": "40eff433-6692-4839-ba9f-2613bebb43ca",
+            "type": "container"
+          }
+        },
+        "vessel": {
+          "data": null
+        },
+        "source_event": {
+          "data": {
+            "id": "e2e5b756-60d6-41da-98df-4d9bc4b3bc0b",
+            "type": "raw_event"
+          }
+        },
+        "previous_version": {
+          "data": null
+        },
+        "location": {
+          "data": {
+            "id": "7c163146-f2b6-483c-ac66-377759490e86",
+            "type": "port"
+          }
+        },
+        "terminal": {
+          "data": null
+        }
+      }
+    }
+  ],
+  "meta": {
+    "total": 227247
+  },
+  "links": {
+    "self": "https://api.terminal49.com/v2/containers?page%5Bsize%5D=3&include=transport_events",
+    "current": "https://api.terminal49.com/v2/containers?include=transport_events&page[number]=1&page[size]=3",
+    "next": "https://api.terminal49.com/v2/containers?include=transport_events&page[number]=2&page[size]=3",
+    "last": "https://api.terminal49.com/v2/containers?include=transport_events&page[number]=75749&page[size]=3"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "errors": [
+    {
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/request_number"
+      },
+      "title": "Unprocessable Entity",
+      "detail": "Request number can't be blank",
+      "code": "blank"
+    },
+    {
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/request_number"
+      },
+      "title": "Unprocessable Entity",
+      "detail": "Request number is too short (minimum is 6 characters)",
+      "code": "too_short"
+    },
+    {
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/request_type"
+      },
+      "title": "Unprocessable Entity",
+      "detail": "Request type 'by_bill_of_lading' not recognized. Accepted request types are 'bill_of_lading', 'booking_number', and 'container'",
+      "code": "invalid_request_type"
+    }
+  ]
+}

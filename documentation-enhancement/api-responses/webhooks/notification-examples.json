@@ -1,0 +1,12 @@
+{
+  "errors": [
+    {
+      "status": "400",
+      "source": {
+        "parameter": "event"
+      },
+      "title": "Bad Request",
+      "detail": null
+    }
+  ]
+}

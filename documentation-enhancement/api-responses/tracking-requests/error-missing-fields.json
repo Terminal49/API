@@ -1,0 +1,49 @@
+{
+  "errors": [
+    {
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/request_number"
+      },
+      "title": "Unprocessable Entity",
+      "detail": "Request number can't be blank",
+      "code": "blank"
+    },
+    {
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/request_number"
+      },
+      "title": "Unprocessable Entity",
+      "detail": "Request number is too short (minimum is 6 characters)",
+      "code": "too_short"
+    },
+    {
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/scac"
+      },
+      "title": "Unprocessable Entity",
+      "detail": "Scac can't be blank",
+      "code": "blank"
+    },
+    {
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/scac"
+      },
+      "title": "Unprocessable Entity",
+      "detail": "Scac '' is not recognized",
+      "code": "not_recognized"
+    },
+    {
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/request_type"
+      },
+      "title": "Unprocessable Entity",
+      "detail": "Request type 'by_container_id' not recognized. Accepted request types are 'bill_of_lading', 'booking_number', and 'container'",
+      "code": "invalid_request_type"
+    }
+  ]
+}

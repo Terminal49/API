@@ -1,0 +1,176 @@
+{
+  "data": [
+    {
+      "id": "8d8fc5e9-9d63-4407-a635-4dbe84d70336",
+      "type": "tracking_request",
+      "attributes": {
+        "request_number": "SMLU8638243A",
+        "request_type": "bill_of_lading",
+        "scac": "SMLU",
+        "ref_numbers": [],
+        "shipment_tags": [],
+        "created_at": "2025-07-15T15:01:16Z",
+        "updated_at": "2025-07-15T15:01:16Z",
+        "status": "failed",
+        "failed_reason": "shipping_line_not_supported",
+        "is_retrying": false,
+        "retry_count": null
+      },
+      "relationships": {
+        "tracked_object": {
+          "data": null
+        },
+        "customer": {
+          "data": null
+        },
+        "user": {
+          "data": null
+        }
+      },
+      "links": {
+        "self": "/v2/tracking_requests/8d8fc5e9-9d63-4407-a635-4dbe84d70336"
+      }
+    },
+    {
+      "id": "3ad94c02-90c3-42da-bc07-78002fcb84d7",
+      "type": "tracking_request",
+      "attributes": {
+        "request_number": "SMLU8638482A",
+        "request_type": "bill_of_lading",
+        "scac": "SMLU",
+        "ref_numbers": [],
+        "shipment_tags": [],
+        "created_at": "2025-07-15T15:01:04Z",
+        "updated_at": "2025-07-15T15:01:05Z",
+        "status": "failed",
+        "failed_reason": "shipping_line_not_supported",
+        "is_retrying": false,
+        "retry_count": null
+      },
+      "relationships": {
+        "tracked_object": {
+          "data": null
+        },
+        "customer": {
+          "data": null
+        },
+        "user": {
+          "data": null
+        }
+      },
+      "links": {
+        "self": "/v2/tracking_requests/3ad94c02-90c3-42da-bc07-78002fcb84d7"
+      }
+    },
+    {
+      "id": "88c732f1-d21e-470e-aadb-a148aaf1b07f",
+      "type": "tracking_request",
+      "attributes": {
+        "request_number": "SMLU8638261A",
+        "request_type": "bill_of_lading",
+        "scac": "SMLU",
+        "ref_numbers": [],
+        "shipment_tags": [],
+        "created_at": "2025-07-15T15:01:04Z",
+        "updated_at": "2025-07-15T15:01:05Z",
+        "status": "failed",
+        "failed_reason": "shipping_line_not_supported",
+        "is_retrying": false,
+        "retry_count": null
+      },
+      "relationships": {
+        "tracked_object": {
+          "data": null
+        },
+        "customer": {
+          "data": null
+        },
+        "user": {
+          "data": null
+        }
+      },
+      "links": {
+        "self": "/v2/tracking_requests/88c732f1-d21e-470e-aadb-a148aaf1b07f"
+      }
+    },
+    {
+      "id": "f8bf49f2-d777-4e7b-9b15-584025980777",
+      "type": "tracking_request",
+      "attributes": {
+        "request_number": "SMLU8638852A",
+        "request_type": "bill_of_lading",
+        "scac": "SMLU",
+        "ref_numbers": [],
+        "shipment_tags": [],
+        "created_at": "2025-07-15T15:01:03Z",
+        "updated_at": "2025-07-15T15:01:03Z",
+        "status": "failed",
+        "failed_reason": "shipping_line_not_supported",
+        "is_retrying": false,
+        "retry_count": null
+      },
+      "relationships": {
+        "tracked_object": {
+          "data": null
+        },
+        "customer": {
+          "data": null
+        },
+        "user": {
+          "data": null
+        }
+      },
+      "links": {
+        "self": "/v2/tracking_requests/f8bf49f2-d777-4e7b-9b15-584025980777"
+      }
+    },
+    {
+      "id": "1b9b63b6-1d94-4388-84b6-1360fbdeb80e",
+      "type": "tracking_request",
+      "attributes": {
+        "request_number": "SMLU8638632A",
+        "request_type": "bill_of_lading",
+        "scac": "SMLU",
+        "ref_numbers": [],
+        "shipment_tags": [],
+        "created_at": "2025-07-15T15:01:01Z",
+        "updated_at": "2025-07-15T15:01:01Z",
+        "status": "failed",
+        "failed_reason": "shipping_line_not_supported",
+        "is_retrying": false,
+        "retry_count": null
+      },
+      "relationships": {
+        "tracked_object": {
+          "data": null
+        },
+        "customer": {
+          "data": null
+        },
+        "user": {
+          "data": null
+        }
+      },
+      "links": {
+        "self": "/v2/tracking_requests/1b9b63b6-1d94-4388-84b6-1360fbdeb80e"
+      }
+    }
+  ],
+  "included": [],
+  "meta": {
+    "size": 5,
+    "total": 140334,
+    "pagination": {
+      "current": 1,
+      "next": 2,
+      "last": 28067,
+      "records": 140334
+    }
+  },
+  "links": {
+    "self": "https://api.terminal49.com/v2/tracking_requests?page%5Bsize%5D=5",
+    "current": "https://api.terminal49.com/v2/tracking_requests?page[number]=1&page[size]=5",
+    "next": "https://api.terminal49.com/v2/tracking_requests?page[number]=2&page[size]=5",
+    "last": "https://api.terminal49.com/v2/tracking_requests?page[number]=28067&page[size]=5"
+  }
+}

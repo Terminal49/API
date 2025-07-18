@@ -1,0 +1,2209 @@
+{
+  "data": [
+    {
+      "id": "6d87a211-7205-43c5-af27-bd15865d3b43",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-15T21:05:13Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "CLAMCWPN4M093780",
+        "normalized_number": "CWPN4M093780",
+        "shipping_line_scac": "CLAM",
+        "shipping_line_name": "Crowley",
+        "shipping_line_short_name": "Crowley",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "HNPCR",
+        "port_of_lading_name": "Puerto Cortes",
+        "port_of_discharge_locode": "USILM",
+        "port_of_discharge_name": "Wilmington (NC)",
+        "pod_vessel_name": "QUETZAL",
+        "pod_vessel_imo": "9984247",
+        "pod_voyage_number": "NZV5076",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": null,
+        "pol_timezone": "America/Tegucigalpa",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-11T15:18:01Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T01:10:49Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T01:10:52Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/6d87a211-7205-43c5-af27-bd15865d3b43"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "dd5eab5e-71ad-4a8e-92e2-9c216bf0978a",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "b939d367-970a-4e8c-925e-d991dabca8ac",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "9d5e2433-5102-4e72-b7ff-01e38886a9d8",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "df008eee-8145-4edf-b857-c5d1be8604ce",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c0eb25ed-6ef5-4d1f-b67f-7f645a6ed726",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-15T21:05:04Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "CLAMCWPN4M093782",
+        "normalized_number": "CWPN4M093782",
+        "shipping_line_scac": "CLAM",
+        "shipping_line_name": "Crowley",
+        "shipping_line_short_name": "Crowley",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "HNPCR",
+        "port_of_lading_name": "Puerto Cortes",
+        "port_of_discharge_locode": "USILM",
+        "port_of_discharge_name": "Wilmington (NC)",
+        "pod_vessel_name": "QUETZAL",
+        "pod_vessel_imo": "9984247",
+        "pod_voyage_number": "NZV5076",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": null,
+        "pol_timezone": "America/Tegucigalpa",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-11T15:18:01Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T03:50:50Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T03:51:13Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/c0eb25ed-6ef5-4d1f-b67f-7f645a6ed726"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "dd5eab5e-71ad-4a8e-92e2-9c216bf0978a",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "b939d367-970a-4e8c-925e-d991dabca8ac",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "9d5e2433-5102-4e72-b7ff-01e38886a9d8",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "c669c515-f12e-4587-b0e2-72769c1efccd",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ce6dcbeb-f2f7-499c-b1ff-36888a825a69",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-15T15:03:15Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "CLAMCWPN4M075823",
+        "normalized_number": "CWPN4M075823",
+        "shipping_line_scac": "CLAM",
+        "shipping_line_name": "Crowley",
+        "shipping_line_short_name": "Crowley",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "HNPCR",
+        "port_of_lading_name": "Puerto Cortes",
+        "port_of_discharge_locode": "USILM",
+        "port_of_discharge_name": "Wilmington (NC)",
+        "pod_vessel_name": "QUETZAL",
+        "pod_vessel_imo": "9984247",
+        "pod_voyage_number": "NZV5076",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": null,
+        "pol_timezone": "America/Tegucigalpa",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-11T15:18:01Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T02:07:28Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T02:07:34Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/ce6dcbeb-f2f7-499c-b1ff-36888a825a69"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "dd5eab5e-71ad-4a8e-92e2-9c216bf0978a",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "b939d367-970a-4e8c-925e-d991dabca8ac",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "9d5e2433-5102-4e72-b7ff-01e38886a9d8",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "bdeda782-ce39-47f9-984b-87631994d2b5",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "2e8d933e-4ab4-4bec-8348-629c1df3bb1b",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T18:46:42Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUBC1250551933",
+        "normalized_number": "HLCUBC1250551933",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "ESBCN",
+        "port_of_lading_name": "Barcelona",
+        "port_of_discharge_locode": "USORF",
+        "port_of_discharge_name": "Virginia",
+        "pod_vessel_name": "VELA",
+        "pod_vessel_imo": "9406180",
+        "pod_voyage_number": "13W",
+        "destination_locode": "USSTL",
+        "destination_name": "Saint Louis",
+        "destination_timezone": "America/Chicago",
+        "destination_ata_at": null,
+        "destination_eta_at": "2025-07-17T05:00:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-24T21:23:32Z",
+        "pol_timezone": "Europe/Madrid",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-10T18:00:18Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T01:25:49Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T01:27:56Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/2e8d933e-4ab4-4bec-8348-629c1df3bb1b"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "664d41e3-2682-4f4b-a3a7-2429a4bfd731",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "c4554ebb-5476-4b5e-b79f-1e873f7b86fa",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "4636c1c6-abc9-401f-ab4b-9a73a5f171a8",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "719ae09e-dd32-409a-a622-7dd2152b96ff",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "abc2b151-22bf-4d8e-b5b3-c68886932a31",
+            "type": "terminal"
+          }
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "96b80f0d-54e4-4992-adad-33d59b4902b8",
+              "type": "container"
+            },
+            {
+              "id": "0007990f-3127-4716-b6bc-46465485c372",
+              "type": "container"
+            },
+            {
+              "id": "2dd155db-7512-4c1a-801d-443589f9e98a",
+              "type": "container"
+            },
+            {
+              "id": "fd00b681-fde1-44e2-adbd-6f2dcf5ea0c5",
+              "type": "container"
+            },
+            {
+              "id": "8c44ef94-7437-4381-9b81-c2e1062d8eb9",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "81d89161-ab14-4dbb-8f12-63caeada773b",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T16:18:43Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "TRKU10194405",
+        "normalized_number": "10194405",
+        "shipping_line_scac": "TRKU",
+        "shipping_line_name": "Turkon Line",
+        "shipping_line_short_name": "Turkon",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "JOAQJ",
+        "port_of_lading_name": "Al 'Aqabah",
+        "port_of_discharge_locode": "USNYC",
+        "port_of_discharge_name": "New York / New Jersey",
+        "pod_vessel_name": "KAAN KALKAVAN",
+        "pod_vessel_imo": "9365879",
+        "pod_voyage_number": "0US9RW1TK",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": null,
+        "pol_timezone": "Asia/Amman",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-09T07:27:49Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T01:41:22Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T01:42:36Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/81d89161-ab14-4dbb-8f12-63caeada773b"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "23a14a3b-3f59-4d07-8fed-e808dfbfd9ef",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "3bb70d2c-4063-4a4f-b7cc-0941fae436e6",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "509c88f8-4e59-4aff-a306-c1b8ca806811",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "caf1892e-4acb-4909-a2b4-57c171a8d1fa",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T16:10:29Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUAMM250504909",
+        "normalized_number": "HLCUAMM250504909",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "JOAQJ",
+        "port_of_lading_name": "Al 'Aqabah",
+        "port_of_discharge_locode": "USNYC",
+        "port_of_discharge_name": "New York / New Jersey",
+        "pod_vessel_name": "PORTO CHELI",
+        "pod_vessel_imo": "9221839",
+        "pod_voyage_number": "526W",
+        "destination_locode": "USCLE",
+        "destination_name": "Cleveland",
+        "destination_timezone": "America/New_York",
+        "destination_ata_at": "2025-07-15T07:37:00Z",
+        "destination_eta_at": "2025-07-18T04:00:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-03T18:43:00Z",
+        "pol_timezone": "Asia/Amman",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-11T07:30:20Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T01:36:13Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T01:36:51Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/caf1892e-4acb-4909-a2b4-57c171a8d1fa"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "23a14a3b-3f59-4d07-8fed-e808dfbfd9ef",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "3bb70d2c-4063-4a4f-b7cc-0941fae436e6",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "3b1cc325-ffe9-400a-82ce-f5c4891af382",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "ce22669e-14b2-4501-b782-f0a360f07cd0",
+            "type": "terminal"
+          }
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "57ecfc96-2c54-4494-a7de-6811c13a937b",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "7009399f-2560-4797-83f8-880419bb3dfc",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:54:05Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUGOA250670837",
+        "normalized_number": "HLCUGOA250670837",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "ITGOA",
+        "port_of_lading_name": "Genova",
+        "port_of_discharge_locode": "USNYC",
+        "port_of_discharge_name": "New York / New Jersey",
+        "pod_vessel_name": "PORTO CHELI",
+        "pod_vessel_imo": "9221839",
+        "pod_voyage_number": "526W",
+        "destination_locode": "USCHI",
+        "destination_name": "Chicago",
+        "destination_timezone": "America/Chicago",
+        "destination_ata_at": "2025-07-14T11:56:00Z",
+        "destination_eta_at": "2025-07-16T05:00:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-29T07:19:02Z",
+        "pol_timezone": "Europe/Rome",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-11T07:30:20Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T00:33:20Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T00:35:08Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/7009399f-2560-4797-83f8-880419bb3dfc"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "98818268-0d4f-4147-88a3-3b22b5cc9409",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "3bb70d2c-4063-4a4f-b7cc-0941fae436e6",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "bacf19ca-697d-4dc1-8c0b-6294500bde33",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "a8d86a42-b753-4266-bd9b-eb5e4e705a01",
+              "type": "container"
+            },
+            {
+              "id": "0be92a02-4161-4b14-ace5-1e83cf3e2800",
+              "type": "container"
+            },
+            {
+              "id": "fcf79381-3247-4c0a-8d0c-4429349f4c2c",
+              "type": "container"
+            },
+            {
+              "id": "b1b1e3e7-dbfd-4fbe-bddd-96655d2befc8",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "bf5a8994-8e9c-4810-95b9-54c83e498ce0",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:37:00Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUBO12505BMET2",
+        "normalized_number": "HLCUBO12505BMET2",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "INNSA",
+        "port_of_lading_name": "Nhava Sheva",
+        "port_of_discharge_locode": "USNYC",
+        "port_of_discharge_name": "New York / New Jersey",
+        "pod_vessel_name": "TENO",
+        "pod_vessel_imo": "9447859",
+        "pod_voyage_number": "5123",
+        "destination_locode": "USMES",
+        "destination_name": "Minneapolis",
+        "destination_timezone": "America/Chicago",
+        "destination_ata_at": null,
+        "destination_eta_at": "2025-07-21T05:00:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-08T14:10:27Z",
+        "pol_timezone": "Asia/Kolkata",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-10T13:28:14Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-15T23:28:16Z",
+        "line_tracking_last_succeeded_at": "2025-07-15T23:29:25Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/bf5a8994-8e9c-4810-95b9-54c83e498ce0"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "df48a152-d0b8-4d8b-8471-78b85dccfecc",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "3bb70d2c-4063-4a4f-b7cc-0941fae436e6",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "59d41ef7-57e7-4edc-b0e4-55919e8fa186",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "6a0e7a89-4974-43e7-a3f9-ea8fef202e66",
+            "type": "terminal"
+          }
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "379e0671-ea41-4542-bcd1-333510fe5226",
+              "type": "container"
+            },
+            {
+              "id": "6be8aa1d-2110-41ee-9605-9843908cc7af",
+              "type": "container"
+            },
+            {
+              "id": "e165bb1b-06d4-4819-b48c-a7d4677213c7",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "30d22164-a200-420f-8552-3ca5d9a9fa71",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:35:30Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HDMUBKKM09339900",
+        "normalized_number": "BKKM09339900",
+        "shipping_line_scac": "HDMU",
+        "shipping_line_name": "Hyundai Merchant Marine",
+        "shipping_line_short_name": "Hyundai",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "THLCH",
+        "port_of_lading_name": "Laem Chabang",
+        "port_of_discharge_locode": "USSAV",
+        "port_of_discharge_name": "Savannah",
+        "pod_vessel_name": "ONE MACKINAC",
+        "pod_vessel_imo": "9689603",
+        "pod_voyage_number": "0041E",
+        "destination_locode": "USROQ",
+        "destination_name": "Rossville",
+        "destination_timezone": "America/Chicago",
+        "destination_ata_at": "2025-07-15T04:32:00Z",
+        "destination_eta_at": "2025-07-15T15:32:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-05-12T22:00:57Z",
+        "pol_timezone": "Asia/Bangkok",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-09T19:46:06Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T00:28:27Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T00:29:31Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/30d22164-a200-420f-8552-3ca5d9a9fa71"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "c5adae24-6fd4-4720-8813-976cf206feb1",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "6129528d-846e-4571-ae16-b5328a4285ab",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "a243bdf8-0da3-4056-a6a7-05fe8ab43999",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "87ca3f37-e4d1-46eb-9eb1-6b5ffafde95d",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "75c40e3d-9948-48df-8cf9-1cbf5cd9fc18",
+            "type": "terminal"
+          }
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "057a8cef-e54c-4646-be11-975dea4d7af9",
+              "type": "container"
+            },
+            {
+              "id": "1743c7ca-d1a5-4e79-887d-405544d3e4f3",
+              "type": "container"
+            },
+            {
+              "id": "608804de-e072-432f-9e3b-6d887dfb8503",
+              "type": "container"
+            },
+            {
+              "id": "d3fa049e-8c35-4509-9397-b81272a7e685",
+              "type": "container"
+            },
+            {
+              "id": "001f8224-7aa0-4113-a2f4-a5a6efec43c6",
+              "type": "container"
+            },
+            {
+              "id": "ccd84143-5b48-4a17-bfb8-d4c6896b06fd",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1324e3c4-e5ce-4142-b6e8-121a0c478dba",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:25:42Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCURI4250506446",
+        "normalized_number": "HLCURI4250506446",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "BRRIG",
+        "port_of_lading_name": "Rio Grande",
+        "port_of_discharge_locode": "USPHL",
+        "port_of_discharge_name": "PhilaPort",
+        "pod_vessel_name": "MAERSK MONTE ALEGRE",
+        "pod_vessel_imo": "9348065",
+        "pod_voyage_number": "524N",
+        "destination_locode": "USCHI",
+        "destination_name": "Chicago",
+        "destination_timezone": "America/Chicago",
+        "destination_ata_at": null,
+        "destination_eta_at": "2025-07-18T09:00:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-18T23:01:32Z",
+        "pol_timezone": "America/Sao_Paulo",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-10T19:32:10Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T04:14:08Z",
+        "line_tracking_last_succeeded_at": "2025-07-15T22:09:15Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/1324e3c4-e5ce-4142-b6e8-121a0c478dba"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "1b47ec3e-0d04-4668-840d-c8b5dbc45163",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "ab24dc8b-f7e3-4d12-a2ad-fb1d38b1f87d",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "e93b3e96-79ec-4c35-98dd-f284dab9d7fe",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "bacf19ca-697d-4dc1-8c0b-6294500bde33",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "dba4c4d8-9793-415f-8f86-b8b7129baf55",
+            "type": "terminal"
+          }
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "88982b13-96be-42fe-b00d-4973496fb6a1",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "5efb6e23-7cef-4951-ab36-0d250467c11f",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:09:08Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUBKK250527218",
+        "normalized_number": "HLCUBKK250527218",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "THLCH",
+        "port_of_lading_name": "Laem Chabang",
+        "port_of_discharge_locode": "USORF",
+        "port_of_discharge_name": "Virginia",
+        "pod_vessel_name": "ROME EXPRESS",
+        "pod_vessel_imo": "9447861",
+        "pod_voyage_number": "521E",
+        "destination_locode": "USCVG",
+        "destination_name": "Cincinnati",
+        "destination_timezone": "America/New_York",
+        "destination_ata_at": null,
+        "destination_eta_at": "2025-07-19T04:00:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-05-28T13:16:17Z",
+        "pol_timezone": "Asia/Bangkok",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-10T19:34:57Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T04:01:40Z",
+        "line_tracking_last_succeeded_at": "2025-07-15T22:15:14Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/5efb6e23-7cef-4951-ab36-0d250467c11f"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "c5adae24-6fd4-4720-8813-976cf206feb1",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "c4554ebb-5476-4b5e-b79f-1e873f7b86fa",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "4636c1c6-abc9-401f-ab4b-9a73a5f171a8",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "94e0a725-7095-407d-a2a4-409c68ffa1a0",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "3535a76a-3a13-4ffd-bf88-db710cef6bcf",
+              "type": "container"
+            },
+            {
+              "id": "b5f56232-351c-47fb-b8be-8a58c6e27cea",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "6cefb4b2-a5f5-46e8-9091-21f4d2f05b32",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:08:53Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUBO12505AUAX9",
+        "normalized_number": "HLCUBO12505AUAX9",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "INHZA",
+        "port_of_lading_name": "Hazira Port/Surat",
+        "port_of_discharge_locode": "USNYC",
+        "port_of_discharge_name": "New York / New Jersey",
+        "pod_vessel_name": "TENO",
+        "pod_vessel_imo": "9447859",
+        "pod_voyage_number": "5123",
+        "destination_locode": "USPIT",
+        "destination_name": "Pittsburgh",
+        "destination_timezone": "America/New_York",
+        "destination_ata_at": "2025-07-15T20:00:00Z",
+        "destination_eta_at": "2025-07-18T04:00:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-02T18:25:00Z",
+        "pol_timezone": "Asia/Kolkata",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-10T13:28:14Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T00:46:21Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T00:48:08Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/6cefb4b2-a5f5-46e8-9091-21f4d2f05b32"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "1f8629ec-f44a-4b89-bd33-8787bc41c87c",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "3bb70d2c-4063-4a4f-b7cc-0941fae436e6",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "1b67b97b-dfd1-46d3-bc83-d0c2152a14f5",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "3fdff8fb-7bf2-4a00-a04b-5593d10bd973",
+            "type": "terminal"
+          }
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "c1d3563f-169f-4327-9300-d11569c32eee",
+              "type": "container"
+            },
+            {
+              "id": "d885146f-a344-4499-86f1-fc8e72922ab8",
+              "type": "container"
+            },
+            {
+              "id": "1b064136-e4e2-4ae0-8cb0-9e924d7966f9",
+              "type": "container"
+            },
+            {
+              "id": "21469974-7dfe-4a4f-a28a-e93f675ab298",
+              "type": "container"
+            },
+            {
+              "id": "a5b23257-c0a4-499a-bda8-0c92350d9812",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "530afe2e-4de9-4f9e-ae29-77b30c1aeaf9",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:08:51Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUGOA250532912",
+        "normalized_number": "HLCUGOA250532912",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "ITGOA",
+        "port_of_lading_name": "Genova",
+        "port_of_discharge_locode": "USNYC",
+        "port_of_discharge_name": "New York / New Jersey",
+        "pod_vessel_name": "PORTO CHELI",
+        "pod_vessel_imo": "9221839",
+        "pod_voyage_number": "526W",
+        "destination_locode": "USCLE",
+        "destination_name": "Cleveland",
+        "destination_timezone": "America/New_York",
+        "destination_ata_at": "2025-07-15T06:41:00Z",
+        "destination_eta_at": "2025-07-18T04:00:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-29T07:19:02Z",
+        "pol_timezone": "Europe/Rome",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-11T07:30:20Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-15T23:56:34Z",
+        "line_tracking_last_succeeded_at": "2025-07-15T23:57:36Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/530afe2e-4de9-4f9e-ae29-77b30c1aeaf9"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "98818268-0d4f-4147-88a3-3b22b5cc9409",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "f72f33ae-c1e9-49ab-811b-efafbbb3ce2f",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "3b1cc325-ffe9-400a-82ce-f5c4891af382",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "ce22669e-14b2-4501-b782-f0a360f07cd0",
+            "type": "terminal"
+          }
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "a7090e68-adc4-4d2c-b48f-ccf4f9a952eb",
+              "type": "container"
+            },
+            {
+              "id": "54e7ed55-c7d5-484e-b71e-0c2e2177d687",
+              "type": "container"
+            },
+            {
+              "id": "dd83b284-81a3-4ef1-a11f-91733236813d",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "391507d1-df18-4808-9874-3bfb9b046032",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:08:18Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUAKL250508743",
+        "normalized_number": "HLCUAKL250508743",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "NZTRG",
+        "port_of_lading_name": "Tauranga",
+        "port_of_discharge_locode": "USOAK",
+        "port_of_discharge_name": "Oakland",
+        "pod_vessel_name": "MATE",
+        "pod_vessel_imo": "9644990",
+        "pod_voyage_number": "521N",
+        "destination_locode": "USCHI",
+        "destination_name": "Chicago",
+        "destination_timezone": "America/Chicago",
+        "destination_ata_at": null,
+        "destination_eta_at": "2025-07-21T05:00:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-18T22:45:00Z",
+        "pol_timezone": "Pacific/Auckland",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-10T13:37:45Z",
+        "pod_timezone": "America/Los_Angeles",
+        "line_tracking_last_attempted_at": "2025-07-16T00:01:45Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T00:04:24Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/391507d1-df18-4808-9874-3bfb9b046032"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "7c4fa227-b36a-486f-bad5-89a6698bc08c",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "42d1ba3a-f4b8-431d-a6fe-49fd748a59e7",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "3e550f0e-ac2a-48fb-b242-5be45ecf2c78",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "bacf19ca-697d-4dc1-8c0b-6294500bde33",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "65a66965-fadb-44ee-9f64-ec5a5fc68436",
+              "type": "container"
+            },
+            {
+              "id": "551191ee-8274-429a-bf3e-ce167158c4e6",
+              "type": "container"
+            },
+            {
+              "id": "24601fb7-8038-476d-a1fd-e065e75801f9",
+              "type": "container"
+            },
+            {
+              "id": "8ac058ff-32a8-4a8a-a53e-60c3089fe752",
+              "type": "container"
+            },
+            {
+              "id": "cd7ef985-87b8-4bb4-840a-b96c54c52027",
+              "type": "container"
+            },
+            {
+              "id": "09bab27e-32d7-47c2-93d8-5807570ceda8",
+              "type": "container"
+            },
+            {
+              "id": "df4320a0-c0a4-4638-9993-8df718f8de17",
+              "type": "container"
+            },
+            {
+              "id": "6ee50c27-84d3-48a9-87e0-1f35e9e21a5a",
+              "type": "container"
+            },
+            {
+              "id": "84cc73f4-3ffa-4f15-b17c-39e7055d2c38",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "04ed3139-39bc-440a-bb43-7577a5263484",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:08:04Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUBO12505BBUQ0",
+        "normalized_number": "HLCUBO12505BBUQ0",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "INNSA",
+        "port_of_lading_name": "Nhava Sheva",
+        "port_of_discharge_locode": "USNYC",
+        "port_of_discharge_name": "New York / New Jersey",
+        "pod_vessel_name": "TENO",
+        "pod_vessel_imo": "9447859",
+        "pod_voyage_number": "5123",
+        "destination_locode": "USSTL",
+        "destination_name": "Saint Louis",
+        "destination_timezone": "America/Chicago",
+        "destination_ata_at": "2025-07-14T17:36:00Z",
+        "destination_eta_at": "2025-07-15T05:00:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-08T14:10:27Z",
+        "pol_timezone": "Asia/Kolkata",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-10T13:28:14Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T03:22:12Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T03:23:03Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/04ed3139-39bc-440a-bb43-7577a5263484"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "df48a152-d0b8-4d8b-8471-78b85dccfecc",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "3bb70d2c-4063-4a4f-b7cc-0941fae436e6",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "719ae09e-dd32-409a-a622-7dd2152b96ff",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "abc2b151-22bf-4d8e-b5b3-c68886932a31",
+            "type": "terminal"
+          }
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "4ec8cf4f-4fe7-4cc9-a331-47cd6efa1aa6",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "e7824004-3f1b-47c0-a34e-a49e8233a5b7",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:08:03Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUHA3250415927",
+        "normalized_number": "HLCUHA3250415927",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "VNVUT",
+        "port_of_lading_name": "Vung Tau",
+        "port_of_discharge_locode": "USNYC",
+        "port_of_discharge_name": "New York / New Jersey",
+        "pod_vessel_name": "WAN HAI A15",
+        "pod_vessel_imo": "9941154",
+        "pod_voyage_number": "E005",
+        "destination_locode": "USORH",
+        "destination_name": "Worcester",
+        "destination_timezone": "America/New_York",
+        "destination_ata_at": null,
+        "destination_eta_at": "2025-07-16T09:57:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-04T02:07:13Z",
+        "pol_timezone": "Asia/Ho_Chi_Minh",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-10T22:50:29Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T00:48:33Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T00:49:05Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/e7824004-3f1b-47c0-a34e-a49e8233a5b7"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "519b14b8-9e9c-42da-bc96-0133f9679f2f",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "3bb70d2c-4063-4a4f-b7cc-0941fae436e6",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "0e8e404e-4b0a-48a2-af15-0108a1c1225d",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "d19c985e-c111-43aa-b466-a0aa4e1593d9",
+            "type": "terminal"
+          }
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "c18a909e-f736-418f-b670-12fb74ff2b79",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "f6274ccc-cffb-4efa-9124-c9202184e1ad",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:07:48Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUSYD250424150",
+        "normalized_number": "HLCUSYD250424150",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "AUMEL",
+        "port_of_lading_name": "Melbourne",
+        "port_of_discharge_locode": "USCHS",
+        "port_of_discharge_name": "Charleston",
+        "pod_vessel_name": "MAERSK BUTON",
+        "pod_vessel_imo": "9392925",
+        "pod_voyage_number": "522N",
+        "destination_locode": "USATL",
+        "destination_name": "Atlanta",
+        "destination_timezone": "America/New_York",
+        "destination_ata_at": "2025-07-13T21:28:00Z",
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-01T02:06:00Z",
+        "pol_timezone": "Australia/Melbourne",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-11T07:36:32Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T00:50:42Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T00:52:39Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/f6274ccc-cffb-4efa-9124-c9202184e1ad"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "51ccdbd2-8552-4098-be14-a8defcd58b7b",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "d8138df6-f542-4f69-a3e3-e5fd6b16b63a",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "a59b3bd1-d497-4a48-bfb6-5cf2c4824a60",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "7daf9ea3-3018-4d62-b88c-43803df9030c",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "573a9f6a-7bee-4a81-8e84-0883bc8b3909",
+              "type": "container"
+            },
+            {
+              "id": "067734d8-55f8-41cf-9dc3-94f6fb2f3006",
+              "type": "container"
+            },
+            {
+              "id": "aa953fdf-3d5c-4fe3-a038-fb51d72d0986",
+              "type": "container"
+            },
+            {
+              "id": "9061a03e-693d-4a1d-918e-fd1841a94b38",
+              "type": "container"
+            },
+            {
+              "id": "09b59236-6927-4bbb-8087-a4d9f0c5ab93",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ae71e23c-5248-4293-8b6b-9ec2993ef601",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:07:40Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUIT1250418760",
+        "normalized_number": "HLCUIT1250418760",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "BRIOA",
+        "port_of_lading_name": "Itapoa",
+        "port_of_discharge_locode": "USPHL",
+        "port_of_discharge_name": "PhilaPort",
+        "pod_vessel_name": "MAERSK MONTE ALEGRE",
+        "pod_vessel_imo": "9348065",
+        "pod_voyage_number": "524N",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-20T22:42:31Z",
+        "pol_timezone": "America/Sao_Paulo",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-10T19:32:10Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T00:37:42Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T00:39:13Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/ae71e23c-5248-4293-8b6b-9ec2993ef601"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "1fff80ef-2869-4fba-9008-41d30f26eb77",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "ab24dc8b-f7e3-4d12-a2ad-fb1d38b1f87d",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "e93b3e96-79ec-4c35-98dd-f284dab9d7fe",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "7006bf53-40dd-40ed-bef7-fb0c8e49bb22",
+              "type": "container"
+            },
+            {
+              "id": "147927c8-4676-4b38-b1ea-45bdc935bc32",
+              "type": "container"
+            },
+            {
+              "id": "0b8fb1ee-580e-4395-b024-96c733cd6679",
+              "type": "container"
+            },
+            {
+              "id": "7f676834-b536-40b4-ab91-21280b06b4f9",
+              "type": "container"
+            },
+            {
+              "id": "5471fb8b-947c-4e67-b19b-cce1fe6effdc",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b2f390bc-9f4a-44a0-8a5a-c02e83ee47ee",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:07:11Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUDX3250440272",
+        "normalized_number": "HLCUDX3250440272",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "AEJEA",
+        "port_of_lading_name": "Jebel Ali",
+        "port_of_discharge_locode": "USHOU",
+        "port_of_discharge_name": "Houston",
+        "pod_vessel_name": "CHACABUCO",
+        "pod_vessel_imo": "9295957",
+        "pod_voyage_number": "524W",
+        "destination_locode": null,
+        "destination_name": null,
+        "destination_timezone": null,
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-05-08T13:42:00Z",
+        "pol_timezone": "Asia/Dubai",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-11T09:16:22Z",
+        "pod_timezone": "America/Chicago",
+        "line_tracking_last_attempted_at": "2025-07-15T23:17:25Z",
+        "line_tracking_last_succeeded_at": "2025-07-15T23:18:20Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/b2f390bc-9f4a-44a0-8a5a-c02e83ee47ee"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "94892d07-ef8f-4f76-a860-97a398c2c177",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "bfa59f0c-e01e-459d-a690-9111d2094c7b",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "858b06c3-9c26-43f0-8e98-35951c289778",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": null
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "ee89f128-3bfa-42fd-a1a4-e51dfe4b8ddd",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b0aab804-a8a0-417c-bade-fa04e949a3bc",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:07:06Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUGOA250625002",
+        "normalized_number": "HLCUGOA250625002",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "ITSAL",
+        "port_of_lading_name": "Salerno",
+        "port_of_discharge_locode": "USSAV",
+        "port_of_discharge_name": "Savannah",
+        "pod_vessel_name": "FOS EXPRESS",
+        "pod_vessel_imo": "9348699",
+        "pod_voyage_number": "523W",
+        "destination_locode": "USATL",
+        "destination_name": "Atlanta",
+        "destination_timezone": "America/New_York",
+        "destination_ata_at": "2025-07-12T11:15:00Z",
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-16T03:28:00Z",
+        "pol_timezone": "Europe/Rome",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-09T15:44:21Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-15T23:19:11Z",
+        "line_tracking_last_succeeded_at": "2025-07-15T23:19:52Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/b0aab804-a8a0-417c-bade-fa04e949a3bc"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "f8a30e7d-b86d-4294-8f5f-2ceb22cfcc4c",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "6129528d-846e-4571-ae16-b5328a4285ab",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "a243bdf8-0da3-4056-a6a7-05fe8ab43999",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "7daf9ea3-3018-4d62-b88c-43803df9030c",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "06119e52-0bc0-46f5-af22-a2c182533ff6",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "eec09822-89e0-41e5-b332-ac0290b65424",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:06:43Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUBC1250604759",
+        "normalized_number": "HLCUBC1250604759",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "ESBCN",
+        "port_of_lading_name": "Barcelona",
+        "port_of_discharge_locode": "USHOU",
+        "port_of_discharge_name": "Houston",
+        "pod_vessel_name": "CHACABUCO",
+        "pod_vessel_imo": "9295957",
+        "pod_voyage_number": "524W",
+        "destination_locode": "USOAK",
+        "destination_name": "Oakland",
+        "destination_timezone": "America/Los_Angeles",
+        "destination_ata_at": null,
+        "destination_eta_at": "2025-07-23T07:00:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-14T16:09:32Z",
+        "pol_timezone": "Europe/Madrid",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-11T09:16:22Z",
+        "pod_timezone": "America/Chicago",
+        "line_tracking_last_attempted_at": "2025-07-16T01:19:12Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T01:20:04Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/eec09822-89e0-41e5-b332-ac0290b65424"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "664d41e3-2682-4f4b-a3a7-2429a4bfd731",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "bfa59f0c-e01e-459d-a690-9111d2094c7b",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "858b06c3-9c26-43f0-8e98-35951c289778",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "42d1ba3a-f4b8-431d-a6fe-49fd748a59e7",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "3248f887-ff53-4493-89fa-97cf4ccf3970",
+            "type": "terminal"
+          }
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "32fcefbb-7a3b-48eb-aa70-eb238bf462a6",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "df8f2570-e9d3-49b7-a1e5-c773a14d2117",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:06:42Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUGOA250697894",
+        "normalized_number": "HLCUGOA250697894",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "ITGOA",
+        "port_of_lading_name": "Genova",
+        "port_of_discharge_locode": "USNYC",
+        "port_of_discharge_name": "New York / New Jersey",
+        "pod_vessel_name": "PORTO CHELI",
+        "pod_vessel_imo": "9221839",
+        "pod_voyage_number": "526W",
+        "destination_locode": "USDET",
+        "destination_name": "Detroit",
+        "destination_timezone": "America/Detroit",
+        "destination_ata_at": null,
+        "destination_eta_at": "2025-07-19T04:00:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-29T07:19:02Z",
+        "pol_timezone": "Europe/Rome",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-11T07:30:20Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-15T22:17:25Z",
+        "line_tracking_last_succeeded_at": "2025-07-15T22:18:39Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/df8f2570-e9d3-49b7-a1e5-c773a14d2117"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "98818268-0d4f-4147-88a3-3b22b5cc9409",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "f72f33ae-c1e9-49ab-811b-efafbbb3ce2f",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "edee0f16-8aad-42a5-8836-9a3a8ecd2321",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "1bdb95d0-5cd2-4f01-b799-2679345a4b76",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "4c8abe80-9997-4da8-a234-4388d9a11612",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:06:16Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUTPE250429920",
+        "normalized_number": "HLCUTPE250429920",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "TWKHH",
+        "port_of_lading_name": "Kaohsiung",
+        "port_of_discharge_locode": "USORF",
+        "port_of_discharge_name": "Virginia",
+        "pod_vessel_name": "ROME EXPRESS",
+        "pod_vessel_imo": "9447861",
+        "pod_voyage_number": "521E",
+        "destination_locode": "USCLE",
+        "destination_name": "Cleveland",
+        "destination_timezone": "America/New_York",
+        "destination_ata_at": null,
+        "destination_eta_at": "2025-07-18T04:00:00Z",
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-05-13T03:12:00Z",
+        "pol_timezone": "Asia/Taipei",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-10T19:34:57Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-15T23:27:47Z",
+        "line_tracking_last_succeeded_at": "2025-07-15T23:28:39Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/4c8abe80-9997-4da8-a234-4388d9a11612"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "7c163146-f2b6-483c-ac66-377759490e86",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "c4554ebb-5476-4b5e-b79f-1e873f7b86fa",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "4636c1c6-abc9-401f-ab4b-9a73a5f171a8",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "3b1cc325-ffe9-400a-82ce-f5c4891af382",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "ce22669e-14b2-4501-b782-f0a360f07cd0",
+            "type": "terminal"
+          }
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "b0a13c0f-fc73-4dd6-81bb-6e3120af4072",
+              "type": "container"
+            },
+            {
+              "id": "14c47635-c00e-4016-91a3-7093e6f8c1e6",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "0ed2193c-79dc-4c07-9998-b26732fa45c1",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:06:12Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUBO12505AYBW2",
+        "normalized_number": "HLCUBO12505AYBW2",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "INMUN",
+        "port_of_lading_name": "Mundra",
+        "port_of_discharge_locode": "USNYC",
+        "port_of_discharge_name": "New York / New Jersey",
+        "pod_vessel_name": "TENO",
+        "pod_vessel_imo": "9447859",
+        "pod_voyage_number": "5123",
+        "destination_locode": "USDET",
+        "destination_name": "Detroit",
+        "destination_timezone": "America/Detroit",
+        "destination_ata_at": "2025-07-14T09:38:00Z",
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-12T19:02:57Z",
+        "pol_timezone": "Asia/Kolkata",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-10T13:28:14Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-15T23:31:50Z",
+        "line_tracking_last_succeeded_at": "2025-07-15T23:32:40Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/0ed2193c-79dc-4c07-9998-b26732fa45c1"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "7913a279-5fdc-4a51-8964-408ed328e5e3",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "3bb70d2c-4063-4a4f-b7cc-0941fae436e6",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "edee0f16-8aad-42a5-8836-9a3a8ecd2321",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": null
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "0b4f683c-9c34-4d60-812f-b04660b724bd",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "5830e63c-8adb-463f-b1de-8523a3bc397c",
+      "type": "shipment",
+      "attributes": {
+        "created_at": "2025-07-14T15:06:09Z",
+        "ref_numbers": [],
+        "tags": [],
+        "bill_of_lading_number": "HLCUBC1250608464",
+        "normalized_number": "HLCUBC1250608464",
+        "shipping_line_scac": "HLCU",
+        "shipping_line_name": "Hapag-Lloyd",
+        "shipping_line_short_name": "Hapag-Lloyd",
+        "customer_name": "Sodor Steamworks",
+        "port_of_lading_locode": "ESVLC",
+        "port_of_lading_name": "Valencia",
+        "port_of_discharge_locode": "USORF",
+        "port_of_discharge_name": "Virginia",
+        "pod_vessel_name": "VELA",
+        "pod_vessel_imo": "9406180",
+        "pod_voyage_number": "13W",
+        "destination_locode": "USMES",
+        "destination_name": "Minneapolis",
+        "destination_timezone": "America/Chicago",
+        "destination_ata_at": null,
+        "destination_eta_at": null,
+        "pol_etd_at": null,
+        "pol_atd_at": "2025-06-27T14:28:47Z",
+        "pol_timezone": "Europe/Madrid",
+        "pod_eta_at": null,
+        "pod_original_eta_at": null,
+        "pod_ata_at": "2025-07-10T18:00:18Z",
+        "pod_timezone": "America/New_York",
+        "line_tracking_last_attempted_at": "2025-07-16T01:38:44Z",
+        "line_tracking_last_succeeded_at": "2025-07-16T01:39:28Z",
+        "line_tracking_stopped_at": null,
+        "line_tracking_stopped_reason": null
+      },
+      "links": {
+        "self": "/v2/shipments/5830e63c-8adb-463f-b1de-8523a3bc397c"
+      },
+      "relationships": {
+        "port_of_lading": {
+          "data": {
+            "id": "af71d8ef-bfe9-4fdb-bc20-e5809eed5c77",
+            "type": "port"
+          }
+        },
+        "port_of_discharge": {
+          "data": {
+            "id": "c4554ebb-5476-4b5e-b79f-1e873f7b86fa",
+            "type": "port"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "4636c1c6-abc9-401f-ab4b-9a73a5f171a8",
+            "type": "terminal"
+          }
+        },
+        "destination": {
+          "data": {
+            "id": "59d41ef7-57e7-4edc-b0e4-55919e8fa186",
+            "type": "port"
+          }
+        },
+        "destination_terminal": {
+          "data": {
+            "id": "6a0e7a89-4974-43e7-a3f9-ea8fef202e66",
+            "type": "terminal"
+          }
+        },
+        "line_tracking_stopped_by_user": {
+          "data": null
+        },
+        "containers": {
+          "data": [
+            {
+              "id": "b39643cb-6aba-47d4-955b-9035db8acb76",
+              "type": "container"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "meta": {
+    "size": 25,
+    "total": 133035
+  },
+  "links": {
+    "self": "https://api.terminal49.com/v2/shipments?page%5Bsize%5D=25",
+    "current": "https://api.terminal49.com/v2/shipments?page[number]=1&page[size]=25",
+    "next": "https://api.terminal49.com/v2/shipments?page[number]=2&page[size]=25",
+    "last": "https://api.terminal49.com/v2/shipments?page[number]=5322&page[size]=25"
+  }
+}

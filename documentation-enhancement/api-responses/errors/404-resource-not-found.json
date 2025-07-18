@@ -1,0 +1,11 @@
+jq: parse error: Invalid numeric literal at line 2, column 7
+{
+  "errors": [
+    {
+      "status": "404",
+      "source": null,
+      "title": "Not Found",
+      "detail": null
+    }
+  ]
+}

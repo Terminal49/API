@@ -1,0 +1,376 @@
+# Tracking Requests OpenAPI Enhancements
+# Based on comprehensive API testing and documentation analysis
+
+endpoint_descriptions:
+  list:
+    summary: "List tracking requests"
+    description: |
+      Retrieve a paginated list of all tracking requests with optional filtering.
+      
+      Tracking requests represent attempts to track containers, bookings, or bills of lading.
+      Each request progresses through a status lifecycle: pending → in_progress → succeeded/failed.
+      
+      Use filters to find specific requests by status, type, or date range.
+      Include related resources like the tracked shipment/container when requests succeed.
+
+  create:
+    summary: "Create a tracking request"
+    description: |
+      Create a new tracking request to start monitoring a container, booking, or bill of lading.
+      
+      ## Request Types
+      - `container`: Track by container number (must be valid ISO 6346 format)
+      - `booking_number`: Track by booking reference
+      - `bill_of_lading`: Track by bill of lading number
+      
+      ## Important Notes
+      - Duplicate requests (same number + SCAC) return the existing tracking
+      - Failed requests may be automatically retried for temporary errors
+      - Use the `/shipping_lines` endpoint to verify supported SCAC codes
+      
+      ## Validation Rules
+      - Container numbers: 4 letters + 7 digits (e.g., MSCU1234567)
+      - All tracking numbers: minimum 6 characters
+      - SCAC must match a supported shipping line
+
+  get:
+    summary: "Get a tracking request"
+    description: |
+      Retrieve details of a specific tracking request including its current status
+      and any related tracked objects (shipment/container).
+
+  update:
+    summary: "Update a tracking request"
+    description: |
+      Update reference numbers or tags on an existing tracking request.
+      Note: You cannot change the tracking number or type after creation.
+
+  delete:
+    summary: "Delete a tracking request"
+    description: |
+      Cancel a tracking request. This stops future tracking attempts but preserves
+      any historical data already collected.
+
+parameters:
+  - name: "filter[status]"
+    description: |
+      Filter tracking requests by current status.
+      - `pending`: Request created but not yet processed
+      - `in_progress`: Currently being tracked with shipping line
+      - `succeeded`: Successfully created shipment/container
+      - `failed`: Tracking failed (check failed_reason for details)
+    schema:
+      enum: ["pending", "in_progress", "succeeded", "failed"]
+    examples:
+      succeeded:
+        value: "succeeded"
+        summary: "Show only successful tracking requests"
+
+  - name: "filter[request_type]"
+    description: |
+      Filter by the type of tracking request.
+      - `container`: Container number tracking
+      - `booking_number`: Booking reference tracking
+      - `bill_of_lading`: Bill of lading tracking
+    schema:
+      enum: ["container", "booking_number", "bill_of_lading"]
+
+  - name: "filter[scac]"
+    description: |
+      Filter by shipping line SCAC code (e.g., MSCU for MSC, COSU for COSCO).
+      See `/shipping_lines` endpoint for valid codes.
+    examples:
+      msc:
+        value: "MSCU"
+        summary: "Show only MSC tracking requests"
+
+  - name: "filter[created_at_gte]"
+    description: "Filter by creation date (greater than or equal to)"
+    examples:
+      last_week:
+        value: "2025-07-09T00:00:00Z"
+        summary: "Requests created in the last week"
+
+  - name: "filter[created_at_lte]"
+    description: "Filter by creation date (less than or equal to)"
+    examples:
+      before_july:
+        value: "2025-06-30T23:59:59Z"
+        summary: "Requests created before July"
+
+  - name: "include"
+    description: |
+      Include related resources in the response.
+      - `tracked_object`: The created shipment or container (when status is succeeded)
+      - `customer`: Associated customer/party
+      - `user`: User who created the request
+    examples:
+      with_shipment:
+        value: "tracked_object"
+        summary: "Include the tracked shipment/container"
+
+schema_enhancements:
+  tracking_request:
+    properties:
+      id:
+        description: "Unique identifier for the tracking request"
+        
+      attributes:
+        properties:
+          request_number:
+            description: |
+              The tracking identifier (container number, booking reference, or bill of lading).
+              - For containers: Must be valid ISO 6346 format (4 letters + 7 digits)
+              - For bookings/B/L: Minimum 6 characters, format varies by shipping line
+            minLength: 6
+            examples:
+              container: "MSCU1234567"
+              booking: "BOOK123456"
+              bol: "MSCU987654321"
+              
+          request_type:
+            description: |
+              Type of tracking request. Note: API uses different values than UI.
+              Use exactly: `container`, `booking_number`, or `bill_of_lading`
+              
+          scac:
+            description: |
+              Standard Carrier Alpha Code for the shipping line.
+              Must match a supported shipping line. Common codes:
+              - MSCU: Mediterranean Shipping Company (MSC)
+              - MAEU: Maersk
+              - COSU: COSCO
+              - CMDU: CMA CGM
+              - HPGD: Hapag-Lloyd
+            examples:
+              - "MSCU"
+              - "MAEU"
+              - "COSU"
+              
+          ref_numbers:
+            description: |
+              Optional reference numbers to attach to the created shipment.
+              Useful for linking to your internal systems (PO numbers, invoice numbers, etc.)
+            examples:
+              - ["PO-12345", "INV-2024-001"]
+              - ["Customer: Acme Corp", "Project: Q4-2024"]
+              
+          shipment_tags:
+            description: |
+              Optional tags for categorization and filtering.
+              Tags help organize shipments in the Terminal49 dashboard.
+            examples:
+              - ["urgent", "electronics"]
+              - ["west-coast", "high-value"]
+              
+          status:
+            description: |
+              Current status of the tracking request:
+              - `pending`: Queued for processing
+              - `in_progress`: Actively tracking with shipping line
+              - `succeeded`: Successfully created tracked object
+              - `failed`: Tracking failed (see failed_reason)
+              
+          failed_reason:
+            description: |
+              Reason for tracking failure (null when not failed):
+              - `shipping_line_not_supported`: SCAC not supported
+              - `invalid_container`: Invalid container number format
+              - `not_found`: Number not found at shipping line
+              - `rate_limited`: Temporary rate limit
+              - `shipping_line_error`: Temporary shipping line issue
+              - `booking_not_shipped`: Booking exists but not shipped yet
+              
+          is_retrying:
+            description: |
+              Whether Terminal49 is automatically retrying the request.
+              Only temporary failures (rate limits, shipping line errors) are retried.
+              
+          retry_count:
+            description: "Number of automatic retry attempts (max 3)"
+
+request_examples:
+  track_container:
+    summary: "Track a single container"
+    description: "Most common use case - track a container by its ISO number"
+    value:
+      data:
+        type: "tracking_request"
+        attributes:
+          request_type: "container"
+          request_number: "MSCU1234567"
+          scac: "MSCU"
+          ref_numbers: ["PO-2024-001", "Customer: Acme Corp"]
+          shipment_tags: ["electronics", "urgent"]
+          
+  track_booking:
+    summary: "Track by booking number"
+    description: "Track all containers in a booking (useful for FCL shipments)"
+    value:
+      data:
+        type: "tracking_request"
+        attributes:
+          request_type: "booking_number"
+          request_number: "BOOK123456789"
+          scac: "COSU"
+          
+  track_bol:
+    summary: "Track by bill of lading"
+    description: "Track shipment using B/L number"
+    value:
+      data:
+        type: "tracking_request"
+        attributes:
+          request_type: "bill_of_lading"
+          request_number: "MSCU987654321"
+          scac: "MSCU"
+          shipment_tags: ["high-value"]
+
+response_examples:
+  201:
+    success_pending:
+      summary: "Successfully created - pending processing"
+      value:
+        data:
+          id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          type: "tracking_request"
+          attributes:
+            request_number: "MSCU1234567"
+            request_type: "container"
+            scac: "MSCU"
+            ref_numbers: ["PO-2024-001"]
+            shipment_tags: ["electronics"]
+            created_at: "2025-07-16T10:30:00Z"
+            updated_at: "2025-07-16T10:30:00Z"
+            status: "pending"
+            failed_reason: null
+            is_retrying: false
+            retry_count: 0
+          relationships:
+            tracked_object:
+              data: null
+            customer:
+              data: null
+            user:
+              data:
+                id: "current-user"
+                type: "user"
+                
+  200:
+    list_with_mixed_statuses:
+      summary: "List showing different tracking statuses"
+      value:
+        data:
+          - id: "success-example"
+            type: "tracking_request"
+            attributes:
+              request_number: "MSCU1234567"
+              request_type: "container"
+              status: "succeeded"
+              failed_reason: null
+            relationships:
+              tracked_object:
+                data:
+                  id: "container-123"
+                  type: "container"
+          - id: "failed-example"
+            type: "tracking_request"
+            attributes:
+              request_number: "INVALID123"
+              request_type: "container"
+              status: "failed"
+              failed_reason: "invalid_container"
+              
+  422:
+    validation_errors:
+      summary: "Multiple validation errors"
+      value:
+        errors:
+          - status: "422"
+            source:
+              pointer: "/data/attributes/request_number"
+            title: "Unprocessable Entity"
+            detail: "Request number can't be blank"
+            code: "blank"
+          - status: "422"
+            source:
+              pointer: "/data/attributes/request_type"
+            title: "Unprocessable Entity"
+            detail: "Request type 'invalid_type' not recognized. Accepted request types are 'bill_of_lading', 'booking_number', and 'container'"
+            code: "invalid_request_type"
+            
+    invalid_container:
+      summary: "Invalid container number format"
+      value:
+        errors:
+          - status: "422"
+            source:
+              pointer: "/data/attributes/request_number"
+            title: "Unprocessable Entity"
+            detail: "Request number 'ABC123' is not a valid container number"
+            code: "invalid_container"
+
+x_code_samples:
+  - lang: "Python"
+    source: |
+      import requests
+      
+      headers = {
+          "Authorization": "Bearer YOUR_API_KEY",
+          "Content-Type": "application/vnd.api+json"
+      }
+      
+      payload = {
+          "data": {
+              "type": "tracking_request",
+              "attributes": {
+                  "request_type": "container",
+                  "request_number": "MSCU1234567",
+                  "scac": "MSCU",
+                  "ref_numbers": ["PO-12345"],
+                  "shipment_tags": ["urgent"]
+              }
+          }
+      }
+      
+      response = requests.post(
+          "https://api.terminal49.com/v2/tracking_requests",
+          json=payload,
+          headers=headers
+      )
+      
+  - lang: "JavaScript"
+    source: |
+      const response = await fetch('https://api.terminal49.com/v2/tracking_requests', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer YOUR_API_KEY',
+          'Content-Type': 'application/vnd.api+json'
+        },
+        body: JSON.stringify({
+          data: {
+            type: 'tracking_request',
+            attributes: {
+              request_type: 'container',
+              request_number: 'MSCU1234567',
+              scac: 'MSCU'
+            }
+          }
+        })
+      });
+      
+      const result = await response.json();
+
+x_webhooks:
+  tracking_request_succeeded:
+    description: "Fired when a tracking request successfully creates a tracked object"
+    payload:
+      data:
+        type: "webhook_notification"
+        attributes:
+          event: "tracking_request.succeeded"
+          created_at: "2025-07-16T10:31:00Z"
+          data:
+            tracking_request_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            tracked_object_type: "container"
+            tracked_object_id: "container-123"

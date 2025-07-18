@@ -1,0 +1,7 @@
+{
+  "links": {
+    "self": "https://api.terminal49.com/v2/webhooks",
+    "current": "https://api.terminal49.com/v2/webhooks?page[number]=1"
+  },
+  "data": []
+}
