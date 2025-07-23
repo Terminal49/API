@@ -5433,6 +5433,50 @@
         "description": "Retrieves the route details from the port of lading to the port of discharge, including transshipments. <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>"
       }
     },
+    "/containers/{id}/refresh": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "patch": {
+        "summary": "Refresh container",
+        "operationId": "patch-containers-id-refresh",
+        "tags": [
+          "Containers"
+        ],
+        "description": "Schedules the container to be refreshed immediately from all relevant sources.<br /><br />To be alerted of updates you should subscribe to the [relevant webhooks](/api-docs/in-depth-guides/webhooks).<Info>This endpoint is limited to 10 requests per minute.</Info> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "examples": {
+                  "Refresh response": {
+                    "value": {
+                      "message": "Started refresh forShipping line, Terminal, Rail"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/shipping_lines": {
       "get": {
         "summary": "Shipping Lines",
