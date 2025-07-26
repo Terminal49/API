@@ -1,0 +1,201 @@
+# Container Endpoint OpenAPI Enhancements
+
+endpoint_descriptions:
+  list:
+    summary: "List containers"
+    description: |
+      Returns a list of containers. The containers are returned sorted by creation date, with the most recently refreshed containers appearing first.
+      
+      This API will return all containers associated with the account.
+      
+      **Container Lifecycle**
+      
+      Containers progress through these key stages:
+      1. **In Transit** - On vessel heading to port
+      2. **Arrived** - Vessel at port (`pod_arrived_at`)
+      3. **Discharged** - Unloaded from vessel (`pod_discharged_at`)
+      4. **Available** - Released and ready for pickup
+      5. **Full Out** - Picked up from terminal (`pod_full_out_at`)
+      
+      **Key Information Tracked**
+      
+      - **Location**: Current position within terminal or in transit
+      - **Availability**: Whether container can be picked up
+      - **Holds**: Customs, freight, or other holds preventing release
+      - **Fees**: Outstanding terminal charges
+      - **Last Free Day**: Deadline to avoid demurrage charges
+
+  get:
+    summary: "Get a container"
+    description: |
+      Retrieve detailed information about a specific container including its current status, location, and availability.
+
+  edit:
+    summary: "Edit a container"
+    description: |
+      Update container information such as reference numbers or seal number.
+
+parameters:
+  - name: "include"
+    description: |
+      Comma-separated list of related resources to include.
+      Available includes:
+      - **`transport_events`** - Detailed movement history
+      - **`raw_events`** - Original shipping line events
+      - **`shipment`** - Parent shipment information
+      - **`pod_terminal`** - Discharge terminal details
+      - **`pickup_facility`** - Inland facility information
+    examples:
+      with_events:
+        value: "transport_events,pod_terminal"
+        summary: "Include events and terminal info"
+      
+  - name: "filter[available_for_pickup]"
+    description: |
+      Filter by pickup availability status.
+      - **`true`** - Only containers ready for pickup (no holds, fees paid)
+      - **`false`** - Containers with holds or pending fees
+      
+  - name: "filter[pod_arrived_at_gte]"
+    description: "Filter containers that arrived at port on or after this date (ISO 8601 format)"
+    
+  - name: "filter[pod_arrived_at_lte]"  
+    description: "Filter containers that arrived at port on or before this date (ISO 8601 format)"
+
+schema_enhancements:
+  container:
+    properties:
+      attributes:
+        properties:
+          number:
+            description: 'Container number in ISO 6346 format (4 letters + 7 digits, e.g., "MSCU1234567")'
+            pattern: "^[A-Z]{4}[0-9]{7}$"
+            
+          seal_number:
+            description: "Security seal number affixed to the container"
+            
+          equipment_type:
+            description: 'Type of container equipment: "dry", "reefer", "open_top", "flat_rack", "tank", etc.'
+            enum: ["dry", "reefer", "open_top", "flat_rack", "tank", "other"]
+            
+          equipment_length:
+            description: "Container length in feet (20, 40, or 45)"
+            enum: [20, 40, 45]
+            
+          equipment_height:
+            description: 'Container height: "standard" (8\'6") or "high_cube" (9\'6")'
+            enum: ["standard", "high_cube"]
+            
+          weight_in_lbs:
+            description: "Cargo weight in pounds. May be 0 if not provided by shipping line"
+            
+          available_for_pickup:
+            description: |
+              Whether the container can be picked up from the terminal.
+              Requires: all holds released, fees paid, and customs clearance
+              
+          availability_known:
+            description: "Whether availability status has been determined. False during initial tracking"
+            
+          location_at_pod_terminal:
+            description: |
+              Current location within the terminal (e.g., "YARD K376E (Grounded)").
+              Null if container has left the terminal
+              
+          holds_at_pod_terminal:
+            description: |
+              Active holds preventing pickup. Each hold contains:
+              - status: "hold" for active holds
+              - name: Type of hold ("customs", "freight", "other")  
+              - description: Additional details
+              
+          fees_at_pod_terminal:
+            description: "Outstanding terminal fees. Empty array means no fees due"
+            
+          pickup_lfd:
+            description: "Last Free Day - final day to pick up without demurrage charges (ISO 8601)"
+            
+          pickup_appointment_at:
+            description: "Scheduled pickup appointment time. Required by some terminals"
+            
+          pod_arrived_at:
+            description: "When the vessel arrived at the port of discharge (ISO 8601)"
+            
+          pod_discharged_at:
+            description: "When the container was unloaded from the vessel (ISO 8601)"
+            
+          pod_full_out_at:
+            description: "When the container left the terminal - picked up (ISO 8601)"
+            
+          empty_terminated_at:
+            description: "When the empty container was returned (ISO 8601)"
+            
+          pod_last_tracking_request_at:
+            description: "Last attempt to get terminal updates"
+            
+          shipment_last_tracking_request_at:
+            description: "Last attempt to update from shipping line"
+            
+          terminal_checked_at:
+            description: "Last time terminal status was verified"
+            
+          pod_timezone:
+            description: "Timezone of the port of discharge (IANA format, e.g., 'America/Los_Angeles')"
+            
+          final_destination_timezone:
+            description: "Timezone of the final destination (IANA format)"
+            
+          pod_rail_carrier_scac:
+            description: 'Rail carrier at port of discharge (e.g., "BNSF", "UP")'
+            
+          ind_rail_carrier_scac:
+            description: "Rail carrier for inland delivery"
+            
+          ind_facility_lfd_on:
+            description: "Last free day at inland facility for rail shipments"
+            
+          ind_facility_holds:
+            description: "Holds at inland rail facility"
+            
+          ind_facility_fees:
+            description: "Fees at inland rail facility"
+
+response_examples:
+  200:
+    containers_with_holds:
+      summary: "Containers with different hold statuses"
+      value:
+        data:
+          - id: "584ebb17-e753-49d6-b411-3460897154fb"
+            type: "container"
+            attributes:
+              number: "HDMU2744338"
+              seal_number: "24H1142418"
+              available_for_pickup: false
+              holds_at_pod_terminal:
+                - status: "hold"
+                  name: "freight"
+                  description: ""
+                - status: "hold"
+                  name: "customs"
+                  description: ""
+              location_at_pod_terminal: "V-OMG081W"
+              pod_arrived_at: null
+              pod_discharged_at: null
+              pickup_lfd: null
+              
+    available_container:
+      summary: "Container ready for pickup"
+      value:
+        data:
+          - id: "b3f4f7e4-6f4b-4c89-8f54-10094565e4e7"
+            type: "container"
+            attributes:
+              number: "MSNU7926760"
+              available_for_pickup: true
+              holds_at_pod_terminal: []
+              fees_at_pod_terminal: []
+              location_at_pod_terminal: "YARD K376E (Grounded)"
+              pod_arrived_at: "2025-07-08T21:17:25Z"
+              pod_discharged_at: "2025-07-09T07:00:00Z"
+              pickup_lfd: "2025-09-06T07:00:00Z"
