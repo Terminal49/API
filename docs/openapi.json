@@ -5433,6 +5433,124 @@
         "description": "Retrieves the route details from the port of lading to the port of discharge, including transshipments. <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>"
       }
     },
+    "/containers/{id}/refresh": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "patch": {
+        "summary": "Refresh container",
+        "operationId": "patch-containers-id-refresh",
+        "tags": [
+          "Containers"
+        ],
+        "description": "Schedules the container to be refreshed immediately from all relevant sources.<br /><br />To be alerted of updates you should subscribe to the [relevant webhooks](/api-docs/in-depth-guides/webhooks).<Info> This endpoint is limited to 10 requests per minute.</Info><Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Started refresh for Shipping line, Terminal, Rail"
+                    }
+                  }
+                },
+                "examples": {
+                  "Refresh response": {
+                    "value": {
+                      "message": "Started refresh for Shipping line, Terminal, Rail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - This API endpoint is not enabled for your account. Please contact support@terminal49.com",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "example": "403"
+                          },
+                          "title": {
+                            "type": "string",
+                            "example": "API access not enabled"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "example": "This API endpoint is not enabled for your account. Please contact support@terminal49.com"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests - You've hit the refresh limit. Please try again in a minute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "example": "429"
+                          },
+                          "title": {
+                            "type": "string",
+                            "example": "Too Many Requests"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "example": "You've hit the refresh limit. Please try again in a minute."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Number of seconds to wait before making another request",
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/shipping_lines": {
       "get": {
         "summary": "Shipping Lines",
