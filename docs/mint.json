@@ -154,6 +154,7 @@
         "api-docs/api-reference/containers/list-containers",
         "api-docs/api-reference/containers/edit-a-container",
         "api-docs/api-reference/containers/get-a-container",
+        "api-docs/api-reference/containers/refresh-container",
         "api-docs/api-reference/containers/get-container-route",
         "api-docs/api-reference/containers/get-a-containers-raw-events",
         "api-docs/api-reference/containers/get-a-containers-transport-events"
