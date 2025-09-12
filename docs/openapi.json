@@ -787,7 +787,12 @@
                             "ind_eta_at": null,
                             "ind_ata_at": null,
                             "ind_rail_unloaded_at": null,
-                            "ind_facility_lfd_on": null
+                            "ind_facility_lfd_on": null,
+                            "import_deadlines": {
+                              "pickup_lfd_terminal": "2024-07-07T04:00:00Z",
+                              "pickup_lfd_rail": null,
+                              "pickup_lfd_line": "2024-07-07T04:00:00Z"
+                            }
                           },
                           "relationships": {
                             "shipment": {
@@ -3489,7 +3494,12 @@
                             "ind_eta_at": null,
                             "ind_ata_at": null,
                             "ind_rail_unloaded_at": null,
-                            "ind_facility_lfd_on": null
+                            "ind_facility_lfd_on": null,
+                            "import_deadlines": {
+                              "pickup_lfd_terminal": null,
+                              "pickup_lfd_rail": null,
+                              "pickup_lfd_line": null
+                            }
                           },
                           "relationships": {
                             "shipment": {
@@ -3655,7 +3665,12 @@
                             "ind_eta_at": "2024-07-02T14:20:00Z",
                             "ind_ata_at": null,
                             "ind_rail_unloaded_at": null,
-                            "ind_facility_lfd_on": null
+                            "ind_facility_lfd_on": null,
+                            "import_deadlines": {
+                              "pickup_lfd_terminal": null,
+                              "pickup_lfd_rail": null,
+                              "pickup_lfd_line": null
+                            }
                           },
                           "relationships": {
                             "shipment": {
@@ -3844,7 +3859,12 @@
                             "ind_eta_at": null,
                             "ind_ata_at": null,
                             "ind_rail_unloaded_at": null,
-                            "ind_facility_lfd_on": null
+                            "ind_facility_lfd_on": null,
+                            "import_deadlines": {
+                              "pickup_lfd_terminal": "2024-06-27T07:00:00Z",
+                              "pickup_lfd_rail": null,
+                              "pickup_lfd_line": "2024-06-27T07:00:00Z"
+                            }
                           },
                           "relationships": {
                             "shipment": {
@@ -4030,7 +4050,12 @@
                             "ind_eta_at": "2024-07-07T08:00:00Z",
                             "ind_ata_at": null,
                             "ind_rail_unloaded_at": null,
-                            "ind_facility_lfd_on": null
+                            "ind_facility_lfd_on": null,
+                            "import_deadlines": {
+                              "pickup_lfd_terminal": "2024-06-27T07:00:00Z",
+                              "pickup_lfd_rail": null,
+                              "pickup_lfd_line": "2024-06-27T07:00:00Z"
+                            }
                           },
                           "relationships": {
                             "shipment": {
@@ -4163,7 +4188,12 @@
                             "ind_eta_at": "2024-07-04T22:00:00Z",
                             "ind_ata_at": null,
                             "ind_rail_unloaded_at": null,
-                            "ind_facility_lfd_on": null
+                            "ind_facility_lfd_on": null,
+                            "import_deadlines": {
+                              "pickup_lfd_terminal": "2024-07-01T07:00:00Z",
+                              "pickup_lfd_rail": null,
+                              "pickup_lfd_line": "2024-07-01T07:00:00Z"
+                            }
                           },
                           "relationships": {
                             "shipment": {
@@ -4458,7 +4488,12 @@
                           "ind_eta_at": null,
                           "ind_ata_at": null,
                           "ind_rail_unloaded_at": null,
-                          "ind_facility_lfd_on": null
+                          "ind_facility_lfd_on": null,
+                          "import_deadlines": {
+                            "pickup_lfd_terminal": "2024-07-07T04:00:00Z",
+                            "pickup_lfd_rail": null,
+                            "pickup_lfd_line": "2024-07-07T04:00:00Z"
+                          }
                         },
                         "relationships": {
                           "shipment": {
@@ -6947,7 +6982,12 @@
               "ind_eta_at": null,
               "ind_ata_at": "2022-02-15T01:12:00Z",
               "ind_rail_unloaded_at": "2022-02-15T07:54:00Z",
-              "ind_facility_lfd_on": null
+              "ind_facility_lfd_on": null,
+              "import_deadlines": {
+                "pickup_lfd_terminal": null,
+                "pickup_lfd_rail": "2022-02-20T08:00:00Z",
+                "pickup_lfd_line": "2022-02-25T08:00:00Z"
+              }
             },
             "relationships": {
               "shipment": {
@@ -7111,8 +7151,9 @@
               "pickup_lfd": {
                 "type": "string",
                 "format": "date-time",
-                "description": "The last free day for pickup before demmurage accrues. Corresponding timezone is pod_timezone.",
-                "nullable": true
+                "description": "Please use `import_deadlines.pickup_lfd_terminal`",
+                "nullable": true,
+                "deprecated": true
               },
               "pickup_appointment_at": {
                 "type": "string",
@@ -7250,6 +7291,33 @@
               "ind_facility_lfd_on": {
                 "type": "string",
                 "format": "date-time",
+                "description": "Please use `import_deadlines.pickup_lfd_rail`",
+                "nullable": true,
+                "deprecated": true
+              },
+              "import_deadlines": {
+                "type": "object",
+                "description": "Import pickup deadlines for the container",
+                "properties": {
+                  "pickup_lfd_terminal": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The last free day for pickup before demmurage accrues. Corresponding timezone is pod_timezone.",
+                    "nullable": true
+                  },
+                  "pickup_lfd_rail": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The last free day for pickup before demmurage accrues. Corresponding timezone is final_destination_timezone.",
+                    "nullable": true
+                  },
+                  "pickup_lfd_line": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The last free day as reported by the line. Corresponding timezone is final_destination_timezone or pod_timezone.",
+                    "nullable": true
+                  }
+                },
                 "nullable": true
               }
             }
