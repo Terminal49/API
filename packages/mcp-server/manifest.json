@@ -1,0 +1,43 @@
+{
+  "dxt_version": "0.2",
+  "name": "terminal49-mcp",
+  "version": "0.0.1-alpha.0",
+  "description": "The official MCP Server for the Terminal49 API",
+  "author": {
+    "name": "Terminal49",
+    "email": "support@terminal49.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stainless-sdks/terminal49-typescript.git"
+  },
+  "homepage": "https://github.com/stainless-sdks/terminal49-typescript/tree/main/packages/mcp-server#readme",
+  "documentation": "https://www.terminal49.com",
+  "server": {
+    "type": "node",
+    "entry_point": "index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/index.js"],
+      "env": {
+        "TERMINAL49_API_KEY": "${user_config.TERMINAL49_API_KEY}"
+      }
+    }
+  },
+  "user_config": {
+    "TERMINAL49_API_KEY": {
+      "title": "api_key",
+      "description": "`Token YOUR_API_TOKEN`\n\nThe APIs require authentication to be done using header-based API Key and Secret Authentication. \n\nAPI key and secret are sent va the `Authorization` request header.\n\nYou send your API key and secret in the following way:\n\n`Authorization: Token YOUR_API_KEY`",
+      "required": true,
+      "type": "string"
+    }
+  },
+  "tools": [],
+  "tools_generated": true,
+  "compatibility": {
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  },
+  "keywords": ["api"]
+}

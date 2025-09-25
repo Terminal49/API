@@ -8,7 +8,7 @@ const client = new Terminal49({
 });
 
 describe('resource vessels', () => {
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('retrieveByID', async () => {
     const responsePromise = client.vessels.retrieveByID('id');
     const rawResponse = await responsePromise.asResponse();
@@ -20,7 +20,7 @@ describe('resource vessels', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('retrieveByImo', async () => {
     const responsePromise = client.vessels.retrieveByImo('imo');
     const rawResponse = await responsePromise.asResponse();

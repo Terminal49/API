@@ -8,7 +8,7 @@ const client = new Terminal49({
 });
 
 describe('resource webhooks', () => {
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('create: only required params', async () => {
     const responsePromise = client.webhooks.create({
       data: { attributes: { active: true, url: 'https://webhook.site/' }, type: 'webhook' },
@@ -22,7 +22,7 @@ describe('resource webhooks', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('create: required and optional params', async () => {
     const response = await client.webhooks.create({
       data: {
@@ -70,7 +70,7 @@ describe('resource webhooks', () => {
     });
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('retrieve', async () => {
     const responsePromise = client.webhooks.retrieve('id');
     const rawResponse = await responsePromise.asResponse();
@@ -82,7 +82,7 @@ describe('resource webhooks', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('update: only required params', async () => {
     const responsePromise = client.webhooks.update('id', { data: { attributes: {}, type: 'webhook' } });
     const rawResponse = await responsePromise.asResponse();
@@ -94,7 +94,7 @@ describe('resource webhooks', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('update: required and optional params', async () => {
     const response = await client.webhooks.update('id', {
       data: {
@@ -109,7 +109,7 @@ describe('resource webhooks', () => {
     });
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('list', async () => {
     const responsePromise = client.webhooks.list();
     const rawResponse = await responsePromise.asResponse();
@@ -121,7 +121,7 @@ describe('resource webhooks', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('list: request options and params are passed correctly', async () => {
     // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
     await expect(
@@ -129,7 +129,7 @@ describe('resource webhooks', () => {
     ).rejects.toThrow(Terminal49.NotFoundError);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('delete', async () => {
     const responsePromise = client.webhooks.delete('id');
     const rawResponse = await responsePromise.asResponse();
@@ -141,7 +141,7 @@ describe('resource webhooks', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('listIPs', async () => {
     const responsePromise = client.webhooks.listIPs();
     const rawResponse = await responsePromise.asResponse();

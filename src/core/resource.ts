@@ -2,7 +2,7 @@
 
 import type { Terminal49 } from '../client';
 
-export class APIResource {
+export abstract class APIResource {
   protected _client: Terminal49;
 
   constructor(client: Terminal49) {

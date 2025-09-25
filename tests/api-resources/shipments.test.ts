@@ -8,7 +8,7 @@ const client = new Terminal49({
 });
 
 describe('resource shipments', () => {
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('retrieve', async () => {
     const responsePromise = client.shipments.retrieve('id');
     const rawResponse = await responsePromise.asResponse();
@@ -20,7 +20,7 @@ describe('resource shipments', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('retrieve: request options and params are passed correctly', async () => {
     // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
     await expect(
@@ -28,7 +28,7 @@ describe('resource shipments', () => {
     ).rejects.toThrow(Terminal49.NotFoundError);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('update', async () => {
     const responsePromise = client.shipments.update('id');
     const rawResponse = await responsePromise.asResponse();
@@ -40,7 +40,7 @@ describe('resource shipments', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('update: request options and params are passed correctly', async () => {
     // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
     await expect(
@@ -52,7 +52,7 @@ describe('resource shipments', () => {
     ).rejects.toThrow(Terminal49.NotFoundError);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('list', async () => {
     const responsePromise = client.shipments.list();
     const rawResponse = await responsePromise.asResponse();
@@ -64,7 +64,7 @@ describe('resource shipments', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('list: request options and params are passed correctly', async () => {
     // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
     await expect(
@@ -75,7 +75,7 @@ describe('resource shipments', () => {
     ).rejects.toThrow(Terminal49.NotFoundError);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('resumeTracking', async () => {
     const responsePromise = client.shipments.resumeTracking('id');
     const rawResponse = await responsePromise.asResponse();
@@ -87,7 +87,7 @@ describe('resource shipments', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('stopTracking', async () => {
     const responsePromise = client.shipments.stopTracking('id');
     const rawResponse = await responsePromise.asResponse();

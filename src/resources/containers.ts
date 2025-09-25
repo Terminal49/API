@@ -65,6 +65,8 @@ export class Containers extends APIResource {
    * For past historical events we recommend consuming `transport_events`. Although
    * there are fewer events here those events go through additional vetting and
    * normalization to avoid false positives and get you correct data.
+   *
+   * @deprecated
    */
   getRawEvents(id: string, options?: RequestOptions): APIPromise<ContainerGetRawEventsResponse> {
     return this._client.get(path`/containers/${id}/raw_events`, options);

@@ -8,7 +8,7 @@ const client = new Terminal49({
 });
 
 describe('resource ports', () => {
-  // skipped: tests are disabled for the time being
+  // Prism tests are disabled
   test.skip('retrieve', async () => {
     const responsePromise = client.ports.retrieve('id');
     const rawResponse = await responsePromise.asResponse();

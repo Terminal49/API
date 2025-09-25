@@ -15,6 +15,16 @@ export class Webhooks extends APIResource {
    *
    * This is the recommended way tracking shipments and containers via the API. You
    * should use this instead of polling our the API periodically.
+   *
+   * @example
+   * ```ts
+   * const webhook = await client.webhooks.create({
+   *   data: {
+   *     attributes: { ... },
+   *     type: 'webhook',
+   *   },
+   * });
+   * ```
    */
   create(body: WebhookCreateParams, options?: RequestOptions): APIPromise<WebhookCreateResponse> {
     return this._client.post('/webhooks', { body, ...options });
@@ -22,6 +32,11 @@ export class Webhooks extends APIResource {
 
   /**
    * Get the details of a single webhook
+   *
+   * @example
+   * ```ts
+   * const webhook = await client.webhooks.retrieve('id');
+   * ```
    */
   retrieve(id: string, options?: RequestOptions): APIPromise<WebhookRetrieveResponse> {
     return this._client.get(path`/webhooks/${id}`, options);
@@ -29,6 +44,13 @@ export class Webhooks extends APIResource {
 
   /**
    * Update a single webhook
+   *
+   * @example
+   * ```ts
+   * const webhook = await client.webhooks.update('id', {
+   *   data: { attributes: {}, type: 'webhook' },
+   * });
+   * ```
    */
   update(id: string, body: WebhookUpdateParams, options?: RequestOptions): APIPromise<WebhookUpdateResponse> {
     return this._client.patch(path`/webhooks/${id}`, { body, ...options });
@@ -36,6 +58,11 @@ export class Webhooks extends APIResource {
 
   /**
    * Get a list of all the webhooks
+   *
+   * @example
+   * ```ts
+   * const webhooks = await client.webhooks.list();
+   * ```
    */
   list(
     query: WebhookListParams | null | undefined = {},
@@ -46,6 +73,11 @@ export class Webhooks extends APIResource {
 
   /**
    * Delete a webhook
+   *
+   * @example
+   * ```ts
+   * await client.webhooks.delete('id');
+   * ```
    */
   delete(id: string, options?: RequestOptions): APIPromise<void> {
     return this._client.delete(path`/webhooks/${id}`, {
@@ -57,6 +89,11 @@ export class Webhooks extends APIResource {
   /**
    * Return the list of IPs used for sending webhook notifications. This can be
    * useful for whitelisting the IPs on the firewall.
+   *
+   * @example
+   * ```ts
+   * const response = await client.webhooks.listIPs();
+   * ```
    */
   listIPs(options?: RequestOptions): APIPromise<WebhookListIPsResponse> {
     return this._client.get('/webhooks/ips', options);

@@ -6,7 +6,7 @@
     "rootDir": "./dist/src",
     "paths": {
       "terminal49/*": ["dist/src/*"],
-      "terminal49": ["dist/src/index.ts"],
+      "terminal49": ["dist/src/index.ts"]
     },
     "noEmit": false,
     "declaration": true,

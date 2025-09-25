@@ -24,6 +24,31 @@ export class TrackingRequests extends APIResource {
    *
    * A `tracking_request.succeeded` or `tracking_request.failed` webhook notificaiton
    * will only be sent if you have atleast one active webhook.
+   *
+   * @example
+   * ```ts
+   * const trackingRequest =
+   *   await client.trackingRequests.create({
+   *     data: {
+   *       attributes: {
+   *         request_type: 'bill_of_lading',
+   *         request_number: 'MEDUFR030802',
+   *         ref_numbers: ['PO12345', 'HBL12345', 'CUSREF1234'],
+   *         shipment_tags: ['camembert'],
+   *         scac: 'MSCU',
+   *       },
+   *       relationships: {
+   *         customer: {
+   *           data: {
+   *             id: 'f7cb530a-9e60-412c-a5bc-205a2f34ba54',
+   *             type: 'party',
+   *           },
+   *         },
+   *       },
+   *       type: 'tracking_request',
+   *     },
+   *   });
+   * ```
    */
   create(
     body: TrackingRequestCreateParams | null | undefined = {},
@@ -34,6 +59,12 @@ export class TrackingRequests extends APIResource {
 
   /**
    * Get the details and status of an existing tracking request.
+   *
+   * @example
+   * ```ts
+   * const trackingRequest =
+   *   await client.trackingRequests.retrieve('id');
+   * ```
    */
   retrieve(
     id: string,
@@ -45,6 +76,12 @@ export class TrackingRequests extends APIResource {
 
   /**
    * Update a tracking request
+   *
+   * @example
+   * ```ts
+   * const trackingRequest =
+   *   await client.trackingRequests.update('id');
+   * ```
    */
   update(
     id: string,
@@ -57,6 +94,12 @@ export class TrackingRequests extends APIResource {
   /**
    * Returns a list of your tracking requests. The tracking requests are returned
    * sorted by creation date, with the most recent tracking request appearing first.
+   *
+   * @example
+   * ```ts
+   * const trackingRequests =
+   *   await client.trackingRequests.list();
+   * ```
    */
   list(
     query: TrackingRequestListParams | null | undefined = {},
