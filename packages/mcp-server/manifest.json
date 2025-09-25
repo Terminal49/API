@@ -9,9 +9,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stainless-sdks/terminal49-typescript.git"
+    "url": "git+https://github.com/Terminal49/API.git"
   },
-  "homepage": "https://github.com/stainless-sdks/terminal49-typescript/tree/main/packages/mcp-server#readme",
+  "homepage": "https://github.com/Terminal49/API/tree/main/packages/mcp-server#readme",
   "documentation": "https://www.terminal49.com",
   "server": {
     "type": "node",

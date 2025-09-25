@@ -8,10 +8,10 @@
   "type": "commonjs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stainless-sdks/terminal49-typescript.git",
+    "url": "git+https://github.com/Terminal49/API.git",
     "directory": "packages/mcp-server"
   },
-  "homepage": "https://github.com/stainless-sdks/terminal49-typescript/tree/main/packages/mcp-server#readme",
+  "homepage": "https://github.com/Terminal49/API/tree/main/packages/mcp-server#readme",
   "license": "Apache-2.0",
   "packageManager": "yarn@1.22.22",
   "private": false,
