@@ -7151,9 +7151,8 @@
               "pickup_lfd": {
                 "type": "string",
                 "format": "date-time",
-                "description": "Please use `import_deadlines.pickup_lfd_terminal`",
-                "nullable": true,
-                "deprecated": true
+                "description": "Coalesces `import_deadlines` values giving preference to `pickup_lfd_line`",
+                "nullable": true
               },
               "pickup_appointment_at": {
                 "type": "string",
