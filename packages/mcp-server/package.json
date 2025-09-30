@@ -1,6 +1,6 @@
 {
   "name": "terminal49-mcp",
-  "version": "0.0.1-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "The official MCP Server for the Terminal49 API",
   "author": "Terminal49 <support@terminal49.com>",
   "types": "dist/index.d.ts",
