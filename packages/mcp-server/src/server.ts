@@ -34,7 +34,7 @@ export const newMcpServer = () =>
   new McpServer(
     {
       name: 'terminal49_api',
-      version: '0.0.1-alpha.0',
+      version: '0.1.0-alpha.1',
     },
     { capabilities: { tools: {}, logging: {} } },
   );
