@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export const tool: Tool = {
   name: 'list_ips_webhooks',
   description:
-    "When using this tool, always use the `jq_filter` parameter to reduce the response size and improve performance.\n\nOnly omit if you're sure you don't need the data.\n\nReturn the list of IPs used for sending webhook notifications.  This can be useful for whitelisting the IPs on the firewall.\n\n# Response Schema\n```json\n{\n  type: 'object',\n  properties: {\n    last_updated: {\n      type: 'string',\n      format: 'date-time'\n    },\n    webhook_notification_ips: {\n      type: 'array',\n      items: {\n        type: 'string'\n      }\n    }\n  }\n}\n```",
+    "When using this tool, always use the `jq_filter` parameter to reduce the response size and improve performance.\n\nOnly omit if you're sure you don't need the data.\n\nReturn the list of IPs used for sending webhook notifications.  This can be useful for whitelisting the IPs on the firewall.\n\n# Response Schema\n```json\n{\n  $ref: '#/$defs/webhook_list_ips_response',\n  $defs: {\n    webhook_list_ips_response: {\n      type: 'object',\n      properties: {\n        last_updated: {\n          type: 'string',\n          format: 'date-time'\n        },\n        webhook_notification_ips: {\n          type: 'array',\n          items: {\n            type: 'string'\n          }\n        }\n      }\n    }\n  }\n}\n```",
   inputSchema: {
     type: 'object',
     properties: {
