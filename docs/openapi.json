@@ -1355,6 +1355,47 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Too Many Requests - You've hit the create tracking requests limit. Please try again in a minute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "example": "429"
+                          },
+                          "title": {
+                            "type": "string",
+                            "example": "Too Many Requests"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "example": "You've hit the create tracking requests limit. Please try again in a minute."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Number of seconds to wait before making another request",
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -1487,7 +1528,7 @@
             "authorization": []
           }
         ],
-        "description": "To track an ocean shipment, you create a new tracking request. \nTwo attributes are required to track a shipment. A `bill of lading/booking number` and a shipping line `SCAC`. \n\nOnce a tracking request is created we will attempt to fetch the shipment details and it's related containers from the shipping line. If the attempt is successful we will create in new shipment object including any related container objects. We will send a `tracking_request.succeeded` webhook notification to your webhooks.  \n\nIf the attempt to fetch fails then we will send a `tracking_request.failed` webhook notification to your `webhooks`.  \n\nA `tracking_request.succeeded` or `tracking_request.failed` webhook notificaiton will only be sent  if you have  atleast one active webhook. ",
+        "description": "To track an ocean shipment, you create a new tracking request. \nTwo attributes are required to track a shipment. A `bill of lading/booking number` and a shipping line `SCAC`. \n\nOnce a tracking request is created we will attempt to fetch the shipment details and it's related containers from the shipping line. If the attempt is successful we will create in new shipment object including any related container objects. We will send a `tracking_request.succeeded` webhook notification to your webhooks.  \n\nIf the attempt to fetch fails then we will send a `tracking_request.failed` webhook notification to your `webhooks`.  \n\nA `tracking_request.succeeded` or `tracking_request.failed` webhook notificaiton will only be sent  if you have  atleast one active webhook. <br /><br /><Info>This endpoint is limited to 100 tracking requests per minute.</Info>",
         "tags": [
           "Tracking Requests"
         ],
