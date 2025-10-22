@@ -2186,6 +2186,7 @@
                                 "container.transport.arrived_at_inland_destination",
                                 "container.transport.estimated.arrived_at_inland_destination",
                                 "container.pickup_lfd.changed",
+                                "container.pickup_lfd_line.changed",
                                 "container.transport.available"
                               ]
                             }
@@ -2405,6 +2406,7 @@
                                 "container.transport.arrived_at_inland_destination",
                                 "container.transport.estimated.arrived_at_inland_destination",
                                 "container.pickup_lfd.changed",
+                                "container.pickup_lfd_line.changed",
                                 "container.transport.available"
                               ],
                               "example": "tracking_request.succeeded"
@@ -2484,6 +2486,7 @@
                           "container.transport.arrived_at_inland_destination",
                           "container.transport.estimated.arrived_at_inland_destination",
                           "container.pickup_lfd.changed",
+                          "container.pickup_lfd_line.changed",
                           "container.transport.available"
                         ],
                         "active": true
@@ -3399,6 +3402,7 @@
                 "container.transport.arrived_at_inland_destination",
                 "container.transport.estimated.arrived_at_inland_destination",
                 "container.pickup_lfd.changed",
+                "container.pickup_lfd_line.changed",
                 "container.transport.available"
               ],
               "example": "container.transport.full_out"
@@ -8171,6 +8175,7 @@
                     "container.transport.arrived_at_inland_destination",
                     "container.transport.estimated.arrived_at_inland_destination",
                     "container.pickup_lfd.changed",
+                    "container.pickup_lfd_line.changed",
                     "container.transport.available"
                   ]
                 }
@@ -8353,6 +8358,7 @@
                   "container.transport.arrived_at_inland_destination",
                   "container.transport.estimated.arrived_at_inland_destination",
                   "container.pickup_lfd.changed",
+                  "container.pickup_lfd_line.changed",
                   "container.transport.available"
                 ]
               },
@@ -8706,6 +8712,7 @@
                   "container.transport.arrived_at_inland_destination",
                   "container.transport.estimated.arrived_at_inland_destination",
                   "container.pickup_lfd.changed",
+                  "container.pickup_lfd_line.changed",
                   "container.transport.available"
                 ]
               },
