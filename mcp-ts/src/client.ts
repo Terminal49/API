@@ -133,8 +133,8 @@ export class Terminal49Client {
    */
   async getShipment(id: string, includeContainers: boolean = true): Promise<any> {
     const includes = includeContainers
-      ? 'containers,pod_terminal,pol_terminal'
-      : 'pod_terminal,pol_terminal';
+      ? 'containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal'
+      : 'pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal';
     const url = `${this.apiBaseUrl}/shipments/${id}?include=${includes}`;
     return this.request(url);
   }
@@ -149,7 +149,7 @@ export class Terminal49Client {
     updatedAfter?: string;
   } = {}): Promise<any> {
     const params = new URLSearchParams({
-      include: 'containers,pod_terminal,pol_terminal',
+      include: 'containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal',
     });
 
     if (filters.status) params.append('filter[status]', filters.status);
