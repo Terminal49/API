@@ -57,7 +57,7 @@ post:
                   attributes:
                     company_name: "COMPANY NAME"
                 links:
-                  self: "/v2/parties/ba4cb904-827f-4038-8e31-1e92b3356218"
+                  self: "https://api.terminal49.com/v2/parties/ba4cb904-827f-4038-8e31-1e92b3356218"
       headers: {}
     422:
       description: "Unprocessable Entity"

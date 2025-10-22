@@ -2,6 +2,7 @@
   "name": "Terminal 49",
   "logo": "/logos/light.svg",
   "favicon": "/logos/favicon.svg",
+  "openapi": "openapi.json",
   "colors": {
     "primary": "#00A2FF",
     "light": "#52bfff",

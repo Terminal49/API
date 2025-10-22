@@ -70,7 +70,7 @@ get:
                     line_tracking_stopped_at: null
                     line_tracking_stopped_reason: null
                   links:
-                    self: "/v2/shipments/02b1bd6f-407c-45bb-8645-06e7ee34e7e3"
+                    self: "https://api.terminal49.com/v2/shipments/02b1bd6f-407c-45bb-8645-06e7ee34e7e3"
                   relationships:
                     port_of_lading:
                       data:

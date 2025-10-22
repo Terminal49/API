@@ -677,10 +677,10 @@ get:
                   size: 5
                   total: 59229
                 links:
-                  self: "https://api.terminal49.com/v2/containers?page[size]=5"
-                  current: "https://api.terminal49.com/v2/containers?page[number]=1&page[size]=5"
-                  next: "https://api.terminal49.com/v2/containers?page[number]=2&page[size]=5"
-                  last: "https://api.terminal49.com/v2/containers?page[number]=11846&page[size]=5"
+                  self: "https://api.terminal49.com/v2/containers?page%5Bsize%5D=5"
+                  current: "https://api.terminal49.com/v2/containers?page%5Bnumber%5D=1&page%5Bsize%5D=5"
+                  next: "https://api.terminal49.com/v2/containers?page%5Bnumber%5D=2&page%5Bsize%5D=5"
+                  last: "https://api.terminal49.com/v2/containers?page%5Bnumber%5D=11846&page%5Bsize%5D=5"
   operationId: "get-containers"
   description: "Returns a list of container. The containers are returned sorted by creation date, with the most recently refreshed containers appearing first.\n\nThis API will return all containers associated with the account."
   parameters:
@@ -689,13 +689,13 @@ get:
         type: "integer"
         default: 1
       in: "query"
-      name: "page[number]"
+      name: "page%5Bnumber%5D"
     -
       schema:
         type: "integer"
         default: 30
       in: "query"
-      name: "page[size]"
+      name: "page%5Bsize%5D"
       description: ""
     -
       schema:

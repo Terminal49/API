@@ -1,0 +1,36 @@
+{
+  "name": "terminal49-api-docs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Terminal49 API documentation with modular OpenAPI specifications",
+  "scripts": {
+    "bundle": "python -m tools.openapi_bundle docs/openapi/index.yaml docs/openapi.json",
+    "bundle:redocly": "redocly bundle docs/openapi/index.yaml -o docs/openapi.json",
+    "bundle:dereferenced": "redocly bundle docs/openapi/index.yaml -o docs/openapi.json --dereferenced",
+    "lint": "redocly lint docs/openapi/index.yaml",
+    "lint:spectral": "spectral lint docs/openapi/index.yaml",
+    "validate": "bun run bundle && bun run lint && python -m unittest tests.test_openapi_bundle",
+    "watch": "chokidar 'docs/openapi/**/*.yaml' -c 'python -m tools.openapi_bundle docs/openapi/index.yaml docs/openapi.json --no-validate' --initial",
+    "preview": "redocly preview-docs docs/openapi/index.yaml",
+    "preview:mintlify": "mintlify dev",
+    "stats": "redocly stats docs/openapi/index.yaml"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.25.14",
+    "@stoplight/spectral-cli": "^6.13.1",
+    "@stoplight/spectral-rulesets": "^1.20.2",
+    "chokidar-cli": "^3.0.0",
+    "mintlify": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
+  },
+  "keywords": [
+    "openapi",
+    "api-documentation",
+    "terminal49",
+    "shipping",
+    "container-tracking"
+  ]
+}

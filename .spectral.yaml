@@ -1,0 +1,2 @@
+# Spectral configuration for Terminal49 API
+extends: spectral:oas

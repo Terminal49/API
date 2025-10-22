@@ -42,7 +42,7 @@ post:
                         id: "f7cb530a-9e60-412c-a5bc-205a2f34ba54"
                         type: "party"
                   links:
-                    self: "/v2/tracking_requests/ba4cb904-827f-4038-8e31-1e92b3356218"
+                    self: "https://api.terminal49.com/v2/tracking_requests/ba4cb904-827f-4038-8e31-1e92b3356218"
       headers: {}
     422:
       description: "Unprocessable Entity"

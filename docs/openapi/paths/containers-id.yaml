@@ -1,6 +1,5 @@
 parameters:
-  -
-    schema:
+  - schema:
       type: "string"
     name: "id"
     in: "path"
@@ -23,12 +22,9 @@ get:
                 type: "array"
                 items:
                   anyOf:
-                    -
-                      $ref: "#/components/schemas/shipment"
-                    -
-                      $ref: "#/components/schemas/terminal"
-                    -
-                      $ref: "#/components/schemas/transport_event"
+                    - $ref: "#/components/schemas/shipment"
+                    - $ref: "#/components/schemas/terminal"
+                    - $ref: "#/components/schemas/transport_event"
           examples:
             Example Container:
               value:
@@ -88,48 +84,36 @@ get:
                         type: "terminal"
                     transport_events:
                       data:
-                        -
-                          id: "45b542cb-332b-4684-b915-42e3a0759823"
+                        - id: "45b542cb-332b-4684-b915-42e3a0759823"
                           type: "transport_event"
-                        -
-                          id: "174ed528-a1a9-4002-aef0-f2c9369199da"
+                        - id: "174ed528-a1a9-4002-aef0-f2c9369199da"
                           type: "transport_event"
-                        -
-                          id: "7a2f30a6-a756-4c14-9477-fbfc1c7fe2f8"
+                        - id: "7a2f30a6-a756-4c14-9477-fbfc1c7fe2f8"
                           type: "transport_event"
-                        -
-                          id: "e7365004-175a-46e8-96cd-dbed0f3daf21"
+                        - id: "e7365004-175a-46e8-96cd-dbed0f3daf21"
                           type: "transport_event"
-                        -
-                          id: "7c567bf3-7f01-4a3d-a176-eaa1f7165585"
+                        - id: "7c567bf3-7f01-4a3d-a176-eaa1f7165585"
                           type: "transport_event"
                     raw_events:
                       data:
-                        -
-                          id: "2956f71c-bfb9-4e49-b9e2-1b4d53c74cac"
+                        - id: "2956f71c-bfb9-4e49-b9e2-1b4d53c74cac"
                           type: "raw_event"
-                        -
-                          id: "391e0eda-65b5-4fc3-a53d-25ecd9570259"
+                        - id: "391e0eda-65b5-4fc3-a53d-25ecd9570259"
                           type: "raw_event"
-                        -
-                          id: "74810c04-6c8a-4194-8cff-52936584a965"
+                        - id: "74810c04-6c8a-4194-8cff-52936584a965"
                           type: "raw_event"
-                        -
-                          id: "4b1500e2-b23b-4896-87bd-c38b1d16f385"
+                        - id: "4b1500e2-b23b-4896-87bd-c38b1d16f385"
                           type: "raw_event"
-                        -
-                          id: "8b9a7d88-720a-4304-8c1e-a3336e39f481"
+                        - id: "8b9a7d88-720a-4304-8c1e-a3336e39f481"
                           type: "raw_event"
-                        -
-                          id: "bf1f59c5-5dd8-4013-87f9-d7056bc87114"
+                        - id: "bf1f59c5-5dd8-4013-87f9-d7056bc87114"
                           type: "raw_event"
                 links:
                   self: "https://api.terminal49.com/v2/containers/55a700e4-7005-45a9-92fd-1ff38641dbd9"
   operationId: "get-containers-id"
   description: "Retrieves the details of a container."
   parameters:
-    -
-      schema:
+    - schema:
         type: "string"
       in: "query"
       name: "include"

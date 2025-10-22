@@ -1,0 +1,49 @@
+# Redocly configuration for Terminal49 API
+# See https://redocly.com/docs/cli/rules/ for all available rules
+
+extends:
+  - recommended
+
+# Customize rules to match our API style
+rules:
+  # Turn off overly strict rules
+  operation-operationId: off  # We don't require operationId on every operation
+  operation-summary: warn  # Warn instead of error for missing summaries
+  operation-description: off  # Don't require descriptions on every operation
+
+  # Info section rules
+  info-contact: warn
+  info-license: off  # We have terms of service instead
+
+  # Tag rules
+  tag-description: off  # Tags don't need descriptions
+  operation-tag-defined: warn  # Warn if tag not defined in global tags
+
+  # Security rules
+  operation-security-defined: warn  # Warn if security scheme not defined
+
+  # Parameter rules
+  parameter-description: warn  # Warn instead of error for missing parameter descriptions
+
+  # Response rules
+  response-contains-header: off  # Don't require specific headers
+
+  # Schema rules
+  no-invalid-media-type-examples: error  # Keep this as error
+  no-enum-type-mismatch: error
+
+  # Structural rules
+  no-identical-paths: error
+  no-ambiguous-paths: error
+  no-path-trailing-slash: error
+
+  # Best practices (as warnings)
+  operation-2xx-response: warn  # Warn if no 2xx response defined
+  operation-4xx-response: warn  # Warn if no 4xx response defined
+
+  # Deprecated fields
+  no-deprecated: off  # We use deprecated fields intentionally for backwards compatibility
+
+# Ignore patterns (if needed)
+# ignore:
+#   - 'docs/openapi/paths/legacy-*.yaml'

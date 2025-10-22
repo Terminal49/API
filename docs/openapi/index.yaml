@@ -19,6 +19,8 @@ tags:
   -
     name: "Shipments"
   -
+    name: "Shipping Lines"
+  -
     name: "Locations"
   -
     name: "Events"
@@ -36,6 +38,10 @@ tags:
     name: "Terminals"
   -
     name: "Routing (Paid)"
+  -
+    name: "Vessels"
+  -
+    name: "Parties"
 security:
   -
     authorization: []
@@ -100,8 +106,6 @@ paths:
     $ref: "./paths/ports-id.yaml"
   "/vessels/{id}":
     $ref: "./paths/vessels-id.yaml"
-  "/vessels/{imo}":
-    $ref: "./paths/vessels-imo.yaml"
   "/vessels/{id}/future_positions":
     $ref: "./paths/vessels-id-future-positions.yaml"
   "/vessels/{id}/future_positions_with_coordinates":

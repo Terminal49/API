@@ -69,7 +69,7 @@ get:
                       line_tracking_stopped_at: null
                       line_tracking_stopped_reason: null
                     links:
-                      self: "/v2/shipments/62738624-7032-4a50-892e-c55826228c25"
+                      self: "https://api.terminal49.com/v2/shipments/62738624-7032-4a50-892e-c55826228c25"
                     relationships:
                       port_of_lading:
                         data:
@@ -135,7 +135,7 @@ get:
                       line_tracking_stopped_at: null
                       line_tracking_stopped_reason: null
                     links:
-                      self: "/v2/shipments/baaa725e-aa0e-4937-ac78-54d9e2e8621e"
+                      self: "https://api.terminal49.com/v2/shipments/baaa725e-aa0e-4937-ac78-54d9e2e8621e"
                     relationships:
                       port_of_lading:
                         data:
@@ -205,7 +205,7 @@ get:
                       line_tracking_stopped_at: null
                       line_tracking_stopped_reason: null
                     links:
-                      self: "/v2/shipments/7721a48c-5e93-43c9-9f5f-5be10a87fdde"
+                      self: "https://api.terminal49.com/v2/shipments/7721a48c-5e93-43c9-9f5f-5be10a87fdde"
                     relationships:
                       port_of_lading:
                         data:
@@ -277,7 +277,7 @@ get:
                       line_tracking_stopped_at: null
                       line_tracking_stopped_reason: null
                     links:
-                      self: "/v2/shipments/32b5ad78-43ba-42d9-bdc0-4cf12320e020"
+                      self: "https://api.terminal49.com/v2/shipments/32b5ad78-43ba-42d9-bdc0-4cf12320e020"
                     relationships:
                       port_of_lading:
                         data:
@@ -346,7 +346,7 @@ get:
                       line_tracking_stopped_at: null
                       line_tracking_stopped_reason: null
                     links:
-                      self: "/v2/shipments/bd117d3b-8fa4-487c-9bab-25c15e227d1a"
+                      self: "https://api.terminal49.com/v2/shipments/bd117d3b-8fa4-487c-9bab-25c15e227d1a"
                     relationships:
                       port_of_lading:
                         data:
@@ -375,10 +375,10 @@ get:
                   size: 5
                   total: 34044
                 links:
-                  self: "https://api.terminal49.com/v2/shipments?page[size]=5"
-                  current: "https://api.terminal49.com/v2/shipments?page[number]=1&page[size]=5"
-                  next: "https://api.terminal49.com/v2/shipments?page[number]=2&page[size]=5"
-                  last: "https://api.terminal49.com/v2/shipments?page[number]=6809&page[size]=5"
+                  self: "https://api.terminal49.com/v2/shipments?page%5Bsize%5D=5"
+                  current: "https://api.terminal49.com/v2/shipments?page%5Bnumber%5D=1&page%5Bsize%5D=5"
+                  next: "https://api.terminal49.com/v2/shipments?page%5Bnumber%5D=2&page%5Bsize%5D=5"
+                  last: "https://api.terminal49.com/v2/shipments?page%5Bnumber%5D=6809&page%5Bsize%5D=5"
     422:
       description: "Unprocessable Entity"
       content:
@@ -414,14 +414,14 @@ get:
         type: "integer"
         default: 1
       in: "query"
-      name: "page[number]"
+      name: "page%5Bnumber%5D"
       description: "\n"
     -
       schema:
         type: "integer"
         default: 30
       in: "query"
-      name: "page[size]"
+      name: "page%5Bsize%5D"
       description: "\n"
     -
       schema:

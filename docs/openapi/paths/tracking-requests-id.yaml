@@ -49,7 +49,7 @@ get:
                         id: "eb6f218a-0b4a-47f9-8ef9-759aa5e0ea83"
                         type: "shipment"
                   links:
-                    self: "/v2/tracking_requests/ba4cb904-827f-4038-8e31-1e92b3356218"
+                    self: "https://api.terminal49.com/v2/tracking_requests/ba4cb904-827f-4038-8e31-1e92b3356218"
                 included:
                   -
                     id: "eb6f218a-0b4a-47f9-8ef9-759aa5e0ea83"
@@ -99,7 +99,7 @@ get:
                             id: "11c1fa10-52a5-48e2-82f4-5523756b3d0f"
                             type: "container"
                     links:
-                      self: "/v2/shipments/eb6f218a-0b4a-47f9-8ef9-759aa5e0ea83"
+                      self: "https://api.terminal49.com/v2/shipments/eb6f218a-0b4a-47f9-8ef9-759aa5e0ea83"
             Multiple containers:
               value:
                 data:
@@ -125,7 +125,7 @@ get:
                     customer:
                       data: null
                   links:
-                    self: "/v2/tracking_requests/62c30bd4-d7fc-40dc-9fd6-fb39224301f5"
+                    self: "https://api.terminal49.com/v2/tracking_requests/62c30bd4-d7fc-40dc-9fd6-fb39224301f5"
                 links:
                   self: "https://api.terminal49.com/v2/tracking_requests/62c30bd4-d7fc-40dc-9fd6-fb39224301f5?filter%5Bstatus%5D=created"
                 included:
@@ -190,7 +190,7 @@ get:
                             id: "5ab5d058-772c-466c-bc73-0b8767ad5a79"
                             type: "container"
                     links:
-                      self: "/v2/shipments/dfc9f601-f6fe-412e-a71c-feabcc2dd4e3"
+                      self: "https://api.terminal49.com/v2/shipments/dfc9f601-f6fe-412e-a71c-feabcc2dd4e3"
     404:
       description: "Not Found"
       content:

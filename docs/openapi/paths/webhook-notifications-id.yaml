@@ -31,6 +31,20 @@ get:
                       $ref: "#/components/schemas/estimated_event"
                     -
                       $ref: "#/components/schemas/container_updated_event"
+                    -
+                      $ref: "#/components/schemas/shipment"
+                    -
+                      $ref: "#/components/schemas/container"
+                    -
+                      $ref: "#/components/schemas/port"
+                    -
+                      $ref: "#/components/schemas/terminal"
+                    -
+                      $ref: "#/components/schemas/vessel"
+                    -
+                      $ref: "#/components/schemas/metro_area"
+                    -
+                      $ref: "#/components/schemas/rail_terminal"
           examples:
             Tracking Request:
               value:
@@ -74,7 +88,7 @@ get:
                           id: "b5b10c0a-8d18-46da-b4c2-4e5fa790e7da"
                           type: "shipment"
                     links:
-                      self: "/v2/tracking_requests/bdeca506-9741-4ab1-a0a7-cfd1d908e923"
+                      self: "https://api.terminal49.com/v2/tracking_requests/bdeca506-9741-4ab1-a0a7-cfd1d908e923"
                   -
                     id: "b5b10c0a-8d18-46da-b4c2-4e5fa790e7da"
                     type: "shipment"
@@ -123,7 +137,7 @@ get:
                             id: "b2fc728c-e2f5-4a99-8899-eb7b34ef22d7"
                             type: "container"
                     links:
-                      self: "/v2/shipments/b5b10c0a-8d18-46da-b4c2-4e5fa790e7da"
+                      self: "https://api.terminal49.com/v2/shipments/b5b10c0a-8d18-46da-b4c2-4e5fa790e7da"
                   -
                     id: "b2fc728c-e2f5-4a99-8899-eb7b34ef22d7"
                     type: "container"
@@ -289,7 +303,7 @@ get:
                       containers:
                         data: []
                     links:
-                      self: "/v2/shipments/715ed64b-6195-49f6-9407-1383a8088bfd"
+                      self: "https://api.terminal49.com/v2/shipments/715ed64b-6195-49f6-9407-1383a8088bfd"
             Transport Event:
               value:
                 data:
@@ -359,8 +373,7 @@ get:
                     attributes:
                       created_at: "2020-07-28T23:12:53Z"
                       bill_of_lading_number: "TE491846459E"
-                      ref_numbers:
-                        - null
+                      ref_numbers: []
                       shipping_line_scac: "MSCU"
                       shipping_line_name: "Mediterranean Shipping Company"
                       port_of_lading_locode: "MXZLO"
@@ -402,7 +415,7 @@ get:
                             id: "8c2f335a-b155-4021-87f0-9b040159a981"
                             type: "container"
                     links:
-                      self: "/v2/shipments/1fc35241-4c8b-420d-803a-9e6661720a05"
+                      self: "https://api.terminal49.com/v2/shipments/1fc35241-4c8b-420d-803a-9e6661720a05"
             Container Updated Event:
               value:
                 data:

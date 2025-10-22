@@ -1,0 +1,12 @@
+{
+  "ignore_dirs": [
+    ".git",
+    "node_modules",
+    "__pycache__",
+    ".pytest_cache",
+    "terminal49_mcp.egg-info",
+    "dist",
+    "build"
+  ],
+  "settle": 100
+}
