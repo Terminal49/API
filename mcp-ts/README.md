@@ -15,17 +15,50 @@
 
 ## 📦 What's Included
 
-### Tools (Sprint 1)
-- ✅ **`get_container(id)`** - Get detailed container information by Terminal49 ID
+### 🛠️ Tools (7 Available)
 
-### Resources
-- ✅ **`t49:container/{id}`** - Markdown-formatted container summaries
+| Tool | Description | Key Features |
+|------|-------------|--------------|
+| **`search_container`** | Search by container#, BL, booking, or reference | Fast fuzzy search |
+| **`track_container`** | Create tracking request and get container data | SCAC autocomplete ✨ |
+| **`get_container`** | Get detailed container info with flexible data loading | Progressive loading |
+| **`get_shipment_details`** | Get shipment routing, BOL, containers, ports | Full shipment context |
+| **`get_container_transport_events`** | Get event timeline with ResourceLinks | 50-70% context reduction ✨ |
+| **`get_supported_shipping_lines`** | List 40+ major carriers with SCAC codes | Filterable by name/code |
+| **`get_container_route`** | Get multi-leg routing with vessels and ETAs | Premium feature |
 
-### Coming Soon (Sprint 2)
-- `track_container` - Create tracking requests
-- `list_shipments` - Search shipments
-- `get_demurrage` - LFD and fees
-- `get_rail_milestones` - Rail tracking
+### 🎯 Prompts (3 Workflows)
+
+| Prompt | Description | Use Case |
+|--------|-------------|----------|
+| **`track-shipment`** | Track container with optional carrier | Quick tracking start |
+| **`check-demurrage`** | Analyze demurrage/detention risk | LFD calculations |
+| **`analyze-delays`** | Identify delays and root causes | Timeline analysis |
+
+### 📚 Resources
+- ✅ **`terminal49://milestone-glossary`** - Complete milestone reference guide
+- ✅ **Container resources** - Dynamic container data access
+
+### ✨ Phase 1 Features
+
+#### High-Level McpServer API
+- Modern `registerTool()`, `registerPrompt()`, `registerResource()` patterns
+- Type-safe Zod schemas for all inputs and outputs
+- Cleaner, more maintainable code
+
+#### Streamable HTTP Transport
+- Production-ready remote access via Vercel
+- Stateless mode for serverless deployments
+- Full CORS support for browser-based clients
+
+#### Smart Completions
+- **SCAC codes**: Autocomplete carrier codes as you type
+- Context-aware suggestions based on input
+
+#### ResourceLinks
+- Return event summaries + links instead of embedding 100+ events
+- 50-70% reduction in context usage for large datasets
+- Faster responses, better LLM performance
 
 ---
 
