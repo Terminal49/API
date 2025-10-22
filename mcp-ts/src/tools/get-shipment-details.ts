@@ -100,9 +100,14 @@ function formatShipmentResponse(apiResponse: any, includeContainers: boolean): a
     : `Call get_shipment_details with include_containers=true to fetch container list`;
 
   // Extract port/terminal info
-  const polTerminal = included.find(
+  const portOfLading = included.find(
     (item: any) =>
-      item.id === relationships.pol_terminal?.data?.id && item.type === 'terminal'
+      item.id === relationships.port_of_lading?.data?.id && item.type === 'port'
+  );
+
+  const portOfDischarge = included.find(
+    (item: any) =>
+      item.id === relationships.port_of_discharge?.data?.id && item.type === 'port'
   );
 
   const podTerminal = included.find(
@@ -110,6 +115,13 @@ function formatShipmentResponse(apiResponse: any, includeContainers: boolean): a
       item.id === relationships.pod_terminal?.data?.id && item.type === 'terminal'
   );
 
+  const destinationTerminal = included.find(
+    (item: any) =>
+      item.id === relationships.destination_terminal?.data?.id && item.type === 'terminal'
+  );
+
+  // Note: shipping_line is available directly from shipment attributes
+  // We don't sideload it via includes due to API limitations
   return {
     id: apiResponse.data?.id,
     bill_of_lading: shipment.bill_of_lading_number,
@@ -125,24 +137,30 @@ function formatShipmentResponse(apiResponse: any, includeContainers: boolean): a
     tags: shipment.tags || [],
     routing: {
       port_of_lading: {
-        locode: shipment.port_of_lading_locode,
-        name: shipment.port_of_lading_name,
-        terminal: polTerminal
-          ? {
-              name: polTerminal.attributes?.name,
-              firms_code: polTerminal.attributes?.firms_code,
-            }
-          : null,
+        locode: shipment.port_of_lading_locode || portOfLading?.attributes?.locode,
+        name: shipment.port_of_lading_name || portOfLading?.attributes?.name,
+        port_details: portOfLading ? {
+          id: portOfLading.id,
+          code: portOfLading.attributes?.code,
+          country_code: portOfLading.attributes?.country_code,
+        } : null,
         etd: shipment.pol_etd_at,
         atd: shipment.pol_atd_at,
         timezone: shipment.pol_timezone,
       },
       port_of_discharge: {
-        locode: shipment.port_of_discharge_locode,
-        name: shipment.port_of_discharge_name,
+        locode: shipment.port_of_discharge_locode || portOfDischarge?.attributes?.locode,
+        name: shipment.port_of_discharge_name || portOfDischarge?.attributes?.name,
+        port_details: portOfDischarge ? {
+          id: portOfDischarge.id,
+          code: portOfDischarge.attributes?.code,
+          country_code: portOfDischarge.attributes?.country_code,
+        } : null,
         terminal: podTerminal
           ? {
+              id: podTerminal.id,
               name: podTerminal.attributes?.name,
+              nickname: podTerminal.attributes?.nickname,
               firms_code: podTerminal.attributes?.firms_code,
             }
           : null,
@@ -155,6 +173,12 @@ function formatShipmentResponse(apiResponse: any, includeContainers: boolean): a
         ? {
             locode: shipment.destination_locode,
             name: shipment.destination_name,
+            terminal: destinationTerminal ? {
+              id: destinationTerminal.id,
+              name: destinationTerminal.attributes?.name,
+              nickname: destinationTerminal.attributes?.nickname,
+              firms_code: destinationTerminal.attributes?.firms_code,
+            } : null,
             eta: shipment.destination_eta_at,
             ata: shipment.destination_ata_at,
             timezone: shipment.destination_timezone,
