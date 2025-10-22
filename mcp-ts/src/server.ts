@@ -1,6 +1,6 @@
 /**
  * Terminal49 MCP Server
- * Main server implementation using @modelcontextprotocol/sdk
+ * Implementation using @modelcontextprotocol/sdk v0.5.0
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -45,7 +45,7 @@ export class Terminal49McpServer {
     this.server = new Server(
       {
         name: 'terminal49-mcp',
-        version: '0.1.0',
+        version: '1.0.0',
       },
       {
         capabilities: {
@@ -218,7 +218,8 @@ export class Terminal49McpServer {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
 
-    console.error('Terminal49 MCP Server running on stdio');
+    console.error('Terminal49 MCP Server v1.0.0 running on stdio');
+    console.error('Available tools: 7 | Resources: 2');
   }
 
   getServer(): Server {
