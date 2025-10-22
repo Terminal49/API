@@ -60,6 +60,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       const result = await executeSearchContainer({ query }, client);
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        structuredContent: result as any,
       };
     }
   );
@@ -93,6 +94,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       );
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        structuredContent: result as any,
       };
     }
   );
@@ -124,6 +126,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       const result = await executeGetContainer({ id, include }, client);
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        structuredContent: result as any,
       };
     }
   );
@@ -146,6 +149,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       const result = await executeGetShipmentDetails({ id, include_containers }, client);
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        structuredContent: result as any,
       };
     }
   );
@@ -168,6 +172,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       const result = await executeGetContainerTransportEvents({ id }, client);
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        structuredContent: result as any,
       };
     }
   );
@@ -189,6 +194,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       const result = await executeGetSupportedShippingLines({ search });
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        structuredContent: result as any,
       };
     }
   );
@@ -211,6 +217,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       const result = await executeGetContainerRoute({ id }, client);
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        structuredContent: result as any,
       };
     }
   );
