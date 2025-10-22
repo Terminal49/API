@@ -24,10 +24,6 @@
       "destination": "/api/sse"
     }
   ],
-  "env": {
-    "T49_API_TOKEN": "@t49_api_token",
-    "T49_API_BASE_URL": "https://api.terminal49.com/v2"
-  },
   "headers": [
     {
       "source": "/mcp",
