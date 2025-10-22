@@ -70,10 +70,29 @@ export class Terminal49Client {
   }
 
   /**
-   * GET /containers/:id
+   * GET /search
    */
-  async getContainer(id: string): Promise<any> {
-    const url = `${this.apiBaseUrl}/containers/${id}?include=shipment,pod_terminal,transport_events`;
+  async search(query: string): Promise<any> {
+    const params = new URLSearchParams({ query });
+    const url = `${this.apiBaseUrl}/search?${params}`;
+    return this.request(url);
+  }
+
+  /**
+   * GET /containers/:id
+   * @param id - Container UUID
+   * @param include - Optional array of relationships to include.
+   *                  Defaults to ['shipment', 'pod_terminal'] for optimal performance.
+   *                  Available: 'shipment', 'pod_terminal', 'transport_events'
+   */
+  async getContainer(
+    id: string,
+    include: string[] = ['shipment', 'pod_terminal']
+  ): Promise<any> {
+    const includeParam = include.length > 0 ? include.join(',') : '';
+    const url = includeParam
+      ? `${this.apiBaseUrl}/containers/${id}?include=${includeParam}`
+      : `${this.apiBaseUrl}/containers/${id}`;
     return this.request(url);
   }
 
@@ -105,6 +124,19 @@ export class Terminal49Client {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+  }
+
+  /**
+   * GET /shipments/:id
+   * @param id - Shipment UUID
+   * @param includeContainers - Whether to include container list
+   */
+  async getShipment(id: string, includeContainers: boolean = true): Promise<any> {
+    const includes = includeContainers
+      ? 'containers,pod_terminal,pol_terminal'
+      : 'pod_terminal,pol_terminal';
+    const url = `${this.apiBaseUrl}/shipments/${id}?include=${includes}`;
+    return this.request(url);
   }
 
   /**
@@ -147,6 +179,24 @@ export class Terminal49Client {
       pod_arrived_at: container.pod_arrived_at,
       pod_discharged_at: container.pod_discharged_at,
     };
+  }
+
+  /**
+   * GET /containers/:id/transport_events
+   * @param id - Container UUID
+   */
+  async getContainerTransportEvents(id: string): Promise<any> {
+    const url = `${this.apiBaseUrl}/containers/${id}/transport_events?include=location,terminal`;
+    return this.request(url);
+  }
+
+  /**
+   * GET /containers/:id/route
+   * @param id - Container UUID
+   */
+  async getContainerRoute(id: string): Promise<any> {
+    const url = `${this.apiBaseUrl}/containers/${id}/route?include=port,vessel,route_location`;
+    return this.request(url);
   }
 
   /**
