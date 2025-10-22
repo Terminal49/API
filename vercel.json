@@ -1,7 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cd mcp-ts && npm install && npm run build",
-  "outputDirectory": "mcp-ts/dist",
+  "buildCommand": "npm install && cd mcp-ts && npm install && npm run build",
   "functions": {
     "api/mcp.ts": {
       "maxDuration": 30,
