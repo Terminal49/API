@@ -39,26 +39,28 @@
 - ✅ **`terminal49://milestone-glossary`** - Complete milestone reference guide
 - ✅ **Container resources** - Dynamic container data access
 
-### ✨ Phase 1 Features
+### ✨ Current Features (v1.0.0 - Phase 1 & 2.1 Complete)
 
-#### High-Level McpServer API
-- Modern `registerTool()`, `registerPrompt()`, `registerResource()` patterns
-- Type-safe Zod schemas for all inputs and outputs
-- Cleaner, more maintainable code
+#### ✅ Modern McpServer API
+- High-level `registerTool()`, `registerPrompt()`, `registerResource()` patterns
+- Type-safe Zod schemas for all tool inputs
+- Cleaner, maintainable code (71% code reduction in HTTP handler)
+- **SDK**: @modelcontextprotocol/sdk v1.20.1
 
-#### Streamable HTTP Transport
+#### ✅ Streamable HTTP Transport
 - Production-ready remote access via Vercel
 - Stateless mode for serverless deployments
 - Full CORS support for browser-based clients
+- **No SSE** - uses modern StreamableHTTP (SSE is deprecated)
 
-#### Smart Completions
-- **SCAC codes**: Autocomplete carrier codes as you type
-- Context-aware suggestions based on input
+#### ✅ 3 Workflow Prompts
+- `track-shipment`: Quick container tracking with optional carrier
+- `check-demurrage`: Demurrage/detention risk analysis
+- `analyze-delays`: Journey delay identification and root cause
 
-#### ResourceLinks
-- Return event summaries + links instead of embedding 100+ events
-- 50-70% reduction in context usage for large datasets
-- Faster responses, better LLM performance
+#### 🚧 Coming Soon (Phase 2.2)
+- **SCAC code completions**: Autocomplete carrier codes as you type
+- **Resource Links**: Return event summaries + links for large datasets
 
 ---
 
