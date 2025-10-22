@@ -1,0 +1,29 @@
+source 'https://rubygems.org'
+
+ruby '>= 3.0.0'
+
+# MCP SDK
+gem 'mcp', '~> 0.1.0'  # Model Context Protocol Ruby SDK
+
+# HTTP client for Terminal49 API
+gem 'faraday', '~> 2.7'
+gem 'faraday-retry', '~> 2.2'
+
+# JSON:API parsing
+gem 'jsonapi-serializer', '~> 2.2'
+
+# Logging
+gem 'logger', '~> 1.5'
+
+# Web server (for HTTP transport)
+gem 'puma', '~> 6.4'
+gem 'rack', '~> 3.0'
+
+group :development, :test do
+  gem 'rspec', '~> 3.12'
+  gem 'vcr', '~> 6.2'
+  gem 'webmock', '~> 3.19'
+  gem 'dotenv', '~> 2.8'
+  gem 'pry', '~> 0.14'
+  gem 'rubocop', '~> 1.57'
+end

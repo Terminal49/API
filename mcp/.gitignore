@@ -1,0 +1,23 @@
+# Environment files
+.env
+.env.local
+
+# Bundler
+vendor/bundle
+.bundle
+
+# RSpec
+spec/examples.txt
+coverage/
+
+# VCR cassettes (optional - may want to commit sanitized versions)
+spec/fixtures/vcr_cassettes/*.yml
+
+# Logs
+*.log
+log/
+
+# Temporary files
+tmp/
+.byebug_history
+.pry_history
