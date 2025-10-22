@@ -1,9 +1,23 @@
 .DS_Store
 
 .vercel
+
+# Environment variables
 .env.local
 .env.development.local
+.env
+*.env
+!.env.sample
+!.env.example
 
 .tool-versions.local
+
+# LLM context files (development only)
+*-llms-full.txt
+mcp-protocol-*.txt
+
+# Test files
+mcp-ts/test-*.js
+mcp-ts/test-*.sh
 
 .pytest_cache
