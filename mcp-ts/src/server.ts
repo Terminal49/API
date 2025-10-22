@@ -324,13 +324,14 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
     }
   );
 
-  // Resource 2: Milestone Glossary
+  // Resource 2: Milestone Glossary (static resource)
   server.registerResource(
     'milestone-glossary',
-    new ResourceTemplate('terminal49://docs/milestone-glossary', { list: undefined }),
+    'terminal49://docs/milestone-glossary',
     {
       title: 'Milestone Glossary',
       description: 'Comprehensive event/milestone reference documentation',
+      mimeType: 'text/markdown',
     },
     async (uri) => {
       const resource = readMilestoneGlossaryResource();
