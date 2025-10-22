@@ -19,11 +19,26 @@ import { Terminal49Client } from '../mcp-ts/src/client.js';
 import { getContainerTool, executeGetContainer } from '../mcp-ts/src/tools/get-container.js';
 import { trackContainerTool, executeTrackContainer } from '../mcp-ts/src/tools/track-container.js';
 import { searchContainerTool, executeSearchContainer } from '../mcp-ts/src/tools/search-container.js';
+import { getShipmentDetailsTool, executeGetShipmentDetails } from '../mcp-ts/src/tools/get-shipment-details.js';
+import {
+  getContainerTransportEventsTool,
+  executeGetContainerTransportEvents,
+} from '../mcp-ts/src/tools/get-container-transport-events.js';
+import {
+  getSupportedShippingLinesTool,
+  executeGetSupportedShippingLines,
+} from '../mcp-ts/src/tools/get-supported-shipping-lines.js';
+import { getContainerRouteTool, executeGetContainerRoute } from '../mcp-ts/src/tools/get-container-route.js';
 import {
   containerResource,
   matchesContainerUri,
   readContainerResource,
 } from '../mcp-ts/src/resources/container.js';
+import {
+  milestoneGlossaryResource,
+  matchesMilestoneGlossaryUri,
+  readMilestoneGlossaryResource,
+} from '../mcp-ts/src/resources/milestone-glossary.js';
 
 // CORS headers for MCP clients
 const CORS_HEADERS = {
@@ -39,15 +54,17 @@ const CORS_HEADERS = {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return res.status(200).json({ ok: true });
+    res.status(200).json({ ok: true });
+    return;
   }
 
   // Only accept POST requests
   if (req.method !== 'POST') {
-    return res.status(405).json({
+    res.status(405).json({
       error: 'Method not allowed',
       message: 'Only POST requests are accepted',
     });
+    return;
   }
 
   try {
@@ -61,17 +78,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Fallback to environment variable
       apiToken = process.env.T49_API_TOKEN;
     } else {
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Unauthorized',
         message: 'Missing Authorization header or T49_API_TOKEN environment variable',
       });
+      return;
     }
 
     // Parse JSON-RPC request
     const mcpRequest = req.body as JSONRPCRequest;
 
     if (!mcpRequest || !mcpRequest.method) {
-      return res.status(400).json({
+      res.status(400).json({
         jsonrpc: '2.0',
         error: {
           code: -32600,
@@ -79,6 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
         id: null,
       });
+      return;
     }
 
     // Create Terminal49 client
@@ -90,12 +109,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Handle MCP request
     const response = await handleMcpRequest(mcpRequest, client);
 
-    return res.status(200).json(response);
+    res.status(200).json(response);
   } catch (error) {
     console.error('MCP handler error:', error);
 
     const err = error as Error;
-    return res.status(500).json({
+    res.status(500).json({
       jsonrpc: '2.0',
       error: {
         code: -32603,
@@ -129,7 +148,7 @@ async function handleMcpRequest(
             },
             serverInfo: {
               name: 'terminal49-mcp',
-              version: '0.1.0',
+              version: '1.0.0',
             },
           },
           id,
@@ -139,7 +158,15 @@ async function handleMcpRequest(
         return {
           jsonrpc: '2.0',
           result: {
-            tools: [searchContainerTool, trackContainerTool, getContainerTool],
+            tools: [
+              searchContainerTool,
+              trackContainerTool,
+              getContainerTool,
+              getShipmentDetailsTool,
+              getContainerTransportEventsTool,
+              getSupportedShippingLinesTool,
+              getContainerRouteTool,
+            ],
           },
           id,
         };
@@ -147,62 +174,94 @@ async function handleMcpRequest(
       case 'tools/call': {
         const { name, arguments: args } = params as any;
 
-        if (name === 'search_container') {
-          const result = await executeSearchContainer(args, client);
-          return {
-            jsonrpc: '2.0',
-            result: {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify(result, null, 2),
-                },
-              ],
-            },
-            id,
-          };
-        }
+        switch (name) {
+          case 'search_container': {
+            const result = await executeSearchContainer(args, client);
+            return {
+              jsonrpc: '2.0',
+              result: {
+                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+              },
+              id,
+            };
+          }
 
-        if (name === 'track_container') {
-          const result = await executeTrackContainer(args, client);
-          return {
-            jsonrpc: '2.0',
-            result: {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify(result, null, 2),
-                },
-              ],
-            },
-            id,
-          };
-        }
+          case 'track_container': {
+            const result = await executeTrackContainer(args, client);
+            return {
+              jsonrpc: '2.0',
+              result: {
+                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+              },
+              id,
+            };
+          }
 
-        if (name === 'get_container') {
-          const result = await executeGetContainer(args, client);
-          return {
-            jsonrpc: '2.0',
-            result: {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify(result, null, 2),
-                },
-              ],
-            },
-            id,
-          };
-        }
+          case 'get_container': {
+            const result = await executeGetContainer(args, client);
+            return {
+              jsonrpc: '2.0',
+              result: {
+                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+              },
+              id,
+            };
+          }
 
-        throw new Error(`Unknown tool: ${name}`);
+          case 'get_shipment_details': {
+            const result = await executeGetShipmentDetails(args, client);
+            return {
+              jsonrpc: '2.0',
+              result: {
+                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+              },
+              id,
+            };
+          }
+
+          case 'get_container_transport_events': {
+            const result = await executeGetContainerTransportEvents(args, client);
+            return {
+              jsonrpc: '2.0',
+              result: {
+                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+              },
+              id,
+            };
+          }
+
+          case 'get_supported_shipping_lines': {
+            const result = await executeGetSupportedShippingLines(args);
+            return {
+              jsonrpc: '2.0',
+              result: {
+                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+              },
+              id,
+            };
+          }
+
+          case 'get_container_route': {
+            const result = await executeGetContainerRoute(args, client);
+            return {
+              jsonrpc: '2.0',
+              result: {
+                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+              },
+              id,
+            };
+          }
+
+          default:
+            throw new Error(`Unknown tool: ${name}`);
+        }
       }
 
       case 'resources/list':
         return {
           jsonrpc: '2.0',
           result: {
-            resources: [containerResource],
+            resources: [containerResource, milestoneGlossaryResource],
           },
           id,
         };
@@ -212,6 +271,17 @@ async function handleMcpRequest(
 
         if (matchesContainerUri(uri)) {
           const resource = await readContainerResource(uri, client);
+          return {
+            jsonrpc: '2.0',
+            result: {
+              contents: [resource],
+            },
+            id,
+          };
+        }
+
+        if (matchesMilestoneGlossaryUri(uri)) {
+          const resource = readMilestoneGlossaryResource();
           return {
             jsonrpc: '2.0',
             result: {
