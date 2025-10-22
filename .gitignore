@@ -1,6 +1,7 @@
 .DS_Store
 .beads/
 
+.vercel
 .env.local
 .env.development.local
 
