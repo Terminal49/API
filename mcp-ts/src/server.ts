@@ -215,6 +215,90 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
     }
   );
 
+  // ==================== PROMPTS ====================
+
+  // Prompt 1: Track Shipment
+  server.registerPrompt(
+    'track-shipment',
+    {
+      title: 'Track Container Shipment',
+      description: 'Quick container tracking workflow with carrier autocomplete',
+      argsSchema: {
+        container_number: z.string().describe('Container number (e.g., CAIU1234567)'),
+        carrier: z.string().optional().describe('Shipping line SCAC code (e.g., MAEU for Maersk)'),
+      },
+    },
+    async ({ container_number, carrier }) => ({
+      messages: [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: carrier
+              ? `Track container ${container_number} with carrier ${carrier}. Show current status, location, and any holds or issues.`
+              : `Track container ${container_number}. Show current status, location, and any holds or issues.`,
+          },
+        },
+      ],
+    })
+  );
+
+  // Prompt 2: Check Demurrage
+  server.registerPrompt(
+    'check-demurrage',
+    {
+      title: 'Check Demurrage Risk',
+      description: 'Analyze demurrage/detention risk for a container',
+      argsSchema: {
+        container_id: z.string().uuid().describe('Terminal49 container UUID'),
+      },
+    },
+    async ({ container_id }) => ({
+      messages: [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `Analyze demurrage risk for container ${container_id}. Check:
+- Last Free Day (LFD) and days remaining
+- Current availability status
+- Any holds blocking pickup
+- Terminal fees
+- Recommended action to avoid demurrage charges`,
+          },
+        },
+      ],
+    })
+  );
+
+  // Prompt 3: Analyze Delays
+  server.registerPrompt(
+    'analyze-delays',
+    {
+      title: 'Analyze Journey Delays',
+      description: 'Identify delays and root causes in container journey',
+      argsSchema: {
+        container_id: z.string().uuid().describe('Terminal49 container UUID'),
+      },
+    },
+    async ({ container_id }) => ({
+      messages: [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `Analyze the journey timeline for container ${container_id}:
+- Identify any delays vs. expected schedule
+- Compare actual vs. estimated times for each milestone
+- Highlight unusual gaps or extended stays
+- Determine root causes (port congestion, vessel delays, customs, etc.)
+- Provide summary of impact on overall transit time`,
+          },
+        },
+      ],
+    })
+  );
+
   // ==================== RESOURCES ====================
 
   // Resource 1: Container Resource
@@ -273,6 +357,6 @@ export async function runStdioServer() {
   await server.connect(transport);
 
   console.error('Terminal49 MCP Server v1.0.0 running on stdio');
-  console.error('Available tools: 7 | Resources: 2');
+  console.error('Available: 7 tools | 3 prompts | 2 resources');
   console.error('SDK: @modelcontextprotocol/sdk v1.20.1 (McpServer API)');
 }
