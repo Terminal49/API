@@ -1,0 +1,20 @@
+get:
+  summary: "Shipping Lines"
+  tags:
+    - "Shipping Lines"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/shipping_line"
+              links:
+                $ref: "#/components/schemas/links"
+  operationId: "get-shipping_lines"
+  description: "Return a list of shipping lines supported by Terminal49. \nN.B. There is no pagination for this endpoint."

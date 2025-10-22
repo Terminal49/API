@@ -1,0 +1,23 @@
+parameters:
+  -
+    schema:
+      type: "string"
+    name: "id"
+    in: "path"
+    required: true
+get:
+  summary: "Get a port using the locode or the id"
+  tags:
+    - "Ports"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/port"
+  operationId: "get-port-id"
+  description: "Return the details of a single port."

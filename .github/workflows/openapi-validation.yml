@@ -1,0 +1,48 @@
+name: OpenAPI validation
+
+on:
+  pull_request:
+    paths:
+      - 'docs/openapi/**'
+      - 'docs/openapi.json'
+      - 'tools/openapi_*.py'
+      - 'tests/test_openapi_bundle.py'
+      - '.spectral.mjs'
+      - '.github/workflows/openapi-validation.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/openapi/**'
+      - 'docs/openapi.json'
+      - 'tools/openapi_*.py'
+      - 'tests/test_openapi_bundle.py'
+      - '.spectral.mjs'
+      - '.github/workflows/openapi-validation.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Spectral CLI
+        run: npm install --global @stoplight/spectral-cli
+
+      - name: Lint OpenAPI specification
+        run: spectral lint docs/openapi/index.yaml
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run OpenAPI regression test
+        run: python -m unittest tests.test_openapi_bundle

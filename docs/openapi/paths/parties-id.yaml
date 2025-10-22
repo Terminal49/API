@@ -1,0 +1,86 @@
+parameters:
+  -
+    schema:
+      type: "string"
+    name: "id"
+    in: "path"
+    required: true
+get:
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/party"
+              links:
+                $ref: "#/components/schemas/link-self"
+  operationId: "get-parties-id"
+  description: "Returns a party by it's given identifier"
+  tags:
+    - "Parties"
+patch:
+  description: "Updates a party"
+  operationId: "edit-party"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/party"
+              links:
+                $ref: "#/components/schemas/link-self"
+    422:
+      description: "Unprocessable Entity"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              errors:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/error"
+          examples:
+            Error Examples:
+              value:
+                errors:
+                  -
+                    status: "422"
+                    source:
+                      pointer: "/data/attributes/company_name"
+                    title: "Unprocessable Entity"
+                    detail: "Company name can't be blank"
+                  -
+                    status: "422"
+                    source:
+                      pointer: "/data/attributes/customer"
+                    title: "Unprocessable Entity"
+                    detail: "'XXXX' already exists in Account"
+  requestBody:
+    content:
+      application/json:
+        schema:
+          type: "object"
+          properties:
+            data:
+              type: "object"
+              required:
+                - "attributes"
+              properties:
+                attributes:
+                  type: "object"
+                  properties:
+                    company_name:
+                      type: "string"
+                      example: "COMPANY NAME"
+                      description: "The name of the company"
+  tags:
+    - "Parties"

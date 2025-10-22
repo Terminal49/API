@@ -1,0 +1,504 @@
+parameters:
+  -
+    schema:
+      type: "string"
+    name: "id"
+    in: "path"
+    required: true
+get:
+  summary: "Get a single webhook notification"
+  responses:
+    200:
+      description: ""
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/webhook_notification"
+              included:
+                type: "array"
+                items:
+                  anyOf:
+                    -
+                      $ref: "#/components/schemas/webhook"
+                    -
+                      $ref: "#/components/schemas/tracking_request"
+                    -
+                      $ref: "#/components/schemas/transport_event"
+                    -
+                      $ref: "#/components/schemas/estimated_event"
+                    -
+                      $ref: "#/components/schemas/container_updated_event"
+          examples:
+            Tracking Request:
+              value:
+                data:
+                  id: "a76187fc-5749-43f9-9053-cfaad9790a31"
+                  type: "webhook_notification"
+                  attributes:
+                    id: "a76187fc-5749-43f9-9053-cfaad9790a31"
+                    event: "tracking_request.succeeded"
+                    delivery_status: "pending"
+                    created_at: "2020-09-11T21:25:34Z"
+                  relationships:
+                    reference_object:
+                      data:
+                        id: "bdeca506-9741-4ab1-a0a7-cfd1d908e923"
+                        type: "tracking_request"
+                    webhook:
+                      data:
+                        id: "914b21ce-dd7d-4c49-8503-65aba488e9a9"
+                        type: "webhook"
+                    webhook_notification_logs:
+                      data: []
+                included:
+                  -
+                    id: "bdeca506-9741-4ab1-a0a7-cfd1d908e923"
+                    type: "tracking_request"
+                    attributes:
+                      request_number: "TE497ED1063E"
+                      request_type: "bill_of_lading"
+                      scac: "MSCU"
+                      ref_numbers: []
+                      created_at: "2020-09-11T21:25:34Z"
+                      updated_at: "2020-09-11T22:25:34Z"
+                      status: "created"
+                      failed_reason: null
+                      is_retrying: false
+                      retry_count: null
+                    relationships:
+                      tracked_object:
+                        data:
+                          id: "b5b10c0a-8d18-46da-b4c2-4e5fa790e7da"
+                          type: "shipment"
+                    links:
+                      self: "/v2/tracking_requests/bdeca506-9741-4ab1-a0a7-cfd1d908e923"
+                  -
+                    id: "b5b10c0a-8d18-46da-b4c2-4e5fa790e7da"
+                    type: "shipment"
+                    attributes:
+                      created_at: "2020-09-11T21:25:33Z"
+                      bill_of_lading_number: "TE497ED1063E"
+                      ref_numbers: []
+                      shipping_line_scac: "MSCU"
+                      shipping_line_name: "Mediterranean Shipping Company"
+                      port_of_lading_locode: "MXZLO"
+                      port_of_lading_name: "Manzanillo"
+                      port_of_discharge_locode: "USOAK"
+                      port_of_discharge_name: "Port of Oakland"
+                      pod_vessel_name: "MSC CHANNE"
+                      pod_vessel_imo: "9710438"
+                      pod_voyage_number: "098N"
+                      destination_locode: null
+                      destination_name: null
+                      destination_timezone: null
+                      destination_ata_at: null
+                      destination_eta_at: null
+                      pol_etd_at: null
+                      pol_atd_at: "2020-08-29T21:25:33Z"
+                      pol_timezone: "America/Mexico_City"
+                      pod_eta_at: "2020-09-18T21:25:33Z"
+                      pod_ata_at: null
+                      pod_timezone: "America/Los_Angeles"
+                    relationships:
+                      port_of_lading:
+                        data:
+                          id: "4384d6a5-5ccc-43b7-8d19-4a9525e74c08"
+                          type: "port"
+                      port_of_discharge:
+                        data:
+                          id: "2a765fdd-c479-4345-b71d-c4ef839952e2"
+                          type: "port"
+                      pod_terminal:
+                        data:
+                          id: "17891bc8-52da-40bf-8ff0-0247ec05faf1"
+                          type: "terminal"
+                      destination:
+                        data: null
+                      containers:
+                        data:
+                          -
+                            id: "b2fc728c-e2f5-4a99-8899-eb7b34ef22d7"
+                            type: "container"
+                    links:
+                      self: "/v2/shipments/b5b10c0a-8d18-46da-b4c2-4e5fa790e7da"
+                  -
+                    id: "b2fc728c-e2f5-4a99-8899-eb7b34ef22d7"
+                    type: "container"
+                    attributes:
+                      number: "ARDU1824900"
+                      seal_number: "139F1451"
+                      created_at: "2020-09-11T21:25:34Z"
+                      equipment_type: "dry"
+                      equipment_length: 40
+                      equipment_height: "standard"
+                      weight_in_lbs: 53507
+                      fees_at_pod_terminal: []
+                      holds_at_pod_terminal: []
+                      pickup_lfd: null
+                      pickup_appointment_at: null
+                      availability_known: true
+                      available_for_pickup: false
+                      pod_arrived_at: null
+                      pod_discharged_at: null
+                      final_destination_full_out_at: null
+                      pod_full_out_at: null
+                      empty_terminated_at: null
+                      pod_timezone: "America/Los_Angeles"
+                      final_destination_timezone: null
+                      empty_terminated_timezone: null
+                    relationships:
+                      shipment:
+                        data:
+                          id: "b5b10c0a-8d18-46da-b4c2-4e5fa790e7da"
+                          type: "shipment"
+                      pod_terminal:
+                        data:
+                          id: "17891bc8-52da-40bf-8ff0-0247ec05faf1"
+                          type: "terminal"
+                      transport_events:
+                        data:
+                          -
+                            id: "56078596-5293-4c84-9245-cca00a787265"
+                            type: "transport_event"
+                  -
+                    id: "56078596-5293-4c84-9245-cca00a787265"
+                    type: "transport_event"
+                    attributes:
+                      event: "container.transport.vessel_departed"
+                      created_at: "2020-09-11T21:25:34Z"
+                      voyage_number: null
+                      timestamp: "2020-08-29T21:25:33Z"
+                      location_locode: "MXZLO"
+                      timezone: "America/Los_Angeles"
+                    relationships:
+                      shipment:
+                        data:
+                          id: "b5b10c0a-8d18-46da-b4c2-4e5fa790e7da"
+                          type: "shipment"
+                      container:
+                        data:
+                          id: "b2fc728c-e2f5-4a99-8899-eb7b34ef22d7"
+                          type: "container"
+                      vessel:
+                        data: null
+                      location:
+                        data:
+                          id: "2a765fdd-c479-4345-b71d-c4ef839952e2"
+                          type: "port"
+                      terminal:
+                        data: null
+            Estimated Event:
+              value:
+                data:
+                  id: "d7e04138-b59d-4c41-9d2d-251d95bedd6e"
+                  type: "webhook_notification"
+                  attributes:
+                    id: "d7e04138-b59d-4c41-9d2d-251d95bedd6e"
+                    event: "shipment.estimated.arrival"
+                    delivery_status: "pending"
+                    created_at: "2020-09-11T21:25:34Z"
+                  relationships:
+                    reference_object:
+                      data:
+                        id: "b68bc6cb-2c37-43f6-889b-86a16b2b6fe6"
+                        type: "estimated_event"
+                    webhook:
+                      data:
+                        id: "614eab61-ae3c-4d40-bbe9-41200a172691"
+                        type: "webhook"
+                included:
+                  -
+                    id: "b68bc6cb-2c37-43f6-889b-86a16b2b6fe6"
+                    type: "estimated_event"
+                    attributes:
+                      created_at: "2020-04-06T19:02:46-07:00"
+                      estimated_timestamp: "2020-04-09T19:02:46-07:00"
+                      voyage_number: "A1C"
+                      event: "shipment.estimated.arrival"
+                      timezone: "America/Los_Angeles"
+                    relationships:
+                      shipment:
+                        data:
+                          id: "715ed64b-6195-49f6-9407-1383a8088bfd"
+                          type: "shipment"
+                      port:
+                        data:
+                          id: "ed4001a5-ad9d-43c3-883c-79354f422510"
+                          type: "port"
+                      vessel:
+                        data:
+                          id: "ebf68c6c-9d0d-4383-aa41-e097009dfb4c"
+                          type: "vessel"
+                  -
+                    id: "ed4001a5-ad9d-43c3-883c-79354f422510"
+                    type: "port"
+                    attributes:
+                      id: "ed4001a5-ad9d-43c3-883c-79354f422510"
+                      name: "Port of Oakland"
+                      code: "USOAK"
+                      state_abbr: "CA"
+                      city: "Oakland"
+                      country_code: "US"
+                      time_zone: "America/Los_Angeles"
+                  -
+                    id: "715ed64b-6195-49f6-9407-1383a8088bfd"
+                    type: "shipment"
+                    attributes:
+                      created_at: "2020-04-06T19:02:46-07:00"
+                      bill_of_lading_number: "TE49DD6650B9"
+                      ref_numbers:
+                        - "REF-4A25EA"
+                      shipping_line_scac: "MSCU"
+                      shipping_line_name: "Mediterranean Shipping Company"
+                      port_of_lading_locode: "MXZLO"
+                      port_of_lading_name: "Manzanillo"
+                      port_of_discharge_locode: "USOAK"
+                      port_of_discharge_name: "Port of Oakland"
+                      pod_vessel_name: "MSC CHANNE"
+                      pod_vessel_imo: "9710438"
+                      pod_voyage_number: "098N"
+                      destination_locode: null
+                      destination_name: null
+                      destination_timezone: null
+                      destination_ata_at: null
+                      destination_eta_at: null
+                      pol_etd_at: null
+                      pol_atd_at: null
+                      pol_timezone: "America/Mexico_City"
+                      pod_eta_at: "2020-04-13T19:02:46-07:00"
+                      pod_ata_at: null
+                      pod_timezone: "America/Los_Angeles"
+                    relationships:
+                      port_of_lading:
+                        data:
+                          id: "1378c720-efe9-4562-a2ad-562002eb4b1d"
+                          type: "port"
+                      port_of_discharge:
+                        data:
+                          id: "ed4001a5-ad9d-43c3-883c-79354f422510"
+                          type: "port"
+                      pod_terminal:
+                        data:
+                          id: "2508d879-4451-4d7f-ab23-92258b5df553"
+                          type: "terminal"
+                      destination:
+                        data: null
+                      containers:
+                        data: []
+                    links:
+                      self: "/v2/shipments/715ed64b-6195-49f6-9407-1383a8088bfd"
+            Transport Event:
+              value:
+                data:
+                  id: "abec839a-48fe-4540-93d7-d3ea3d67bdbf"
+                  type: "webhook_notification"
+                  attributes:
+                    id: "abec839a-48fe-4540-93d7-d3ea3d67bdbf"
+                    event: "container.transport.vessel_arrived"
+                    delivery_status: "pending"
+                    created_at: "2020-07-28T23:12:53Z"
+                  relationships:
+                    reference_object:
+                      data:
+                        id: "a6ecb8ab-98d6-4cab-8487-ce9dd7be082b"
+                        type: "transport_event"
+                    webhook:
+                      data:
+                        id: "534d498b-8332-439a-accb-129dfd144ceb"
+                        type: "webhook"
+                    webhook_notification_logs:
+                      data: []
+                included:
+                  -
+                    id: "a6ecb8ab-98d6-4cab-8487-ce9dd7be082b"
+                    type: "transport_event"
+                    attributes:
+                      event: "container.transport.vessel_arrived"
+                      created_at: "2020-07-28T23:12:53Z"
+                      voyage_number: null
+                      timestamp: "2020-07-28T23:12:53Z"
+                      timezone: "America/Los_Angeles"
+                    relationships:
+                      shipment:
+                        data:
+                          id: "1fc35241-4c8b-420d-803a-9e6661720a05"
+                          type: "shipment"
+                      container:
+                        data:
+                          id: "8c2f335a-b155-4021-87f0-9b040159a981"
+                          type: "container"
+                      vessel:
+                        data:
+                          id: "b381c692-8dad-4f04-873f-d9e567143335"
+                          type: "vessel"
+                      location:
+                        data:
+                          id: "f5a8a49f-d8b2-4d2a-8a43-0e4ff0ce7995"
+                          type: "port"
+                      terminal:
+                        data:
+                          id: "26fede8d-2c6d-4bf5-98d6-5a86d30f17a9"
+                          type: "terminal"
+                  -
+                    id: "f5a8a49f-d8b2-4d2a-8a43-0e4ff0ce7995"
+                    type: "port"
+                    attributes:
+                      id: "f5a8a49f-d8b2-4d2a-8a43-0e4ff0ce7995"
+                      name: "Port of Oakland"
+                      code: "USOAK"
+                      state_abbr: "CA"
+                      city: "Oakland"
+                      country_code: "US"
+                      time_zone: "America/Los_Angeles"
+                  -
+                    id: "1fc35241-4c8b-420d-803a-9e6661720a05"
+                    type: "shipment"
+                    attributes:
+                      created_at: "2020-07-28T23:12:53Z"
+                      bill_of_lading_number: "TE491846459E"
+                      ref_numbers:
+                        - null
+                      shipping_line_scac: "MSCU"
+                      shipping_line_name: "Mediterranean Shipping Company"
+                      port_of_lading_locode: "MXZLO"
+                      port_of_lading_name: "Manzanillo"
+                      port_of_discharge_locode: "USOAK"
+                      port_of_discharge_name: "Port of Oakland"
+                      pod_vessel_name: "MSC CHANNE"
+                      pod_vessel_imo: "9710438"
+                      pod_voyage_number: "098N"
+                      destination_locode: null
+                      destination_name: null
+                      destination_timezone: null
+                      destination_ata_at: null
+                      destination_eta_at: null
+                      pol_etd_at: null
+                      pol_atd_at: "2020-07-15T23:12:53Z"
+                      pol_timezone: "America/Mexico_City"
+                      pod_eta_at: "2020-08-04T23:12:53Z"
+                      pod_ata_at: null
+                      pod_timezone: "America/Los_Angeles"
+                    relationships:
+                      port_of_lading:
+                        data:
+                          id: "06564cb7-77d6-4e0e-8e4a-37756ca21bc9"
+                          type: "port"
+                      port_of_discharge:
+                        data:
+                          id: "f5a8a49f-d8b2-4d2a-8a43-0e4ff0ce7995"
+                          type: "port"
+                      pod_terminal:
+                        data:
+                          id: "06f5d3bb-f258-4f1b-8c2f-db78248f6e29"
+                          type: "terminal"
+                      destination:
+                        data: null
+                      containers:
+                        data:
+                          -
+                            id: "8c2f335a-b155-4021-87f0-9b040159a981"
+                            type: "container"
+                    links:
+                      self: "/v2/shipments/1fc35241-4c8b-420d-803a-9e6661720a05"
+            Container Updated Event:
+              value:
+                data:
+                  id: "416e293f-4423-47f7-abf3-1ae97054f41f"
+                  type: "webhook_notification"
+                  attributes:
+                    id: "416e293f-4423-47f7-abf3-1ae97054f41f"
+                    event: "container.updated"
+                    delivery_status: "pending"
+                    created_at: "2020-06-04T22:03:09Z"
+                  relationships:
+                    reference_object:
+                      data:
+                        id: "fc48cb10-b7a8-47a4-a12f-89bce7434978"
+                        type: "container_updated_event"
+                    webhook:
+                      data:
+                        id: "cda37836-aa40-455e-8b43-5fd74930c7f6"
+                        type: "webhook"
+                    webhook_notification_logs:
+                      data: []
+                included:
+                  -
+                    id: "fc48cb10-b7a8-47a4-a12f-89bce7434978"
+                    type: "container_updated_event"
+                    attributes:
+                      changeset:
+                        available_for_pickup:
+                          - false
+                          - true
+                        pod_terminal_holds:
+                          - null
+                          -
+                            -
+                              name: "customs"
+                              status: "hold"
+                              description: "CUST EXAM"
+                      timestamp: "2020-06-04T22:03:09Z"
+                      timezone: "America/Los_Angeles"
+                    relationships:
+                      container:
+                        data:
+                          id: "1445af31-991c-4d52-a183-6c3ea97cd6e8"
+                          type: "container"
+                      terminal:
+                        data:
+                          id: "07db0258-1911-4acf-8e70-0cfe4b100f80"
+                          type: "terminal"
+                  -
+                    id: "1445af31-991c-4d52-a183-6c3ea97cd6e8"
+                    type: "container"
+                    attributes:
+                      number: "GLDU1355602"
+                      seal_number: "431ac97412228532"
+                      created_at: "2020-05-04T22:03:09Z"
+                      equipment_type: "dry"
+                      equipment_length: 40
+                      equipment_height: "standard"
+                      weight_in_lbs: 55634
+                      fees_at_pod_terminal: []
+                      holds_at_pod_terminal: []
+                      pickup_lfd: null
+                      availability_known: true
+                      available_for_pickup: null
+                      pod_arrived_at: "2020-06-04T22:03:08Z"
+                      pod_discharged_at: "2020-06-04T22:03:08Z"
+                      final_destination_full_out_at: "2020-06-04T22:03:08Z"
+                      pod_full_out_at: null
+                      empty_terminated_at: null
+                      pod_timezone: "America/Los_Angeles"
+                      final_destination_timezone: null
+                      empty_terminated_timezone: null
+                    relationships:
+                      shipment:
+                        data: null
+                  -
+                    id: "07db0258-1911-4acf-8e70-0cfe4b100f80"
+                    type: "terminal"
+                    attributes:
+                      id: "07db0258-1911-4acf-8e70-0cfe4b100f80"
+                      nickname: "Denesik-Hintz"
+                      name: "Adams LLC Terminal"
+                      firms_code: "E005"
+                    relationships:
+                      port:
+                        data:
+                          id: "d8a92775-95f9-47be-a6d2-42542a32d5fc"
+                          type: "port"
+  operationId: "get-webhook-notification-id"
+  description: "\n"
+  tags:
+    - "Webhook Notifications"
+  parameters:
+    -
+      schema:
+        type: "string"
+      in: "query"
+      description: "Comma delimited list of relations to include."
+      name: "include"

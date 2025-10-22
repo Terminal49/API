@@ -1,0 +1,252 @@
+parameters:
+  -
+    schema:
+      type: "string"
+    name: "id"
+    in: "path"
+    required: true
+    description: "Tracking Request ID"
+get:
+  summary: "Get a single tracking request"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/tracking_request"
+              included:
+                type: "array"
+                items:
+                  anyOf:
+                    -
+                      $ref: "#/components/schemas/account"
+                    -
+                      $ref: "#/components/schemas/shipment"
+                    -
+                      $ref: "#/components/schemas/shipping_line"
+          examples:
+            With Status Created:
+              value:
+                data:
+                  id: "ba4cb904-827f-4038-8e31-1e92b3356218"
+                  type: "tracking_request"
+                  attributes:
+                    request_number: "MEDUFR030802"
+                    request_type: "bill_of_lading"
+                    scac: "MSCU"
+                    ref_numbers: []
+                    created_at: "2020-04-04T16:13:35-07:00"
+                    updated_at: "2020-04-04T17:13:35-07:00"
+                    status: "created"
+                    failed_reason: null
+                  relationships:
+                    tracked_object:
+                      data:
+                        id: "eb6f218a-0b4a-47f9-8ef9-759aa5e0ea83"
+                        type: "shipment"
+                  links:
+                    self: "/v2/tracking_requests/ba4cb904-827f-4038-8e31-1e92b3356218"
+                included:
+                  -
+                    id: "eb6f218a-0b4a-47f9-8ef9-759aa5e0ea83"
+                    type: "shipment"
+                    attributes:
+                      created_at: "2020-04-04T16:13:37-07:00"
+                      bill_of_lading_number: "MEDUFR030802"
+                      ref_numbers: []
+                      shipping_line_scac: "MSCU"
+                      shipping_line_name: "Mediterranean Shipping Company"
+                      port_of_lading_locode: "FRFOS"
+                      port_of_lading_name: "Fos-Sur-Mer"
+                      port_of_discharge_locode: "USOAK"
+                      port_of_discharge_name: "Oakland"
+                      pod_vessel_name: "MSC ALGECIRAS"
+                      pod_vessel_imo: "9605243"
+                      pod_voyage_number: "920A"
+                      destination_locode: "USOAK"
+                      destination_name: "Oakland"
+                      destination_timezone: "America/Los_Angeles"
+                      destination_ata_at: "2019-06-21T18:46:00-07:00"
+                      destination_eta_at: null
+                      pol_etd_at: null
+                      pol_atd_at: "2019-05-24T03:00:00-07:00"
+                      pol_timezone: "Europe/Paris"
+                      pod_eta_at: null
+                      pod_ata_at: "2019-06-21T18:46:00-07:00"
+                      pod_timezone: "America/Los_Angeles"
+                    relationships:
+                      port_of_lading:
+                        data:
+                          id: "6d8c6c29-72a6-49ad-87b7-fd045f202212"
+                          type: "port"
+                      port_of_discharge:
+                        data:
+                          id: "42d1ba3a-f4b8-431d-a6fe-49fd748a59e7"
+                          type: "port"
+                      pod_terminal:
+                        data: null
+                      destination:
+                        data:
+                          id: "42d1ba3a-f4b8-431d-a6fe-49fd748a59e7"
+                          type: "port"
+                      containers:
+                        data:
+                          -
+                            id: "11c1fa10-52a5-48e2-82f4-5523756b3d0f"
+                            type: "container"
+                    links:
+                      self: "/v2/shipments/eb6f218a-0b4a-47f9-8ef9-759aa5e0ea83"
+            Multiple containers:
+              value:
+                data:
+                  id: "62c30bd4-d7fc-40dc-9fd6-fb39224301f5"
+                  type: "tracking_request"
+                  attributes:
+                    request_number: "212157148"
+                    request_type: "bill_of_lading"
+                    scac: "MAEU"
+                    ref_numbers: []
+                    shipment_tags: []
+                    created_at: "2021-07-27T16:44:14Z"
+                    updated_at: "2021-07-27T17:44:14Z"
+                    status: "created"
+                    failed_reason: null
+                    is_retrying: false
+                    retry_count: null
+                  relationships:
+                    tracked_object:
+                      data:
+                        id: "dfc9f601-f6fe-412e-a71c-feabcc2dd4e3"
+                        type: "shipment"
+                    customer:
+                      data: null
+                  links:
+                    self: "/v2/tracking_requests/62c30bd4-d7fc-40dc-9fd6-fb39224301f5"
+                links:
+                  self: "https://api.terminal49.com/v2/tracking_requests/62c30bd4-d7fc-40dc-9fd6-fb39224301f5?filter%5Bstatus%5D=created"
+                included:
+                  -
+                    id: "dfc9f601-f6fe-412e-a71c-feabcc2dd4e3"
+                    type: "shipment"
+                    attributes:
+                      created_at: "2021-07-27T16:44:16Z"
+                      ref_numbers: null
+                      tags: []
+                      bill_of_lading_number: "212157148"
+                      shipping_line_scac: "MAEU"
+                      shipping_line_name: "Maersk"
+                      shipping_line_short_name: "Maersk"
+                      port_of_lading_locode: "MYTPP"
+                      port_of_lading_name: "Tanjung Pelepas"
+                      port_of_discharge_locode: null
+                      port_of_discharge_name: null
+                      pod_vessel_name: null
+                      pod_vessel_imo: null
+                      pod_voyage_number: null
+                      destination_locode: null
+                      destination_name: null
+                      destination_timezone: null
+                      destination_ata_at: null
+                      destination_eta_at: null
+                      pol_etd_at: null
+                      pol_atd_at: null
+                      pol_timezone: "Asia/Kuala_Lumpur"
+                      pod_eta_at: "2021-09-15T15:00:00Z"
+                      pod_ata_at: null
+                      pod_timezone: null
+                      line_tracking_last_attempted_at: null
+                      line_tracking_last_succeeded_at: "2021-07-27T16:44:16Z"
+                      line_tracking_stopped_at: null
+                      line_tracking_stopped_reason: null
+                    relationships:
+                      port_of_lading:
+                        data:
+                          id: "6c387786-252c-476d-9f99-7d835b6b978b"
+                          type: "port"
+                      port_of_discharge:
+                        data: null
+                      pod_terminal:
+                        data: null
+                      destination:
+                        data: null
+                      destination_terminal:
+                        data: null
+                      containers:
+                        data:
+                          -
+                            id: "965880c9-a37e-4ed7-a060-9c49c0f0c5ed"
+                            type: "container"
+                          -
+                            id: "ea1f8e08-fcdf-498d-9cb5-0c370b023eeb"
+                            type: "container"
+                          -
+                            id: "67f55105-8ea2-4137-9244-f9cc204f5766"
+                            type: "container"
+                          -
+                            id: "5ab5d058-772c-466c-bc73-0b8767ad5a79"
+                            type: "container"
+                    links:
+                      self: "/v2/shipments/dfc9f601-f6fe-412e-a71c-feabcc2dd4e3"
+    404:
+      description: "Not Found"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              errors:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/error"
+          examples: {}
+  operationId: "get-track-request-by-id"
+  description: "Get the details and status of an existing tracking request. "
+  tags:
+    - "Tracking Requests"
+  parameters:
+    -
+      schema:
+        type: "string"
+      in: "query"
+      name: "include"
+      description: "Comma delimited list of relations to include. 'tracked_object' is included by default."
+  x-internal: false
+patch:
+  summary: "Edit a tracking request"
+  operationId: "patch-track-request-by-id"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/tracking_request"
+  description: "Update a tracking request"
+  tags:
+    - "Tracking Requests"
+  requestBody:
+    content:
+      application/json:
+        schema:
+          type: "object"
+          properties:
+            data:
+              type: "object"
+              required:
+                - "attributes"
+                - "type"
+              properties:
+                attributes:
+                  type: "object"
+                  properties:
+                    ref_number:
+                      type: "string"
+                      example: "REFNUMBER11"
+                      description: "Tracking request ref number."

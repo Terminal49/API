@@ -1,0 +1,18 @@
+title: "links"
+type: "object"
+properties:
+  last:
+    type: "string"
+    format: "uri"
+  next:
+    type: "string"
+    format: "uri"
+  prev:
+    type: "string"
+    format: "uri"
+  first:
+    type: "string"
+    format: "uri"
+  self:
+    type: "string"
+    format: "uri"

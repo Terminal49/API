@@ -18,6 +18,65 @@
       "description": "Production"
     }
   ],
+  "tags": [
+    {
+      "name": "Containers"
+    },
+    {
+      "name": "Shipments"
+    },
+    {
+      "name": "Locations"
+    },
+    {
+      "name": "Events"
+    },
+    {
+      "name": "Tracking Requests"
+    },
+    {
+      "name": "Webhooks"
+    },
+    {
+      "name": "Webhook Notifications"
+    },
+    {
+      "name": "Ports"
+    },
+    {
+      "name": "Metro Areas"
+    },
+    {
+      "name": "Terminals"
+    },
+    {
+      "name": "Routing (Paid)"
+    }
+  ],
+  "security": [
+    {
+      "authorization": []
+    }
+  ],
+  "x-tagGroups": [
+    {
+      "name": "End Points",
+      "tags": [
+        "Shipments",
+        "Containers",
+        "Tracking Requests",
+        "Webhooks",
+        "Webhook Notifications",
+        "Metro Areas"
+      ]
+    },
+    {
+      "name": "Routing (Paid)",
+      "tags": [
+        "Routing (Paid)"
+      ]
+    }
+  ],
   "paths": {
     "/shipments": {
       "get": {
@@ -6526,25 +6585,6 @@
       }
     }
   },
-  "x-tagGroups": [
-    {
-      "name": "End Points",
-      "tags": [
-        "Shipments",
-        "Containers",
-        "Tracking Requests",
-        "Webhooks",
-        "Webhook Notifications",
-        "Metro Areas"
-      ]
-    },
-    {
-      "name": "Routing (Paid)",
-      "tags": [
-        "Routing (Paid)"
-      ]
-    }
-  ],
   "components": {
     "schemas": {
       "shipment": {
@@ -9683,45 +9723,5 @@
         "description": "`Token YOUR_API_TOKEN`\n\nThe APIs require authentication to be done using header-based API Key and Secret Authentication. \n\nAPI key and secret are sent va the `Authorization` request header.\n\nYou send your API key and secret in the following way:\n\n`Authorization: Token YOUR_API_KEY`"
       }
     }
-  },
-  "tags": [
-    {
-      "name": "Containers"
-    },
-    {
-      "name": "Shipments"
-    },
-    {
-      "name": "Locations"
-    },
-    {
-      "name": "Events"
-    },
-    {
-      "name": "Tracking Requests"
-    },
-    {
-      "name": "Webhooks"
-    },
-    {
-      "name": "Webhook Notifications"
-    },
-    {
-      "name": "Ports"
-    },
-    {
-      "name": "Metro Areas"
-    },
-    {
-      "name": "Terminals"
-    },
-    {
-      "name": "Routing (Paid)"
-    }
-  ],
-  "security": [
-    {
-      "authorization": []
-    }
-  ]
+  }
 }

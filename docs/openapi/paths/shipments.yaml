@@ -1,0 +1,450 @@
+get:
+  summary: "List shipments"
+  tags:
+    - "Shipments"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/shipment"
+              included:
+                type: "array"
+                items:
+                  anyOf:
+                    -
+                      $ref: "#/components/schemas/container"
+                    -
+                      $ref: "#/components/schemas/port"
+                    -
+                      $ref: "#/components/schemas/terminal"
+              links:
+                $ref: "#/components/schemas/links"
+              meta:
+                $ref: "#/components/schemas/meta"
+          examples:
+            En-route to NY with inland move:
+              value:
+                data:
+                  -
+                    id: "62738624-7032-4a50-892e-c55826228c25"
+                    type: "shipment"
+                    attributes:
+                      created_at: "2024-06-26T17:28:59Z"
+                      ref_numbers: []
+                      tags: []
+                      bill_of_lading_number: "OOLU2148468620"
+                      normalized_number: "2148468620"
+                      shipping_line_scac: "OOLU"
+                      shipping_line_name: "Orient Overseas Container Line"
+                      shipping_line_short_name: "OOCL"
+                      customer_name: "Sodor Steamworks"
+                      port_of_lading_locode: "CNNBG"
+                      port_of_lading_name: "Ningbo"
+                      port_of_discharge_locode: "USLAX"
+                      port_of_discharge_name: "Los Angeles"
+                      pod_vessel_name: "EVER FORWARD"
+                      pod_vessel_imo: "9850551"
+                      pod_voyage_number: "1119E"
+                      destination_locode: "USCLE"
+                      destination_name: "Cleveland"
+                      destination_timezone: "America/New_York"
+                      destination_ata_at: null
+                      destination_eta_at: "2024-07-02T08:00:00Z"
+                      pol_etd_at: null
+                      pol_atd_at: "2024-06-09T03:42:00Z"
+                      pol_timezone: "Asia/Shanghai"
+                      pod_eta_at: null
+                      pod_original_eta_at: null
+                      pod_ata_at: "2024-06-22T13:36:00Z"
+                      pod_timezone: "America/Los_Angeles"
+                      line_tracking_last_attempted_at: "2024-06-26T17:28:59Z"
+                      line_tracking_last_succeeded_at: "2024-06-26T17:28:59Z"
+                      line_tracking_stopped_at: null
+                      line_tracking_stopped_reason: null
+                    links:
+                      self: "/v2/shipments/62738624-7032-4a50-892e-c55826228c25"
+                    relationships:
+                      port_of_lading:
+                        data:
+                          id: "2a90c27b-c2ee-45e2-892f-5c695d74e2d0"
+                          type: "port"
+                      port_of_discharge:
+                        data:
+                          id: "47b27584-4ec9-4e2f-95e1-7a42928cc40c"
+                          type: "port"
+                      pod_terminal:
+                        data:
+                          id: "42c53b13-0d29-4fa6-8663-7343a56319f1"
+                          type: "terminal"
+                      destination:
+                        data:
+                          id: "3b1cc325-ffe9-400a-82ce-f5c4891af382"
+                          type: "port"
+                      destination_terminal:
+                        data:
+                          id: "ce22669e-14b2-4501-b782-f0a360f07cd0"
+                          type: "terminal"
+                      line_tracking_stopped_by_user:
+                        data: null
+                      containers:
+                        data:
+                          -
+                            id: "7aefc29e-0898-4825-8376-4f998b51d033"
+                            type: "container"
+                  -
+                    id: "baaa725e-aa0e-4937-ac78-54d9e2e8621e"
+                    type: "shipment"
+                    attributes:
+                      created_at: "2024-06-26T16:47:42Z"
+                      ref_numbers: []
+                      tags: []
+                      bill_of_lading_number: "HDMUTAOM72244900"
+                      normalized_number: "TAOM72244900"
+                      shipping_line_scac: "HDMU"
+                      shipping_line_name: "Hyundai Merchant Marine"
+                      shipping_line_short_name: "Hyundai"
+                      customer_name: "Sodor Steamworks"
+                      port_of_lading_locode: "CNQDG"
+                      port_of_lading_name: "Qingdao"
+                      port_of_discharge_locode: "USSAV"
+                      port_of_discharge_name: "Savannah"
+                      pod_vessel_name: "UMM SALAL"
+                      pod_vessel_imo: "9525857"
+                      pod_voyage_number: "0038E"
+                      destination_locode: "USROQ"
+                      destination_name: "Rossville"
+                      destination_timezone: "America/Chicago"
+                      destination_ata_at: null
+                      destination_eta_at: "2024-06-30T07:05:00Z"
+                      pol_etd_at: null
+                      pol_atd_at: "2024-05-07T03:01:00Z"
+                      pol_timezone: "Asia/Shanghai"
+                      pod_eta_at: null
+                      pod_original_eta_at: null
+                      pod_ata_at: "2024-06-20T21:27:00Z"
+                      pod_timezone: "America/New_York"
+                      line_tracking_last_attempted_at: "2024-06-26T16:48:04Z"
+                      line_tracking_last_succeeded_at: "2024-06-26T16:48:04Z"
+                      line_tracking_stopped_at: null
+                      line_tracking_stopped_reason: null
+                    links:
+                      self: "/v2/shipments/baaa725e-aa0e-4937-ac78-54d9e2e8621e"
+                    relationships:
+                      port_of_lading:
+                        data:
+                          id: "0ccbe8af-c8d0-4abd-a842-3bfad1d82024"
+                          type: "port"
+                      port_of_discharge:
+                        data:
+                          id: "6129528d-846e-4571-ae16-b5328a4285ab"
+                          type: "port"
+                      pod_terminal:
+                        data:
+                          id: "a243bdf8-0da3-4056-a6a7-05fe8ab43999"
+                          type: "terminal"
+                      destination:
+                        data:
+                          id: "87ca3f37-e4d1-46eb-9eb1-6b5ffafde95d"
+                          type: "port"
+                      destination_terminal:
+                        data: null
+                      line_tracking_stopped_by_user:
+                        data: null
+                      containers:
+                        data:
+                          -
+                            id: "772cd872-9677-4c68-9b7a-4e9e843b00e2"
+                            type: "container"
+                          -
+                            id: "52efc544-0de1-452f-bcf8-0290a6ce5c11"
+                            type: "container"
+                          -
+                            id: "3107692e-61ad-4b4c-b3d4-78348b2e37ff"
+                            type: "container"
+                  -
+                    id: "7721a48c-5e93-43c9-9f5f-5be10a87fdde"
+                    type: "shipment"
+                    attributes:
+                      created_at: "2024-06-26T16:28:39Z"
+                      ref_numbers: []
+                      tags: []
+                      bill_of_lading_number: "OOLU2738424980"
+                      normalized_number: "2738424980"
+                      shipping_line_scac: "OOLU"
+                      shipping_line_name: "Orient Overseas Container Line"
+                      shipping_line_short_name: "OOCL"
+                      customer_name: "Sodor Steamworks"
+                      port_of_lading_locode: "ITSPE"
+                      port_of_lading_name: "La Spezia"
+                      port_of_discharge_locode: "USSAV"
+                      port_of_discharge_name: "Savannah"
+                      pod_vessel_name: "OOCL GUANGZHOU"
+                      pod_vessel_imo: "9404869"
+                      pod_voyage_number: "162E"
+                      destination_locode: "USATL"
+                      destination_name: "Atlanta"
+                      destination_timezone: "America/New_York"
+                      destination_ata_at: null
+                      destination_eta_at: "2024-06-27T06:42:00Z"
+                      pol_etd_at: null
+                      pol_atd_at: "2024-06-05T08:03:00Z"
+                      pol_timezone: "Europe/Rome"
+                      pod_eta_at: null
+                      pod_original_eta_at: null
+                      pod_ata_at: "2024-06-23T15:34:00Z"
+                      pod_timezone: "America/New_York"
+                      line_tracking_last_attempted_at: "2024-06-26T16:28:39Z"
+                      line_tracking_last_succeeded_at: "2024-06-26T16:28:39Z"
+                      line_tracking_stopped_at: null
+                      line_tracking_stopped_reason: null
+                    links:
+                      self: "/v2/shipments/7721a48c-5e93-43c9-9f5f-5be10a87fdde"
+                    relationships:
+                      port_of_lading:
+                        data:
+                          id: "b5656766-a56f-4b32-8e03-d240e7519604"
+                          type: "port"
+                      port_of_discharge:
+                        data:
+                          id: "6129528d-846e-4571-ae16-b5328a4285ab"
+                          type: "port"
+                      pod_terminal:
+                        data:
+                          id: "a243bdf8-0da3-4056-a6a7-05fe8ab43999"
+                          type: "terminal"
+                      destination:
+                        data:
+                          id: "7daf9ea3-3018-4d62-b88c-43803df9030c"
+                          type: "port"
+                      destination_terminal:
+                        data:
+                          id: "022ef8fc-1e2a-4ad6-8eae-330d65eb1c8e"
+                          type: "terminal"
+                      line_tracking_stopped_by_user:
+                        data: null
+                      containers:
+                        data:
+                          -
+                            id: "2a25fd3e-a18e-47cc-9cea-62771e82d0f2"
+                            type: "container"
+                          -
+                            id: "6cdc725d-2b31-40f9-86dd-76225390a488"
+                            type: "container"
+                          -
+                            id: "2f1e9a9d-4689-4f4d-84a8-64409b56521d"
+                            type: "container"
+                  -
+                    id: "32b5ad78-43ba-42d9-bdc0-4cf12320e020"
+                    type: "shipment"
+                    attributes:
+                      created_at: "2024-06-26T15:59:52Z"
+                      ref_numbers: []
+                      tags: []
+                      bill_of_lading_number: "OOLU2738277190"
+                      normalized_number: "2738277190"
+                      shipping_line_scac: "OOLU"
+                      shipping_line_name: "Orient Overseas Container Line"
+                      shipping_line_short_name: "OOCL"
+                      customer_name: "Sodor Steamworks"
+                      port_of_lading_locode: "CNQDG"
+                      port_of_lading_name: "Qingdao"
+                      port_of_discharge_locode: "USLAX"
+                      port_of_discharge_name: "Los Angeles"
+                      pod_vessel_name: "EVER FORWARD"
+                      pod_vessel_imo: "9850551"
+                      pod_voyage_number: "1119E"
+                      destination_locode: "USMEM"
+                      destination_name: "Memphis"
+                      destination_timezone: "America/Chicago"
+                      destination_ata_at: null
+                      destination_eta_at: "2024-07-01T14:00:00Z"
+                      pol_etd_at: null
+                      pol_atd_at: "2024-06-02T18:22:00Z"
+                      pol_timezone: "Asia/Shanghai"
+                      pod_eta_at: null
+                      pod_original_eta_at: null
+                      pod_ata_at: "2024-06-22T13:36:00Z"
+                      pod_timezone: "America/Los_Angeles"
+                      line_tracking_last_attempted_at: "2024-06-26T15:59:52Z"
+                      line_tracking_last_succeeded_at: "2024-06-26T15:59:52Z"
+                      line_tracking_stopped_at: null
+                      line_tracking_stopped_reason: null
+                    links:
+                      self: "/v2/shipments/32b5ad78-43ba-42d9-bdc0-4cf12320e020"
+                    relationships:
+                      port_of_lading:
+                        data:
+                          id: "0ccbe8af-c8d0-4abd-a842-3bfad1d82024"
+                          type: "port"
+                      port_of_discharge:
+                        data:
+                          id: "47b27584-4ec9-4e2f-95e1-7a42928cc40c"
+                          type: "port"
+                      pod_terminal:
+                        data:
+                          id: "42c53b13-0d29-4fa6-8663-7343a56319f1"
+                          type: "terminal"
+                      destination:
+                        data:
+                          id: "ba0b9f68-2025-40ca-ae12-1c2210cca333"
+                          type: "port"
+                      destination_terminal:
+                        data:
+                          id: "d0ec0da1-8a3a-4b11-b1e3-5716bbc71dc3"
+                          type: "terminal"
+                      line_tracking_stopped_by_user:
+                        data: null
+                      containers:
+                        data:
+                          -
+                            id: "60d2fd62-14e2-4ca2-a927-9633fc58fdff"
+                            type: "container"
+                          -
+                            id: "0ffe3e75-b3df-4d20-b9f4-97bbbcec404d"
+                            type: "container"
+                  -
+                    id: "bd117d3b-8fa4-487c-9bab-25c15e227d1a"
+                    type: "shipment"
+                    attributes:
+                      created_at: "2024-06-26T15:59:35Z"
+                      ref_numbers: []
+                      tags: []
+                      bill_of_lading_number: "OOLU2147973020"
+                      normalized_number: "2147973020"
+                      shipping_line_scac: "OOLU"
+                      shipping_line_name: "Orient Overseas Container Line"
+                      shipping_line_short_name: "OOCL"
+                      customer_name: "Sodor Steamworks"
+                      port_of_lading_locode: "IDSUB"
+                      port_of_lading_name: "Surabaya"
+                      port_of_discharge_locode: "USLAX"
+                      port_of_discharge_name: "Los Angeles"
+                      pod_vessel_name: "CMA CGM A.LINCOLN"
+                      pod_vessel_imo: "9780859"
+                      pod_voyage_number: "1TU70E1MA"
+                      destination_locode: null
+                      destination_name: null
+                      destination_timezone: null
+                      destination_ata_at: null
+                      destination_eta_at: null
+                      pol_etd_at: null
+                      pol_atd_at: "2024-05-14T02:37:00Z"
+                      pol_timezone: "Asia/Jakarta"
+                      pod_eta_at: null
+                      pod_original_eta_at: null
+                      pod_ata_at: "2024-06-23T21:58:00Z"
+                      pod_timezone: "America/Los_Angeles"
+                      line_tracking_last_attempted_at: "2024-06-26T15:59:35Z"
+                      line_tracking_last_succeeded_at: "2024-06-26T15:59:35Z"
+                      line_tracking_stopped_at: null
+                      line_tracking_stopped_reason: null
+                    links:
+                      self: "/v2/shipments/bd117d3b-8fa4-487c-9bab-25c15e227d1a"
+                    relationships:
+                      port_of_lading:
+                        data:
+                          id: "4201ab42-c51f-48ac-b7a1-12146e02c6a2"
+                          type: "port"
+                      port_of_discharge:
+                        data:
+                          id: "47b27584-4ec9-4e2f-95e1-7a42928cc40c"
+                          type: "port"
+                      pod_terminal:
+                        data:
+                          id: "eaa2580c-5f5b-4198-85e4-821145d62098"
+                          type: "terminal"
+                      destination:
+                        data: null
+                      destination_terminal:
+                        data: null
+                      line_tracking_stopped_by_user:
+                        data: null
+                      containers:
+                        data:
+                          -
+                            id: "815ff702-fdb5-4455-a28e-314c345d7481"
+                            type: "container"
+                meta:
+                  size: 5
+                  total: 34044
+                links:
+                  self: "https://api.terminal49.com/v2/shipments?page[size]=5"
+                  current: "https://api.terminal49.com/v2/shipments?page[number]=1&page[size]=5"
+                  next: "https://api.terminal49.com/v2/shipments?page[number]=2&page[size]=5"
+                  last: "https://api.terminal49.com/v2/shipments?page[number]=6809&page[size]=5"
+    422:
+      description: "Unprocessable Entity"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              errors:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/error"
+          examples:
+            Errors:
+              value:
+                error:
+                  -
+                    title: "Invalid arrival_date_from"
+                    detail: "filter['arrival_from'] must be in the format 'YYYY-MM-DD' and a valid date"
+                  -
+                    title: "Invalid arrival_date_to"
+                    detail: "filter['arrival_from'] must be in the format 'YYYY-MM-DD' and a valid date"
+                  -
+                    title: "Invalid port_of_lading"
+                    detail: "port_of_discharge must be an array of 5 character UN/LOCODEs"
+                  -
+                    title: "Invalid port_of_discharge"
+                    detail: "port_of_discharge must be an array of 5 character UN/LOCODEs"
+  operationId: "get-shipments"
+  description: "Returns a list of your shipments. The shipments are returned sorted by creation date, with the most recent shipments appearing first.\n\nThis api will return all shipments associated with the account. Shipments created via the `tracking_request` API aswell as the ones added via the dashboard will be retuned via this endpoint. "
+  parameters:
+    -
+      schema:
+        type: "integer"
+        default: 1
+      in: "query"
+      name: "page[number]"
+      description: "\n"
+    -
+      schema:
+        type: "integer"
+        default: 30
+      in: "query"
+      name: "page[size]"
+      description: "\n"
+    -
+      schema:
+        type: "string"
+      in: "query"
+      name: "q"
+      description: "\nSearch shipments by master bill of lading, reference number, or container number."
+      deprecated: true
+    -
+      schema:
+        type: "string"
+      in: "query"
+      name: "include"
+      description: "Comma delimited list of relations to include"
+    -
+      schema:
+        type: "string"
+      in: "query"
+      name: "number"
+      description: "Search shipments by the original request tracking `request_number`"
+    -
+      schema:
+        type: "boolean"
+      in: "query"
+      name: "filter[tracking_stopped]"
+      description: "Filter shipments by whether they are still tracking or not"

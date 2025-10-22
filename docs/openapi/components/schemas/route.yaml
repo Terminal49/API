@@ -1,0 +1,84 @@
+title: "Route model"
+type: "object"
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  type:
+    type: "string"
+    enum:
+      - "route"
+  attributes:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        format: "uuid"
+      created_at:
+        type: "string"
+        format: "date-time"
+      updated_at:
+        type: "string"
+        format: "date-time"
+    required:
+      - "id"
+      - "created_at"
+      - "updated_at"
+  relationships:
+    type: "object"
+    properties:
+      cargo:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "container"
+            required:
+              - "id"
+              - "type"
+      shipment:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "shipment"
+            required:
+              - "id"
+              - "type"
+      route_locations:
+        type: "object"
+        properties:
+          data:
+            type: "array"
+            items:
+              type: "object"
+              properties:
+                id:
+                  type: "string"
+                  format: "uuid"
+                type:
+                  type: "string"
+                  enum:
+                    - "route_location"
+              required:
+                - "id"
+                - "type"
+required:
+  - "id"
+  - "type"
+  - "attributes"
+  - "relationships"

@@ -1,0 +1,108 @@
+get:
+  description: "Get a list of parties"
+  operationId: "list-parties"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/party"
+              links:
+                $ref: "#/components/schemas/links"
+              meta:
+                $ref: "#/components/schemas/meta"
+  parameters:
+    -
+      schema:
+        type: "integer"
+        default: 1
+      in: "query"
+      name: "page[number]"
+    -
+      schema:
+        type: "integer"
+        default: 25
+      in: "query"
+      name: "page[size]"
+      description: ""
+  tags:
+    - "Parties"
+post:
+  description: "Creates a new party"
+  operationId: "post-party"
+  responses:
+    201:
+      description: "Party Created"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/party"
+              links:
+                $ref: "#/components/schemas/link-self"
+          examples:
+            New Party:
+              value:
+                data:
+                  id: "ba4cb904-827f-4038-8e31-1e92b3356218"
+                  type: "party"
+                  attributes:
+                    company_name: "COMPANY NAME"
+                links:
+                  self: "/v2/parties/ba4cb904-827f-4038-8e31-1e92b3356218"
+      headers: {}
+    422:
+      description: "Unprocessable Entity"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              errors:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/error"
+          examples:
+            Error Examples:
+              value:
+                errors:
+                  -
+                    status: "422"
+                    source:
+                      pointer: "/data/attributes/company_name"
+                    title: "Unprocessable Entity"
+                    detail: "Company name can't be blank"
+                  -
+                    status: "422"
+                    source:
+                      pointer: "/data/attributes/customer"
+                    title: "Unprocessable Entity"
+                    detail: "'XXXX' already exists in Account"
+  requestBody:
+    content:
+      application/json:
+        schema:
+          type: "object"
+          properties:
+            data:
+              type: "object"
+              required:
+                - "attributes"
+              properties:
+                attributes:
+                  type: "object"
+                  properties:
+                    company_name:
+                      type: "string"
+                      example: "COMPANY NAME"
+                      description: "The name of the company"
+  tags:
+    - "Parties"

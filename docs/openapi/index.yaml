@@ -1,0 +1,173 @@
+openapi: "3.0.0"
+info:
+  title: "Terminal49 API Reference"
+  version: "0.2.0"
+  contact:
+    name: "Terminal49 API support"
+    url: "https://www.terminal49.com"
+    email: "support@terminal49.com"
+  description: "The Terminal 49 API offers a convenient way to programmatically track your shipments from origin to destination.\n\nPlease enter your API key into the \"Variables\" tab before using these endpoints within Postman."
+  x-label: "Beta"
+  termsOfService: "https://www.terminal49.com/terms"
+servers:
+  -
+    url: "https://api.terminal49.com/v2"
+    description: "Production"
+tags:
+  -
+    name: "Containers"
+  -
+    name: "Shipments"
+  -
+    name: "Locations"
+  -
+    name: "Events"
+  -
+    name: "Tracking Requests"
+  -
+    name: "Webhooks"
+  -
+    name: "Webhook Notifications"
+  -
+    name: "Ports"
+  -
+    name: "Metro Areas"
+  -
+    name: "Terminals"
+  -
+    name: "Routing (Paid)"
+security:
+  -
+    authorization: []
+x-tagGroups:
+  -
+    name: "End Points"
+    tags:
+      - "Shipments"
+      - "Containers"
+      - "Tracking Requests"
+      - "Webhooks"
+      - "Webhook Notifications"
+      - "Metro Areas"
+  -
+    name: "Routing (Paid)"
+    tags:
+      - "Routing (Paid)"
+paths:
+  /shipments:
+    $ref: "./paths/shipments.yaml"
+  "/shipments/{id}":
+    $ref: "./paths/shipments-id.yaml"
+  "/shipments/{id}/stop_tracking":
+    $ref: "./paths/shipments-id-stop-tracking.yaml"
+  "/shipments/{id}/resume_tracking":
+    $ref: "./paths/shipments-id-resume-tracking.yaml"
+  /tracking_requests:
+    $ref: "./paths/tracking-requests.yaml"
+  "/tracking_requests/{id}":
+    $ref: "./paths/tracking-requests-id.yaml"
+  "/webhooks/{id}":
+    $ref: "./paths/webhooks-id.yaml"
+  /webhooks:
+    $ref: "./paths/webhooks.yaml"
+  "/webhook_notifications/{id}":
+    $ref: "./paths/webhook-notifications-id.yaml"
+  /webhook_notifications:
+    $ref: "./paths/webhook-notifications.yaml"
+  /webhook_notifications/examples:
+    $ref: "./paths/webhook-notifications-examples.yaml"
+  /webhooks/ips:
+    $ref: "./paths/webhooks-ips.yaml"
+  /containers:
+    $ref: "./paths/containers.yaml"
+  "/containers/{id}":
+    $ref: "./paths/containers-id.yaml"
+  "/containers/{id}/raw_events":
+    $ref: "./paths/containers-id-raw-events.yaml"
+  "/containers/{id}/transport_events":
+    $ref: "./paths/containers-id-transport-events.yaml"
+  "/containers/{id}/route":
+    $ref: "./paths/containers-id-route.yaml"
+  "/containers/{id}/refresh":
+    $ref: "./paths/containers-id-refresh.yaml"
+  /shipping_lines:
+    $ref: "./paths/shipping-lines.yaml"
+  "/shipping_lines/{id}":
+    $ref: "./paths/shipping-lines-id.yaml"
+  "/metro_areas/{id}":
+    $ref: "./paths/metro-areas-id.yaml"
+  "/ports/{id}":
+    $ref: "./paths/ports-id.yaml"
+  "/vessels/{id}":
+    $ref: "./paths/vessels-id.yaml"
+  "/vessels/{imo}":
+    $ref: "./paths/vessels-imo.yaml"
+  "/vessels/{id}/future_positions":
+    $ref: "./paths/vessels-id-future-positions.yaml"
+  "/vessels/{id}/future_positions_with_coordinates":
+    $ref: "./paths/vessels-id-future-positions-with-coordinates.yaml"
+  "/terminals/{id}":
+    $ref: "./paths/terminals-id.yaml"
+  /parties:
+    $ref: "./paths/parties.yaml"
+  "/parties/{id}":
+    $ref: "./paths/parties-id.yaml"
+components:
+  schemas:
+    shipment:
+      $ref: "./components/schemas/shipment.yaml"
+    meta:
+      $ref: "./components/schemas/meta.yaml"
+    link-self:
+      $ref: "./components/schemas/link-self.yaml"
+    links:
+      $ref: "./components/schemas/links.yaml"
+    container:
+      $ref: "./components/schemas/container.yaml"
+    port:
+      $ref: "./components/schemas/port.yaml"
+    shipping_line:
+      $ref: "./components/schemas/shipping-line.yaml"
+    account:
+      $ref: "./components/schemas/account.yaml"
+    error:
+      $ref: "./components/schemas/error.yaml"
+    metro_area:
+      $ref: "./components/schemas/metro-area.yaml"
+    terminal:
+      $ref: "./components/schemas/terminal.yaml"
+    rail_terminal:
+      $ref: "./components/schemas/rail-terminal.yaml"
+    tracking_request:
+      $ref: "./components/schemas/tracking-request.yaml"
+    webhook:
+      $ref: "./components/schemas/webhook.yaml"
+    vessel:
+      $ref: "./components/schemas/vessel.yaml"
+    transport_event:
+      $ref: "./components/schemas/transport-event.yaml"
+    estimated_event:
+      $ref: "./components/schemas/estimated-event.yaml"
+    webhook_notification:
+      $ref: "./components/schemas/webhook-notification.yaml"
+    terminal_hold:
+      $ref: "./components/schemas/terminal-hold.yaml"
+    terminal_fee:
+      $ref: "./components/schemas/terminal-fee.yaml"
+    container_updated_event:
+      $ref: "./components/schemas/container-updated-event.yaml"
+    raw_event:
+      $ref: "./components/schemas/raw-event.yaml"
+    container_pod_terminal_changed_event:
+      $ref: "./components/schemas/container-pod-terminal-changed-event.yaml"
+    party:
+      $ref: "./components/schemas/party.yaml"
+    route:
+      $ref: "./components/schemas/route.yaml"
+    route_location:
+      $ref: "./components/schemas/route-location.yaml"
+    vessel_with_positions:
+      $ref: "./components/schemas/vessel-with-positions.yaml"
+  securitySchemes:
+    authorization:
+      $ref: "./components/securitySchemes/authorization.yaml"

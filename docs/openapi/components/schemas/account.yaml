@@ -1,0 +1,22 @@
+title: "Account model"
+type: "object"
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  type:
+    type: "string"
+    enum:
+      - "container"
+  attributes:
+    type: "object"
+    required:
+      - "company_name"
+    properties:
+      company_name:
+        type: "string"
+required:
+  - "id"
+  - "type"
+  - "attributes"
+x-examples: {}

@@ -1,0 +1,54 @@
+title: "Rail Terminal model"
+type: "object"
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  relationships:
+    type: "object"
+    properties:
+      port:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            nullable: true
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "port"
+      metro_area:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "metro_area"
+  attributes:
+    type: "object"
+    required:
+      - "name"
+    properties:
+      name:
+        type: "string"
+      nickname:
+        type: "string"
+      firms_code:
+        type: "string"
+        description: "CBP FIRMS Code or CBS Sublocation Code"
+  type:
+    type: "string"
+    enum:
+      - "rail_terminal"
+required:
+  - "attributes"

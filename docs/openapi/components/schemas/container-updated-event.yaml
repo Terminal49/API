@@ -1,0 +1,73 @@
+title: "container_updated_event"
+type: "object"
+properties:
+  id:
+    type: "string"
+  type:
+    type: "string"
+  attributes:
+    type: "object"
+    properties:
+      changeset:
+        type: "object"
+        description: "A hash of all the changed attributes with the values being an array of the before and after. E.g. \n`{\"pickup_lfd\": [null, \"2020-05-20\"]}`\n\nThe current attributes that can be alerted on are:\n- `available_for_pickup`\n- `pickup_lfd`\n- `fees_at_pod_terminal`\n- `holds_at_pod_terminal`\n- `pickup_appointment_at`\n- `pod_terminal`"
+      timestamp:
+        type: "string"
+        format: "date-time"
+        description: ""
+      timezone:
+        type: "string"
+        description: "IANA tz "
+      data_source:
+        type: "string"
+        enum:
+          - "terminal"
+        example: "terminal"
+    required:
+      - "changeset"
+      - "timestamp"
+  relationships:
+    type: "object"
+    required:
+      - "container"
+      - "terminal"
+    properties:
+      container:
+        type: "object"
+        required:
+          - "data"
+        properties:
+          data:
+            type: "object"
+            required:
+              - "id"
+              - "type"
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "container"
+      terminal:
+        type: "object"
+        description: ""
+        required:
+          - "data"
+        properties:
+          data:
+            type: "object"
+            required:
+              - "id"
+              - "type"
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "terminal"
+required:
+  - "relationships"

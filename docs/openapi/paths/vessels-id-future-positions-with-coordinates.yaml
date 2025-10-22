@@ -1,0 +1,82 @@
+parameters:
+  -
+    schema:
+      type: "string"
+    name: "id"
+    in: "path"
+    required: true
+get:
+  summary: "Get vessel future positions from coordinates"
+  tags:
+    - "Routing (Paid)"
+    - "Vessels"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/vessel_with_positions"
+              links:
+                type: "object"
+                properties:
+                  self:
+                    type: "string"
+                    format: "uri"
+    403:
+      description: "Forbidden - Routing data feature is not enabled for this account"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              errors:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    status:
+                      type: "string"
+                      example: "403"
+                    title:
+                      type: "string"
+                      example: "Forbidden"
+                    detail:
+                      type: "string"
+                      example: "Routing data feature is not enabled for this account"
+  operationId: "get-vessels-id-future-positions-with-coordinates"
+  description: "Returns the estimated route between two ports for a given vessel from a set of coordinates. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>"
+  parameters:
+    -
+      schema:
+        type: "string"
+        format: "uuid"
+      in: "query"
+      name: "port_id"
+      description: "The destination port id"
+      required: true
+    -
+      schema:
+        type: "string"
+        format: "uuid"
+      in: "query"
+      name: "previous_port_id"
+      description: "The previous port id"
+      required: true
+    -
+      schema:
+        type: "number"
+      in: "query"
+      name: "latitude"
+      description: "Starting latitude coordinate"
+      required: true
+    -
+      schema:
+        type: "number"
+      in: "query"
+      name: "longitude"
+      description: "Starting longitude coordinate"
+      required: true

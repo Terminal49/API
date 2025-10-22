@@ -1,0 +1,50 @@
+title: "Shipping line model"
+type: "object"
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  attributes:
+    type: "object"
+    required:
+      - "scac"
+      - "name"
+      - "alternative_scacs"
+      - "short_name"
+      - "bill_of_lading_tracking_support"
+      - "booking_number_tracking_support"
+      - "container_number_tracking_support"
+    properties:
+      scac:
+        type: "string"
+        minLength: 4
+        maxLength: 4
+      name:
+        type: "string"
+      alternative_scacs:
+        type: "array"
+        x-stoplight:
+          id: "jwf70hnip0xwb"
+        description: "Additional SCACs which will be accepted in tracking requests"
+        items:
+          x-stoplight:
+            id: "nrqnwg5y2u0ni"
+          type: "string"
+          minLength: 4
+          maxLength: 4
+      short_name:
+        type: "string"
+      bill_of_lading_tracking_support:
+        type: "boolean"
+      booking_number_tracking_support:
+        type: "boolean"
+      container_number_tracking_support:
+        type: "boolean"
+  type:
+    type: "string"
+    enum:
+      - "shipping_line"
+required:
+  - "id"
+  - "attributes"
+  - "type"

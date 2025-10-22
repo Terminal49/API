@@ -1,0 +1,47 @@
+title: "Port model"
+type: "object"
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  attributes:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      code:
+        type: "string"
+        description: "UN/LOCODE"
+      state_abbr:
+        type: "string"
+        x-stoplight:
+          id: "jixah1a0q3exs"
+        nullable: true
+      city:
+        type: "string"
+        x-stoplight:
+          id: "657ij4boc7kyv"
+        nullable: true
+      country_code:
+        type: "string"
+        description: "2 digit country code"
+      time_zone:
+        type: "string"
+        description: "IANA tz"
+      latitude:
+        type: "number"
+        x-stoplight:
+          id: "480os7a90z6kk"
+        nullable: true
+      longitude:
+        type: "number"
+        x-stoplight:
+          id: "nfdetqgx5p1yv"
+        nullable: true
+  type:
+    type: "string"
+    enum:
+      - "port"
+required:
+  - "id"
+  - "type"
