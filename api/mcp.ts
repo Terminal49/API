@@ -17,6 +17,8 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { Terminal49Client } from '../mcp-ts/src/client.js';
 import { getContainerTool, executeGetContainer } from '../mcp-ts/src/tools/get-container.js';
+import { trackContainerTool, executeTrackContainer } from '../mcp-ts/src/tools/track-container.js';
+import { searchContainerTool, executeSearchContainer } from '../mcp-ts/src/tools/search-container.js';
 import {
   containerResource,
   matchesContainerUri,
@@ -137,13 +139,45 @@ async function handleMcpRequest(
         return {
           jsonrpc: '2.0',
           result: {
-            tools: [getContainerTool],
+            tools: [searchContainerTool, trackContainerTool, getContainerTool],
           },
           id,
         };
 
       case 'tools/call': {
         const { name, arguments: args } = params as any;
+
+        if (name === 'search_container') {
+          const result = await executeSearchContainer(args, client);
+          return {
+            jsonrpc: '2.0',
+            result: {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify(result, null, 2),
+                },
+              ],
+            },
+            id,
+          };
+        }
+
+        if (name === 'track_container') {
+          const result = await executeTrackContainer(args, client);
+          return {
+            jsonrpc: '2.0',
+            result: {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify(result, null, 2),
+                },
+              ],
+            },
+            id,
+          };
+        }
 
         if (name === 'get_container') {
           const result = await executeGetContainer(args, client);
