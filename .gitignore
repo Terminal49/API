@@ -1,5 +1,6 @@
 .DS_Store
 
+.vercel
 .env.local
 .env.development.local
 
