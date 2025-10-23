@@ -23,43 +23,15 @@ bundle-fast:
     @echo "✅ Bundle complete (validation skipped)"
 
 # ========================================
-# OpenAPI Bundling (Redocly - Optional)
-# ========================================
-
-# Bundle using Redocly CLI (requires Bun/Node.js)
-bundle-redocly:
-    @echo "🔄 Bundling with Redocly CLI..."
-    bunx redocly bundle docs/openapi/index.yaml -o docs/openapi.json
-    @echo "✅ Bundle complete"
-
-# Bundle with full dereferencing (no $ref in output)
-bundle-dereferenced:
-    @echo "🔄 Bundling with full dereferencing..."
-    bunx redocly bundle docs/openapi/index.yaml -o docs/openapi-dereferenced.json --dereferenced
-    @echo "✅ Dereferenced bundle created"
-
-# ========================================
 # Linting & Validation
 # ========================================
 
-# Lint with Spectral (default linter, used in CI)
-# Note: Lints the bundled JSON file, not modular YAML
+# Lint OpenAPI with Mintlify CLI
 lint:
-    @echo "🔍 Linting bundled OpenAPI with Spectral..."
-    bunx spectral lint docs/openapi.json
-
-# Lint with Redocly CLI (optional, stricter rules)
-# Note: May show more warnings than Spectral
-# Configure rules in .redocly.yaml
-lint-redocly:
-    @echo "🔍 Linting with Redocly (stricter rules)..."
-    bunx redocly lint docs/openapi/index.yaml
-
-# Run both linters
-lint-all:
-    @echo "🔍 Running all linters..."
-    @just lint
-    @just lint-redocly
+    @echo "🔄 Ensuring OpenAPI bundle is up to date..."
+    @just bundle-fast
+    @echo "🔍 Linting OpenAPI with Mintlify CLI..."
+    npx -y mintlify openapi-check docs/openapi.json
 
 # ========================================
 # Testing
@@ -74,8 +46,9 @@ test:
 validate: bundle lint test
     @echo "✅ All validations passed"
 
-# Full validation with both linters
-validate-full: bundle lint-all test
+# Full validation (kept for backwards compatibility)
+validate-full:
+    @just validate
     @echo "✅ All validations passed (full)"
 
 # ========================================
@@ -88,25 +61,9 @@ watch:
     @echo "Press Ctrl+C to stop"
     bun run watch
 
-# Watch and use Redocly
-watch-redocly:
-    @echo "👀 Watching with Redocly..."
-    bunx chokidar 'docs/openapi/**/*.yaml' -c 'bunx redocly bundle docs/openapi/index.yaml -o docs/openapi.json' --initial
-
-# Show OpenAPI spec statistics
-stats:
-    @echo "📊 OpenAPI Statistics:"
-    bunx redocly stats docs/openapi/index.yaml
-
 # ========================================
 # Documentation Preview
 # ========================================
-
-# Preview OpenAPI with Redocly (interactive API docs)
-preview:
-    @echo "🌐 Starting Redocly preview server..."
-    @echo "Opens at http://localhost:8080"
-    bunx redocly preview-docs docs/openapi/index.yaml
 
 # Preview full docs with Mintlify (includes MDX content)
 preview-mintlify:
@@ -148,6 +105,17 @@ uninstall-hooks:
 setup:
     @echo "🚀 Setting up development environment..."
     @echo ""
+    @echo "🛠️  Installing toolchain with mise..."
+    mise install
+    @echo ""
+    @if command -v uv >/dev/null 2>&1; then \
+        echo "🐍 Installing Python deps with uv..."; \
+        uv pip install --upgrade --quiet -r requirements-dev.txt; \
+    else \
+        echo "🐍 Installing Python deps with pip..."; \
+        python -m pip install --upgrade --quiet -r requirements-dev.txt; \
+    fi
+    @echo ""
     @echo "📦 Installing Bun dependencies..."
     bun install
     @echo ""
@@ -158,9 +126,9 @@ setup:
     @echo ""
     @echo "Try these commands:"
     @echo "  just bundle      - Bundle with Python (production)"
-    @echo "  just lint        - Lint with Spectral"
+    @echo "  just lint        - Lint with Mintlify CLI"
     @echo "  just watch       - Auto-bundle on file changes"
-    @echo "  just preview     - Preview docs locally"
+    @echo "  just preview-mintlify - Preview docs locally"
 
 # Install Bun dependencies
 install:
@@ -228,16 +196,14 @@ help:
     @echo ""
     @echo "📦 Building:"
     @echo "  just bundle          - Bundle OpenAPI with Python (production)"
-    @echo "  just bundle-redocly  - Bundle OpenAPI with Redocly CLI (optional)"
     @echo "  just validate        - Bundle + lint + test"
     @echo ""
     @echo "👀 Development:"
     @echo "  just watch           - Auto-bundle on file changes"
-    @echo "  just preview         - Preview OpenAPI with Redocly"
     @echo "  just preview-mintlify - Preview full docs with Mintlify"
     @echo ""
     @echo "🔍 Quality:"
-    @echo "  just lint            - Lint with Spectral"
+    @echo "  just lint            - Lint with Mintlify CLI"
     @echo "  just test            - Run regression tests"
     @echo ""
     @echo "For full command list: just --list"

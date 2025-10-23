@@ -71,22 +71,16 @@ Terminal49-API.postman_collection.json  # Auto-generated from openapi.json
 
 The `docs/openapi.json` file is bundled from modular YAML sources. If you edit it directly, your changes will be overwritten!
 
-### Hybrid Bundling Approach
+### Bundling Approach
 
-We support **two bundling methods** – developers choose their preference:
+The repository uses a single, battle-tested bundling flow:
 
-1. **Python Bundler** (Production, CI/CD)
+- **Python Bundler** (production + local)
+  - Zero external dependencies beyond Python
+  - Validates schema structure while bundling
+  - Command: `just bundle` or `python -m tools.openapi_bundle docs/openapi/index.yaml docs/openapi.json`
 
-   - Zero dependencies, fast, proven
-   - Used in GitHub Actions
-   - Command: `just bundle` or `python -m tools.openapi_bundle docs/openapi/index.yaml docs/openapi.json`
-
-2. **Redocly CLI** (Optional, Development)
-   - Industry standard, better error messages, more features
-   - Requires Bun/Node.js
-   - Command: `just bundle-redocly` or `bun redocly bundle docs/openapi/index.yaml -o docs/openapi.json`
-
-Both produce **identical output**. Use whichever you prefer during development.
+For a faster iteration loop you can skip validation with `just bundle-fast`, but always run the full bundle before committing.
 
 ### Task Runner: Justfile
 
@@ -96,13 +90,13 @@ We use `just` (modern alternative to Make) for task running:
 just --list          # Show all commands
 just setup           # First-time setup
 just bundle          # Bundle with Python
-just bundle-redocly  # Bundle with Redocly CLI
-just lint            # Lint with Spectral
+just bundle-fast     # Bundle with Python (skip validation)
+just lint            # Lint with Mintlify CLI
 just validate        # Bundle + lint + test
 just watch           # Auto-bundle on file changes
-just preview         # Preview OpenAPI with Redocly
 just preview-mintlify # Preview full docs with Mintlify
 just dev             # Bundle + lint + preview (recommended workflow)
+just dev-full        # Full validation then Mintlify preview
 ```
 
 For full command list, see `justfile`.
@@ -213,10 +207,11 @@ just postman
 - **docs/openapi.json** - Bundled output (auto-generated, don't edit)
 - **justfile** - All available commands
 - **tools/openapi_bundle.py** - Python bundler with validation
-- **package.json** - Optional Bun/Node.js tools (Redocly, etc.)
+- **package.json** - CLI scripts (Mintlify CLI, chokidar)
+- **.tool-versions** - `mise` runtime pins (Node.js, Bun, Python)
+- **requirements-dev.txt** - Python dependencies for the bundler (`PyYAML`)
 - **scripts/pre-commit.sh** - Auto-bundling hook
 - **docs/mint.json** - Navigation structure, tabs, branding
-- **.spectral.mjs** - Stoplight linting configuration
 
 ## Development Setup
 
@@ -228,13 +223,22 @@ just setup
 
 This installs:
 
-- Bun dependencies (Redocly CLI, Spectral, chokidar)
+- Toolchain pinned in `.tool-versions` via `mise install` (Node.js, Bun, Python)
+- Python dependencies from `requirements-dev.txt` (uses `uv` when available, falls back to `pip`)
+- Bun dependencies (Mintlify CLI for linting, chokidar for watch mode)
 - Pre-commit hook for auto-bundling
 
 **Manual setup:**
 
 ```bash
-# Install Bun dependencies (optional)
+# Install toolchain
+mise install
+
+# Install Python deps
+# (preferred) uv pip install -r requirements-dev.txt
+# (fallback)  python -m pip install -r requirements-dev.txt
+
+# Install Bun dependencies (optional when using bun workloads)
 bun install
 
 # Install pre-commit hook
@@ -245,14 +249,13 @@ just install-hooks
 
 ### Linting
 
-Two linters available:
+We rely on the Mintlify CLI to validate the modular OpenAPI spec:
 
 ```bash
-just lint              # Spectral (default, fast)
-just lint-redocly      # Redocly CLI (better errors, requires Bun)
-just lint-all          # Run both
+just lint              # Mintlify openapi-check (requires Node >= 18)
 ```
 
+The recipe bundles (skipping validation) before invoking `mintlify openapi-check`, so the CLI verifies the generated `docs/openapi.json` that Mintlify consumes.
 ### Schema Validation
 
 The Python bundler includes automatic validation:
@@ -332,14 +335,12 @@ Workflows use `[skip ci]` in auto-generated commits to prevent infinite loops.
 **Bundling speed** (9700+ line spec):
 
 - Python bundler: ~100-200ms
-- Redocly CLI: ~150-300ms
 
 **Linting speed:**
 
-- Spectral: ~1-2s for 1MB spec
-- Redocly CLI: <1s for 1MB spec
+- Mintlify CLI (`openapi-check`): ~1s for 1MB spec (depends on Node runtime)
 
-Both are fast enough for local development. Python is used in CI for zero Node.js dependency.
+Both are fast enough for local development. Python is used in CI for zero Node.js dependency, and Mintlify CLI provides OpenAPI validation aligned with our hosted docs.
 
 ## Troubleshooting
 
@@ -382,7 +383,7 @@ These are reference data used in documentation or validation.
 - **OpenAPI workflow:** `docs/openapi/README.md`
 - **Detailed guide:** `docs/openapi/DEVELOPER_GUIDE.md`
 - **Python bundler:** `python -m tools.openapi_bundle --help`
-- **Redocly docs:** https://redocly.com/docs/cli
+- **Mintlify CLI:** `npx mintlify --help`
 
 ## When Claude Code Works on This Repo
 

@@ -21,19 +21,21 @@ just setup
 
 # Bundle OpenAPI
 just bundle              # Python (production method)
-just bundle-redocly      # Redocly CLI (optional)
+just bundle-fast         # Python (skip validation, faster iteration)
 
 # Validate everything
 just validate            # Bundle + lint + test
 
 # Development
 just watch               # Auto-bundle on file changes
-just preview             # Preview docs locally
+just preview-mintlify    # Preview docs locally (Mintlify)
 
 # Maintenance
-just lint                # Lint with Spectral
+just lint                # Lint with Mintlify CLI
 just test                # Run regression test
 ```
+
+Run `mise install` (or simply `just setup`) to pull the Node.js/Bun/Python versions pinned in `.tool-versions`; `just setup` also installs the bundler dependencies from `requirements-dev.txt` (using `uv` when available) and fetches Bun packages. If your shell is outside mise, run `mise shell` or prefix commands with `mise exec --` (for example, `mise exec -- just validate`).
 
 ### File Locations Cheat Sheet
 
@@ -45,6 +47,8 @@ just test                # Run regression test
 | Bundled output | `docs/openapi.json` (auto-generated) |
 | Task commands | `justfile` (root directory) |
 | Bundler implementation | `tools/openapi_bundle.py` |
+| Toolchain pins | `.tool-versions` |
+| Python bundler deps | `requirements-dev.txt` |
 | Pre-commit hook | `scripts/pre-commit.sh` |
 
 ## Understanding the Architecture
@@ -88,18 +92,13 @@ $ref: "./shipment.yaml#/properties/id"
 
 The bundler resolves all external `$ref`s into a single `openapi.json` file.
 
-### The Two Bundlers
+### Bundling Strategy
 
-| Feature | Python Bundler | Redocly CLI |
-|---------|---------------|-------------|
-| **Production use** | ✅ Yes (CI/CD) | ❌ No (dev only) |
-| **Dependencies** | None (stdlib only) | Requires Bun/Node.js |
-| **Speed** | ~100-200ms | ~150-300ms |
-| **Error messages** | Good (enhanced) | Excellent |
-| **Extra features** | Schema validation | Lint, preview, stats |
-| **Command** | `just bundle` | `just bundle-redocly` |
+The Python bundler is the single path for generating `docs/openapi.json`. It validates schema structure as it assembles the modular YAML files.
 
-**Recommendation:** Use either during development, but Python is required for CI/CD.
+- Standard run: `just bundle`
+- Skip validation when iterating: `just bundle-fast`
+- The same code runs in CI, so matching it locally avoids surprises.
 
 ## Development Workflows
 
@@ -198,25 +197,7 @@ The bundler resolves all external `$ref`s into a single `openapi.json` file.
 
 **Best for:** Seeing how changes look before deploying
 
-#### Option A: Redocly Preview (OpenAPI Only)
-
-1. **Start preview server**:
-   ```bash
-   just preview
-   # Opens http://localhost:8080
-   # Shows interactive API docs from openapi.json
-   ```
-
-2. **Make changes** to YAML files
-
-3. **Rebuild** (in another terminal):
-   ```bash
-   just bundle
-   ```
-
-4. **Refresh** browser to see changes
-
-#### Option B: Mintlify Preview (Full Documentation)
+#### Mintlify Preview (Full Documentation)
 
 **Recommended for comprehensive preview**
 
@@ -229,7 +210,7 @@ The bundler resolves all external `$ref`s into a single `openapi.json` file.
 
    This runs:
    - Bundle OpenAPI with Python
-   - Lint with Spectral
+   - Lint with Mintlify CLI
    - Start Mintlify dev server
 
 2. **Or with full validation**:
@@ -359,13 +340,13 @@ just validate
 
 This runs:
 1. Bundle with schema validation
-2. Spectral lint
+2. Mintlify OpenAPI check
 3. Regression test (ensures bundle matches)
 
 **Check lint errors seriously:**
 ```bash
 just lint
-# Fix all errors and warnings
+# Fix all errors and warnings (requires Node.js ≥ 18)
 ```
 
 **Test CI locally:**
@@ -454,18 +435,6 @@ write_bundle(
     Path("docs/openapi.json"),
     validate_schemas=True
 )
-```
-
-Use Redocly in Node.js:
-
-```javascript
-import { bundle, loadConfig } from '@redocly/openapi-core';
-
-const config = await loadConfig();
-const result = await bundle({
-  ref: 'docs/openapi/index.yaml',
-  config
-});
 ```
 
 ### Automation Ideas
@@ -570,9 +539,6 @@ git commit
 ```bash
 # Skip validation (faster)
 just bundle-fast
-
-# Or use Redocly (faster bundler)
-just bundle-redocly
 ```
 
 ## Getting More Help
@@ -580,7 +546,7 @@ just bundle-redocly
 - **README:** `docs/openapi/README.md`
 - **Justfile commands:** `just --list` or `cat justfile`
 - **Python bundler help:** `python -m tools.openapi_bundle --help`
-- **Redocly docs:** https://redocly.com/docs/cli
+- **Mintlify CLI help:** `mintlify --help`
 - **OpenAPI spec:** https://spec.openapis.org/oas/v3.0.3
 - **JSONAPI spec:** https://jsonapi.org/format/
 
@@ -592,7 +558,7 @@ When contributing OpenAPI changes:
 2. **Add examples** for new endpoints
 3. **Document** all fields with descriptions
 4. **Validate** before committing: `just validate`
-5. **Test** that docs render correctly: `just preview`
+5. **Test** that docs render correctly: `just preview-mintlify`
 6. **Keep PRs focused** – one feature/fix per PR
 
 ## Appendix: File Structure Example

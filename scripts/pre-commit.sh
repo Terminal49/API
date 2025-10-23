@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Pre-commit hook for OpenAPI bundling
 # This ensures the bundled openapi.json is always in sync with the modular YAML sources
 
@@ -10,12 +10,26 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Resolve a Python runtime (python, python3, or mise-managed)
+run_python() {
+    if command -v python >/dev/null 2>&1; then
+        python "$@"
+    elif command -v python3 >/dev/null 2>&1; then
+        python3 "$@"
+    elif command -v mise >/dev/null 2>&1; then
+        mise exec -- python "$@"
+    else
+        echo -e "${RED}❌ No Python interpreter found. Install one via mise (just setup) or add python to PATH.${NC}"
+        exit 1
+    fi
+}
+
 # Check if any OpenAPI YAML files were modified
 if git diff --cached --name-only | grep -q "^docs/openapi/.*\.yaml$"; then
     echo -e "${YELLOW}🔄 OpenAPI YAML files changed, regenerating bundle...${NC}"
 
     # Run the bundler
-    if python -m tools.openapi_bundle docs/openapi/index.yaml docs/openapi.json; then
+    if run_python -m tools.openapi_bundle docs/openapi/index.yaml docs/openapi.json; then
         echo -e "${GREEN}✅ Bundle regenerated successfully${NC}"
 
         # Check if the bundle changed
@@ -40,7 +54,7 @@ if git diff --cached --name-only | grep -q "^docs/openapi.json$"; then
 
     # Create a temp file with the freshly bundled version
     TEMP_BUNDLE=$(mktemp)
-    python -m tools.openapi_bundle docs/openapi/index.yaml "$TEMP_BUNDLE" 2>/dev/null || {
+    run_python -m tools.openapi_bundle docs/openapi/index.yaml "$TEMP_BUNDLE" 2>/dev/null || {
         echo -e "${RED}❌ Failed to create verification bundle${NC}"
         rm -f "$TEMP_BUNDLE"
         exit 1

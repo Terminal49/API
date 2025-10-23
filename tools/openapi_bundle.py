@@ -89,7 +89,11 @@ def _resolve(value: Any, current_file: Path, stack: set[Tuple[Path, str | None]]
                                     error_msg.append(f"  ... and {len(resolved.keys()) - 10} more")
                             raise BundleError("\n".join(error_msg))
             return _resolve(resolved, target_file, stack | {key})
-        return {k: _resolve(v, current_file, stack) for k, v in value.items()}
+        normalized: Dict[str, Any] = {}
+        for k, v in value.items():
+            key = k if isinstance(k, str) else str(k)
+            normalized[key] = _resolve(v, current_file, stack)
+        return normalized
     if isinstance(value, list):
         return [_resolve(item, current_file, stack) for item in value]
     return value

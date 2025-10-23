@@ -36,6 +36,8 @@ just dev
 # Auto-reloads on changes
 ```
 
+The project pins its toolchain via `.tool-versions` (Node.js 20, Bun 1.1, Python 3.11). `just setup` runs `mise install`, installs the Python requirements from `requirements-dev.txt` (using `uv` when available), fetches Bun dependencies, and wires up the pre-commit hook. If your shell is not already managed by mise, run `mise shell` or prefix commands with `mise exec --` (e.g., `mise exec -- just lint`).
+
 **Alternative commands:**
 ```bash
 # Bundle OpenAPI only
@@ -46,9 +48,6 @@ just validate
 
 # Watch for changes and auto-bundle
 just watch
-
-# Preview with Redocly (OpenAPI only)
-just preview
 ```
 
 **Traditional commands (without justfile):**
@@ -56,11 +55,11 @@ just preview
 # Bundle with Python (production method)
 python -m tools.openapi_bundle docs/openapi/index.yaml docs/openapi.json
 
-# Or bundle with Redocly CLI (optional, requires Bun)
-bun redocly bundle docs/openapi/index.yaml -o docs/openapi.json
+# Validate OpenAPI with Mintlify CLI (expects bundled JSON)
+npx -y mintlify openapi-check docs/openapi.json
 
 # Preview with Mintlify
-bun mintlify dev
+npx -y mintlify dev
 ```
 
 ## Editing Workflow
@@ -93,7 +92,8 @@ bun mintlify dev
 3. Validate your changes:
    ```bash
    just validate
-   # or: spectral lint docs/openapi/index.yaml && python -m unittest tests.test_openapi_bundle
+   # or: python -m tools.openapi_bundle docs/openapi/index.yaml docs/openapi.json --no-validate
+   #     && mintlify openapi-check docs/openapi.json
    ```
 
 4. Commit both the YAML sources and regenerated `docs/openapi.json`
@@ -109,16 +109,13 @@ just watch
 
 This watches `docs/openapi/**/*.yaml` and auto-runs the bundler whenever you save changes.
 
-## Bundling Methods: Python vs. Redocly
+## Bundling
 
-We support **two bundling methods** – choose based on your workflow:
+The Python bundler is used everywhere (local + CI) to generate `docs/openapi.json`. It performs schema validation while producing the bundle.
 
-| Method | Command | Use Case | Pros | Cons |
-|--------|---------|----------|------|------|
-| **Python** | `just bundle` | Production, CI/CD | Zero dependencies, fast, proven | Fewer features |
-| **Redocly** | `just bundle-redocly` | Local development | Industry standard, better errors, more features | Requires Node.js/Bun |
-
-Both produce identical `docs/openapi.json` output. **CI/CD uses Python only** (no Node.js dependency).
+- Standard run: `just bundle`
+- Skip validation (faster iteration): `just bundle-fast`
+- Direct command: `python -m tools.openapi_bundle docs/openapi/index.yaml docs/openapi.json`
 
 ## Adding New Endpoints or Schemas
 
@@ -151,38 +148,19 @@ Both produce identical `docs/openapi.json` output. **CI/CD uses Python only** (n
 
 ## Linting and Validation
 
-We support **two linters** with different philosophies:
+Mintlify's CLI is the single source of truth for OpenAPI validation. Always bundle before linting so the CLI operates on `docs/openapi.json`:
 
-### Spectral (Primary Linter)
 ```bash
 just lint
-# or: bunx spectral lint docs/openapi/index.yaml
+# or: python -m tools.openapi_bundle docs/openapi/index.yaml docs/openapi.json --no-validate \
+#     && mintlify openapi-check docs/openapi.json
 ```
 
-- **Used in CI/CD** - must pass for PRs to merge
-- Uses `.spectral.mjs` ruleset
-- Focused on OpenAPI spec compliance
-- Less strict, more practical
+- Validates the bundled spec that Mintlify serves (ensures parity with production)
+- Matches the validation Mintlify applies when rendering docs
+- Requires Node.js ≥ 18 (use `nvm`, `asdf`, or Bun to provide a compatible runtime)
 
-### Redocly CLI (Optional, Stricter)
-```bash
-just lint-redocly
-# or: bunx redocly lint docs/openapi/index.yaml
-```
-
-- **Optional** - for extra validation during development
-- Uses `.redocly.yaml` config (customized for our API)
-- Stricter rules, catches more style issues
-- May show warnings that Spectral doesn't flag
-- Requires Bun/Node.js
-
-**Recommendation:** Run `just lint` (Spectral) before committing. Use `just lint-redocly` optionally for deeper validation.
-
-### Run Both
-```bash
-just lint-all
-# Runs Spectral + Redocly
-```
+Run the linter as part of your workflow before committing or opening a PR.
 
 ## Schema Validation
 
@@ -257,7 +235,7 @@ just split
 
 A GitHub Actions workflow (`.github/workflows/openapi-validation.yml`) runs on every PR:
 
-1. Lints with Spectral
+1. Lints with Mintlify CLI
 2. Bundles with Python
 3. Validates bundle matches committed `openapi.json`
 
@@ -270,8 +248,9 @@ If you forget to bundle or have lint errors, CI will fail.
 - `tools/openapi_yaml.py` – Minimal YAML parser
 - `tests/test_openapi_bundle.py` – Bundle regression test
 - `scripts/pre-commit.sh` – Pre-commit hook for auto-bundling
-- `package.json` – Bun/Node.js dependencies (Redocly, etc.)
-- `.spectral.mjs` – Spectral lint configuration
+- `package.json` – CLI scripts (Mintlify CLI, chokidar)
+- `.tool-versions` – `mise`-managed Node.js/Bun/Python versions
+- `requirements-dev.txt` – Python dependencies for the bundler (PyYAML)
 - `.watchmanconfig` – Watchman file watching config
 
 ## Performance Comparison
@@ -279,27 +258,16 @@ If you forget to bundle or have lint errors, CI will fail.
 **Bundling speed** (9700+ line OpenAPI spec):
 
 - Python bundler: ~100-200ms
-- Redocly CLI: ~150-300ms
 
 Both are fast enough for development. Python is used in CI for zero dependencies.
 
 **Linting speed:**
 
-- Spectral: ~1-2s for 1MB spec
-- Redocly CLI: <1s for 1MB spec
+- Mintlify CLI (`openapi-check`): ~1s for 1MB spec (depends on Node runtime)
 
 ## Additional Tools
 
 ### Preview Docs Locally
-
-Two preview options available:
-
-**Redocly Preview** (OpenAPI only):
-```bash
-just preview
-# Opens http://localhost:8080 with interactive API docs
-# Only shows OpenAPI spec, no MDX content
-```
 
 **Mintlify Preview** (Full documentation):
 ```bash
@@ -320,12 +288,6 @@ just dev-full
 # Bundles + validates + tests + starts Mintlify
 ```
 
-### Show Spec Statistics
-```bash
-just stats
-# Shows endpoints, schemas, operations count
-```
-
 ### Format YAML Files
 ```bash
 just format
@@ -336,9 +298,6 @@ just format
 
 - **Justfile commands:** `just --list` or `just help`
 - **Python bundler:** `python -m tools.openapi_bundle --help`
-- **Redocly CLI:** `bun redocly --help`
-- **Spectral docs:** https://docs.stoplight.io/docs/spectral
-- **Redocly docs:** https://redocly.com/docs/cli
+- **Mintlify CLI:** `mintlify --help`
 
 For detailed developer workflows, see `docs/openapi/DEVELOPER_GUIDE.md`.
-
