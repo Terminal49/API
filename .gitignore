@@ -16,3 +16,6 @@ mcp-protocol-*.txt
 # Test files
 mcp-ts/test-*.js
 mcp-ts/test-*.sh
+
+# Claude Code configuration
+.claude/
