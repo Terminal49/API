@@ -22,3 +22,6 @@ mcp-ts/test-*.js
 mcp-ts/test-*.sh
 
 .pytest_cache
+
+# Claude Code configuration
+.claude/
