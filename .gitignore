@@ -24,4 +24,5 @@ mcp-ts/test-*.sh
 
 .pytest_cache
 
-node_modules
+# Claude Code configuration
+.claude/
