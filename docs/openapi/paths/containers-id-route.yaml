@@ -1,0 +1,57 @@
+parameters:
+  -
+    schema:
+      type: "string"
+    name: "id"
+    in: "path"
+    required: true
+get:
+  summary: "Get container route"
+  tags:
+    - "Containers"
+    - "Routing (Paid)"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/route"
+              included:
+                type: "array"
+                items:
+                  anyOf:
+                    -
+                      $ref: "#/components/schemas/port"
+                    -
+                      $ref: "#/components/schemas/vessel"
+                    -
+                      $ref: "#/components/schemas/route_location"
+                    -
+                      $ref: "#/components/schemas/shipment"
+    403:
+      description: "Forbidden - Routing data feature is not enabled for this account"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              errors:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    status:
+                      type: "string"
+                      example: "403"
+                    title:
+                      type: "string"
+                      example: "Forbidden"
+                    detail:
+                      type: "string"
+                      example: "Routing data feature is not enabled for this account"
+  operationId: "get-containers-id-route"
+  description: "Retrieves the route details from the port of lading to the port of discharge, including transshipments. <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>"

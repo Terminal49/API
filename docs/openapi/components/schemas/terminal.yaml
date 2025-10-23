@@ -1,0 +1,67 @@
+title: "Terminal model"
+type: "object"
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  relationships:
+    type: "object"
+    required:
+      - "port"
+    properties:
+      port:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "port"
+  attributes:
+    type: "object"
+    required:
+      - "name"
+    properties:
+      name:
+        type: "string"
+      nickname:
+        type: "string"
+      firms_code:
+        type: "string"
+        description: "CBP FIRMS Code or CBS Sublocation Code"
+      smdg_code:
+        type: "string"
+        description: "SMDG Code"
+      bic_facility_code:
+        type: "string"
+        description: "BIC Facility Code"
+      street:
+        type: "string"
+        description: "Street part of the address"
+      city:
+        type: "string"
+        description: "City part of the address"
+      state:
+        type: "string"
+        description: "State part of the address"
+      state_abbr:
+        type: "string"
+        description: "State abbreviation for the state"
+      zip:
+        type: "string"
+        description: "ZIP code part of the address"
+      country:
+        type: "string"
+        description: "Country part of the address"
+  type:
+    type: "string"
+    enum:
+      - "terminal"
+required:
+  - "attributes"
+  - "relationships"

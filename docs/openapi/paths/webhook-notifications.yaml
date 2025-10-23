@@ -1,0 +1,51 @@
+get:
+  summary: "List webhook notifications"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/webhook_notification"
+              links:
+                $ref: "#/components/schemas/links"
+              meta:
+                $ref: "#/components/schemas/meta"
+              included:
+                type: "array"
+                items:
+                  anyOf:
+                    -
+                      $ref: "#/components/schemas/webhook"
+                    -
+                      $ref: "#/components/schemas/tracking_request"
+                    -
+                      $ref: "#/components/schemas/transport_event"
+                    -
+                      $ref: "#/components/schemas/estimated_event"
+  operationId: "get-webhook-notifications"
+  description: "Return the list of  webhook notifications. This can be useful for reconciling your data if your endpoint has been down. "
+  tags:
+    - "Webhook Notifications"
+  parameters:
+    -
+      schema:
+        type: "integer"
+      in: "query"
+      name: "page[number]"
+    -
+      schema:
+        type: "integer"
+      in: "query"
+      name: "page[size]"
+    -
+      schema:
+        type: "string"
+      in: "query"
+      name: "include"
+      description: "Comma delimited list of relations to include."

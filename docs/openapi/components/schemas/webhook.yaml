@@ -1,0 +1,85 @@
+title: "webhook"
+type: "object"
+x-examples: {}
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  type:
+    type: "string"
+    enum:
+      - "webhook"
+  attributes:
+    type: "object"
+    properties:
+      url:
+        type: "string"
+        format: "uri"
+        description: "https end point"
+      active:
+        type: "boolean"
+        default: true
+        description: "Whether the webhook will be delivered when events are triggered"
+      events:
+        type: "array"
+        description: "The list of events to enabled for this endpoint"
+        uniqueItems: true
+        minItems: 1
+        items:
+          type: "string"
+          enum:
+            - "container.transport.vessel_arrived"
+            - "container.transport.vessel_discharged"
+            - "container.transport.vessel_loaded"
+            - "container.transport.vessel_departed"
+            - "container.transport.rail_departed"
+            - "container.transport.rail_arrived"
+            - "container.transport.rail_loaded"
+            - "container.transport.rail_unloaded"
+            - "container.transport.transshipment_arrived"
+            - "container.transport.transshipment_discharged"
+            - "container.transport.transshipment_loaded"
+            - "container.transport.transshipment_departed"
+            - "container.transport.feeder_arrived"
+            - "container.transport.feeder_discharged"
+            - "container.transport.feeder_loaded"
+            - "container.transport.feeder_departed"
+            - "container.transport.empty_out"
+            - "container.transport.full_in"
+            - "container.transport.full_out"
+            - "container.transport.empty_in"
+            - "container.transport.vessel_berthed"
+            - "shipment.estimated.arrival"
+            - "tracking_request.succeeded"
+            - "tracking_request.failed"
+            - "tracking_request.awaiting_manifest"
+            - "tracking_request.tracking_stopped"
+            - "container.created"
+            - "container.updated"
+            - "container.pod_terminal_changed"
+            - "container.transport.arrived_at_inland_destination"
+            - "container.transport.estimated.arrived_at_inland_destination"
+            - "container.pickup_lfd.changed"
+            - "container.transport.available"
+      secret:
+        type: "string"
+        description: "A random token that will sign all delivered webhooks"
+      headers:
+        type: "array"
+        nullable: true
+        items:
+          type: "object"
+          properties:
+            name:
+              type: "string"
+            value:
+              type: "string"
+    required:
+      - "url"
+      - "active"
+      - "events"
+      - "secret"
+required:
+  - "id"
+  - "type"
+description: ""

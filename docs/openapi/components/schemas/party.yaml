@@ -1,0 +1,20 @@
+title: "Party model"
+type: "object"
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  attributes:
+    type: "object"
+    required:
+      - "company_name"
+    properties:
+      company_name:
+        type: "string"
+        description: "Company name"
+  type:
+    type: "string"
+    enum:
+      - "party"
+required:
+  - "attributes"

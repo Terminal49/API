@@ -1,0 +1,332 @@
+post:
+  summary: "Create a tracking request"
+  operationId: "post-track"
+  responses:
+    201:
+      description: "Tracking Request Created"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/tracking_request"
+              included:
+                type: "array"
+                items:
+                  anyOf:
+                    -
+                      $ref: "#/components/schemas/account"
+                    -
+                      $ref: "#/components/schemas/shipping_line"
+          examples:
+            Pending Tracking Request:
+              value:
+                data:
+                  id: "ba4cb904-827f-4038-8e31-1e92b3356218"
+                  type: "tracking_request"
+                  attributes:
+                    request_number: "MEDUFR030802"
+                    request_type: "bill_of_lading"
+                    scac: "MSCU"
+                    ref_numbers: []
+                    created_at: "2020-04-04T16:13:35-07:00"
+                    updated_at: "2020-04-04T17:13:35-07:00"
+                    status: "pending"
+                    failed_reason: null
+                  relationships:
+                    tracked_object:
+                      data: null
+                    customer:
+                      data:
+                        id: "f7cb530a-9e60-412c-a5bc-205a2f34ba54"
+                        type: "party"
+                  links:
+                    self: "https://api.terminal49.com/v2/tracking_requests/ba4cb904-827f-4038-8e31-1e92b3356218"
+      headers: {}
+    422:
+      description: "Unprocessable Entity"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              errors:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/error"
+          examples:
+            Error Examples:
+              value:
+                errors:
+                  -
+                    status: "422"
+                    source:
+                      pointer: "/data/attributes/scac"
+                    title: "Unprocessable Entity"
+                    detail: "Scac can't be blank"
+                    code: "blank"
+                  -
+                    status: "422"
+                    source:
+                      pointer: "/data/attributes/scac"
+                    title: "Unprocessable Entity"
+                    detail: "Scac 'XXXX' is not recognized"
+                    code: "blank"
+                  -
+                    status: "422"
+                    source:
+                      pointer: "/data/attributes/scac"
+                    title: "Unprocessable Entity"
+                    detail: "Scac 'UALC' is not supported. We do not currently integrate with Universal Africa Lines"
+                    code: "blank"
+                  -
+                    status: "422"
+                    source:
+                      pointer: "/data/attributes/request_number"
+                    title: "Unprocessable Entity"
+                    detail: "Request number can't be blank"
+                    code: "blank"
+    429:
+      description: "Too Many Requests - You've hit the create tracking requests limit. Please try again in a minute."
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              errors:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    status:
+                      type: "string"
+                      example: "429"
+                    title:
+                      type: "string"
+                      example: "Too Many Requests"
+                    detail:
+                      type: "string"
+                      example: "You've hit the create tracking requests limit. Please try again in a minute."
+      headers:
+        Retry-After:
+          description: "Number of seconds to wait before making another request"
+          schema:
+            type: "integer"
+            example: 60
+  requestBody:
+    content:
+      application/json:
+        schema:
+          type: "object"
+          properties:
+            data:
+              type: "object"
+              properties:
+                attributes:
+                  type: "object"
+                  properties:
+                    request_type:
+                      type: "string"
+                      example: "bill_of_lading"
+                      enum:
+                        - "bill_of_lading"
+                        - "booking_number"
+                        - "container"
+                      description: " The type of document number to be supplied. Container number support is currently in BETA."
+                    request_number:
+                      type: "string"
+                      example: "MEDUFR030802"
+                    scac:
+                      type: "string"
+                      example: "MSCU"
+                      minLength: 4
+                      maxLength: 4
+                    ref_numbers:
+                      type: "array"
+                      description: "Optional list of reference numbers to be added to the shipment when tracking request completes"
+                      items:
+                        type: "string"
+                    shipment_tags:
+                      type: "array"
+                      description: "Optional list of tags to be added to the shipment when tracking request completes"
+                      items:
+                        type: "string"
+                  required:
+                    - "request_type"
+                    - "request_number"
+                    - "scac"
+                relationships:
+                  type: "object"
+                  properties:
+                    customer:
+                      type: "object"
+                      properties:
+                        data:
+                          type: "object"
+                          properties:
+                            id:
+                              type: "string"
+                              format: "uuid"
+                            type:
+                              type: "string"
+                              enum:
+                                - "party"
+                type:
+                  enum:
+                    - "tracking_request"
+                  type: "string"
+              required:
+                - "type"
+        examples:
+          "Example: MSC BL":
+            value:
+              data:
+                attributes:
+                  request_type: "bill_of_lading"
+                  request_number: "MEDUFR030802"
+                  ref_numbers:
+                    - "PO12345"
+                    - "HBL12345"
+                    - "CUSREF1234"
+                  shipment_tags:
+                    - "camembert"
+                  scac: "MSCU"
+                relationships:
+                  customer:
+                    data:
+                      id: "f7cb530a-9e60-412c-a5bc-205a2f34ba54"
+                      type: "party"
+                type: "tracking_request"
+    description: "Create a shipment tracking request"
+  security:
+    -
+      authorization: []
+  description: "To track an ocean shipment, you create a new tracking request. \nTwo attributes are required to track a shipment. A `bill of lading/booking number` and a shipping line `SCAC`. \n\nOnce a tracking request is created we will attempt to fetch the shipment details and it's related containers from the shipping line. If the attempt is successful we will create in new shipment object including any related container objects. We will send a `tracking_request.succeeded` webhook notification to your webhooks.  \n\nIf the attempt to fetch fails then we will send a `tracking_request.failed` webhook notification to your `webhooks`.  \n\nA `tracking_request.succeeded` or `tracking_request.failed` webhook notificaiton will only be sent  if you have  atleast one active webhook. <br /><br /><Info>This endpoint is limited to 100 tracking requests per minute.</Info>"
+  tags:
+    - "Tracking Requests"
+  parameters: []
+parameters: []
+get:
+  summary: "List tracking requests"
+  operationId: "get-tracking-requests"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/tracking_request"
+              links:
+                $ref: "#/components/schemas/links"
+              meta:
+                $ref: "#/components/schemas/meta"
+              included:
+                type: "array"
+                items:
+                  anyOf:
+                    -
+                      $ref: "#/components/schemas/account"
+                    -
+                      $ref: "#/components/schemas/shipping_line"
+                    -
+                      type: "object"
+                      properties:
+                        id:
+                          type: "string"
+                          format: "uuid"
+                        type:
+                          type: "string"
+                          enum:
+                            - "shipment"
+                        links:
+                          type: "object"
+                          properties:
+                            self:
+                              type: "string"
+                              format: "uri"
+                      description: ""
+          examples: {}
+    404:
+      description: "Not Found"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              errors:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/error"
+  description: "Returns a list of your tracking requests. The tracking requests are returned sorted by creation date, with the most recent tracking request appearing first."
+  tags:
+    - "Tracking Requests"
+  parameters:
+    -
+      schema:
+        type: "string"
+      in: "query"
+      name: "q"
+      description: "A search term to be applied against request_number and reference_numbers."
+      deprecated: true
+    -
+      schema:
+        type: "string"
+        enum:
+          - "created"
+          - "pending"
+          - "failed"
+        example: "created"
+      in: "query"
+      name: "filter[status]"
+      description: "filter by `status`"
+    -
+      schema:
+        type: "string"
+        example: "MSCU"
+      in: "query"
+      name: "filter[scac]"
+      description: "filter by shipping line `scac`"
+    -
+      schema:
+        type: "string"
+        example: "2020-04-28T22:59:15Z"
+        format: "date-time"
+      in: "query"
+      name: "filter[created_at][start]"
+      description: "filter by tracking_requests `created_at` after a certain ISO8601 timestamp"
+    -
+      schema:
+        type: "string"
+        format: "date-time"
+        example: "2020-04-28T22:59:15Z"
+      in: "query"
+      description: "filter by tracking_requests `created_at` before a certain ISO8601 timestamp"
+      name: "filter[created_at][end]"
+    -
+      schema:
+        type: "string"
+      in: "query"
+      name: "include"
+      description: "Comma delimited list of relations to include. 'tracked_object' is included by default."
+    -
+      schema:
+        type: "integer"
+      in: "query"
+      name: "page[number]"
+    -
+      schema:
+        type: "integer"
+      in: "query"
+      name: "page[size]"
+    -
+      schema:
+        type: "string"
+      in: "query"
+      name: "filter[request_number]"
+      description: "filter by `request_number`"

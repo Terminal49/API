@@ -1,0 +1,220 @@
+get:
+  summary: "List webhooks"
+  tags:
+    - "Webhooks"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/webhook"
+              meta:
+                $ref: "#/components/schemas/meta"
+              links:
+                $ref: "#/components/schemas/links"
+          examples:
+            example-1:
+              value:
+                data:
+                  -
+                    id: "497f6eca-6276-4993-bfeb-53cbbbba6f08"
+                    type: "webhook"
+                    attributes:
+                      url: "http://example.com"
+                      active: true
+                      events:
+                        - "tracking_request.succeeded"
+                      secret: "672bd7b58b54645934a830d8fa"
+                      headers:
+                        -
+                          name: "x-secret-sauce"
+                          value: "sriracha"
+                meta:
+                  size: 0
+                  total: 0
+                links:
+                  last: "http://example.com"
+                  next: "http://example.com"
+                  prev: "http://example.com"
+                  first: "http://example.com"
+                  self: "http://example.com"
+  operationId: "get-webhooks"
+  description: "Get a list of all the webhooks"
+  parameters:
+    -
+      schema:
+        type: "integer"
+      in: "query"
+      name: "page[number]"
+    -
+      schema:
+        type: "integer"
+      in: "query"
+      name: "page[size]"
+post:
+  summary: "Create a webhook"
+  operationId: "post-webhooks"
+  tags:
+    - "Webhooks"
+  description: "You can configure a webhook via the API to be notified about events that happen in your Terminal49 account. These events can be realted to tracking_requests, shipments and containers. \n\nThis is the recommended way tracking shipments and containers via the API. You should use this instead of polling our the API periodically.  "
+  requestBody:
+    content:
+      application/json:
+        schema:
+          type: "object"
+          properties:
+            data:
+              type: "object"
+              required:
+                - "attributes"
+                - "type"
+              properties:
+                attributes:
+                  type: "object"
+                  required:
+                    - "url"
+                    - "active"
+                  properties:
+                    url:
+                      type: "string"
+                      example: "https://webhook.site/#!/39084fbb-d887-42e8-be08-b9183ad02362"
+                      format: "uri"
+                      description: "The URL of the webhook endpoint."
+                    events:
+                      type: "array"
+                      uniqueItems: true
+                      description: "The list of events to enable for this endpoint."
+                      minItems: 1
+                      items:
+                        type: "string"
+                        enum:
+                          - "container.transport.vessel_arrived"
+                          - "container.transport.vessel_discharged"
+                          - "container.transport.vessel_loaded"
+                          - "container.transport.vessel_departed"
+                          - "container.transport.rail_departed"
+                          - "container.transport.rail_arrived"
+                          - "container.transport.rail_loaded"
+                          - "container.transport.rail_unloaded"
+                          - "container.transport.transshipment_arrived"
+                          - "container.transport.transshipment_discharged"
+                          - "container.transport.transshipment_loaded"
+                          - "container.transport.transshipment_departed"
+                          - "container.transport.feeder_arrived"
+                          - "container.transport.feeder_discharged"
+                          - "container.transport.feeder_loaded"
+                          - "container.transport.feeder_departed"
+                          - "container.transport.empty_out"
+                          - "container.transport.full_in"
+                          - "container.transport.full_out"
+                          - "container.transport.empty_in"
+                          - "container.transport.vessel_berthed"
+                          - "shipment.estimated.arrival"
+                          - "tracking_request.succeeded"
+                          - "tracking_request.failed"
+                          - "tracking_request.awaiting_manifest"
+                          - "tracking_request.tracking_stopped"
+                          - "container.created"
+                          - "container.updated"
+                          - "container.pod_terminal_changed"
+                          - "container.transport.arrived_at_inland_destination"
+                          - "container.transport.estimated.arrived_at_inland_destination"
+                          - "container.pickup_lfd.changed"
+                          - "container.transport.available"
+                        example: "tracking_request.succeeded"
+                    active:
+                      type: "boolean"
+                    headers:
+                      type: "array"
+                      description: "Optional custom headers to pass with each webhook invocation"
+                      items:
+                        type: "object"
+                        properties:
+                          name:
+                            type: "string"
+                            description: "The name of the header. (Please note this will be auto-capitalized) "
+                          value:
+                            type: "string"
+                            description: "The value to pass for the header\n"
+                type:
+                  type: "string"
+                  enum:
+                    - "webhook"
+          required:
+            - "data"
+        examples:
+          Test Webhook (all events):
+            value:
+              data:
+                attributes:
+                  url: "https://webhook.site/"
+                  events:
+                    - "container.transport.vessel_arrived"
+                    - "container.transport.vessel_discharged"
+                    - "container.transport.vessel_loaded"
+                    - "container.transport.vessel_departed"
+                    - "container.transport.rail_departed"
+                    - "container.transport.rail_arrived"
+                    - "container.transport.rail_loaded"
+                    - "container.transport.rail_unloaded"
+                    - "container.transport.transshipment_arrived"
+                    - "container.transport.transshipment_discharged"
+                    - "container.transport.transshipment_loaded"
+                    - "container.transport.transshipment_departed"
+                    - "container.transport.feeder_arrived"
+                    - "container.transport.feeder_discharged"
+                    - "container.transport.feeder_loaded"
+                    - "container.transport.feeder_departed"
+                    - "container.transport.empty_out"
+                    - "container.transport.full_in"
+                    - "container.transport.full_out"
+                    - "container.transport.empty_in"
+                    - "container.transport.vessel_berthed"
+                    - "shipment.estimated.arrival"
+                    - "tracking_request.succeeded"
+                    - "tracking_request.failed"
+                    - "tracking_request.awaiting_manifest"
+                    - "tracking_request.tracking_stopped"
+                    - "container.created"
+                    - "container.updated"
+                    - "container.pod_terminal_changed"
+                    - "container.transport.arrived_at_inland_destination"
+                    - "container.transport.estimated.arrived_at_inland_destination"
+                    - "container.pickup_lfd.changed"
+                    - "container.transport.available"
+                  active: true
+                type: "webhook"
+    description: ""
+  responses:
+    201:
+      description: "Create a test webhook endpoint"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/webhook"
+          examples:
+            Test Endpoint Created:
+              value:
+                data:
+                  type: "webhook"
+                  id: "9809fb96-7754-488f-99df-29ca8d410d89"
+                  attributes:
+                    url: "https://webhook.site/"
+                    active: true
+                    events:
+                      - "tracking_request.succeeded"
+                    secret: "C193J3QOXMFH"
+                    created_at: "2020-06-05T19:06:13Z"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/webhook"
+parameters: []

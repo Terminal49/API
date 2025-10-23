@@ -1,0 +1,374 @@
+title: "Container model"
+type: "object"
+x-examples:
+  Example Container:
+    id: "ff77a822-23a7-4ccd-95ca-g534c071baaf3"
+    type: "container"
+    attributes:
+      number: "KOCU4959010"
+      ref_numbers:
+        - "REF-1"
+        - "REF-2"
+      seal_number: "210084213"
+      created_at: "2021-10-18T09:52:33Z"
+      equipment_type: "dry"
+      equipment_length: 40
+      equipment_height: "high_cube"
+      weight_in_lbs: 20210
+      fees_at_pod_terminal: []
+      holds_at_pod_terminal: []
+      pickup_lfd: "2022-01-21T08:00:00Z"
+      pickup_appointment_at: null
+      pod_full_out_chassis_number: "APMZ418805"
+      location_at_pod_terminal: "Delivered 02/11/2022 14:18"
+      availability_known: true
+      available_for_pickup: false
+      pod_arrived_at: "2022-01-03T10:30:00Z"
+      pod_discharged_at: "2022-01-08T09:15:00Z"
+      final_destination_full_out_at: null
+      pod_full_out_at: "2022-02-11T22:18:00Z"
+      empty_terminated_at: null
+      terminal_checked_at: "2022-02-11T22:45:32Z"
+      pod_rail_carrier_scac: "UPRR"
+      ind_rail_carrier_scac: "CSXT"
+      pod_timezone: "America/Los_Angeles"
+      final_destination_timezone: null
+      empty_terminated_timezone: null
+      pod_last_tracking_request_at: "2022-02-11T22:40:00Z"
+      shipment_last_tracking_request_at: "2022-02-11T22:40:00Z"
+      pod_rail_loaded_at: "2022-02-11T22:18:00Z"
+      pod_rail_departed_at: "2022-02-11T23:30:00Z"
+      ind_eta_at: null
+      ind_ata_at: "2022-02-15T01:12:00Z"
+      ind_rail_unloaded_at: "2022-02-15T07:54:00Z"
+      ind_facility_lfd_on: null
+      import_deadlines:
+        pickup_lfd_terminal: null
+        pickup_lfd_rail: "2022-02-20T08:00:00Z"
+        pickup_lfd_line: "2022-02-25T08:00:00Z"
+    relationships:
+      shipment:
+        data:
+          id: "x92acf88-c263-43ddf-b005-aca2a32d47f1"
+          type: "shipment"
+      pod_terminal:
+        data:
+          id: "x551cac7-aff5-40a6-9c63-49facf19cc3df"
+          type: "terminal"
+      pickup_facility:
+        data:
+          id: "d7d8d314-b02b-4caa-b04f-d3d4726f4107"
+          type: "terminal"
+      transport_events:
+        data:
+          -
+            id: "xecfe2d1-c498-4022-a9f8-ec56722e1215"
+            type: "transport_event"
+          -
+            id: "2900a9b8-d9e2-4696-abd86-4a767b885d23"
+            type: "transport_event"
+          -
+            id: "5ad0dce1-x78e4-464d-af5f-a36190428a2c"
+            type: "transport_event"
+          -
+            id: "876575d5-5ede-40d6-a093-c3a4cfcxaa1c7"
+            type: "transport_event"
+          -
+            id: "dc2a9d8f-75e6-43xa5-a04e-58458495f08c"
+            type: "transport_event"
+          -
+            id: "50xd2ea1-01ac-473d-8a08-3b5d77d2b793"
+            type: "transport_event"
+          -
+            id: "9d1f55xe3-6758-4be7-872a-30451ddd957e"
+            type: "transport_event"
+      raw_events:
+        data:
+          -
+            id: "38084a1d-a2eb-434e-81ac3-606c89a61c4b"
+            type: "raw_event"
+          -
+            id: "53680df3-93d5-4385-86c5-a33ee41b4c1f"
+            type: "raw_event"
+          -
+            id: "7d9cdf70-51e8-4b75-a8229-f5d691495ab6"
+            type: "raw_event"
+          -
+            id: "e62d41ac-8738-42e8-b582-35ef28ae88e2"
+            type: "raw_event"
+          -
+            id: "1209172b-acd8-4ce0-8821-dbc4934208b3"
+            type: "raw_event"
+          -
+            id: "4265ea5f-2b9a-436f-98fa-803d8ed49acb2"
+            type: "raw_event"
+          -
+            id: "c3cb2eb7-6c0a-4db8-8742-517b97b175d5"
+            type: "raw_event"
+          -
+            id: "b1959f36-a218-4b6e-863a9-2e0b4ad5159c"
+            type: "raw_event"
+description: "Represents the equipment during a specific journey."
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  type:
+    type: "string"
+    enum:
+      - "container"
+  attributes:
+    type: "object"
+    properties:
+      number:
+        type: "string"
+      ref_numbers:
+        type: "array"
+        items:
+          type: "string"
+      equipment_type:
+        type: "string"
+        enum:
+          - "dry"
+          - "reefer"
+          - "open top"
+          - "flat rack"
+          - "bulk"
+          - "tank"
+          - null
+        nullable: true
+      equipment_length:
+        type: "integer"
+        enum:
+          - null
+          - 10
+          - 20
+          - 40
+          - 45
+        nullable: true
+      equipment_height:
+        type: "string"
+        enum:
+          - "standard"
+          - "high_cube"
+          - null
+        nullable: true
+      weight_in_lbs:
+        type: "number"
+        nullable: true
+      created_at:
+        type: "string"
+        format: "date-time"
+      seal_number:
+        type: "string"
+        nullable: true
+      pickup_lfd:
+        type: "string"
+        format: "date-time"
+        description: "Coalesces `import_deadlines` values giving preference to `pickup_lfd_line`"
+        nullable: true
+      pickup_appointment_at:
+        type: "string"
+        format: "date-time"
+        description: "When available the pickup appointment time at the terminal is returned."
+        nullable: true
+      availability_known:
+        type: "boolean"
+        description: "Whether Terminal 49 is receiving availability status from the terminal."
+      available_for_pickup:
+        type: "boolean"
+        description: "If availability_known is true, then whether container is available to be picked up at terminal."
+        nullable: true
+      pod_arrived_at:
+        type: "string"
+        format: "date-time"
+        description: "Time the vessel arrived at the POD"
+        nullable: true
+      pod_discharged_at:
+        type: "string"
+        format: "date-time"
+        description: "Discharge time at the port of discharge"
+        nullable: true
+      pod_full_out_at:
+        type: "string"
+        format: "date-time"
+        description: "Full Out time at port of discharge. Null for inland moves."
+        nullable: true
+      terminal_checked_at:
+        type: "string"
+        format: "date-time"
+        description: "When the terminal was last checked."
+        nullable: true
+      pod_full_out_chassis_number:
+        type: "string"
+        description: "The chassis number used when container was picked up at POD (if available)"
+        nullable: true
+      location_at_pod_terminal:
+        type: "string"
+        description: "Location at port of discharge terminal"
+        nullable: true
+      final_destination_full_out_at:
+        type: "string"
+        format: "date-time"
+        description: "Pickup time at final destination for inland moves."
+        nullable: true
+      empty_terminated_at:
+        type: "string"
+        format: "date-time"
+        description: "Time empty container was returned."
+        nullable: true
+      holds_at_pod_terminal:
+        type: "array"
+        items:
+          $ref: "#/components/schemas/terminal_hold"
+      fees_at_pod_terminal:
+        type: "array"
+        items:
+          $ref: "#/components/schemas/terminal_fee"
+      pod_timezone:
+        type: "string"
+        description: "IANA tz. Applies to attributes pod_arrived_at, pod_discharged_at, pickup_appointment_at, pod_full_out_at."
+        nullable: true
+      final_destination_timezone:
+        type: "string"
+        description: "IANA tz. Applies to attribute final_destination_full_out_at."
+        nullable: true
+      empty_terminated_timezone:
+        type: "string"
+        description: "IANA tz. Applies to attribute empty_terminated_at."
+        nullable: true
+      pod_rail_carrier_scac:
+        type: "string"
+        description: "The SCAC of the rail carrier for the pickup leg of the container's journey.(BETA)"
+        nullable: true
+      ind_rail_carrier_scac:
+        type: "string"
+        description: "The SCAC of the rail carrier for the delivery leg of the container's journey.(BETA)"
+        nullable: true
+      pod_last_tracking_request_at:
+        type: "string"
+        format: "date-time"
+        nullable: true
+      shipment_last_tracking_request_at:
+        type: "string"
+        format: "date-time"
+        nullable: true
+      pod_rail_loaded_at:
+        type: "string"
+        format: "date-time"
+        nullable: true
+      pod_rail_departed_at:
+        type: "string"
+        format: "date-time"
+        nullable: true
+      ind_eta_at:
+        type: "string"
+        format: "date-time"
+        nullable: true
+      ind_ata_at:
+        type: "string"
+        format: "date-time"
+        nullable: true
+      ind_rail_unloaded_at:
+        type: "string"
+        format: "date-time"
+        nullable: true
+      ind_facility_lfd_on:
+        type: "string"
+        format: "date-time"
+        description: "Please use `import_deadlines.pickup_lfd_rail`"
+        nullable: true
+        deprecated: true
+      import_deadlines:
+        type: "object"
+        description: "Import pickup deadlines for the container"
+        properties:
+          pickup_lfd_terminal:
+            type: "string"
+            format: "date-time"
+            description: "The last free day for pickup before demmurage accrues. Corresponding timezone is pod_timezone."
+            nullable: true
+          pickup_lfd_rail:
+            type: "string"
+            format: "date-time"
+            description: "The last free day for pickup before demmurage accrues. Corresponding timezone is final_destination_timezone."
+            nullable: true
+          pickup_lfd_line:
+            type: "string"
+            format: "date-time"
+            description: "The last free day as reported by the line. Corresponding timezone is final_destination_timezone or pod_timezone."
+            nullable: true
+        nullable: true
+  relationships:
+    type: "object"
+    properties:
+      shipment:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            nullable: true
+            properties:
+              id:
+                type: "string"
+              type:
+                type: "string"
+                enum:
+                  - "shipment"
+      pickup_facility:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            nullable: true
+            properties:
+              id:
+                type: "string"
+              type:
+                type: "string"
+                enum:
+                  - "terminal"
+      pod_terminal:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            properties:
+              id:
+                type: "string"
+              type:
+                type: "string"
+                enum:
+                  - "terminal"
+      transport_events:
+        type: "object"
+        properties:
+          data:
+            type: "array"
+            items:
+              type: "object"
+              properties:
+                id:
+                  type: "string"
+                type:
+                  type: "string"
+                  enum:
+                    - "transport_event"
+      raw_events:
+        type: "object"
+        properties:
+          data:
+            type: "array"
+            items:
+              type: "object"
+              properties:
+                id:
+                  type: "string"
+                type:
+                  type: "string"
+                  enum:
+                    - "raw_event"
+required:
+  - "id"
+  - "type"
+  - "attributes"

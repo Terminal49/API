@@ -1,0 +1,747 @@
+get:
+  summary: "List containers"
+  tags:
+    - "Containers"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/container"
+              included:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/shipment"
+              links:
+                $ref: "#/components/schemas/links"
+              meta:
+                $ref: "#/components/schemas/meta"
+          examples:
+            Example List of containers:
+              value:
+                data:
+                  -
+                    id: "be0b247b-c144-4163-8919-cf9178930736"
+                    type: "container"
+                    attributes:
+                      number: "TCLU6718159"
+                      seal_number: null
+                      created_at: "2024-06-26T15:05:18Z"
+                      ref_numbers: []
+                      pod_arrived_at: "2024-06-21T14:12:00Z"
+                      pod_discharged_at: "2024-06-23T00:19:00Z"
+                      final_destination_full_out_at: null
+                      holds_at_pod_terminal: []
+                      available_for_pickup: false
+                      equipment_type: "dry"
+                      equipment_length: 40
+                      equipment_height: "high_cube"
+                      weight_in_lbs: 53502
+                      pod_full_out_at: "2024-06-26T16:15:00Z"
+                      empty_terminated_at: null
+                      terminal_checked_at: "2024-06-26T18:47:56Z"
+                      fees_at_pod_terminal: []
+                      pickup_lfd: null
+                      pickup_appointment_at: null
+                      pod_full_out_chassis_number: null
+                      location_at_pod_terminal: "Community"
+                      pod_last_tracking_request_at: "2024-06-26T18:47:56Z"
+                      shipment_last_tracking_request_at: "2024-06-26T15:05:18Z"
+                      availability_known: true
+                      pod_timezone: "America/New_York"
+                      final_destination_timezone: null
+                      empty_terminated_timezone: "America/New_York"
+                      pod_rail_carrier_scac: null
+                      ind_rail_carrier_scac: null
+                      pod_rail_loaded_at: null
+                      pod_rail_departed_at: null
+                      ind_eta_at: null
+                      ind_ata_at: null
+                      ind_rail_unloaded_at: null
+                      ind_facility_lfd_on: null
+                      import_deadlines:
+                        pickup_lfd_terminal: null
+                        pickup_lfd_rail: null
+                        pickup_lfd_line: null
+                    relationships:
+                      shipment:
+                        data:
+                          id: "cc8f8e43-d6a9-4edb-a8c0-d0ab03c113d3"
+                          type: "shipment"
+                      pickup_facility:
+                        data: null
+                      pod_terminal:
+                        data:
+                          id: "a243bdf8-0da3-4056-a6a7-05fe8ab43999"
+                          type: "terminal"
+                      transport_events:
+                        data:
+                          -
+                            id: "fb53b35c-6a0c-4e22-b196-b623e8ba7db5"
+                            type: "transport_event"
+                          -
+                            id: "179897a3-04f5-450b-86e1-db57970c0248"
+                            type: "transport_event"
+                          -
+                            id: "a119b8e6-10c5-4967-8364-885f7dbf8e50"
+                            type: "transport_event"
+                          -
+                            id: "3372d58c-df89-46a2-b064-b308a9dc7040"
+                            type: "transport_event"
+                          -
+                            id: "800a3e59-8231-4e42-a80f-73c97cfb1be9"
+                            type: "transport_event"
+                          -
+                            id: "d466676b-0073-4b0c-89aa-d42486e9ed4f"
+                            type: "transport_event"
+                          -
+                            id: "85665836-5915-4cb9-ab78-b8487598cd0d"
+                            type: "transport_event"
+                          -
+                            id: "94cca22a-520a-4d19-a551-0554aceb3794"
+                            type: "transport_event"
+                          -
+                            id: "032e812f-d5e4-48af-8d79-2c2b41a07032"
+                            type: "transport_event"
+                          -
+                            id: "1b7dd74d-eff6-4e06-9a15-234295ce6fd5"
+                            type: "transport_event"
+                          -
+                            id: "b9f07b7e-1653-4209-b375-4588653d5275"
+                            type: "transport_event"
+                          -
+                            id: "a35f3c1b-ad35-4347-b0f2-9e08f0d4ca64"
+                            type: "transport_event"
+                      raw_events:
+                        data:
+                          -
+                            id: "e26fc659-f79d-4cc0-8efc-5ce5e8444891"
+                            type: "raw_event"
+                          -
+                            id: "8820af5e-cb77-41c5-a897-906f2c56eb1e"
+                            type: "raw_event"
+                          -
+                            id: "a628a2c2-dab6-4b04-b3ae-d7ec99098a89"
+                            type: "raw_event"
+                          -
+                            id: "6ca157f9-3b58-4db5-8155-fc7b41a62611"
+                            type: "raw_event"
+                          -
+                            id: "6fb06390-4b0a-4c1f-9703-ec89927df7f3"
+                            type: "raw_event"
+                          -
+                            id: "26fe408d-e091-412a-a2fb-23a4d778b6b9"
+                            type: "raw_event"
+                          -
+                            id: "16490dd8-d79f-468a-91b1-dbb30bb45c85"
+                            type: "raw_event"
+                          -
+                            id: "ff3db923-a644-4706-8057-1bd53c95fbd5"
+                            type: "raw_event"
+                          -
+                            id: "3fd27ffd-9618-477f-b1a9-cbc179defefe"
+                            type: "raw_event"
+                          -
+                            id: "f92efdd3-f79c-4a1c-97ce-9a47588b525c"
+                            type: "raw_event"
+                          -
+                            id: "3b2a88ef-df0b-4e61-99c1-d4a175910111"
+                            type: "raw_event"
+                          -
+                            id: "9b367e33-9e43-488f-8217-081698adf40d"
+                            type: "raw_event"
+                          -
+                            id: "ee0915df-e2f8-46b0-acf1-816871ca142d"
+                            type: "raw_event"
+                  -
+                    id: "a9e52f3d-2fa9-467c-8deb-09e90dac2f0b"
+                    type: "container"
+                    attributes:
+                      number: "TCLU2224327"
+                      seal_number: null
+                      created_at: "2024-06-26T15:05:34Z"
+                      ref_numbers: []
+                      pod_arrived_at: "2024-06-21T14:12:00Z"
+                      pod_discharged_at: "2024-06-23T17:21:00Z"
+                      final_destination_full_out_at: null
+                      holds_at_pod_terminal: []
+                      available_for_pickup: false
+                      equipment_type: "dry"
+                      equipment_length: 20
+                      equipment_height: "standard"
+                      weight_in_lbs: 44225
+                      pod_full_out_at: null
+                      empty_terminated_at: null
+                      terminal_checked_at: "2024-06-26T18:47:56Z"
+                      fees_at_pod_terminal: []
+                      pickup_lfd: null
+                      pickup_appointment_at: null
+                      pod_full_out_chassis_number: null
+                      location_at_pod_terminal: "Yard"
+                      pod_last_tracking_request_at: "2024-06-26T18:47:56Z"
+                      shipment_last_tracking_request_at: "2024-06-26T15:05:34Z"
+                      availability_known: true
+                      pod_timezone: "America/New_York"
+                      final_destination_timezone: "America/Chicago"
+                      empty_terminated_timezone: "America/Chicago"
+                      pod_rail_carrier_scac: "CSXT"
+                      ind_rail_carrier_scac: "CSXT"
+                      pod_rail_loaded_at: null
+                      pod_rail_departed_at: null
+                      ind_eta_at: "2024-07-02T14:20:00Z"
+                      ind_ata_at: null
+                      ind_rail_unloaded_at: null
+                      ind_facility_lfd_on: null
+                      import_deadlines:
+                        pickup_lfd_terminal: null
+                        pickup_lfd_rail: null
+                        pickup_lfd_line: null
+                    relationships:
+                      shipment:
+                        data:
+                          id: "99f84294-3bda-4765-81b3-31765e6d2a24"
+                          type: "shipment"
+                      pickup_facility:
+                        data:
+                          id: "e6fa9a01-511b-4f43-a7e1-d628315b84ef"
+                          type: "terminal"
+                      pod_terminal:
+                        data:
+                          id: "a243bdf8-0da3-4056-a6a7-05fe8ab43999"
+                          type: "terminal"
+                      transport_events:
+                        data:
+                          -
+                            id: "4a5a04b7-8974-4c46-beaa-bf55004422c9"
+                            type: "transport_event"
+                          -
+                            id: "11c90391-aa9c-408b-b20e-daed8dd09586"
+                            type: "transport_event"
+                          -
+                            id: "d7f23c71-7084-4fbb-9fef-740f624182aa"
+                            type: "transport_event"
+                          -
+                            id: "c4c3537d-5c47-4623-afe0-edc0dd6f75c5"
+                            type: "transport_event"
+                          -
+                            id: "e4002e13-0a74-4bd4-9147-787bb21e2fda"
+                            type: "transport_event"
+                          -
+                            id: "57b5568f-d8a6-443d-b1c8-be5cd080e5ed"
+                            type: "transport_event"
+                          -
+                            id: "0771cff1-79bf-4eaa-9d9d-790cb433ce44"
+                            type: "transport_event"
+                          -
+                            id: "031021b9-7b39-41f7-bd45-26cc8cb799d2"
+                            type: "transport_event"
+                          -
+                            id: "9956448d-34d3-4c23-bcfd-19807eb4034f"
+                            type: "transport_event"
+                          -
+                            id: "f1caf6ea-3e92-4b68-bcea-556828301062"
+                            type: "transport_event"
+                          -
+                            id: "2dd558a8-fa07-454c-acf3-b53d072264af"
+                            type: "transport_event"
+                          -
+                            id: "83118511-d9ed-4b16-b323-5e685d9b266e"
+                            type: "transport_event"
+                      raw_events:
+                        data:
+                          -
+                            id: "f256289f-219d-45f6-b727-56fb9c6bc433"
+                            type: "raw_event"
+                          -
+                            id: "c5581f60-ffb2-4ef0-a855-b70acd3b294f"
+                            type: "raw_event"
+                          -
+                            id: "3c6716f9-814c-4459-9bbb-753f010446b2"
+                            type: "raw_event"
+                          -
+                            id: "62c7b849-c99b-4e37-9861-105141cc0a4c"
+                            type: "raw_event"
+                          -
+                            id: "7db37d43-426a-4f84-82af-2957621ce466"
+                            type: "raw_event"
+                          -
+                            id: "d4342119-db56-46fc-8299-f573f5b52e73"
+                            type: "raw_event"
+                          -
+                            id: "ba159c3b-590c-43ff-bc04-b0354fd326f4"
+                            type: "raw_event"
+                          -
+                            id: "ec1be31a-17f1-4f6f-85ab-c74cb0dbe6cb"
+                            type: "raw_event"
+                          -
+                            id: "d12c4656-0d1f-4f30-a0fa-a2ee887741a8"
+                            type: "raw_event"
+                          -
+                            id: "146d56e2-b41d-4469-8202-0c7d7315e794"
+                            type: "raw_event"
+                          -
+                            id: "6b86b4d1-f85f-4c26-9fbc-3132a62f0fbc"
+                            type: "raw_event"
+                          -
+                            id: "bb2c9105-e421-4372-9265-e61b3fa54851"
+                            type: "raw_event"
+                          -
+                            id: "3a09c49f-c12e-49e9-b2de-b8dca2b3d608"
+                            type: "raw_event"
+                          -
+                            id: "54d91ebc-8f57-4764-b7c6-a3f4dc2459be"
+                            type: "raw_event"
+                          -
+                            id: "9e788c46-9431-41eb-baee-c8b14fb4f590"
+                            type: "raw_event"
+                          -
+                            id: "d3051802-8b6f-497d-ad16-fb35547c8662"
+                            type: "raw_event"
+                          -
+                            id: "af3090e7-c6d3-4d8e-88aa-9cd757102f9b"
+                            type: "raw_event"
+                          -
+                            id: "95daf204-d95d-4a89-bedf-358bedb8b3b8"
+                            type: "raw_event"
+                  -
+                    id: "8d1faeeb-3890-4fac-8659-cd13737b26f1"
+                    type: "container"
+                    attributes:
+                      number: "CMAU0619052"
+                      seal_number: null
+                      created_at: "2024-06-26T15:02:11Z"
+                      ref_numbers: []
+                      pod_arrived_at: "2024-06-22T22:10:00Z"
+                      pod_discharged_at: "2024-06-23T20:38:00Z"
+                      final_destination_full_out_at: null
+                      holds_at_pod_terminal: []
+                      available_for_pickup: false
+                      equipment_type: "dry"
+                      equipment_length: 20
+                      equipment_height: "standard"
+                      weight_in_lbs: null
+                      pod_full_out_at: null
+                      empty_terminated_at: null
+                      terminal_checked_at: "2024-06-26T18:47:47Z"
+                      fees_at_pod_terminal: []
+                      pickup_lfd: "2024-06-27T07:00:00Z"
+                      pickup_appointment_at: null
+                      pod_full_out_chassis_number: null
+                      location_at_pod_terminal: "Grounded"
+                      pod_last_tracking_request_at: "2024-06-26T18:47:47Z"
+                      shipment_last_tracking_request_at: "2024-06-26T15:02:11Z"
+                      availability_known: true
+                      pod_timezone: "America/Los_Angeles"
+                      final_destination_timezone: "Asia/Shanghai"
+                      empty_terminated_timezone: "Asia/Shanghai"
+                      pod_rail_carrier_scac: null
+                      ind_rail_carrier_scac: null
+                      pod_rail_loaded_at: null
+                      pod_rail_departed_at: null
+                      ind_eta_at: null
+                      ind_ata_at: null
+                      ind_rail_unloaded_at: null
+                      ind_facility_lfd_on: null
+                      import_deadlines:
+                        pickup_lfd_terminal: "2024-06-27T07:00:00Z"
+                        pickup_lfd_rail: null
+                        pickup_lfd_line: "2024-06-27T07:00:00Z"
+                    relationships:
+                      shipment:
+                        data:
+                          id: "f706cbea-3264-473d-8d26-af257f3bc1be"
+                          type: "shipment"
+                      pickup_facility:
+                        data: null
+                      pod_terminal:
+                        data:
+                          id: "eaa2580c-5f5b-4198-85e4-821145d62098"
+                          type: "terminal"
+                      transport_events:
+                        data:
+                          -
+                            id: "1bb3a814-edab-403f-8ef2-a6d0966df423"
+                            type: "transport_event"
+                          -
+                            id: "19f197bf-444c-40ee-8478-6f02abe715a9"
+                            type: "transport_event"
+                          -
+                            id: "4c9223bb-0218-4175-8a2e-7bb99c40642a"
+                            type: "transport_event"
+                          -
+                            id: "432da964-6e99-45e9-b4b1-00b7be858591"
+                            type: "transport_event"
+                          -
+                            id: "b462b4d1-1e02-4037-af7f-6c8fa981f268"
+                            type: "transport_event"
+                          -
+                            id: "e3ca4a25-692f-474a-aa71-48fb9840aef1"
+                            type: "transport_event"
+                          -
+                            id: "014b9d1f-f033-4a3e-89f9-c57569883436"
+                            type: "transport_event"
+                          -
+                            id: "2cec71c9-721a-4060-993f-0ffcf01151cd"
+                            type: "transport_event"
+                          -
+                            id: "24941515-1b5e-4fca-87eb-092e56ed156a"
+                            type: "transport_event"
+                          -
+                            id: "0fd06bc0-1fda-467c-ab67-90a30c6d62ab"
+                            type: "transport_event"
+                          -
+                            id: "0bce915e-b9ba-42a0-a484-136266fe8b9a"
+                            type: "transport_event"
+                          -
+                            id: "582006aa-6547-4712-b964-5637aad839b4"
+                            type: "transport_event"
+                          -
+                            id: "11458420-b354-4288-a275-7572d3c60e33"
+                            type: "transport_event"
+                          -
+                            id: "5c900fa1-11bf-4f96-89e7-b12f6a98edc4"
+                            type: "transport_event"
+                      raw_events:
+                        data:
+                          -
+                            id: "999d7de7-eaed-4313-85df-772a6d24a85e"
+                            type: "raw_event"
+                          -
+                            id: "ac9c2780-240d-443f-87f4-95465fa5447b"
+                            type: "raw_event"
+                          -
+                            id: "a0ee3724-91c3-4b78-af32-2f16e8c2d600"
+                            type: "raw_event"
+                          -
+                            id: "79725b1f-19f7-4fc3-8c69-586e237c1719"
+                            type: "raw_event"
+                          -
+                            id: "4f07f257-ea4f-4e61-94ed-a01598899020"
+                            type: "raw_event"
+                          -
+                            id: "41612acb-b3d4-495f-9138-f34105851d21"
+                            type: "raw_event"
+                          -
+                            id: "84ffdd37-ec39-404a-9b68-d72d8fb96d48"
+                            type: "raw_event"
+                          -
+                            id: "7e9d8a6d-5339-4266-a6fb-22c28f41149f"
+                            type: "raw_event"
+                          -
+                            id: "2359b787-b218-42dc-b9a5-84b608aee671"
+                            type: "raw_event"
+                          -
+                            id: "ea33303e-0e48-4442-9886-0dfe38b726b5"
+                            type: "raw_event"
+                          -
+                            id: "3689d013-8525-418b-92ed-95ec684130b4"
+                            type: "raw_event"
+                          -
+                            id: "a64f7f7e-a6fa-4913-aba0-b28ba189d68b"
+                            type: "raw_event"
+                          -
+                            id: "c264a859-4fcb-4fab-95c0-29be99ec54a4"
+                            type: "raw_event"
+                          -
+                            id: "2aabf25c-9a3e-44bc-b6c8-ed7b1e3c3630"
+                            type: "raw_event"
+                          -
+                            id: "6ae70038-02d7-425a-99c1-8761c69a9033"
+                            type: "raw_event"
+                          -
+                            id: "c30021d8-93e9-4bfd-a978-e9e24de148c8"
+                            type: "raw_event"
+                  -
+                    id: "853f1794-9b94-4118-9970-4e28e549440d"
+                    type: "container"
+                    attributes:
+                      number: "TGHU6578122"
+                      seal_number: null
+                      created_at: "2024-06-26T15:08:30Z"
+                      ref_numbers: []
+                      pod_arrived_at: "2024-06-23T21:58:00Z"
+                      pod_discharged_at: "2024-06-24T02:28:00Z"
+                      final_destination_full_out_at: null
+                      holds_at_pod_terminal: []
+                      available_for_pickup: false
+                      equipment_type: "dry"
+                      equipment_length: 40
+                      equipment_height: "high_cube"
+                      weight_in_lbs: 8898
+                      pod_full_out_at: null
+                      empty_terminated_at: null
+                      terminal_checked_at: "2024-06-26T18:47:47Z"
+                      fees_at_pod_terminal: []
+                      pickup_lfd: "2024-06-27T07:00:00Z"
+                      pickup_appointment_at: null
+                      pod_full_out_chassis_number: null
+                      location_at_pod_terminal: "Wheeled"
+                      pod_last_tracking_request_at: "2024-06-26T18:47:46Z"
+                      shipment_last_tracking_request_at: "2024-06-26T15:08:30Z"
+                      availability_known: true
+                      pod_timezone: "America/Los_Angeles"
+                      final_destination_timezone: "America/New_York"
+                      empty_terminated_timezone: "America/New_York"
+                      pod_rail_carrier_scac: "BNSF"
+                      ind_rail_carrier_scac: "CSXT"
+                      pod_rail_loaded_at: null
+                      pod_rail_departed_at: null
+                      ind_eta_at: "2024-07-07T08:00:00Z"
+                      ind_ata_at: null
+                      ind_rail_unloaded_at: null
+                      ind_facility_lfd_on: null
+                      import_deadlines:
+                        pickup_lfd_terminal: "2024-06-27T07:00:00Z"
+                        pickup_lfd_rail: null
+                        pickup_lfd_line: "2024-06-27T07:00:00Z"
+                    relationships:
+                      shipment:
+                        data:
+                          id: "f3cfe624-706e-4a0c-89d5-140980d986fd"
+                          type: "shipment"
+                      pickup_facility:
+                        data:
+                          id: "7e4557b9-cc5a-4298-aaec-1a32e90202c9"
+                          type: "terminal"
+                      pod_terminal:
+                        data:
+                          id: "eaa2580c-5f5b-4198-85e4-821145d62098"
+                          type: "terminal"
+                      transport_events:
+                        data:
+                          -
+                            id: "94f687d0-dc6b-4342-8710-cb98bc98716e"
+                            type: "transport_event"
+                          -
+                            id: "a8d0a842-95fe-4c12-a80e-bd12e87a1421"
+                            type: "transport_event"
+                          -
+                            id: "c1f1a186-3737-41ca-ae2b-f79a17519991"
+                            type: "transport_event"
+                          -
+                            id: "7fcc5496-d402-4b1c-a6c5-8514e6433070"
+                            type: "transport_event"
+                          -
+                            id: "ab7cd84a-edc5-476d-a1c4-190011582314"
+                            type: "transport_event"
+                          -
+                            id: "68d91384-3eb3-4d21-ac7a-c1f688f649c2"
+                            type: "transport_event"
+                          -
+                            id: "5a702f46-4356-4570-bd2e-2b8adab5ba3e"
+                            type: "transport_event"
+                      raw_events:
+                        data:
+                          -
+                            id: "a4b7e4b6-5227-4f34-9e91-9e75223798ae"
+                            type: "raw_event"
+                          -
+                            id: "4f3e3c7b-d1e6-4fde-b95e-ce9a8835445c"
+                            type: "raw_event"
+                          -
+                            id: "39e8570d-1a8f-4e10-8d2e-ac930abc5971"
+                            type: "raw_event"
+                          -
+                            id: "b8015a72-9741-4fbf-8adc-d30b87de6aa3"
+                            type: "raw_event"
+                          -
+                            id: "61512b1a-a94e-4cac-8bab-763588dbbddf"
+                            type: "raw_event"
+                          -
+                            id: "c0bf87f2-37c3-4895-90b0-9f97ac4b5c13"
+                            type: "raw_event"
+                          -
+                            id: "3856c7e7-f832-42ca-873b-096952599e29"
+                            type: "raw_event"
+                          -
+                            id: "485be998-0861-4d10-8a60-f66d27eb46a7"
+                            type: "raw_event"
+                          -
+                            id: "29cde194-bbd9-40c2-adba-5dcb1514f5fc"
+                            type: "raw_event"
+                  -
+                    id: "681d713d-bcd6-4303-b082-b9f893e7d1d9"
+                    type: "container"
+                    attributes:
+                      number: "CSNU8439129"
+                      seal_number: null
+                      created_at: "2024-06-26T15:02:32Z"
+                      ref_numbers: []
+                      pod_arrived_at: "2024-06-23T21:58:00Z"
+                      pod_discharged_at: "2024-06-26T04:30:00Z"
+                      final_destination_full_out_at: null
+                      holds_at_pod_terminal: []
+                      available_for_pickup: true
+                      equipment_type: "dry"
+                      equipment_length: 40
+                      equipment_height: "high_cube"
+                      weight_in_lbs: 40488
+                      pod_full_out_at: null
+                      empty_terminated_at: null
+                      terminal_checked_at: "2024-06-26T18:47:47Z"
+                      fees_at_pod_terminal: []
+                      pickup_lfd: "2024-07-01T07:00:00Z"
+                      pickup_appointment_at: "2024-06-28T15:00:00Z"
+                      pod_full_out_chassis_number: null
+                      location_at_pod_terminal: "Grounded"
+                      pod_last_tracking_request_at: "2024-06-26T18:47:46Z"
+                      shipment_last_tracking_request_at: "2024-06-26T15:02:32Z"
+                      availability_known: true
+                      pod_timezone: "America/Los_Angeles"
+                      final_destination_timezone: "America/Chicago"
+                      empty_terminated_timezone: "America/Chicago"
+                      pod_rail_carrier_scac: "BNSF"
+                      ind_rail_carrier_scac: "BNSF"
+                      pod_rail_loaded_at: null
+                      pod_rail_departed_at: null
+                      ind_eta_at: "2024-07-04T22:00:00Z"
+                      ind_ata_at: null
+                      ind_rail_unloaded_at: null
+                      ind_facility_lfd_on: null
+                      import_deadlines:
+                        pickup_lfd_terminal: "2024-07-01T07:00:00Z"
+                        pickup_lfd_rail: null
+                        pickup_lfd_line: "2024-07-01T07:00:00Z"
+                    relationships:
+                      shipment:
+                        data:
+                          id: "edd626cf-b0b5-4679-8a6c-80c8e9fe7698"
+                          type: "shipment"
+                      pickup_facility:
+                        data:
+                          id: "572b372f-21c7-4403-8fb0-948377c74642"
+                          type: "terminal"
+                      pod_terminal:
+                        data:
+                          id: "eaa2580c-5f5b-4198-85e4-821145d62098"
+                          type: "terminal"
+                      transport_events:
+                        data:
+                          -
+                            id: "9d19125a-2944-442c-8132-bf0d83670e5c"
+                            type: "transport_event"
+                          -
+                            id: "b2ff0b47-3151-41e2-8c46-7f95cdbe4167"
+                            type: "transport_event"
+                          -
+                            id: "e52feaa3-7a50-4570-a2ea-bf06f955ce23"
+                            type: "transport_event"
+                          -
+                            id: "c56d95e5-774f-432c-b6f4-c53967f07292"
+                            type: "transport_event"
+                          -
+                            id: "9b1d8b48-e870-46fa-bc46-10f9b30c64d4"
+                            type: "transport_event"
+                          -
+                            id: "3e1d3571-6b24-4ad2-a071-4e70d59af521"
+                            type: "transport_event"
+                          -
+                            id: "60f5eefe-13d5-4f85-9b65-d13b4c67115a"
+                            type: "transport_event"
+                      raw_events:
+                        data:
+                          -
+                            id: "2af51127-0971-4741-9b97-ea1b338e3a7c"
+                            type: "raw_event"
+                          -
+                            id: "4472ded6-eb69-4f21-8666-9a4f2342dfeb"
+                            type: "raw_event"
+                          -
+                            id: "ce238754-d5fd-4dc8-9f55-2ac6efdfbb5e"
+                            type: "raw_event"
+                          -
+                            id: "5cd3b5ef-843f-4f60-87ce-5beaeea86f7b"
+                            type: "raw_event"
+                          -
+                            id: "55291737-98b6-403c-9424-1605e6e01007"
+                            type: "raw_event"
+                          -
+                            id: "cdc55ea8-a075-45b3-9570-ade6fb2f0d94"
+                            type: "raw_event"
+                          -
+                            id: "c0ab5406-4e10-4fdc-85a4-e17ce8d956f5"
+                            type: "raw_event"
+                          -
+                            id: "965f0172-1c20-4342-a44a-7be0e594ff76"
+                            type: "raw_event"
+                          -
+                            id: "db178011-c795-42a4-9537-b4e77ffb4f98"
+                            type: "raw_event"
+                meta:
+                  size: 5
+                  total: 59229
+                links:
+                  self: "https://api.terminal49.com/v2/containers?page%5Bsize%5D=5"
+                  current: "https://api.terminal49.com/v2/containers?page%5Bnumber%5D=1&page%5Bsize%5D=5"
+                  next: "https://api.terminal49.com/v2/containers?page%5Bnumber%5D=2&page%5Bsize%5D=5"
+                  last: "https://api.terminal49.com/v2/containers?page%5Bnumber%5D=11846&page%5Bsize%5D=5"
+  operationId: "get-containers"
+  description: "Returns a list of container. The containers are returned sorted by creation date, with the most recently refreshed containers appearing first.\n\nThis API will return all containers associated with the account."
+  parameters:
+    -
+      schema:
+        type: "integer"
+        default: 1
+      in: "query"
+      name: "page%5Bnumber%5D"
+    -
+      schema:
+        type: "integer"
+        default: 30
+      in: "query"
+      name: "page%5Bsize%5D"
+      description: ""
+    -
+      schema:
+        type: "string"
+      in: "query"
+      name: "include"
+      description: "Comma delimited list of relations to include"
+    -
+      schema:
+        type: "integer"
+      in: "query"
+      name: "terminal_checked_before"
+      description: "Number of seconds in which containers were refreshed"
+patch:
+  summary: "Edit a container"
+  operationId: "patch-containers-id"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/container"
+  description: "Update a container"
+  tags:
+    - "Containers"
+  requestBody:
+    content:
+      application/json:
+        schema:
+          type: "object"
+          properties:
+            data:
+              type: "object"
+              required:
+                - "attributes"
+                - "type"
+              properties:
+                attributes:
+                  type: "object"
+                  properties:
+                    ref_numbers:
+                      type: "array"
+                      items:
+                        type: "string"
+                        example: "REF-12345"

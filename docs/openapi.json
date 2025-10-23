@@ -18,6 +18,74 @@
       "description": "Production"
     }
   ],
+  "tags": [
+    {
+      "name": "Containers"
+    },
+    {
+      "name": "Shipments"
+    },
+    {
+      "name": "Shipping Lines"
+    },
+    {
+      "name": "Locations"
+    },
+    {
+      "name": "Events"
+    },
+    {
+      "name": "Tracking Requests"
+    },
+    {
+      "name": "Webhooks"
+    },
+    {
+      "name": "Webhook Notifications"
+    },
+    {
+      "name": "Ports"
+    },
+    {
+      "name": "Metro Areas"
+    },
+    {
+      "name": "Terminals"
+    },
+    {
+      "name": "Routing (Paid)"
+    },
+    {
+      "name": "Vessels"
+    },
+    {
+      "name": "Parties"
+    }
+  ],
+  "security": [
+    {
+      "authorization": []
+    }
+  ],
+  "x-tagGroups": [
+    {
+      "name": "End Points",
+      "tags": [
+        "Shipments",
+        "Containers",
+        "Tracking Requests",
+        "Webhooks",
+        "Webhook Notifications",
+        "Metro Areas"
+      ]
+    },
+    {
+      "name": "Routing (Paid)",
+      "tags": [
+        "Routing (Paid)"
+      ]
+    }
+  ],
   "paths": {
     "/shipments": {
       "get": {
@@ -105,7 +173,7 @@
                             "line_tracking_stopped_reason": null
                           },
                           "links": {
-                            "self": "/v2/shipments/62738624-7032-4a50-892e-c55826228c25"
+                            "self": "https://api.terminal49.com/v2/shipments/62738624-7032-4a50-892e-c55826228c25"
                           },
                           "relationships": {
                             "port_of_lading": {
@@ -189,7 +257,7 @@
                             "line_tracking_stopped_reason": null
                           },
                           "links": {
-                            "self": "/v2/shipments/baaa725e-aa0e-4937-ac78-54d9e2e8621e"
+                            "self": "https://api.terminal49.com/v2/shipments/baaa725e-aa0e-4937-ac78-54d9e2e8621e"
                           },
                           "relationships": {
                             "port_of_lading": {
@@ -278,7 +346,7 @@
                             "line_tracking_stopped_reason": null
                           },
                           "links": {
-                            "self": "/v2/shipments/7721a48c-5e93-43c9-9f5f-5be10a87fdde"
+                            "self": "https://api.terminal49.com/v2/shipments/7721a48c-5e93-43c9-9f5f-5be10a87fdde"
                           },
                           "relationships": {
                             "port_of_lading": {
@@ -370,7 +438,7 @@
                             "line_tracking_stopped_reason": null
                           },
                           "links": {
-                            "self": "/v2/shipments/32b5ad78-43ba-42d9-bdc0-4cf12320e020"
+                            "self": "https://api.terminal49.com/v2/shipments/32b5ad78-43ba-42d9-bdc0-4cf12320e020"
                           },
                           "relationships": {
                             "port_of_lading": {
@@ -458,7 +526,7 @@
                             "line_tracking_stopped_reason": null
                           },
                           "links": {
-                            "self": "/v2/shipments/bd117d3b-8fa4-487c-9bab-25c15e227d1a"
+                            "self": "https://api.terminal49.com/v2/shipments/bd117d3b-8fa4-487c-9bab-25c15e227d1a"
                           },
                           "relationships": {
                             "port_of_lading": {
@@ -504,10 +572,10 @@
                         "total": 34044
                       },
                       "links": {
-                        "self": "https://api.terminal49.com/v2/shipments?page[size]=5",
-                        "current": "https://api.terminal49.com/v2/shipments?page[number]=1&page[size]=5",
-                        "next": "https://api.terminal49.com/v2/shipments?page[number]=2&page[size]=5",
-                        "last": "https://api.terminal49.com/v2/shipments?page[number]=6809&page[size]=5"
+                        "self": "https://api.terminal49.com/v2/shipments?page%5Bsize%5D=5",
+                        "current": "https://api.terminal49.com/v2/shipments?page%5Bnumber%5D=1&page%5Bsize%5D=5",
+                        "next": "https://api.terminal49.com/v2/shipments?page%5Bnumber%5D=2&page%5Bsize%5D=5",
+                        "last": "https://api.terminal49.com/v2/shipments?page%5Bnumber%5D=6809&page%5Bsize%5D=5"
                       }
                     }
                   }
@@ -567,7 +635,7 @@
               "default": 1
             },
             "in": "query",
-            "name": "page[number]",
+            "name": "page%5Bnumber%5D",
             "description": "\n"
           },
           {
@@ -576,7 +644,7 @@
               "default": 30
             },
             "in": "query",
-            "name": "page[size]",
+            "name": "page%5Bsize%5D",
             "description": "\n"
           },
           {
@@ -702,7 +770,7 @@
                           "line_tracking_stopped_reason": null
                         },
                         "links": {
-                          "self": "/v2/shipments/02b1bd6f-407c-45bb-8645-06e7ee34e7e3"
+                          "self": "https://api.terminal49.com/v2/shipments/02b1bd6f-407c-45bb-8645-06e7ee34e7e3"
                         },
                         "relationships": {
                           "port_of_lading": {
@@ -1284,7 +1352,7 @@
                           }
                         },
                         "links": {
-                          "self": "/v2/tracking_requests/ba4cb904-827f-4038-8e31-1e92b3356218"
+                          "self": "https://api.terminal49.com/v2/tracking_requests/ba4cb904-827f-4038-8e31-1e92b3356218"
                         }
                       }
                     }
@@ -1779,7 +1847,7 @@
                           }
                         },
                         "links": {
-                          "self": "/v2/tracking_requests/ba4cb904-827f-4038-8e31-1e92b3356218"
+                          "self": "https://api.terminal49.com/v2/tracking_requests/ba4cb904-827f-4038-8e31-1e92b3356218"
                         }
                       },
                       "included": [
@@ -1843,7 +1911,7 @@
                             }
                           },
                           "links": {
-                            "self": "/v2/shipments/eb6f218a-0b4a-47f9-8ef9-759aa5e0ea83"
+                            "self": "https://api.terminal49.com/v2/shipments/eb6f218a-0b4a-47f9-8ef9-759aa5e0ea83"
                           }
                         }
                       ]
@@ -1879,7 +1947,7 @@
                           }
                         },
                         "links": {
-                          "self": "/v2/tracking_requests/62c30bd4-d7fc-40dc-9fd6-fb39224301f5"
+                          "self": "https://api.terminal49.com/v2/tracking_requests/62c30bd4-d7fc-40dc-9fd6-fb39224301f5"
                         }
                       },
                       "links": {
@@ -1961,7 +2029,7 @@
                             }
                           },
                           "links": {
-                            "self": "/v2/shipments/dfc9f601-f6fe-412e-a71c-feabcc2dd4e3"
+                            "self": "https://api.terminal49.com/v2/shipments/dfc9f601-f6fe-412e-a71c-feabcc2dd4e3"
                           }
                         }
                       ]
@@ -2583,6 +2651,27 @@
                           },
                           {
                             "$ref": "#/components/schemas/container_updated_event"
+                          },
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container"
+                          },
+                          {
+                            "$ref": "#/components/schemas/port"
+                          },
+                          {
+                            "$ref": "#/components/schemas/terminal"
+                          },
+                          {
+                            "$ref": "#/components/schemas/vessel"
+                          },
+                          {
+                            "$ref": "#/components/schemas/metro_area"
+                          },
+                          {
+                            "$ref": "#/components/schemas/rail_terminal"
                           }
                         ]
                       }
@@ -2644,7 +2733,7 @@
                             }
                           },
                           "links": {
-                            "self": "/v2/tracking_requests/bdeca506-9741-4ab1-a0a7-cfd1d908e923"
+                            "self": "https://api.terminal49.com/v2/tracking_requests/bdeca506-9741-4ab1-a0a7-cfd1d908e923"
                           }
                         },
                         {
@@ -2707,7 +2796,7 @@
                             }
                           },
                           "links": {
-                            "self": "/v2/shipments/b5b10c0a-8d18-46da-b4c2-4e5fa790e7da"
+                            "self": "https://api.terminal49.com/v2/shipments/b5b10c0a-8d18-46da-b4c2-4e5fa790e7da"
                           }
                         },
                         {
@@ -2928,7 +3017,7 @@
                             }
                           },
                           "links": {
-                            "self": "/v2/shipments/715ed64b-6195-49f6-9407-1383a8088bfd"
+                            "self": "https://api.terminal49.com/v2/shipments/715ed64b-6195-49f6-9407-1383a8088bfd"
                           }
                         }
                       ]
@@ -3026,9 +3115,7 @@
                           "attributes": {
                             "created_at": "2020-07-28T23:12:53Z",
                             "bill_of_lading_number": "TE491846459E",
-                            "ref_numbers": [
-                              null
-                            ],
+                            "ref_numbers": [],
                             "shipping_line_scac": "MSCU",
                             "shipping_line_name": "Mediterranean Shipping Company",
                             "port_of_lading_locode": "MXZLO",
@@ -3082,7 +3169,7 @@
                             }
                           },
                           "links": {
-                            "self": "/v2/shipments/1fc35241-4c8b-420d-803a-9e6661720a05"
+                            "self": "https://api.terminal49.com/v2/shipments/1fc35241-4c8b-420d-803a-9e6661720a05"
                           }
                         }
                       ]
@@ -4335,10 +4422,10 @@
                         "total": 59229
                       },
                       "links": {
-                        "self": "https://api.terminal49.com/v2/containers?page[size]=5",
-                        "current": "https://api.terminal49.com/v2/containers?page[number]=1&page[size]=5",
-                        "next": "https://api.terminal49.com/v2/containers?page[number]=2&page[size]=5",
-                        "last": "https://api.terminal49.com/v2/containers?page[number]=11846&page[size]=5"
+                        "self": "https://api.terminal49.com/v2/containers?page%5Bsize%5D=5",
+                        "current": "https://api.terminal49.com/v2/containers?page%5Bnumber%5D=1&page%5Bsize%5D=5",
+                        "next": "https://api.terminal49.com/v2/containers?page%5Bnumber%5D=2&page%5Bsize%5D=5",
+                        "last": "https://api.terminal49.com/v2/containers?page%5Bnumber%5D=11846&page%5Bsize%5D=5"
                       }
                     }
                   }
@@ -4356,7 +4443,7 @@
               "default": 1
             },
             "in": "query",
-            "name": "page[number]"
+            "name": "page%5Bnumber%5D"
           },
           {
             "schema": {
@@ -4364,7 +4451,7 @@
               "default": 30
             },
             "in": "query",
-            "name": "page[size]",
+            "name": "page%5Bsize%5D",
             "description": ""
           },
           {
@@ -5866,102 +5953,6 @@
         "description": "Returns a vessel by id. <Note>`show_positions` is a paid feature. Please contact sales@terminal49.com.</Note>"
       }
     },
-    "/vessels/{imo}": {
-      "parameters": [
-        {
-          "schema": {
-            "type": "string"
-          },
-          "name": "imo",
-          "in": "path",
-          "required": true
-        },
-        {
-          "schema": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2025-05-20T00:00:00Z"
-          },
-          "name": "show_positions[from_timestamp]",
-          "in": "query",
-          "description": "ISO 8601 timestamp to filter positions from. 7 days by default.",
-          "required": false
-        },
-        {
-          "schema": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2025-05-24T00:00:00Z"
-          },
-          "name": "show_positions[to_timestamp]",
-          "in": "query",
-          "description": "ISO 8601 timestamp to filter positions up to. Current time by default.",
-          "required": false
-        }
-      ],
-      "get": {
-        "summary": "Get a vessel using the imo",
-        "tags": [
-          "Vessels"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/vessel"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Feature not enabled",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "errors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "status": {
-                            "type": "string",
-                            "example": "403"
-                          },
-                          "source": {
-                            "type": "object",
-                            "nullable": true
-                          },
-                          "title": {
-                            "type": "string",
-                            "example": "Forbidden"
-                          },
-                          "detail": {
-                            "type": "string",
-                            "example": "Routing data feature is not enabled for this account"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "operationId": "get-vessels-imo",
-        "description": "Returns a vessel by the given IMO number. <Note>`show_positions` is a paid feature. Please contact sales@terminal49.com.</Note>",
-        "x-internal": true
-      }
-    },
     "/vessels/{id}/future_positions": {
       "parameters": [
         {
@@ -6302,7 +6293,7 @@
                         }
                       },
                       "links": {
-                        "self": "/v2/parties/ba4cb904-827f-4038-8e31-1e92b3356218"
+                        "self": "https://api.terminal49.com/v2/parties/ba4cb904-827f-4038-8e31-1e92b3356218"
                       }
                     }
                   }
@@ -6526,25 +6517,6 @@
       }
     }
   },
-  "x-tagGroups": [
-    {
-      "name": "End Points",
-      "tags": [
-        "Shipments",
-        "Containers",
-        "Tracking Requests",
-        "Webhooks",
-        "Webhook Notifications",
-        "Metro Areas"
-      ]
-    },
-    {
-      "name": "Routing (Paid)",
-      "tags": [
-        "Routing (Paid)"
-      ]
-    }
-  ],
   "components": {
     "schemas": {
       "shipment": {
@@ -6668,6 +6640,7 @@
                 "properties": {
                   "data": {
                     "type": "object",
+                    "nullable": true,
                     "properties": {
                       "type": {
                         "type": "string",
@@ -6692,6 +6665,7 @@
                 "properties": {
                   "data": {
                     "type": "object",
+                    "nullable": true,
                     "properties": {
                       "type": {
                         "type": "string",
@@ -6717,6 +6691,7 @@
                 "properties": {
                   "data": {
                     "type": "object",
+                    "nullable": true,
                     "properties": {
                       "type": {
                         "type": "string",
@@ -7370,6 +7345,7 @@
                 "properties": {
                   "data": {
                     "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string"
@@ -7389,6 +7365,7 @@
                 "properties": {
                   "data": {
                     "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string"
@@ -8080,6 +8057,7 @@
                 "properties": {
                   "data": {
                     "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
@@ -9046,7 +9024,8 @@
               },
               "location_name": {
                 "type": "string",
-                "description": "The city or facility name of the event location"
+                "description": "The city or facility name of the event location",
+                "nullable": true
               },
               "location_locode": {
                 "type": "string",
@@ -9081,6 +9060,7 @@
                 "properties": {
                   "data": {
                     "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
@@ -9102,6 +9082,7 @@
                 "properties": {
                   "data": {
                     "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
@@ -9683,45 +9664,5 @@
         "description": "`Token YOUR_API_TOKEN`\n\nThe APIs require authentication to be done using header-based API Key and Secret Authentication. \n\nAPI key and secret are sent va the `Authorization` request header.\n\nYou send your API key and secret in the following way:\n\n`Authorization: Token YOUR_API_KEY`"
       }
     }
-  },
-  "tags": [
-    {
-      "name": "Containers"
-    },
-    {
-      "name": "Shipments"
-    },
-    {
-      "name": "Locations"
-    },
-    {
-      "name": "Events"
-    },
-    {
-      "name": "Tracking Requests"
-    },
-    {
-      "name": "Webhooks"
-    },
-    {
-      "name": "Webhook Notifications"
-    },
-    {
-      "name": "Ports"
-    },
-    {
-      "name": "Metro Areas"
-    },
-    {
-      "name": "Terminals"
-    },
-    {
-      "name": "Routing (Paid)"
-    }
-  ],
-  "security": [
-    {
-      "authorization": []
-    }
-  ]
+  }
 }

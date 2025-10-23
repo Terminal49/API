@@ -1,0 +1,23 @@
+parameters:
+  -
+    schema:
+      type: "string"
+    name: "id"
+    in: "path"
+    required: true
+patch:
+  summary: "Resume tracking a shipment"
+  operationId: "patch-shipments-id-resume-tracking"
+  tags:
+    - "Shipments"
+  description: "Resume tracking a shipment.  Keep in mind that some information is only made available by our data sources at specific times, so a stopped and resumed shipment may have some information missing."
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/shipment"

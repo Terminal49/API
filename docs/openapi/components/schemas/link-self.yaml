@@ -1,0 +1,6 @@
+title: "link"
+type: "object"
+properties:
+  self:
+    type: "string"
+    format: "uri"

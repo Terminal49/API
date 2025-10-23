@@ -1,0 +1,21 @@
+title: "terminal_fee"
+type: "object"
+properties:
+  type:
+    type: "string"
+    enum:
+      - "demurrage"
+      - "exam"
+      - "extended_dwell_time"
+      - "other"
+      - "total"
+  amount:
+    type: "number"
+    description: "The fee amount in local currency"
+  currency_code:
+    type: "string"
+    description: "The ISO 4217 currency code of the fee is charged in. E.g. USD"
+    example: "USD"
+required:
+  - "type"
+  - "amount"

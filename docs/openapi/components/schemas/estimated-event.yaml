@@ -1,0 +1,102 @@
+title: "Estimated Event Model"
+type: "object"
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  type:
+    type: "string"
+    enum:
+      - "estimated_event"
+  attributes:
+    type: "object"
+    required:
+      - "created_at"
+      - "estimated_timestamp"
+      - "event"
+    properties:
+      created_at:
+        type: "string"
+        description: "When the estimated event was created"
+        format: "date-time"
+      estimated_timestamp:
+        type: "string"
+        format: "date-time"
+      event:
+        type: "string"
+        enum:
+          - "shipment.estimated.arrival"
+      location_locode:
+        type: "string"
+        description: "UNLOCODE of the event location"
+        nullable: true
+      timezone:
+        type: "string"
+        description: "IANA tz"
+        nullable: true
+      voyage_number:
+        type: "string"
+        nullable: true
+      data_source:
+        type: "string"
+        enum:
+          - "shipping_line"
+          - "terminal"
+        description: "The original source of the event data"
+  relationships:
+    type: "object"
+    required:
+      - "shipment"
+    properties:
+      shipment:
+        type: "object"
+        required:
+          - "data"
+        properties:
+          data:
+            type: "object"
+            required:
+              - "id"
+              - "type"
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "shipment"
+      port:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            nullable: true
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "port"
+      vessel:
+        type: "object"
+        description: "\n"
+        properties:
+          data:
+            type: "object"
+            nullable: true
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "vessel"
+required:
+  - "id"
+  - "type"
+  - "attributes"
+  - "relationships"

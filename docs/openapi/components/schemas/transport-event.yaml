@@ -1,0 +1,143 @@
+title: "Transport Event Model"
+type: "object"
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  type:
+    type: "string"
+    enum:
+      - "transport_event"
+  attributes:
+    type: "object"
+    properties:
+      event:
+        type: "string"
+        enum:
+          - "container.transport.vessel_arrived"
+          - "container.transport.vessel_discharged"
+          - "container.transport.vessel_loaded"
+          - "container.transport.vessel_departed"
+          - "container.transport.rail_departed"
+          - "container.transport.rail_arrived"
+          - "container.transport.rail_loaded"
+          - "container.transport.rail_unloaded"
+          - "container.transport.transshipment_arrived"
+          - "container.transport.transshipment_discharged"
+          - "container.transport.transshipment_loaded"
+          - "container.transport.transshipment_departed"
+          - "container.transport.feeder_arrived"
+          - "container.transport.feeder_discharged"
+          - "container.transport.feeder_loaded"
+          - "container.transport.feeder_departed"
+          - "container.transport.empty_out"
+          - "container.transport.full_in"
+          - "container.transport.full_out"
+          - "container.transport.empty_in"
+          - "container.transport.vessel_berthed"
+          - "container.transport.arrived_at_inland_destination"
+          - "container.transport.estimated.arrived_at_inland_destination"
+          - "container.pickup_lfd.changed"
+          - "container.transport.available"
+      voyage_number:
+        type: "string"
+        nullable: true
+      timestamp:
+        type: "string"
+        format: "date-time"
+        nullable: true
+      timezone:
+        type: "string"
+        description: "IANA tz"
+        nullable: true
+      location_locode:
+        type: "string"
+        description: "UNLOCODE of the event location"
+        nullable: true
+      created_at:
+        type: "string"
+        format: "date-time"
+      data_source:
+        type: "string"
+        enum:
+          - "shipping_line"
+          - "terminal"
+          - "ais"
+        example: "shipping_line"
+        description: "The original source of the event data"
+  relationships:
+    type: "object"
+    properties:
+      shipment:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "shipment"
+      location:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            nullable: true
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "port"
+                  - "metro_area"
+      vessel:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            nullable: true
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              name:
+                type: "string"
+                enum:
+                  - "vessel"
+      terminal:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            nullable: true
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "terminal"
+                  - "rail_terminal"
+      container:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "container"
+required:
+  - "id"
+  - "type"

@@ -1,0 +1,97 @@
+title: "webhook_notification"
+type: "object"
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  type:
+    type: "string"
+    enum:
+      - "webhook_notification"
+  attributes:
+    type: "object"
+    properties:
+      event:
+        type: "string"
+        enum:
+          - "container.transport.vessel_arrived"
+          - "container.transport.vessel_discharged"
+          - "container.transport.vessel_loaded"
+          - "container.transport.vessel_departed"
+          - "container.transport.rail_departed"
+          - "container.transport.rail_arrived"
+          - "container.transport.rail_loaded"
+          - "container.transport.rail_unloaded"
+          - "container.transport.transshipment_arrived"
+          - "container.transport.transshipment_discharged"
+          - "container.transport.transshipment_loaded"
+          - "container.transport.transshipment_departed"
+          - "container.transport.feeder_arrived"
+          - "container.transport.feeder_discharged"
+          - "container.transport.feeder_loaded"
+          - "container.transport.feeder_departed"
+          - "container.transport.empty_out"
+          - "container.transport.full_in"
+          - "container.transport.full_out"
+          - "container.transport.empty_in"
+          - "container.transport.vessel_berthed"
+          - "shipment.estimated.arrival"
+          - "tracking_request.succeeded"
+          - "tracking_request.failed"
+          - "tracking_request.awaiting_manifest"
+          - "tracking_request.tracking_stopped"
+          - "container.created"
+          - "container.updated"
+          - "container.pod_terminal_changed"
+          - "container.transport.arrived_at_inland_destination"
+          - "container.transport.estimated.arrived_at_inland_destination"
+          - "container.pickup_lfd.changed"
+          - "container.transport.available"
+      delivery_status:
+        type: "string"
+        default: "pending"
+        enum:
+          - "pending"
+          - "succeeded"
+          - "failed"
+        description: "Whether the notification has been delivered to the webhook endpoint"
+      created_at:
+        type: "string"
+    required:
+      - "event"
+      - "delivery_status"
+      - "created_at"
+  relationships:
+    type: "object"
+    properties:
+      webhook:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "webhook"
+      reference_object:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "tracking_request"
+                  - "estimated_event"
+                  - "transport_event"
+                  - "container_updated_event"
+    required:
+      - "webhook"

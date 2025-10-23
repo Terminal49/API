@@ -1,0 +1,76 @@
+title: "vessel"
+type: "object"
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  type:
+    type: "string"
+    enum:
+      - "vessel"
+  attributes:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "The name of the ship or vessel"
+        example: "Ever Given"
+      imo:
+        type: "string"
+        description: "International Maritime Organization (IMO) number"
+        nullable: true
+        example: "9811000"
+      mmsi:
+        type: "string"
+        description: "Maritime Mobile Service Identity (MMSI)"
+        nullable: true
+        example: "353136000"
+      latitude:
+        type: "number"
+        description: "The current latitude position of the vessel"
+        nullable: true
+        example: 25.29845
+      longitude:
+        type: "number"
+        description: "The current longitude position of the vessel"
+        nullable: true
+        example: 121.217
+      nautical_speed_knots:
+        type: "number"
+        description: "The current speed of the ship in knots (nautical miles per hour)"
+        nullable: true
+        example: 90
+      navigational_heading_degrees:
+        type: "number"
+        description: "The current heading of the ship in degrees, where 0 is North, 90 is East, 180 is South, and 270 is West"
+        nullable: true
+        example: 194
+      position_timestamp:
+        type: "string"
+        description: "The timestamp of when the ship's position was last recorded, in ISO 8601 date and time format"
+        nullable: true
+        example: "2023-07-28T14:01:37Z"
+      positions:
+        type: "array"
+        description: "An array of historical position data for the vessel. Only included if `show_positions` is true."
+        nullable: true
+        items:
+          type: "object"
+          properties:
+            latitude:
+              type: "number"
+              example: 1.477285
+            longitude:
+              type: "number"
+              example: 104.535533333
+            heading:
+              type: "number"
+              nullable: true
+              example: 51
+            timestamp:
+              type: "string"
+              format: "date-time"
+              example: "2025-05-23T19:14:22Z"
+            estimated:
+              type: "boolean"
+              example: false

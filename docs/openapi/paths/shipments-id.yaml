@@ -1,0 +1,397 @@
+parameters:
+  -
+    schema:
+      type: "string"
+    name: "id"
+    in: "path"
+    required: true
+    description: "Shipment Id"
+get:
+  summary: "Get a shipment"
+  tags:
+    - "Shipments"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/shipment"
+              included:
+                type: "array"
+                items:
+                  anyOf:
+                    -
+                      $ref: "#/components/schemas/container"
+                    -
+                      $ref: "#/components/schemas/port"
+                    -
+                      $ref: "#/components/schemas/terminal"
+          examples:
+            En-route to NY with inland move:
+              value:
+                data:
+                  id: "02b1bd6f-407c-45bb-8645-06e7ee34e7e3"
+                  type: "shipment"
+                  attributes:
+                    created_at: "2024-06-26T15:05:20Z"
+                    ref_numbers: []
+                    tags: []
+                    bill_of_lading_number: "MEDUF5399896"
+                    normalized_number: "MEDUF5399896"
+                    shipping_line_scac: "MSCU"
+                    shipping_line_name: "Mediterranean Shipping Company"
+                    shipping_line_short_name: "MSC"
+                    customer_name: "Sodor Steamworks"
+                    port_of_lading_locode: "FRLEH"
+                    port_of_lading_name: "Le Havre"
+                    port_of_discharge_locode: "USNYC"
+                    port_of_discharge_name: "New York / New Jersey"
+                    pod_vessel_name: "MSC ANISHA R."
+                    pod_vessel_imo: "9227297"
+                    pod_voyage_number: "421A"
+                    destination_locode: "USIND"
+                    destination_name: "Indianapolis"
+                    destination_timezone: "US/Eastern"
+                    destination_ata_at: null
+                    destination_eta_at: null
+                    pol_etd_at: null
+                    pol_atd_at: "2024-06-11T22:00:00Z"
+                    pol_timezone: "Europe/Paris"
+                    pod_eta_at: null
+                    pod_original_eta_at: null
+                    pod_ata_at: null
+                    pod_timezone: "America/New_York"
+                    line_tracking_last_attempted_at: "2024-06-26T15:05:20Z"
+                    line_tracking_last_succeeded_at: "2024-06-26T15:05:20Z"
+                    line_tracking_stopped_at: null
+                    line_tracking_stopped_reason: null
+                  links:
+                    self: "https://api.terminal49.com/v2/shipments/02b1bd6f-407c-45bb-8645-06e7ee34e7e3"
+                  relationships:
+                    port_of_lading:
+                      data:
+                        id: "fe7fc831-8a81-4079-8938-b90015912e8b"
+                        type: "port"
+                    port_of_discharge:
+                      data:
+                        id: "f7cb530a-9e60-412c-a5bc-205a2f34ba54"
+                        type: "port"
+                    pod_terminal:
+                      data:
+                        id: "b859f5c3-8515-41da-bf20-39c0a5ada887"
+                        type: "terminal"
+                    destination:
+                      data:
+                        id: "e1e492f6-c8ba-45a9-ad1a-67a7e74547ce"
+                        type: "port"
+                    destination_terminal:
+                      data: null
+                    line_tracking_stopped_by_user:
+                      data: null
+                    containers:
+                      data:
+                        -
+                          id: "55a700e4-7005-45a9-92fd-1ff38641dbd9"
+                          type: "container"
+                links:
+                  self: "https://api.terminal49.com/v2/shipments/02b1bd6f-407c-45bb-8645-06e7ee34e7e3?include=containers"
+                included:
+                  -
+                    id: "55a700e4-7005-45a9-92fd-1ff38641dbd9"
+                    type: "container"
+                    attributes:
+                      number: "CAIU7432986"
+                      seal_number: null
+                      created_at: "2024-06-26T15:05:21Z"
+                      ref_numbers: []
+                      pod_arrived_at: null
+                      pod_discharged_at: "2024-06-22T04:00:00Z"
+                      final_destination_full_out_at: null
+                      holds_at_pod_terminal: []
+                      available_for_pickup: true
+                      equipment_type: "dry"
+                      equipment_length: 40
+                      equipment_height: "high_cube"
+                      weight_in_lbs: null
+                      pod_full_out_at: null
+                      empty_terminated_at: null
+                      terminal_checked_at: "2024-06-26T17:51:12Z"
+                      fees_at_pod_terminal: []
+                      pickup_lfd: "2024-07-07T04:00:00Z"
+                      pickup_appointment_at: null
+                      pod_full_out_chassis_number: null
+                      location_at_pod_terminal: "Yard - Y0709A"
+                      pod_last_tracking_request_at: "2024-06-26T17:51:12Z"
+                      shipment_last_tracking_request_at: "2024-06-26T15:05:20Z"
+                      availability_known: true
+                      pod_timezone: "America/New_York"
+                      final_destination_timezone: "US/Eastern"
+                      empty_terminated_timezone: "US/Eastern"
+                      pod_rail_carrier_scac: "CSXT"
+                      ind_rail_carrier_scac: "CSXT"
+                      pod_rail_loaded_at: null
+                      pod_rail_departed_at: null
+                      ind_eta_at: null
+                      ind_ata_at: null
+                      ind_rail_unloaded_at: null
+                      ind_facility_lfd_on: null
+                      import_deadlines:
+                        pickup_lfd_terminal: "2024-07-07T04:00:00Z"
+                        pickup_lfd_rail: null
+                        pickup_lfd_line: "2024-07-07T04:00:00Z"
+                    relationships:
+                      shipment:
+                        data:
+                          id: "02b1bd6f-407c-45bb-8645-06e7ee34e7e3"
+                          type: "shipment"
+                      pickup_facility:
+                        data: null
+                      pod_terminal:
+                        data:
+                          id: "b859f5c3-8515-41da-bf20-39c0a5ada887"
+                          type: "terminal"
+                      transport_events:
+                        data:
+                          -
+                            id: "45b542cb-332b-4684-b915-42e3a0759823"
+                            type: "transport_event"
+                          -
+                            id: "174ed528-a1a9-4002-aef0-f2c9369199da"
+                            type: "transport_event"
+                          -
+                            id: "7a2f30a6-a756-4c14-9477-fbfc1c7fe2f8"
+                            type: "transport_event"
+                          -
+                            id: "e7365004-175a-46e8-96cd-dbed0f3daf21"
+                            type: "transport_event"
+                          -
+                            id: "7c567bf3-7f01-4a3d-a176-eaa1f7165585"
+                            type: "transport_event"
+                      raw_events:
+                        data:
+                          -
+                            id: "2956f71c-bfb9-4e49-b9e2-1b4d53c74cac"
+                            type: "raw_event"
+                          -
+                            id: "391e0eda-65b5-4fc3-a53d-25ecd9570259"
+                            type: "raw_event"
+                          -
+                            id: "74810c04-6c8a-4194-8cff-52936584a965"
+                            type: "raw_event"
+                          -
+                            id: "4b1500e2-b23b-4896-87bd-c38b1d16f385"
+                            type: "raw_event"
+                          -
+                            id: "8b9a7d88-720a-4304-8c1e-a3336e39f481"
+                            type: "raw_event"
+                          -
+                            id: "bf1f59c5-5dd8-4013-87f9-d7056bc87114"
+                            type: "raw_event"
+    404:
+      description: "Not Found"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              errors:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/error"
+          examples:
+            En-route to NY with inland move:
+              value:
+                data:
+                  id: "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8"
+                  type: "shipment"
+                  attributes:
+                    bill_of_lading_number: "6140575020"
+                    ref_numbers:
+                      - "my-ref-49"
+                      - "PO#18412"
+                    created_at: "2020-02-20T13:37:12Z"
+                    tags: []
+                    port_of_lading_locode: "INVTZ"
+                    port_of_lading_name: "Visakhapatnam, IN"
+                    port_of_discharge_locode: "USNYC"
+                    port_of_discharge_name: "New York / New Jersey, NY"
+                    destination_locode: "USDET"
+                    destination_name: "Detroit, MI"
+                    shipping_line_scac: "HLCU"
+                    pod_vessel_name: "CMA CGM ALMAVIVA"
+                    pod_voyage_number: "0108"
+                    pol_etd_at: null
+                    pol_atd_at: "2020-02-15T21:53Z"
+                    pol_timezone: "Asia/Calcutta"
+                    pod_eta_at: "2020-03-18T08:00Z"
+                    pod_ata_at: null
+                    pod_timezone: "America/New_York"
+                    destination_eta_at: "2020-03-26T17:00Z"
+                    destination_ata_at: null
+                    destination_timezone: "America/Detroit"
+                  relationships:
+                    containers:
+                      data:
+                        -
+                          id: "c99a81c0-ff69-4bdf-aa5f-8e33a787f5fa"
+                          type: "container"
+                    port_of_lading:
+                      data:
+                        id: "bde5465a-1160-4fde-a026-74df9c362f65"
+                        type: "port"
+                    port_of_discharge:
+                      data:
+                        id: "f7cb530a-9e60-412c-a5bc-205a2f34ba54"
+                        type: "port"
+                    destination:
+                      data:
+                        id: "c9ae2b6b-5088-4e07-ba09-2872121e4fa2"
+                        type: "metro_area"
+                    customer:
+                      data:
+                        id: "ff76b51a-371e-45ec-86d1-9d03ccae566a"
+                        type: "account"
+                included:
+                  -
+                    id: "c99a81c0-ff69-4bdf-aa5f-8e33a787f5fa"
+                    type: "container"
+                    attributes:
+                      number: "UACU4743531"
+                      equipment_type: "reefer"
+                      length: 40
+                      height: "high_cube"
+                      weight_in_lbs: 35075
+                      created_at: "2020-02-20T08:19:52Z"
+                      seal_number: null
+                      pickup_lfd: null
+                      availability_known: false
+                      available_for_pickup: null
+                      current_transportation_mode: "vessel"
+                      pod_discharged_at: null
+                      pod_picked_up_at: null
+                      destination_unloaded_at: null
+                      destination_picked_up_at: null
+                      empty_returned_at: null
+                      pod_timezone: "America/Los_Angeles"
+                      final_destination_timezone: null
+                      empty_terminated_timezone: null
+                    relationships:
+                      most_recent_location:
+                        data:
+                          id: "dd179094-a1d4-4129-842d-b952e43df4b7"
+                          type: "port"
+                      shipment:
+                        data:
+                          id: "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8"
+                          type: "shipment"
+                  -
+                    id: "bde5465a-1160-4fde-a026-74df9c362f65"
+                    type: "port"
+                    attributes:
+                      name: "Visakhapatnam"
+                      code: "INVTZ"
+                      country_code: "IN"
+                      timezone: "Asia/Calcutta"
+                  -
+                    id: "dd179094-a1d4-4129-842d-b952e43df4b7"
+                    type: "port"
+                    attributes:
+                      name: "Damietta"
+                      code: "EGDAM"
+                      country_code: "EG"
+                      time_zone: "Africa/Cairo"
+                  -
+                    id: "f7cb530a-9e60-412c-a5bc-205a2f34ba54"
+                    type: "port"
+                    attributes:
+                      name: "New York / New Jersey"
+                      code: "USNYC"
+                      country_code: "US"
+                      timezone: "America/New_York"
+                  -
+                    id: "c9ae2b6b-5088-4e07-ba09-2872121e4fa2"
+                    type: "metro_area"
+                    attributes:
+                      name: "Detroit"
+                      code: "USDET"
+                      country_code: "US"
+                      state_abbr: "MI"
+                      timezone: "America/Detroit"
+                  -
+                    id: "ff76b51a-371e-45ec-86d1-9d03ccae566a"
+                    type: "account"
+                    attributes:
+                      name: "A-Z Imports"
+                  -
+                    id: "252a5450-2893-4207-b5c4-81ce3152ce84"
+                    type: "vessel"
+                    attributes:
+                      name: "CMA CGM ALMAVIVA"
+                      imo: "9450648"
+                      mmsi: "228339600"
+                      latitude: 70.22625823437389
+                      longitude: 45.06279126658865
+                      nautical_speed_knots: 100
+                      navigational_heading_degrees: 1
+                      position_timestamp: "2023-06-05T19:46:18Z"
+  operationId: "get-shipment-id"
+  description: "Retrieves the details of an existing shipment. You need only supply the unique shipment `id` that was returned upon `tracking_request` creation."
+  parameters:
+    -
+      schema:
+        type: "string"
+      in: "query"
+      name: "include"
+      description: "Comma delimited list of relations to include"
+patch:
+  summary: "Edit a shipment"
+  operationId: "patch-shipments-id"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/shipment"
+  description: "Update a shipment"
+  tags:
+    - "Shipments"
+  requestBody:
+    content:
+      application/json:
+        schema:
+          type: "object"
+          properties:
+            data:
+              type: "object"
+              required:
+                - "attributes"
+              properties:
+                attributes:
+                  type: "object"
+                  properties:
+                    ref_numbers:
+                      type: "array"
+                      example:
+                        - "REFNUMBER10"
+                      description: "Shipment ref numbers."
+                      items:
+                        type: "string"
+                    shipment_tags:
+                      type: "array"
+                      x-stoplight:
+                        id: "02itol38fmg55"
+                      uniqueItems: true
+                      description: "Tags related to a shipment"
+                      items:
+                        x-stoplight:
+                          id: "64x90wvr9d6nd"
+                        type: "string"
+                        example: "tag1, tag2"

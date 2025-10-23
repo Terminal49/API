@@ -1,0 +1,359 @@
+parameters:
+  -
+    schema:
+      type: "string"
+    name: "id"
+    in: "path"
+    required: true
+get:
+  summary: "Get a container's raw events"
+  tags:
+    - "Containers"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/raw_event"
+          examples:
+            Example Raw Events:
+              value:
+                data:
+                  -
+                    id: "ca6b760f-13e9-4bf6-ab49-3cf2e40757fb"
+                    type: "raw_event"
+                    attributes:
+                      timestamp: "2020-03-03T00:00:00Z"
+                      estimated: false
+                      actual_on: "2020-03-03"
+                      estimated_at: null
+                      actual_at: null
+                      event: "empty_out"
+                      index: 0
+                      original_event: "Truck Gate out empty"
+                      created_at: "2020-04-18T00:18:27Z"
+                      voyage_number: null
+                      location_name: "Oakland"
+                      location_locode: null
+                      vessel_name: null
+                      vessel_imo: null
+                      timezone: null
+                    relationships:
+                      location:
+                        data: null
+                      vessel:
+                        data: null
+                  -
+                    id: "bcdfc796-0570-4c85-9336-d6c7d0da02d2"
+                    type: "raw_event"
+                    attributes:
+                      timestamp: "2020-03-09T00:00:00Z"
+                      estimated: false
+                      actual_on: "2020-03-09"
+                      estimated_at: null
+                      actual_at: null
+                      event: "full_in"
+                      index: 1
+                      original_event: "Truck Arrival in"
+                      created_at: "2020-04-18T00:18:27Z"
+                      voyage_number: null
+                      location_name: null
+                      location_locode: null
+                      vessel_name: null
+                      vessel_imo: null
+                      timezone: null
+                    relationships:
+                      location:
+                        data: null
+                      vessel:
+                        data: null
+                  -
+                    id: "a4ff01b0-b374-4123-ae65-3dc0c7ea41ea"
+                    type: "raw_event"
+                    attributes:
+                      timestamp: "2020-03-14T00:00:00Z"
+                      estimated: false
+                      actual_on: "2020-03-14"
+                      estimated_at: null
+                      actual_at: null
+                      event: "vessel_loaded"
+                      index: 2
+                      original_event: "Vessel Loaded"
+                      created_at: "2020-04-18T00:18:27Z"
+                      voyage_number: "FA009R"
+                      location_name: null
+                      location_locode: null
+                      vessel_name: "MSC FAITH"
+                      vessel_imo: null
+                      timezone: null
+                    relationships:
+                      location:
+                        data: null
+                      vessel:
+                        data:
+                          id: "4b473d0e-7073-4171-8b5b-15e71e9e13cc"
+                          type: "vessel"
+                  -
+                    id: "ca5862ef-6e27-4245-a281-0cec6bbe1fb7"
+                    type: "raw_event"
+                    attributes:
+                      timestamp: "2020-03-15T00:00:00Z"
+                      estimated: false
+                      actual_on: "2020-03-15"
+                      estimated_at: null
+                      actual_at: null
+                      event: "vessel_departed"
+                      index: 3
+                      original_event: "Vessel departed"
+                      created_at: "2020-04-18T00:18:27Z"
+                      voyage_number: "FA009R"
+                      location_name: null
+                      location_locode: null
+                      vessel_name: "MSC FAITH"
+                      vessel_imo: null
+                      timezone: null
+                    relationships:
+                      location:
+                        data: null
+                      vessel:
+                        data:
+                          id: "4b473d0e-7073-4171-8b5b-15e71e9e13cc"
+                          type: "vessel"
+                  -
+                    id: "f47a903e-e6d1-41c5-aec6-8401b2abf297"
+                    type: "raw_event"
+                    attributes:
+                      timestamp: "2020-03-25T00:00:00Z"
+                      estimated: false
+                      actual_on: "2020-03-25"
+                      estimated_at: null
+                      actual_at: null
+                      event: "transshipment_arrived"
+                      index: 4
+                      original_event: "Vessel arrived"
+                      created_at: "2020-04-18T00:18:27Z"
+                      voyage_number: "FA009R"
+                      location_name: null
+                      location_locode: null
+                      vessel_name: "MSC FAITH"
+                      vessel_imo: null
+                      timezone: null
+                    relationships:
+                      location:
+                        data: null
+                      vessel:
+                        data:
+                          id: "4b473d0e-7073-4171-8b5b-15e71e9e13cc"
+                          type: "vessel"
+                  -
+                    id: "72a1a13b-a2e0-4ac0-851d-eec41e9e9087"
+                    type: "raw_event"
+                    attributes:
+                      timestamp: "2020-03-25T00:00:00Z"
+                      estimated: false
+                      actual_on: "2020-03-25"
+                      estimated_at: null
+                      actual_at: null
+                      event: "transshipment_discharged"
+                      index: 5
+                      original_event: "Vessel Discharged"
+                      created_at: "2020-04-18T00:18:27Z"
+                      voyage_number: "FA009R"
+                      location_name: null
+                      location_locode: null
+                      vessel_name: "MSC FAITH"
+                      vessel_imo: null
+                      timezone: null
+                    relationships:
+                      location:
+                        data: null
+                      vessel:
+                        data:
+                          id: "4b473d0e-7073-4171-8b5b-15e71e9e13cc"
+                          type: "vessel"
+                  -
+                    id: "cd91f0cf-ee73-4c47-b99f-63245cb5bc96"
+                    type: "raw_event"
+                    attributes:
+                      timestamp: "2020-04-07T00:00:00Z"
+                      estimated: false
+                      actual_on: "2020-04-07"
+                      estimated_at: null
+                      actual_at: null
+                      event: "transshipment_loaded"
+                      index: 6
+                      original_event: "Vessel Loaded"
+                      created_at: "2020-04-18T00:18:27Z"
+                      voyage_number: "15W10"
+                      location_name: null
+                      location_locode: null
+                      vessel_name: "SINGAPORE EXPRESS"
+                      vessel_imo: null
+                      timezone: null
+                    relationships:
+                      location:
+                        data: null
+                      vessel:
+                        data:
+                          id: "345c05ab-4217-4ffe-a1a4-6c03b9ad2b36"
+                          type: "vessel"
+                  -
+                    id: "561dbb7e-c3ab-4e63-b09b-957878b1425f"
+                    type: "raw_event"
+                    attributes:
+                      timestamp: "2020-04-07T00:00:00Z"
+                      estimated: false
+                      actual_on: "2020-04-07"
+                      estimated_at: null
+                      actual_at: null
+                      event: "transshipment_departed"
+                      index: 7
+                      original_event: "Vessel departed"
+                      created_at: "2020-04-18T00:18:27Z"
+                      voyage_number: "15W10"
+                      location_name: null
+                      location_locode: null
+                      vessel_name: "SINGAPORE EXPRESS"
+                      vessel_imo: null
+                      timezone: null
+                    relationships:
+                      location:
+                        data: null
+                      vessel:
+                        data:
+                          id: "345c05ab-4217-4ffe-a1a4-6c03b9ad2b36"
+                          type: "vessel"
+                  -
+                    id: "551711a6-62ad-4205-8da2-00e0c0cbd2db"
+                    type: "raw_event"
+                    attributes:
+                      timestamp: "2020-04-12T00:00:00Z"
+                      estimated: false
+                      actual_on: "2020-04-12"
+                      estimated_at: null
+                      actual_at: null
+                      event: "vessel_arrived"
+                      index: 8
+                      original_event: "Vessel arrived"
+                      created_at: "2020-04-18T00:18:27Z"
+                      voyage_number: "15W10"
+                      location_name: null
+                      location_locode: null
+                      vessel_name: "SINGAPORE EXPRESS"
+                      vessel_imo: null
+                      timezone: null
+                    relationships:
+                      location:
+                        data: null
+                      vessel:
+                        data:
+                          id: "345c05ab-4217-4ffe-a1a4-6c03b9ad2b36"
+                          type: "vessel"
+                  -
+                    id: "f4027470-75ca-4e2a-b4f0-47654a25ac48"
+                    type: "raw_event"
+                    attributes:
+                      timestamp: "2020-04-13T00:00:00Z"
+                      estimated: false
+                      actual_on: "2020-04-13"
+                      estimated_at: null
+                      actual_at: null
+                      event: "vessel_discharged"
+                      index: 9
+                      original_event: "Vessel Discharged"
+                      created_at: "2020-04-18T00:18:27Z"
+                      voyage_number: "15W10"
+                      location_name: null
+                      location_locode: null
+                      vessel_name: "SINGAPORE EXPRESS"
+                      vessel_imo: null
+                      timezone: null
+                    relationships:
+                      location:
+                        data: null
+                      vessel:
+                        data:
+                          id: "345c05ab-4217-4ffe-a1a4-6c03b9ad2b36"
+                          type: "vessel"
+                  -
+                    id: "50f11e4f-411e-48e2-8141-64226500df9c"
+                    type: "raw_event"
+                    attributes:
+                      timestamp: "2020-04-14T00:00:00Z"
+                      estimated: false
+                      actual_on: "2020-04-14"
+                      estimated_at: null
+                      actual_at: null
+                      event: "full_out"
+                      index: 10
+                      original_event: "Truck Departure from"
+                      created_at: "2020-04-18T00:18:27Z"
+                      voyage_number: null
+                      location_name: null
+                      location_locode: null
+                      vessel_name: null
+                      vessel_imo: null
+                      timezone: null
+                    relationships:
+                      location:
+                        data: null
+                      vessel:
+                        data: null
+                  -
+                    id: "49aea23c-b8c5-4a97-b133-f7a9723fa1b4"
+                    type: "raw_event"
+                    attributes:
+                      timestamp: "2020-04-15T00:00:00Z"
+                      estimated: false
+                      actual_on: "2020-04-15"
+                      estimated_at: null
+                      actual_at: null
+                      event: "empty_in"
+                      index: 11
+                      original_event: "Truck Gate in empty"
+                      created_at: "2020-04-18T00:18:27Z"
+                      voyage_number: null
+                      location_name: null
+                      location_locode: null
+                      vessel_name: null
+                      vessel_imo: null
+                      timezone: null
+                    relationships:
+                      location:
+                        data: null
+                      vessel:
+                        data: null
+                included:
+                  -
+                    id: "4b473d0e-7073-4171-8b5b-15e71e9e13cc"
+                    type: "vessel"
+                    attributes:
+                      name: "MSC FAITH"
+                      imo: null
+                      mmsi: "636019213"
+                      latitude: 70.22625823437389
+                      longitude: 45.06279126658865
+                      nautical_speed_knots: 100
+                      navigational_heading_degrees: 1
+                      position_timestamp: "2023-06-05T19:46:18Z"
+                  -
+                    id: "345c05ab-4217-4ffe-a1a4-6c03b9ad2b36"
+                    type: "vessel"
+                    attributes:
+                      name: "SINGAPORE EXPRESS"
+                      imo: null
+                      mmsi: "477300500"
+                      latitude: 70.22625823437389
+                      longitude: 45.06279126658865
+                      nautical_speed_knots: 100
+                      navigational_heading_degrees: 1
+                      position_timestamp: "2023-06-05T19:46:18Z"
+  operationId: "get-containers-id-raw_events"
+  description: "#### Deprecation warning\nThe `raw_events` endpoint is provided as-is.\n\n For past events we recommend consuming `transport_events`.\n\n---\nGet a list of past and future (estimated) milestones for a container as reported by the carrier. Some of the data is normalized even though the API is called raw_events. \n\nNormalized attributes: `event` and `timestamp` timestamp. Not all of the `event` values have been normalized. You can expect the the events related to container movements to be normalized but there are cases where events are not normalized. \n\nFor past historical events we recommend consuming `transport_events`. Although there are fewer events here those events go through additional vetting and normalization to avoid false positives and get you correct data."
+  deprecated: true

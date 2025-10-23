@@ -1,0 +1,49 @@
+title: "Metro area model"
+type: "object"
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  attributes:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      code:
+        type: "string"
+        description: "UN/LOCODE"
+      state_abbr:
+        type: "string"
+        x-stoplight:
+          id: "j9yuwej2ym7yq"
+        nullable: true
+      country_code:
+        type: "string"
+        x-stoplight:
+          id: "hfupdk750wcrj"
+      time_zone:
+        type: "string"
+        description: "IANA tz"
+        x-stoplight:
+          id: "izvtty345nfsz"
+      latitude:
+        type: "number"
+        x-stoplight:
+          id: "9l62t4cwsp53w"
+        nullable: true
+      longitude:
+        type: "number"
+        x-stoplight:
+          id: "3tzibc0li8xvg"
+        nullable: true
+  type:
+    type: "string"
+    enum:
+      - "metro_area"
+  "":
+    type: "string"
+    x-stoplight:
+      id: "kwcjunrtu3r5o"
+required:
+  - "id"
+  - "type"

@@ -1,0 +1,35 @@
+title: "Error model"
+type: "object"
+properties:
+  detail:
+    type: "string"
+    nullable: true
+  title:
+    type: "string"
+    nullable: true
+  source:
+    type: "object"
+    nullable: true
+    properties:
+      pointer:
+        type: "string"
+        nullable: true
+      parameter:
+        type: "string"
+        nullable: true
+  code:
+    type: "string"
+    nullable: true
+  status:
+    type: "string"
+    nullable: true
+  meta:
+    type: "object"
+    nullable: true
+    properties:
+      tracking_request_id:
+        type: "string"
+        format: "uuid"
+        nullable: true
+required:
+  - "title"

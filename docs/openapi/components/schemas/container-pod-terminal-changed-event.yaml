@@ -1,0 +1,57 @@
+title: "Container Pod Terminal Changed Event"
+type: "object"
+properties:
+  id:
+    type: "string"
+  type:
+    type: "string"
+  attributes:
+    type: "object"
+    properties:
+      data_source:
+        type: "string"
+        enum:
+          - "shipping_line"
+          - "terminal"
+          - "pierpass"
+        example: "shipping_line"
+        description: "Where the information about the terminal change came from"
+      timestamp:
+        type: "string"
+        format: "date-time"
+        description: "When the terminal change was recorded"
+  relationships:
+    type: "object"
+    properties:
+      container:
+        type: "object"
+        properties:
+          id:
+            type: "string"
+            format: "uuid"
+          type:
+            type: "string"
+            enum:
+              - "container"
+      shipment:
+        type: "object"
+        properties:
+          id:
+            type: "string"
+            format: "uuid"
+          type:
+            type: "string"
+            enum:
+              - "shipment"
+      terminal:
+        type: "object"
+        description: "The terminal the container has changed to. If this container is still on the vessel this represents an advisory. If it was previously at the terminal this represents an off-dock move."
+        properties:
+          id:
+            type: "string"
+            format: "uuid"
+          type:
+            type: "string"
+            enum:
+              - "terminal"
+description: ""

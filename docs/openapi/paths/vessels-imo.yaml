@@ -1,0 +1,66 @@
+parameters:
+  -
+    schema:
+      type: "string"
+    name: "imo"
+    in: "path"
+    required: true
+  -
+    schema:
+      type: "string"
+      format: "date-time"
+      example: "2025-05-20T00:00:00Z"
+    name: "show_positions[from_timestamp]"
+    in: "query"
+    description: "ISO 8601 timestamp to filter positions from. 7 days by default."
+    required: false
+  -
+    schema:
+      type: "string"
+      format: "date-time"
+      example: "2025-05-24T00:00:00Z"
+    name: "show_positions[to_timestamp]"
+    in: "query"
+    description: "ISO 8601 timestamp to filter positions up to. Current time by default."
+    required: false
+get:
+  summary: "Get a vessel using the imo"
+  tags:
+    - "Vessels"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                $ref: "#/components/schemas/vessel"
+    403:
+      description: "Forbidden - Feature not enabled"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              errors:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    status:
+                      type: "string"
+                      example: "403"
+                    source:
+                      type: "object"
+                      nullable: true
+                    title:
+                      type: "string"
+                      example: "Forbidden"
+                    detail:
+                      type: "string"
+                      example: "Routing data feature is not enabled for this account"
+  operationId: "get-vessels-imo"
+  description: "Returns a vessel by the given IMO number. <Note>`show_positions` is a paid feature. Please contact sales@terminal49.com.</Note>"
+  x-internal: true

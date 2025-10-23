@@ -1,0 +1,28 @@
+{
+  "name": "terminal49-api-docs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Terminal49 API documentation with modular OpenAPI specifications",
+  "scripts": {
+    "bundle": "python -m tools.openapi_bundle docs/openapi/index.yaml docs/openapi.json",
+    "lint": "python -m tools.openapi_bundle docs/openapi/index.yaml docs/openapi.json --no-validate && mintlify openapi-check docs/openapi.json",
+    "validate": "bun run bundle && bun run lint && python -m unittest tests.test_openapi_bundle",
+    "watch": "chokidar 'docs/openapi/**/*.yaml' -c 'python -m tools.openapi_bundle docs/openapi/index.yaml docs/openapi.json --no-validate' --initial",
+    "preview:mintlify": "mintlify dev"
+  },
+  "devDependencies": {
+    "chokidar-cli": "^3.0.0",
+    "mintlify": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
+  },
+  "keywords": [
+    "openapi",
+    "api-documentation",
+    "terminal49",
+    "shipping",
+    "container-tracking"
+  ]
+}

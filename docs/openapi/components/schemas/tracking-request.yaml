@@ -1,0 +1,113 @@
+title: "Tracking Request"
+type: "object"
+properties:
+  id:
+    type: "string"
+    format: "uuid"
+  type:
+    type: "string"
+    enum:
+      - "tracking_request"
+  attributes:
+    type: "object"
+    properties:
+      request_number:
+        type: "string"
+        example: "ONEYSH9AME650500"
+      ref_numbers:
+        type: "array"
+        nullable: true
+        items:
+          type: "string"
+      tags:
+        type: "array"
+        items:
+          type: "string"
+      status:
+        type: "string"
+        enum:
+          - "pending"
+          - "awaiting_manifest"
+          - "created"
+          - "failed"
+          - "tracking_stopped"
+      failed_reason:
+        type: "string"
+        enum:
+          - "booking_cancelled"
+          - "duplicate"
+          - "expired"
+          - "internal_processing_error"
+          - "invalid_number"
+          - "not_found"
+          - "retries_exhausted"
+          - "shipping_line_unreachable"
+          - "unrecognized_response"
+          - "data_unavailable"
+          - null
+        description: "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request"
+        nullable: true
+      request_type:
+        type: "string"
+        enum:
+          - "bill_of_lading"
+          - "booking_number"
+          - "container"
+        example: "bill_of_lading"
+      scac:
+        type: "string"
+        example: "ONEY"
+        minLength: 4
+        maxLength: 4
+      created_at:
+        type: "string"
+        format: "date-time"
+      updated_at:
+        type: "string"
+        format: "date-time"
+      is_retrying:
+        type: "boolean"
+      retry_count:
+        type: "integer"
+        description: "How many times T49 has attempted to get the shipment from the shipping line"
+        nullable: true
+    required:
+      - "request_number"
+      - "status"
+      - "request_type"
+      - "scac"
+      - "created_at"
+  relationships:
+    type: "object"
+    properties:
+      tracked_object:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            nullable: true
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "shipment"
+      customer:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            nullable: true
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "party"
+required:
+  - "id"
+  - "type"

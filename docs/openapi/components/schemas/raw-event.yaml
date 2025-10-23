@@ -1,0 +1,139 @@
+title: "Raw Event Model"
+type: "object"
+description: "Raw Events represent the milestones from the shipping line for a given container.\n\n### About raw_event datetimes\n\nThe events may include estimated future events. The event is a future event if an `estimated_` timestamp is not null. \n\nThe datetime properties `timestamp` and `estimated`. \n\nWhen the `time_zone` property is present the datetimes are UTC timestamps, which can be converted to the local time by parsing the provided `time_zone`.\n\nWhen the `time_zone` property is absent, the datetimes represent local times which serialized as UTC timestamps for consistency. "
+properties:
+  id:
+    type: "string"
+  type:
+    type: "string"
+    description: ""
+    enum:
+      - "raw_event"
+  attributes:
+    type: "object"
+    properties:
+      event:
+        type: "string"
+        enum:
+          - "empty_out"
+          - "full_in"
+          - "positioned_in"
+          - "positioned_out"
+          - "vessel_loaded"
+          - "vessel_departed"
+          - "transshipment_arrived"
+          - "transshipment_discharged"
+          - "transshipment_loaded"
+          - "transshipment_departed"
+          - "feeder_arrived"
+          - "feeder_discharged"
+          - "feeder_loaded"
+          - "feeder_departed"
+          - "rail_loaded"
+          - "rail_departed"
+          - "rail_arrived"
+          - "rail_unloaded"
+          - "vessel_arrived"
+          - "vessel_discharged"
+          - "arrived_at_destination"
+          - "delivered"
+          - "full_out"
+          - "empty_in"
+          - "vgm_received"
+          - "carrier_release"
+          - "customs_release"
+          - "available"
+        description: "Normalized string representing the event"
+        nullable: true
+      original_event:
+        type: "string"
+        description: "The event name as returned by the carrier"
+      timestamp:
+        type: "string"
+        format: "date-time"
+        description: "The datetime the event either transpired or will occur in UTC"
+      estimated:
+        type: "boolean"
+        description: "True if the timestamp is estimated, false otherwise"
+      actual_on:
+        type: "string"
+        format: "date"
+        description: "Deprecated: The date of the event at the event location when no time information is available. "
+        nullable: true
+      estimated_on:
+        type: "string"
+        format: "date"
+        description: "Deprecated: The estimated date of the event at the event location when no time information is available. "
+        nullable: true
+      actual_at:
+        type: "string"
+        format: "date-time"
+        description: "Deprecated: The datetime the event transpired in UTC"
+        nullable: true
+      estimated_at:
+        type: "string"
+        format: "date-time"
+        description: "Deprecated: The estimated datetime the event will occur in UTC"
+        nullable: true
+      timezone:
+        type: "string"
+        description: "IANA tz where the event occured"
+        nullable: true
+      created_at:
+        type: "string"
+        format: "date-time"
+        description: "When the raw_event was created in UTC"
+      location_name:
+        type: "string"
+        description: "The city or facility name of the event location"
+        nullable: true
+      location_locode:
+        type: "string"
+        description: "UNLOCODE of the event location"
+        nullable: true
+      vessel_name:
+        type: "string"
+        description: "The name of the vessel where applicable"
+        nullable: true
+      vessel_imo:
+        type: "string"
+        description: "The IMO of the vessel where applicable"
+        nullable: true
+      index:
+        type: "integer"
+        description: "The order of the event. This may be helpful when only dates (i.e. actual_on) are available."
+      voyage_number:
+        type: "string"
+        nullable: true
+  relationships:
+    type: "object"
+    properties:
+      location:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            nullable: true
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "port"
+                  - "metro_area"
+      vessel:
+        type: "object"
+        properties:
+          data:
+            type: "object"
+            nullable: true
+            properties:
+              id:
+                type: "string"
+                format: "uuid"
+              type:
+                type: "string"
+                enum:
+                  - "vessel"

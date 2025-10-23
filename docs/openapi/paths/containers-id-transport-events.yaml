@@ -1,0 +1,233 @@
+parameters:
+  -
+    schema:
+      type: "string"
+    name: "id"
+    in: "path"
+    required: true
+get:
+  summary: "Get a container's transport events"
+  tags:
+    - "Containers"
+  responses:
+    200:
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/transport_event"
+              included:
+                type: "array"
+                items:
+                  anyOf:
+                    -
+                      $ref: "#/components/schemas/shipment"
+                    -
+                      $ref: "#/components/schemas/container"
+                    -
+                      $ref: "#/components/schemas/port"
+                    -
+                      $ref: "#/components/schemas/metro_area"
+                    -
+                      $ref: "#/components/schemas/terminal"
+                    -
+                      $ref: "#/components/schemas/rail_terminal"
+                    -
+                      $ref: "#/components/schemas/vessel"
+              links:
+                $ref: "#/components/schemas/links"
+              meta:
+                $ref: "#/components/schemas/meta"
+          examples:
+            Example transport events:
+              value:
+                data:
+                  -
+                    id: "efc3f3c1-cdc2-4a7d-a176-762ddec107b8"
+                    type: "transport_event"
+                    attributes:
+                      event: "container.transport.vessel_loaded"
+                      created_at: "2021-01-05T08:41:12Z"
+                      voyage_number: "15W10"
+                      timestamp: null
+                      location_locode: "CLSAI"
+                      timezone: "America/Santiago"
+                    relationships:
+                      shipment:
+                        data:
+                          id: "06264731-503e-498e-bc76-f90b87b31562"
+                          type: "shipment"
+                      container:
+                        data:
+                          id: "eeafd337-72b5-4e5c-87cb-9ef83fa99cf4"
+                          type: "container"
+                      vessel:
+                        data:
+                          id: "345c05ab-4217-4ffe-a1a4-6c03b9ad2b36"
+                          type: "vessel"
+                      location:
+                        data:
+                          id: "0ad2cf2b-e694-4ccc-9cd2-40af0d1fa1b5"
+                          type: "port"
+                      terminal:
+                        data: null
+                  -
+                    id: "951058bd-2c3b-4bcc-94e1-9be2526b9687"
+                    type: "transport_event"
+                    attributes:
+                      event: "container.transport.vessel_departed"
+                      created_at: "2021-01-05T08:41:11Z"
+                      voyage_number: "15W10"
+                      timestamp: null
+                      location_locode: "CLSAI"
+                      timezone: "America/Santiago"
+                    relationships:
+                      shipment:
+                        data:
+                          id: "06264731-503e-498e-bc76-f90b87b31562"
+                          type: "shipment"
+                      container:
+                        data:
+                          id: "eeafd337-72b5-4e5c-87cb-9ef83fa99cf4"
+                          type: "container"
+                      vessel:
+                        data:
+                          id: "345c05ab-4217-4ffe-a1a4-6c03b9ad2b36"
+                          type: "vessel"
+                      location:
+                        data:
+                          id: "0ad2cf2b-e694-4ccc-9cd2-40af0d1fa1b5"
+                          type: "port"
+                      terminal:
+                        data: null
+                  -
+                    id: "69af6795-56c2-4157-9a87-afd761cc85a0"
+                    type: "transport_event"
+                    attributes:
+                      event: "container.transport.full_out"
+                      created_at: "2020-05-14T00:05:41Z"
+                      voyage_number: null
+                      timestamp: "2020-04-14T00:00:00Z"
+                      location_locode: "USOAK"
+                      timezone: "America/Los_Angeles"
+                    relationships:
+                      shipment:
+                        data:
+                          id: "06264731-503e-498e-bc76-f90b87b31562"
+                          type: "shipment"
+                      container:
+                        data:
+                          id: "eeafd337-72b5-4e5c-87cb-9ef83fa99cf4"
+                          type: "container"
+                      vessel:
+                        data: null
+                      location:
+                        data:
+                          id: "42d1ba3a-f4b8-431d-a6fe-49fd748a59e7"
+                          type: "port"
+                      terminal:
+                        data: null
+                  -
+                    id: "68c3c29a-504a-4dbb-ad27-7194ef42d484"
+                    type: "transport_event"
+                    attributes:
+                      event: "container.transport.vessel_discharged"
+                      created_at: "2020-05-14T00:05:41Z"
+                      voyage_number: "15W10"
+                      timestamp: "2020-04-13T00:00:00Z"
+                      location_locode: "USOAK"
+                      timezone: "America/Los_Angeles"
+                    relationships:
+                      shipment:
+                        data:
+                          id: "06264731-503e-498e-bc76-f90b87b31562"
+                          type: "shipment"
+                      container:
+                        data:
+                          id: "eeafd337-72b5-4e5c-87cb-9ef83fa99cf4"
+                          type: "container"
+                      vessel:
+                        data:
+                          id: "345c05ab-4217-4ffe-a1a4-6c03b9ad2b36"
+                          type: "vessel"
+                      location:
+                        data:
+                          id: "42d1ba3a-f4b8-431d-a6fe-49fd748a59e7"
+                          type: "port"
+                      terminal:
+                        data:
+                          id: "3e550f0e-ac2a-48fb-b242-5be45ecf2c78"
+                          type: "terminal"
+                  -
+                    id: "03349405-a9be-4f3e-abde-28f2cb3922bd"
+                    type: "transport_event"
+                    attributes:
+                      event: "container.transport.vessel_arrived"
+                      created_at: "2020-05-14T00:05:41Z"
+                      voyage_number: "15W10"
+                      timestamp: "2020-04-13T01:24:00Z"
+                      location_locode: "USOAK"
+                      timezone: "America/Los_Angeles"
+                    relationships:
+                      shipment:
+                        data:
+                          id: "06264731-503e-498e-bc76-f90b87b31562"
+                          type: "shipment"
+                      container:
+                        data:
+                          id: "eeafd337-72b5-4e5c-87cb-9ef83fa99cf4"
+                          type: "container"
+                      vessel:
+                        data:
+                          id: "345c05ab-4217-4ffe-a1a4-6c03b9ad2b36"
+                          type: "vessel"
+                      location:
+                        data:
+                          id: "42d1ba3a-f4b8-431d-a6fe-49fd748a59e7"
+                          type: "port"
+                      terminal:
+                        data:
+                          id: "3e550f0e-ac2a-48fb-b242-5be45ecf2c78"
+                          type: "terminal"
+                  -
+                    id: "ba9f85b4-658d-4f23-9308-635964df8037"
+                    type: "transport_event"
+                    attributes:
+                      event: "container.transport.empty_in"
+                      created_at: "2020-05-14T00:05:42Z"
+                      voyage_number: null
+                      timestamp: "2020-04-15T00:00:00Z"
+                      location_locode: null
+                      timezone: null
+                    relationships:
+                      shipment:
+                        data:
+                          id: "06264731-503e-498e-bc76-f90b87b31562"
+                          type: "shipment"
+                      container:
+                        data:
+                          id: "eeafd337-72b5-4e5c-87cb-9ef83fa99cf4"
+                          type: "container"
+                      vessel:
+                        data: null
+                      location:
+                        data: null
+                      terminal:
+                        data: null
+                links:
+                  self: "https://api.terminal49.com/v2/containers/eeafd337-72b5-4e5c-87cb-9ef83fa99cf4/transport_events"
+                  current: "https://api.terminal49.com/v2/containers/eeafd337-72b5-4e5c-87cb-9ef83fa99cf4/transport_events?page[number]=1"
+  operationId: "get-containers-id-transport_events"
+  description: "Get a list of past transport events (canonical) for a container. All data has been normalized across all carriers. These are a verified subset of the raw events may also be sent as Webhook Notifications to a webhook endpoint.\n\nThis does not provide any estimated future events. See `container/:id/raw_events` endpoint for that.  "
+  parameters:
+    -
+      schema:
+        type: "string"
+      in: "query"
+      name: "include"
+      description: "Comma delimited list of relations to include"

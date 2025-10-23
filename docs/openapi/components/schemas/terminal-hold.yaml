@@ -1,0 +1,17 @@
+title: "terminal_hold"
+type: "object"
+properties:
+  name:
+    type: "string"
+  status:
+    type: "string"
+    enum:
+      - "pending"
+      - "hold"
+  description:
+    type: "string"
+    description: "Text description from the terminal (if any)"
+    nullable: true
+required:
+  - "name"
+  - "status"
