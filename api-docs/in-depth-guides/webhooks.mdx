@@ -1,0 +1,277 @@
+---
+title: Webhooks
+---
+
+## Creating Webhooks
+You can subscribe to events through webhooks to be alerted when events are triggered.
+
+Visit https://app.terminal49.com/developers/webhooks and click the 'Create Webhook Endpoint' button to create your webhook through the UI.
+
+If you prefer to create webhooks programmatically, see the [webhooks post endpoint documentation](/api-docs/api-reference/webhooks/create-a-webhook).
+
+
+## Available Webhook Events
+
+Each `WebhookNotification` event represents a change to a model that may trigger a notification.
+
+List of Supported Events:
+
+Event | Description
+---------|----------
+ `tracking_request.succeeded` | A shipment has been created and linked to a `TrackingRequest`
+ `tracking_request.failed` | The `TrackingRequest` failed and no shipment was created
+ `tracking_request.awaiting_manifest` | The `TrackingRequest` is awaiting a manifest
+ `tracking_request.tracking_stopped` | Terminal49 is no longer updating this `TrackingRequest`
+ `container.transport.empty_out` | Container is empty out at port of lading
+ `container.transport.full_in` | Container is full in at port of lading
+ `container.transport.vessel_loaded` | Container is loaded onto vessel at port of lading
+ `container.transport.vessel_departed` | Vessel has departed from port of lading
+ `container.transport.transshipment_arrived` | Container has arrived at transshipment port
+ `container.transport.transshipment_discharged` | Container is discharged at transshipment port
+ `container.transport.transshipment_loaded` | Container is loaded at transshipment port
+ `container.transport.transshipment_departed` | Container has departed from transshipment port
+ `container.transport.feeder_arrived` | Container has arrived on feeder vessel or barge
+ `container.transport.feeder_discharged` | Container is discharged from feeder vessel or barge
+ `container.transport.feeder_loaded` | Container is loaded on feeder vessel or barge
+ `container.transport.feeder_departed` | Container has departed on feeder vessel or barge
+ `container.transport.vessel_arrived` | Container has arrived on vessel at port of discharge (destination port)
+ `container.transport.vessel_berthed` | Container vessel has berthed at port of discharge (destination port)
+ `container.transport.vessel_discharged` | Container is discharged at port of discharge
+ `container.transport.full_out` | Container full out at port of discharge
+ `container.transport.empty_in` | Container empty returned at destination
+ `container.transport.rail_loaded` | Container is loaded onto rail
+ `container.transport.rail_departed` | Container has departed on rail
+ `container.transport.rail_arrived` | Container has arrived by rail
+ `container.transport.rail_unloaded` | Container is unloaded from rail
+ `shipment.estimated.arrival` | ETA change notification (for port of discharge)
+ `container.created` | New container added to shipment (helpful for tracking new containers on a booking or BL)
+ `container.updated` | Container attribute(s) have been updated (see example below)
+ `container.pod_terminal_changed` | Port of discharge terminal assignment changed for container
+ `container.transport.arrived_at_inland_destination` | Container has arrived at inland destination
+ `container.transport.estimated.arrived_at_inland_destination` | ETA change notification (for destination)
+ `container.pickup_lfd.changed` | Last Free Day (LFD) has changed for container
+
+## Receiving Webhooks
+
+When an event is triggered, Terminal49 will attempt to POST to the URL you provided with the webhook.
+
+The payload of every webhook is a `WebhookNotification`. Each `WebhookNotification` includes a `reference_object` in its relationships which is the subject of that notification (e.g., a tracking request or an updated container).
+
+Terminal49 expects the endpoint to return one of these HTTP status codes:
+- [HTTP 200 OK](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200)
+- [HTTP 201 Created](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/201)
+- [HTTP 202 Accepted](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/202)
+- [HTTP 204 No Content](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/204)
+
+To ensure delivery of all webhook notifications, any other response (including timeouts) will result in up to twelve retry attempts.
+
+```json json_schema
+{
+  "type":"object",
+  "properties":{
+    "data":{
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "webhook_notification"
+          ]
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "event": {
+              "type": "string"
+            },
+            "delivery_status": {
+              "type": "string",
+              "default": "pending",
+              "enum": [
+                "pending",
+                "succeeded",
+                "failed"
+              ],
+              "description": "Whether the notification has been delivered to the webhook endpoint"
+            },
+            "created_at": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "event",
+            "delivery_status",
+            "created_at"
+          ]
+        },
+        "relationships": {
+          "type": "object",
+          "properties": {
+            "webhook": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "webhook"
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "reference_object": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "tracking_request",
+                        "estimated_event",
+                        "transport_event",
+                        "container_updated_event"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "required": [
+            "webhook"
+          ]
+        }
+      }
+    },
+    "included":{
+      "type":"array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "title": "Webhook"
+          },
+          {
+            "type": "object",
+            "title": "Tracking Request"
+          },
+          {
+            "type": "object",
+            "title": "Transport Event"
+          },
+          {
+            "type": "object",
+            "title": "Estimated Event"
+          },
+          {
+            "type": "object",
+            "title": "Container Updated Event"
+          },
+          {
+            "type": "object",
+            "title": "Terminal"
+          },
+          {
+            "type": "object",
+            "title": "Port"
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+> [How to Troubleshoot Missing Webhook Notifications](https://help.terminal49.com/en/articles/7851422-missing-webhook-notifications)
+
+
+## Security
+Terminal49 provides two ways to verify webhook authenticity:
+
+1. Verify webhook signatures to confirm events are sent from Terminal49
+2. Verify the source IP address against Terminal49's list of webhook IPs
+
+### Webhook Notification Origin IP
+Webhook notifications will only come from these IP addresses:
+
+```
+35.222.62.171
+3.230.67.145
+44.217.15.129
+```
+
+### Verifying the Webhook Signature (Optional)
+When you create or retrieve a webhook, the model includes a `secret` attribute.
+
+For each webhook notification, Terminal49 generates a signature using the webhook `secret` as the key to create an HMAC hex digest with SHA-256 on the body.
+
+This signature is included in the header as `X-T49-Webhook-Signature`.
+
+To verify that a third party has not tampered with the webhook payload, perform the same operation on the response body using the webhook secret and confirm the digests match.
+
+Here's an example implementation in Ruby:
+```ruby
+class WebhooksController < ApplicationController
+  def receive_tracking_request
+    secret = ENV.fetch('TRACKING_REQUEST_WEBHOOK_SECRET')
+    raise 'InvalidSignature' unless valid_signature?(request, secret)
+
+    # continue processing webhook payload...
+  end
+
+  private
+
+  def valid_signature?(request, secret)
+    hmac = OpenSSL::HMAC.hexdigest('SHA256', secret, request.body.read)
+    request.headers['X-T49-Webhook-Signature'] == hmac
+  end
+end
+```
+
+## Webhook Notification Examples
+
+### container.updated
+
+The `container.updated` event notifies you about changes to container properties at the terminal or changes to which terminal the container is (or will be) located at.
+
+The `changeset` attribute contains a hash of all modified container properties. For each changed property:
+- The hash key is the property name
+- The array contains two values: the previous value and the new value
+
+For example:
+```json
+"changeset": {
+  "pickup_lfd": [null, "2020-05-20 00:00:00"]
+}
+```
+This shows the pickup last free day changed from not being set (null) to May 20, 2020.
+
+Monitored properties include:
+- fees_at_pod_terminal
+- holds_at_pod_terminal
+- pickup_lfd
+- pickup_appointment_at
+- available_for_pickup
+- pod_terminal
+
+The `container_updated.timestamp` attribute indicates when Terminal49 detected the changes at the terminal.
+
+When container availability status changes at the POD Terminal, you'll receive `container.updated` events with the `available_for_pickup` key in the `changeset`.
