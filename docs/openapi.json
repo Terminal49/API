@@ -6894,6 +6894,7 @@
                 "enum": [
                   "all_containers_terminated",
                   "past_arrival_window",
+                  "past_full_out_window",
                   "no_updates_at_line",
                   "cancelled_by_user",
                   "booking_cancelled",
