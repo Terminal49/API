@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require_relative '../lib/terminal49_mcp'
+
+# Load environment variables from .env if present
+require 'dotenv/load' if File.exist?(File.expand_path('../.env', __dir__))
+
+# Initialize configuration
+Terminal49MCP.configure
+
+# Validate API token
+if Terminal49MCP.configuration.api_token.nil? || Terminal49MCP.configuration.api_token.empty?
+  $stderr.puts "ERROR: T49_API_TOKEN environment variable is required"
+  $stderr.puts ""
+  $stderr.puts "Please set your Terminal49 API token:"
+  $stderr.puts "  export T49_API_TOKEN=your_token_here"
+  $stderr.puts ""
+  $stderr.puts "Get your API token at: https://app.terminal49.com/developers/api-keys"
+  exit 1
+end
+
+# Start stdio transport
+server = Terminal49MCP::Server.new
+server.start_stdio
