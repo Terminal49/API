@@ -70,6 +70,7 @@
       "group": "In Depth Guides",
       "pages": [
         "api-docs/in-depth-guides/quickstart",
+        "api-docs/in-depth-guides/rate-limiting",
         "api-docs/in-depth-guides/webhooks",
         "api-docs/in-depth-guides/including-resources",
         "api-docs/in-depth-guides/adding-customer",

@@ -1,0 +1,136 @@
+---
+title: Rate Limiting
+og:title: Rate Limiting | Terminal49 API Documentation
+og:description: Understand Terminal49 API rate limits and best practices for handling rate limit responses.
+---
+
+## Overview
+
+Terminal49 API implements rate limiting to ensure fair usage and maintain service quality for all users.
+
+## Rate Limit Details
+
+- **Limit**: 100 requests per minute per account
+- **Scope**: Applied per API key/account
+- **Window**: Rolling 60-second window
+
+## Rate Limit Response
+
+When you exceed the rate limit, the API will return:
+
+**HTTP Status Code**: `429 Too Many Requests`
+
+**Response Headers**:
+- `Retry-After`: Number of seconds to wait before making another request
+
+**Response Body**:
+```json
+{
+  "errors": [
+    {
+      "status": "429",
+      "title": "Too Many Requests",
+      "detail": "Your account has exceeded its API rate limit. Please reduce request frequency or contact support to increase your limit. Consider using webhooks for real-time updates instead of polling."
+    }
+  ]
+}
+```
+
+## Best Practices
+
+### 1. Use Webhooks Instead of Polling
+
+The most effective way to avoid rate limits is to use **webhooks** for real-time updates instead of repeatedly polling the API:
+
+- Configure webhooks to receive push notifications when shipment data changes
+- Eliminates the need for frequent polling
+- Provides instant updates without consuming your rate limit
+- See the [Webhooks](/api-docs/api-reference/webhooks) section for setup instructions
+
+### 2. Implement Exponential Backoff
+
+If you receive a `429` response:
+
+1. Check the `Retry-After` header
+2. Wait for the specified number of seconds
+3. Implement exponential backoff for subsequent failures
+4. Don't retry immediately, as this will consume your limit further
+
+### 3. Batch Your Requests
+
+- Use list endpoints with filtering instead of multiple individual requests
+- Leverage the [`include` parameter](/api-docs/in-depth-guides/including-resources) to fetch related resources in a single request
+- Cache responses when appropriate to reduce redundant calls
+
+### 4. Monitor Your Usage
+
+- Track your request patterns
+- Identify and optimize high-frequency operations
+- Consider spreading requests over time rather than bursting
+
+## Need a Higher Limit?
+
+If your use case requires a higher rate limit:
+
+1. **Evaluate webhook usage first** - Most polling use cases can be replaced with webhooks
+2. **Contact support** at support@terminal49.com
+3. **Provide details** about your use case and expected request volume
+4. **Our team will work with you** to find an appropriate solution
+
+## Example: Handling Rate Limits
+
+Here's an example of how to properly handle rate limit responses in Python:
+
+```python
+import time
+import requests
+
+def make_request_with_retry(url, headers, max_retries=3):
+    """
+    Make an API request with automatic retry on rate limit.
+
+    Args:
+        url: The API endpoint URL
+        headers: Request headers including Authorization
+        max_retries: Maximum number of retry attempts
+
+    Returns:
+        Response object if successful
+
+    Raises:
+        Exception: If max retries exceeded
+    """
+    for attempt in range(max_retries):
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 429:
+            # Get the retry-after value from header (default to 60 seconds)
+            retry_after = int(response.headers.get('Retry-After', 60))
+            print(f"Rate limited. Waiting {retry_after} seconds...")
+            time.sleep(retry_after)
+            continue
+
+        # Return response for any other status code
+        return response
+
+    raise Exception("Max retries exceeded")
+
+# Example usage
+headers = {
+    'Authorization': 'Token YOUR_API_KEY'
+}
+response = make_request_with_retry(
+    'https://api.terminal49.com/v2/shipments',
+    headers
+)
+```
+
+## Tips for High-Volume Applications
+
+If you're building a high-volume application:
+
+- **Design for webhooks from the start**: Don't rely on polling for data updates
+- **Implement request queuing**: Spread your requests evenly across the rate limit window
+- **Use pagination efficiently**: Fetch larger pages less frequently rather than small pages frequently
+- **Cache aggressively**: Store and reuse data that doesn't change frequently
+- **Monitor rate limit headers**: Some APIs provide headers indicating remaining quota (check our response headers)
