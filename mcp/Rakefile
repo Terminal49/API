@@ -1,0 +1,54 @@
+require 'bundler/gem_tasks'
+require 'rspec/core/rake_task'
+
+RSpec::Core::RakeTask.new(:spec)
+
+task default: :spec
+
+namespace :mcp do
+  desc 'Start MCP server in stdio mode'
+  task :stdio do
+    exec 'bundle exec ruby bin/terminal49-mcp'
+  end
+
+  desc 'Start MCP server in HTTP mode (Puma)'
+  task :serve do
+    exec 'bundle exec puma -C config/puma.rb'
+  end
+
+  desc 'Test MCP server with example request'
+  task :test do
+    require 'json'
+
+    request = {
+      jsonrpc: '2.0',
+      method: 'tools/list',
+      id: 1
+    }
+
+    puts JSON.generate(request)
+    $stdout.flush
+  end
+end
+
+namespace :dev do
+  desc 'Start console with Terminal49MCP loaded'
+  task :console do
+    require 'dotenv/load'
+    require_relative 'lib/terminal49_mcp'
+    require 'pry'
+
+    Terminal49MCP.configure
+
+    puts "Terminal49 MCP Console"
+    puts "Version: #{Terminal49MCP::VERSION}"
+    puts ""
+    puts "Available:"
+    puts "  - Terminal49MCP::Client"
+    puts "  - Terminal49MCP::Server"
+    puts "  - Terminal49MCP::Tools::GetContainer"
+    puts ""
+
+    binding.pry
+  end
+end
