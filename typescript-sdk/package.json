@@ -1,0 +1,48 @@
+{
+  "name": "@terminal49/typescript-sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for Terminal49 API with MCP support",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "generate:types": "openapi-typescript ./openapi/terminal49-openapi.json -o src/generated/terminal49.d.ts",
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/**/*.ts",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsx src/index.ts",
+    "prepublishOnly": "npm run generate:types && npm run build"
+  },
+  "keywords": [
+    "terminal49",
+    "api",
+    "sdk",
+    "typescript",
+    "mcp",
+    "shipping",
+    "logistics"
+  ],
+  "author": "Terminal49",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "jsona": "^1.12.1",
+    "openapi-fetch": "^0.12.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vitest/coverage-v8": "^1.2.0",
+    "eslint": "^8.56.0",
+    "openapi-typescript": "^7.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  }
+}
