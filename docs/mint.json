@@ -50,12 +50,18 @@
     {
       "name": "DataSync",
       "url": "datasync"
+    },
+    {
+      "name": "MCP",
+      "url": "mcp"
     }
   ],
   "navigation": [
     {
       "group": " ",
-      "pages": ["home"]
+      "pages": [
+        "home"
+      ]
     },
     {
       "group": "Getting Started",
@@ -94,11 +100,16 @@
     },
     {
       "group": " ",
-      "pages": ["datasync/home"]
+      "pages": [
+        "datasync/home"
+      ]
     },
     {
       "group": " ",
-      "pages": ["datasync/overview", "datasync/supported-destinations"]
+      "pages": [
+        "datasync/overview",
+        "datasync/supported-destinations"
+      ]
     },
     {
       "group": "Table Properties",
@@ -109,6 +120,13 @@
         "datasync/table-properties/transport-events",
         "datasync/table-properties/transfer-status",
         "datasync/table-properties/containers"
+      ]
+    },
+    {
+      "group": "MCP",
+      "pages": [
+        "mcp/home",
+        "api-docs/in-depth-guides/mcp"
       ]
     },
     {
@@ -191,7 +209,9 @@
     },
     {
       "group": "Terminals",
-      "pages": ["api-docs/api-reference/terminals/get-a-terminal-using-the-id"]
+      "pages": [
+        "api-docs/api-reference/terminals/get-a-terminal-using-the-id"
+      ]
     },
     {
       "group": "Parties",

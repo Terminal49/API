@@ -4,17 +4,13 @@
   "private": true,
   "type": "module",
   "description": "Terminal49 API with MCP Server",
+  "workspaces": [
+    "packages/*",
+    "sdks/*"
+  ],
   "scripts": {
-    "build": "cd mcp-ts && npm install && npm run build"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.20.1",
-    "@vercel/node": "^3.0.0",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.0",
-    "typescript": "^5.3.3"
+    "build": "npm run build --workspaces",
+    "test": "npm test --workspaces"
   },
   "engines": {
     "node": ">=20.0.0"

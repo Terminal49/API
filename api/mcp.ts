@@ -7,7 +7,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { createTerminal49McpServer } from '../mcp-ts/src/server.js';
+import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
 
 /**
  * Main handler for Vercel serverless function

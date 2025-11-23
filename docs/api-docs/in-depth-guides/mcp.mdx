@@ -1,0 +1,63 @@
+---
+title: MCP Server Quickstart
+description: How to use Terminal49's MCP server and SDK
+---
+
+## Overview
+
+Terminal49 provides a Model Context Protocol (MCP) server and a TypeScript SDK to query shipping data via MCP-compatible clients.
+
+- **Endpoint (HTTP/streamable)**: `/api/mcp`
+- **Auth**: `Authorization: Bearer <T49_API_TOKEN>` (no OAuth required)
+- **SDK Package**: `@terminal49/sdk` (local workspace in this repo)
+
+## Setup
+
+1) Get an API token from Terminal49.
+2) Configure your MCP client (e.g., Claude, Cursor) with:
+
+```json
+{
+  "mcpServers": {
+    "terminal49": {
+      "url": "https://your-deployment.vercel.app/api/mcp",
+      "headers": {
+        "Authorization": "Bearer <T49_API_TOKEN>"
+      }
+    }
+  }
+}
+```
+
+For local testing, point `url` to `http://localhost:3000/api/mcp` (or your dev server) with the same header.
+
+## Tools (MCP)
+- `search_container`
+- `track_container`
+- `get_container`
+- `get_shipment_details`
+- `get_container_transport_events`
+- `get_supported_shipping_lines`
+- `get_container_route`
+
+## Resources (MCP)
+- `terminal49://container/{id}`
+- `terminal49://docs/milestone-glossary`
+
+## SDK Highlights
+- Namespaced client with format options (`raw` | `mapped` | `both`).
+- Mapped models for containers, shipments, routes, shipping lines, tracking requests.
+- Scripts: `npm run smoke` and `npm run smoke:lists` (load `.env` via dotenv).
+
+### Example (Node/TS)
+```ts
+import { Terminal49Client } from '@terminal49/sdk';
+
+const client = new Terminal49Client({ apiToken: process.env.T49_API_TOKEN!, defaultFormat: 'mapped' });
+const container = await client.containers.get('container-uuid', ['shipment'], { format: 'both' });
+console.log(container.mapped);
+```
+
+## Deployment Notes
+- Vercel function: `api/mcp.ts` uses `StreamableHTTPServerTransport` and bearer auth.
+- Build command: `npm install && cd packages/mcp && npm install && npm run build` (see `vercel.json`).
