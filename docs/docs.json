@@ -187,6 +187,18 @@
         ]
       },
       {
+        "tab": "MCP",
+        "groups": [
+          {
+            "group": "MCP",
+            "pages": [
+              "mcp/home",
+              "api-docs/in-depth-guides/mcp"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "DataSync",
         "groups": [
           {
