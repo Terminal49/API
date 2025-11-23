@@ -25,3 +25,8 @@ mcp-ts/test-*.sh
 
 # Claude Code configuration
 .claude/
+
+# Build output
+dist/
+packages/*/dist/
+sdks/*/dist/

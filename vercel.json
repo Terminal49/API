@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm install && cd mcp-ts && npm install && npm run build",
+  "buildCommand": "npm install && npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp",
   "functions": {
     "api/mcp.ts": {
       "maxDuration": 30,

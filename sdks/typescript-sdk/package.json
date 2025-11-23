@@ -1,0 +1,44 @@
+{
+  "name": "@terminal49/sdk",
+  "version": "0.1.0",
+  "description": "Terminal49 TypeScript SDK (JSON:API, openapi-fetch)",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./client": "./dist/client.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "test": "vitest",
+    "generate:types": "openapi-typescript ../../docs/openapi.json -o src/generated/terminal49.ts",
+    "example": "node -r dotenv/config dist/scripts/example.js",
+    "smoke": "node -r dotenv/config dist/scripts/smoke.js",
+    "smoke:lists": "node -r dotenv/config dist/scripts/list-smoke.js",
+    "prepublishOnly": "npm run build",
+    "lint": "eslint src --ext .ts"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "jsona": "^1.12.1",
+    "openapi-fetch": "^0.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.47.0",
+    "@typescript-eslint/parser": "^8.47.0",
+    "eslint": "^9.39.1",
+    "openapi-typescript": "^7.10.1",
+    "typescript": "^5.3.3",
+    "undici-types": "^7.16.0",
+    "vitest": "^4.0.13"
+  }
+}

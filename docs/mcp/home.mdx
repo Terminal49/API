@@ -1,0 +1,54 @@
+---
+title: MCP Overview
+description: Terminal49 MCP server and SDK entry point
+---
+
+# Terminal49 MCP
+
+Use the Terminal49 Model Context Protocol (MCP) server to query shipping data from MCP-compatible clients (e.g., Claude, Cursor) via the streamable HTTP endpoint.
+
+- Endpoint: `/api/mcp`
+- Auth: `Authorization: Bearer <T49_API_TOKEN>`
+- SDK: `@terminal49/sdk` (TypeScript)
+
+## Quickstart
+
+1. Obtain a Terminal49 API token.
+2. Configure your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "terminal49": {
+      "url": "https://your-deployment.vercel.app/api/mcp",
+      "headers": {
+        "Authorization": "Bearer <T49_API_TOKEN>"
+      }
+    }
+  }
+}
+```
+
+For local testing, point `url` to your dev server (e.g., `http://localhost:3000/api/mcp`) with the same header.
+
+## SDK
+
+Install in your workspace:
+
+```bash
+npm install @terminal49/sdk
+```
+
+Example:
+
+```ts
+import { Terminal49Client } from '@terminal49/sdk';
+
+const client = new Terminal49Client({ apiToken: process.env.T49_API_TOKEN!, defaultFormat: 'mapped' });
+const container = await client.containers.get('container-uuid', ['shipment'], { format: 'both' });
+console.log(container.mapped);
+```
+
+## Learn more
+
+See the detailed MCP guide: `API Docs → In Depth Guides → MCP Server Quickstart`.
