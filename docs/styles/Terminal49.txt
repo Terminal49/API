@@ -1,8 +1,6 @@
 Terminal49
 terminal49
 T49
-
-# Shipping and Logistics Terms
 SCAC
 SCACs
 BOL
@@ -23,8 +21,6 @@ Flatpack
 Flatrack
 datetimes
 datetime
-
-# Shipping Companies
 Maersk
 Sealand
 Safmarine
@@ -55,8 +51,6 @@ Union Pacific
 Canadian National
 Canadian Pacific
 Norfolk Southern
-
-# Technical Terms
 Namespaced
 dotenv
 Vercel
@@ -72,16 +66,11 @@ Model Context Protocol
 McpServer
 StdioServerTransport
 SSEServerTransport
-
-# Container Types
 Dry
-Reefer
 Open Top
 Flat Rack
 Tank
 Hard Top
-
-# Ports and Locations
 Baltimore
 Boston
 Charleston
@@ -110,16 +99,12 @@ Tacoma
 Tampa
 Vancouver
 Virginia
-
-# Rail Carriers
 BNSF Railway
 Canadian National Railway
 Canadian Pacific Railway
 CSX Transportation
 Norfolk Southern Railway
 Union Pacific Railroad
-
-# API and Technical Terms
 JSON:API
 JSON-RPC
 REST
@@ -164,8 +149,6 @@ GitLab
 Bitbucket
 VSCode
 Visual Studio Code
-
-# Common Abbreviations
 dev
 env
 config
@@ -194,4 +177,3 @@ nav
 prev
 next
 toc
-
