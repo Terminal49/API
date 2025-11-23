@@ -13,6 +13,6 @@
     "isolatedModules": true,
     "noEmit": true
   },
-  "include": ["api/**/*", "mcp-ts/src/**/*"],
-  "exclude": ["node_modules", "mcp-ts/node_modules", "mcp-ts/dist"]
+  "include": ["api/**/*", "packages/mcp/src/**/*"],
+  "exclude": ["node_modules", "packages/mcp/node_modules", "packages/mcp/dist"]
 }

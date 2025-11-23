@@ -11,7 +11,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
-import { createTerminal49McpServer } from '../mcp-ts/src/server.js';
+import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
 
 // Store active transports per session (in-memory, limited for serverless)
 const activeTransports = new Map<string, { transport: SSEServerTransport; server: any }>();
