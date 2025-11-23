@@ -18,7 +18,7 @@ View a complete list of supported carriers and attributes on [Google Sheets](htt
 
 
 ## Ports and Terminals
-Presently, the Terminal 49 api integrates with terminals at the following ports:
+Presently, the Terminal 49 API integrates with terminals at the following ports:
 - Baltimore
 - Boston
 - Charleston
@@ -144,7 +144,7 @@ In addition to some data not being provided by all carriers, there are a couple 
 {/* These seem very out of date... many new properties added since we updated it years ago.  Should we update it, or remove it? */}
 {/* I went ahead and added the newest properties to Container Data  */}
 
-Below is a list of data that can be retrieved via the API, including whether is is always available, or whether it is only supported by certain carriers (Carrier Dependent), certain Terminals (Terminal Dependent) or on certain types of journeys (Journey dependent).
+Below is a list of data that can be retrieved via the API, including whether it is always available, or whether it is only supported by certain carriers (Carrier Dependent), certain Terminals (Terminal Dependent) or on certain types of journeys (Journey dependent).
 
 ## Shipment Data
 Shipment Data is the primary data that comes from the Carrier. It containers the details of the shipment retrieved from the Bill of Lading, and references multiple container objects.
@@ -186,7 +186,7 @@ At the container level, the following data is available. Container data is combi
 | Full out at final destination       | Journey Dependent | Only if non-port final destination |  |
 | Rail Loaded At Port of Discharge    | Journey Dependent | Only if non-port final destination |  |
 | Rail Departed At Port of Discharge  | Journey Dependent | Only if non-port final destination |  |
-| Rail Carrier Scac at Port of Discharge |Journey Dependent | Only if non-port final destination | |
+| Rail Carrier SCAC at Port of Discharge |Journey Dependent | Only if non-port final destination | |
 | ETA for final destination           | Carrier Dependent, Journey Dependent | Only if non-port final destination |  |
 | ATA for final destination           | Journey Dependent | Only if non-port final destination |  |
 | LFD at final destination            | Carrier Dependent, Journey Dependent | Only if non-port final destination |  |
@@ -199,13 +199,13 @@ When a milestone passes, the Terminal49 API will ping one of your webhooks with 
 | -------------- | ---------------------------------------------------------------- |
 | Event Name     | the name of the event. e.g. 'container.transport.vessel\_loaded' |
 | Created At     | when the event was created in our system                         |
-| Timestamp      | when the event occured                                           |
+| Timestamp      | when the event occurred                                           |
 | Timezone       | Which timezone did the event occur in.                           |
 | Voyage Number  | the voyage number of the vessel                                  |
 | Container      | A link to the Container Data                                     |
 | Shipment       | A link to the Shipment Data                                      |
 | Vessel         | Which vessel did the event occur on.                             |
-| Location       | Where did the event oocur.                                       |
+| Location       | Where did the event occur.                                       |
 | Terminal       | Which terminal did this occur at.                                |
 
 ## Milestones Events Supported
