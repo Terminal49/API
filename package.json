@@ -12,6 +12,9 @@
     "build": "npm run build --workspaces",
     "test": "npm test --workspaces"
   },
+  "devDependencies": {
+    "@vercel/node": "^3.0.30"
+  },
   "engines": {
     "node": ">=20.0.0"
   }

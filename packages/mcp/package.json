@@ -20,7 +20,7 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.22.0",
-    "@terminal49/sdk": "file:../sdks/typescript-sdk",
+    "@terminal49/sdk": "file:../../sdks/typescript-sdk",
     "zod": "^3.23.8"
   },
   "devDependencies": {
