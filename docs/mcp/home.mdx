@@ -5,22 +5,21 @@ description: Terminal49 MCP server and SDK entry point
 
 # Terminal49 MCP
 
-Use the Terminal49 Model Context Protocol (MCP) server to query shipping data from MCP-compatible clients (e.g., Claude, Cursor) via the streamable HTTP endpoint.
+Use the Terminal49 Model Context Protocol (MCP) server to query shipping data from MCP-compatible clients (e.g., Claude, Cursor). It exposes the same tools used by the Terminal49 SDK, streamed over HTTP/SSE.
 
-- Endpoint: `/api/mcp`
-- Auth: `Authorization: Bearer <T49_API_TOKEN>`
-- SDK: `@terminal49/sdk` (TypeScript)
+## Endpoints & auth
 
-## Quickstart
+- HTTP (streamable): `POST /api/mcp`
+- SSE (stateful): `GET /sse?sessionId=...` + `POST /sse?sessionId=...`
+- Auth: `Authorization: Bearer <T49_API_TOKEN>` (server also falls back to `process.env.T49_API_TOKEN`)
 
-1. Obtain a Terminal49 API token.
-2. Configure your MCP client:
+## Configure your MCP client
 
 ```json
 {
   "mcpServers": {
     "terminal49": {
-      "url": "https://your-deployment.vercel.app/api/mcp",
+      "url": "https://mcp.terminal49.com/api/mcp",
       "headers": {
         "Authorization": "Bearer <T49_API_TOKEN>"
       }
@@ -29,17 +28,25 @@ Use the Terminal49 Model Context Protocol (MCP) server to query shipping data fr
 }
 ```
 
-For local testing, point `url` to your dev server (e.g., `http://localhost:3000/api/mcp`) with the same header.
+For local dev, point `url` to `http://localhost:3000/api/mcp` (or your port). If you deploy with the `/mcp` rewrite, you can also target `https://mcp.terminal49.com/mcp`.
 
-## SDK
+## Local dev & stdio
 
-Install in your workspace:
+1. `npm install` && `npm --prefix packages/mcp install`
+2. Set `T49_API_TOKEN` (copy `.env.example` in `packages/mcp` if present).
+3. Run `npm --prefix packages/mcp run dev` for HTTP, or `npm --prefix packages/mcp run mcp:stdio` for stdio clients.
+
+## Tools & resources
+
+Tools: `search_container`, `track_container`, `get_container`, `get_shipment_details`, `get_container_transport_events`, `get_supported_shipping_lines`, `get_container_route`.
+
+Resources: `terminal49://container/{id}`, `terminal49://docs/milestone-glossary`.
+
+## SDK (TypeScript)
 
 ```bash
 npm install @terminal49/sdk
 ```
-
-Example:
 
 ```ts
 import { Terminal49Client } from '@terminal49/sdk';
@@ -49,6 +56,4 @@ const container = await client.containers.get('container-uuid', ['shipment'], { 
 console.log(container.mapped);
 ```
 
-## Learn more
-
-See the detailed MCP guide: `API Docs → In Depth Guides → MCP Server Quickstart`.
+For a deeper walkthrough, see `API Docs → In Depth Guides → MCP Server Quickstart`.

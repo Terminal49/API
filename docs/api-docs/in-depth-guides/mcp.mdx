@@ -7,20 +7,21 @@ description: How to use Terminal49's MCP server and SDK
 
 Terminal49 provides a Model Context Protocol (MCP) server and a TypeScript SDK to query shipping data via MCP-compatible clients.
 
-- **Endpoint (HTTP/streamable)**: `/api/mcp`
-- **Auth**: `Authorization: Bearer <T49_API_TOKEN>` (no OAuth required)
-- **SDK Package**: `@terminal49/sdk` (local workspace in this repo)
+- **HTTP (streamable)**: `POST /api/mcp`
+- **SSE (stateful)**: `GET/POST /sse?sessionId=<id>`
+- **Auth**: `Authorization: Bearer <T49_API_TOKEN>` (server also falls back to `process.env.T49_API_TOKEN`)
+- **SDK**: `@terminal49/sdk` (TypeScript)
 
-## Setup
+## Configure an MCP client (Claude/Cursor)
 
 1) Get an API token from Terminal49.
-2) Configure your MCP client (e.g., Claude, Cursor) with:
+2) Add the server to your client config:
 
 ```json
 {
   "mcpServers": {
     "terminal49": {
-      "url": "https://your-deployment.vercel.app/api/mcp",
+      "url": "https://mcp.terminal49.com/api/mcp",
       "headers": {
         "Authorization": "Bearer <T49_API_TOKEN>"
       }
@@ -29,25 +30,32 @@ Terminal49 provides a Model Context Protocol (MCP) server and a TypeScript SDK t
 }
 ```
 
-For local testing, point `url` to `http://localhost:3000/api/mcp` (or your dev server) with the same header.
+For local testing, set `url` to `http://localhost:3000/api/mcp` (or your dev server) with the same header. If your deploy exposes the rewrite, you can also call `https://mcp.terminal49.com/mcp`.
+
+## Local dev & transports
+- Install deps: `npm install` && `npm --prefix packages/mcp install`.
+- Env: set `T49_API_TOKEN` (copy `.env.example` in `packages/mcp` if present).
+- HTTP dev: `npm --prefix packages/mcp run dev` (default port 3000).
+- Stdio: `npm --prefix packages/mcp run mcp:stdio`.
+- SSE: `GET /sse?sessionId=<id>` to open the stream, `POST /sse?sessionId=<id>` to send messages on the same session.
 
 ## Tools (MCP)
-- `search_container`
-- `track_container`
-- `get_container`
-- `get_shipment_details`
-- `get_container_transport_events`
-- `get_supported_shipping_lines`
-- `get_container_route`
+- `search_container`: find containers by number, bill, booking, or shipment refs.
+- `track_container`: start tracking a container.
+- `get_container`: fetch a container with optional includes (e.g., `shipment`).
+- `get_shipment_details`: fetch a shipment and its containers.
+- `get_container_transport_events`: list transport events for a container.
+- `get_supported_shipping_lines`: list shipping lines Terminal49 supports.
+- `get_container_route`: fetch the planned/actual route for a container.
 
 ## Resources (MCP)
 - `terminal49://container/{id}`
 - `terminal49://docs/milestone-glossary`
 
-## SDK Highlights
-- Namespaced client with format options (`raw` | `mapped` | `both`).
+## SDK highlights
+- Namespaced client with `raw` | `mapped` | `both` formats.
 - Mapped models for containers, shipments, routes, shipping lines, tracking requests.
-- Scripts: `npm run smoke` and `npm run smoke:lists` (load `.env` via dotenv).
+- Smoke scripts: `npm run smoke` and `npm run smoke:lists` (dotenv-aware).
 
 ### Example (Node/TS)
 ```ts
@@ -58,6 +66,7 @@ const container = await client.containers.get('container-uuid', ['shipment'], { 
 console.log(container.mapped);
 ```
 
-## Deployment Notes
-- Vercel function: `api/mcp.ts` uses `StreamableHTTPServerTransport` and bearer auth.
-- Build command: `npm install && cd packages/mcp && npm install && npm run build` (see `vercel.json`).
+## Deployment notes
+- Vercel function: `api/mcp.ts` uses `StreamableHTTPServerTransport` and bearer auth fallback to `process.env.T49_API_TOKEN`.
+- SSE endpoint: `api/sse.ts` with `sessionId` pairing for GET/POST.
+- Build command (Vercel): `npm install && npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp` (see `vercel.json`).
