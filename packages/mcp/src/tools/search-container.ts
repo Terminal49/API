@@ -221,7 +221,7 @@ function formatContainer(container: any, included: any[]): SearchResult['contain
   };
 }
 
-function formatShipment(shipment: any, included: any[]): SearchResult['shipments'][0] {
+function formatShipment(shipment: any, _included: any[]): SearchResult['shipments'][0] {
   const attrs = shipment.attributes || {};
   const relationships = shipment.relationships || {};
 
