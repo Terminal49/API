@@ -420,7 +420,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       title: 'Container Information',
       description: 'Access container data as a resource',
     },
-    async (uri, { id }) => {
+    async (uri, { id: _id }) => {
       const resource = await readContainerResource(uri.href, client);
       return {
         contents: [resource],
@@ -437,7 +437,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       description: 'Comprehensive event/milestone reference documentation',
       mimeType: 'text/markdown',
     },
-    async (uri) => {
+    async (_uri) => {
       const resource = readMilestoneGlossaryResource();
       return {
         contents: [resource],
