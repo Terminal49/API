@@ -30,14 +30,11 @@ Terminal49 provides a Model Context Protocol (MCP) server and a TypeScript SDK t
 }
 ```
 
-For local testing, set `url` to `http://localhost:3000/api/mcp` (or your dev server) with the same header. If your deploy exposes the rewrite, you can also call `https://mcp.terminal49.com/mcp`.
+If your deploy exposes the rewrite, you can also call `https://mcp.terminal49.com/mcp`.
 
-## Local dev & transports
-- Install deps: `npm install` && `npm --prefix packages/mcp install`.
-- Env: set `T49_API_TOKEN` (copy `.env.example` in `packages/mcp` if present).
-- HTTP dev: `npm --prefix packages/mcp run dev` (default port 3000).
-- Stdio: `npm --prefix packages/mcp run mcp:stdio`.
-- SSE: `GET /sse?sessionId=<id>` to open the stream, `POST /sse?sessionId=<id>` to send messages on the same session.
+## Transports
+- HTTP (streamable): `POST /api/mcp`
+- SSE (stateful): `GET /sse?sessionId=<id>` to open the stream, `POST /sse?sessionId=<id>` to send messages on the same session.
 
 ## Tools (MCP)
 - `search_container`: find containers by number, bill, booking, or shipment refs.

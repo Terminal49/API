@@ -28,13 +28,7 @@ Use the Terminal49 Model Context Protocol (MCP) server to query shipping data fr
 }
 ```
 
-For local dev, point `url` to `http://localhost:3000/api/mcp` (or your port). If you deploy with the `/mcp` rewrite, you can also target `https://mcp.terminal49.com/mcp`.
-
-## Local dev & stdio
-
-1. `npm install` && `npm --prefix packages/mcp install`
-2. Set `T49_API_TOKEN` (copy `.env.example` in `packages/mcp` if present).
-3. Run `npm --prefix packages/mcp run dev` for HTTP, or `npm --prefix packages/mcp run mcp:stdio` for stdio clients.
+If your deployment exposes the `/mcp` rewrite, you can also target `https://mcp.terminal49.com/mcp`.
 
 ## Tools & resources
 
