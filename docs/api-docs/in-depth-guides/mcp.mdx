@@ -5,17 +5,27 @@ description: How to use Terminal49's MCP server and SDK
 
 ## Overview
 
-Terminal49 provides a Model Context Protocol (MCP) server and a TypeScript SDK to query shipping data via MCP-compatible clients.
+Terminal49 provides a Model Context Protocol (MCP) server and a TypeScript SDK to query shipping data via MCP-compatible clients like Claude Desktop and Cursor.
 
-- **HTTP (streamable)**: `POST /api/mcp`
-- **SSE (stateful)**: `GET/POST /sse?sessionId=<id>`
-- **Auth**: `Authorization: Bearer <T49_API_TOKEN>` (server also falls back to `process.env.T49_API_TOKEN`)
-- **SDK**: `@terminal49/sdk` (TypeScript)
+**Technical Details:**
+- **MCP SDK**: `@modelcontextprotocol/sdk ^1.22.0`
+- **TypeScript SDK**: `@terminal49/sdk`
+- **Runtime**: Node.js 18+
 
-## Configure an MCP client (Claude/Cursor)
+## Transports
 
-1) Get an API token from Terminal49.
-2) Add the server to your client config:
+| Transport | Endpoint | Use Case |
+|-----------|----------|----------|
+| HTTP (streamable) | `POST /api/mcp` or `/mcp` | Stateless requests, serverless |
+| SSE (stateful) | `GET /sse?sessionId=<id>` then `POST /sse?sessionId=<id>` | Long-running sessions |
+
+**Authentication**: Pass `Authorization: Bearer <T49_API_TOKEN>` header. Server falls back to `T49_API_TOKEN` environment variable.
+
+## Configure an MCP Client
+
+### Claude Desktop
+
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
@@ -30,40 +40,160 @@ Terminal49 provides a Model Context Protocol (MCP) server and a TypeScript SDK t
 }
 ```
 
-The function path `https://mcp.terminal49.com/api/mcp` works as well.
+### Cursor IDE
 
-## Transports
-- HTTP (streamable): `POST /api/mcp`
-- SSE (stateful): `GET /sse?sessionId=<id>` to open the stream, `POST /sse?sessionId=<id>` to send messages on the same session.
+Add to Cursor settings:
 
-## Tools (MCP)
-- `search_container`: find containers by number, bill, booking, or shipment refs.
-- `track_container`: start tracking a container.
-- `get_container`: fetch a container with optional includes (e.g., `shipment`).
-- `get_shipment_details`: fetch a shipment and its containers.
-- `get_container_transport_events`: list transport events for a container.
-- `get_supported_shipping_lines`: list shipping lines Terminal49 supports.
-- `get_container_route`: fetch the planned/actual route for a container.
+```json
+{
+  "mcp": {
+    "servers": {
+      "terminal49": {
+        "url": "https://mcp.terminal49.com/mcp",
+        "headers": {
+          "Authorization": "Bearer <T49_API_TOKEN>"
+        }
+      }
+    }
+  }
+}
+```
 
-## Resources (MCP)
-- `terminal49://container/{id}`
-- `terminal49://docs/milestone-glossary`
+### Local stdio (Development)
 
-## SDK highlights
-- Namespaced client with `raw` | `mapped` | `both` formats.
-- Mapped models for containers, shipments, routes, shipping lines, tracking requests.
-- Smoke scripts: `npm run smoke` and `npm run smoke:lists` (dotenv-aware).
+```json
+{
+  "mcpServers": {
+    "terminal49": {
+      "command": "node",
+      "args": ["/path/to/API/packages/mcp/dist/index.js"],
+      "env": {
+        "T49_API_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+```
 
-### Example (Node/TS)
+## Supported MCP Capabilities
+
+### Tools (7)
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `search_container` | Find containers by number, BL, booking, or ref | `query: string` |
+| `track_container` | Start tracking a container | `containerNumber`, `scac?`, `bookingNumber?`, `refNumbers?` |
+| `get_container` | Get container with optional includes | `id: uuid`, `include?: ['shipment', 'pod_terminal', 'transport_events']` |
+| `get_shipment_details` | Get shipment and containers | `id: uuid`, `include_containers?: boolean` |
+| `get_container_transport_events` | Get event timeline | `id: uuid` |
+| `get_supported_shipping_lines` | List carriers with SCAC codes | `search?: string` |
+| `get_container_route` | Get multi-leg routing (paid feature) | `id: uuid` |
+
+### Prompts (3)
+
+| Prompt | Description | Arguments |
+|--------|-------------|-----------|
+| `track-shipment` | Quick tracking workflow | `container_number`, `carrier?` |
+| `check-demurrage` | Demurrage risk analysis | `container_id` |
+| `analyze-delays` | Journey delay analysis | `container_id` |
+
+### Resources (2)
+
+| URI | Description |
+|-----|-------------|
+| `terminal49://container/{id}` | Container data as resource |
+| `terminal49://docs/milestone-glossary` | Event/milestone reference |
+
+## Not Yet Supported
+
+These Terminal49 APIs are available via SDK but not exposed as MCP tools:
+
+| API | SDK Method | Notes |
+|-----|------------|-------|
+| List containers | `client.containers.list()` | Use `search_container` as workaround |
+| List shipments | `client.shipments.list()` | Use `search_container` as workaround |
+| Update shipment | `client.shipments.update()` | Modify ref numbers, tags |
+| Stop/resume tracking | `client.shipments.stopTracking()` | Tracking lifecycle |
+| Raw events | `client.containers.rawEvents()` | EDI data |
+| Refresh container | `client.containers.refresh()` | Force data refresh |
+| Tracking requests | `client.listTrackingRequests()` | List/manage requests |
+| Completions | - | SCAC autocomplete (coming soon) |
+| Webhooks | - | Configure via dashboard |
+
+## SDK Usage
+
+```bash
+npm install @terminal49/sdk
+```
+
 ```ts
 import { Terminal49Client } from '@terminal49/sdk';
 
-const client = new Terminal49Client({ apiToken: process.env.T49_API_TOKEN!, defaultFormat: 'mapped' });
-const container = await client.containers.get('container-uuid', ['shipment'], { format: 'both' });
-console.log(container.mapped);
+const client = new Terminal49Client({
+  apiToken: process.env.T49_API_TOKEN!,
+  defaultFormat: 'mapped'
+});
+
+// Get container with shipment and terminal
+const container = await client.containers.get(
+  'container-uuid',
+  ['shipment', 'pod_terminal']
+);
+
+// Search for containers
+const results = await client.search('CAIU1234567');
+
+// List shipments with filters
+const shipments = await client.shipments.list({
+  status: 'in_transit',
+  carrier: 'MAEU'
+});
 ```
 
-## Deployment notes
-- Vercel function: `api/mcp.ts` uses `StreamableHTTPServerTransport` and bearer auth fallback to `process.env.T49_API_TOKEN`.
-- SSE endpoint: `api/sse.ts` with `sessionId` pairing for GET/POST.
-- Build command (Vercel): `npm install && npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp` (see `vercel.json`).
+### Response Formats
+
+- `raw`: JSON:API response as-is
+- `mapped`: Simplified, camelCase objects
+- `both`: `{ raw, mapped }` for debugging
+
+## Deployment
+
+### Vercel (Production)
+
+The `vercel.json` configures:
+
+```json
+{
+  "buildCommand": "npm install && npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp",
+  "functions": {
+    "api/mcp.ts": { "maxDuration": 30, "memory": 1024 },
+    "api/sse.ts": { "maxDuration": 60, "memory": 1024 }
+  },
+  "rewrites": [
+    { "source": "/mcp", "destination": "/api/mcp" },
+    { "source": "/sse", "destination": "/api/sse" }
+  ]
+}
+```
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `T49_API_TOKEN` | Yes | Terminal49 API token |
+| `T49_API_BASE_URL` | No | Override API URL (default: `https://api.terminal49.com/v2`) |
+
+## Testing
+
+```bash
+# Test locally with stdio
+cd packages/mcp
+npm run build
+echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | npm run mcp:stdio
+
+# Test HTTP endpoint
+curl -X POST https://mcp.terminal49.com/mcp \
+  -H "Authorization: Bearer $T49_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+```

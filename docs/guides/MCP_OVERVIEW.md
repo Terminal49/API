@@ -97,8 +97,8 @@ https://your-deployment.vercel.app/api/mcp
 ### Technology Stack
 - **Language**: TypeScript 5.x
 - **Runtime**: Node.js 20.x
-- **MCP SDK**: @modelcontextprotocol/sdk v1.20.1
-- **Validation**: Zod v3.23.8
+- **MCP SDK**: @modelcontextprotocol/sdk ^1.22.0
+- **Validation**: Zod ^3.25.76
 - **Platform**: Vercel Serverless Functions
 
 ---

@@ -36,8 +36,8 @@
 | **`analyze-delays`** | Identify delays and root causes | Timeline analysis |
 
 ### 📚 Resources
-- ✅ **`terminal49://milestone-glossary`** - Complete milestone reference guide
-- ✅ **Container resources** - Dynamic container data access
+- ✅ **`terminal49://docs/milestone-glossary`** - Complete milestone reference guide
+- ✅ **`terminal49://container/{id}`** - Dynamic container data access
 
 ### ✨ Current Features (v1.0.0 - Phase 1 & 2.1 Complete)
 
@@ -45,13 +45,12 @@
 - High-level `registerTool()`, `registerPrompt()`, `registerResource()` patterns
 - Type-safe Zod schemas for all tool inputs
 - Cleaner, maintainable code (71% code reduction in HTTP handler)
-- **SDK**: @modelcontextprotocol/sdk v1.20.1
+- **SDK**: @modelcontextprotocol/sdk ^1.22.0
 
-#### ✅ Streamable HTTP Transport
-- Production-ready remote access via Vercel
-- Stateless mode for serverless deployments
+#### ✅ Dual Transport Support
+- **HTTP (streamable)**: `POST /api/mcp` - stateless, JSON responses
+- **SSE (stateful)**: `GET/POST /sse?sessionId=<id>` - for long-running sessions
 - Full CORS support for browser-based clients
-- **No SSE** - uses modern StreamableHTTP (SSE is deprecated)
 
 #### ✅ 3 Workflow Prompts
 - `track-shipment`: Quick container tracking with optional carrier
