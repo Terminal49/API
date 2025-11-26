@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Terminal 49",
-  "theme": "mint",
+  "theme": "palm",
   "logo": "/logos/light.svg",
   "favicon": "/logos/favicon.svg",
   "colors": {
@@ -12,6 +12,18 @@
   "appearance": {
     "default": "light",
     "strict": false
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "navbar": {
     "links": [

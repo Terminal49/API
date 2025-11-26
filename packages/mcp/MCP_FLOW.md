@@ -228,13 +228,16 @@ Claude formats this into a natural language response:
 
 ## MCP Resources
 
-The server also provides a resource endpoint:
+The server provides two resource endpoints:
 
-**URI Pattern:** `t49:container/{id}`
+**Container Resource:**
+- **URI Pattern:** `terminal49://container/{id}`
+- **Example:** `terminal49://container/123e4567-e89b-12d3-a456-426614174000`
+- Returns container data in markdown format
 
-**Example:** `t49:container/123e4567-e89b-12d3-a456-426614174000`
-
-This returns a markdown-formatted container summary.
+**Milestone Glossary:**
+- **URI:** `terminal49://docs/milestone-glossary`
+- Comprehensive event/milestone reference documentation
 
 ## Error Handling
 
