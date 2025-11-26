@@ -1,19 +1,24 @@
 ---
 title: MCP Overview
-description: Terminal49 MCP server and SDK entry point
+description: Terminal49 MCP server for AI-powered container tracking
 ---
 
-# Terminal49 MCP
+# Terminal49 MCP Server
 
-Use the Terminal49 Model Context Protocol (MCP) server to query shipping data from MCP-compatible clients (e.g., Claude, Cursor). It exposes the same tools used by the Terminal49 SDK, streamed over HTTP/SSE.
+Use the Terminal49 Model Context Protocol (MCP) server to query shipping data from MCP-compatible clients (Claude Desktop, Cursor, and other MCP clients).
 
-## Endpoints & auth
+## Endpoints & Authentication
 
-- HTTP (streamable): `POST /api/mcp`
-- SSE (stateful): `GET /sse?sessionId=...` + `POST /sse?sessionId=...`
-- Auth: `Authorization: Bearer <T49_API_TOKEN>` (server also falls back to `process.env.T49_API_TOKEN`)
+| Transport | Endpoint | Description |
+|-----------|----------|-------------|
+| HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Stateless, JSON responses |
+| SSE (stateful) | `GET /sse?sessionId=<id>` | Open stream, then `POST /sse?sessionId=<id>` to send messages |
 
-## Configure your MCP client
+**Authentication**: `Authorization: Bearer <T49_API_TOKEN>` header, or set `T49_API_TOKEN` environment variable on the server.
+
+## Configure Your MCP Client
+
+**Claude Desktop / Generic MCP Client:**
 
 ```json
 {
@@ -28,13 +33,68 @@ Use the Terminal49 Model Context Protocol (MCP) server to query shipping data fr
 }
 ```
 
-If you prefer the function path, `https://mcp.terminal49.com/api/mcp` also works.
+**Cursor IDE:**
 
-## Tools & resources
+```json
+{
+  "mcp": {
+    "servers": {
+      "terminal49": {
+        "url": "https://mcp.terminal49.com/mcp",
+        "headers": {
+          "Authorization": "Bearer <T49_API_TOKEN>"
+        }
+      }
+    }
+  }
+}
+```
 
-Tools: `search_container`, `track_container`, `get_container`, `get_shipment_details`, `get_container_transport_events`, `get_supported_shipping_lines`, `get_container_route`.
+## Supported Capabilities
 
-Resources: `terminal49://container/{id}`, `terminal49://docs/milestone-glossary`.
+### Tools (7)
+
+| Tool | Description | Use Case |
+|------|-------------|----------|
+| `search_container` | Search by container#, BL, booking, or reference | Finding containers quickly |
+| `track_container` | Create tracking request for a new container | Start tracking a container |
+| `get_container` | Get container details with flexible includes | Status, location, demurrage |
+| `get_shipment_details` | Get shipment with routing and containers | Shipment-level queries |
+| `get_container_transport_events` | Get event timeline and milestones | Journey history, delays |
+| `get_supported_shipping_lines` | List 40+ carriers with SCAC codes | Carrier validation |
+| `get_container_route` | Get multi-leg routing with vessels | Routing, transshipments (paid feature) |
+
+### Prompts (3)
+
+| Prompt | Description |
+|--------|-------------|
+| `track-shipment` | Quick container tracking workflow |
+| `check-demurrage` | Demurrage/detention risk analysis |
+| `analyze-delays` | Journey delay identification |
+
+### Resources (2)
+
+| Resource URI | Description |
+|--------------|-------------|
+| `terminal49://container/{id}` | Container data as a resource |
+| `terminal49://docs/milestone-glossary` | Event/milestone reference documentation |
+
+## Not Yet Supported (Roadmap)
+
+These Terminal49 API capabilities are available via the SDK but not yet exposed as MCP tools:
+
+| API | Description | Workaround |
+|-----|-------------|------------|
+| `list_containers` | List containers with filters | Use `search_container` |
+| `list_shipments` | List shipments with filters | Use `search_container` |
+| `update_shipment` | Update shipment ref numbers/tags | Use REST API directly |
+| `stop_tracking` | Stop tracking a shipment | Use REST API directly |
+| `resume_tracking` | Resume tracking a shipment | Use REST API directly |
+| `raw_events` | Get raw EDI event data | Use REST API directly |
+| `refresh_container` | Force refresh container data | Use REST API directly |
+| `tracking_requests` | List/get/update tracking requests | Use REST API directly |
+| Webhooks | Real-time event notifications | Configure via Terminal49 dashboard |
+| Completions | Autocomplete for SCAC codes | Coming soon |
 
 ## SDK (TypeScript)
 
@@ -45,9 +105,13 @@ npm install @terminal49/sdk
 ```ts
 import { Terminal49Client } from '@terminal49/sdk';
 
-const client = new Terminal49Client({ apiToken: process.env.T49_API_TOKEN!, defaultFormat: 'mapped' });
-const container = await client.containers.get('container-uuid', ['shipment'], { format: 'both' });
-console.log(container.mapped);
+const client = new Terminal49Client({
+  apiToken: process.env.T49_API_TOKEN!,
+  defaultFormat: 'mapped'
+});
+
+const container = await client.containers.get('container-uuid', ['shipment']);
+console.log(container);
 ```
 
-For a deeper walkthrough, see `API Docs → In Depth Guides → MCP Server Quickstart`.
+For a deeper walkthrough, see **API Docs → In Depth Guides → MCP Server Quickstart**.
