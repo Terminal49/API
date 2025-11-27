@@ -5,113 +5,425 @@ description: Terminal49 MCP server for AI-powered container tracking
 
 # Terminal49 MCP Server
 
-Use the Terminal49 Model Context Protocol (MCP) server to query shipping data from MCP-compatible clients (Claude Desktop, Cursor, and other MCP clients).
+Use the Terminal49 MCP server to let Claude or Cursor answer questions with live container and shipment data—without writing custom glue code.
 
-## Endpoints & Authentication
+## TL;DR – Get Started in 5 Minutes
 
-| Transport | Endpoint | Description |
-|-----------|----------|-------------|
-| HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Stateless, JSON responses |
-| SSE (stateful) | `GET /sse?sessionId=<id>` | Open stream, then `POST /sse?sessionId=<id>` to send messages |
+<Steps>
+  <Step title="Get your API token">
+    Go to the [Terminal49 dashboard](https://app.terminal49.com/developers/api-keys) → Settings → API Tokens and create a `T49_API_TOKEN`.
+  </Step>
+  <Step title="Pick your MCP client">
+    - **Claude Desktop** (macOS / Windows / Linux)
+    - **Cursor IDE**
+  </Step>
+  <Step title="Paste this config (Claude Desktop)">
+    Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
-**Authentication**: `Authorization: Bearer <T49_API_TOKEN>` header, or set `T49_API_TOKEN` environment variable on the server.
-
-## Configure Your MCP Client
-
-**Claude Desktop / Generic MCP Client:**
-
-```json
-{
-  "mcpServers": {
-    "terminal49": {
-      "url": "https://mcp.terminal49.com/mcp",
-      "headers": {
-        "Authorization": "Bearer <T49_API_TOKEN>"
-      }
-    }
-  }
-}
-```
-
-**Cursor IDE:**
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "terminal49": {
-        "url": "https://mcp.terminal49.com/mcp",
-        "headers": {
-          "Authorization": "Bearer <T49_API_TOKEN>"
+    ```json
+    {
+      "mcpServers": {
+        "terminal49": {
+          "url": "https://mcp.terminal49.com/mcp",
+          "headers": {
+            "Authorization": "Bearer <T49_API_TOKEN>"
+          }
         }
       }
     }
+    ```
+
+    <Accordion title="Cursor IDE config">
+    ```json
+    {
+      "mcp": {
+        "servers": {
+          "terminal49": {
+            "url": "https://mcp.terminal49.com/mcp",
+            "headers": {
+              "Authorization": "Bearer <T49_API_TOKEN>"
+            }
+          }
+        }
+      }
+    }
+    ```
+    </Accordion>
+  </Step>
+  <Step title="Ask Claude">
+    > "Using the Terminal49 MCP server, track container CAIU1234567 with Maersk."
+  </Step>
+  <Step title="Explore tools">
+    Ask Claude:
+    > "List the tools available in the Terminal49 MCP server and what they're for."
+  </Step>
+</Steps>
+
+<Note>
+Need test container numbers? See [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+</Note>
+
+For the full walkthrough (including local stdio dev, deployment, and SDK examples), see [MCP Server Quickstart](/api-docs/in-depth-guides/mcp).
+
+---
+
+## Transports
+
+| Transport | Endpoint | Best For |
+|-----------|----------|----------|
+| HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Serverless, short-lived requests |
+| SSE (stateful) | `GET /sse?sessionId=<id>` then `POST /sse?sessionId=<id>` | Long-running, chatty sessions (dev tools, IDEs) |
+
+**Authentication** for both transports:
+- Header: `Authorization: Bearer <T49_API_TOKEN>`
+- Or set `T49_API_TOKEN` environment variable when self-hosting
+
+<Tip>
+Claude Desktop and Cursor use the HTTP transport. Use SSE if you're building a custom client that needs long-lived sessions and streaming responses.
+</Tip>
+
+The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP endpoints as the REST API.
+
+---
+
+## Tools Reference
+
+### `search_container`
+
+Find containers by container number, BL, booking, or your own reference. This is the fastest way to locate containers.
+
+**Parameters**
+- `query` *(string, required)* – container number, BL, booking, or reference
+
+<Accordion title="Example MCP request">
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "search_container",
+    "arguments": {
+      "query": "CAIU1234567"
+    }
   }
 }
 ```
+</Accordion>
 
-## Supported Capabilities
+<Accordion title="Example response">
+```json
+{
+  "containers": [
+    {
+      "id": "abc-123-uuid",
+      "containerNumber": "CAIU1234567",
+      "status": "in_transit",
+      "shippingLine": "Maersk",
+      "podTerminal": "APM Terminals",
+      "destination": "Los Angeles"
+    }
+  ],
+  "shipments": [],
+  "totalResults": 1
+}
+```
+</Accordion>
 
-### Tools (7)
+**Good for**
+- "Find this container and tell me where it is"
+- "Show all containers with reference PO-12345"
 
-| Tool | Description | Use Case |
-|------|-------------|----------|
-| `search_container` | Search by container#, BL, booking, or reference | Finding containers quickly |
-| `track_container` | Create tracking request for a new container | Start tracking a container |
-| `get_container` | Get container details with flexible includes | Status, location, demurrage |
-| `get_shipment_details` | Get shipment with routing and containers | Shipment-level queries |
-| `get_container_transport_events` | Get event timeline and milestones | Journey history, delays |
-| `get_supported_shipping_lines` | List 40+ carriers with SCAC codes | Carrier validation |
-| `get_container_route` | Get multi-leg routing with vessels | Routing, transshipments (paid feature) |
+**REST equivalent**: [GET /containers](/api-docs/api-reference/containers/list-containers) with filters
 
-### Prompts (3)
+---
 
-| Prompt | Description |
-|--------|-------------|
-| `track-shipment` | Quick container tracking workflow |
-| `check-demurrage` | Demurrage/detention risk analysis |
-| `analyze-delays` | Journey delay identification |
+### `track_container`
 
-### Resources (2)
+Start tracking a new container. Creates a tracking request and returns container details.
+
+**Parameters**
+- `containerNumber` *(string, required)* – e.g., `CAIU1234567`
+- `scac` *(string, optional)* – shipping line code, e.g., `MAEU` for Maersk
+- `bookingNumber` *(string, optional)* – if tracking by booking/BL
+- `refNumbers` *(string[], optional)* – your reference numbers
+
+<Accordion title="Example MCP request">
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "track_container",
+    "arguments": {
+      "containerNumber": "CAIU1234567",
+      "scac": "MAEU"
+    }
+  }
+}
+```
+</Accordion>
+
+**Good for**
+- "Track container CAIU1234567 with Maersk"
+- "Start tracking this new shipment"
+
+**REST equivalent**: [POST /tracking_requests](/api-docs/api-reference/tracking-requests/create-a-tracking-request)
+
+---
+
+### `get_container`
+
+Get detailed container information with flexible data loading. Choose what to include based on your question.
+
+**Parameters**
+- `id` *(uuid, required)* – Terminal49 container UUID
+- `include` *(string[], optional)* – what to load:
+  - `shipment` – routing, BOL, line, ref numbers (lightweight)
+  - `pod_terminal` – terminal name, location (lightweight)
+  - `transport_events` – full event history (heavy, 50-100 events)
+
+<Accordion title="Example MCP request">
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "get_container",
+    "arguments": {
+      "id": "abc-123-uuid",
+      "include": ["shipment", "pod_terminal"]
+    }
+  }
+}
+```
+</Accordion>
+
+<Accordion title="Example response (mapped)">
+```json
+{
+  "id": "abc-123-uuid",
+  "number": "CAIU1234567",
+  "status": "available_for_pickup",
+  "equipment": {
+    "type": "40HC",
+    "length": "40",
+    "height": "high_cube"
+  },
+  "location": {
+    "currentLocation": "APM Terminals",
+    "availableForPickup": true,
+    "podArrivedAt": "2025-01-15T08:30:00Z",
+    "podDischargedAt": "2025-01-16T14:20:00Z"
+  },
+  "demurrage": {
+    "pickupLfd": "2025-01-22",
+    "holds": [],
+    "fees": []
+  },
+  "shipment": {
+    "id": "shipment-uuid",
+    "billOfLading": "MAEU123456789",
+    "shippingLineScac": "MAEU"
+  }
+}
+```
+</Accordion>
+
+**Good for**
+- "What's the status of this container?"
+- "Is it available for pickup? Any holds?"
+- "When does demurrage start?"
+
+**REST equivalent**: [GET /containers/{id}](/api-docs/api-reference/containers/get-a-container)
+
+---
+
+### `get_container_transport_events`
+
+Get the full event timeline for a container's journey.
+
+**Parameters**
+- `id` *(uuid, required)* – Terminal49 container UUID
+
+<Accordion title="Example response">
+```json
+{
+  "totalEvents": 47,
+  "eventCategories": {
+    "vesselEvents": 8,
+    "railEvents": 12,
+    "terminalEvents": 18
+  },
+  "milestones": {
+    "vesselLoadedAt": "2024-12-08T10:30:00Z",
+    "vesselDepartedAt": "2024-12-09T14:00:00Z",
+    "vesselArrivedAt": "2024-12-22T08:30:00Z",
+    "dischargedAt": "2024-12-23T11:15:00Z"
+  },
+  "timeline": [
+    {
+      "event": "container.transport.vessel_loaded",
+      "timestamp": "2024-12-08T10:30:00Z",
+      "location": { "name": "Shanghai", "locode": "CNSHA" }
+    }
+  ]
+}
+```
+</Accordion>
+
+**Good for**
+- "Show me the journey timeline"
+- "What happened to this container?"
+- "How long was the rail portion?"
+
+**REST equivalent**: [GET /containers/{id}/transport_events](/api-docs/api-reference/containers/get-a-containers-transport-events)
+
+---
+
+### `get_shipment_details`
+
+Get shipment-level information including routing, BOL, and all containers.
+
+**Parameters**
+- `id` *(uuid, required)* – Terminal49 shipment UUID
+- `include_containers` *(boolean, optional)* – include container list (default: true)
+
+**Good for**
+- "Tell me about this shipment"
+- "What containers are on this BL?"
+- "Show me the routing"
+
+**REST equivalent**: [GET /shipments/{id}](/api-docs/api-reference/shipments/get-a-shipment)
+
+---
+
+### `get_supported_shipping_lines`
+
+List carriers supported by Terminal49 with their SCAC codes.
+
+**Parameters**
+- `search` *(string, optional)* – filter by name or SCAC
+
+**Good for**
+- "What carriers do you support?"
+- "What's the SCAC code for CMA CGM?"
+
+**REST equivalent**: [GET /shipping_lines](/api-docs/api-reference/shipping-lines/shipping-lines)
+
+---
+
+### `get_container_route`
+
+Get detailed multi-leg routing with vessel itinerary.
+
+<Warning>
+This is a **paid feature**. If not enabled for your account, use `get_container_transport_events` for historical movement data instead.
+</Warning>
+
+**Parameters**
+- `id` *(uuid, required)* – Terminal49 container UUID
+
+**Good for**
+- "What's the routing for this container?"
+- "Which transshipment ports?"
+- "What vessel is it on?"
+
+**REST equivalent**: [GET /containers/{id}/route](/api-docs/api-reference/containers/get-container-route)
+
+---
+
+## Prompts Reference
+
+Prompts are pre-built workflows that guide the AI through multi-step analysis.
+
+### `track-shipment`
+
+Quick container tracking with optional carrier specification.
+
+**Arguments**
+- `container_number` *(string, required)* – e.g., `CAIU1234567`
+- `carrier` *(string, optional)* – SCAC code, e.g., `MAEU`
+
+**Try this in Claude:**
+> "Using Terminal49, track container CAIU1234567 and show me its current status, location, and ETA."
+
+---
+
+### `check-demurrage`
+
+Analyze demurrage/detention risk for a container.
+
+**Arguments**
+- `container_id` *(uuid, required)* – from `search_container` or `get_container`
+
+**Try this in Claude:**
+> "Using Terminal49, check demurrage risk for container CAIU1234567 and explain which fees apply and when."
+
+---
+
+### `analyze-delays`
+
+Identify delays and root causes in a container's journey.
+
+**Arguments**
+- `container_id` *(uuid, required)* – Container UUID
+
+**Try this in Claude:**
+> "Using Terminal49, analyze delays for container CAIU1234567 and tell me what caused them."
+
+---
+
+## Resources Reference
+
+Resources provide static or dynamic data that AI clients can read.
 
 | Resource URI | Description |
 |--------------|-------------|
-| `terminal49://container/{id}` | Container data as a resource |
+| `terminal49://container/{id}` | Container data in markdown format |
 | `terminal49://docs/milestone-glossary` | Event/milestone reference documentation |
 
-## Not Yet Supported (Roadmap)
+<Accordion title="Example resources/read request">
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "resources/read",
+  "params": {
+    "uri": "terminal49://docs/milestone-glossary"
+  }
+}
+```
+</Accordion>
 
-These Terminal49 API capabilities are available via the SDK but not yet exposed as MCP tools:
+---
+
+## Not Yet Supported
+
+These Terminal49 API capabilities are available via the [SDK](/api-docs/in-depth-guides/mcp#sdk-usage) but not yet exposed as MCP tools:
 
 | API | Description | Workaround |
 |-----|-------------|------------|
 | `list_containers` | List containers with filters | Use `search_container` |
 | `list_shipments` | List shipments with filters | Use `search_container` |
-| `update_shipment` | Update shipment ref numbers/tags | Use REST API directly |
-| `stop_tracking` | Stop tracking a shipment | Use REST API directly |
-| `resume_tracking` | Resume tracking a shipment | Use REST API directly |
-| `raw_events` | Get raw EDI event data | Use REST API directly |
-| `refresh_container` | Force refresh container data | Use REST API directly |
-| `tracking_requests` | List/get/update tracking requests | Use REST API directly |
-| Webhooks | Real-time event notifications | Configure via Terminal49 dashboard |
-| Completions | Autocomplete for SCAC codes | Coming soon |
+| `update_shipment` | Update shipment ref numbers/tags | Use [REST API](/api-docs/api-reference/shipments/edit-a-shipment) |
+| `stop_tracking` | Stop tracking a shipment | Use [REST API](/api-docs/api-reference/shipments/stop-tracking-shipment) |
+| `resume_tracking` | Resume tracking a shipment | Use [REST API](/api-docs/api-reference/shipments/resume-tracking-shipment) |
+| `raw_events` | Get raw EDI event data | Use [REST API](/api-docs/api-reference/containers/get-a-containers-raw-events) |
+| `refresh_container` | Force refresh container data | Use [REST API](/api-docs/api-reference/containers/refresh-container) |
+| Webhooks | Real-time event notifications | Configure via [dashboard](/api-docs/in-depth-guides/webhooks) |
 
-## SDK (TypeScript)
+<Info>
+If you ask your MCP client to "list all my shipments" or "stop tracking this shipment", it won't work via MCP alone. Use the REST API or SDK directly for these operations.
+</Info>
 
-```bash
-npm install @terminal49/sdk
-```
+---
 
-```ts
-import { Terminal49Client } from '@terminal49/sdk';
+## Related Guides
 
-const client = new Terminal49Client({
-  apiToken: process.env.T49_API_TOKEN!,
-  defaultFormat: 'mapped'
-});
-
-const container = await client.containers.get('container-uuid', ['shipment']);
-console.log(container);
-```
-
-For a deeper walkthrough, see **API Docs → In Depth Guides → MCP Server Quickstart**.
+- [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, local dev, deployment
+- [Rate Limiting](/api-docs/in-depth-guides/rate-limiting) – Same limits apply to MCP
+- [Test Numbers](/api-docs/useful-info/test-numbers) – Containers for testing
+- [Webhooks](/api-docs/in-depth-guides/webhooks) – Real-time updates (use with MCP for best results)
