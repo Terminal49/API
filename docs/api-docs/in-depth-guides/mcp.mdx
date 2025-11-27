@@ -1,48 +1,115 @@
 ---
 title: MCP Server Quickstart
-description: How to use Terminal49's MCP server and SDK
+description: Full setup guide for the Terminal49 MCP server
 ---
 
-## Overview
+# MCP Server Quickstart
 
-Terminal49 provides a Model Context Protocol (MCP) server and a TypeScript SDK to query shipping data via MCP-compatible clients like Claude Desktop and Cursor.
+This guide covers everything you need to connect Claude or Cursor to Terminal49's container tracking data via MCP.
+
+<Note>
+Just want to get started fast? See [MCP Overview](/mcp/home) for a 5-minute setup.
+</Note>
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+<CardGroup cols={2}>
+  <Card title="Terminal49 Account" icon="user">
+    A Terminal49 account with API access
+  </Card>
+  <Card title="API Token" icon="key">
+    A `T49_API_TOKEN` from the [dashboard](https://app.terminal49.com/developers/api-keys)
+  </Card>
+  <Card title="Node.js 18+" icon="node-js">
+    Required if running the MCP server locally
+  </Card>
+  <Card title="MCP Client" icon="robot">
+    Claude Desktop or Cursor IDE
+  </Card>
+</CardGroup>
 
 **Technical Details:**
 - **MCP SDK**: `@modelcontextprotocol/sdk ^1.22.0`
 - **TypeScript SDK**: `@terminal49/sdk`
 - **Runtime**: Node.js 18+
 
+---
+
 ## Transports
 
-| Transport | Endpoint | Use Case |
+| Transport | Endpoint | Best For |
 |-----------|----------|----------|
-| HTTP (streamable) | `POST /api/mcp` or `/mcp` | Stateless requests, serverless |
-| SSE (stateful) | `GET /sse?sessionId=<id>` then `POST /sse?sessionId=<id>` | Long-running sessions |
+| HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Serverless, short-lived requests |
+| SSE (stateful) | `GET /sse?sessionId=<id>` then `POST /sse?sessionId=<id>` | Long-running sessions, streaming |
 
 **Authentication**: Pass `Authorization: Bearer <T49_API_TOKEN>` header. Server falls back to `T49_API_TOKEN` environment variable.
 
-## Configure an MCP Client
+<Tip>
+Claude Desktop and Cursor use the HTTP transport. Use SSE only if you're building a custom client that needs persistent connections.
+</Tip>
+
+---
+
+## Configure Your MCP Client
 
 ### Claude Desktop
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+<Tabs>
+  <Tab title="macOS">
+    Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
-```json
-{
-  "mcpServers": {
-    "terminal49": {
-      "url": "https://mcp.terminal49.com/mcp",
-      "headers": {
-        "Authorization": "Bearer <T49_API_TOKEN>"
+    ```json
+    {
+      "mcpServers": {
+        "terminal49": {
+          "url": "https://mcp.terminal49.com/mcp",
+          "headers": {
+            "Authorization": "Bearer <T49_API_TOKEN>"
+          }
+        }
       }
     }
-  }
-}
-```
+    ```
+  </Tab>
+  <Tab title="Windows">
+    Edit `%APPDATA%\Claude\claude_desktop_config.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "terminal49": {
+          "url": "https://mcp.terminal49.com/mcp",
+          "headers": {
+            "Authorization": "Bearer <T49_API_TOKEN>"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Linux">
+    Edit `~/.config/Claude/claude_desktop_config.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "terminal49": {
+          "url": "https://mcp.terminal49.com/mcp",
+          "headers": {
+            "Authorization": "Bearer <T49_API_TOKEN>"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
 
 ### Cursor IDE
 
-Add to Cursor settings:
+Add to your Cursor settings:
 
 ```json
 {
@@ -61,6 +128,8 @@ Add to Cursor settings:
 
 ### Local stdio (Development)
 
+For local development without a hosted server:
+
 ```json
 {
   "mcpServers": {
@@ -75,7 +144,67 @@ Add to Cursor settings:
 }
 ```
 
-## Supported MCP Capabilities
+<Warning>
+Build the MCP server first: `cd packages/mcp && npm install && npm run build`
+</Warning>
+
+---
+
+## Test Your Setup
+
+Once configured, verify everything works:
+
+<Steps>
+  <Step title="Restart your MCP client">
+    Close and reopen Claude Desktop or Cursor to load the new config.
+  </Step>
+  <Step title="Ask Claude to list tools">
+    > "List the tools available in the Terminal49 MCP server."
+
+    Claude should respond with a list of 7 tools including `search_container`, `track_container`, etc.
+  </Step>
+  <Step title="Search for a test container">
+    > "Using the Terminal49 MCP server, search for container TCLU1234567 and summarize its status."
+
+    If configured correctly, Claude will call `search_container` and return container details.
+  </Step>
+  <Step title="Try a multi-step query">
+    > "Using Terminal49, find container CAIU1234567, check its demurrage risk, and tell me if I need to pick it up urgently."
+
+    Claude should chain multiple tools together to answer.
+  </Step>
+</Steps>
+
+<Note>
+Need test container numbers? See [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+</Note>
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely Cause | How to Fix |
+|---------|--------------|------------|
+| "Cannot connect to MCP server" | Wrong URL or config path | Confirm URL is `https://mcp.terminal49.com/mcp` and config file path matches your OS |
+| `401 Unauthorized` | Missing or invalid token | Create a new API token in [dashboard](https://app.terminal49.com/developers/api-keys); ensure `Authorization: Bearer <token>` header is set |
+| `429 Too Many Requests` | Rate limit exceeded | See [Rate Limiting](/api-docs/in-depth-guides/rate-limiting); use webhooks instead of polling |
+| Tools list is empty | Config not loaded | Restart Claude/Cursor; check MCP inspector for errors |
+| "Tool not found" | Typo in tool name | Use exact names: `search_container`, `get_container`, etc. |
+| Slow responses | Large data requests | Use `include` parameter to load only what you need |
+
+<Accordion title="Check MCP server logs">
+If using the hosted server, check your Terminal49 dashboard for API logs.
+
+If running locally:
+```bash
+cd packages/mcp
+T49_API_TOKEN=your_token npm run mcp:stdio 2>&1 | head -20
+```
+</Accordion>
+
+---
+
+## MCP Capabilities
 
 ### Tools (7)
 
@@ -104,29 +233,19 @@ Add to Cursor settings:
 | `terminal49://container/{id}` | Container data as resource |
 | `terminal49://docs/milestone-glossary` | Event/milestone reference |
 
-## Not Yet Supported
+For detailed examples and response formats, see [MCP Overview → Tools Reference](/mcp/home#tools-reference).
 
-These Terminal49 APIs are available via SDK but not exposed as MCP tools:
-
-| API | SDK Method | Notes |
-|-----|------------|-------|
-| List containers | `client.containers.list()` | Use `search_container` as workaround |
-| List shipments | `client.shipments.list()` | Use `search_container` as workaround |
-| Update shipment | `client.shipments.update()` | Modify ref numbers, tags |
-| Stop/resume tracking | `client.shipments.stopTracking()` | Tracking lifecycle |
-| Raw events | `client.containers.rawEvents()` | EDI data |
-| Refresh container | `client.containers.refresh()` | Force data refresh |
-| Tracking requests | `client.listTrackingRequests()` | List/manage requests |
-| Completions | - | SCAC autocomplete (coming soon) |
-| Webhooks | - | Configure via dashboard |
+---
 
 ## SDK Usage
+
+The TypeScript SDK provides the same capabilities as MCP tools, plus additional APIs not yet exposed via MCP.
 
 ```bash
 npm install @terminal49/sdk
 ```
 
-```ts
+```typescript
 import { Terminal49Client } from '@terminal49/sdk';
 
 const client = new Terminal49Client({
@@ -143,7 +262,7 @@ const container = await client.containers.get(
 // Search for containers
 const results = await client.search('CAIU1234567');
 
-// List shipments with filters
+// List shipments with filters (not available via MCP)
 const shipments = await client.shipments.list({
   status: 'in_transit',
   carrier: 'MAEU'
@@ -152,15 +271,44 @@ const shipments = await client.shipments.list({
 
 ### Response Formats
 
-- `raw`: JSON:API response as-is
-- `mapped`: Simplified, camelCase objects
-- `both`: `{ raw, mapped }` for debugging
+| Format | Description |
+|--------|-------------|
+| `raw` | JSON:API response with `data`, `attributes`, `relationships` |
+| `mapped` | Simplified, camelCase objects with IDs resolved |
+| `both` | `{ raw, mapped }` for debugging |
+
+<Accordion title="Raw vs Mapped example">
+**Raw format:**
+```json
+{
+  "data": {
+    "type": "container",
+    "id": "abc-123",
+    "attributes": {
+      "container_number": "CAIU1234567",
+      "available_for_pickup": true
+    }
+  }
+}
+```
+
+**Mapped format:**
+```json
+{
+  "id": "abc-123",
+  "containerNumber": "CAIU1234567",
+  "availableForPickup": true
+}
+```
+</Accordion>
+
+---
 
 ## Deployment
 
 ### Vercel (Production)
 
-The `vercel.json` configures:
+The `vercel.json` configures the MCP server:
 
 ```json
 {
@@ -183,17 +331,35 @@ The `vercel.json` configures:
 | `T49_API_TOKEN` | Yes | Terminal49 API token |
 | `T49_API_BASE_URL` | No | Override API URL (default: `https://api.terminal49.com/v2`) |
 
-## Testing
+---
+
+## Testing Locally
 
 ```bash
-# Test locally with stdio
+# Build the MCP server
 cd packages/mcp
+npm install
 npm run build
-echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | npm run mcp:stdio
 
-# Test HTTP endpoint
+# Test tools/list
+echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | T49_API_TOKEN=your_token npm run mcp:stdio
+
+# Test search_container
+echo '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"search_container","arguments":{"query":"CAIU1234567"}},"id":2}' | T49_API_TOKEN=your_token npm run mcp:stdio
+
+# Test the hosted endpoint
 curl -X POST https://mcp.terminal49.com/mcp \
   -H "Authorization: Bearer $T49_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
 ```
+
+---
+
+## Related Guides
+
+- [MCP Overview](/mcp/home) – Quick start and tools reference
+- [Rate Limiting](/api-docs/in-depth-guides/rate-limiting) – API limits (same for MCP)
+- [Test Numbers](/api-docs/useful-info/test-numbers) – Containers for testing
+- [Webhooks](/api-docs/in-depth-guides/webhooks) – Real-time updates
+- [API Data Sources](/api-docs/useful-info/api-data-sources-availability) – Data freshness and coverage
