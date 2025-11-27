@@ -1,1 +1,26 @@
 .DS_Store
+.vercel
+node_modules
+
+# Environment variables
+.env.local
+.env
+*.env
+!.env.sample
+!.env.example
+
+# LLM context files (development only)
+*-llms-full.txt
+mcp-protocol-*.txt
+
+# Test files
+mcp-ts/test-*.js
+mcp-ts/test-*.sh
+
+# Claude Code configuration
+.claude/
+
+# Build output
+dist/
+packages/*/dist/
+sdks/*/dist/

@@ -3,7 +3,7 @@ title: Including Resources
 ---
 Throughout the documentation you will notice that many of the endpoints include a `relationships` object inside of the `data` attribute.
 
-For example, if you are [requesting a container](/api/4c6091811c4e0-get-a-container) the relationships will include `shipment`, and possibly `pod_terminal` and `transport_events`
+For example, if you are requesting a container (see containers API reference in this site) the relationships will include `shipment`, and possibly `pod_terminal` and `transport_events`
 
 If you want to load the `shipment` and `pod_terminal` without making any additional requests you can add the query parameter `include` and provide a comma delimited list of the related resources:
 ```
@@ -14,4 +14,3 @@ You can even traverse the relationships up or down. For example if you wanted to
 ```
 containers/{id}?include=shipment,shipment.port_of_lading
 ```
-

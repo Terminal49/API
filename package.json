@@ -1,0 +1,21 @@
+{
+  "name": "terminal49-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Terminal49 API with MCP Server",
+  "workspaces": [
+    "packages/*",
+    "sdks/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm test --workspaces"
+  },
+  "devDependencies": {
+    "@vercel/node": "^2.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
