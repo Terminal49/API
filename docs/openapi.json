@@ -792,7 +792,8 @@
                               "pickup_lfd_terminal": "2024-07-07T04:00:00Z",
                               "pickup_lfd_rail": null,
                               "pickup_lfd_line": "2024-07-07T04:00:00Z"
-                            }
+                            },
+                            "current_status": "available"
                           },
                           "relationships": {
                             "shipment": {
@@ -977,7 +978,8 @@
                             "empty_returned_at": null,
                             "pod_timezone": "America/Los_Angeles",
                             "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
+                            "empty_terminated_timezone": null,
+                            "current_status": "on_ship"
                           },
                           "relationships": {
                             "most_recent_location": {
@@ -2737,7 +2739,8 @@
                             "empty_terminated_at": null,
                             "pod_timezone": "America/Los_Angeles",
                             "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
+                            "empty_terminated_timezone": null,
+                            "current_status": "on_ship"
                           },
                           "relationships": {
                             "shipment": {
@@ -3182,7 +3185,8 @@
                             "empty_terminated_at": null,
                             "pod_timezone": "America/Los_Angeles",
                             "final_destination_timezone": null,
-                            "empty_terminated_timezone": null
+                            "empty_terminated_timezone": null,
+                            "current_status": "picked_up"
                           },
                           "relationships": {
                             "shipment": {
@@ -3544,7 +3548,8 @@
                               "pickup_lfd_terminal": null,
                               "pickup_lfd_rail": null,
                               "pickup_lfd_line": null
-                            }
+                            },
+                            "current_status": "picked_up"
                           },
                           "relationships": {
                             "shipment": {
@@ -3715,7 +3720,8 @@
                               "pickup_lfd_terminal": null,
                               "pickup_lfd_rail": null,
                               "pickup_lfd_line": null
-                            }
+                            },
+                            "current_status": "awaiting_inland_transfer"
                           },
                           "relationships": {
                             "shipment": {
@@ -3909,7 +3915,8 @@
                               "pickup_lfd_terminal": "2024-06-27T07:00:00Z",
                               "pickup_lfd_rail": null,
                               "pickup_lfd_line": "2024-06-27T07:00:00Z"
-                            }
+                            },
+                            "current_status": "not_available"
                           },
                           "relationships": {
                             "shipment": {
@@ -4100,7 +4107,8 @@
                               "pickup_lfd_terminal": "2024-06-27T07:00:00Z",
                               "pickup_lfd_rail": null,
                               "pickup_lfd_line": "2024-06-27T07:00:00Z"
-                            }
+                            },
+                            "current_status": "awaiting_inland_transfer"
                           },
                           "relationships": {
                             "shipment": {
@@ -4238,7 +4246,8 @@
                               "pickup_lfd_terminal": "2024-07-01T07:00:00Z",
                               "pickup_lfd_rail": null,
                               "pickup_lfd_line": "2024-07-01T07:00:00Z"
-                            }
+                            },
+                            "current_status": "available"
                           },
                           "relationships": {
                             "shipment": {
@@ -4538,7 +4547,8 @@
                             "pickup_lfd_terminal": "2024-07-07T04:00:00Z",
                             "pickup_lfd_rail": null,
                             "pickup_lfd_line": "2024-07-07T04:00:00Z"
-                          }
+                          },
+                          "current_status": "available"
                         },
                         "relationships": {
                           "shipment": {
@@ -7033,7 +7043,8 @@
                 "pickup_lfd_terminal": null,
                 "pickup_lfd_rail": "2022-02-20T08:00:00Z",
                 "pickup_lfd_line": "2022-02-25T08:00:00Z"
-              }
+              },
+              "current_status": "delivered"
             },
             "relationships": {
               "shipment": {
@@ -7364,6 +7375,25 @@
                   }
                 },
                 "nullable": true
+              },
+              "current_status": {
+                "type": "string",
+                "description": "The current status of the container in its journey. [Read guide to learn more.](/api-docs/in-depth-guides/container-statuses)",
+                "enum": [
+                  "new",
+                  "on_ship",
+                  "available",
+                  "not_available",
+                  "grounded",
+                  "on_rail",
+                  "picked_up",
+                  "off_dock",
+                  "delivered",
+                  "dropped",
+                  "loaded",
+                  "empty_returned",
+                  "awaiting_inland_transfer"
+                ]
               }
             }
           },
