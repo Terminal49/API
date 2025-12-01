@@ -7378,7 +7378,7 @@
               },
               "current_status": {
                 "type": "string",
-                "description": "The current status of the container in its journey. Note: The logic to derive these statuses is complex and there can sometimes be errors in the reported status.",
+                "description": "The current status of the container in its journey. [Read guide to learn more.](/api-docs/in-depth-guides/container-statuses)",
                 "enum": [
                   "new",
                   "on_ship",
