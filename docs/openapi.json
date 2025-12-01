@@ -7033,7 +7033,8 @@
                 "pickup_lfd_terminal": null,
                 "pickup_lfd_rail": "2022-02-20T08:00:00Z",
                 "pickup_lfd_line": "2022-02-25T08:00:00Z"
-              }
+              },
+              "current_status": "delivered"
             },
             "relationships": {
               "shipment": {
@@ -7363,6 +7364,26 @@
                     "nullable": true
                   }
                 },
+                "nullable": true
+              },
+              "current_status": {
+                "type": "string",
+                "description": "The current status of the container in its journey. Note: The logic to derive these statuses is complex and there can sometimes be errors in the reported status.",
+                "enum": [
+                  "new",
+                  "on_ship",
+                  "available",
+                  "not_available",
+                  "grounded",
+                  "on_rail",
+                  "picked_up",
+                  "off_dock",
+                  "delivered",
+                  "dropped",
+                  "loaded",
+                  "empty_returned",
+                  "awaiting_inland_transfer"
+                ],
                 "nullable": true
               }
             }

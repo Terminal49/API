@@ -1,0 +1,122 @@
+---
+title: Understanding Container Statuses
+description: Learn about the different container status values and their meanings throughout the container journey lifecycle.
+---
+
+The `current_status` attribute on container objects provides a high-level view of where a container is in its journey. This guide explains the different status values and their meanings.
+
+## Available Status Values
+
+The `current_status` field can have one of the following values:
+
+### new
+**Default state** - The container is tracked but we don't yet have enough information to determine its actual status. This is the initial state when tracking begins.
+
+### on_ship
+**In transit by vessel** - The container is on a ship at any point prior to arrival at the Port of Discharge (POD). This status can apply at multiple stages:
+- During the ocean voyage from origin to destination
+- Before vessel departure from the Port of Lading
+- Any time the container is loaded on a vessel
+
+### available
+**Ready for pickup** - The container has arrived at the POD or inland destination and is confirmed available for pickup. You can proceed with arranging pickup when you see this status.
+
+### not_available
+**Arrived but not ready** - The container is at the POD or inland destination but is not yet available for pickup. This could be due to:
+- Customs holds
+- Terminal holds
+- Documentation requirements
+- Other restrictions
+
+### grounded
+**Availability unknown** - The container is physically at the POD, but we don't currently know whether it's available for pickup or not. This typically means the terminal isn't providing real-time availability data.
+
+### awaiting_inland_transfer
+**Moving inland** - The container is either:
+- Still at the POD waiting to be loaded onto rail for an inland move
+- In transit between the POD and a rail terminal
+- At a rail terminal but not yet loaded onto a rail car
+
+This status is specific to shipments with inland rail movements.
+
+### on_rail
+**In transit by rail** - The container has been loaded onto a rail car and is being transported to its inland destination.
+
+### picked_up
+**Out for delivery** - The container has been picked up from the terminal or facility and is currently being transported to its final destination.
+
+### off_dock
+**At alternative facility** - The container has been moved to a different terminal or off-dock storage facility for pickup. You may need to go to this alternative location rather than the original POD terminal.
+
+### delivered
+**Delivery confirmed** - This status is only shown when delivery has been manually confirmed through the Terminal49 dashboard. It indicates successful delivery to the final destination.
+
+### empty_returned
+**Container returned empty** - The container has been emptied and returned to the shipping line or designated return location. This typically marks the end of the container's tracked journey.
+
+### dropped
+**Not currently used** - This status value is defined but not actively used in the system.
+
+### loaded
+**Not currently used** - This status value is defined but not actively used in the system.
+
+## Important Considerations
+
+### Status Accuracy
+The logic to derive container statuses is complex and involves processing data from multiple sources including:
+- Shipping line updates
+- Terminal systems
+- Rail carrier feeds
+- Manual updates
+
+**There can sometimes be errors in the reported `current_status`**. When making critical business decisions, we recommend:
+- Cross-referencing with transport events
+- Checking raw event data when available
+- Contacting the terminal directly for time-sensitive pickups
+
+### Status Transitions
+Containers don't always follow a linear path through these statuses. For example:
+- A container may go from `on_ship` directly to `available` if terminal data arrives quickly
+- A container might alternate between `available` and `not_available` if holds are placed and removed
+- The status may remain as `new` for some time if data from the shipping line is delayed
+
+### API Usage
+To get the current status of a container, include the container's `current_status` attribute in your API responses:
+
+```bash
+GET /v2/containers/{id}
+```
+
+The response will include:
+
+```json
+{
+  "data": {
+    "id": "abc123",
+    "type": "container",
+    "attributes": {
+      "number": "ABCU1234567",
+      "current_status": "available",
+      ...
+    }
+  }
+}
+```
+
+### Filtering by Status
+You can also filter containers by their current status when listing:
+
+```bash
+GET /v2/containers?current_status=available
+```
+
+This is useful for workflows like:
+- Finding all containers ready for pickup
+- Identifying containers still in transit
+- Locating containers that need attention (e.g., `not_available` due to holds)
+
+## Related Resources
+
+- [Container API Reference](/api-docs/api-reference/containers/list-containers)
+- [Transport Events](/api-docs/api-reference/containers/get-a-containers-transport-events)
+- [Tracking Request Lifecycle](/api-docs/in-depth-guides/tracking-request-lifecycle)
