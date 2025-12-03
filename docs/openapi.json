@@ -1639,6 +1639,14 @@
           },
           {
             "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "filter[request_number]",
+            "description": "filter by `request_number`"
+          },
+          {
+            "schema": {
               "type": "string",
               "enum": [
                 "created",
@@ -1682,6 +1690,26 @@
           },
           {
             "schema": {
+              "type": "string",
+              "example": "2020-04-28T22:59:15Z",
+              "format": "date-time"
+            },
+            "in": "query",
+            "name": "filter[updated_at][start]",
+            "description": "filter by tracking_requests `updated_at` after a certain ISO8601 timestamp"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2020-04-28T22:59:15Z"
+            },
+            "in": "query",
+            "description": "filter by tracking_requests `updated_at` before a certain ISO8601 timestamp",
+            "name": "filter[updated_at][end]"
+          },
+          {
+            "schema": {
               "type": "string"
             },
             "in": "query",
@@ -1701,14 +1729,6 @@
             },
             "in": "query",
             "name": "page[size]"
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "query",
-            "name": "filter[request_number]",
-            "description": "filter by `request_number`"
           }
         ]
       }
