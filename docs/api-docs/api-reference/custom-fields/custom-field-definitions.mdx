@@ -1,0 +1,277 @@
+---
+title: Custom field definitions
+og:title: Custom Field Definitions | Terminal49 API Documentation
+og:description: Create and manage custom field definitions to add metadata to shipments and containers via Terminal49's API.
+---
+
+Custom field definitions are schemas that define the structure and validation rules for custom metadata you can attach to shipments and containers.
+
+## Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v2/custom_field_definitions` | List all definitions |
+| GET | `/v2/custom_field_definitions/:id` | Get a single definition |
+| POST | `/v2/custom_field_definitions` | Create a definition |
+| PATCH | `/v2/custom_field_definitions/:id` | Update a definition |
+| DELETE | `/v2/custom_field_definitions/:id` | Delete a definition |
+
+## Definition attributes
+
+| Attribute | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `entity_type` | string | Yes | The entity type this field applies to. Must be `Shipment` or `Cargo`. |
+| `api_slug` | string | Yes | Unique identifier for the field. Alphanumeric and underscores only. |
+| `display_name` | string | Yes | Human-readable name for the field. |
+| `description` | string | No | Optional description of the field's purpose. |
+| `data_type` | string | Yes | The data type for values. See [supported data types](#supported-data-types). |
+| `reference_type` | string | Conditional | Required when `data_type` is `reference`. |
+| `validation` | object | No | Validation rules (e.g., `required`, `pattern`, `max_length`). |
+| `default_format` | string | No | Format string for numbers/dates. |
+| `default_value` | any | No | Default value for new custom fields. |
+
+## Supported data types
+
+| Data type | Description | Example value |
+|-----------|-------------|---------------|
+| `short_text` | Text string | `"PO-12345"` |
+| `number` | Numeric value | `1234.56` |
+| `date` | Date value | `"2024-01-15"` |
+| `datetime` | Date and time | `"2024-01-15 14:30:00"` |
+| `boolean` | True/false | `true` |
+| `enum` | Single selection from options | `"priority_high"` |
+| `enum_multi` | Multiple selections from options | `["urgent", "fragile"]` |
+| `reference` | Reference to another entity | Limited support |
+
+## List definitions
+
+Returns all custom field definitions for your account.
+
+```json http
+{
+  "method": "get",
+  "url": "https://api.terminal49.com/v2/custom_field_definitions",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  }
+}
+```
+
+### Query filters
+
+| Filter | Description |
+|--------|-------------|
+| `filter[entity_type]` | Filter by entity type (`Shipment` or `Cargo`) |
+| `filter[data_type]` | Filter by data type |
+| `filter[display_name]` | Search by display name (prefix match) |
+
+**Example with filters:**
+
+```json http
+{
+  "method": "get",
+  "url": "https://api.terminal49.com/v2/custom_field_definitions?filter[entity_type]=Shipment",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  }
+}
+```
+
+### Response
+
+```json
+{
+  "data": [
+    {
+      "id": "abc123",
+      "type": "custom_field_definition",
+      "attributes": {
+        "entity_type": "Shipment",
+        "api_slug": "purchase_order",
+        "display_name": "Purchase Order",
+        "description": "Customer purchase order number",
+        "data_type": "short_text",
+        "validation": {
+          "required": true,
+          "max_length": 50
+        },
+        "default_format": null,
+        "default_value": null
+      }
+    }
+  ]
+}
+```
+
+## Get a definition
+
+Retrieve a single custom field definition by ID.
+
+```json http
+{
+  "method": "get",
+  "url": "https://api.terminal49.com/v2/custom_field_definitions/:id",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  }
+}
+```
+
+## Create a definition
+
+Create a new custom field definition.
+
+```json http
+{
+  "method": "post",
+  "url": "https://api.terminal49.com/v2/custom_field_definitions",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  },
+  "body": {
+    "data": {
+      "type": "custom_field_definition",
+      "attributes": {
+        "entity_type": "Shipment",
+        "api_slug": "purchase_order",
+        "display_name": "Purchase Order",
+        "description": "Customer purchase order number",
+        "data_type": "short_text",
+        "validation": {
+          "required": true,
+          "max_length": 50
+        }
+      }
+    }
+  }
+}
+```
+
+### Validation rules
+
+You can specify validation rules in the `validation` object:
+
+| Rule | Description | Example |
+|------|-------------|---------|
+| `required` | Field must have a value | `true` |
+| `pattern` | Regex pattern for text fields | `"^PO-\\d+$"` |
+| `max_length` | Maximum character length | `50` |
+
+### Number formatting
+
+For `number` data types, use `default_format` to specify decimal places (0-6):
+
+```json
+{
+  "data_type": "number",
+  "default_format": "2"
+}
+```
+
+### Date formatting
+
+For `date` and `datetime` data types, use `default_format` with strftime patterns:
+
+```json
+{
+  "data_type": "date",
+  "default_format": "%Y-%m-%d"
+}
+```
+
+## Update a definition
+
+Update an existing custom field definition.
+
+```json http
+{
+  "method": "patch",
+  "url": "https://api.terminal49.com/v2/custom_field_definitions/:id",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  },
+  "body": {
+    "data": {
+      "type": "custom_field_definition",
+      "attributes": {
+        "display_name": "PO Number",
+        "description": "Updated description"
+      }
+    }
+  }
+}
+```
+
+<Note>
+You cannot change the `api_slug`, `entity_type`, or `data_type` after creation.
+</Note>
+
+## Delete a definition
+
+Delete a custom field definition. This also removes all associated custom field values.
+
+```json http
+{
+  "method": "delete",
+  "url": "https://api.terminal49.com/v2/custom_field_definitions/:id",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  }
+}
+```
+
+## Creating enum fields
+
+For `enum` and `enum_multi` data types, you must create options after creating the definition. See [Custom field options](/api-docs/api-reference/custom-fields/custom-field-options) for details.
+
+**Example: Create an enum definition**
+
+```json http
+{
+  "method": "post",
+  "url": "https://api.terminal49.com/v2/custom_field_definitions",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  },
+  "body": {
+    "data": {
+      "type": "custom_field_definition",
+      "attributes": {
+        "entity_type": "Shipment",
+        "api_slug": "priority_level",
+        "display_name": "Priority Level",
+        "data_type": "enum"
+      }
+    }
+  }
+}
+```
+
+Then add options to the definition:
+
+```json http
+{
+  "method": "post",
+  "url": "https://api.terminal49.com/v2/custom_field_definitions/:id/options",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  },
+  "body": {
+    "data": {
+      "type": "custom_field_option",
+      "attributes": {
+        "label": "High Priority",
+        "value": "high"
+      }
+    }
+  }
+}
+```
