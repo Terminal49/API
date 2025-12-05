@@ -34,9 +34,41 @@ Note that you can also access sample code, include a cURL template, by clicking 
 }
 ```
 
-## Check Your Tracking Request Succeeded
+## Set Up Webhooks (Recommended)
 
-We have not yet set up a webook to receive status updates from the Terminal49 API, so we will need to manually poll to check if the Tracking Request has succeeded or failed.
+The recommended way to integrate with Terminal49 is through webhooks. Instead of polling our API for updates, webhooks push real-time notifications to your system whenever there are changes to your shipments and containers.
+
+<Note>
+**Why webhooks?** Webhooks are more efficient than polling—you receive updates instantly without making repeated API calls. This reduces latency, lowers your API usage, and ensures you never miss an update.
+</Note>
+
+To set up a webhook, you'll need a URL on the open web to receive POST requests. You can use a service like [webhook.site](https://webhook.site) for testing.
+
+**Try it below. Click "Headers" and replace YOUR_API_KEY with your API key.**
+
+```json http
+{
+  "method": "post",
+  "url": "https://api.terminal49.com/v2/webhooks",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  },
+  "body": "{\r\n  \"data\": {\r\n    \"type\": \"webhook\",\r\n    \"attributes\": {\r\n      \"url\": \"https://webhook.site/\",\r\n      \"active\": true,\r\n      \"events\": [\r\n        \"*\"\r\n      ]\r\n    }\r\n  }\r\n}"
+}
+```
+
+Once configured, you'll automatically receive notifications for:
+- Tracking request status changes (`tracking_request.succeeded`, `tracking_request.failed`)
+- Container transport events (vessel departed, arrived, discharged, etc.)
+- ETA changes and container availability updates
+- Last Free Day (LFD) changes
+
+See the [Webhooks guide](/api-docs/in-depth-guides/webhooks) for the full list of events and payload examples.
+
+## Check Your Tracking Request Succeeded (Polling)
+
+If you haven't set up webhooks yet, you can manually poll to check if the Tracking Request has succeeded or failed. However, we recommend setting up webhooks above for production integrations.
 
 
 
