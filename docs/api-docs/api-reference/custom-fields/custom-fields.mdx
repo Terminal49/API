@@ -1,0 +1,363 @@
+---
+title: Custom fields
+og:title: Custom Fields | Terminal49 API Documentation
+og:description: Add and manage custom metadata values on shipments and containers via Terminal49's API.
+---
+
+Custom fields store metadata values on shipments and containers based on your custom field definitions.
+
+## Endpoints
+
+### Standalone endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v2/custom_fields` | List custom fields with filters |
+| GET | `/v2/custom_fields/:id` | Get a single custom field |
+| POST | `/v2/custom_fields` | Create a custom field |
+| PATCH | `/v2/custom_fields/:id` | Update a custom field |
+| DELETE | `/v2/custom_fields/:id` | Delete a custom field |
+
+### Shipment-scoped endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v2/shipments/:shipment_id/custom_fields` | List custom fields for a shipment |
+| POST | `/v2/shipments/:shipment_id/custom_fields` | Create or update a custom field |
+| PATCH | `/v2/shipments/:shipment_id/custom_fields/:api_slug` | Update by slug |
+| DELETE | `/v2/shipments/:shipment_id/custom_fields/:api_slug` | Delete by slug |
+
+### Container-scoped endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v2/containers/:container_id/custom_fields` | List custom fields for a container |
+| POST | `/v2/containers/:container_id/custom_fields` | Create or update a custom field |
+| PATCH | `/v2/containers/:container_id/custom_fields/:api_slug` | Update by slug |
+| DELETE | `/v2/containers/:container_id/custom_fields/:api_slug` | Delete by slug |
+
+## Custom field attributes
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `api_slug` | string | The slug of the custom field definition. |
+| `value` | varies | The raw stored value (type depends on definition). |
+| `display_value` | string | Formatted value for display. |
+
+## List custom fields
+
+### Using filters
+
+```json http
+{
+  "method": "get",
+  "url": "https://api.terminal49.com/v2/custom_fields",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  }
+}
+```
+
+#### Query filters
+
+| Filter | Description |
+|--------|-------------|
+| `filter[entity_type]` | Filter by entity type (`Shipment` or `Cargo`) |
+| `filter[entity_id]` | Filter by entity ID |
+| `filter[definition_id]` | Filter by definition ID |
+
+**Example with filters:**
+
+```json http
+{
+  "method": "get",
+  "url": "https://api.terminal49.com/v2/custom_fields?filter[entity_type]=Shipment&filter[entity_id]=abc123",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  }
+}
+```
+
+### For a specific shipment
+
+```json http
+{
+  "method": "get",
+  "url": "https://api.terminal49.com/v2/shipments/:shipment_id/custom_fields",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  }
+}
+```
+
+### For a specific container
+
+```json http
+{
+  "method": "get",
+  "url": "https://api.terminal49.com/v2/containers/:container_id/custom_fields",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  }
+}
+```
+
+### Response
+
+```json
+{
+  "data": [
+    {
+      "id": "cf123",
+      "type": "custom_field",
+      "attributes": {
+        "api_slug": "purchase_order",
+        "value": "PO-12345",
+        "display_value": "PO-12345"
+      },
+      "relationships": {
+        "entity": {
+          "data": {
+            "type": "shipment",
+            "id": "ship123"
+          }
+        },
+        "definition": {
+          "data": {
+            "type": "custom_field_definition",
+            "id": "def123"
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+## Create a custom field
+
+### Using the standalone endpoint
+
+```json http
+{
+  "method": "post",
+  "url": "https://api.terminal49.com/v2/custom_fields",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  },
+  "body": {
+    "data": {
+      "type": "custom_field",
+      "attributes": {
+        "api_slug": "purchase_order",
+        "value": "PO-12345"
+      },
+      "relationships": {
+        "entity": {
+          "data": {
+            "type": "shipment",
+            "id": "ship123"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### Using the shipment-scoped endpoint
+
+```json http
+{
+  "method": "post",
+  "url": "https://api.terminal49.com/v2/shipments/:shipment_id/custom_fields",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  },
+  "body": {
+    "data": {
+      "type": "custom_field",
+      "attributes": {
+        "api_slug": "purchase_order",
+        "value": "PO-12345"
+      }
+    }
+  }
+}
+```
+
+<Note>
+The scoped `POST` endpoint creates a new custom field if one doesn't exist, or updates the existing value if it does.
+</Note>
+
+### Using the container-scoped endpoint
+
+```json http
+{
+  "method": "post",
+  "url": "https://api.terminal49.com/v2/containers/:container_id/custom_fields",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  },
+  "body": {
+    "data": {
+      "type": "custom_field",
+      "attributes": {
+        "api_slug": "seal_number",
+        "value": "SEAL-789"
+      }
+    }
+  }
+}
+```
+
+## Update a custom field
+
+### Using the standalone endpoint
+
+```json http
+{
+  "method": "patch",
+  "url": "https://api.terminal49.com/v2/custom_fields/:id",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  },
+  "body": {
+    "data": {
+      "type": "custom_field",
+      "attributes": {
+        "value": "PO-67890"
+      }
+    }
+  }
+}
+```
+
+### Using the scoped endpoint (by api_slug)
+
+```json http
+{
+  "method": "patch",
+  "url": "https://api.terminal49.com/v2/shipments/:shipment_id/custom_fields/:api_slug",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  },
+  "body": {
+    "data": {
+      "type": "custom_field",
+      "attributes": {
+        "value": "PO-67890"
+      }
+    }
+  }
+}
+```
+
+## Delete a custom field
+
+### Using the standalone endpoint
+
+```json http
+{
+  "method": "delete",
+  "url": "https://api.terminal49.com/v2/custom_fields/:id",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  }
+}
+```
+
+### Using the scoped endpoint (by api_slug)
+
+```json http
+{
+  "method": "delete",
+  "url": "https://api.terminal49.com/v2/shipments/:shipment_id/custom_fields/:api_slug",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  }
+}
+```
+
+## Value types by data type
+
+| Data type | Value format | Display value |
+|-----------|--------------|---------------|
+| `short_text` | String | Same as value |
+| `number` | Number | Formatted with decimal places |
+| `date` | `"YYYY-MM-DD"` | Formatted date string |
+| `datetime` | `"YYYY-MM-DD HH:MM:SS"` | Formatted datetime string |
+| `boolean` | `true` or `false` | `"Yes"` or `"No"` |
+| `enum` | Option value string | Option label |
+| `enum_multi` | Array of option values | Comma-separated labels |
+
+### Examples by data type
+
+**Short text:**
+```json
+{
+  "api_slug": "purchase_order",
+  "value": "PO-12345"
+}
+```
+
+**Number:**
+```json
+{
+  "api_slug": "weight_kg",
+  "value": 1234.56
+}
+```
+
+**Date:**
+```json
+{
+  "api_slug": "expected_delivery",
+  "value": "2024-03-15"
+}
+```
+
+**Boolean:**
+```json
+{
+  "api_slug": "is_hazardous",
+  "value": true
+}
+```
+
+**Enum:**
+```json
+{
+  "api_slug": "priority",
+  "value": "high"
+}
+```
+
+**Enum multi:**
+```json
+{
+  "api_slug": "handling_instructions",
+  "value": ["fragile", "keep_dry"]
+}
+```
+
+## Validation
+
+Values are validated against the definition's data type and validation rules:
+
+- **Type validation**: Values must match the expected data type
+- **Enum validation**: Values must match one of the defined options
+- **Custom validation**: Values are checked against any `validation` rules on the definition
+
+Invalid values return a `422 Unprocessable Entity` response with error details.
