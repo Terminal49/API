@@ -3,3 +3,32 @@ og:title: Get a Custom Field | Terminal49 API Documentation
 og:description: Retrieve a single custom field by ID using Terminal49's API.
 openapi: get /custom_fields/{id}
 ---
+
+Use this endpoint to retrieve a single custom field value by its ID.
+
+## Path parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `id` | The unique identifier of the custom field value |
+
+## Response
+
+The response includes:
+- `value` - The raw stored value (type depends on the field's data type)
+- `display_value` - Human-readable formatted value
+- Relationships to the associated entity (shipment or container), definition, and the user who last updated it
+
+## Data types
+
+Custom fields support these data types, each with specific value handling:
+
+| Data type | Storage | Display format |
+|-----------|---------|----------------|
+| `short_text` | String | As-is |
+| `number` | Decimal (precision: 18, scale: 6) | Formatted per `default_format` |
+| `date` | Date | `YYYY-MM-DD` or custom format |
+| `datetime` | DateTime | `YYYY-MM-DD HH:MM:SS` or custom format |
+| `boolean` | Boolean | `Yes` or `No` |
+| `enum` | String | Option label |
+| `enum_multi` | Comma-separated string | Comma-separated labels |
