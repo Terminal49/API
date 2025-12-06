@@ -163,7 +163,11 @@
         "api-docs/api-reference/containers/refresh-container",
         "api-docs/api-reference/containers/get-container-route",
         "api-docs/api-reference/containers/get-a-containers-raw-events",
-        "api-docs/api-reference/containers/get-a-containers-transport-events"
+        "api-docs/api-reference/containers/get-a-containers-transport-events",
+        "api-docs/api-reference/containers/list-container-custom-fields",
+        "api-docs/api-reference/containers/create-container-custom-field",
+        "api-docs/api-reference/containers/update-container-custom-field",
+        "api-docs/api-reference/containers/delete-container-custom-field"
       ]
     },
     {
