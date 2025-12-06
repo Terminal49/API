@@ -1,0 +1,24 @@
+---
+og:title: List Custom Fields | Terminal49 API Documentation
+og:description: List custom fields with filters using Terminal49's API. Retrieve metadata attached to shipments and containers.
+openapi: get /custom_fields
+---
+
+Use this endpoint to retrieve custom field values attached to your shipments and containers. Custom fields let you store additional metadata on entities to support your business workflows.
+
+## Query filters
+
+Filter results using these query parameters:
+
+| Filter | Description |
+|--------|-------------|
+| `filter[entity_type]` | Filter by entity type (`Shipment` or `Cargo`) |
+| `filter[entity_id]` | Filter by the ID of the shipment or container |
+| `filter[definition_id]` | Filter by custom field definition ID |
+
+## Response
+
+The response includes:
+- `value` - The raw stored value
+- `display_value` - Formatted value for display (e.g., formatted numbers, date strings, enum labels)
+- Relationships to the entity, definition, and user who last updated the field

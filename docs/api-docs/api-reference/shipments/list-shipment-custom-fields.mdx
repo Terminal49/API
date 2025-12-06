@@ -1,0 +1,24 @@
+---
+og:title: List Shipment Custom Fields | Terminal49 API Documentation
+og:description: List all custom fields for a specific shipment using Terminal49's API.
+openapi: get /shipments/{shipment_id}/custom_fields
+---
+
+Lists all custom fields attached to a specific shipment.
+
+## Path parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `shipment_id` | Yes | The ID of the shipment |
+
+## Authorization
+
+Requires `show` permission on the shipment.
+
+## Response
+
+Returns a JSONAPI array of custom field resources including:
+- `value` - The raw stored value
+- `display_value` - Formatted value for display
+- Relationships to the definition and user who last updated the field
