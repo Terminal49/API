@@ -1,0 +1,241 @@
+---
+title: Custom fields
+description: Create and manage custom field values on shipments and containers.
+---
+
+Custom fields allow you to attach metadata to shipments and containers. Use the standalone endpoint to manage custom fields across all entities, or use entity-scoped endpoints for shipment or container-specific operations.
+
+## List custom fields
+
+<ParamField path="GET" type="/api/v2/custom_fields">
+  Returns custom fields with optional filters.
+</ParamField>
+
+### Query parameters
+
+<ParamField query="filter[entity_type]" type="string">
+  Filter by entity type. Values: `Shipment` or `Cargo`.
+</ParamField>
+
+<ParamField query="filter[entity_id]" type="string">
+  Filter by entity ID (shipment or container UUID).
+</ParamField>
+
+<ParamField query="filter[definition_id]" type="string">
+  Filter by custom field definition ID.
+</ParamField>
+
+### Example request
+
+```bash
+curl -X GET "https://api.terminal49.com/v2/custom_fields?filter[entity_type]=Shipment" \
+  -H "Authorization: Token YOUR_API_TOKEN" \
+  -H "Content-Type: application/vnd.api+json"
+```
+
+### Example response
+
+```json
+{
+  "data": [
+    {
+      "id": "cf-1234-5678-90ab-cdef12345678",
+      "type": "custom_field",
+      "attributes": {
+        "value": "PO-12345",
+        "display_value": "PO-12345",
+        "update_pathway": "api",
+        "created_at": "2024-01-15T10:30:00Z",
+        "updated_at": "2024-01-15T10:30:00Z"
+      },
+      "relationships": {
+        "entity": {
+          "data": {
+            "id": "shipment-uuid",
+            "type": "shipment"
+          }
+        },
+        "definition": {
+          "data": {
+            "id": "def-uuid",
+            "type": "custom_field_definition"
+          }
+        },
+        "updated_by": {
+          "data": {
+            "id": "user-uuid",
+            "type": "user"
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+## Get a custom field
+
+<ParamField path="GET" type="/api/v2/custom_fields/:id">
+  Returns a single custom field.
+</ParamField>
+
+### Example request
+
+```bash
+curl -X GET "https://api.terminal49.com/v2/custom_fields/cf-1234-5678-90ab-cdef12345678" \
+  -H "Authorization: Token YOUR_API_TOKEN" \
+  -H "Content-Type: application/vnd.api+json"
+```
+
+## Create a custom field
+
+<ParamField path="POST" type="/api/v2/custom_fields">
+  Creates a new custom field value.
+</ParamField>
+
+### Request body attributes
+
+<ParamField body="entity" type="object" required>
+  Polymorphic relationship to the entity. Include `type` (`shipment` or `container`) and `id`.
+</ParamField>
+
+<ParamField body="api_slug" type="string" required>
+  The `api_slug` of the custom field definition.
+</ParamField>
+
+<ParamField body="value" type="any" required>
+  The field value. Type depends on the definition's `data_type`.
+</ParamField>
+
+<ParamField body="update_pathway" type="string">
+  Source of the update. Values: `api`, `dashboard`, `email`, `tracking_request`, `unknown`. Defaults to `api`.
+</ParamField>
+
+### Example request
+
+```bash
+curl -X POST "https://api.terminal49.com/v2/custom_fields" \
+  -H "Authorization: Token YOUR_API_TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "custom_field",
+      "attributes": {
+        "api_slug": "purchase_order",
+        "value": "PO-67890"
+      },
+      "relationships": {
+        "entity": {
+          "data": {
+            "type": "shipment",
+            "id": "b5b10c0a-8d18-46da-b4c2-4e5fa790e7da"
+          }
+        }
+      }
+    }
+  }'
+```
+
+### Example response
+
+```json
+{
+  "data": {
+    "id": "cf-2345-6789-01bc-def234567890",
+    "type": "custom_field",
+    "attributes": {
+      "value": "PO-67890",
+      "display_value": "PO-67890",
+      "update_pathway": "api",
+      "created_at": "2024-01-15T12:00:00Z",
+      "updated_at": "2024-01-15T12:00:00Z"
+    },
+    "relationships": {
+      "entity": {
+        "data": {
+          "id": "b5b10c0a-8d18-46da-b4c2-4e5fa790e7da",
+          "type": "shipment"
+        }
+      },
+      "definition": {
+        "data": {
+          "id": "def-uuid",
+          "type": "custom_field_definition"
+        }
+      },
+      "updated_by": {
+        "data": {
+          "id": "user-uuid",
+          "type": "user"
+        }
+      }
+    }
+  }
+}
+```
+
+## Update a custom field
+
+<ParamField path="PATCH" type="/api/v2/custom_fields/:id">
+  Updates an existing custom field value.
+</ParamField>
+
+### Request body attributes
+
+<ParamField body="value" type="any" required>
+  The new field value.
+</ParamField>
+
+<ParamField body="update_pathway" type="string">
+  Source of the update.
+</ParamField>
+
+### Example request
+
+```bash
+curl -X PATCH "https://api.terminal49.com/v2/custom_fields/cf-2345-6789-01bc-def234567890" \
+  -H "Authorization: Token YOUR_API_TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "custom_field",
+      "attributes": {
+        "value": "PO-67890-UPDATED"
+      }
+    }
+  }'
+```
+
+## Delete a custom field
+
+<ParamField path="DELETE" type="/api/v2/custom_fields/:id">
+  Soft deletes a custom field value.
+</ParamField>
+
+### Example request
+
+```bash
+curl -X DELETE "https://api.terminal49.com/v2/custom_fields/cf-2345-6789-01bc-def234567890" \
+  -H "Authorization: Token YOUR_API_TOKEN"
+```
+
+## Value and display value
+
+Custom fields return two value representations:
+
+| Attribute | Description |
+|-----------|-------------|
+| `value` | Raw stored value (type-specific) |
+| `display_value` | Formatted value for display |
+
+### Display value formatting
+
+| Data type | Display format |
+|-----------|----------------|
+| `short_text` | Raw string |
+| `number` | Formatted with decimal places per `default_format` |
+| `date` | Formatted per `default_format` or `%Y-%m-%d` |
+| `datetime` | Formatted per `default_format` or `%Y-%m-%d %H:%M:%S` |
+| `boolean` | `"Yes"` or `"No"` |
+| `enum` | Option label |
+| `enum_multi` | Comma-separated option labels |
