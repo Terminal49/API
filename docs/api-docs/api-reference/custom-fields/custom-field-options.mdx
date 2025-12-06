@@ -1,0 +1,184 @@
+---
+title: Custom field options
+description: Manage options for enum and enum_multi custom field definitions.
+---
+
+Custom field options define the available choices for `enum` and `enum_multi` data type fields. Each option has a label (displayed to users) and a value (stored in the database).
+
+## List options
+
+<ParamField path="GET" type="/api/v2/custom_field_definitions/:custom_field_definition_id/options">
+  Returns all options for a custom field definition.
+</ParamField>
+
+### Example request
+
+```bash
+curl -X GET "https://api.terminal49.com/v2/custom_field_definitions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/options" \
+  -H "Authorization: Token YOUR_API_TOKEN" \
+  -H "Content-Type: application/vnd.api+json"
+```
+
+### Example response
+
+```json
+{
+  "data": [
+    {
+      "id": "opt-1234-5678-90ab-cdef12345678",
+      "type": "custom_field_option",
+      "attributes": {
+        "label": "High Priority",
+        "value": "priority_high",
+        "position": 1,
+        "created_at": "2024-01-15T10:30:00Z",
+        "updated_at": "2024-01-15T10:30:00Z"
+      },
+      "relationships": {
+        "custom_field_definition": {
+          "data": {
+            "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "type": "custom_field_definition"
+          }
+        }
+      }
+    },
+    {
+      "id": "opt-2345-6789-01bc-def234567890",
+      "type": "custom_field_option",
+      "attributes": {
+        "label": "Medium Priority",
+        "value": "priority_medium",
+        "position": 2,
+        "created_at": "2024-01-15T10:31:00Z",
+        "updated_at": "2024-01-15T10:31:00Z"
+      },
+      "relationships": {
+        "custom_field_definition": {
+          "data": {
+            "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "type": "custom_field_definition"
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+## Get an option
+
+<ParamField path="GET" type="/api/v2/custom_field_definitions/:custom_field_definition_id/options/:option_id">
+  Returns a single option.
+</ParamField>
+
+### Example request
+
+```bash
+curl -X GET "https://api.terminal49.com/v2/custom_field_definitions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/options/opt-1234-5678-90ab-cdef12345678" \
+  -H "Authorization: Token YOUR_API_TOKEN" \
+  -H "Content-Type: application/vnd.api+json"
+```
+
+## Create an option
+
+<ParamField path="POST" type="/api/v2/custom_field_definitions/:custom_field_definition_id/options">
+  Creates a new option for an enum or enum_multi field.
+</ParamField>
+
+### Request body attributes
+
+<ParamField body="label" type="string" required>
+  Display label shown to users.
+</ParamField>
+
+<ParamField body="value" type="string" required>
+  Stored value. Must be unique within the definition. Only alphanumeric characters, spaces, hyphens, and underscores are allowed.
+</ParamField>
+
+<ParamField body="position" type="integer">
+  Sort order. Auto-incremented if not provided.
+</ParamField>
+
+### Example request
+
+```bash
+curl -X POST "https://api.terminal49.com/v2/custom_field_definitions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/options" \
+  -H "Authorization: Token YOUR_API_TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "custom_field_option",
+      "attributes": {
+        "label": "Low Priority",
+        "value": "priority_low",
+        "position": 3
+      }
+    }
+  }'
+```
+
+### Example response
+
+```json
+{
+  "data": {
+    "id": "opt-3456-7890-12cd-ef3456789012",
+    "type": "custom_field_option",
+    "attributes": {
+      "label": "Low Priority",
+      "value": "priority_low",
+      "position": 3,
+      "created_at": "2024-01-15T12:00:00Z",
+      "updated_at": "2024-01-15T12:00:00Z"
+    },
+    "relationships": {
+      "custom_field_definition": {
+        "data": {
+          "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "type": "custom_field_definition"
+        }
+      }
+    }
+  }
+}
+```
+
+## Update an option
+
+<ParamField path="PATCH" type="/api/v2/custom_field_definitions/:custom_field_definition_id/options/:option_id">
+  Updates an existing option.
+</ParamField>
+
+### Example request
+
+```bash
+curl -X PATCH "https://api.terminal49.com/v2/custom_field_definitions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/options/opt-3456-7890-12cd-ef3456789012" \
+  -H "Authorization: Token YOUR_API_TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "custom_field_option",
+      "attributes": {
+        "label": "Low Priority (Updated)"
+      }
+    }
+  }'
+```
+
+## Delete an option
+
+<ParamField path="DELETE" type="/api/v2/custom_field_definitions/:custom_field_definition_id/options/:option_id">
+  Deletes an option from the definition.
+</ParamField>
+
+### Example request
+
+```bash
+curl -X DELETE "https://api.terminal49.com/v2/custom_field_definitions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/options/opt-3456-7890-12cd-ef3456789012" \
+  -H "Authorization: Token YOUR_API_TOKEN"
+```
+
+<Note>
+Options are only available for custom field definitions with `data_type` set to `enum` or `enum_multi`.
+</Note>
