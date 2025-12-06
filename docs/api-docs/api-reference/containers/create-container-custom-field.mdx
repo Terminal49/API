@@ -1,0 +1,37 @@
+---
+og:title: Create Container Custom Field | Terminal49 API Documentation
+og:description: Create or update a custom field on a container using Terminal49's API.
+---
+
+# Create container custom field
+
+`POST /api/v2/containers/:container_id/custom_fields`
+
+Creates or updates a custom field on a container. If a custom field with the specified `api_slug` already exists, it will be updated.
+
+## Path parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `container_id` | Yes | The ID of the container |
+
+## Request body
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `api_slug` | Yes | The slug of the custom field definition |
+| `value` | Yes | The value to set (type depends on the definition's data type) |
+
+## Authorization
+
+Requires `update` permission on the container.
+
+## Response
+
+Returns `201 Created` with the custom field resource on success.
+
+## Behavior
+
+- Uses `find_or_initialize_by` internally, so it creates if missing or updates if it exists
+- Values are validated against the definition's data type
+- For enum fields, values are validated against the definition's options
