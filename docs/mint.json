@@ -163,6 +163,16 @@
       ]
     },
     {
+      "group": "Custom Fields",
+      "pages": [
+        "api-docs/api-reference/custom-fields/custom-field-definitions",
+        "api-docs/api-reference/custom-fields/custom-field-options",
+        "api-docs/api-reference/custom-fields/custom-fields",
+        "api-docs/api-reference/custom-fields/shipment-custom-fields",
+        "api-docs/api-reference/custom-fields/container-custom-fields"
+      ]
+    },
+    {
       "group": "Shipping Lines",
       "pages": [
         "api-docs/api-reference/shipping-lines/shipping-lines",
