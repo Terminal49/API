@@ -165,11 +165,11 @@
     {
       "group": "Custom Fields",
       "pages": [
-        "api-docs/api-reference/custom-fields/custom-field-definitions",
-        "api-docs/api-reference/custom-fields/custom-field-options",
-        "api-docs/api-reference/custom-fields/custom-fields",
-        "api-docs/api-reference/custom-fields/shipment-custom-fields",
-        "api-docs/api-reference/custom-fields/container-custom-fields"
+        "api-docs/api-reference/custom-fields/list-custom-fields",
+        "api-docs/api-reference/custom-fields/get-a-custom-field",
+        "api-docs/api-reference/custom-fields/create-a-custom-field",
+        "api-docs/api-reference/custom-fields/update-a-custom-field",
+        "api-docs/api-reference/custom-fields/delete-a-custom-field"
       ]
     },
     {
