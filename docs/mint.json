@@ -119,7 +119,11 @@
         "api-docs/api-reference/shipments/get-a-shipment",
         "api-docs/api-reference/shipments/edit-a-shipment",
         "api-docs/api-reference/shipments/stop-tracking-shipment",
-        "api-docs/api-reference/shipments/resume-tracking-shipment"
+        "api-docs/api-reference/shipments/resume-tracking-shipment",
+        "api-docs/api-reference/shipments/list-shipment-custom-fields",
+        "api-docs/api-reference/shipments/create-shipment-custom-field",
+        "api-docs/api-reference/shipments/update-shipment-custom-field",
+        "api-docs/api-reference/shipments/delete-shipment-custom-field"
       ]
     },
     {
