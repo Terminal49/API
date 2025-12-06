@@ -3,3 +3,17 @@ og:title: Delete a Custom Field | Terminal49 API Documentation
 og:description: Delete a custom field value using Terminal49's API.
 openapi: delete /custom_fields/{id}
 ---
+
+Use this endpoint to delete a custom field value from a shipment or container.
+
+## Path parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `id` | The unique identifier of the custom field value to delete |
+
+## Behavior
+
+- This performs a soft delete, allowing potential recovery
+- The custom field value is removed from the associated entity
+- Deleting a custom field value does not affect the underlying custom field definition
