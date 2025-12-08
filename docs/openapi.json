@@ -888,175 +888,12 @@
                   }
                 },
                 "examples": {
-                  "En-route to NY with inland move": {
+                  "Not Found": {
                     "value": {
-                      "data": {
-                        "id": "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8",
-                        "type": "shipment",
-                        "attributes": {
-                          "bill_of_lading_number": "6140575020",
-                          "ref_numbers": [
-                            "my-ref-49",
-                            "PO#18412"
-                          ],
-                          "created_at": "2020-02-20T13:37:12Z",
-                          "tags": [],
-                          "port_of_lading_locode": "INVTZ",
-                          "port_of_lading_name": "Visakhapatnam, IN",
-                          "port_of_discharge_locode": "USNYC",
-                          "port_of_discharge_name": "New York / New Jersey, NY",
-                          "destination_locode": "USDET",
-                          "destination_name": "Detroit, MI",
-                          "shipping_line_scac": "HLCU",
-                          "pod_vessel_name": "CMA CGM ALMAVIVA",
-                          "pod_voyage_number": "0108",
-                          "pol_etd_at": null,
-                          "pol_atd_at": "2020-02-15T21:53Z",
-                          "pol_timezone": "Asia/Calcutta",
-                          "pod_eta_at": "2020-03-18T08:00Z",
-                          "pod_ata_at": null,
-                          "pod_timezone": "America/New_York",
-                          "destination_eta_at": "2020-03-26T17:00Z",
-                          "destination_ata_at": null,
-                          "destination_timezone": "America/Detroit"
-                        },
-                        "relationships": {
-                          "containers": {
-                            "data": [
-                              {
-                                "id": "c99a81c0-ff69-4bdf-aa5f-8e33a787f5fa",
-                                "type": "container"
-                              }
-                            ]
-                          },
-                          "port_of_lading": {
-                            "data": {
-                              "id": "bde5465a-1160-4fde-a026-74df9c362f65",
-                              "type": "port"
-                            }
-                          },
-                          "port_of_discharge": {
-                            "data": {
-                              "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
-                              "type": "port"
-                            }
-                          },
-                          "destination": {
-                            "data": {
-                              "id": "c9ae2b6b-5088-4e07-ba09-2872121e4fa2",
-                              "type": "metro_area"
-                            }
-                          },
-                          "customer": {
-                            "data": {
-                              "id": "ff76b51a-371e-45ec-86d1-9d03ccae566a",
-                              "type": "account"
-                            }
-                          }
-                        }
-                      },
-                      "included": [
+                      "errors": [
                         {
-                          "id": "c99a81c0-ff69-4bdf-aa5f-8e33a787f5fa",
-                          "type": "container",
-                          "attributes": {
-                            "number": "UACU4743531",
-                            "equipment_type": "reefer",
-                            "length": 40,
-                            "height": "high_cube",
-                            "weight_in_lbs": 35075,
-                            "created_at": "2020-02-20T08:19:52Z",
-                            "seal_number": null,
-                            "pickup_lfd": null,
-                            "availability_known": false,
-                            "available_for_pickup": null,
-                            "current_transportation_mode": "vessel",
-                            "pod_discharged_at": null,
-                            "pod_picked_up_at": null,
-                            "destination_unloaded_at": null,
-                            "destination_picked_up_at": null,
-                            "empty_returned_at": null,
-                            "pod_timezone": "America/Los_Angeles",
-                            "final_destination_timezone": null,
-                            "empty_terminated_timezone": null,
-                            "current_status": "on_ship"
-                          },
-                          "relationships": {
-                            "most_recent_location": {
-                              "data": {
-                                "id": "dd179094-a1d4-4129-842d-b952e43df4b7",
-                                "type": "port"
-                              }
-                            },
-                            "shipment": {
-                              "data": {
-                                "id": "512ae32c-a604-44f8-9c15-2ca9cd3d2ae8",
-                                "type": "shipment"
-                              }
-                            }
-                          }
-                        },
-                        {
-                          "id": "bde5465a-1160-4fde-a026-74df9c362f65",
-                          "type": "port",
-                          "attributes": {
-                            "name": "Visakhapatnam",
-                            "code": "INVTZ",
-                            "country_code": "IN",
-                            "timezone": "Asia/Calcutta"
-                          }
-                        },
-                        {
-                          "id": "dd179094-a1d4-4129-842d-b952e43df4b7",
-                          "type": "port",
-                          "attributes": {
-                            "name": "Damietta",
-                            "code": "EGDAM",
-                            "country_code": "EG",
-                            "time_zone": "Africa/Cairo"
-                          }
-                        },
-                        {
-                          "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
-                          "type": "port",
-                          "attributes": {
-                            "name": "New York / New Jersey",
-                            "code": "USNYC",
-                            "country_code": "US",
-                            "timezone": "America/New_York"
-                          }
-                        },
-                        {
-                          "id": "c9ae2b6b-5088-4e07-ba09-2872121e4fa2",
-                          "type": "metro_area",
-                          "attributes": {
-                            "name": "Detroit",
-                            "code": "USDET",
-                            "country_code": "US",
-                            "state_abbr": "MI",
-                            "timezone": "America/Detroit"
-                          }
-                        },
-                        {
-                          "id": "ff76b51a-371e-45ec-86d1-9d03ccae566a",
-                          "type": "account",
-                          "attributes": {
-                            "name": "A-Z Imports"
-                          }
-                        },
-                        {
-                          "id": "252a5450-2893-4207-b5c4-81ce3152ce84",
-                          "type": "vessel",
-                          "attributes": {
-                            "name": "CMA CGM ALMAVIVA",
-                            "imo": "9450648",
-                            "mmsi": "228339600",
-                            "latitude": 70.22625823437389,
-                            "longitude": 45.06279126658865,
-                            "nautical_speed_knots": 100,
-                            "navigational_heading_degrees": 1,
-                            "position_timestamp": "2023-06-05T19:46:18Z"
-                          }
+                          "status": "404",
+                          "title": "Not Found"
                         }
                       ]
                     }
@@ -1618,6 +1455,18 @@
                       }
                     }
                   }
+                },
+                "examples": {
+                  "Not Found": {
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "404",
+                          "title": "Not Found"
+                        }
+                      ]
+                    }
+                  }
                 }
               }
             }
@@ -2008,7 +1857,18 @@
                     }
                   }
                 },
-                "examples": {}
+                "examples": {
+                  "Not Found": {
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "404",
+                          "title": "Not Found"
+                        }
+                      ]
+                    }
+                  }
+                }
               }
             }
           }
