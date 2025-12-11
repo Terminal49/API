@@ -158,6 +158,7 @@
         "api-docs/api-reference/containers/get-a-container",
         "api-docs/api-reference/containers/refresh-container",
         "api-docs/api-reference/containers/get-container-route",
+        "api-docs/api-reference/containers/get-container-map-geojson",
         "api-docs/api-reference/containers/get-a-containers-raw-events",
         "api-docs/api-reference/containers/get-a-containers-transport-events"
       ]

@@ -5543,6 +5543,191 @@
         "description": "Retrieves the route details from the port of lading to the port of discharge, including transshipments. <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>"
       }
     },
+    "/containers/{id}/map_geojson": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get container map GeoJSON",
+        "tags": [
+          "Containers",
+          "Routing (Paid)"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "FeatureCollection"
+                      ],
+                      "example": "FeatureCollection"
+                    },
+                    "features": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "Feature"
+                            ],
+                            "example": "Feature"
+                          },
+                          "geometry": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "Point"
+                                    ]
+                                  },
+                                  "coordinates": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "number"
+                                    },
+                                    "minItems": 2,
+                                    "maxItems": 2,
+                                    "example": [
+                                      100.896831042,
+                                      13.065302386
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "coordinates"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "LineString"
+                                    ]
+                                  },
+                                  "coordinates": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "number"
+                                      },
+                                      "minItems": 2,
+                                      "maxItems": 2
+                                    },
+                                    "minItems": 2,
+                                    "example": [
+                                      [
+                                        100.868768333,
+                                        13.07306
+                                      ],
+                                      [
+                                        100.839155,
+                                        13.079318333
+                                      ]
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "coordinates"
+                                ]
+                              }
+                            ]
+                          },
+                          "properties": {
+                            "type": "object",
+                            "properties": {
+                              "feature_type": {
+                                "type": "string",
+                                "enum": [
+                                  "port",
+                                  "current_vessel",
+                                  "past_vessel_locations",
+                                  "estimated_full_legs",
+                                  "estimated_partial_leg"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "feature_type"
+                            ],
+                            "additionalProperties": true
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "geometry",
+                          "properties"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "features"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Routing data feature is not enabled for this account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "example": "403"
+                          },
+                          "title": {
+                            "type": "string",
+                            "example": "Forbidden"
+                          },
+                          "detail": {
+                            "type": "string",
+                            "example": "Routing data feature is not enabled for this account"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-containers-id-map-geojson",
+        "description": "Returns a GeoJSON FeatureCollection containing all map-related data for a container, including port locations, current vessel position (if at sea), past vessel paths, and estimated future routes. The response can be directly used with most mapping libraries (Leaflet, Mapbox GL, Google Maps, etc.). <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>"
+      }
+    },
     "/containers/{id}/refresh": {
       "parameters": [
         {
