@@ -1,0 +1,28 @@
+---
+og:title: Update Shipment Custom Field | Terminal49 API Documentation
+og:description: Update a specific custom field on a shipment by its api_slug using Terminal49's API.
+openapi: patch /shipments/{shipment_id}/custom_fields/{api_slug}
+---
+
+Updates a specific custom field on a shipment by its `api_slug`.
+
+## Path parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `shipment_id` | Yes | The ID of the shipment |
+| `api_slug` | Yes | The api_slug of the custom field definition |
+
+## Request body
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `value` | Yes | The new value to set |
+
+## Authorization
+
+Requires `update` permission on the shipment.
+
+## Response
+
+Returns `200 OK` with the updated custom field resource on success.

@@ -1,0 +1,24 @@
+---
+og:title: List Container Custom Fields | Terminal49 API Documentation
+og:description: List all custom fields for a specific container using Terminal49's API.
+openapi: get /containers/{container_id}/custom_fields
+---
+
+Lists all custom fields attached to a specific container.
+
+## Path parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `container_id` | Yes | The ID of the container |
+
+## Authorization
+
+Requires `show` permission on the container.
+
+## Response
+
+Returns a JSONAPI array of custom field resources including:
+- `value` - The raw stored value
+- `display_value` - Formatted value for display
+- Relationships to the definition and user who last updated the field
