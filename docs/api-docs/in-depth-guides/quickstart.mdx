@@ -18,7 +18,7 @@ You'll need a four things to get started.
 You can try this using the embedded request maker below, or using Postman.
 
 1. Try it below. Click "Headers" and replace YOUR_API_KEY with your API key. In the authorization header value.
-2. Enter a value for the `request_number` and `scac`. The request number has to be a shipping line booking or master bill of lading number. The SCAC has to be a shipping line scac (see data sources to get a list of valid SCACs)
+2. Enter a value for the `request_number` and `scac`. The request number has to be a shipping line booking or master bill of lading number. The SCAC has to be a shipping line scac (see data sources to get a list of valid SCACs)
 
 Note that you can also access sample code, include a cURL template, by clicking the "Code Generation" tab in the Request Maker.
 
@@ -34,9 +34,41 @@ Note that you can also access sample code, include a cURL template, by clicking 
 }
 ```
 
-## Check Your Tracking Request Succeeded
+## Set Up Webhooks (Recommended)
 
-We have not yet set up a webook to receive status updates from the Terminal49 API, so we will need to manually poll to check if the Tracking Request has succeeded or failed.
+The recommended way to integrate with Terminal49 is through webhooks. Instead of polling our API for updates, webhooks push real-time notifications to your system whenever there are changes to your shipments and containers.
+
+<Note>
+**Why webhooks?** Webhooks are more efficient than polling—you receive updates instantly without making repeated API calls. This reduces latency, lowers your API usage, and ensures you never miss an update.
+</Note>
+
+To set up a webhook, you'll need a URL on the open web to receive POST requests. You can use a service like [webhook.site](https://webhook.site) for testing.
+
+**Try it below. Click "Headers" and replace YOUR_API_KEY with your API key.**
+
+```json http
+{
+  "method": "post",
+  "url": "https://api.terminal49.com/v2/webhooks",
+  "headers": {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
+  },
+  "body": "{\r\n  \"data\": {\r\n    \"type\": \"webhook\",\r\n    \"attributes\": {\r\n      \"url\": \"https://webhook.site/\",\r\n      \"active\": true,\r\n      \"events\": [\r\n        \"*\"\r\n      ]\r\n    }\r\n  }\r\n}"
+}
+```
+
+Once configured, you'll automatically receive notifications for:
+- Tracking request status changes (`tracking_request.succeeded`, `tracking_request.failed`)
+- Container transport events (vessel departed, arrived, discharged, etc.)
+- ETA changes and container availability updates
+- Last Free Day (LFD) changes
+
+See the [Webhooks guide](/api-docs/in-depth-guides/webhooks) for the full list of events and payload examples.
+
+## Check Your Tracking Request Succeeded (Polling)
+
+If you haven't set up webhooks yet, you can manually poll to check if the Tracking Request has succeeded or failed. However, we recommend setting up webhooks above for production integrations.
 
 
 
@@ -99,27 +131,10 @@ Try it after replacing `<YOUR_API_KEY>` with your API key.
 }
 ```
 
+## Next Steps
 
-## Listening for Updates with Webhooks
+Now that you've set up tracking and webhooks, explore these resources:
 
-The true power of Terminal49's API is that it is asynchronous. You can register a Webhook, which is essentially a callback URL that our systems HTTP Post to when there are updates.
-
-To try this, you will need to first set up a URL on the open web to receive POST requests. Once you have done this, you'll be able to receive status updates from containers and shipments as they happen, which means you don't need to poll us for updates; we'll notify you.
-
-** Try it below. Click "Headers" and replace YOUR_API_KEY with your API key.**
-
-Once this is done, any changes to shipments and containers you're tracking in step 2 will now be sent to your webhook URL as Http POST Requests.
-
-View the "Code Generation" button to see sample code.
-
-```json http
-{
-  "method": "post",
-  "url": "https://api.terminal49.com/v2/webhooks",
-  "headers": {
-    "Content-Type": "application/vnd.api+json",
-    "Authorization": "Token YOUR_API_KEY"
-  },
-  "body": "{\r\n  \"data\": {\r\n    \"type\": \"webhook\",\r\n    \"attributes\": {\r\n      \"url\": \"https:\/\/webhook.site\/\",\r\n      \"active\": true,\r\n      \"events\": [\r\n        \"*\"\r\n      ]\r\n    }\r\n  }\r\n}"
-}
-```
+- [Webhooks guide](/api-docs/in-depth-guides/webhooks) - Learn about webhook events, security, and payload examples
+- [Container statuses](/api-docs/in-depth-guides/container-statuses) - Understand the different container status events
+- [Webhook events examples](/api-docs/useful-info/webhook-events-examples) - See real webhook payload examples
