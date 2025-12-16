@@ -13,6 +13,12 @@ You'll need a four things to get started.
 3. **A Terminal49 Account.** If you don't have one yet, [sign up here.](https://app.terminal49.com/register)
 4. **An API key.** Sign in to your Terminal49 account and go to your [developer portal page](https://app.terminal49.com/developers) to get your API key.
 
+<Tip>
+  Not sure which SCAC to use? The [Auto-Detect
+  Carrier](/api-docs/in-depth-guides/auto-detect-carrier) API can identify it
+  from your tracking number.
+</Tip>
+
 ## Track a Shipment
 
 You can try this using the embedded request maker below, or using Postman.
@@ -38,17 +44,15 @@ Note that you can also access sample code, include a cURL template, by clicking 
 
 We have not yet set up a webook to receive status updates from the Terminal49 API, so we will need to manually poll to check if the Tracking Request has succeeded or failed.
 
-
-
 > ### Tracking Request Troubleshooting
-> The most common issue people encounter is that they are  entering the wrong number.
+>
+> The most common issue people encounter is that they are entering the wrong number.
 >
 > Please check that you are entering the Bill of Lading number, booking number, or container number and not internal reference at your company or by your frieght forwarder. You can the number you are supplying by going to a carrier's website and using their tools to track your shipment using the request number. If this works, and if the SCAC is supported by T49, you should able to track it with us.
 >
 > You can always email us at support@terminal49.com if you have persistent issues.
 
 ** Try it below. Click "Headers" and replace `<YOUR_API_KEY>` with your API key.**
-
 
 ```json http
 {
@@ -98,7 +102,6 @@ Try it after replacing `<YOUR_API_KEY>` with your API key.
   }
 }
 ```
-
 
 ## Listening for Updates with Webhooks
 

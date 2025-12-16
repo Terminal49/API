@@ -1582,6 +1582,262 @@
         ]
       }
     },
+    "/tracking_requests/infer_number": {
+      "post": {
+        "summary": "Auto-detect carrier from tracking number",
+        "operationId": "post-infer-number",
+        "x-beta": true,
+        "description": "Identifies the shipping line (SCAC) for a tracking number. Pass a container number, bill of lading, or booking number and get back the carrier with a confidence score. Use this to auto-populate carrier fields before creating a tracking request.",
+        "tags": [
+          "Tracking Requests"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "description": "The tracking number to analyze (container number, bill of lading, or booking number)",
+                    "example": "WHLU1234560"
+                  }
+                },
+                "required": ["number"]
+              },
+              "examples": {
+                "Container Number": {
+                  "value": {
+                    "number": "WHLU1234560"
+                  }
+                },
+                "Bill of Lading": {
+                  "value": {
+                    "number": "EGLV084900042045"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully inferred number type and shipping line",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "req_123e4567-e89b-12d3-a456-426614174000"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": ["infer_number_results"]
+                        },
+                        "attributes": {
+                          "type": "object",
+                          "properties": {
+                            "number_type": {
+                              "type": "string",
+                              "enum": ["container", "bill_of_lading", "booking"]
+                            },
+                            "validation": {
+                              "type": "object",
+                              "properties": {
+                                "is_valid": {
+                                  "type": "boolean",
+                                  "nullable": true
+                                },
+                                "type": {
+                                  "type": "string",
+                                  "enum": ["container", "shipment"]
+                                },
+                                "check_digit_passed": {
+                                  "type": "boolean",
+                                  "nullable": true
+                                },
+                                "parsed_number": {
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "reason": {
+                                  "type": "string",
+                                  "nullable": true
+                                }
+                              }
+                            },
+                            "shipping_line": {
+                              "type": "object",
+                              "properties": {
+                                "decision": {
+                                  "type": "string",
+                                  "enum": ["auto_select", "needs_confirmation", "no_prediction"]
+                                },
+                                "selected": {
+                                  "type": "object",
+                                  "nullable": true,
+                                  "properties": {
+                                    "scac": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "confidence": {
+                                      "type": "number"
+                                    }
+                                  }
+                                },
+                                "candidates": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "scac": {
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "confidence": {
+                                        "type": "number"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "Container - Auto Select": {
+                    "value": {
+                      "data": {
+                        "id": "req_123e4567-e89b-12d3-a456-426614174000",
+                        "type": "infer_number_results",
+                        "attributes": {
+                          "number_type": "container",
+                          "validation": {
+                            "is_valid": true,
+                            "type": "container",
+                            "check_digit_passed": true,
+                            "parsed_number": null,
+                            "reason": null
+                          },
+                          "shipping_line": {
+                            "decision": "auto_select",
+                            "selected": {
+                              "scac": "WHLC",
+                              "name": "Wan Hai Lines",
+                              "confidence": 1.0
+                            },
+                            "candidates": [
+                              {
+                                "scac": "WHLC",
+                                "name": "Wan Hai Lines",
+                                "confidence": 1.0
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity - Invalid tracking number format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          },
+                          "detail": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "Invalid Number": {
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "422",
+                          "detail": "This reference number is not valid."
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          },
+                          "detail": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Number of seconds to wait before making another request",
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "authorization": []
+          }
+        ]
+      }
+    },
     "/tracking_requests/{id}": {
       "parameters": [
         {

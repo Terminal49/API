@@ -1,0 +1,37 @@
+---
+title: Auto-Detect Carrier (Beta)
+sidebarTitle: Auto-Detect Carrier 🆕
+og:title: Auto-Detect Carrier | Terminal49 API Documentation
+og:description: Automatically identify the shipping line (SCAC) from a tracking number.
+openapi: post /tracking_requests/infer_number
+---
+
+<Info>
+  **Beta Feature** - This endpoint is currently in beta. The API is stable but
+  the feature set may expand based on feedback.
+</Info>
+
+## How It Works
+
+**Container Numbers:**
+
+- Deterministic lookup using BIC prefix mapping (~135 known prefixes)
+- ISO 6346 check digit validation
+- Confidence is always 1.0 when prefix is found
+
+**Shipment Numbers (BL/Booking):**
+
+- ML-based prediction with variable confidence (0.0 - 1.0)
+- Decision thresholds: `auto_select` (≥0.95), `needs_confirmation` (0.70-0.95), `no_prediction` (&lt;0.70)
+
+<Warning>
+  This endpoint is rate limited to 200 requests per minute per API key.
+</Warning>
+
+<Card
+  title="Auto-Detect Carrier Guide"
+  icon="book"
+  href="/api-docs/in-depth-guides/auto-detect-carrier"
+>
+  Learn more about how to use this endpoint in your application
+</Card>

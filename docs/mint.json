@@ -75,6 +75,7 @@
         "api-docs/in-depth-guides/including-resources",
         "api-docs/in-depth-guides/adding-customer",
         "api-docs/in-depth-guides/tracking-request-lifecycle",
+        "api-docs/in-depth-guides/auto-detect-carrier",
         "api-docs/in-depth-guides/container-statuses",
         "api-docs/in-depth-guides/event-timestamps",
         "api-docs/in-depth-guides/terminal49-map",
@@ -128,7 +129,8 @@
         "api-docs/api-reference/tracking-requests/list-tracking-requests",
         "api-docs/api-reference/tracking-requests/create-a-tracking-request",
         "api-docs/api-reference/tracking-requests/get-a-single-tracking-request",
-        "api-docs/api-reference/tracking-requests/edit-a-tracking-request"
+        "api-docs/api-reference/tracking-requests/edit-a-tracking-request",
+        "api-docs/api-reference/tracking-requests/auto-detect-carrier"
       ]
     },
     {
@@ -213,6 +215,14 @@
     {
       "source": "/api-docs/getting-started/recieve-status-updates",
       "destination": "/api-docs/getting-started/receive-status-updates"
+    },
+    {
+      "source": "/api-docs/in-depth-guides/infer-number-guide",
+      "destination": "/api-docs/in-depth-guides/auto-detect-carrier"
+    },
+    {
+      "source": "/api-docs/api-reference/tracking-requests/infer-number",
+      "destination": "/api-docs/api-reference/tracking-requests/auto-detect-carrier"
     }
   ]
 }

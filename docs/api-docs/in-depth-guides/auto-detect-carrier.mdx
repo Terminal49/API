@@ -1,0 +1,269 @@
+---
+title: Auto-Detect Carrier (Beta)
+sidebarTitle: Auto-Detect Carrier 🆕
+description: Don't know the carrier for your tracking number? Use this API to automatically identify the shipping line (SCAC) before creating a tracking request.
+og:title: Auto-Detect Carrier | Terminal49 API Documentation
+og:description: Automatically identify the shipping line (SCAC) from a tracking number before creating a tracking request.
+---
+
+<Info>
+  **Beta Feature** - The Auto-Detect Carrier endpoint is currently in beta. The
+  API is stable but the feature set may expand based on feedback.
+</Info>
+
+## Overview
+
+Have a tracking number but don't know which shipping line to select? The Auto-Detect Carrier endpoint automatically identifies the carrier and validates your number.
+
+<CardGroup cols={2}>
+  <Card title="Auto-Fill Carrier Dropdowns" icon="list">
+    When users enter a tracking number, auto-populate the carrier selection
+    field
+  </Card>
+  <Card title="Validate Before Tracking" icon="shield-check">
+    Catch invalid numbers early to reduce tracking request failures
+  </Card>
+  <Card title="Improve User Experience" icon="face-smile">
+    Minimize manual data entry and guesswork for your users
+  </Card>
+  <Card title="Container Check Digit" icon="box">
+    Validate container numbers using ISO 6346 verification
+  </Card>
+</CardGroup>
+
+## Quick Start
+
+<Steps>
+  <Step title="Call the Auto-Detect Endpoint" icon="magnifying-glass">
+    Pass your tracking number to identify the carrier automatically
+
+    ```bash
+    curl -X POST https://api.terminal49.com/v2/tracking_requests/infer_number \
+      -H "Authorization: Token YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"number": "WHLU1234560"}'
+    ```
+
+  </Step>
+  <Step title="Check the Decision" icon="code-branch">
+    The response includes a `decision` field indicating confidence level:
+    - `auto_select` — High confidence, safe to use automatically
+    - `needs_confirmation` — Medium confidence, ask user to confirm
+    - `no_prediction` — Low confidence, user must select manually
+  </Step>
+  <Step title="Create Tracking Request" icon="circle-plus">
+    Use the detected SCAC to create your tracking request
+
+    ```bash
+    curl -X POST https://api.terminal49.com/v2/tracking_requests \
+      -H "Authorization: Token YOUR_API_KEY" \
+      -H "Content-Type: application/vnd.api+json" \
+      -d '{"data": {"type": "tracking_request", "attributes": {"request_number": "WHLU1234560", "scac": "WHLC", "request_type": "container"}}}'
+    ```
+
+  </Step>
+</Steps>
+
+## Code Examples
+
+<Tabs>
+  <Tab title="JavaScript">
+```javascript
+const response = await fetch(
+  "https://api.terminal49.com/v2/tracking_requests/infer_number",
+  {
+    method: "POST",
+    headers: {
+      Authorization: "Token YOUR_API_KEY",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ number: userInput }),
+  }
+);
+
+const result = await response.json();
+const { decision, selected } = result.data.attributes.shipping_line;
+
+if (decision === "auto_select") {
+// High confidence - auto-fill the carrier dropdown
+carrierDropdown.value = selected.scac;
+} else if (decision === "needs_confirmation") {
+// Medium confidence - show suggestion with confirmation prompt
+showCarrierSuggestion(selected, result.data.attributes.shipping_line.candidates);
+} else {
+// No prediction - let user select manually
+carrierDropdown.focus();
+}
+
+````
+  </Tab>
+  <Tab title="Python">
+```python
+import requests
+
+def detect_carrier(number: str, api_key: str) -> dict:
+    """Detect the carrier for a tracking number."""
+    response = requests.post(
+        'https://api.terminal49.com/v2/tracking_requests/infer_number',
+        headers={
+            'Authorization': f'Token {api_key}',
+            'Content-Type': 'application/json'
+        },
+        json={'number': number}
+    )
+
+    result = response.json()
+    shipping_line = result['data']['attributes']['shipping_line']
+
+    if shipping_line['decision'] == 'auto_select':
+        return {'scac': shipping_line['selected']['scac'], 'confirmed': True}
+    elif shipping_line['decision'] == 'needs_confirmation':
+        return {'scac': shipping_line['selected']['scac'], 'confirmed': False}
+    else:
+        return {'scac': None, 'confirmed': False}
+````
+
+  </Tab>
+  <Tab title="cURL">
+```bash
+curl -X POST https://api.terminal49.com/v2/tracking_requests/infer_number \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"number": "WHLU1234560"}'
+```
+  </Tab>
+</Tabs>
+
+## Example Request & Response
+
+<CodeGroup>
+```json Request
+{
+  "number": "WHLU1234560"
+}
+```
+
+```json Response
+{
+  "data": {
+    "id": "req_123e4567-e89b-12d3-a456-426614174000",
+    "type": "infer_number_results",
+    "attributes": {
+      "number_type": "container",
+      "validation": {
+        "is_valid": true,
+        "type": "container",
+        "check_digit_passed": true
+      },
+      "shipping_line": {
+        "decision": "auto_select",
+        "selected": {
+          "scac": "WHLC",
+          "name": "Wan Hai Lines",
+          "confidence": 1.0
+        },
+        "candidates": [
+          {
+            "scac": "WHLC",
+            "name": "Wan Hai Lines",
+            "confidence": 1.0
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+</CodeGroup>
+
+## Decision Handling
+
+The `decision` field tells you how confident the prediction is and what action to take:
+
+| Decision             | Confidence     | Recommended Action                                     |
+| -------------------- | -------------- | ------------------------------------------------------ |
+| `auto_select`        | ≥ 0.95         | ✅ Safe to use automatically without user confirmation |
+| `needs_confirmation` | 0.70 - 0.95    | ⚠️ Show the prediction but ask user to confirm         |
+| `no_prediction`      | < 0.70 or null | ❌ User must select the carrier manually               |
+
+<Tip>
+  For the best user experience, always handle all three decision types. Even
+  when `no_prediction` is returned, you can still show the list of `candidates`
+  as suggestions.
+</Tip>
+
+## How It Works
+
+<AccordionGroup>
+  <Accordion title="Container Numbers" icon="box">
+    Container numbers follow the **ISO 6346** format: `[A-Z]{3}U[0-9]{7}` (owner code + category identifier + serial number + check digit).
+
+    | Aspect | Details |
+    | ------ | ------- |
+    | **Validation** | ISO 6346 check digit verification |
+    | **SCAC Lookup** | Deterministic mapping from BIC prefix (first 3 characters) |
+    | **Confidence** | Always 1.0 when prefix is found (~135 known prefixes) |
+    | **Latency** | ~5ms (local lookup, no external dependency) |
+
+    **Example:** `WHLU1234560` → BIC prefix `WHL` → SCAC `WHLC` (Wan Hai Lines)
+
+  </Accordion>
+
+  <Accordion title="Shipment Numbers (Bill of Lading / Booking)" icon="file-lines">
+    Shipment numbers have carrier-specific formats and are analyzed using **ML-based prediction**.
+
+    | Aspect | Details |
+    | ------ | ------- |
+    | **Validation** | Format validation when SCAC is inferred |
+    | **SCAC Prediction** | ML service analyzes number patterns |
+    | **Confidence** | Variable (0.0 - 1.0) based on pattern distinctiveness |
+    | **Latency** | 50-2000ms (external ML service with 2s timeout) |
+
+    **Example:** `MAEU123456789` → Pattern matches Maersk format → SCAC `MAEU`
+
+  </Accordion>
+
+  <Accordion title="Response Fields" icon="code">
+    | Field | Type | Description |
+    | ----- | ---- | ----------- |
+    | `number_type` | string | Detected type: `container`, `bill_of_lading`, or `booking` |
+    | `validation.is_valid` | boolean | Whether the number format is valid |
+    | `validation.check_digit_passed` | boolean | For containers, whether ISO 6346 check digit is correct |
+    | `shipping_line.decision` | string | Confidence level: `auto_select`, `needs_confirmation`, `no_prediction` |
+    | `shipping_line.selected.scac` | string | The predicted SCAC code |
+    | `shipping_line.selected.confidence` | number | Confidence score (0.0 - 1.0) |
+    | `shipping_line.candidates` | array | List of possible carriers ranked by confidence |
+  </Accordion>
+</AccordionGroup>
+
+## Rate Limits
+
+| Setting             | Value                   |
+| ------------------- | ----------------------- |
+| Requests per minute | 200                     |
+| Rate limit header   | `Retry-After` (seconds) |
+
+<Warning>
+  Rate limit errors return HTTP 429 with a `Retry-After` header. Respect this
+  header to avoid extended throttling.
+</Warning>
+
+## What's Next?
+
+<CardGroup cols={2}>
+  <Card
+    title="Create a Tracking Request"
+    icon="circle-plus"
+    href="/api-docs/api-reference/tracking-requests/create-a-tracking-request"
+  >
+    Use the detected SCAC to start tracking your shipment
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-docs/api-reference/tracking-requests/auto-detect-carrier"
+  >
+    View the full API specification and try it in the playground
+  </Card>
+</CardGroup>
