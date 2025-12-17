@@ -31,7 +31,7 @@ These instructions guide automated changes for the Terminal49 docs in this repos
 ## API and code examples
 - Base URL is `https://api.terminal49.com/v2` unless a page says otherwise.
 - Examples should be realistic but safe (no real keys, emails, or customer data).
-- Use JSON with 2-space indentation; label code fences (e.g., ```json, ```bash, ```json http).
+- Use JSON with 2-space indentation; label code fences (e.g., `json`, `bash`, `json http`).
 - Prefer copy-pasteable snippets with complete headers.
 - For auth examples, use `Authorization: Token YOUR_API_KEY`.
 
