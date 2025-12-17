@@ -1,28 +1,32 @@
 ---
-title: Auto-Detect Carrier (Beta)
-sidebarTitle: Auto-Detect Carrier 🆕
-og:title: Auto-Detect Carrier | Terminal49 API Documentation
-og:description: Automatically identify the shipping line (SCAC) from a tracking number.
+title: Infer Tracking Number (Beta)
+sidebarTitle: Infer Tracking Number 🆕
+og:title: Infer Tracking Number | Terminal49 API Documentation
+og:description: Predict the carrier SCAC and number type from a tracking number.
 openapi: post /tracking_requests/infer_number
 ---
 
 <Info>
-  **Beta Feature** - This endpoint is currently in beta. The API is stable but
-  the feature set may expand based on feedback.
+  **Beta Feature** - This endpoint is currently in beta. The API is stable, but
+  the schema and behavior may evolve based on feedback.
 </Info>
 
-## How It Works
+## What this endpoint does
 
-**Container Numbers:**
+Give us a tracking number (container, bill of lading, or booking). We return:
 
-- Deterministic lookup using BIC prefix mapping (~135 known prefixes)
-- ISO 6346 check digit validation
-- Confidence is always 1.0 when prefix is found
+- The **predicted VOCC carrier SCAC** to use for tracking
+- The **predicted number type**
+- A confidence-driven **decision** (`auto_select`, `needs_confirmation`, `no_prediction`)
 
-**Shipment Numbers (BL/Booking):**
+<Info>
+  We use machine learning prediction across container, bill of lading, and
+  booking numbers. For container numbers, we leverage tens of millions of
+  historical container movements to predict which carrier is moving the
+  container (about 9 out of 10 times).
+</Info>
 
-- ML-based prediction with variable confidence (0.0 - 1.0)
-- Decision thresholds: `auto_select` (≥0.95), `needs_confirmation` (0.70-0.95), `no_prediction` (&lt;0.70)
+## How to use the result
 
 <Warning>
   This endpoint is rate limited to 200 requests per minute per API key.
@@ -33,5 +37,5 @@ openapi: post /tracking_requests/infer_number
   icon="book"
   href="/api-docs/in-depth-guides/auto-detect-carrier"
 >
-  Learn more about how to use this endpoint in your application
+  Learn how to use Infer Tracking Number to reliably create tracking requests
 </Card>

@@ -1,241 +1,415 @@
 ---
-title: Auto-Detect Carrier (Beta)
+title: Identify Your Carrier with the Infer API
 sidebarTitle: Auto-Detect Carrier 🆕
-description: Don't know the carrier for your tracking number? Use this API to automatically identify the shipping line (SCAC) before creating a tracking request.
+description: Don't know the carrier SCAC for your tracking number? The Infer API identifies it automatically, helping you create successful tracking requests.
 og:title: Auto-Detect Carrier | Terminal49 API Documentation
 og:description: Automatically identify the shipping line (SCAC) from a tracking number before creating a tracking request.
 ---
 
+<Note>
+  **Beta Feature** — This guide covers the [Infer Number
+  API](/api-docs/api-reference/tracking-requests/auto-detect-carrier), currently
+  in beta. The API is stable for production use, but features may expand based
+  on feedback.
+</Note>
+
+Every tracking request requires two things: **your tracking number** and **the carrier's SCAC code**.
+But what if you don't know the SCAC? That's where the Infer API comes in.
+
+<Card title="Already using the Terminal49 Dashboard?" icon="browser" horizontal>
+  You've seen this feature in action — when you enter a number, we auto-suggest
+  the carrier. Now this same intelligence is available via API.
+</Card>
+
+## Why SCAC Matters
+
+To track a shipment or container, Terminal49 needs to know **which vessel carrier (VOCC) to ask**.
+The SCAC (Standard Carrier Alpha Code) we use here is the **VOCC SCAC for tracking** — i.e., the carrier operating the move we’re querying for events and shipment data.
+
+| You Have                        | You Need                           | The Challenge                                                                                                               |
+| ------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Bill of Lading: `MAEU123456789` | VOCC SCAC (carrier operating move) | Many MBOLs **do not include a prefix**, and even when they do, it may not reliably identify the VOCC you need for tracking. |
+| Container: `WHLU1234560`        | VOCC SCAC (carrier operating move) | The container owner code / leasing company is not always the carrier moving it, so the prefix alone is not enough.          |
+| Booking: `987654321`            | VOCC SCAC (carrier operating move) | Booking formats vary widely and often contain no carrier identifier.                                                        |
+
 <Info>
-  **Beta Feature** - The Auto-Detect Carrier endpoint is currently in beta. The
-  API is stable but the feature set may expand based on feedback.
+  Without the correct **VOCC SCAC**, your tracking request can fail even if the
+  number is valid. The Infer API predicts the VOCC SCAC + number type to
+  increase the likelihood your tracking request succeeds.
 </Info>
 
-## Overview
+## How the Infer API Helps
 
-Have a tracking number but don't know which shipping line to select? The Auto-Detect Carrier endpoint automatically identifies the carrier and validates your number.
+Submit any tracking number, and the API returns:
 
-<CardGroup cols={2}>
-  <Card title="Auto-Fill Carrier Dropdowns" icon="list">
-    When users enter a tracking number, auto-populate the carrier selection
-    field
-  </Card>
-  <Card title="Validate Before Tracking" icon="shield-check">
-    Catch invalid numbers early to reduce tracking request failures
-  </Card>
-  <Card title="Improve User Experience" icon="face-smile">
-    Minimize manual data entry and guesswork for your users
-  </Card>
-  <Card title="Container Check Digit" icon="box">
-    Validate container numbers using ISO 6346 verification
-  </Card>
-</CardGroup>
-
-## Quick Start
+- **The predicted carrier (SCAC)** — so you don't have to guess
+- **The number type** — container, bill of lading, or booking
+- **Validation results** — catches typos and invalid formats before you submit
 
 <Steps>
-  <Step title="Call the Auto-Detect Endpoint" icon="magnifying-glass">
-    Pass your tracking number to identify the carrier automatically
-
-    ```bash
-    curl -X POST https://api.terminal49.com/v2/tracking_requests/infer_number \
-      -H "Authorization: Token YOUR_API_KEY" \
-      -H "Content-Type: application/json" \
-      -d '{"number": "WHLU1234560"}'
-    ```
-
+  <Step title="You submit a tracking number" icon="input-text">
+    Just the number — no need to specify the carrier or type
   </Step>
-  <Step title="Check the Decision" icon="code-branch">
-    The response includes a `decision` field indicating confidence level:
-    - `auto_select` — High confidence, safe to use automatically
-    - `needs_confirmation` — Medium confidence, ask user to confirm
-    - `no_prediction` — Low confidence, user must select manually
+  <Step title="We analyze the pattern" icon="microchip-ai">
+    Our system uses machine learning and historical data from millions of
+    shipments to predict the carrier.
   </Step>
-  <Step title="Create Tracking Request" icon="circle-plus">
-    Use the detected SCAC to create your tracking request
-
-    ```bash
-    curl -X POST https://api.terminal49.com/v2/tracking_requests \
-      -H "Authorization: Token YOUR_API_KEY" \
-      -H "Content-Type: application/vnd.api+json" \
-      -d '{"data": {"type": "tracking_request", "attributes": {"request_number": "WHLU1234560", "scac": "WHLC", "request_type": "container"}}}'
-    ```
-
+  <Step title="You get the SCAC and confidence score" icon="bullseye-arrow">
+    Use high-confidence results automatically, or prompt users to confirm
+  </Step>
+  <Step title="Create a successful tracking request" icon="check">
+    With the right SCAC, your tracking request is far more likely to succeed
   </Step>
 </Steps>
 
-## Code Examples
+## Examples by Number Type
 
 <Tabs>
-  <Tab title="JavaScript">
+  <Tab title="Container Number" icon="box">
+    Container numbers follow the ISO 6346 format. While the first three letters (owner code) often indicate the owner, the container might be moved by a different carrier (VOCC).
+
+    Our system analyzes the number against tens of millions of historical records to predict which carrier is moving the container.
+
+    **Example Input:** `MSCU1234567`
+
+    <CodeGroup>
+    ```json Request
+    {
+      "number": "MSCU1234567"
+    }
+    ```
+
+    ```json Response
+    {
+      "data": {
+        "attributes": {
+          "number_type": "container",
+          "validation": {
+            "is_valid": true,
+            "type": "container",
+            "check_digit_passed": true
+          },
+          "shipping_line": {
+            "decision": "auto_select",
+            "selected": {
+              "scac": "MSCU",
+              "name": "Mediterranean Shipping Company",
+              "confidence": 1.0
+            },
+            "candidates": [
+              {
+                "scac": "MSCU",
+                "name": "Mediterranean Shipping Company",
+                "confidence": 1.0
+              }
+            ]
+          }
+        }
+      }
+    }
+    ```
+    </CodeGroup>
+
+    <Tip>
+      For container numbers, we use historical data to identify the carrier with high accuracy (9/10 times).
+      Always check the `decision` field to know if you should ask the user for confirmation.
+    </Tip>
+
+    **What to do next:**
+    ```bash
+    # Create tracking request with the detected SCAC
+    POST /tracking_requests
+    {
+      "data": {
+        "type": "tracking_request",
+        "attributes": {
+          "request_number": "MSCU1234567",
+          "scac": "MSCU",
+          "request_type": "container"
+        }
+      }
+    }
+    ```
+
+  </Tab>
+
+  <Tab title="Bill of Lading" icon="file-lines">
+    Bill of lading numbers vary by carrier. Some contain prefixes, but others don't. The API uses machine learning to identify the carrier pattern.
+
+    **Example Input:** `MAEU123456789`
+
+    <CodeGroup>
+    ```json Request
+    {
+      "number": "MAEU123456789"
+    }
+    ```
+
+    ```json Response
+    {
+      "data": {
+        "attributes": {
+          "number_type": "bill_of_lading",
+          "validation": {
+            "is_valid": true,
+            "type": "shipment"
+          },
+          "shipping_line": {
+            "decision": "auto_select",
+            "selected": {
+              "scac": "MAEU",
+              "name": "Maersk",
+              "confidence": 0.98
+            },
+            "candidates": [
+              {
+                "scac": "MAEU",
+                "name": "Maersk",
+                "confidence": 0.98
+              }
+            ]
+          }
+        }
+      }
+    }
+    ```
+    </CodeGroup>
+
+    <Note>
+      Maersk BLs typically start with `MAEU`, but other carriers may not have prefixes. The API analyzes the full format.
+    </Note>
+
+    **What to do next:**
+    ```bash
+    # Create tracking request with the detected SCAC
+    POST /tracking_requests
+    {
+      "data": {
+        "type": "tracking_request",
+        "attributes": {
+          "request_number": "MAEU123456789",
+          "scac": "MAEU",
+          "request_type": "bill_of_lading"
+        }
+      }
+    }
+    ```
+
+  </Tab>
+
+  <Tab title="Booking Number" icon="ticket">
+    Booking numbers are the **hardest to identify** — they often don't contain carrier identifiers.
+
+    **Example Input:** `987654321`
+
+    <CodeGroup>
+    ```json Request
+    {
+      "number": "987654321"
+    }
+    ```
+
+    ```json Response
+    {
+      "data": {
+        "attributes": {
+          "number_type": "booking",
+          "validation": {
+            "is_valid": null,
+            "type": "shipment"
+          },
+          "shipping_line": {
+            "decision": "needs_confirmation",
+            "selected": {
+              "scac": "HLCU",
+              "name": "Hapag-Lloyd",
+              "confidence": 0.72
+            },
+            "candidates": [
+              {
+                "scac": "HLCU",
+                "name": "Hapag-Lloyd",
+                "confidence": 0.72
+              },
+              {
+                "scac": "ONE",
+                "name": "Ocean Network Express",
+                "confidence": 0.18
+              }
+            ]
+          }
+        }
+      }
+    }
+    ```
+    </CodeGroup>
+
+    <Warning>
+      When `decision` is `needs_confirmation`, show the suggestion but **ask the user to verify**.
+      Display the `candidates` list as options.
+    </Warning>
+
+    **What to do next:**
+    ```bash
+    # Show user the suggested carrier and candidates
+    # After user confirms, create tracking request
+    POST /tracking_requests
+    {
+      "data": {
+        "type": "tracking_request",
+        "attributes": {
+          "request_number": "987654321",
+          "scac": "HLCU",
+          "request_type": "booking"
+        }
+      }
+    }
+    ```
+
+  </Tab>
+</Tabs>
+
+## Understanding the Response
+
+<AccordionGroup>
+  <Accordion title="Decision Types Explained" icon="code-branch" defaultOpen>
+    The `decision` field tells you how confident the prediction is and what action to take:
+
+    | Decision | When it's used | What to do |
+    | -------- | -------------- | ---------- |
+    | `auto_select` | Confidence ≥ 95% | ✅ Safe to use automatically without user confirmation |
+    | `needs_confirmation` | Confidence 70-95% | ⚠️ Show suggestion, ask user to confirm |
+    | `no_prediction` | Confidence < 70% or unknown | ❌ User must select carrier manually |
+
+    <Tip>
+      For the best user experience, always handle all three decision types. Even
+      when `no_prediction` is returned, you can still show the list of `candidates`
+      as suggestions.
+    </Tip>
+
+  </Accordion>
+
+  <Accordion title="Validation Fields" icon="shield-check">
+    The API validates numbers before returning predictions:
+
+    | Field | Description |
+    | ----- | ----------- |
+    | `is_valid` | `true` if format is valid, `false` if invalid, `null` if unknown |
+    | `check_digit_passed` | For containers: ISO 6346 check digit verification |
+    | `reason` | If invalid, explains why (e.g., "Invalid check digit") |
+
+    <Info>
+      Invalid numbers may still return a carrier prediction, but you should validate
+      the format before creating a tracking request.
+    </Info>
+
+  </Accordion>
+
+  <Accordion title="Full Response Schema" icon="brackets-curly">
+    | Field | Type | Description |
+    | ----- | ---- | ----------- |
+    | `number_type` | string | Detected type: `container`, `bill_of_lading`, or `booking` |
+    | `shipping_line.decision` | string | Confidence level for the prediction |
+    | `shipping_line.selected` | object | Best match: `scac`, `name`, `confidence` |
+    | `shipping_line.candidates` | array | All possible matches, ranked by confidence |
+
+    See the [API Reference](/api-docs/api-reference/tracking-requests/auto-detect-carrier) for complete schema details.
+
+  </Accordion>
+</AccordionGroup>
+
+## Integration Guide
+
+For developers implementing this API, here are code examples in different languages:
+
+<Tabs>
+  <Tab title="JavaScript" icon="js">
 ```javascript
-const response = await fetch(
-  "https://api.terminal49.com/v2/tracking_requests/infer_number",
-  {
-    method: "POST",
-    headers: {
-      Authorization: "Token YOUR_API_KEY",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ number: userInput }),
-  }
-);
+async function getCarrierForNumber(trackingNumber, apiKey) {
+  const response = await fetch(
+    "https://api.terminal49.com/v2/tracking_requests/infer_number",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ number: trackingNumber }),
+    }
+  );
 
-const result = await response.json();
-const { decision, selected } = result.data.attributes.shipping_line;
+const { data } = await response.json();
+const { decision, selected, candidates } = data.attributes.shipping_line;
 
-if (decision === "auto_select") {
-// High confidence - auto-fill the carrier dropdown
-carrierDropdown.value = selected.scac;
-} else if (decision === "needs_confirmation") {
-// Medium confidence - show suggestion with confirmation prompt
-showCarrierSuggestion(selected, result.data.attributes.shipping_line.candidates);
-} else {
-// No prediction - let user select manually
-carrierDropdown.focus();
+return {
+scac: selected?.scac,
+carrier: selected?.name,
+confidence: selected?.confidence,
+autoSelect: decision === "auto_select",
+needsConfirmation: decision === "needs_confirmation",
+candidates: candidates,
+};
+}
+
+// Usage
+const result = await getCarrierForNumber("MSCU1234567", "YOUR_API_KEY");
+if (result.autoSelect) {
+// Auto-fill carrier dropdown
+carrierDropdown.value = result.scac;
+} else if (result.needsConfirmation) {
+// Show suggestion with confirmation prompt
+showCarrierSuggestion(result.carrier, result.candidates);
 }
 
 ````
   </Tab>
-  <Tab title="Python">
+  <Tab title="Python" icon="python">
 ```python
 import requests
 
-def detect_carrier(number: str, api_key: str) -> dict:
-    """Detect the carrier for a tracking number."""
+def get_carrier_for_number(tracking_number: str, api_key: str) -> dict:
+    """Get carrier prediction for a tracking number."""
     response = requests.post(
         'https://api.terminal49.com/v2/tracking_requests/infer_number',
         headers={
             'Authorization': f'Token {api_key}',
             'Content-Type': 'application/json'
         },
-        json={'number': number}
+        json={'number': tracking_number}
     )
 
     result = response.json()
     shipping_line = result['data']['attributes']['shipping_line']
 
-    if shipping_line['decision'] == 'auto_select':
-        return {'scac': shipping_line['selected']['scac'], 'confirmed': True}
-    elif shipping_line['decision'] == 'needs_confirmation':
-        return {'scac': shipping_line['selected']['scac'], 'confirmed': False}
-    else:
-        return {'scac': None, 'confirmed': False}
+    return {
+        'scac': shipping_line['selected']['scac'] if shipping_line.get('selected') else None,
+        'carrier': shipping_line['selected']['name'] if shipping_line.get('selected') else None,
+        'confidence': shipping_line['selected']['confidence'] if shipping_line.get('selected') else None,
+        'auto_select': shipping_line['decision'] == 'auto_select',
+        'needs_confirmation': shipping_line['decision'] == 'needs_confirmation',
+        'candidates': shipping_line.get('candidates', [])
+    }
+
+# Usage
+result = get_carrier_for_number("MSCU1234567", "YOUR_API_KEY")
+if result['auto_select']:
+    # Auto-fill carrier dropdown
+    carrier_dropdown.value = result['scac']
+elif result['needs_confirmation']:
+    # Show suggestion with confirmation prompt
+    show_carrier_suggestion(result['carrier'], result['candidates'])
 ````
 
   </Tab>
-  <Tab title="cURL">
+  <Tab title="cURL" icon="terminal">
 ```bash
 curl -X POST https://api.terminal49.com/v2/tracking_requests/infer_number \
   -H "Authorization: Token YOUR_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"number": "WHLU1234560"}'
+  -d '{"number": "MSCU1234567"}'
 ```
   </Tab>
 </Tabs>
-
-## Example Request & Response
-
-<CodeGroup>
-```json Request
-{
-  "number": "WHLU1234560"
-}
-```
-
-```json Response
-{
-  "data": {
-    "id": "req_123e4567-e89b-12d3-a456-426614174000",
-    "type": "infer_number_results",
-    "attributes": {
-      "number_type": "container",
-      "validation": {
-        "is_valid": true,
-        "type": "container",
-        "check_digit_passed": true
-      },
-      "shipping_line": {
-        "decision": "auto_select",
-        "selected": {
-          "scac": "WHLC",
-          "name": "Wan Hai Lines",
-          "confidence": 1.0
-        },
-        "candidates": [
-          {
-            "scac": "WHLC",
-            "name": "Wan Hai Lines",
-            "confidence": 1.0
-          }
-        ]
-      }
-    }
-  }
-}
-```
-
-</CodeGroup>
-
-## Decision Handling
-
-The `decision` field tells you how confident the prediction is and what action to take:
-
-| Decision             | Confidence     | Recommended Action                                     |
-| -------------------- | -------------- | ------------------------------------------------------ |
-| `auto_select`        | ≥ 0.95         | ✅ Safe to use automatically without user confirmation |
-| `needs_confirmation` | 0.70 - 0.95    | ⚠️ Show the prediction but ask user to confirm         |
-| `no_prediction`      | < 0.70 or null | ❌ User must select the carrier manually               |
-
-<Tip>
-  For the best user experience, always handle all three decision types. Even
-  when `no_prediction` is returned, you can still show the list of `candidates`
-  as suggestions.
-</Tip>
-
-## How It Works
-
-<AccordionGroup>
-  <Accordion title="Container Numbers" icon="box">
-    Container numbers follow the **ISO 6346** format: `[A-Z]{3}U[0-9]{7}` (owner code + category identifier + serial number + check digit).
-
-    | Aspect | Details |
-    | ------ | ------- |
-    | **Validation** | ISO 6346 check digit verification |
-    | **SCAC Lookup** | Deterministic mapping from BIC prefix (first 3 characters) |
-    | **Confidence** | Always 1.0 when prefix is found (~135 known prefixes) |
-    | **Latency** | ~5ms (local lookup, no external dependency) |
-
-    **Example:** `WHLU1234560` → BIC prefix `WHL` → SCAC `WHLC` (Wan Hai Lines)
-
-  </Accordion>
-
-  <Accordion title="Shipment Numbers (Bill of Lading / Booking)" icon="file-lines">
-    Shipment numbers have carrier-specific formats and are analyzed using **ML-based prediction**.
-
-    | Aspect | Details |
-    | ------ | ------- |
-    | **Validation** | Format validation when SCAC is inferred |
-    | **SCAC Prediction** | ML service analyzes number patterns |
-    | **Confidence** | Variable (0.0 - 1.0) based on pattern distinctiveness |
-    | **Latency** | 50-2000ms (external ML service with 2s timeout) |
-
-    **Example:** `MAEU123456789` → Pattern matches Maersk format → SCAC `MAEU`
-
-  </Accordion>
-
-  <Accordion title="Response Fields" icon="code">
-    | Field | Type | Description |
-    | ----- | ---- | ----------- |
-    | `number_type` | string | Detected type: `container`, `bill_of_lading`, or `booking` |
-    | `validation.is_valid` | boolean | Whether the number format is valid |
-    | `validation.check_digit_passed` | boolean | For containers, whether ISO 6346 check digit is correct |
-    | `shipping_line.decision` | string | Confidence level: `auto_select`, `needs_confirmation`, `no_prediction` |
-    | `shipping_line.selected.scac` | string | The predicted SCAC code |
-    | `shipping_line.selected.confidence` | number | Confidence score (0.0 - 1.0) |
-    | `shipping_line.candidates` | array | List of possible carriers ranked by confidence |
-  </Accordion>
-</AccordionGroup>
 
 ## Rate Limits
 
@@ -253,6 +427,14 @@ The `decision` field tells you how confident the prediction is and what action t
 
 <CardGroup cols={2}>
   <Card
+    title="Infer Number API Reference"
+    icon="code"
+    href="/api-docs/api-reference/tracking-requests/auto-detect-carrier"
+  >
+    Full API specification with request/response schemas and try it in the
+    playground
+  </Card>
+  <Card
     title="Create a Tracking Request"
     icon="circle-plus"
     href="/api-docs/api-reference/tracking-requests/create-a-tracking-request"
@@ -260,10 +442,17 @@ The `decision` field tells you how confident the prediction is and what action t
     Use the detected SCAC to start tracking your shipment
   </Card>
   <Card
-    title="API Reference"
-    icon="code"
-    href="/api-docs/api-reference/tracking-requests/auto-detect-carrier"
+    title="Supported Carriers"
+    icon="ship"
+    href="/api-docs/useful-info/api-data-sources-availability"
   >
-    View the full API specification and try it in the playground
+    See which carriers we support and their data availability
+  </Card>
+  <Card
+    title="Tracking Request Lifecycle"
+    icon="arrows-spin"
+    href="/api-docs/in-depth-guides/tracking-request-lifecycle"
+  >
+    Learn what happens after you submit a tracking request
   </Card>
 </CardGroup>

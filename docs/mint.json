@@ -50,6 +50,10 @@
     {
       "name": "DataSync",
       "url": "datasync"
+    },
+    {
+      "name": "Updates",
+      "url": "updates"
     }
   ],
   "navigation": [
@@ -101,6 +105,10 @@
     {
       "group": " ",
       "pages": ["datasync/overview", "datasync/supported-destinations"]
+    },
+    {
+      "group": "Updates",
+      "pages": ["updates/home"]
     },
     {
       "group": "Table Properties",

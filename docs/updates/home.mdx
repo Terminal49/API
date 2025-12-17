@@ -1,0 +1,54 @@
+---
+title: API & DataSync Updates
+description: Release notes for Terminal49 API and DataSync.
+rss: true
+---
+
+<Info>
+  This page contains updates to **Terminal49 API** and **DataSync** only (not
+  general product updates).
+</Info>
+
+<Update label="December 2025" description="Infer Tracking Number (Beta)" tags={['API']}
+  rss="Added Infer Tracking Number (beta) to predict VOCC SCAC + number type prior to creating tracking requests."
+>
+  ### Infer Tracking Number (Beta)
+
+Added the **Infer Tracking Number** endpoint to help you predict:
+
+- The **VOCC SCAC** to use for tracking
+- The **number type** (container, bill of lading, booking)
+- A confidence-driven **decision** (`auto_select`, `needs_confirmation`, `no_prediction`)
+
+<CardGroup cols={2}>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-docs/api-reference/tracking-requests/auto-detect-carrier"
+  >
+    Infer Tracking Number endpoint details
+  </Card>
+  <Card
+    title="Guide"
+    icon="book"
+    href="/api-docs/in-depth-guides/auto-detect-carrier"
+  >
+    How to use Infer Tracking Number in your workflow
+  </Card>
+</CardGroup>
+
+  <Tip>
+  Use Infer Tracking Number when you have a valid tracking number but don’t know the correct **VOCC SCAC**.
+  </Tip>
+</Update>
+
+<Update label="December 2025" description="Documentation improvements" tags={['API', 'DataSync']}
+  rss="Improved docs navigation and added an Updates tab for API/DataSync release notes."
+>
+  ### Documentation improvements
+
+Added an **Updates** section to publish API/DataSync changes.
+
+Added cross-links from relevant docs to Infer Tracking Number.
+
+</Update>

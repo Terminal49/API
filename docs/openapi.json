@@ -1584,10 +1584,10 @@
     },
     "/tracking_requests/infer_number": {
       "post": {
-        "summary": "Auto-detect carrier from tracking number",
+        "summary": "Infer Tracking Number",
         "operationId": "post-infer-number",
         "x-beta": true,
-        "description": "Identifies the shipping line (SCAC) for a tracking number. Pass a container number, bill of lading, or booking number and get back the carrier with a confidence score. Use this to auto-populate carrier fields before creating a tracking request.",
+        "description": "Predict the carrier SCAC (VOCC) and number type from a tracking number. Provide a container number, bill of lading number, or booking number and receive the predicted carrier with confidence and a decision value. Use this to auto-populate carrier fields before creating a tracking request.",
         "tags": [
           "Tracking Requests"
         ],
