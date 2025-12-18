@@ -21,6 +21,7 @@
           },
           {
             "group": "Getting Started",
+            "icon": "play",
             "pages": [
               "api-docs/getting-started/start-here",
               "api-docs/getting-started/tracking-shipments-and-containers",
@@ -30,6 +31,7 @@
           },
           {
             "group": "In Depth Guides",
+            "icon": "book-open",
             "pages": [
               "api-docs/in-depth-guides/quickstart",
               "api-docs/in-depth-guides/rate-limiting",
@@ -48,6 +50,7 @@
           },
           {
             "group": "Useful Info",
+            "icon": "info",
             "pages": [
               "api-docs/useful-info/api-data-sources-availability",
               "api-docs/useful-info/pricing",
@@ -58,6 +61,7 @@
           },
           {
             "group": "Shipments",
+            "icon": "package",
             "pages": [
               "api-docs/api-reference/shipments/list-shipments",
               "api-docs/api-reference/shipments/get-a-shipment",
@@ -68,6 +72,7 @@
           },
           {
             "group": "Tracking Requests",
+            "icon": "search",
             "pages": [
               "api-docs/api-reference/tracking-requests/list-tracking-requests",
               "api-docs/api-reference/tracking-requests/create-a-tracking-request",
@@ -78,6 +83,7 @@
           },
           {
             "group": "Webhooks",
+            "icon": "webhook",
             "pages": [
               "api-docs/api-reference/webhooks/get-single-webhook",
               "api-docs/api-reference/webhooks/delete-a-webhook",
@@ -89,6 +95,7 @@
           },
           {
             "group": "Webhook Notifications",
+            "icon": "bell",
             "pages": [
               "api-docs/api-reference/webhook-notifications/get-a-single-webhook-notification",
               "api-docs/api-reference/webhook-notifications/list-webhook-notifications",
@@ -97,6 +104,7 @@
           },
           {
             "group": "Containers",
+            "icon": "container",
             "pages": [
               "api-docs/api-reference/containers/list-containers",
               "api-docs/api-reference/containers/edit-a-container",
@@ -110,6 +118,7 @@
           },
           {
             "group": "Shipping Lines",
+            "icon": "ship",
             "pages": [
               "api-docs/api-reference/shipping-lines/shipping-lines",
               "api-docs/api-reference/shipping-lines/get-a-single-shipping-line"
@@ -117,18 +126,21 @@
           },
           {
             "group": "Metro Areas",
+            "icon": "map-pin",
             "pages": [
               "api-docs/api-reference/metro-areas/get-a-metro-area-using-the-unlocode-or-the-id"
             ]
           },
           {
             "group": "Ports",
+            "icon": "anchor",
             "pages": [
               "api-docs/api-reference/ports/get-a-port-using-the-locode-or-the-id"
             ]
           },
           {
             "group": "Vessels",
+            "icon": "sailboat",
             "pages": [
               "api-docs/api-reference/vessels/get-a-vessel-using-the-id",
               "api-docs/api-reference/vessels/get-a-vessel-using-the-imo",
@@ -138,12 +150,14 @@
           },
           {
             "group": "Terminals",
+            "icon": "warehouse",
             "pages": [
               "api-docs/api-reference/terminals/get-a-terminal-using-the-id"
             ]
           },
           {
             "group": "Parties",
+            "icon": "users",
             "pages": [
               "api-docs/api-reference/parties/list-parties",
               "api-docs/api-reference/parties/create-a-party",
@@ -171,6 +185,7 @@
           },
           {
             "group": "Table Properties",
+            "icon": "table",
             "pages": [
               "datasync/table-properties/containers_rail",
               "datasync/table-properties/shipments",
@@ -187,6 +202,7 @@
         "groups": [
           {
             "group": "Updates",
+            "icon": "newspaper",
             "pages": [
               "updates/home"
             ]
