@@ -1638,7 +1638,7 @@
                         },
                         "type": {
                           "type": "string",
-                          "enum": ["infer_number_results"]
+                          "example": "infer_number_results"
                         },
                         "attributes": {
                           "type": "object",
@@ -1815,6 +1815,18 @@
                           }
                         }
                       }
+                    }
+                  }
+                },
+                "examples": {
+                  "Rate Limit Exceeded": {
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "429",
+                          "detail": "Rate limit exceeded"
+                        }
+                      ]
                     }
                   }
                 }

@@ -13,7 +13,7 @@ og:description: Automatically identify the shipping line (SCAC) from a tracking 
   on feedback.
 </Note>
 
-Every tracking request requires two things: **your tracking number** and **the carrier's SCAC code**.
+Every tracking request requires two things: **your tracking number** and **the shipping line's (carrier's) SCAC code**.
 But what if you don't know the SCAC? That's where the Infer API comes in.
 
 <Card title="Already using the Terminal49 Dashboard?" icon="browser" horizontal>
@@ -23,18 +23,18 @@ But what if you don't know the SCAC? That's where the Infer API comes in.
 
 ## Why SCAC Matters
 
-To track a shipment or container, Terminal49 needs to know **which vessel carrier (VOCC) to ask**.
-The SCAC (Standard Carrier Alpha Code) we use here is the **VOCC SCAC for tracking** — i.e., the carrier operating the move we’re querying for events and shipment data.
+To track a shipment or container, Terminal49 needs to know **which shipping line to ask** (also called the vessel-operating common carrier (VOCC)).
+The SCAC (Standard Carrier Alpha Code) we use here is the **shipping line SCAC for tracking** — i.e., the carrier operating the move we’re querying for events and shipment data.
 
 | You Have                        | You Need                           | The Challenge                                                                                                               |
 | ------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Bill of Lading: `MAEU123456789` | VOCC SCAC (carrier operating move) | Many MBOLs **do not include a prefix**, and even when they do, it may not reliably identify the VOCC you need for tracking. |
-| Container: `WHLU1234560`        | VOCC SCAC (carrier operating move) | The container owner code / leasing company is not always the carrier moving it, so the prefix alone is not enough.          |
-| Booking: `987654321`            | VOCC SCAC (carrier operating move) | Booking formats vary widely and often contain no carrier identifier.                                                        |
+| Bill of Lading: `MAEU123456789` | Shipping line SCAC (VOCC SCAC)     | Many MBOLs **do not include a prefix**, and even when they do, it may not reliably identify the shipping line you need for tracking. |
+| Container: `WHLU1234560`        | Shipping line SCAC (VOCC SCAC)     | The container owner code / leasing company is not always the carrier moving it, so the prefix alone is not enough.                |
+| Booking: `987654321`            | Shipping line SCAC (VOCC SCAC)     | Booking formats vary widely and often contain no carrier identifier.                                                              |
 
 <Info>
-  Without the correct **VOCC SCAC**, your tracking request can fail even if the
-  number is valid. The Infer API predicts the VOCC SCAC + number type to
+  Without the correct **shipping line SCAC (VOCC SCAC)**, your tracking request can fail even if the
+  number is valid. The Infer API predicts the shipping line SCAC + number type to
   increase the likelihood your tracking request succeeds.
 </Info>
 
@@ -42,17 +42,17 @@ The SCAC (Standard Carrier Alpha Code) we use here is the **VOCC SCAC for tracki
 
 Submit any tracking number, and the API returns:
 
-- **The predicted carrier (SCAC)** — so you don't have to guess
+- **The predicted shipping line (SCAC)** — so you don't have to guess
 - **The number type** — container, bill of lading, or booking
 - **Validation results** — catches typos and invalid formats before you submit
 
 <Steps>
   <Step title="You submit a tracking number" icon="input-text">
-    Just the number — no need to specify the carrier or type
+    Just the number — no need to specify the shipping line or type
   </Step>
   <Step title="We analyze the pattern" icon="microchip-ai">
     Our system uses machine learning and historical data from millions of
-    shipments to predict the carrier.
+    shipments to predict the shipping line.
   </Step>
   <Step title="You get the SCAC and confidence score" icon="bullseye-arrow">
     Use high-confidence results automatically, or prompt users to confirm
@@ -66,9 +66,9 @@ Submit any tracking number, and the API returns:
 
 <Tabs>
   <Tab title="Container Number" icon="box">
-    Container numbers follow the ISO 6346 format. While the first three letters (owner code) often indicate the owner, the container might be moved by a different carrier (VOCC).
+    Container numbers follow the ISO 6346 format. While the first three letters (owner code) often indicate the owner, the container might be moved by a different shipping line (VOCC).
 
-    Our system analyzes the number against tens of millions of historical records to predict which carrier is moving the container.
+    Our system analyzes the number against tens of millions of historical records to predict which shipping line is moving the container.
 
     **Example Input:** `MSCU1234567`
 
@@ -111,7 +111,7 @@ Submit any tracking number, and the API returns:
     </CodeGroup>
 
     <Tip>
-      For container numbers, we use historical data to identify the carrier with high accuracy (9/10 times).
+      For container numbers, we use historical data to identify the shipping line with high accuracy (9/10 times).
       Always check the `decision` field to know if you should ask the user for confirmation.
     </Tip>
 
