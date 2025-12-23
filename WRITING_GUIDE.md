@@ -18,7 +18,7 @@ This guide defines how we write and maintain Terminal49 docs. Follow it for new 
   - Build or embed a routing map
   - Integrate milestones from empty-out to empty-return
   - Integrate import and export container milestones
-- Update `docs/mint.json` navigation when you add or move pages.
+- Update `docs/docs.json` navigation when you add or move pages.
 
 ## Choose the right doc type
 Use the closest doc type before drafting:

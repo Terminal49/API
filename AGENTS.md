@@ -6,19 +6,18 @@ This repository contains the Terminal49 public documentation site, including MDX
 - `docs/` holds the Mintlify site content and configuration.
 - `docs/api-docs/`, `docs/datasync/`, and `docs/updates/` contain MDX pages grouped by product area.
 - `docs/openapi.json` is the source of truth for API reference content.
-- `docs/mint.json` defines navigation, branding, and tabs.
+- `docs/docs.json` defines navigation, branding, and tabs.
 - `docs/images/` and `assets/images/` store images used by MDX pages.
 - `Terminal49-API.postman_collection.json` is generated from the OpenAPI spec.
-- `Dockerfile`, `nginx.conf`, and `render.yaml` support a Redoc/NGINX deployment path.
 
 ## Build, Test, and Development Commands
 There are no repo-local build/test scripts. Common tasks:
+- Preview docs locally (requires Mintlify tooling):
+  `cd docs && mintlify dev`
 - Generate the Postman collection (matches CI):
   `openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags`
 - Lint the OpenAPI spec with Spectral (if installed):
   `spectral lint --ruleset .spectral.mjs docs/openapi.json`
-- Build the Redoc image (requires `reference/terminal49/terminal49.v1.json`):
-  `docker build -t terminal49-docs .`
 
 ## Coding Style & Naming Conventions
 - MDX files use YAML frontmatter; include a `title` for every page.

@@ -3,7 +3,7 @@
 These instructions guide automated changes for the Terminal49 docs in this repository.
 
 ## Scope
-- Primary docs live in `docs/` (MDX pages, `docs/mint.json`, and `docs/openapi.json`).
+- Primary docs live in `docs/` (MDX pages, `docs/docs.json`, and `docs/openapi.json`).
 - Do not edit generated files unless explicitly asked (e.g., `Terminal49-API.postman_collection.json`).
 
 ## Audience focus

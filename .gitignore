@@ -1,1 +1,8 @@
 .DS_Store
+
+.env.local
+.env.development.local
+
+.tool-versions.local
+
+.pytest_cache
