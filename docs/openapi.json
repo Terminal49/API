@@ -965,7 +965,7 @@
                               "type": "string"
                             }
                           },
-                          "shipment_tags": {
+                          "tags": {
                             "type": "array",
                             "x-stoplight": {
                               "id": "02itol38fmg55"
