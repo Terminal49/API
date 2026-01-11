@@ -29,8 +29,8 @@ export interface ContainerStatus {
   demurrage: {
     pickup_lfd: string | null;
     pickup_appointment_at: string | null;
-    fees_at_pod_terminal: any[];
-    holds_at_pod_terminal: any[];
+    fees_at_pod_terminal: any[] | null;
+    holds_at_pod_terminal: any[] | null;
   };
   rail: {
     pod_rail_carrier: string | null;
@@ -219,10 +219,11 @@ function formatContainerResponse(apiResponse: any, includes: string[]): Containe
       pod_discharged_at: container.pod_discharged_at,
     },
     demurrage: {
-      pickup_lfd: container.pickup_lfd,
-      pickup_appointment_at: container.pickup_appointment_at,
-      fees_at_pod_terminal: container.fees_at_pod_terminal || [],
-      holds_at_pod_terminal: container.holds_at_pod_terminal || [],
+      pickup_lfd: container.pickup_lfd ?? null,
+      pickup_appointment_at: container.pickup_appointment_at ?? null,
+      // Preserve nulls so clients don’t mistake “unavailable” for “empty”.
+      fees_at_pod_terminal: container.fees_at_pod_terminal ?? null,
+      holds_at_pod_terminal: container.holds_at_pod_terminal ?? null,
     },
     rail: {
       pod_rail_carrier: container.pod_rail_carrier_scac,
@@ -365,9 +366,13 @@ function generateSuggestions(container: any, state: string, includes: string[]):
 
     case 'at_terminal':
     case 'available_for_pickup':
-      if (container.holds_at_pod_terminal?.length > 0) {
+      if (Array.isArray(container.holds_at_pod_terminal) && container.holds_at_pod_terminal.length > 0) {
         const holdTypes = container.holds_at_pod_terminal.map((h: any) => h.name).join(', ');
         message = `Container has holds: ${holdTypes}. User may ask about hold details or clearance timeline.`;
+      } else if (container.holds_at_pod_terminal == null && includes.includes('pod_terminal')) {
+        message =
+          'Hold/fee/LFD data is not available for this container/terminal via the API response. ' +
+          'User may need to check terminal portal or customs/broker docs.';
       } else if (container.pickup_lfd) {
         const lfdDate = new Date(container.pickup_lfd);
         const now = new Date();

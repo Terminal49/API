@@ -4,10 +4,16 @@
  * NOTE: This is a PAID FEATURE in Terminal49 API
  */
 
-import { Terminal49Client } from '@terminal49/sdk';
+import { FeatureNotEnabledError, NotFoundError, Terminal49Client } from '@terminal49/sdk';
 
 export interface FeatureNotEnabledResult {
   error: 'FeatureNotEnabled';
+  message: string;
+  alternative: string;
+}
+
+export interface NotFoundResult {
+  error: 'NotFound';
   message: string;
   alternative: string;
 }
@@ -73,11 +79,14 @@ export async function executeGetContainerRoute(
     return mapped ? { mapped, summary } : summary;
   } catch (error) {
     const duration = Date.now() - startTime;
-
-    // Handle 403 errors (feature not enabled)
     const err = error as any;
-    if (err.name === 'AuthenticationError' && err.message?.includes('not enabled')) {
+
+    if (err instanceof FeatureNotEnabledError || (err?.status === 403 && /not enabled|feature/i.test(err.message))) {
       return handleFeatureNotEnabled(args.id, duration);
+    }
+
+    if (err instanceof NotFoundError || err?.status === 404) {
+      return handleRouteNotFound(args.id, duration);
     }
 
     console.error(
@@ -118,6 +127,29 @@ function handleFeatureNotEnabled(containerId: string, duration: number): Feature
     message: friendlyMessage,
     alternative:
       'Use get_container_transport_events to see historical movement, or get_container for basic routing info.',
+  };
+}
+
+function handleRouteNotFound(containerId: string, duration: number): NotFoundResult {
+  const friendlyMessage =
+    'Route data was not found for this container. The container ID may be incorrect or route data is unavailable.';
+
+  console.error(
+    JSON.stringify({
+      event: 'tool.execute.error',
+      tool: 'get_container_route',
+      container_id: containerId,
+      error: 'NotFound',
+      message: friendlyMessage,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    })
+  );
+
+  return {
+    error: 'NotFound',
+    message: friendlyMessage,
+    alternative: 'Use search_container to find the correct container ID, or get_container for basic details.',
   };
 }
 

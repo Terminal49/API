@@ -14,6 +14,9 @@ import { executeGetShipmentDetails } from './tools/get-shipment-details.js';
 import { executeGetContainerTransportEvents } from './tools/get-container-transport-events.js';
 import { executeGetSupportedShippingLines } from './tools/get-supported-shipping-lines.js';
 import { executeGetContainerRoute, type FeatureNotEnabledResult } from './tools/get-container-route.js';
+import { executeListShipments } from './tools/list-shipments.js';
+import { executeListContainers } from './tools/list-containers.js';
+import { executeListTrackingRequests } from './tools/list-tracking-requests.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
 
@@ -51,6 +54,10 @@ function buildContentPayload(result: unknown): ToolContent[] {
   return [{ type: 'text', text: formatAsText(result) }];
 }
 
+function normalizeStructuredContent(result: unknown): { data: unknown } {
+  return { data: result };
+}
+
 function formatAsText(result: unknown): string {
   try {
     return JSON.stringify(result, null, 2);
@@ -81,7 +88,7 @@ function wrapTool<TArgs>(
       const result = await handler(args);
       return {
         content: buildContentPayload(result),
-        structuredContent: result as any,
+        structuredContent: normalizeStructuredContent(result),
       };
     } catch (error) {
       const err = error as Error;
@@ -141,13 +148,18 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
     {
       title: 'Track Container',
       description:
-        'Track a container by its container number (e.g., CAIU2885402). ' +
-        'This will create a tracking request if it doesn\'t exist and return detailed container information. ' +
-        'Optionally provide SCAC code, booking number, or reference numbers for better matching.',
+        'Track a container, bill of lading, or booking number. ' +
+        'Uses inference to choose the carrier/type when possible, creates a tracking request, ' +
+        'and returns detailed container information.',
       inputSchema: {
-        containerNumber: z.string().describe('The container number (e.g., CAIU2885402, TCLU1234567)'),
+        number: z.string().optional().describe('Container, bill of lading, or booking number to track'),
+        numberType: z
+          .string()
+          .optional()
+          .describe('Optional override: container | bill_of_lading | booking_number'),
+        containerNumber: z.string().optional().describe('Deprecated alias for number (container)'),
+        bookingNumber: z.string().optional().describe('Deprecated alias for number (booking/BL)'),
         scac: z.string().optional().describe('Optional SCAC code of the shipping line (e.g., MAEU for Maersk)'),
-        bookingNumber: z.string().optional().describe('Optional booking/BL number if tracking by bill of lading'),
         refNumbers: z.array(z.string()).optional().describe('Optional reference numbers for matching'),
       },
       outputSchema: {
@@ -155,10 +167,11 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         container_number: z.string(),
         status: z.string(),
         tracking_request_created: z.boolean(),
+        infer_result: z.any().optional(),
       },
     },
-    wrapTool(async ({ containerNumber, scac, bookingNumber, refNumbers }) =>
-      executeTrackContainer({ containerNumber, scac, bookingNumber, refNumbers }, client)
+    wrapTool(async ({ number, numberType, containerNumber, scac, bookingNumber, refNumbers }) =>
+      executeTrackContainer({ number, numberType, containerNumber, scac, bookingNumber, refNumbers }, client)
     )
   );
 
@@ -270,11 +283,14 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       inputSchema: {
         id: z.string().uuid().describe('The Terminal49 container ID (UUID format)'),
       },
-      outputSchema: z.union([
-        z.object({
-          route_id: z.string().optional(),
-          total_legs: z.number(),
-          route_locations: z.array(
+      // NOTE: Avoid `z.union(...)` here; some SDK/schema tooling chokes on unions
+      // and surfaces as "Cannot read properties of undefined (reading '_zod')".
+      // Keep a single permissive schema so the tool can run.
+      outputSchema: z.object({
+        route_id: z.string().optional(),
+        total_legs: z.number().optional(),
+        route_locations: z
+          .array(
             z.object({
               port: z
                 .object({
@@ -309,21 +325,103 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
                   .nullable(),
               }),
             })
-          ),
-          created_at: z.string().nullable().optional(),
-          updated_at: z.string().nullable().optional(),
-          _metadata: z.object({
-            presentation_guidance: z.string(),
-          }),
-        }),
-        z.object({
-          error: z.literal('FeatureNotEnabled'),
-          message: z.string(),
-          alternative: z.string(),
-        }),
-      ]),
+          )
+          .optional(),
+        created_at: z.string().nullable().optional(),
+        updated_at: z.string().nullable().optional(),
+        _metadata: z
+          .object({
+            presentation_guidance: z.string().optional(),
+          })
+          .optional(),
+
+        // Feature gating / errors
+        error: z.string().optional(),
+        message: z.string().optional(),
+        alternative: z.string().optional(),
+      }),
     },
     wrapTool(async ({ id }) => executeGetContainerRoute({ id }, client))
+  );
+
+  // Tool 8: List Shipments
+  server.registerTool(
+    'list_shipments',
+    {
+      title: 'List Shipments',
+      description:
+        'List shipments with optional filters and pagination. ' +
+        'Use for queries like "show recent shipments" or "shipments for a carrier".',
+      inputSchema: {
+        status: z.string().optional().describe('Filter by shipment status'),
+        port: z.string().optional().describe('Filter by POD port LOCODE'),
+        carrier: z.string().optional().describe('Filter by shipping line SCAC'),
+        updated_after: z.string().optional().describe('Filter by updated_at (ISO8601) >= value'),
+        include_containers: z
+          .boolean()
+          .optional()
+          .describe('Include containers relationship in response. Default: true.'),
+        page: z.number().int().positive().optional().describe('Page number (1-based)'),
+        page_size: z.number().int().positive().optional().describe('Page size'),
+      },
+      outputSchema: z.object({
+        items: z.array(z.record(z.any())),
+        links: z.record(z.string()).optional(),
+        meta: z.record(z.any()).optional(),
+      }),
+    },
+    wrapTool(async (args) => executeListShipments(args, client))
+  );
+
+  // Tool 9: List Containers
+  server.registerTool(
+    'list_containers',
+    {
+      title: 'List Containers',
+      description:
+        'List containers with optional filters and pagination. ' +
+        'Use for queries like "containers at port" or "latest updates".',
+      inputSchema: {
+        status: z.string().optional().describe('Filter by container status'),
+        port: z.string().optional().describe('Filter by POD port LOCODE'),
+        carrier: z.string().optional().describe('Filter by shipping line SCAC'),
+        updated_after: z.string().optional().describe('Filter by updated_at (ISO8601) >= value'),
+        include: z
+          .string()
+          .optional()
+          .describe('Comma-separated include list (e.g., shipment,pod_terminal)'),
+        page: z.number().int().positive().optional().describe('Page number (1-based)'),
+        page_size: z.number().int().positive().optional().describe('Page size'),
+      },
+      outputSchema: z.object({
+        items: z.array(z.record(z.any())),
+        links: z.record(z.string()).optional(),
+        meta: z.record(z.any()).optional(),
+      }),
+    },
+    wrapTool(async (args) => executeListContainers(args, client))
+  );
+
+  // Tool 10: List Tracking Requests
+  server.registerTool(
+    'list_tracking_requests',
+    {
+      title: 'List Tracking Requests',
+      description:
+        'List tracking requests with optional filters and pagination. ' +
+        'Useful for monitoring recent tracking activity.',
+      inputSchema: {
+        filters: z.record(z.string()).optional().describe('Raw query filters (e.g., filter[status]=succeeded)'),
+        page: z.number().int().positive().optional().describe('Page number (1-based)'),
+        page_size: z.number().int().positive().optional().describe('Page size'),
+      },
+      outputSchema: z.object({
+        items: z.array(z.record(z.any())),
+        links: z.record(z.string()).optional(),
+        meta: z.record(z.any()).optional(),
+      }),
+    },
+    wrapTool(async (args) => executeListTrackingRequests(args, client))
   );
 
   // ==================== PROMPTS ====================
@@ -469,6 +567,6 @@ export async function runStdioServer() {
   await server.connect(transport);
 
   console.error('Terminal49 MCP Server v1.0.0 running on stdio');
-  console.error('Available: 7 tools | 3 prompts | 2 resources');
+  console.error('Available: 10 tools | 3 prompts | 2 resources');
   console.error('SDK: @modelcontextprotocol/sdk v1.20.1 (McpServer API)');
 }

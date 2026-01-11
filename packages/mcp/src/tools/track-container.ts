@@ -1,38 +1,48 @@
 /**
  * track_container tool
- * Creates a tracking request for a container number and returns the container details
+ * Creates a tracking request for a container/BL/booking number and returns the container details
  */
 
 import { Terminal49Client } from '@terminal49/sdk';
 import { executeGetContainer } from './get-container.js';
 
 export interface TrackContainerArgs {
-  containerNumber: string;
-  scac?: string;
+  number?: string;
+  numberType?: string;
+  containerNumber?: string;
   bookingNumber?: string;
+  scac?: string;
   refNumbers?: string[];
 }
 
 export const trackContainerTool = {
   name: 'track_container',
   description:
-    'Track a container by its container number (e.g., CAIU2885402). ' +
-    'This will create a tracking request if it doesn\'t exist and return detailed container information. ' +
-    'Optionally provide SCAC code, booking number, or reference numbers for better matching.',
+    'Track a container, bill of lading, or booking number. ' +
+    'This will infer number type + carrier when possible, create a tracking request, ' +
+    'and return detailed container information. Optionally provide SCAC or reference numbers.',
   inputSchema: {
     type: 'object',
     properties: {
+      number: {
+        type: 'string',
+        description: 'Container, bill of lading, or booking number to track',
+      },
+      numberType: {
+        type: 'string',
+        description: 'Optional override: container | bill_of_lading | booking_number',
+      },
       containerNumber: {
         type: 'string',
-        description: 'The container number (e.g., CAIU2885402, TCLU1234567)',
+        description: 'Deprecated alias for number (container number)',
+      },
+      bookingNumber: {
+        type: 'string',
+        description: 'Deprecated alias for number (booking/BL number)',
       },
       scac: {
         type: 'string',
         description: 'Optional SCAC code of the shipping line (e.g., MAEU for Maersk)',
-      },
-      bookingNumber: {
-        type: 'string',
-        description: 'Optional booking/BL number if tracking by bill of lading',
       },
       refNumbers: {
         type: 'array',
@@ -40,7 +50,6 @@ export const trackContainerTool = {
         description: 'Optional reference numbers for matching',
       },
     },
-    required: ['containerNumber'],
   },
 };
 
@@ -48,32 +57,36 @@ export async function executeTrackContainer(
   args: TrackContainerArgs,
   client: Terminal49Client
 ): Promise<any> {
-  if (!args.containerNumber || args.containerNumber.trim() === '') {
-    throw new Error('Container number is required');
+  const number = args.number || args.containerNumber || args.bookingNumber;
+  if (!number || number.trim() === '') {
+    throw new Error('Tracking number is required');
   }
+
+  const numberTypeOverride =
+    args.numberType ||
+    (args.containerNumber ? 'container' : args.bookingNumber ? 'booking_number' : undefined);
 
   const startTime = Date.now();
   console.log(
     JSON.stringify({
       event: 'tool.execute.start',
       tool: 'track_container',
-      container_number: args.containerNumber,
+      number,
       scac: args.scac,
       timestamp: new Date().toISOString(),
     })
   );
 
   try {
-    // Step 1: Create tracking request
-    const trackingResponse = await client.trackContainer({
-      containerNumber: args.containerNumber,
+    // Step 1: Infer + create tracking request
+    const { infer, trackingRequest } = await client.createTrackingRequestFromInfer(number, {
       scac: args.scac,
-      bookingNumber: args.bookingNumber,
+      numberType: numberTypeOverride,
       refNumbers: args.refNumbers,
     });
 
     // Extract container ID from the tracking response
-    const containerId = extractContainerId(trackingResponse);
+    const containerId = extractContainerId(trackingRequest);
 
     if (!containerId) {
       throw new Error(
@@ -85,7 +98,7 @@ export async function executeTrackContainer(
     console.log(
       JSON.stringify({
         event: 'tracking_request.created',
-        container_number: args.containerNumber,
+        number,
         container_id: containerId,
         timestamp: new Date().toISOString(),
       })
@@ -99,7 +112,7 @@ export async function executeTrackContainer(
       JSON.stringify({
         event: 'tool.execute.complete',
         tool: 'track_container',
-        container_number: args.containerNumber,
+        number,
         container_id: containerId,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
@@ -109,6 +122,7 @@ export async function executeTrackContainer(
     return {
       ...containerDetails,
       tracking_request_created: true,
+      infer_result: infer,
     };
   } catch (error) {
     const duration = Date.now() - startTime;
@@ -117,7 +131,7 @@ export async function executeTrackContainer(
       JSON.stringify({
         event: 'tool.execute.error',
         tool: 'track_container',
-        container_number: args.containerNumber,
+        number,
         error: (error as Error).name,
         message: (error as Error).message,
         duration_ms: duration,
