@@ -613,7 +613,7 @@ export class Terminal49Client {
   private buildFetch(fetchImpl: typeof fetch) {
     return async (input: Request | URL | string, init?: RequestInit): Promise<Response> => {
       const headers = new Headers(init?.headers);
-      headers.set('Authorization', `Token ${this.apiToken}`);
+      headers.set('Authorization', `Token token=${this.apiToken}`);
       headers.set('Accept', 'application/json');
       if (init?.body !== undefined && !headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/json');

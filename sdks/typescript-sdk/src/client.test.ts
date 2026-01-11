@@ -112,7 +112,7 @@ describe('Terminal49Client', () => {
     expect(calls.length).toBe(1);
 
     const headers = new Headers(calls[0].init?.headers);
-    expect(headers.get('Authorization')).toBe('Token token-123');
+    expect(headers.get('Authorization')).toBe('Token token=token-123');
     expect(calls[0].url.searchParams.get('include')).toBe('shipment,pod_terminal');
   });
 

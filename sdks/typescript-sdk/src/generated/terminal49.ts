@@ -130,6 +130,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tracking_requests/infer_number": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Infer Tracking Number
+         * @description Predict the carrier SCAC (VOCC) and number type from a tracking number. Provide a container number, bill of lading number, or booking number and receive the predicted carrier with confidence and a decision value. Use this to auto-populate carrier fields before creating a tracking request.
+         */
+        post: operations["post-infer-number"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tracking_requests/{id}": {
         parameters: {
             query?: never;
@@ -414,6 +434,28 @@ export interface paths {
          * @description Retrieves the route details from the port of lading to the port of discharge, including transshipments. <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>
          */
         get: operations["get-containers-id-route"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/containers/{id}/map_geojson": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get container map GeoJSON
+         * @description Returns a GeoJSON FeatureCollection containing all map-related data for a container, including port locations, current vessel position (if at sea), past vessel paths, and estimated future routes. The response can be directly used with most mapping libraries (Leaflet, Mapbox GL, Google Maps, etc.). <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>
+         */
+        get: operations["get-containers-id-map-geojson"];
         put?: never;
         post?: never;
         delete?: never;
@@ -818,7 +860,7 @@ export interface components {
                  * @description The reason Terminal49 stopped checking
                  * @enum {string|null}
                  */
-                line_tracking_stopped_reason?: "all_containers_terminated" | "past_arrival_window" | "no_updates_at_line" | "cancelled_by_user" | "booking_cancelled" | null;
+                line_tracking_stopped_reason?: "all_containers_terminated" | "past_arrival_window" | "past_full_out_window" | "no_updates_at_line" | "cancelled_by_user" | "booking_cancelled" | null;
             };
             /** @enum {string} */
             type: "shipment";
@@ -970,6 +1012,11 @@ export interface components {
                      */
                     pickup_lfd_line?: string | null;
                 } | null;
+                /**
+                 * @description The current status of the container in its journey. [Read guide to learn more.](/api-docs/in-depth-guides/container-statuses)
+                 * @enum {string}
+                 */
+                current_status?: "new" | "on_ship" | "available" | "not_available" | "grounded" | "on_rail" | "picked_up" | "off_dock" | "delivered" | "dropped" | "loaded" | "empty_returned" | "awaiting_inland_transfer";
             };
             relationships?: {
                 shipment?: {
@@ -1230,7 +1277,7 @@ export interface components {
                  */
                 active: boolean;
                 /** @description The list of events to enabled for this endpoint */
-                events: ("container.transport.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.transport.available")[];
+                events: ("container.transport.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.transport.available")[];
                 /** @description A random token that will sign all delivered webhooks */
                 secret: string;
                 headers?: {
@@ -1312,7 +1359,7 @@ export interface components {
             type: "transport_event";
             attributes?: {
                 /** @enum {string} */
-                event?: "container.transport.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.transport.available";
+                event?: "container.transport.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.transport.available";
                 voyage_number?: string | null;
                 /** Format: date-time */
                 timestamp?: string | null;
@@ -1435,7 +1482,7 @@ export interface components {
             type?: "webhook_notification";
             attributes?: {
                 /** @enum {string} */
-                event: "container.transport.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.transport.available";
+                event: "container.transport.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.transport.available";
                 /**
                  * @description Whether the notification has been delivered to the webhook endpoint
                  * @default pending
@@ -1822,6 +1869,231 @@ export interface components {
                 }[];
             };
         };
+        /** Port */
+        portFeatureProperties: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            feature_type: "port";
+            /** @description The sequence number of this port in the route (1 = POL, last = POD) */
+            ports_sequence?: number;
+            /** @description Total number of ports in the route */
+            ports_total?: number;
+            /** @description Unique identifier for the port location */
+            location_id?: string;
+            /** @enum {string} */
+            location_type?: "Port";
+            /** @description Name of the port */
+            name?: string;
+            /** @description State abbreviation (if applicable) */
+            state_abbr?: string | null;
+            /** @description State name (if applicable) */
+            state?: string | null;
+            /** @description ISO country code */
+            country_code?: string;
+            /** @description Country name */
+            country?: string;
+            /** @description IANA timezone identifier */
+            time_zone?: string;
+            /** @description Port label: POL, POD, or TS1, TS2, etc. */
+            label?: string;
+            /**
+             * Format: date-time
+             * @description Estimated time of arrival (ISO 8601)
+             */
+            inbound_eta_at?: string | null;
+            /**
+             * Format: date-time
+             * @description Actual time of arrival (ISO 8601)
+             */
+            inbound_ata_at?: string | null;
+            /**
+             * Format: date-time
+             * @description Estimated time of departure (ISO 8601)
+             */
+            outbound_etd_at?: string | null;
+            /**
+             * Format: date-time
+             * @description Actual time of departure (ISO 8601)
+             */
+            outbound_atd_at?: string | null;
+            /**
+             * Format: date-time
+             * @description Last update timestamp from the shipment (ISO 8601)
+             */
+            updated_at?: string | null;
+        };
+        /** Current Vessel */
+        currentVesselFeatureProperties: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            feature_type: "current_vessel";
+            /** @description Sequence number of the departure port for this leg */
+            ports_sequence?: number;
+            /** @description Unique identifier for the vessel */
+            vessel_id?: string;
+            /** @description Name of the vessel */
+            vessel_name?: string;
+            /** @description IMO number of the vessel */
+            vessel_imo?: string;
+            /** @description Voyage number for this leg */
+            voyage_number?: string | null;
+            /**
+             * Format: date-time
+             * @description Timestamp of the vessel position (ISO 8601)
+             */
+            vessel_location_timestamp?: string;
+            /** @description Vessel heading in degrees (0-360) */
+            vessel_location_heading?: number | null;
+            /** @description Vessel speed in knots */
+            vessel_location_speed?: number | null;
+            /** @description ID of the port the vessel departed from */
+            departure_port_id?: string;
+            /** @description Name of the departure port */
+            departure_port_name?: string;
+            /** @description State abbreviation of departure port */
+            departure_port_state_abbr?: string | null;
+            /** @description State name of departure port */
+            departure_port_state?: string | null;
+            /** @description Country code of departure port */
+            departure_port_country_code?: string;
+            /** @description Country name of departure port */
+            departure_port_country?: string;
+            /** @description Label of departure port (POL, POD, TS1, etc.) */
+            departure_port_label?: string;
+            /**
+             * Format: date-time
+             * @description Actual time of departure from the port (ISO 8601)
+             */
+            departure_port_atd?: string | null;
+            /** @description Timezone of departure port */
+            departure_port_time_zone?: string;
+            /** @description ID of the next port the vessel is heading to */
+            arrival_port_id?: string | null;
+            /** @description Name of the arrival port */
+            arrival_port_name?: string | null;
+            /** @description State abbreviation of arrival port */
+            arrival_port_state_abbr?: string | null;
+            /** @description State name of arrival port */
+            arrival_port_state?: string | null;
+            /** @description Country code of arrival port */
+            arrival_port_country_code?: string | null;
+            /** @description Country name of arrival port */
+            arrival_port_country?: string | null;
+            /** @description Label of arrival port (POL, POD, TS1, etc.) */
+            arrival_port_label?: string | null;
+            /**
+             * Format: date-time
+             * @description Estimated time of arrival at the next port (ISO 8601)
+             */
+            arrival_port_eta?: string | null;
+            /** @description Timezone of arrival port */
+            arrival_port_time_zone?: string | null;
+        };
+        /** Past Vessel Locations */
+        pastVesselLocationsFeatureProperties: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            feature_type: "past_vessel_locations";
+            /** @description Sequence number of the departure port for this leg */
+            ports_sequence?: number;
+            /** @description Unique identifier for the vessel that traveled this path */
+            vessel_id?: string;
+            /**
+             * Format: date-time
+             * @description Start timestamp of the path (ISO 8601)
+             */
+            start_time?: string;
+            /**
+             * Format: date-time
+             * @description End timestamp of the path (ISO 8601)
+             */
+            end_time?: string;
+            /** @description Number of coordinate points in the LineString */
+            point_count?: number;
+            /**
+             * Format: date-time
+             * @description Actual time of departure from the origin port (ISO 8601)
+             */
+            outbound_atd_at?: string | null;
+            /**
+             * Format: date-time
+             * @description Actual time of arrival at the destination port (ISO 8601)
+             */
+            inbound_ata_at?: string | null;
+            /**
+             * Format: date-time
+             * @description Estimated time of arrival at the destination port (ISO 8601)
+             */
+            inbound_eta_at?: string | null;
+        };
+        /** Estimated Full Leg */
+        estimatedFullLegFeatureProperties: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            feature_type: "estimated_full_legs";
+            /** @description Sequence number of the departure port for this leg */
+            ports_sequence?: number;
+            /** @description ID of the origin port */
+            previous_port_id?: string;
+            /** @description ID of the destination port */
+            next_port_id?: string;
+            /** @description Number of coordinate points in the LineString */
+            point_count?: number;
+        };
+        /** Estimated Partial Leg */
+        estimatedPartialLegFeatureProperties: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            feature_type: "estimated_partial_leg";
+            /** @description Sequence number of the departure port for this leg */
+            ports_sequence?: number;
+            /** @description ID of the port the vessel departed from */
+            current_port_id?: string;
+            /** @description ID of the next port the vessel is heading to */
+            next_port_id?: string;
+            /** @description Number of coordinate points in the LineString */
+            point_count?: number;
+        };
+        /** Point */
+        pointGeometry: {
+            /** @enum {string} */
+            type: "Point";
+            /**
+             * @example [
+             *       100.896831042,
+             *       13.065302386
+             *     ]
+             */
+            coordinates: number[];
+        };
+        /** LineString */
+        lineStringGeometry: {
+            /** @enum {string} */
+            type: "LineString";
+            /**
+             * @example [
+             *       [
+             *         100.868768333,
+             *         13.07306
+             *       ],
+             *       [
+             *         100.839155,
+             *         13.079318333
+             *       ]
+             *     ]
+             */
+            coordinates: number[][];
+        };
     };
     responses: never;
     parameters: never;
@@ -2022,6 +2294,8 @@ export interface operations {
                  * @description A search term to be applied against request_number and reference_numbers.
                  */
                 q?: string;
+                /** @description filter by `request_number` */
+                "filter[request_number]"?: string;
                 /** @description filter by `status` */
                 "filter[status]"?: "created" | "pending" | "failed";
                 /** @description filter by shipping line `scac` */
@@ -2030,12 +2304,14 @@ export interface operations {
                 "filter[created_at][start]"?: string;
                 /** @description filter by tracking_requests `created_at` before a certain ISO8601 timestamp */
                 "filter[created_at][end]"?: string;
+                /** @description filter by tracking_requests `updated_at` after a certain ISO8601 timestamp */
+                "filter[updated_at][start]"?: string;
+                /** @description filter by tracking_requests `updated_at` before a certain ISO8601 timestamp */
+                "filter[updated_at][end]"?: string;
                 /** @description Comma delimited list of relations to include. 'tracked_object' is included by default. */
                 include?: string;
                 "page[number]"?: number;
                 "page[size]"?: number;
-                /** @description filter by `request_number` */
-                "filter[request_number]"?: string;
             };
             header?: never;
             path?: never;
@@ -2162,6 +2438,99 @@ export interface operations {
                             /** @example Too Many Requests */
                             title?: string;
                             /** @example You've hit the create tracking requests limit. Please try again in a minute. */
+                            detail?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "post-infer-number": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description The tracking number to analyze (container number, bill of lading, or booking number)
+                     * @example WHLU1234560
+                     */
+                    number: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successfully inferred number type and shipping line */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: {
+                            /** @example req_123e4567-e89b-12d3-a456-426614174000 */
+                            id?: string;
+                            /** @example infer_number_results */
+                            type?: string;
+                            attributes?: {
+                                /** @enum {string} */
+                                number_type?: "container" | "bill_of_lading" | "booking";
+                                validation?: {
+                                    is_valid?: boolean | null;
+                                    /** @enum {string} */
+                                    type?: "container" | "shipment";
+                                    check_digit_passed?: boolean | null;
+                                    parsed_number?: string | null;
+                                    reason?: string | null;
+                                };
+                                shipping_line?: {
+                                    /** @enum {string} */
+                                    decision?: "auto_select" | "needs_confirmation" | "no_prediction";
+                                    selected?: {
+                                        scac?: string;
+                                        name?: string;
+                                        confidence?: number;
+                                    } | null;
+                                    candidates?: {
+                                        scac?: string;
+                                        name?: string;
+                                        confidence?: number;
+                                    }[];
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+            /** @description Unprocessable Entity - Invalid tracking number format */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: {
+                            status?: string;
+                            detail?: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Too Many Requests - Rate limit exceeded */
+            429: {
+                headers: {
+                    /** @description Number of seconds to wait before making another request */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: {
+                            status?: string;
                             detail?: string;
                         }[];
                     };
@@ -2313,7 +2682,7 @@ export interface operations {
                              */
                             url?: string;
                             /** @description The list of events to enable for this endpoint. */
-                            events?: ("container.transport.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.transport.available")[];
+                            events?: ("container.transport.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.transport.available")[];
                             active?: boolean;
                             /** @description Optional custom headers to pass with each webhook invocation */
                             headers?: {
@@ -2389,7 +2758,7 @@ export interface operations {
                              */
                             url: string;
                             /** @description The list of events to enable for this endpoint. */
-                            events?: ("container.transport.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.transport.available")[];
+                            events?: ("container.transport.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.transport.available")[];
                             active: boolean;
                             /** @description Optional custom headers to pass with each webhook invocation */
                             headers?: {
@@ -2481,7 +2850,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description The webhook notification event name you wish to see an example of */
-                event?: "container.transport.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.transport.available";
+                event?: "container.transport.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.transport.available";
             };
             header?: never;
             path?: never;
@@ -2695,6 +3064,81 @@ export interface operations {
                     "application/json": {
                         data?: components["schemas"]["route"];
                         included?: (components["schemas"]["port"] | components["schemas"]["vessel"] | components["schemas"]["route_location"] | components["schemas"]["shipment"])[];
+                    };
+                };
+            };
+            /** @description Forbidden - Routing data feature is not enabled for this account */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: {
+                            /** @example 403 */
+                            status?: string;
+                            /** @example Forbidden */
+                            title?: string;
+                            /** @example Routing data feature is not enabled for this account */
+                            detail?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "get-containers-id-map-geojson": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        type: "FeatureCollection";
+                        features: {
+                            /** @enum {string} */
+                            type: "Feature";
+                            geometry: {
+                                /** @enum {string} */
+                                type: "Point";
+                                /**
+                                 * @example [
+                                 *       100.896831042,
+                                 *       13.065302386
+                                 *     ]
+                                 */
+                                coordinates: number[];
+                            } | {
+                                /** @enum {string} */
+                                type: "LineString";
+                                /**
+                                 * @example [
+                                 *       [
+                                 *         100.868768333,
+                                 *         13.07306
+                                 *       ],
+                                 *       [
+                                 *         100.839155,
+                                 *         13.079318333
+                                 *       ]
+                                 *     ]
+                                 */
+                                coordinates: number[][];
+                            };
+                            properties: components["schemas"]["portFeatureProperties"] | components["schemas"]["currentVesselFeatureProperties"] | components["schemas"]["pastVesselLocationsFeatureProperties"] | components["schemas"]["estimatedFullLegFeatureProperties"] | components["schemas"]["estimatedPartialLegFeatureProperties"];
+                        }[];
                     };
                 };
             };
