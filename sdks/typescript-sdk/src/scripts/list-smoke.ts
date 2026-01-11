@@ -31,7 +31,7 @@ async function main() {
 }
 
 function logSection(name: string, data: any, sampleCount: number) {
-  const list = Array.isArray(data) ? data : data?.data || [];
+  const list = Array.isArray(data) ? data : data?.items || data?.data || [];
   console.log(`\n=== ${name} ===`);
   console.log(`count: ${Array.isArray(list) ? list.length : 'n/a'}`);
   if (Array.isArray(list)) {

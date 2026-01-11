@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  AuthenticationError,
+  FeatureNotEnabledError,
   NotFoundError,
   Terminal49Client,
   ValidationError,
@@ -287,9 +287,9 @@ describe('Terminal49Client', () => {
       fetchImpl,
     });
 
-    const result = await client.listContainers({}, { format: 'mapped' }) as any[];
-    expect(result[0].equipment?.type).toBe('dry');
-    expect(result[0].terminals?.podTerminal?.name).toBe('Terminal 1');
+    const result = await client.listContainers({}, { format: 'mapped' }) as any;
+    expect(result.items[0].equipment?.type).toBe('dry');
+    expect(result.items[0].terminals?.podTerminal?.name).toBe('Terminal 1');
   });
 
   it('maps transport events with location/terminal', async () => {
@@ -327,7 +327,7 @@ describe('Terminal49Client', () => {
     expect(events[0].terminal?.firmsCode).toBe('Y790');
   });
 
-  it('maps 403 responses to AuthenticationError', async () => {
+  it('maps 403 feature gating to FeatureNotEnabledError', async () => {
     const { fetchImpl } = createMockFetch({
       '/containers/abc/route?include=port,vessel,route_location': () =>
         jsonResponse({ errors: [{ detail: 'Feature not enabled' }] }, 403),
@@ -339,7 +339,7 @@ describe('Terminal49Client', () => {
       fetchImpl,
     });
 
-    await expect(client.getContainerRoute('abc')).rejects.toBeInstanceOf(AuthenticationError);
+    await expect(client.getContainerRoute('abc')).rejects.toBeInstanceOf(FeatureNotEnabledError);
   });
 
   it('handles validation errors with proper message extraction', async () => {

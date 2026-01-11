@@ -30,8 +30,13 @@ const simplified = client.deserialize<any>(container);
 - `search(query)`
 - `getContainer(id, include?)`
 - `trackContainer({ containerNumber?, bookingNumber?, scac?, refNumbers? })`
+- `createTrackingRequest({ requestType, requestNumber, scac?, refNumbers?, shipmentTags? })`
+- `inferTrackingNumber(number)`
+- `createTrackingRequestFromInfer(number, { scac?, numberType?, refNumbers?, shipmentTags? })`
 - `getShipment(id, includeContainers?)`
-- `listShipments(filters?)`
+- `listShipments(filters?, options?)`
+- `listContainers(filters?, options?)`
+- `listTrackingRequests(filters?, options?)` / `listTrackRequests(filters?, options?)`
 - `getContainerTransportEvents(id)`
 - `getContainerRoute(id)`
 - `listShippingLines(search?)`

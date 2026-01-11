@@ -6,6 +6,21 @@ export interface ShippingLine {
   notes?: string;
 }
 
+export interface PaginationLinks {
+  self?: string;
+  current?: string;
+  next?: string;
+  prev?: string;
+  first?: string;
+  last?: string;
+}
+
+export interface PaginatedResult<T> {
+  items: T[];
+  links?: PaginationLinks;
+  meta?: Record<string, any>;
+}
+
 export interface Container {
   id: string;
   number?: string;

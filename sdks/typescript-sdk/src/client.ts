@@ -2,7 +2,7 @@ import createClient, { type FetchResponse } from 'openapi-fetch';
 import { Jsona } from 'jsona';
 import type { paths } from './generated/terminal49.js';
 import type { ResponseFormat, CallOptions, ListOptions } from './types/options.js';
-import type { Container, Shipment, ShippingLine, Route, TrackingRequest } from './types/models.js';
+import type { Container, Shipment, ShippingLine, Route, TrackingRequest, PaginatedResult } from './types/models.js';
 
 /**
  * Terminal49 API Client
@@ -11,43 +11,62 @@ import type { Container, Shipment, ShippingLine, Route, TrackingRequest } from '
  */
 
 export class Terminal49Error extends Error {
-  constructor(message: string) {
+  status?: number;
+  details?: unknown;
+
+  constructor(message: string, status?: number, details?: unknown) {
     super(message);
     this.name = 'Terminal49Error';
+    this.status = status;
+    this.details = details;
   }
 }
 
 export class AuthenticationError extends Terminal49Error {
-  constructor(message: string) {
-    super(message);
+  constructor(message: string, status: number = 401, details?: unknown) {
+    super(message, status, details);
     this.name = 'AuthenticationError';
   }
 }
 
+export class AuthorizationError extends Terminal49Error {
+  constructor(message: string, status: number = 403, details?: unknown) {
+    super(message, status, details);
+    this.name = 'AuthorizationError';
+  }
+}
+
+export class FeatureNotEnabledError extends AuthorizationError {
+  constructor(message: string, status: number = 403, details?: unknown) {
+    super(message, status, details);
+    this.name = 'FeatureNotEnabledError';
+  }
+}
+
 export class NotFoundError extends Terminal49Error {
-  constructor(message: string) {
-    super(message);
+  constructor(message: string, status: number = 404, details?: unknown) {
+    super(message, status, details);
     this.name = 'NotFoundError';
   }
 }
 
 export class ValidationError extends Terminal49Error {
-  constructor(message: string) {
-    super(message);
+  constructor(message: string, status: number = 400, details?: unknown) {
+    super(message, status, details);
     this.name = 'ValidationError';
   }
 }
 
 export class RateLimitError extends Terminal49Error {
-  constructor(message: string) {
-    super(message);
+  constructor(message: string, status: number = 429, details?: unknown) {
+    super(message, status, details);
     this.name = 'RateLimitError';
   }
 }
 
 export class UpstreamError extends Terminal49Error {
-  constructor(message: string) {
-    super(message);
+  constructor(message: string, status: number = 500, details?: unknown) {
+    super(message, status, details);
     this.name = 'UpstreamError';
   }
 }
@@ -60,7 +79,18 @@ export interface Terminal49ClientConfig {
   defaultFormat?: ResponseFormat;
 }
 
+export type TrackingRequestType = 'container' | 'bill_of_lading' | 'booking_number';
+
 type Client = ReturnType<typeof createClient<paths>>;
+
+type FormattedResult<TDoc, TMapped> = TDoc | TMapped | { raw: TDoc; mapped: TMapped };
+
+export interface CreateTrackingRequestFromInferOptions {
+  scac?: string;
+  numberType?: string;
+  refNumbers?: string[];
+  shipmentTags?: string[];
+}
 
 export class Terminal49Client {
   private apiToken: string;
@@ -140,6 +170,24 @@ export class Terminal49Client {
     list: (search?: string, options?: CallOptions) => this.listShippingLines(search, options),
   };
 
+  public trackingRequests = {
+    list: (filters: Record<string, string> = {}, options?: ListOptions) =>
+      this.listTrackingRequests(filters, options),
+    get: (id: string, options?: CallOptions) => this.getTrackingRequest(id, options),
+    update: (id: string, attrs: Record<string, any>, options?: CallOptions) =>
+      this.updateTrackingRequest(id, attrs, options),
+    create: (params: {
+      requestType: TrackingRequestType;
+      requestNumber: string;
+      scac?: string;
+      refNumbers?: string[];
+      shipmentTags?: string[];
+    }) => this.createTrackingRequest(params),
+    inferNumber: (number: string) => this.inferTrackingNumber(number),
+    createFromInfer: (number: string, options?: CreateTrackingRequestFromInferOptions) =>
+      this.createTrackingRequestFromInfer(number, options),
+  };
+
   // ========= API methods =========
 
   async search(query: string): Promise<any> {
@@ -170,7 +218,7 @@ export class Terminal49Client {
     scac?: string;
     refNumbers?: string[];
   }): Promise<any> {
-    const requestType: 'container' | 'bill_of_lading' | 'booking_number' = params.containerNumber
+    const requestType: TrackingRequestType = params.containerNumber
       ? 'container'
       : 'bill_of_lading';
     const requestNumber = params.containerNumber || params.bookingNumber;
@@ -180,23 +228,92 @@ export class Terminal49Client {
       throw new ValidationError(missingRequestMessage);
     }
 
+    return this.createTrackingRequest({
+      requestType,
+      requestNumber,
+      scac: params.scac,
+      refNumbers: params.refNumbers,
+    });
+  }
+
+  async createTrackingRequest(params: {
+    requestType: TrackingRequestType;
+    requestNumber: string;
+    scac?: string;
+    refNumbers?: string[];
+    shipmentTags?: string[];
+  }): Promise<any> {
+    if (!params.requestNumber) {
+      throw new ValidationError('request_number is required (/data/attributes/request_number)');
+    }
+    if (!params.requestType) {
+      throw new ValidationError('request_type is required (/data/attributes/request_type)');
+    }
+
     const payload = {
       data: {
         type: 'tracking_request' as const,
         attributes: {
-          request_type: requestType,
-          request_number: requestNumber,
+          request_type: params.requestType,
+          request_number: params.requestNumber,
           scac: params.scac ?? '',
           ref_numbers: params.refNumbers,
+          shipment_tags: params.shipmentTags,
         },
       },
     };
 
     return this.execute(() =>
       this.client.POST('/tracking_requests', {
-        body: payload,
+        body: payload as any,
       })
     );
+  }
+
+  async inferTrackingNumber(number: string): Promise<any> {
+    if (!number || number.trim() === '') {
+      throw new ValidationError('number is required (/data/attributes/number)');
+    }
+
+    return this.execute(() =>
+      this.client.POST('/tracking_requests/infer_number', {
+        body: { number } as any,
+      })
+    );
+  }
+
+  async createTrackingRequestFromInfer(
+    number: string,
+    options: CreateTrackingRequestFromInferOptions = {}
+  ): Promise<{ infer: any; trackingRequest: any }> {
+    const infer = await this.inferTrackingNumber(number);
+    const attrs = infer?.data?.attributes || {};
+    const numberType = this.normalizeInferNumberType(attrs.number_type || options.numberType);
+    const shippingLine = attrs.shipping_line || {};
+    const selected = shippingLine.selected || null;
+    const candidates = Array.isArray(shippingLine.candidates) ? shippingLine.candidates : [];
+
+    let scac = options.scac || selected?.scac || (candidates.length === 1 ? candidates[0]?.scac : undefined);
+
+    if (!numberType) {
+      throw new ValidationError('Unable to infer tracking number type. Provide numberType to override.');
+    }
+
+    if (!scac) {
+      throw new ValidationError(
+        'Unable to infer carrier SCAC. Provide scac or use infer candidates to select a carrier.'
+      );
+    }
+
+    const trackingRequest = await this.createTrackingRequest({
+      requestType: numberType,
+      requestNumber: number,
+      scac,
+      refNumbers: options.refNumbers,
+      shipmentTags: options.shipmentTags,
+    });
+
+    return { infer, trackingRequest };
   }
 
   async getShipment(id: string, includeContainers: boolean = true, options?: CallOptions): Promise<any> {
@@ -224,7 +341,7 @@ export class Terminal49Client {
       includeContainers?: boolean;
     } = {},
     options?: ListOptions
-  ): Promise<any> {
+  ): Promise<FormattedResult<any, PaginatedResult<Shipment>>> {
     const params: Record<string, string> = {
       include: 'containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal',
     };
@@ -238,12 +355,14 @@ export class Terminal49Client {
       params['include'] = 'pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal';
     }
 
+    this.applyPagination(params, options);
+
     const raw = await this.execute(() =>
       this.client.GET('/shipments', {
         params: { query: params as any },
       })
     );
-    return this.formatResult(raw, options?.format, (doc) => this.mapShipmentList(doc));
+    return this.formatResult(raw, options?.format, (doc) => this.mapListResult(doc, this.mapShipmentList));
   }
 
   async updateShipment(id: string, attrs: Record<string, any>, options?: CallOptions): Promise<any> {
@@ -402,7 +521,7 @@ export class Terminal49Client {
       include?: string;
     } = {},
     options?: ListOptions
-  ): Promise<any> {
+  ): Promise<FormattedResult<any, PaginatedResult<Container>>> {
     const params: Record<string, string> = {
       include: filters.include || 'shipment,pod_terminal',
     };
@@ -411,12 +530,14 @@ export class Terminal49Client {
     if (filters.carrier) params['filter[line_scac]'] = filters.carrier;
     if (filters.updatedAfter) params['filter[updated_at]'] = filters.updatedAfter;
 
+    this.applyPagination(params, options);
+
     const raw = await this.execute(() =>
       this.client.GET('/containers', {
         params: { query: params as any },
       })
     );
-    return this.formatResult(raw, options?.format, (doc) => this.mapContainerList(doc));
+    return this.formatResult(raw, options?.format, (doc) => this.mapListResult(doc, this.mapContainerList));
   }
 
   async getContainerRawEvents(id: string, options?: CallOptions): Promise<any> {
@@ -440,13 +561,23 @@ export class Terminal49Client {
   async listTrackingRequests(
     filters: Record<string, string> = {},
     options?: ListOptions
-  ): Promise<any> {
+  ): Promise<FormattedResult<any, PaginatedResult<TrackingRequest>>> {
+    const params: Record<string, string> = { ...filters };
+    this.applyPagination(params, options);
+
     const raw = await this.execute(() =>
       this.client.GET('/tracking_requests', {
-        params: { query: filters as any },
+        params: { query: params as any },
       })
     );
-    return this.formatResult(raw, options?.format, (doc) => this.mapTrackingRequestList(doc));
+    return this.formatResult(raw, options?.format, (doc) => this.mapListResult(doc, this.mapTrackingRequestList));
+  }
+
+  async listTrackRequests(
+    filters: Record<string, string> = {},
+    options?: ListOptions
+  ): Promise<FormattedResult<any, PaginatedResult<TrackingRequest>>> {
+    return this.listTrackingRequests(filters, options);
   }
 
   async getTrackingRequest(id: string, options?: CallOptions): Promise<any> {
@@ -515,7 +646,7 @@ export class Terminal49Client {
     }
 
     const errorBody = error ?? (await this.safeParse(response));
-    throw this.toError(status, this.extractErrorMessage(errorBody));
+    throw this.toError(status, this.extractErrorMessage(errorBody), errorBody);
   }
 
   private async executeManual<T = any>(input: Request | URL | string, init?: RequestInit): Promise<T> {
@@ -545,13 +676,26 @@ export class Terminal49Client {
   }
 
   private extractErrorMessage(body: any): string {
+    if (typeof body === 'string') {
+      return body;
+    }
+
+    if (body?.error && typeof body.error === 'string') {
+      return body.error;
+    }
+
+    if (typeof body?.errors === 'string') {
+      return body.errors;
+    }
+
     if (body?.errors && Array.isArray(body.errors) && body.errors.length > 0) {
       return body.errors
         .map((error: any) => {
           const detail = error.detail;
           const title = error.title;
+          const code = error.code;
           const pointer = error.source?.pointer;
-          let msg = detail || title || 'Unknown error';
+          let msg = detail || title || code || 'Unknown error';
           if (pointer) msg += ` (${pointer})`;
           return msg;
         })
@@ -562,35 +706,62 @@ export class Terminal49Client {
       return body.message;
     }
 
+    if (body?.detail && typeof body.detail === 'string') {
+      return body.detail;
+    }
+
     return 'Unknown error';
   }
 
-  private toError(status: number, message: string): Terminal49Error {
+  private toError(status: number, message: string, details?: unknown): Terminal49Error {
     switch (status) {
       case 400:
-        return new ValidationError(message);
+        return new ValidationError(message, status, details);
       case 401:
-        return new AuthenticationError('Invalid or missing API token');
-      case 403:
-        return new AuthenticationError(message || 'Access forbidden');
+        return new AuthenticationError('Invalid or missing API token', status, details);
+      case 403: {
+        const normalized = message || 'Access forbidden';
+        const featureNotEnabled = /not enabled|feature/i.test(normalized);
+        return featureNotEnabled
+          ? new FeatureNotEnabledError(normalized, status, details)
+          : new AuthorizationError(normalized, status, details);
+      }
       case 404:
-        return new NotFoundError(message || 'Resource not found');
+        return new NotFoundError(message || 'Resource not found', status, details);
       case 422:
-        return new ValidationError(message);
+        return new ValidationError(message, status, details);
       case 429:
-        return new RateLimitError(message || 'Rate limit exceeded');
+        return new RateLimitError(message || 'Rate limit exceeded', status, details);
       case 500:
       case 502:
       case 503:
       case 504:
-        return new UpstreamError(message || `Upstream server error (${status})`);
+        return new UpstreamError(message || `Upstream server error (${status})`, status, details);
       default:
-        return new Terminal49Error(`Unexpected response status: ${status}${message ? ` - ${message}` : ''}`);
+        return new Terminal49Error(
+          `Unexpected response status: ${status}${message ? ` - ${message}` : ''}`,
+          status,
+          details
+        );
     }
   }
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private applyPagination(params: Record<string, string>, options?: ListOptions) {
+    if (!options) return;
+    if (options.page !== undefined) params['page[number]'] = String(options.page);
+    if (options.pageSize !== undefined) params['page[size]'] = String(options.pageSize);
+  }
+
+  private normalizeInferNumberType(numberType?: string): TrackingRequestType | null {
+    if (!numberType) return null;
+    if (numberType === 'booking') return 'booking_number';
+    if (numberType === 'booking_number') return 'booking_number';
+    if (numberType === 'bill_of_lading' || numberType === 'container') return numberType;
+    return null;
   }
 
   // ========= mapping helpers =========
@@ -605,6 +776,14 @@ export class Terminal49Client {
     if (effective === 'mapped') return mapper ? mapper(raw) : (raw as any);
     if (effective === 'both') return mapper ? { raw, mapped: mapper(raw) } : { raw, mapped: raw as any };
     return raw;
+  }
+
+  private mapListResult<T>(doc: any, mapper: (doc: any) => T[]): PaginatedResult<T> {
+    return {
+      items: mapper(doc),
+      links: doc?.links,
+      meta: doc?.meta,
+    };
   }
 
   private mapContainer = (doc: any): Container => {
