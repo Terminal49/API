@@ -4535,14 +4535,6 @@
             "in": "query",
             "name": "include",
             "description": "Comma delimited list of relations to include"
-          },
-          {
-            "schema": {
-              "type": "integer"
-            },
-            "in": "query",
-            "name": "terminal_checked_before",
-            "description": "Number of seconds in which containers were refreshed"
           }
         ]
       },
