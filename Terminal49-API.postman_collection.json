@@ -47,15 +47,6 @@
                                     },
                                     "key": "include",
                                     "value": "<string>"
-                                },
-                                {
-                                    "disabled": false,
-                                    "description": {
-                                        "content": "Number of seconds in which containers were refreshed",
-                                        "type": "text/plain"
-                                    },
-                                    "key": "terminal_checked_before",
-                                    "value": "<integer>"
                                 }
                             ],
                             "variable": []
@@ -109,15 +100,6 @@
                                             },
                                             "key": "include",
                                             "value": "<string>"
-                                        },
-                                        {
-                                            "disabled": false,
-                                            "description": {
-                                                "content": "Number of seconds in which containers were refreshed",
-                                                "type": "text/plain"
-                                            },
-                                            "key": "terminal_checked_before",
-                                            "value": "<integer>"
                                         }
                                     ],
                                     "variable": []
