@@ -1,0 +1,82 @@
+---
+title: 2. SDK Quickstart (TypeScript)
+---
+
+Use the Terminal49 TypeScript SDK to create tracking requests, pull shipment/container data, and drill into events or routing.
+
+This SDK is **server-side only** and requires Node 18+.
+
+## Install
+
+```bash
+npm install @terminal49/sdk
+```
+
+## Configure the client
+
+```ts
+import { Terminal49Client } from '@terminal49/sdk';
+
+const client = new Terminal49Client({
+  apiToken: process.env.T49_API_TOKEN!,
+});
+```
+
+## Use case: track a container and pull details
+
+This example walks through the common flow:
+1. Track a container (creates a tracking request)
+2. List shipments
+3. Get container details
+4. Get shipment details
+5. Get container events
+6. Get routing details
+
+Replace the placeholder IDs with real values from your account.
+
+```ts
+import { Terminal49Client } from '@terminal49/sdk';
+
+const client = new Terminal49Client({
+  apiToken: process.env.T49_API_TOKEN!,
+});
+
+// 1) Track a container (creates a tracking request)
+// You can provide a SCAC for better inference if you know it.
+await client.trackingRequests.createFromInfer('MAEU1234567', {
+  scac: 'MAEU',
+});
+
+// 2) List shipments (example: most recently updated)
+const shipments = await client.shipments.list({
+  updatedAfter: '2025-01-01T00:00:00Z',
+});
+
+// 3) Get container details
+const containerId = 'your-container-uuid';
+const container = await client.containers.get(containerId, ['shipment', 'pod_terminal']);
+
+// 4) Get shipment details
+const shipmentId = 'your-shipment-uuid';
+const shipment = await client.shipments.get(shipmentId, true);
+
+// 5) Get container events (milestones + timeline)
+const events = await client.containers.events(containerId);
+
+// 6) Get container route (multi-leg itinerary + vessels)
+const route = await client.containers.route(containerId);
+
+console.log({ shipments, container, shipment, events, route });
+```
+
+## Get updates via webhooks
+
+For near real-time updates, set up webhooks and store the payloads in your system. Start here:
+
+- [Receive status updates](./receive-status-updates)
+- [Webhooks guide](../in-depth-guides/webhooks)
+
+## Next steps
+
+- Use [Including Resources](../in-depth-guides/including-resources) to control related data payloads.
+- See [Tracking Request Lifecycle](../in-depth-guides/tracking-request-lifecycle) for what happens after creation.
