@@ -23,33 +23,38 @@ for (const candidate of envCandidates) {
 
 const token = process.env.T49_API_TOKEN;
 const baseUrl = process.env.T49_API_BASE_URL;
+const runSmoke = process.env.T49_RUN_SMOKE === '1';
 
-if (!token) {
-  describe.skip('Terminal49Client smoke (requires T49_API_TOKEN)', () => {});
+if (!token || !runSmoke) {
+  describe.skip('Terminal49Client smoke (requires T49_API_TOKEN and T49_RUN_SMOKE=1)', () => {});
 } else {
   describe('Terminal49Client smoke', () => {
-  const client = new Terminal49Client({
-    apiToken: token as string,
-    apiBaseUrl: baseUrl,
-    defaultFormat: 'raw',
-  });
+    const client = new Terminal49Client({
+      apiToken: token as string,
+      apiBaseUrl: baseUrl,
+      defaultFormat: 'raw',
+    });
 
-  it('lists shipping lines', async () => {
-    const result = await client.shippingLines.list(undefined, { format: 'raw' });
-    expect((result as any)?.data).toBeDefined();
-  });
+    it('lists shipping lines', async () => {
+      const result = await client.shippingLines.list(undefined, {
+        format: 'raw',
+      });
+      expect((result as any)?.data).toBeDefined();
+    });
 
-  it('lists tracking requests', async () => {
-    const result = await client.trackingRequests.list();
-    expect((result as any)?.data).toBeDefined();
-  });
+    it('lists tracking requests', async () => {
+      const result = await client.trackingRequests.list();
+      expect((result as any)?.data).toBeDefined();
+    });
 
-  const inferNumber = process.env.T49_INFER_NUMBER;
-  const itIf = inferNumber ? it : it.skip;
+    const inferNumber = process.env.T49_INFER_NUMBER;
+    const itIf = inferNumber ? it : it.skip;
 
-  itIf('infers tracking number', async () => {
-    const result = await client.trackingRequests.inferNumber(inferNumber as string);
-    expect(result).toBeTruthy();
-  });
+    itIf('infers tracking number', async () => {
+      const result = await client.trackingRequests.inferNumber(
+        inferNumber as string,
+      );
+      expect(result).toBeTruthy();
+    });
   });
 }

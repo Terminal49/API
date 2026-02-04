@@ -1,0 +1,49 @@
+{
+  "data": {
+    "id": "terminal-1",
+    "type": "terminal",
+    "attributes": {
+      "id": "a59b3bd1-d497-4a48-bfb6-5cf2c4824a60",
+      "nickname": "WWT",
+      "name": "Wando Welch Terminal",
+      "firms_code": "N598",
+      "smdg_code": "WWMT",
+      "bic_facility_code": null,
+      "provided_data": {
+        "pickup_lfd": false,
+        "pod_full_out_at": true,
+        "pickup_lfd_notes": "",
+        "available_for_pickup": true,
+        "fees_at_pod_terminal": false,
+        "holds_at_pod_terminal": true,
+        "pickup_appointment_at": false,
+        "location_at_pod_terminal": false,
+        "available_for_pickup_notes": "",
+        "fees_at_pod_terminal_notes": "",
+        "holds_at_pod_terminal_notes": "",
+        "pickup_appointment_at_notes": "",
+        "pod_full_out_chassis_number": true,
+        "location_at_pod_terminal_notes": "",
+        "pod_full_out_chassis_number_notes": ""
+      },
+      "street": "400 Long Point Rd. ",
+      "city": "Mt. Pleasant",
+      "state": "South Carolina",
+      "state_abbr": "SC",
+      "zip": "29464",
+      "country": "United States",
+      "facility_type": "ocean_terminal"
+    },
+    "relationships": {
+      "port": {
+        "data": {
+          "id": "port-2",
+          "type": "port"
+        }
+      }
+    }
+  },
+  "links": {
+    "self": "https://api.terminal49.com/v2/terminals/a59b3bd1-d497-4a48-bfb6-5cf2c4824a60"
+  }
+}
