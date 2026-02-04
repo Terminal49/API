@@ -1,56 +1,7 @@
 ---
-title: Quickstart
+title: "Quickstart"
 ---
 
-This walkthrough covers a simple flow:
+This page has moved.
 
-1. Track a container (creates a tracking request)
-2. List shipments
-3. Get container details
-4. Get shipment details
-5. Get container events
-6. Get routing details
-
-Replace the placeholder IDs with real values from your account.
-
-```ts
-import { Terminal49Client } from '@terminal49/sdk';
-
-const client = new Terminal49Client({
-  apiToken: process.env.T49_API_TOKEN!,
-});
-
-// 1) Track a container (creates a tracking request)
-// Provide a SCAC for more reliable inference when known.
-await client.trackingRequests.createFromInfer('MAEU1234567', {
-  scac: 'MAEU',
-});
-
-// 2) List shipments (example: most recently updated)
-const shipments = await client.shipments.list({
-  updatedAfter: '2025-01-01T00:00:00Z',
-});
-
-// 3) Get container details
-const containerId = 'your-container-uuid';
-const container = await client.containers.get(containerId, ['shipment', 'pod_terminal']);
-
-// 4) Get shipment details
-const shipmentId = 'your-shipment-uuid';
-const shipment = await client.shipments.get(shipmentId, true);
-
-// 5) Get container events (milestones + timeline)
-const events = await client.containers.events(containerId);
-
-// 6) Get container route (multi-leg itinerary + vessels)
-const route = await client.containers.route(containerId);
-
-console.log({ shipments, container, shipment, events, route });
-```
-
-## Get updates via webhooks
-
-For near real-time updates, set up webhooks and store the payloads in your system.
-
-- [Receive status updates](/api-docs/getting-started/receive-status-updates)
-- [Webhooks guide](/api-docs/in-depth-guides/webhooks)
+- [SDK Quickstart](/sdk/quickstart)

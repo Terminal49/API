@@ -1,39 +1,7 @@
 ---
-title: Available Methods
+title: "Available Methods"
 ---
 
-The SDK exposes a `Terminal49Client` with grouped namespaces.
+This page has moved.
 
-## Search
-
-- `client.search(query)`
-
-## Shipments
-
-- `client.shipments.get(id, includeContainers?)`
-- `client.shipments.list(filters?, options?)`
-- `client.shipments.update(id, attrs, options?)`
-- `client.shipments.stopTracking(id, options?)`
-- `client.shipments.resumeTracking(id, options?)`
-
-## Containers
-
-- `client.containers.get(id, include?, options?)`
-- `client.containers.list(filters?, options?)`
-- `client.containers.events(id, options?)`
-- `client.containers.route(id, options?)`
-- `client.containers.rawEvents(id, options?)`
-- `client.containers.refresh(id, options?)`
-
-## Tracking Requests
-
-- `client.trackingRequests.list(filters?, options?)`
-- `client.trackingRequests.get(id, options?)`
-- `client.trackingRequests.update(id, attrs, options?)`
-- `client.trackingRequests.create({ requestType, requestNumber, scac?, refNumbers?, shipmentTags? })`
-- `client.trackingRequests.inferNumber(number)`
-- `client.trackingRequests.createFromInfer(number, options?)`
-
-## Shipping Lines
-
-- `client.shippingLines.list(search?, options?)`
+- [Methods Reference](/sdk/methods)

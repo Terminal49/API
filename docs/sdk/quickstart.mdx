@@ -1,0 +1,73 @@
+---
+title: "Quickstart"
+description: "Track a container and retrieve shipment data in 5 minutes"
+---
+
+This walkthrough shows the most common SDK operations: creating a tracking request, listing shipments, and fetching container details.
+
+## Prerequisites
+
+Make sure you have [installed the SDK](/sdk/introduction) and set your `T49_API_TOKEN` environment variable.
+
+## Complete example
+
+```typescript
+import { Terminal49Client } from '@terminal49/sdk';
+
+const client = new Terminal49Client({
+  apiToken: process.env.T49_API_TOKEN!,
+});
+
+async function main() {
+  // 1) Track a container (creates a tracking request)
+  // Provide a SCAC for faster, more reliable inference when known.
+  await client.trackingRequests.createFromInfer('MSCU1234567', {
+    scac: 'MSCU',
+  });
+
+  // 2) List your shipments (mapped response)
+  const shipments = await client.shipments.list(
+    { updatedAfter: '2025-01-01T00:00:00Z' },
+    { format: 'mapped' },
+  );
+  console.log(`Found ${shipments.items.length} shipments`);
+
+  // 3) Get a specific container with related data (raw JSON:API)
+  const containerId = 'your-container-uuid';
+  const container = await client.containers.get(containerId, [
+    'shipment',
+    'pod_terminal',
+  ]);
+  console.log(container.data?.id);
+
+  // 4) Get transport events (milestones and timeline)
+  const events = await client.containers.events(containerId, {
+    format: 'mapped',
+  });
+  console.log(`Container has ${events.length} events`);
+
+  // 5) Get routing details (vessels, ports, legs)
+  const route = await client.containers.route(containerId, {
+    format: 'mapped',
+  });
+  console.log(`Route has ${route.locations.length} locations`);
+}
+
+main();
+```
+
+## What’s happening
+
+**Tracking requests** tell Terminal49 to start monitoring a container. You can track by container number, booking number, or bill of lading. Once tracked, Terminal49 polls carriers and terminals for updates.
+
+**Shipments** are the parent objects that group related containers. A single bill of lading might have multiple containers.
+
+**Events** are individual milestones: gate out, vessel departure, discharge, and more. Each event has a timestamp, location, and description.
+
+**Routes** show the planned and actual journey, broken into locations with inbound and outbound legs.
+
+## Next steps
+
+- [Methods Reference](/sdk/methods) — See all available operations
+- [Filtering & Pagination](/sdk/filtering-pagination) — Query large datasets efficiently
+- [Webhooks](/api-docs/in-depth-guides/webhooks) — Get notified when shipments update

@@ -1,28 +1,7 @@
 ---
-title: Filtering
+title: "Filtering"
 ---
 
-Use filter objects when listing shipments or containers.
+This page has moved.
 
-## Shipments
-
-```ts
-const shipments = await client.shipments.list({
-  status: 'in_transit',
-  port: 'USLAX',
-  carrier: 'MAEU',
-  updatedAfter: '2025-01-01T00:00:00Z',
-});
-```
-
-## Containers
-
-```ts
-const containers = await client.containers.list({
-  status: 'discharged',
-  port: 'USLAX',
-  carrier: 'MAEU',
-  updatedAfter: '2025-01-01T00:00:00Z',
-  include: 'shipment,pod_terminal',
-});
-```
+- [Filtering & Pagination](/sdk/filtering-pagination)

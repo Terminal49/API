@@ -1,0 +1,124 @@
+---
+title: "Methods Reference"
+description: "All available methods in the Terminal49 SDK"
+---
+
+The SDK exposes a `Terminal49Client` with methods grouped by resource type. Each method corresponds to an [API endpoint](/api-docs/home).
+
+## Resource namespaces (recommended)
+
+### Search
+
+| Method | Description |
+|--------|-------------|
+| `client.search(query)` | Search across shipments and containers by number, reference, or keyword |
+
+### Shipments
+
+| Method | Description |
+|--------|-------------|
+| `client.shipments.get(id, includeContainers?, options?)` | Fetch a shipment by ID. Set `includeContainers: false` to omit container relationships. |
+| `client.shipments.list(filters?, options?)` | List shipments matching filter criteria. |
+| `client.shipments.update(id, attrs, options?)` | Update shipment attributes like reference numbers or tags. |
+| `client.shipments.stopTracking(id, options?)` | Stop tracking a shipment and its containers. |
+| `client.shipments.resumeTracking(id, options?)` | Resume tracking a previously stopped shipment. |
+
+### Containers
+
+| Method | Description |
+|--------|-------------|
+| `client.containers.get(id, include?, options?)` | Fetch a container by ID. `include` is an array of related resources. |
+| `client.containers.list(filters?, options?)` | List containers matching filter criteria. |
+| `client.containers.events(id, options?)` | Get transport events for a container. |
+| `client.containers.route(id, options?)` | Get routing details: vessels, ports, and journey legs. |
+| `client.containers.rawEvents(id, options?)` | Get unprocessed events as received from carriers. |
+| `client.containers.refresh(id, options?)` | Request an immediate data refresh from the carrier. |
+
+### Tracking Requests
+
+| Method | Description |
+|--------|-------------|
+| `client.trackingRequests.list(filters?, options?)` | List tracking requests. |
+| `client.trackingRequests.get(id, options?)` | Fetch a single tracking request. |
+| `client.trackingRequests.update(id, attrs, options?)` | Update tracking request attributes. |
+| `client.trackingRequests.create(params)` | Create a tracking request with an explicit request type and SCAC. |
+| `client.trackingRequests.inferNumber(number)` | Detect whether a number is a container, booking, or bill of lading. |
+| `client.trackingRequests.createFromInfer(number, options?)` | Create a tracking request with automatic number type detection. |
+
+### Shipping Lines
+
+| Method | Description |
+|--------|-------------|
+| `client.shippingLines.list(search?, options?)` | List carriers. Use `search` to filter by name or SCAC. |
+
+## Helpers and aliases
+
+| Method | Description |
+|--------|-------------|
+| `client.trackContainer(params)` | Convenience helper that creates a tracking request using a container or booking number. |
+| `client.listTrackRequests(filters?, options?)` | Alias for `client.trackingRequests.list`. |
+| `client.getDemurrage(containerId)` | Returns a subset of demurrage-related fields for a container. |
+| `client.getRailMilestones(containerId)` | Returns rail milestones derived from transport events. |
+| `client.deserialize<T>(document)` | Deserialize a JSON:API document into plain objects using JSONA. |
+
+## Direct method equivalents
+
+All namespace methods are also available as direct methods on the client:
+
+| Namespace method | Direct method |
+|------------------|--------------|
+| `client.shipments.get` | `client.getShipment` |
+| `client.shipments.list` | `client.listShipments` |
+| `client.shipments.update` | `client.updateShipment` |
+| `client.shipments.stopTracking` | `client.stopTrackingShipment` |
+| `client.shipments.resumeTracking` | `client.resumeTrackingShipment` |
+| `client.containers.get` | `client.getContainer` |
+| `client.containers.list` | `client.listContainers` |
+| `client.containers.events` | `client.getContainerTransportEvents` |
+| `client.containers.route` | `client.getContainerRoute` |
+| `client.containers.rawEvents` | `client.getContainerRawEvents` |
+| `client.containers.refresh` | `client.refreshContainer` |
+| `client.trackingRequests.list` | `client.listTrackingRequests` |
+| `client.trackingRequests.get` | `client.getTrackingRequest` |
+| `client.trackingRequests.update` | `client.updateTrackingRequest` |
+| `client.trackingRequests.create` | `client.createTrackingRequest` |
+| `client.trackingRequests.inferNumber` | `client.inferTrackingNumber` |
+| `client.trackingRequests.createFromInfer` | `client.createTrackingRequestFromInfer` |
+| `client.shippingLines.list` | `client.listShippingLines` |
+
+## Common options
+
+Most methods accept an `options` object with `format`:
+
+```typescript
+const shipment = await client.shipments.get('shipment-id', true, {
+  format: 'mapped',
+});
+```
+
+Supported formats:
+
+- `raw` (default) returns the JSON:API response
+- `mapped` returns simplified objects for methods that support mapping
+- `both` returns `{ raw, mapped }`
+
+You can set a default format when initializing the client:
+
+```typescript
+const client = new Terminal49Client({
+  apiToken: process.env.T49_API_TOKEN!,
+  defaultFormat: 'mapped',
+});
+```
+
+List methods also accept pagination options:
+
+```typescript
+const shipments = await client.shipments.list({}, {
+  page: 1,
+  pageSize: 25,
+  format: 'mapped',
+});
+```
+
+See [Filtering & Pagination](/sdk/filtering-pagination) for details.

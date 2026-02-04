@@ -173,29 +173,15 @@
             "group": "Getting Started",
             "pages": [
               "sdk/introduction",
-              "sdk/typescript/quickstart"
+              "sdk/quickstart"
             ]
           },
           {
-            "group": "Installation & Auth",
+            "group": "Reference",
             "pages": [
-              "sdk/typescript/installation",
-              "sdk/typescript/authentication"
-            ]
-          },
-          {
-            "group": "Using the SDK",
-            "pages": [
-              "sdk/typescript/available-methods",
-              "sdk/typescript/filtering",
-              "sdk/typescript/pagination",
-              "sdk/typescript/error-handling"
-            ]
-          },
-          {
-            "group": "Breaking Changes",
-            "pages": [
-              "sdk/sdk-maturity"
+              "sdk/methods",
+              "sdk/filtering-pagination",
+              "sdk/error-handling"
             ]
           }
         ]
