@@ -1,0 +1,17 @@
+---
+title: Authentication
+---
+
+Authenticate with your API token. Tokens must be prefixed with `Token` at the HTTP layer, but the SDK handles this for you.
+
+## Example
+
+```ts
+import { Terminal49Client } from '@terminal49/sdk';
+
+const client = new Terminal49Client({
+  apiToken: process.env.T49_API_TOKEN!,
+});
+```
+
+If the token is missing or invalid, the SDK throws an `AuthenticationError`.

@@ -24,7 +24,6 @@
             "icon": "play",
             "pages": [
               "api-docs/getting-started/start-here",
-              "api-docs/getting-started/sdk-quickstart",
               "api-docs/getting-started/tracking-shipments-and-containers",
               "api-docs/getting-started/list-shipments-and-containers",
               "api-docs/getting-started/receive-status-updates"
@@ -168,12 +167,35 @@
         ]
       },
       {
-        "tab": "SDK",
+        "tab": "SDK Docs",
         "groups": [
           {
-            "group": "SDK",
+            "group": "Getting Started",
             "pages": [
-              "api-docs/getting-started/sdk-quickstart"
+              "sdk/introduction",
+              "sdk/typescript/quickstart"
+            ]
+          },
+          {
+            "group": "Installation & Auth",
+            "pages": [
+              "sdk/typescript/installation",
+              "sdk/typescript/authentication"
+            ]
+          },
+          {
+            "group": "Using the SDK",
+            "pages": [
+              "sdk/typescript/available-methods",
+              "sdk/typescript/filtering",
+              "sdk/typescript/pagination",
+              "sdk/typescript/error-handling"
+            ]
+          },
+          {
+            "group": "Breaking Changes",
+            "pages": [
+              "sdk/sdk-maturity"
             ]
           }
         ]

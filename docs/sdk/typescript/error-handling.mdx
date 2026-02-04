@@ -1,0 +1,41 @@
+---
+title: Error Handling
+---
+
+The SDK throws typed errors you can catch and handle.
+
+## Error classes
+
+- `AuthenticationError`
+- `AuthorizationError`
+- `FeatureNotEnabledError`
+- `NotFoundError`
+- `ValidationError`
+- `RateLimitError`
+- `UpstreamError`
+
+## Example
+
+```ts
+import {
+  Terminal49Client,
+  AuthenticationError,
+  RateLimitError,
+} from '@terminal49/sdk';
+
+const client = new Terminal49Client({
+  apiToken: process.env.T49_API_TOKEN!,
+});
+
+try {
+  await client.containers.get('container-uuid');
+} catch (error) {
+  if (error instanceof AuthenticationError) {
+    // Missing or invalid token
+  } else if (error instanceof RateLimitError) {
+    // Back off and retry
+  } else {
+    // Generic error handling
+  }
+}
+```
