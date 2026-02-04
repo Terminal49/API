@@ -1,4 +1,5 @@
 .DS_Store
+.beads/
 
 .env.local
 .env.development.local
