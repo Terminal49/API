@@ -1,4 +1,5 @@
 .DS_Store
+.beads/
 
 .env.local
 .env.development.local
@@ -6,3 +7,5 @@
 .tool-versions.local
 
 .pytest_cache
+
+node_modules

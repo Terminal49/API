@@ -1,0 +1,55 @@
+---
+title: "Introduction"
+description: "TypeScript SDK for the Terminal49 API"
+---
+
+The Terminal49 TypeScript SDK lets you track containers, retrieve shipment data, and receive status updates from your Node.js applications.
+
+## Requirements
+
+- Node.js 18 or later
+- A Terminal49 API key ([get one here](https://app.terminal49.com/developers))
+
+## Install
+
+```bash
+npm install @terminal49/sdk
+```
+
+## Setup
+
+Store your API key as an environment variable:
+
+```bash
+export T49_API_TOKEN=your_api_key
+```
+
+Then initialize the client:
+
+```typescript
+import { Terminal49Client } from '@terminal49/sdk';
+
+const client = new Terminal49Client({
+  apiToken: process.env.T49_API_TOKEN!,
+});
+```
+
+## What you can do
+
+- **Track containers** — Create tracking requests by container number, booking number, or bill of lading
+- **List shipments and containers** — Query with filters by status, port, carrier, or date
+- **Get transport events** — Pull milestones, timestamps, and location updates
+- **Fetch routing details** — See the full journey including vessels and ports
+
+For real-time updates, set up [webhooks](/api-docs/in-depth-guides/webhooks) to receive status changes as they happen.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/sdk/quickstart">
+    Track your first container in 5 minutes
+  </Card>
+  <Card title="Methods Reference" icon="code" href="/sdk/methods">
+    See all available SDK methods
+  </Card>
+</CardGroup>

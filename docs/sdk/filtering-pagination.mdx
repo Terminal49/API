@@ -1,0 +1,94 @@
+---
+title: "Filtering & Pagination"
+description: "Query shipments and containers with filters and handle large result sets"
+---
+
+## Filtering shipments
+
+Pass filter parameters to narrow results:
+
+```typescript
+const shipments = await client.shipments.list({
+  status: 'in_transit',
+  port: 'USLAX',
+  carrier: 'MAEU',
+  updatedAfter: '2025-01-01T00:00:00Z',
+});
+```
+
+Available shipment filters:
+
+| Filter | Type | Description |
+|--------|------|-------------|
+| `status` | string | Shipment status (for example `in_transit` or `delivered`) |
+| `port` | string | UN/LOCODE for port of discharge |
+| `carrier` | string | SCAC code (for example `MAEU`, `HLCU`) |
+| `updatedAfter` | ISO 8601 | Only shipments updated after this timestamp |
+| `includeContainers` | boolean | Set to `false` to omit containers from the included relationships |
+
+## Filtering containers
+
+```typescript
+const containers = await client.containers.list({
+  status: 'discharged',
+  port: 'USLAX',
+  carrier: 'MAEU',
+  updatedAfter: '2025-01-01T00:00:00Z',
+  include: 'shipment,pod_terminal',
+});
+```
+
+Available container filters:
+
+| Filter | Type | Description |
+|--------|------|-------------|
+| `status` | string | Container status |
+| `port` | string | UN/LOCODE for port of discharge |
+| `carrier` | string | SCAC code |
+| `updatedAfter` | ISO 8601 | Only containers updated after this timestamp |
+| `include` | string | Comma-delimited list of related resources to include |
+
+<Note>
+For list endpoints, avoid heavy `include` usage for performance. When you need deep relationships, prefer single-resource endpoints like `containers.get` or `shipments.get`.
+</Note>
+
+## Pagination
+
+List methods accept pagination options with `page` and `pageSize` (page numbers are 1-based):
+
+```typescript
+const page1 = await client.shipments.list({}, {
+  page: 1,
+  pageSize: 25,
+  format: 'mapped',
+});
+
+const page2 = await client.shipments.list({}, {
+  page: 2,
+  pageSize: 25,
+  format: 'mapped',
+});
+```
+
+When using `format: 'mapped'`, list results include `items`, `links`, and `meta`. When using `format: 'raw'`, these live in the JSON:API response.
+
+## Common patterns
+
+### Recently updated shipments
+
+```typescript
+const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+const updated = await client.shipments.list({
+  updatedAfter: oneDayAgo,
+});
+```
+
+### In-transit containers at a specific port
+
+```typescript
+const containers = await client.containers.list({
+  status: 'in_transit',
+  port: 'USLAX',
+});
+```

@@ -167,6 +167,26 @@
         ]
       },
       {
+        "tab": "SDK Docs",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "sdk/introduction",
+              "sdk/quickstart"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "sdk/methods",
+              "sdk/filtering-pagination",
+              "sdk/error-handling"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "DataSync",
         "groups": [
           {

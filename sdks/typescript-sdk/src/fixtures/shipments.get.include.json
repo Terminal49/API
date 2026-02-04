@@ -1,0 +1,390 @@
+{
+  "data": {
+    "id": "shipment-1",
+    "type": "shipment",
+    "attributes": {
+      "created_at": "2026-02-03T04:53:33Z",
+      "ref_numbers": [],
+      "tags": [],
+      "bill_of_lading_number": "HLCUSEL251063ad5",
+      "normalized_number": "HLCUSEL251063257",
+      "shipping_line_scac": "HLCU",
+      "shipping_line_name": "Hapag-Lloyd",
+      "shipping_line_short_name": "Hapag-Lloyd",
+      "customer_name": "CUSTOMER-001",
+      "port_of_lading_locode": "KRPUS",
+      "port_of_lading_name": "Busan",
+      "port_of_discharge_locode": "USCHS",
+      "port_of_discharge_name": "Charleston",
+      "pod_vessel_name": "MAERSK SHIVLING",
+      "pod_vessel_imo": "9728253",
+      "pod_voyage_number": "546E",
+      "destination_locode": null,
+      "destination_name": null,
+      "destination_timezone": null,
+      "destination_ata_at": null,
+      "destination_eta_at": null,
+      "pol_etd_at": null,
+      "pol_atd_at": "2025-11-18T15:26:00Z",
+      "pol_timezone": "Asia/Seoul",
+      "pod_eta_at": null,
+      "pod_original_eta_at": null,
+      "pol_original_etd_at": null,
+      "destination_original_eta_at": null,
+      "pod_ata_at": "2025-12-29T09:28:23Z",
+      "pod_timezone": "America/New_York",
+      "line_tracking_last_attempted_at": "2026-02-03T18:02:03Z",
+      "line_tracking_last_succeeded_at": "2026-02-03T18:02:04Z",
+      "line_tracking_stopped_at": null,
+      "line_tracking_stopped_reason": null
+    },
+    "links": {
+      "self": "/v2/shipments/a99e23fe-84ca-4dac-ab15-c4996c7fe3d6"
+    },
+    "relationships": {
+      "port_of_lading": {
+        "data": {
+          "id": "port-1",
+          "type": "port"
+        }
+      },
+      "port_of_discharge": {
+        "data": {
+          "id": "port-2",
+          "type": "port"
+        }
+      },
+      "pod_terminal": {
+        "data": {
+          "id": "terminal-1",
+          "type": "terminal"
+        }
+      },
+      "destination": {
+        "data": null
+      },
+      "destination_terminal": {
+        "data": null
+      },
+      "line_tracking_stopped_by_user": {
+        "data": null
+      },
+      "containers": {
+        "data": [
+          {
+            "id": "container-1",
+            "type": "container"
+          }
+        ]
+      }
+    }
+  },
+  "links": {
+    "self": "https://api.terminal49.com/v2/shipments/a99e23fe-84ca-4dac-ab15-c4996c7fe3d6?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal"
+  },
+  "included": [
+    {
+      "id": "container-1",
+      "type": "container",
+      "attributes": {
+        "number": "RMCU74210c6",
+        "seal_number": null,
+        "created_at": "2026-02-03T04:53:33Z",
+        "ref_numbers": [],
+        "pod_arrived_at": "2025-12-29T09:28:23Z",
+        "pod_discharged_at": "2025-12-29T14:24:00Z",
+        "final_destination_full_out_at": null,
+        "holds_at_pod_terminal": [],
+        "available_for_pickup": false,
+        "delivered_at": null,
+        "current_status": "picked_up",
+        "empty_out_at": null,
+        "pol_full_in_at": "2025-11-12T03:23:00Z",
+        "pol_vessel_loaded_at": "2025-11-18T13:57:00Z",
+        "pol_vessel_departed_at": "2025-11-18T15:26:00Z",
+        "equipment_type": "tank",
+        "equipment_length": 20,
+        "equipment_height": "standard",
+        "pod_full_out_at": "2026-01-06T21:25:00Z",
+        "empty_terminated_at": null,
+        "terminal_checked_at": null,
+        "fees_at_pod_terminal": [],
+        "pickup_lfd": null,
+        "pickup_appointment_at": null,
+        "pod_full_out_chassis_number": null,
+        "location_at_pod_terminal": null,
+        "pod_last_tracking_request_at": null,
+        "shipment_last_tracking_request_at": "2026-02-03T18:02:04Z",
+        "rail_last_tracking_request_at": null,
+        "availability_known": false,
+        "pod_timezone": "America/New_York",
+        "final_destination_timezone": null,
+        "weight_in_lbs": 0,
+        "empty_terminated_timezone": "America/New_York",
+        "pod_rail_carrier_scac": null,
+        "ind_rail_carrier_scac": null,
+        "pod_rail_loaded_at": null,
+        "pod_rail_departed_at": null,
+        "ind_eta_at": null,
+        "ind_ata_at": null,
+        "ind_rail_unloaded_at": null,
+        "ind_facility_holds": null,
+        "ind_facility_fees": null,
+        "ind_facility_lfd_on": null,
+        "import_deadlines": {
+          "pickup_lfd_terminal": null,
+          "pickup_lfd_rail": null,
+          "pickup_lfd_line": null
+        },
+        "ssl_lfd": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "shipment-1",
+            "type": "shipment"
+          }
+        },
+        "pickup_facility": {
+          "data": null
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "terminal-1",
+            "type": "terminal"
+          }
+        },
+        "transport_events": {
+          "data": [
+            {
+              "id": "transport_event-1",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-2",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-3",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-4",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-5",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-6",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-7",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-8",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-9",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-10",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-11",
+              "type": "transport_event"
+            }
+          ]
+        },
+        "raw_events": {
+          "data": [
+            {
+              "id": "raw_event-1",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-2",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-3",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-4",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-5",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-6",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-7",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-8",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-9",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-10",
+              "type": "raw_event"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "terminal-1",
+      "type": "terminal",
+      "attributes": {
+        "id": "a59b3bd1-d497-4a48-bfb6-5cf2c4824a60",
+        "nickname": "WWT",
+        "name": "Wando Welch Terminal",
+        "firms_code": "N598",
+        "smdg_code": "WWMT",
+        "bic_facility_code": null,
+        "provided_data": {
+          "pickup_lfd": false,
+          "pod_full_out_at": true,
+          "pickup_lfd_notes": "",
+          "available_for_pickup": true,
+          "fees_at_pod_terminal": false,
+          "holds_at_pod_terminal": true,
+          "pickup_appointment_at": false,
+          "location_at_pod_terminal": false,
+          "available_for_pickup_notes": "",
+          "fees_at_pod_terminal_notes": "",
+          "holds_at_pod_terminal_notes": "",
+          "pickup_appointment_at_notes": "",
+          "pod_full_out_chassis_number": true,
+          "location_at_pod_terminal_notes": "",
+          "pod_full_out_chassis_number_notes": ""
+        },
+        "street": "400 Long Point Rd. ",
+        "city": "Mt. Pleasant",
+        "state": "South Carolina",
+        "state_abbr": "SC",
+        "zip": "29464",
+        "country": "United States",
+        "facility_type": "ocean_terminal"
+      },
+      "relationships": {
+        "port": {
+          "data": {
+            "id": "port-2",
+            "type": "port"
+          }
+        }
+      }
+    },
+    {
+      "id": "port-1",
+      "type": "port",
+      "attributes": {
+        "id": "f11d479d-5501-4b24-8703-4133f0b202b7",
+        "name": "Busan",
+        "code": "KRPUS",
+        "state_abbr": "26",
+        "city": "Busan",
+        "country_code": "KR",
+        "latitude": "35.10162",
+        "longitude": "129.036",
+        "time_zone": "Asia/Seoul"
+      },
+      "relationships": {
+        "terminals": {
+          "data": [
+            {
+              "id": "terminal-2",
+              "type": "terminal"
+            },
+            {
+              "id": "terminal-3",
+              "type": "terminal"
+            },
+            {
+              "id": "terminal-4",
+              "type": "terminal"
+            },
+            {
+              "id": "terminal-5",
+              "type": "terminal"
+            },
+            {
+              "id": "terminal-6",
+              "type": "terminal"
+            },
+            {
+              "id": "terminal-7",
+              "type": "terminal"
+            },
+            {
+              "id": "terminal-8",
+              "type": "terminal"
+            },
+            {
+              "id": "terminal-9",
+              "type": "terminal"
+            },
+            {
+              "id": "terminal-10",
+              "type": "terminal"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "port-2",
+      "type": "port",
+      "attributes": {
+        "id": "d8138df6-f542-4f69-a3e3-e5fd6b16b63a",
+        "name": "Charleston",
+        "code": "USCHS",
+        "state_abbr": "SC",
+        "city": "Charleston",
+        "country_code": "US",
+        "latitude": "32.831492181",
+        "longitude": "-79.89124957",
+        "time_zone": "America/New_York"
+      },
+      "relationships": {
+        "terminals": {
+          "data": [
+            {
+              "id": "terminal-11",
+              "type": "terminal"
+            },
+            {
+              "id": "terminal-12",
+              "type": "terminal"
+            },
+            {
+              "id": "terminal-13",
+              "type": "terminal"
+            },
+            {
+              "id": "terminal-1",
+              "type": "terminal"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
