@@ -168,6 +168,17 @@
         ]
       },
       {
+        "tab": "SDK",
+        "groups": [
+          {
+            "group": "SDK",
+            "pages": [
+              "api-docs/getting-started/sdk-quickstart"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "DataSync",
         "groups": [
           {
