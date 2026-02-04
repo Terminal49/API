@@ -7,3 +7,5 @@
 .tool-versions.local
 
 .pytest_cache
+
+node_modules
