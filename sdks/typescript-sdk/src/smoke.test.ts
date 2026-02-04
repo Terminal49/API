@@ -1,13 +1,33 @@
-import 'dotenv/config';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
 import { describe, expect, it } from 'vitest';
 import { Terminal49Client } from './client.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const envCandidates = [
+  process.env.DOTENV_CONFIG_PATH,
+  path.resolve(__dirname, '../../../.env.local'),
+  path.resolve(__dirname, '../../../.env'),
+  path.resolve(__dirname, '../.env.local'),
+  path.resolve(__dirname, '../.env'),
+].filter(Boolean) as string[];
+
+for (const candidate of envCandidates) {
+  if (fs.existsSync(candidate)) {
+    dotenv.config({ path: candidate });
+    break;
+  }
+}
 
 const token = process.env.T49_API_TOKEN;
 const baseUrl = process.env.T49_API_BASE_URL;
 
-const describeIf = token ? describe : describe.skip;
-
-describeIf('Terminal49Client smoke', () => {
+if (!token) {
+  describe.skip('Terminal49Client smoke (requires T49_API_TOKEN)', () => {});
+} else {
+  describe('Terminal49Client smoke', () => {
   const client = new Terminal49Client({
     apiToken: token as string,
     apiBaseUrl: baseUrl,
@@ -31,4 +51,5 @@ describeIf('Terminal49Client smoke', () => {
     const result = await client.trackingRequests.inferNumber(inferNumber as string);
     expect(result).toBeTruthy();
   });
-});
+  });
+}

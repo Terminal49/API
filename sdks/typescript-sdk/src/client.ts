@@ -92,6 +92,21 @@ export interface CreateTrackingRequestFromInferOptions {
   shipmentTags?: string[];
 }
 
+function normalizeBaseUrl(input?: string): string {
+  const defaultBase = 'https://api.terminal49.com/v2';
+  if (!input) return defaultBase;
+  try {
+    const url = new URL(input);
+    const path = url.pathname.replace(/\/+$/, '');
+    if (path === '' || path === '/') {
+      url.pathname = '/v2';
+    }
+    return url.toString().replace(/\/+$/, '');
+  } catch {
+    return input;
+  }
+}
+
 export class Terminal49Client {
   private apiToken: string;
   private apiBaseUrl: string;
@@ -107,7 +122,7 @@ export class Terminal49Client {
     }
 
     this.apiToken = config.apiToken;
-    this.apiBaseUrl = config.apiBaseUrl || 'https://api.terminal49.com/v2';
+    this.apiBaseUrl = normalizeBaseUrl(config.apiBaseUrl);
     this.maxRetries = config.maxRetries ?? 2;
     this.defaultFormat = config.defaultFormat ?? 'raw';
     this.authedFetch = this.buildFetch(config.fetchImpl ?? fetch);
