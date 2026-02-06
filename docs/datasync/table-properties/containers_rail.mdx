@@ -65,8 +65,10 @@ _Columns marked with * are only included with the Intermodal Rail product._
 | `pod_berthed_at_local`            | Port of Discharge Berthed event, as a string in the POD local time zone                                                | `text`     |
 | `pod_discharged_at`               | Port of Discharge Discharged event, as a UTC timestamp                                                                 | `timestamp`|
 | `pod_discharged_at_local`         | Port of Discharge Discharged event, as a string in the POD local time zone                                             | `text`     |
-| `pod_last_free_day_on`            | Current Last Free Day at the POD terminal, as a UTC timestamp<br /><br />Named `pickup_lfd` in the API                 | `timestamp`|
-| `pod_last_free_day_on_local`      | Current Last Free Day at the POD terminal, as a string in the POD local time zone                                      | `text`     |
+| `pod_last_free_day_on`            | Current Last Free Day from the POD terminal, as a UTC timestamp<br /><br />Named `pickup_lfd` in the API                 | `timestamp`|
+| `pod_last_free_day_on_local`      | Current Last Free Day from the POD terminal, as a string in the POD local time zone                                      | `text`     |
+| `ssl_last_free_day_on`            | Current Last Free Day from the shipping line, as a UTC timestamp                                                       | `timestamp` |
+| `ssl_last_free_day_on_local`      | Current Last Free Day from the shipping line, as a string in the Destination or POD local time zone                    | `text`      |
 | `pod_pickup_appointment_at`       | Port of Discharge Pickup Appointment, as a UTC timestamp<br /><br />Named `pickup_appointment_at` in the API           | `timestamp`|
 | `pod_pickup_appointment_at_local` | Port of Discharge Pickup Appointment, as a string in the POD local time zone                                           | `text`     |
 | `pod_full_out_at`                 | Port of Discharge Full Out event, as a UTC timestamp                                                                   | `timestamp`|
@@ -83,12 +85,12 @@ _Columns marked with * are only included with the Intermodal Rail product._
 | `ind_arrived_at_local`*           | Inland Destination Actual Time of Arrival, as a string in the Inland Destination local time zone                       | `text`     |
 | `ind_rail_unloaded_at`*           | Inland Destination Rail Unloaded, as a UTC timestamp                                                                   | `timestamp`|
 | `ind_rail_unloaded_at_local`*     | Inland Destination Rail Unloaded, as a string in the Inland Destination local time zone                                | `text`     |
-| `ind_last_free_day_on`*           | Last Free Day at the inland destination facility, as a UTC timestamp<br /><br />Named `ind_facility_lfd_on` in the API | `timestamp`|
-| `ind_last_free_day_on_local`*     | Last Free Day at the inland destination facility, as a string in the inland estination local time zone                 | `text`     |
+| `ind_last_free_day_on`*           | Last Free Day at the inland destination facility from the rail carrier, as a UTC timestamp<br /><br />Named `ind_facility_lfd_on` in the API | `timestamp`|
+| `ind_last_free_day_on_local`*     | Last Free Day at the inland destination facility from the rail carrier, as a string in the inland estination local time zone                 | `text`     |
 | `ind_full_out_at`                 | Inland Destination Full Out event, as a UTC timestamp<br /><br />Named `final_destination_full_out_at` in the API      | `timestamp`|
 | `ind_full_out_at_local`           | Inland Destination Full Out event, as a string in the Inland Destination local time zone                               | `text`     |
 | `empty_terminated_at`             | Container Empty Returned event, as a UTC timestamp                                                                     | `timestamp`|
-| `empty_terminated_at_local`       | Container Empty Returned event, as a string in the POD local time zone                                                 | `text`     |
+| `empty_terminated_at_local`       | Container Empty Returned event, as a string in the Destination or POD local time zone                                  | `text`     |
 | `fees_at_pod_terminal`            | Current fee amounts at the POD terminal, in JSON format                                                                | `text`     |
 | `demurrage_at_pod_terminal`       | Current demurrage amount owed at the POD terminal                                                                      | `text`     |
 | `holds_at_pod_terminal`           | Current terminal hold statuses at the POD, in JSON format                                                              | `text`     |
