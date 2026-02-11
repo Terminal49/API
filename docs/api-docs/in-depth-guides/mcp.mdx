@@ -145,8 +145,23 @@ For local development without a hosted server:
 ```
 
 <Warning>
-Build the MCP server first: `cd packages/mcp && npm install && npm run build`
+Build the MCP server first:
+`cd packages/mcp && npm install && T49_SDK_SOURCE=published npm run sdk:setup && npm run build`
 </Warning>
+
+<Accordion title="Contributor mode: switch SDK source">
+Use published SDK by default:
+```bash
+cd packages/mcp
+T49_SDK_SOURCE=published npm run sdk:setup
+```
+
+Use local SDK build during development:
+```bash
+cd packages/mcp
+T49_SDK_SOURCE=local npm run sdk:setup
+```
+</Accordion>
 
 ---
 
@@ -161,7 +176,7 @@ Once configured, verify everything works:
   <Step title="Ask Claude to list tools">
     > "List the tools available in the Terminal49 MCP server."
 
-    Claude should respond with a list of 7 tools including `search_container`, `track_container`, etc.
+    Claude should respond with a list of 10 tools including `search_container`, `track_container`, and list tools.
   </Step>
   <Step title="Search for a test container">
     > "Using the Terminal49 MCP server, search for container TCLU1234567 and summarize its status."
@@ -206,17 +221,20 @@ T49_API_TOKEN=your_token npm run mcp:stdio 2>&1 | head -20
 
 ## MCP Capabilities
 
-### Tools (7)
+### Tools (10)
 
 | Tool | Description | Parameters |
 |------|-------------|------------|
 | `search_container` | Find containers by number, BL, booking, or ref | `query: string` |
-| `track_container` | Start tracking a container | `containerNumber`, `scac?`, `bookingNumber?`, `refNumbers?` |
+| `track_container` | Start tracking a container | `number`, `numberType?`, `scac?`, `refNumbers?` |
 | `get_container` | Get container with optional includes | `id: uuid`, `include?: ['shipment', 'pod_terminal', 'transport_events']` |
 | `get_shipment_details` | Get shipment and containers | `id: uuid`, `include_containers?: boolean` |
 | `get_container_transport_events` | Get event timeline | `id: uuid` |
 | `get_supported_shipping_lines` | List carriers with SCAC codes | `search?: string` |
 | `get_container_route` | Get multi-leg routing (paid feature) | `id: uuid` |
+| `list_shipments` | List shipments with filters + pagination | `status?`, `port?`, `carrier?`, `updated_after?`, `include_containers?`, `page?`, `page_size?` |
+| `list_containers` | List containers with filters + pagination | `status?`, `port?`, `carrier?`, `updated_after?`, `include?`, `page?`, `page_size?` |
+| `list_tracking_requests` | List tracking requests with filters | `filters?`, `page?`, `page_size?` |
 
 ### Prompts (3)
 
@@ -312,7 +330,7 @@ The `vercel.json` configures the MCP server:
 
 ```json
 {
-  "buildCommand": "npm install && npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp",
+  "buildCommand": "cd packages/mcp && npm ci && npm run build",
   "functions": {
     "api/mcp.ts": { "maxDuration": 30, "memory": 1024 },
     "api/sse.ts": { "maxDuration": 60, "memory": 1024 }

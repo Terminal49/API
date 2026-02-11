@@ -15,7 +15,7 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (7 Available)
+### 🛠️ Tools (10 Available)
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -26,6 +26,9 @@
 | **`get_container_transport_events`** | Get event timeline with ResourceLinks | 50-70% context reduction ✨ |
 | **`get_supported_shipping_lines`** | List 40+ major carriers with SCAC codes | Filterable by name/code |
 | **`get_container_route`** | Get multi-leg routing with vessels and ETAs | Premium feature |
+| **`list_shipments`** | List shipments with filters and pagination | Fleet-level visibility |
+| **`list_containers`** | List containers with filters and pagination | Operational snapshots |
+| **`list_tracking_requests`** | List tracking requests and statuses | Audit and monitoring |
 
 ### 🎯 Prompts (3 Workflows)
 
@@ -69,13 +72,14 @@
 /api/mcp.ts                  # Vercel serverless function (HTTP)
 /packages/mcp/
   ├── src/
-  │   ├── client.ts          # Terminal49 API client
   │   ├── server.ts          # MCP server (stdio)
   │   ├── index.ts           # Stdio entry point
   │   ├── tools/             # MCP tools
   │   └── resources/         # MCP resources
   └── package.json
 ```
+
+MCP uses published `@terminal49/sdk` by default, with optional local override for contributors.
 
 **Dual Transport:**
 - **HTTP**: Vercel serverless function at `/api/mcp` (for hosted use)
@@ -94,8 +98,16 @@
 ```bash
 cd packages/mcp
 npm install
+T49_SDK_SOURCE=published npm run sdk:setup
 cp .env.example .env
 # Add your T49_API_TOKEN to .env
+```
+
+Use a local SDK build during MCP development:
+
+```bash
+cd packages/mcp
+T49_SDK_SOURCE=local npm run sdk:setup
 ```
 
 ### Run Locally
