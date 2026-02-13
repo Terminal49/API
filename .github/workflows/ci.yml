@@ -39,6 +39,8 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install MCP deps (published SDK)
         run: npm ci
+      - name: Build SDK (workspace dependency)
+        run: npm run build --workspace @terminal49/sdk
       - name: Build MCP
         run: npm run build --workspace @terminal49/mcp
       - name: Test MCP
