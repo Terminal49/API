@@ -1,6 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "cd packages/mcp && npm ci && npm run build",
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build --workspace @terminal49/mcp",
   "functions": {
     "api/mcp.ts": {
       "maxDuration": 30,

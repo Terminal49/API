@@ -30,21 +30,18 @@ jobs:
 
   mcp:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/mcp
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'npm'
-          cache-dependency-path: packages/mcp/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Install MCP deps (published SDK)
         run: npm ci
       - name: Build MCP
-        run: npm run build
+        run: npm run build --workspace @terminal49/mcp
       - name: Test MCP
-        run: npm test -- --run
+        run: npm run test --workspace @terminal49/mcp -- --run
       - name: Lint MCP (Biome)
-        run: npm run lint
+        run: npm run lint --workspace @terminal49/mcp
