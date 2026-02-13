@@ -108,9 +108,9 @@ Pre-built workflows for common tasks:
 │   │   ├── prompts/        # 3 workflow prompts
 │   │   └── resources/      # Dynamic resources
 │   └── README.md           # Full documentation
-└── sdks/typescript-sdk/    # Terminal49 API client
-    └── src/client.ts
 ```
+
+The MCP package consumes published `@terminal49/sdk` by default.
 
 **Stack:**
 - [Model Context Protocol SDK](https://modelcontextprotocol.io) v1.22.0
@@ -132,8 +132,13 @@ Pre-built workflows for common tasks:
 # Install dependencies
 npm install
 
-# Run MCP server locally (stdio)
 cd packages/mcp
+T49_SDK_SOURCE=published npm run sdk:setup
+
+# Optional: switch to local SDK build for development
+# T49_SDK_SOURCE=local npm run sdk:setup
+
+# Run MCP server locally (stdio)
 npm run dev
 
 # Run tests

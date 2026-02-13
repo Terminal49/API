@@ -110,7 +110,6 @@
               "api-docs/api-reference/containers/edit-a-container",
               "api-docs/api-reference/containers/get-a-container",
               "api-docs/api-reference/containers/refresh-container",
-              "api-docs/api-reference/containers/get-container-route",
               "api-docs/api-reference/containers/get-container-map-geojson",
               "api-docs/api-reference/containers/get-a-containers-raw-events",
               "api-docs/api-reference/containers/get-a-containers-transport-events"
@@ -163,6 +162,26 @@
               "api-docs/api-reference/parties/create-a-party",
               "api-docs/api-reference/parties/get-a-party",
               "api-docs/api-reference/parties/edit-a-party"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "SDK Docs",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "sdk/introduction",
+              "sdk/quickstart"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "sdk/methods",
+              "sdk/filtering-pagination",
+              "sdk/error-handling"
             ]
           }
         ]

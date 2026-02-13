@@ -2,12 +2,33 @@ name: CI
 
 on:
   push:
-    branches: [ main, master, feature/** ]
+    branches: [main, master, feature/**]
   pull_request:
-    branches: [ main, master, feature/** ]
+    branches: [main, master, feature/**]
 
 jobs:
-  build-test:
+  sdk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdks/typescript-sdk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: sdks/typescript-sdk/package-lock.json
+      - name: Install SDK deps
+        run: npm ci
+      - name: Build SDK
+        run: npm run build
+      - name: Test SDK
+        run: npm test -- --run
+      - name: Lint SDK (Biome)
+        run: npm run lint
+
+  mcp:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,20 +36,12 @@ jobs:
         with:
           node-version: 22
           cache: 'npm'
-      - name: Install root deps
-        run: npm install
-      - name: Build SDK
-        run: npm run build --workspace @terminal49/sdk
-      - name: Test SDK
-        run: npm test --workspace @terminal49/sdk
-      - name: Lint SDK
-        run: npm run lint --workspace @terminal49/sdk
+          cache-dependency-path: package-lock.json
+      - name: Install MCP deps (published SDK)
+        run: npm ci
       - name: Build MCP
         run: npm run build --workspace @terminal49/mcp
       - name: Test MCP
-        run: npm test --workspace @terminal49/mcp
-        env:
-          # Optional: set API token for integration tests if added later
-          T49_API_TOKEN: ${{ secrets.T49_API_TOKEN || '' }}
-      - name: Docs lint (optional)
-        run: echo "No docs lint configured" || true
+        run: npm run test --workspace @terminal49/mcp -- --run
+      - name: Lint MCP (Biome)
+        run: npm run lint --workspace @terminal49/mcp

@@ -1,0 +1,70 @@
+---
+title: "Error Handling"
+description: "Catch and handle errors from the Terminal49 SDK"
+---
+
+The SDK throws typed errors you can catch and handle based on the error type.
+
+## Error types
+
+| Error | Cause |
+|-------|-------|
+| `AuthenticationError` | Invalid or missing API token |
+| `AuthorizationError` | Valid token but insufficient permissions |
+| `NotFoundError` | Resource doesn't exist or isn't accessible |
+| `ValidationError` | Invalid request parameters |
+| `RateLimitError` | Too many requests |
+| `FeatureNotEnabledError` | Feature requires a plan upgrade |
+| `UpstreamError` | Carrier or terminal API is unavailable |
+| `Terminal49Error` | Generic error fallback |
+
+## Basic error handling
+
+```typescript
+import {
+  Terminal49Client,
+  AuthenticationError,
+  RateLimitError,
+  NotFoundError,
+} from '@terminal49/sdk';
+
+const client = new Terminal49Client({
+  apiToken: process.env.T49_API_TOKEN!,
+});
+
+try {
+  await client.containers.get('container-uuid');
+} catch (error) {
+  if (error instanceof AuthenticationError) {
+    console.error('Invalid API token');
+  } else if (error instanceof NotFoundError) {
+    console.error('Container not found');
+  } else if (error instanceof RateLimitError) {
+    console.error('Rate limited, retrying in 60s');
+    await new Promise((resolve) => setTimeout(resolve, 60000));
+  } else {
+    throw error;
+  }
+}
+```
+
+## Automatic retries
+
+The SDK automatically retries `429` and `5xx` responses with exponential backoff up to `maxRetries` (default: 2).
+
+```typescript
+const client = new Terminal49Client({
+  apiToken: process.env.T49_API_TOKEN!,
+  maxRetries: 3,
+});
+```
+
+## Error properties
+
+All SDK errors include:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `message` | string | Human-readable error description |
+| `status` | number | HTTP status code |
+| `details` | unknown | Raw error payload from the API |

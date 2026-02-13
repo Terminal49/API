@@ -1,0 +1,62 @@
+{
+  "data": {
+    "id": "port-1",
+    "type": "port",
+    "attributes": {
+      "id": "f11d479d-5501-4b24-8703-4133f0b202b7",
+      "name": "Busan",
+      "code": "KRPUS",
+      "state_abbr": "26",
+      "city": "Busan",
+      "country_code": "KR",
+      "latitude": "35.10162",
+      "longitude": "129.036",
+      "time_zone": "Asia/Seoul"
+    },
+    "relationships": {
+      "terminals": {
+        "data": [
+          {
+            "id": "terminal-9",
+            "type": "terminal"
+          },
+          {
+            "id": "terminal-8",
+            "type": "terminal"
+          },
+          {
+            "id": "terminal-7",
+            "type": "terminal"
+          },
+          {
+            "id": "terminal-6",
+            "type": "terminal"
+          },
+          {
+            "id": "terminal-5",
+            "type": "terminal"
+          },
+          {
+            "id": "terminal-4",
+            "type": "terminal"
+          },
+          {
+            "id": "terminal-3",
+            "type": "terminal"
+          },
+          {
+            "id": "terminal-2",
+            "type": "terminal"
+          },
+          {
+            "id": "terminal-10",
+            "type": "terminal"
+          }
+        ]
+      }
+    }
+  },
+  "links": {
+    "self": "https://api.terminal49.com/v2/ports/f11d479d-5501-4b24-8703-4133f0b202b7"
+  }
+}

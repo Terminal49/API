@@ -1,0 +1,55 @@
+name: Publish TypeScript SDK
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          registry-url: https://registry.npmjs.org/
+
+      - name: Read SDK version
+        id: sdk-version
+        run: |
+          node -e "const { version } = require('./sdks/typescript-sdk/package.json'); const fs = require('fs'); fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);"
+
+      - name: Check release tag matches SDK version
+        id: tag-check
+        run: |
+          tag="${{ github.event.release.tag_name }}"
+          version="${{ steps.sdk-version.outputs.version }}"
+          if [[ "$tag" == "v$version" || "$tag" == "sdk-v$version" || "$tag" == "$version" ]]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "Release tag $tag does not match SDK version $version; skipping publish."
+          fi
+
+      - name: Install dependencies
+        if: steps.tag-check.outputs.publish == 'true'
+        working-directory: sdks/typescript-sdk
+        run: npm ci
+
+      - name: Build
+        if: steps.tag-check.outputs.publish == 'true'
+        working-directory: sdks/typescript-sdk
+        run: npm run build
+
+      - name: Publish
+        if: steps.tag-check.outputs.publish == 'true'
+        working-directory: sdks/typescript-sdk
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

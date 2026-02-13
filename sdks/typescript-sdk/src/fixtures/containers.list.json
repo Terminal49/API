@@ -1,0 +1,300 @@
+{
+  "data": [
+    {
+      "id": "container-2",
+      "type": "container",
+      "attributes": {
+        "number": "EISU8332dc1",
+        "seal_number": "EMCRDE4724",
+        "created_at": "2025-11-05T15:10:29Z",
+        "ref_numbers": [],
+        "pod_arrived_at": "2025-10-31T04:00:00Z",
+        "pod_discharged_at": "2025-10-31T04:00:00Z",
+        "final_destination_full_out_at": null,
+        "holds_at_pod_terminal": [
+          {
+            "status": "hold",
+            "name": "freight",
+            "description": ""
+          },
+          {
+            "status": "hold",
+            "name": "customs",
+            "description": ""
+          }
+        ],
+        "available_for_pickup": true,
+        "delivered_at": null,
+        "current_status": "available",
+        "empty_out_at": null,
+        "pol_full_in_at": "2025-09-09T16:00:00Z",
+        "pol_vessel_loaded_at": null,
+        "pol_vessel_departed_at": null,
+        "equipment_type": "dry",
+        "equipment_length": 40,
+        "equipment_height": "high_cube",
+        "pod_full_out_at": "2025-11-01T04:00:00Z",
+        "empty_terminated_at": null,
+        "terminal_checked_at": "2026-02-04T05:04:40Z",
+        "fees_at_pod_terminal": [],
+        "pickup_lfd": "2025-11-05T05:00:00Z",
+        "pickup_appointment_at": null,
+        "pod_full_out_chassis_number": null,
+        "location_at_pod_terminal": null,
+        "pod_last_tracking_request_at": "2026-02-04T05:04:40Z",
+        "shipment_last_tracking_request_at": "2026-02-04T03:14:40Z",
+        "rail_last_tracking_request_at": "2026-02-04T04:12:55Z",
+        "availability_known": true,
+        "pod_timezone": "America/New_York",
+        "final_destination_timezone": "America/New_York",
+        "weight_in_lbs": 14242,
+        "empty_terminated_timezone": "America/New_York",
+        "pod_rail_carrier_scac": "CSXT",
+        "ind_rail_carrier_scac": "CSXT",
+        "pod_rail_loaded_at": "2025-11-01T19:33:00Z",
+        "pod_rail_departed_at": "2025-11-01T04:00:00Z",
+        "ind_eta_at": null,
+        "ind_ata_at": "2025-11-03T05:00:00Z",
+        "ind_rail_unloaded_at": "2025-11-03T14:56:00Z",
+        "ind_facility_holds": null,
+        "ind_facility_fees": null,
+        "ind_facility_lfd_on": "2025-11-05T05:00:00Z",
+        "import_deadlines": {
+          "pickup_lfd_terminal": null,
+          "pickup_lfd_rail": "2025-11-05T05:00:00Z",
+          "pickup_lfd_line": null
+        },
+        "ssl_lfd": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "shipment-2",
+            "type": "shipment"
+          }
+        },
+        "pickup_facility": {
+          "data": {
+            "id": "terminal-14",
+            "type": "terminal"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "terminal-15",
+            "type": "terminal"
+          }
+        },
+        "transport_events": {
+          "data": [
+            {
+              "id": "transport_event-12",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-13",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-14",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-15",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-16",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-17",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-18",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-19",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-20",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-21",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-22",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-23",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-24",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-25",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-26",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-27",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-28",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-29",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-30",
+              "type": "transport_event"
+            },
+            {
+              "id": "transport_event-31",
+              "type": "transport_event"
+            }
+          ]
+        },
+        "raw_events": {
+          "data": [
+            {
+              "id": "raw_event-11",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-12",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-13",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-14",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-15",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-16",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-17",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-18",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-19",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-20",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-21",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-22",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-23",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-24",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-25",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-26",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-27",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-28",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-29",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-30",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-31",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-32",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-33",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-34",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-35",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-36",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-37",
+              "type": "raw_event"
+            },
+            {
+              "id": "raw_event-38",
+              "type": "raw_event"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "meta": {
+    "total": 292863
+  },
+  "links": {
+    "self": "https://api.terminal49.com/v2/containers?page[size]=1",
+    "current": "https://api.terminal49.com/v2/containers?page[number]=1&page[size]=1",
+    "next": "https://api.terminal49.com/v2/containers?page[number]=2&page[size]=1",
+    "last": "https://api.terminal49.com/v2/containers?page[number]=292863&page[size]=1"
+  }
+}

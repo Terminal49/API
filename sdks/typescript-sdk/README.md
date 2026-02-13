@@ -5,10 +5,10 @@ Typed, server-side client for the Terminal49 JSON:API, built with `openapi-fetch
 ## Installation
 
 ```bash
-# from repo root using workspaces
-npm install
+# install from npm (recommended)
+npm install @terminal49/sdk
 
-# or inside the SDK package
+# or inside this repo
 cd sdks/typescript-sdk
 npm install
 ```
@@ -25,6 +25,11 @@ console.log(container); // raw JSON:API document
 // Optional: deserialize JSON:API to plain objects
 const simplified = client.deserialize<any>(container);
 ```
+
+## Guide
+
+For a full walkthrough (track a container, list shipments, pull events, and routing),
+see the SDK quickstart in the docs site: `docs/api-docs/getting-started/sdk-quickstart.mdx`.
 
 ### Methods
 - `search(query)`
@@ -69,9 +74,53 @@ npm run type-check
 # Tests
 npm test
 
+# Lint (Biome)
+npm run lint
+
 # Build
 npm run build
 ```
+
+## Testing
+
+Unit tests:
+```bash
+cd sdks/typescript-sdk
+npm test
+```
+
+Type checks and lint:
+```bash
+cd sdks/typescript-sdk
+npm run type-check
+npm run lint
+```
+
+Smoke tests (optional, require a token):
+```bash
+cd sdks/typescript-sdk
+export T49_API_TOKEN=your_token
+export T49_API_BASE_URL=https://api.terminal49.com/v2
+export T49_INFER_NUMBER=your_tracking_number
+export T49_RUN_SMOKE=1
+npm run smoke
+```
+
+## Fixtures
+
+Generate sanitized, production-based fixtures for tests:
+```bash
+cd sdks/typescript-sdk
+export T49_API_TOKEN=your_token
+export T49_API_BASE_URL=https://api.terminal49.com/v2
+npm run fixtures:generate
+```
+
+This writes JSON:API fixtures to `src/fixtures/` with redacted IDs and numbers.
+Numeric identifiers keep their original prefix while the last few characters are
+obfuscated to preserve shape without exposing real values.
+List endpoints are captured without `include` for performance guidance. Single-resource
+fixtures include both base and `include` variants where supported.
 
 ## Publishing (prep)
 - Add a `prepublishOnly` or `prepare` script to run `npm run build` so `dist/` is fresh.

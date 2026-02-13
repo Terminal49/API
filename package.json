@@ -13,7 +13,7 @@
     "test": "npm test --workspaces"
   },
   "devDependencies": {
-    "@vercel/node": "^2.3.0"
+    "@vercel/node": "^5.5.9"
   },
   "engines": {
     "node": ">=20.0.0"
