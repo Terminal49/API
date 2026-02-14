@@ -1,6 +1,6 @@
 /**
  * Terminal49 MCP Server
- * Implementation using @modelcontextprotocol/sdk v1.20.1 with McpServer API
+ * Implementation using @modelcontextprotocol/sdk with McpServer API
  */
 
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -365,9 +365,9 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         page_size: z.number().int().positive().optional().describe('Page size'),
       },
       outputSchema: z.object({
-        items: z.array(z.record(z.any())),
-        links: z.record(z.string()).optional(),
-        meta: z.record(z.any()).optional(),
+        items: z.array(z.record(z.string(), z.any())),
+        links: z.record(z.string(), z.string()).optional(),
+        meta: z.record(z.string(), z.any()).optional(),
       }),
     },
     wrapTool(async (args) => executeListShipments(args, client))
@@ -394,9 +394,9 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         page_size: z.number().int().positive().optional().describe('Page size'),
       },
       outputSchema: z.object({
-        items: z.array(z.record(z.any())),
-        links: z.record(z.string()).optional(),
-        meta: z.record(z.any()).optional(),
+        items: z.array(z.record(z.string(), z.any())),
+        links: z.record(z.string(), z.string()).optional(),
+        meta: z.record(z.string(), z.any()).optional(),
       }),
     },
     wrapTool(async (args) => executeListContainers(args, client))
@@ -411,14 +411,17 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         'List tracking requests with optional filters and pagination. ' +
         'Useful for monitoring recent tracking activity.',
       inputSchema: {
-        filters: z.record(z.string()).optional().describe('Raw query filters (e.g., filter[status]=succeeded)'),
+        filters: z
+          .record(z.string(), z.string())
+          .optional()
+          .describe('Raw query filters (e.g., filter[status]=succeeded)'),
         page: z.number().int().positive().optional().describe('Page number (1-based)'),
         page_size: z.number().int().positive().optional().describe('Page size'),
       },
       outputSchema: z.object({
-        items: z.array(z.record(z.any())),
-        links: z.record(z.string()).optional(),
-        meta: z.record(z.any()).optional(),
+        items: z.array(z.record(z.string(), z.any())),
+        links: z.record(z.string(), z.string()).optional(),
+        meta: z.record(z.string(), z.any()).optional(),
       }),
     },
     wrapTool(async (args) => executeListTrackingRequests(args, client))
@@ -568,5 +571,5 @@ export async function runStdioServer() {
 
   console.error('Terminal49 MCP Server v1.0.0 running on stdio');
   console.error('Available: 10 tools | 3 prompts | 2 resources');
-  console.error('SDK: @modelcontextprotocol/sdk v1.20.1 (McpServer API)');
+  console.error('SDK: @modelcontextprotocol/sdk (McpServer API)');
 }

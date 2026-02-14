@@ -3,14 +3,14 @@ import createClient, { type FetchResponse } from 'openapi-fetch';
 import {
   AuthenticationError,
   AuthorizationError,
+  extractErrorMessage,
   FeatureNotEnabledError,
   NotFoundError,
   RateLimitError,
   Terminal49Error,
+  toTerminal49Error,
   UpstreamError,
   ValidationError,
-  extractErrorMessage,
-  toTerminal49Error,
 } from './client/errors.js';
 import {
   mapContainerList,
@@ -688,12 +688,10 @@ export class Terminal49Client {
     return this.executeWithRetry(
       async (): Promise<FetchResponse<any, any, any>> => {
         const response = await this.authedFetch(input, init);
-        let body: any = undefined;
+        let body: any;
         try {
           body = await response.clone().json();
-        } catch {
-          body = undefined;
-        }
+        } catch {}
         return {
           data: response.ok ? (body as T) : undefined,
           error: response.ok ? undefined : body,

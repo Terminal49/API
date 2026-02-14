@@ -4,7 +4,6 @@ import { executeGetContainer } from './get-container.js';
 import { executeGetContainerRoute } from './get-container-route.js';
 import { executeGetContainerTransportEvents } from './get-container-transport-events.js';
 import { executeGetShipmentDetails } from './get-shipment-details.js';
-import { executeGetSupportedShippingLines } from './get-supported-shipping-lines.js';
 import { executeListContainers } from './list-containers.js';
 import { executeListShipments } from './list-shipments.js';
 import { executeListTrackingRequests } from './list-tracking-requests.js';
@@ -101,6 +100,18 @@ function buildShipmentRaw() {
       },
     ],
   };
+}
+
+async function executeSupportedShippingLines(
+  args: { search?: string },
+  client: Terminal49Client,
+) {
+  vi.resetModules();
+  const { executeGetSupportedShippingLines } = await import(
+    './get-supported-shipping-lines.js'
+  );
+
+  return executeGetSupportedShippingLines(args, client);
 }
 
 describe('MCP tool contracts', () => {
@@ -301,11 +312,21 @@ describe('MCP tool contracts', () => {
       shippingLines: { list: shippingList },
     });
 
-    const result = await executeGetSupportedShippingLines({ search: 'mae' }, client);
+    const result = await executeSupportedShippingLines({ search: 'mae' }, client);
 
     expect(shippingList).toHaveBeenCalledWith(undefined, { format: 'mapped' });
     expect(result.total_lines).toBe(1);
     expect(result.shipping_lines[0]).toMatchObject({ scac: 'MAEU', name: 'Maersk' });
+  });
+
+  it('get_supported_shipping_lines fails when shipping_lines API call fails', async () => {
+    const shippingList = vi.fn().mockRejectedValue(new Error('downstream failure'));
+
+    const client = asClient({
+      shippingLines: { list: shippingList },
+    });
+
+    await expect(executeSupportedShippingLines({ search: 'mae' }, client)).rejects.toThrow('downstream failure');
   });
 
   it('get_container_route returns route summary when route data exists', async () => {

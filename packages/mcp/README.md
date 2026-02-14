@@ -48,12 +48,11 @@
 - High-level `registerTool()`, `registerPrompt()`, `registerResource()` patterns
 - Type-safe Zod schemas for all tool inputs
 - Cleaner, maintainable code (71% code reduction in HTTP handler)
-- **SDK**: @modelcontextprotocol/sdk ^1.22.0
+- **SDK**: @modelcontextprotocol/sdk ^1.26.0
 
-#### ✅ Dual Transport Support
+#### ✅ Production Transport Support
 - **HTTP (streamable)**: `POST /api/mcp` - stateless, JSON responses
-- **SSE (stateful)**: `GET/POST /sse?sessionId=<id>` - for long-running sessions
-- Full CORS support for browser-based clients
+- SSE was removed from the hosted deployment path in favor of Streamable HTTP transport.
 
 #### ✅ 3 Workflow Prompts
 - `track-shipment`: Quick container tracking with optional carrier
@@ -81,7 +80,7 @@
 
 MCP uses published `@terminal49/sdk` by default, with optional local override for contributors.
 
-**Dual Transport:**
+**Transport:**
 - **HTTP**: Vercel serverless function at `/api/mcp` (for hosted use)
 - **stdio**: Local binary for Claude Desktop (run via `npm run mcp:stdio`)
 

@@ -31,7 +31,7 @@ Before you begin, make sure you have:
 </CardGroup>
 
 **Technical Details:**
-- **MCP SDK**: `@modelcontextprotocol/sdk ^1.22.0`
+- **MCP SDK**: `@modelcontextprotocol/sdk ^1.26.0`
 - **TypeScript SDK**: `@terminal49/sdk`
 - **Runtime**: Node.js 18+
 
@@ -42,12 +42,11 @@ Before you begin, make sure you have:
 | Transport | Endpoint | Best For |
 |-----------|----------|----------|
 | HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Serverless, short-lived requests |
-| SSE (stateful) | `GET /sse?sessionId=<id>` then `POST /sse?sessionId=<id>` | Long-running sessions, streaming |
 
 **Authentication**: Pass `Authorization: Bearer <T49_API_TOKEN>` header. Server falls back to `T49_API_TOKEN` environment variable.
 
 <Tip>
-Claude Desktop and Cursor use the HTTP transport. Use SSE only if you're building a custom client that needs persistent connections.
+Claude Desktop and Cursor use the HTTP transport. For hosted production usage, use Streamable HTTP at `/mcp`.
 </Tip>
 
 ---
@@ -332,12 +331,10 @@ The `vercel.json` configures the MCP server:
 {
   "buildCommand": "cd packages/mcp && npm ci && npm run build",
   "functions": {
-    "api/mcp.ts": { "maxDuration": 30, "memory": 1024 },
-    "api/sse.ts": { "maxDuration": 60, "memory": 1024 }
+    "api/mcp.ts": { "maxDuration": 30, "memory": 1024 }
   },
   "rewrites": [
-    { "source": "/mcp", "destination": "/api/mcp" },
-    { "source": "/sse", "destination": "/api/sse" }
+    { "source": "/mcp", "destination": "/api/mcp" }
   ]
 }
 ```
@@ -348,6 +345,8 @@ The `vercel.json` configures the MCP server:
 |----------|----------|-------------|
 | `T49_API_TOKEN` | Yes | Terminal49 API token |
 | `T49_API_BASE_URL` | No | Override API URL (default: `https://api.terminal49.com/v2`) |
+| `T49_MCP_ALLOWED_HOSTS` | No | Comma-separated host allowlist for request Host validation |
+| `T49_MCP_ALLOWED_ORIGINS` | No | Comma-separated origin allowlist for request Origin validation |
 
 ---
 

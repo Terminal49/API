@@ -9,7 +9,7 @@ export const getSupportedShippingLinesTool = {
   name: 'get_supported_shipping_lines',
   description:
     'Get list of shipping lines (carriers) supported by Terminal49 for container tracking. ' +
-    'Returns SCAC codes, names, nicknames, and BOL prefixes pulled from the canonical support CSV. ' +
+    'Returns SCAC codes, names, nicknames, and BOL prefixes from the Terminal49 shipping_lines API. ' +
     'Use this when validating whether a carrier is supported or mapping SCAC codes.',
   inputSchema: {
     type: 'object',
@@ -36,7 +36,7 @@ export interface ShippingLineRecord {
   notes?: string;
 }
 
-let cachedLines: ShippingLineRecord[] = [];
+let cachedLines: ShippingLineRecord[] | null = null;
 
 export async function executeGetSupportedShippingLines(
   args: { search?: string },
@@ -65,40 +65,24 @@ export async function executeGetSupportedShippingLines(
 }
 
 async function loadShippingLines(client: Terminal49Client): Promise<ShippingLineRecord[]> {
-  if (cachedLines.length > 0) {
+  if (cachedLines !== null) {
     return cachedLines;
   }
 
-  try {
-    const response = await client.shippingLines.list(undefined, { format: 'mapped' });
-    const data = Array.isArray(response) ? response : [];
+  const response = await client.shippingLines.list(undefined, { format: 'mapped' });
+  const data = Array.isArray(response) ? response : [];
 
-    const mapped = data.map((item: any): Partial<ShippingLineRecord> => ({
-      scac: item.scac,
-      name: item.name,
-      short_name: item.shortName,
-      bol_prefix: item.bolPrefix,
-      notes: item.notes,
-    }));
+  const mapped = data.map((item: any): Partial<ShippingLineRecord> => ({
+    scac: item.scac,
+    name: item.name,
+    short_name: item.shortName,
+    bol_prefix: item.bolPrefix,
+    notes: item.notes,
+  }));
 
-    cachedLines = mapped
-      .filter((item): item is ShippingLineRecord => item != null && Boolean(item.scac) && Boolean(item.name))
-      .sort((a: ShippingLineRecord, b: ShippingLineRecord) => a.name.localeCompare(b.name));
+  cachedLines = mapped
+    .filter((item): item is ShippingLineRecord => item != null && Boolean(item.scac) && Boolean(item.name))
+    .sort((a: ShippingLineRecord, b: ShippingLineRecord) => a.name.localeCompare(b.name));
 
-    return cachedLines;
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : 'Unable to load shipping line data. API request failed.';
-
-    cachedLines = [
-      {
-        scac: 'UNKNOWN',
-        name: 'Shipping line data unavailable',
-        notes: message,
-      },
-    ];
-    return cachedLines;
-  }
+  return cachedLines;
 }

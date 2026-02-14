@@ -146,7 +146,7 @@ Test with the actual Claude Desktop application.
 
 ---
 
-### 5. **HTTP/SSE Endpoint Testing**
+### 5. **HTTP Endpoint Testing**
 
 Test deployed Vercel endpoints.
 
@@ -179,28 +179,6 @@ curl -X POST https://your-url.vercel.app/mcp \
     },
     "id": 2
   }' | jq
-```
-
-#### SSE Endpoint (`/sse`)
-
-```bash
-# Step 1: Establish SSE connection (in terminal 1)
-curl -N -H "Authorization: Bearer $T49_API_TOKEN" \
-  https://your-url.vercel.app/sse
-
-# Server responds with sessionId via SSE events
-
-# Step 2: Send message (in terminal 2)
-curl -X POST "https://your-url.vercel.app/sse?sessionId=YOUR_SESSION_ID" \
-  -H "Authorization: Bearer $T49_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "method": "tools/list",
-    "id": 1
-  }'
-
-# Response comes via SSE stream (terminal 1)
 ```
 
 ---

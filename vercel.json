@@ -6,20 +6,12 @@
     "api/mcp.ts": {
       "maxDuration": 30,
       "memory": 1024
-    },
-    "api/sse.ts": {
-      "maxDuration": 60,
-      "memory": 1024
     }
   },
   "rewrites": [
     {
       "source": "/mcp",
       "destination": "/api/mcp"
-    },
-    {
-      "source": "/sse",
-      "destination": "/api/sse"
     }
   ],
   "headers": [
@@ -40,22 +32,5 @@
         }
       ]
     },
-    {
-      "source": "/sse",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
-        }
-      ]
-    }
   ]
 }

@@ -5,14 +5,127 @@
  * Endpoint: POST /api/mcp
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
+
+type RequestLike = {
+  method?: string;
+  headers: IncomingMessage['headers'];
+  body?: unknown;
+} & IncomingMessage;
+
+type ResponseLike = {
+  headersSent: boolean;
+  status(code: number): ResponseLike;
+  json(payload: unknown): void;
+  setHeader(name: string, value: string): void;
+  end(): void;
+  on(event: 'close', listener: () => void): void;
+} & ServerResponse;
+
+function getHeaderValue(value: string | string[] | undefined): string | undefined {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+
+  return value;
+}
+
+function parseAllowList(value: string | undefined): Set<string> {
+  if (!value) {
+    return new Set();
+  }
+
+  return new Set(
+    value
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0),
+  );
+}
+
+function isAllowedHost(hostHeader: string | undefined, allowList: Set<string>): boolean {
+  if (!hostHeader) {
+    return false;
+  }
+
+  if (allowList.size === 0) {
+    return true;
+  }
+
+  const hostname = hostHeader.split(':')[0];
+  return allowList.has(hostHeader) || allowList.has(hostname);
+}
+
+function isAllowedOrigin(
+  originHeader: string | undefined,
+  hostHeader: string | undefined,
+  allowList: Set<string>,
+): boolean {
+  if (!originHeader) {
+    // Non-browser clients commonly omit Origin.
+    return true;
+  }
+
+  let origin: URL;
+
+  try {
+    origin = new URL(originHeader);
+  } catch {
+    return false;
+  }
+
+  if (allowList.size > 0) {
+    return allowList.has(origin.origin) || allowList.has(origin.hostname);
+  }
+
+  const localHosts = new Set(['localhost', '127.0.0.1', '::1']);
+  if (localHosts.has(origin.hostname)) {
+    return true;
+  }
+
+  if (!hostHeader) {
+    return false;
+  }
+
+  const requestHost = hostHeader.split(':')[0];
+  return origin.hostname === requestHost;
+}
+
+function validateRequestSecurity(req: RequestLike, res: ResponseLike): boolean {
+  const hostHeader = getHeaderValue(req.headers.host);
+  const originHeader = getHeaderValue(req.headers.origin);
+  const allowedHosts = parseAllowList(process.env.T49_MCP_ALLOWED_HOSTS);
+  const allowedOrigins = parseAllowList(process.env.T49_MCP_ALLOWED_ORIGINS);
+
+  if (!isAllowedHost(hostHeader, allowedHosts)) {
+    res.status(403).json({
+      error: 'Forbidden',
+      message: `Invalid Host header: ${hostHeader ?? '(missing)'}`,
+    });
+    return false;
+  }
+
+  if (!isAllowedOrigin(originHeader, hostHeader, allowedOrigins)) {
+    res.status(403).json({
+      error: 'Forbidden',
+      message: `Invalid Origin header: ${originHeader ?? '(missing)'}`,
+    });
+    return false;
+  }
+
+  return true;
+}
 
 /**
  * Main handler for Vercel serverless function
  */
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: RequestLike, res: ResponseLike): Promise<void> {
+  if (!validateRequestSecurity(req, res)) {
+    return;
+  }
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');

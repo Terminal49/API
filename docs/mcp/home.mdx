@@ -72,14 +72,13 @@ For the full walkthrough (including local stdio dev, deployment, and SDK example
 | Transport | Endpoint | Best For |
 |-----------|----------|----------|
 | HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Serverless, short-lived requests |
-| SSE (stateful) | `GET /sse?sessionId=<id>` then `POST /sse?sessionId=<id>` | Long-running, chatty sessions (dev tools, IDEs) |
 
-**Authentication** for both transports:
+**Authentication**:
 - Header: `Authorization: Bearer <T49_API_TOKEN>`
 - Or set `T49_API_TOKEN` environment variable when self-hosting
 
 <Tip>
-Claude Desktop and Cursor use the HTTP transport. Use SSE if you're building a custom client that needs long-lived sessions and streaming responses.
+Claude Desktop and Cursor use the HTTP transport at `https://mcp.terminal49.com/mcp`.
 </Tip>
 
 The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP endpoints as the REST API.
