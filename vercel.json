@@ -1,11 +1,11 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "installCommand": "npm ci",
   "buildCommand": "npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp",
   "functions": {
     "api/mcp.ts": {
-      "maxDuration": 30,
-      "memory": 1024
+      "maxDuration": 30
     }
   },
   "rewrites": [
@@ -31,6 +31,6 @@
           "value": "Content-Type, Authorization"
         }
       ]
-    },
+    }
   ]
 }
