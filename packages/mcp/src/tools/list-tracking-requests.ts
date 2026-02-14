@@ -7,6 +7,8 @@ import { Terminal49Client } from '@terminal49/sdk';
 
 export interface ListTrackingRequestsArgs {
   filters?: Record<string, string>;
+  status?: string;
+  request_type?: string;
   page?: number;
   page_size?: number;
 }
@@ -28,7 +30,13 @@ export async function executeListTrackingRequests(
   );
 
   try {
-    const result = await client.trackingRequests.list(args.filters || {}, {
+    const filters = {
+      ...(args.filters || {}),
+      ...(args.status ? { 'filter[status]': args.status } : {}),
+      ...(args.request_type ? { 'filter[request_type]': args.request_type } : {}),
+    };
+
+    const result = await client.trackingRequests.list(filters, {
       format: 'mapped',
       page: args.page,
       pageSize: args.page_size,

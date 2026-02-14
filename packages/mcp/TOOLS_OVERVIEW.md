@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Terminal49 MCP Server now provides **7 specialized tools** and **2 MCP resources** for comprehensive container tracking and shipment management.
+The Terminal49 MCP Server now provides **10 specialized tools** and **2 MCP resources** for comprehensive container tracking and shipment management.
 
 ### Design Philosophy
 
@@ -81,7 +81,7 @@ get_container({
 {
   "_metadata": {
     "container_state": "at_terminal",
-    "includes_loaded": ["shipment", "pod_terminal"],
+    "includes_loaded": ["shipment"],
     "can_answer": ["availability status", "demurrage/LFD", ...],
     "needs_more_data_for": ["journey timeline → include: ['transport_events']"],
     "relevant_for_current_state": [
@@ -231,6 +231,69 @@ get_container_route({ id: "container-uuid" })
 - User asks about routing or transshipments
 - Need vessel itinerary
 - Detailed multi-leg journey analysis
+
+---
+
+### 8. `list_shipments` ✅
+**Purpose**: List shipments with optional status, port, and carrier filters
+
+**Usage**:
+```typescript
+list_shipments({
+  status: "in_transit",
+  port: "USLAX",
+  carrier: "MAEU"
+})
+```
+
+**Returns**:
+- Shipment IDs
+- Shipment status and timestamps
+- Container references
+
+**When to Use**: Fleet-level visibility, operational dashboards, operational snapshots
+
+---
+
+### 9. `list_containers` ✅
+**Purpose**: List containers with optional filters and pagination
+
+**Usage**:
+```typescript
+list_containers({
+  status: "available_for_pickup",
+  port: "USLAX",
+  include: "shipment,pod_terminal"
+})
+```
+
+**Returns**:
+- Matching container summary rows
+- Pagination metadata
+
+**When to Use**: Terminal dashboards, "what is arriving", and operational triage
+
+---
+
+### 10. `list_tracking_requests` ✅
+**Purpose**: List tracking requests and monitor intake or failure modes
+
+**Usage**:
+```typescript
+list_tracking_requests({
+  status: "succeeded",
+  request_type: "manual",
+  page: 1,
+  page_size: 25
+})
+```
+
+**Returns**:
+- Request IDs
+- Tracking number + status
+- Response metadata
+
+**When to Use**: Audit, monitoring, and bulk intake workflows
 
 ---
 
@@ -394,14 +457,14 @@ get_container_transport_events({ id: "abc-123" })
 4. LLM: "Container is at WBCT Terminal, available for pickup. LFD is in 5 days."
 ```
 
-### Workflow 2: Demurrage Management
-```
-1. User: "Which containers are past LFD?"
-2. LLM: (would need list_containers tool - not yet implemented)
-3. For each: get_container(id)
-4. Filter where pickup_lfd < now
-5. Present with urgency (days overdue, estimated charges)
-```
+ ### Workflow 2: Demurrage Management
+ ```
+ 1. User: "Which containers are past LFD?"
+2. LLM: list_containers({ status: "arrived" })
+ 3. For each: get_container(id)
+ 4. Filter where pickup_lfd < now
+ 5. Present with urgency (days overdue, estimated charges)
+ ```
 
 ### Workflow 3: Journey Analysis
 ```
@@ -423,8 +486,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Future Enhancements
 
-Potential additional tools:
-- `list_containers` - List containers with filters
+ Potential additional tools:
 - `get_container_raw_events` - Raw EDI data
 - `get_terminal_info` - Terminal operating hours, fees
 - `get_carrier_tracking_page` - Direct link to carrier website
@@ -433,7 +495,7 @@ Potential additional tools:
 
 ## Summary
 
-With these 7 tools and 2 resources, the LLM can:
+With these 10 tools and 2 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

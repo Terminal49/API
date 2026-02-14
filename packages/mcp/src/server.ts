@@ -129,6 +129,9 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
           container_number: z.string(),
           status: z.string(),
           shipping_line: z.string(),
+          pod_terminal: z.string().optional(),
+          pol_terminal: z.string().optional(),
+          destination: z.string().optional(),
         })),
         shipments: z.array(z.object({
           id: z.string(),
@@ -163,10 +166,12 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         refNumbers: z.array(z.string()).optional().describe('Optional reference numbers for matching'),
       },
       outputSchema: {
-        id: z.string(),
-        container_number: z.string(),
-        status: z.string(),
-        tracking_request_created: z.boolean(),
+        error: z.string().optional(),
+        message: z.string().optional(),
+        id: z.string().optional(),
+        container_number: z.string().optional(),
+        status: z.string().optional(),
+        tracking_request_created: z.boolean().optional(),
         infer_result: z.any().optional(),
       },
     },
@@ -189,9 +194,9 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         include: z
           .array(z.enum(['shipment', 'pod_terminal', 'transport_events']))
           .optional()
-          .default(['shipment', 'pod_terminal'])
+          .default(['shipment'])
           .describe(
-            'Optional related data to include. Default: [\'shipment\', \'pod_terminal\'] covers most use cases. ' +
+            'Optional related data to include. Default: [\'shipment\'] covers most use cases. ' +
             '• shipment: Routing, BOL, line, ref numbers (lightweight, always useful) ' +
             '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
             '• transport_events: Full event history, rail tracking (heavy 50-100 events, use for journey/timeline questions)'
@@ -233,6 +238,69 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       inputSchema: {
         id: z.string().uuid().describe('The Terminal49 container ID (UUID format)'),
       },
+      outputSchema: z.union([
+        z.object({
+          total_events: z.number(),
+          event_categories: z.object({
+            vessel_events: z.number(),
+            rail_events: z.number(),
+            truck_events: z.number(),
+            terminal_events: z.number(),
+            other_events: z.number(),
+          }),
+          timeline: z.array(
+            z.object({
+              event: z.string(),
+              timestamp: z.string(),
+              timezone: z.string().optional(),
+              voyage_number: z.string().optional().nullable(),
+              location: z
+                .object({
+                  name: z.string().optional(),
+                  code: z.string().optional(),
+                  type: z.string().optional(),
+                })
+                .nullable(),
+            })
+          ),
+          milestones: z.record(z.string(), z.string().nullable()),
+          _metadata: z.object({
+            presentation_guidance: z.string(),
+          }),
+        }),
+        z.object({
+          mapped: z.array(z.record(z.string(), z.any())),
+          summary: z.object({
+            total_events: z.number(),
+            event_categories: z.object({
+              vessel_events: z.number(),
+              rail_events: z.number(),
+              truck_events: z.number(),
+              terminal_events: z.number(),
+              other_events: z.number(),
+            }),
+            timeline: z.array(
+              z.object({
+                event: z.string(),
+                timestamp: z.string(),
+                timezone: z.string().optional(),
+                voyage_number: z.string().optional().nullable(),
+                location: z
+                  .object({
+                    name: z.string().optional(),
+                    code: z.string().optional(),
+                    type: z.string().optional(),
+                  })
+                  .nullable(),
+              })
+            ),
+            milestones: z.record(z.string(), z.string().nullable()),
+            _metadata: z.object({
+              presentation_guidance: z.string(),
+            }),
+          }),
+        }),
+      ]),
     },
     wrapTool(async ({ id }) => executeGetContainerTransportEvents({ id }, client))
   );
@@ -414,6 +482,10 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
           .record(z.string(), z.string())
           .optional()
           .describe('Raw query filters (e.g., filter[status]=succeeded)'),
+        status: z.string().optional().describe('Filter by request status (mapped to filter[status])'),
+        request_type: z.string()
+          .optional()
+          .describe('Filter by request type (mapped to filter[request_type])'),
         page: z.number().int().positive().optional().describe('Page number (1-based)'),
         page_size: z.number().int().positive().optional().describe('Page size'),
       },

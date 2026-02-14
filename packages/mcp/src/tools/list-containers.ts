@@ -20,6 +20,7 @@ export async function executeListContainers(
   client: Terminal49Client
 ): Promise<any> {
   const startTime = Date.now();
+  const include = args.include?.trim() || undefined;
   console.error(
     JSON.stringify({
       event: 'tool.execute.start',
@@ -29,12 +30,12 @@ export async function executeListContainers(
         port: args.port,
         carrier: args.carrier,
         updated_after: args.updated_after,
-        include: args.include,
+        include: include,
       },
       page: args.page,
       page_size: args.page_size,
       timestamp: new Date().toISOString(),
-    })
+    }),
   );
 
   try {
@@ -44,7 +45,7 @@ export async function executeListContainers(
         port: args.port,
         carrier: args.carrier,
         updatedAfter: args.updated_after,
-        include: args.include,
+        include,
       },
       {
         format: 'mapped',

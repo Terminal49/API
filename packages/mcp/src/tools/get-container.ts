@@ -98,7 +98,7 @@ export const getContainerTool = {
           enum: ['shipment', 'pod_terminal', 'transport_events'],
         },
         description:
-          "Optional related data to include. Default: ['shipment', 'pod_terminal'] covers most use cases.\n\n" +
+          "Optional related data to include. Default: ['shipment'] covers most use cases.\n\n" +
           "• 'shipment': Routing, BOL, line, ref numbers (lightweight, always useful)\n" +
           "• 'pod_terminal': Terminal name, location, availability (lightweight, needed for demurrage questions)\n" +
           "• 'transport_events': Full event history, rail tracking (heavy 50-100 events, use for journey/timeline questions)\n\n" +
@@ -106,7 +106,7 @@ export const getContainerTool = {
           "- shipment: Always useful for context (minimal cost)\n" +
           "- pod_terminal: For availability, demurrage, holds, fees, pickup questions\n" +
           "- transport_events: For journey timeline, 'what happened', rail tracking, milestone analysis",
-        default: ['shipment', 'pod_terminal'],
+        default: ['shipment'],
       },
     },
     required: ['id'],
@@ -132,7 +132,7 @@ export async function executeGetContainer(
   );
 
   try {
-    const includes = args.include || ['shipment', 'pod_terminal'];
+    const includes = args.include || ['shipment'];
     const result = await client.containers.get(args.id, includes, { format: 'both' });
     const raw = (result as any)?.raw ?? result;
     const mapped = (result as any)?.mapped;

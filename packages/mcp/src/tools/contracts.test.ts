@@ -183,7 +183,7 @@ describe('MCP tool contracts', () => {
     });
     expect(getContainer).toHaveBeenCalledWith(
       'container-1',
-      ['shipment', 'pod_terminal'],
+      ['shipment'],
       { format: 'both' },
     );
     expect(result.tracking_request_created).toBe(true);
@@ -450,6 +450,32 @@ describe('MCP tool contracts', () => {
     expect(result.items).toHaveLength(1);
   });
 
+  it('list_containers normalizes include values', async () => {
+    const list = vi.fn().mockResolvedValue({ items: [{ id: 'container-2' }] });
+    const client = asClient({ containers: { list } });
+
+    const result = await executeListContainers(
+      {
+        include: '   ',
+        page: 1,
+        page_size: 10,
+      },
+      client,
+    );
+
+    expect(list).toHaveBeenCalledWith(
+      {
+        status: undefined,
+        port: undefined,
+        carrier: undefined,
+        updatedAfter: undefined,
+        include: undefined,
+      },
+      { format: 'mapped', page: 1, pageSize: 10 },
+    );
+    expect(result.items).toHaveLength(1);
+  });
+
   it('list_tracking_requests forwards filters and pagination to SDK', async () => {
     const list = vi.fn().mockResolvedValue({ items: [{ id: 'tr-1' }] });
     const client = asClient({
@@ -459,6 +485,7 @@ describe('MCP tool contracts', () => {
     const result = await executeListTrackingRequests(
       {
         filters: { 'filter[status]': 'failed' },
+        status: 'succeeded',
         page: 3,
         page_size: 10,
       },
@@ -466,8 +493,32 @@ describe('MCP tool contracts', () => {
     );
 
     expect(list).toHaveBeenCalledWith(
-      { 'filter[status]': 'failed' },
+      { 'filter[status]': 'succeeded' },
       { format: 'mapped', page: 3, pageSize: 10 },
+    );
+    expect(result.items).toHaveLength(1);
+  });
+
+  it('list_tracking_requests maps status and request_type args to filter keys', async () => {
+    const list = vi.fn().mockResolvedValue({ items: [{ id: 'tr-2' }] });
+    const client = asClient({
+      trackingRequests: { list },
+    });
+
+    const result = await executeListTrackingRequests(
+      {
+        status: 'failed',
+        request_type: 'manual',
+      },
+      client,
+    );
+
+    expect(list).toHaveBeenCalledWith(
+      {
+        'filter[status]': 'failed',
+        'filter[request_type]': 'manual',
+      },
+      { format: 'mapped', page: undefined, pageSize: undefined },
     );
     expect(result.items).toHaveLength(1);
   });
