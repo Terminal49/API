@@ -42,7 +42,7 @@ export async function executeGetShipmentDetails(
   }
 
   const startTime = Date.now();
-  console.log(
+  console.error(
     JSON.stringify({
       event: 'tool.execute.start',
       tool: 'get_shipment_details',
@@ -58,7 +58,7 @@ export async function executeGetShipmentDetails(
     const mapped = (result as any)?.mapped;
     const duration = Date.now() - startTime;
 
-    console.log(
+    console.error(
       JSON.stringify({
         event: 'tool.execute.complete',
         tool: 'get_shipment_details',

@@ -67,7 +67,7 @@ export async function executeTrackContainer(
     (args.containerNumber ? 'container' : args.bookingNumber ? 'booking_number' : undefined);
 
   const startTime = Date.now();
-  console.log(
+  console.error(
     JSON.stringify({
       event: 'tool.execute.start',
       tool: 'track_container',
@@ -95,7 +95,7 @@ export async function executeTrackContainer(
       );
     }
 
-    console.log(
+    console.error(
       JSON.stringify({
         event: 'tracking_request.created',
         number,
@@ -108,7 +108,7 @@ export async function executeTrackContainer(
     const containerDetails = await executeGetContainer({ id: containerId }, client);
 
     const duration = Date.now() - startTime;
-    console.log(
+    console.error(
       JSON.stringify({
         event: 'tool.execute.complete',
         tool: 'track_container',

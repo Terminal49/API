@@ -50,7 +50,7 @@ export async function executeGetContainerRoute(
   }
 
   const startTime = Date.now();
-  console.log(
+  console.error(
     JSON.stringify({
       event: 'tool.execute.start',
       tool: 'get_container_route',
@@ -65,7 +65,7 @@ export async function executeGetContainerRoute(
     const mapped = (result as any)?.mapped;
     const duration = Date.now() - startTime;
 
-    console.log(
+    console.error(
       JSON.stringify({
         event: 'tool.execute.complete',
         tool: 'get_container_route',

@@ -57,7 +57,7 @@ export async function executeSearchContainer(
   }
 
   const startTime = Date.now();
-  console.log(
+  console.error(
     JSON.stringify({
       event: 'tool.execute.start',
       tool: 'search_container',
@@ -71,7 +71,7 @@ export async function executeSearchContainer(
     const formattedResult = formatSearchResponse(result);
 
     const duration = Date.now() - startTime;
-    console.log(
+    console.error(
       JSON.stringify({
         event: 'tool.execute.complete',
         tool: 'search_container',

@@ -54,8 +54,8 @@ function buildContentPayload(result: unknown): ToolContent[] {
   return [{ type: 'text', text: formatAsText(result) }];
 }
 
-function normalizeStructuredContent(result: unknown): { data: unknown } {
-  return { data: result };
+function normalizeStructuredContent(result: unknown): unknown {
+  return result;
 }
 
 function formatAsText(result: unknown): string {

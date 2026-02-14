@@ -20,7 +20,7 @@ export async function executeListContainers(
   client: Terminal49Client
 ): Promise<any> {
   const startTime = Date.now();
-  console.log(
+  console.error(
     JSON.stringify({
       event: 'tool.execute.start',
       tool: 'list_containers',
@@ -54,7 +54,7 @@ export async function executeListContainers(
     );
 
     const duration = Date.now() - startTime;
-    console.log(
+    console.error(
       JSON.stringify({
         event: 'tool.execute.complete',
         tool: 'list_containers',

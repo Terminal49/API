@@ -16,7 +16,7 @@ export async function executeListTrackingRequests(
   client: Terminal49Client
 ): Promise<any> {
   const startTime = Date.now();
-  console.log(
+  console.error(
     JSON.stringify({
       event: 'tool.execute.start',
       tool: 'list_tracking_requests',
@@ -35,7 +35,7 @@ export async function executeListTrackingRequests(
     });
 
     const duration = Date.now() - startTime;
-    console.log(
+    console.error(
       JSON.stringify({
         event: 'tool.execute.complete',
         tool: 'list_tracking_requests',
