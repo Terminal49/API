@@ -60,7 +60,7 @@ function normalizeStructuredContent(result: unknown): unknown {
 
 function formatAsText(result: unknown): string {
   try {
-    return JSON.stringify(result, null, 2);
+    return JSON.stringify(result);
   } catch {
     return String(result);
   }
