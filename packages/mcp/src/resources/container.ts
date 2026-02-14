@@ -59,12 +59,13 @@ function generateSummary(id: string, container: any): string {
   const status = determineStatus(container);
   const railSection = container.pod_rail_carrier_scac ? generateRailSection(container) : '';
   const label = container.number || container.container_number || 'Unknown';
+  const equipment = formatEquipment(container);
 
   return `# Container ${label}
 
 **ID:** \`${id}\`
 **Status:** ${status}
-**Equipment:** ${container.equipment_length}' ${container.equipment_type}
+**Equipment:** ${equipment}
 
 ## Location & Availability
 
@@ -85,6 +86,25 @@ ${railSection}
 ---
 *Last Updated: ${formatTimestamp(container.updated_at)}*
 `;
+}
+
+function formatEquipment(container: any): string {
+  const equipmentLength = container.equipment_length;
+  const equipmentType = container.equipment_type;
+
+  if (equipmentLength && equipmentType) {
+    return `${equipmentLength}' ${equipmentType}`;
+  }
+
+  if (equipmentLength) {
+    return `${equipmentLength}'`;
+  }
+
+  if (equipmentType) {
+    return equipmentType;
+  }
+
+  return 'Unknown';
 }
 
 function generateRailSection(container: any): string {
@@ -112,32 +132,32 @@ function determineStatus(container: any): string {
 function formatTimestamp(ts: string | null): string {
   if (!ts) return 'N/A';
 
-  try {
-    const date = new Date(ts);
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short',
-    });
-  } catch {
+  const date = new Date(ts);
+  if (Number.isNaN(date.getTime())) {
     return ts;
   }
+
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  });
 }
 
 function formatDate(date: string | null): string {
   if (!date) return 'N/A';
 
-  try {
-    const d = new Date(date);
-    return d.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
-  } catch {
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) {
     return date;
   }
+
+  return parsedDate.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
 }

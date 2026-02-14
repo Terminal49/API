@@ -283,9 +283,8 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       inputSchema: {
         id: z.string().uuid().describe('The Terminal49 container ID (UUID format)'),
       },
-      // NOTE: Avoid `z.union(...)` here; some SDK/schema tooling chokes on unions
-      // and surfaces as "Cannot read properties of undefined (reading '_zod')".
-      // Keep a single permissive schema so the tool can run.
+      // Keep a single permissive schema because this tool can return either
+      // route fields or feature-gating fields depending on account capability.
       outputSchema: z.object({
         route_id: z.string().optional(),
         total_legs: z.number().optional(),

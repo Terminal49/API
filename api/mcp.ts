@@ -24,6 +24,12 @@ type ResponseLike = {
   on(event: 'close', listener: () => void): void;
 } & ServerResponse;
 
+function setCorsHeaders(res: ResponseLike): void {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
 function getHeaderValue(value: string | string[] | undefined): string | undefined {
   if (Array.isArray(value)) {
     return value[0];
@@ -100,6 +106,7 @@ function validateRequestSecurity(req: RequestLike, res: ResponseLike): boolean {
   const allowedOrigins = parseAllowList(process.env.T49_MCP_ALLOWED_ORIGINS);
 
   if (!isAllowedHost(hostHeader, allowedHosts)) {
+    setCorsHeaders(res);
     res.status(403).json({
       error: 'Forbidden',
       message: `Invalid Host header: ${hostHeader ?? '(missing)'}`,
@@ -108,6 +115,7 @@ function validateRequestSecurity(req: RequestLike, res: ResponseLike): boolean {
   }
 
   if (!isAllowedOrigin(originHeader, hostHeader, allowedOrigins)) {
+    setCorsHeaders(res);
     res.status(403).json({
       error: 'Forbidden',
       message: `Invalid Origin header: ${originHeader ?? '(missing)'}`,
@@ -122,21 +130,21 @@ function validateRequestSecurity(req: RequestLike, res: ResponseLike): boolean {
  * Main handler for Vercel serverless function
  */
 export default async function handler(req: RequestLike, res: ResponseLike): Promise<void> {
+  setCorsHeaders(res);
+
   if (!validateRequestSecurity(req, res)) {
     return;
   }
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.status(200).end();
     return;
   }
 
   // Only accept POST requests
   if (req.method !== 'POST') {
+    setCorsHeaders(res);
     res.status(405).json({
       error: 'Method not allowed',
       message: 'Only POST requests are accepted',
@@ -155,6 +163,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
       // Fallback to environment variable
       apiToken = process.env.T49_API_TOKEN;
     } else {
+      setCorsHeaders(res);
       res.status(401).json({
         error: 'Unauthorized',
         message: 'Missing Authorization header or T49_API_TOKEN environment variable',
@@ -162,10 +171,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
       return;
     }
 
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    setCorsHeaders(res);
 
     // Create MCP server
     const server = createTerminal49McpServer(apiToken, process.env.T49_API_BASE_URL);
@@ -190,6 +196,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
 
     const err = error as Error;
     if (!res.headersSent) {
+      setCorsHeaders(res);
       res.status(500).json({
         jsonrpc: '2.0',
         error: {
