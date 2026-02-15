@@ -199,7 +199,8 @@
             "group": " ",
             "pages": [
               "datasync/overview",
-              "datasync/supported-destinations"
+              "datasync/supported-destinations",
+              "datasync/power-bi-integration"
             ]
           },
           {

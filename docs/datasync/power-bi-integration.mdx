@@ -1,0 +1,125 @@
+---
+title: Power BI Integration
+og:title: Power BI Integration | Terminal49 DataSync
+og:description: Learn how to connect Terminal49 container tracking data to Microsoft Power BI for logistics dashboards and analytics.
+---
+
+Terminal49 data can be visualized in **Microsoft Power BI** by using DataSync to push data into a supported database or data warehouse, and then connecting Power BI to that data source.
+
+There is no direct Power BI connector for Terminal49. Instead, DataSync acts as the bridge: it keeps your data fresh with hourly updates, and Power BI reads from the destination you've configured.
+
+## Architecture
+
+```
+Terminal49 DataSync ──▶ Database / Data Warehouse ──▶ Power BI
+       (hourly sync)        (your system)            (dashboards)
+```
+
+## Recommended Destinations for Power BI
+
+Any [supported DataSync destination](/datasync/supported-destinations) that Power BI can connect to will work. The most common choices are:
+
+| Destination | Power BI Connector | Notes |
+|---|---|---|
+| **Microsoft SQL Server** | Built-in SQL Server connector | Simplest option for Microsoft-centric environments |
+| **Snowflake** | Built-in Snowflake connector | Good for teams already using Snowflake for analytics |
+| **Google BigQuery** | Built-in BigQuery connector | Good for teams on Google Cloud |
+| **Amazon Redshift** | Built-in Redshift connector | Good for teams on AWS |
+| **Postgres** | Built-in PostgreSQL connector | Lightweight, open-source option |
+| **Databricks** | Built-in Databricks connector | Good for teams running Databricks |
+| **MySQL** | Built-in MySQL connector | Another lightweight option |
+
+**Microsoft SQL Server** is the most straightforward path if you don't already have a data warehouse in place, since Power BI has native, well-supported connectivity to SQL Server.
+
+## Setup Steps
+
+### 1. Configure DataSync
+
+Set up DataSync to push Terminal49 data into your chosen database or data warehouse. DataSync will create the following tables:
+
+- **[containers](/datasync/table-properties/containers_rail)** — one row per container with full milestone, route, and terminal data
+- **[shipments](/datasync/table-properties/shipments)** — one row per shipment with carrier, route, and vessel data
+- **[tracking_requests](/datasync/table-properties/tracking-requests)** — one row per tracking request with status and failure info
+- **[transport_events](/datasync/table-properties/transport-events)** — granular transport event records
+- **[_transfer_status](/datasync/table-properties/transfer-status)** — metadata showing when each table was last synced
+
+If you're not yet set up with DataSync, [schedule a call with the Terminal49 team](/datasync/overview#getting-started) to get started.
+
+### 2. Connect Power BI to Your Database
+
+1. Open **Power BI Desktop**.
+2. Click **Get Data** on the Home ribbon.
+3. Select the connector matching your database (e.g., **SQL Server**, **PostgreSQL**, **Snowflake**).
+4. Enter your server address, database name, and credentials.
+5. In the Navigator, select the Terminal49 tables (`containers`, `shipments`, `tracking_requests`, etc.).
+6. Click **Load** (or **Transform Data** if you want to shape the data first in Power Query).
+
+### 3. Build Your Data Model
+
+Once the tables are loaded into Power BI, set up relationships between them:
+
+- Link `containers.shipment_id` to `shipments.shipment_id` (many-to-one).
+- Link `tracking_requests.shipment_id` to `shipments.shipment_id` (many-to-one).
+
+This lets you build visuals that combine container-level detail with shipment-level information.
+
+### 4. Schedule Refresh
+
+To keep your Power BI reports in sync with Terminal49 data:
+
+- **Power BI Desktop**: Click **Refresh** manually, or publish to the Power BI Service for automatic refresh.
+- **Power BI Service**: After publishing, configure a **Scheduled Refresh** under dataset settings. A refresh frequency of 1-2 hours aligns well with DataSync's hourly update cadence. You may need to set up an [on-premises data gateway](https://learn.microsoft.com/en-us/power-bi/connect-data/service-gateway-onprem) if your database is not publicly accessible.
+
+## Dashboard Ideas
+
+Here are some dashboards and reports you can build with Terminal49 data in Power BI:
+
+### Shipment Overview
+- Total active shipments by carrier (`shipping_line_name`)
+- Shipment volume by port of lading / port of discharge
+- Estimated vs. actual arrival times (`pod_eta_at` vs. `pod_arrived_at`)
+
+### Container Status Tracker
+- Container counts by current milestone (empty out, loaded, discharged, full out, etc.)
+- Containers approaching Last Free Day (`pod_last_free_day_on`)
+- Containers with holds at terminal (`customs_hold_at_pod_terminal`, `freight_hold_at_pod_terminal`, etc.)
+- Containers available for pickup (`available_for_pickup`)
+
+### Transit Time Analysis
+- Average transit time by route (POL to POD)
+- Transit time trends over time by carrier
+- Compare carrier performance on the same trade lane
+
+### Demurrage and Fees
+- Containers with outstanding demurrage (`demurrage_at_pod_terminal`)
+- Fee breakdown by terminal
+- Days between discharge and pickup (`pod_discharged_at` to `pod_full_out_at`)
+
+### ETA Reliability
+- ETA change frequency by carrier
+- Difference between first ETA and actual arrival
+- On-time arrival rates by trade lane
+
+## Tips
+
+- **Use `_local` columns for display**: The `containers` table includes both UTC timestamps and local-time strings (e.g., `pod_eta_at` and `pod_eta_at_local`). Use the UTC columns for calculations and the local columns for user-facing display.
+- **Check `_transfer_status`**: Add a card or text box showing the last sync time from the `_transfer_status` table so dashboard users know how fresh the data is.
+- **Filter out stopped shipments**: Use `line_tracking_stopped_at IS NULL` to focus on actively tracked shipments.
+- **Use tags for segmentation**: If you tag shipments in Terminal49 (e.g., by customer, priority, or trade lane), the `shipment_tags` / `tags` columns are available for slicing your reports.
+
+## Alternative: Direct API Connection
+
+If you need real-time data or want to pull specific subsets without DataSync, you can connect Power BI directly to the Terminal49 API using Power BI's **Web connector** or a **custom connector**:
+
+1. In Power BI Desktop, select **Get Data** > **Web**.
+2. Enter a Terminal49 API endpoint URL, e.g., `https://api.terminal49.com/v2/containers`.
+3. In the HTTP request headers, add your API token: `Authorization: Token YOUR_API_KEY`.
+4. Parse the JSON:API response using Power Query transformations.
+
+This approach requires more manual work to handle pagination, JSON:API deserialization, and rate limits. For most reporting use cases, **DataSync + a database connector is the recommended path**.
+
+## Getting Started
+
+If you're already a Terminal49 customer, [schedule a call with Customer Success](https://meetings.hubspot.com/kyle-blount) to set up DataSync for your Power BI workflow.
+
+If you're not yet a customer, [schedule a demo with our sales team](https://www.terminal49.com/contact) to learn more.
