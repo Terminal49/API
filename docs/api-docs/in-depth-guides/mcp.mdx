@@ -43,7 +43,9 @@ Before you begin, make sure you have:
 |-----------|----------|----------|
 | HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Serverless, short-lived requests |
 
-**Authentication**: Pass `Authorization: Bearer <T49_API_TOKEN>` header. Server falls back to `T49_API_TOKEN` environment variable.
+**Authentication**: API token only (OAuth not required for this release).  
+Pass `Authorization: Bearer <T49_API_TOKEN>` or `Authorization: Token <T49_API_TOKEN>`.  
+Server falls back to `T49_API_TOKEN` environment variable.
 
 <Tip>
 Claude Desktop and Cursor use the HTTP transport. For hosted production usage, use Streamable HTTP at `/mcp`.

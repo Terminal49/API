@@ -43,6 +43,28 @@ function getHeaderValue(value: string | string[] | undefined): string | undefine
   return value;
 }
 
+function extractApiToken(
+  authorizationHeader: string | undefined,
+  envToken: string | undefined,
+): { token?: string; source?: 'authorization' | 'environment' } {
+  if (authorizationHeader?.trim()) {
+    const trimmed = authorizationHeader.trim();
+    const authMatch = trimmed.match(/^(bearer|token)\s+(.+)$/i);
+    if (authMatch?.[2]) {
+      const token = authMatch[2].trim();
+      if (token.length > 0) {
+        return { token, source: 'authorization' };
+      }
+    }
+  }
+
+  if (envToken?.trim()) {
+    return { token: envToken.trim(), source: 'environment' };
+  }
+
+  return {};
+}
+
 function buildRequestId(req: RequestLike): string {
   const incomingId = getHeaderValue(req.headers['x-request-id']);
   if (incomingId?.trim()) {
@@ -229,24 +251,26 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
   };
 
   try {
-    // Extract API token from Authorization header or environment
-    const authHeader = req.headers.authorization;
-    let apiToken: string;
+    // Extract API token from Authorization header or environment.
+    // Supports both `Bearer <token>` and `Token <token>` schemes.
+    const authHeader = getHeaderValue(req.headers.authorization);
+    const resolvedAuth = extractApiToken(authHeader, process.env.T49_API_TOKEN);
+    const apiToken = resolvedAuth.token;
 
-    if (authHeader?.startsWith('Bearer ')) {
-      apiToken = authHeader.substring(7);
-    } else if (process.env.T49_API_TOKEN) {
-      // Fallback to environment variable
-      apiToken = process.env.T49_API_TOKEN;
-    } else {
+    if (!apiToken) {
       setCorsHeaders(res);
       res.status(401).json({
         error: 'Unauthorized',
-        message: 'Missing Authorization header or T49_API_TOKEN environment variable',
+        message:
+          'Missing valid Authorization header. Use `Authorization: Bearer <token>` or `Authorization: Token <token>`, or set T49_API_TOKEN.',
       });
       logLifecycle('mcp.request.complete', requestId, { reason: 'missing_api_token' });
       return;
     }
+
+    logLifecycle('mcp.request.auth', requestId, {
+      auth_source: resolvedAuth.source,
+    });
 
     setCorsHeaders(res);
 

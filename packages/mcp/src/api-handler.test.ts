@@ -4,18 +4,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockState = vi.hoisted(() => ({
   servers: [] as any[],
   transports: [] as any[],
+  serverCreateArgs: [] as Array<{ apiToken: string; apiBaseUrl: string | undefined }>,
   handleRequestImpl: undefined as
     | ((req: unknown, res: unknown, body: unknown) => Promise<void>)
     | undefined,
 }));
 
 vi.mock('./server.js', () => ({
-  createTerminal49McpServer: vi.fn(() => {
+  createTerminal49McpServer: vi.fn((apiToken: string, apiBaseUrl?: string) => {
     const server = {
       connect: vi.fn().mockResolvedValue(undefined),
       close: vi.fn().mockResolvedValue(undefined),
     };
 
+    mockState.serverCreateArgs.push({ apiToken, apiBaseUrl });
     mockState.servers.push(server);
     return server;
   }),
@@ -87,6 +89,7 @@ describe('api/mcp handler lifecycle', () => {
     vi.clearAllMocks();
     mockState.servers.length = 0;
     mockState.transports.length = 0;
+    mockState.serverCreateArgs.length = 0;
     mockState.handleRequestImpl = undefined;
     delete process.env.T49_API_TOKEN;
     delete process.env.T49_API_BASE_URL;
@@ -107,6 +110,7 @@ describe('api/mcp handler lifecycle', () => {
     const server = mockState.servers[0];
     const transport = mockState.transports[0];
 
+    expect(mockState.serverCreateArgs[0]?.apiToken).toBe('test-token');
     expect(server.connect).toHaveBeenCalledWith(transport);
     expect(transport.handleRequest).toHaveBeenCalledWith(req, res, req.body);
     expect(transport.close).toHaveBeenCalledTimes(1);
@@ -152,5 +156,55 @@ describe('api/mcp handler lifecycle', () => {
     const transport = mockState.transports[0];
     expect(transport.close).toHaveBeenCalledTimes(1);
     expect(server.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('accepts Authorization header using Token scheme', async () => {
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Token token-scheme-value',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(mockState.serverCreateArgs[0]?.apiToken).toBe('token-scheme-value');
+  });
+
+  it('falls back to T49_API_TOKEN when Authorization header is absent', async () => {
+    process.env.T49_API_TOKEN = 'env-token-value';
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(mockState.serverCreateArgs[0]?.apiToken).toBe('env-token-value');
+  });
+
+  it('returns 401 when neither Authorization header nor T49_API_TOKEN is set', async () => {
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.payload).toMatchObject({
+      error: 'Unauthorized',
+    });
+    expect(mockState.servers).toHaveLength(0);
+    expect(mockState.transports).toHaveLength(0);
   });
 });

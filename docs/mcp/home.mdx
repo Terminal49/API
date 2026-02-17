@@ -74,7 +74,8 @@ For the full walkthrough (including local stdio dev, deployment, and SDK example
 | HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Serverless, short-lived requests |
 
 **Authentication**:
-- Header: `Authorization: Bearer <T49_API_TOKEN>`
+- API token only (OAuth not required for this release)
+- Header: `Authorization: Bearer <T49_API_TOKEN>` or `Authorization: Token <T49_API_TOKEN>`
 - Or set `T49_API_TOKEN` environment variable when self-hosting
 
 <Tip>
