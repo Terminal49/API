@@ -6,6 +6,7 @@
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { randomUUID } from 'node:crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
 
@@ -21,8 +22,12 @@ type ResponseLike = {
   json(payload: unknown): void;
   setHeader(name: string, value: string): void;
   end(): void;
-  on(event: 'close', listener: () => void): void;
+  on(event: 'close' | 'finish', listener: () => void): void;
 } & ServerResponse;
+
+type Closable = {
+  close?: () => Promise<void> | void;
+};
 
 function setCorsHeaders(res: ResponseLike): void {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -36,6 +41,26 @@ function getHeaderValue(value: string | string[] | undefined): string | undefine
   }
 
   return value;
+}
+
+function buildRequestId(req: RequestLike): string {
+  const incomingId = getHeaderValue(req.headers['x-request-id']);
+  if (incomingId?.trim()) {
+    return incomingId.trim();
+  }
+
+  return randomUUID();
+}
+
+function logLifecycle(event: string, requestId: string, details: Record<string, unknown> = {}): void {
+  console.error(
+    JSON.stringify({
+      event,
+      request_id: requestId,
+      timestamp: new Date().toISOString(),
+      ...details,
+    }),
+  );
 }
 
 function parseAllowList(value: string | undefined): Set<string> {
@@ -130,15 +155,19 @@ function validateRequestSecurity(req: RequestLike, res: ResponseLike): boolean {
  * Main handler for Vercel serverless function
  */
 export default async function handler(req: RequestLike, res: ResponseLike): Promise<void> {
+  const requestId = buildRequestId(req);
   setCorsHeaders(res);
+  logLifecycle('mcp.request.start', requestId, { method: req.method ?? 'UNKNOWN' });
 
   if (!validateRequestSecurity(req, res)) {
+    logLifecycle('mcp.request.rejected', requestId, { reason: 'request_security_validation_failed' });
     return;
   }
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     res.status(200).end();
+    logLifecycle('mcp.request.complete', requestId, { reason: 'preflight' });
     return;
   }
 
@@ -149,8 +178,55 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
       error: 'Method not allowed',
       message: 'Only POST requests are accepted',
     });
+    logLifecycle('mcp.request.complete', requestId, { reason: 'method_not_allowed', method: req.method });
     return;
   }
+
+  let server: (Closable & { connect: (transport: StreamableHTTPServerTransport) => Promise<void> }) | undefined;
+  let transport: (Closable & { handleRequest: (req: RequestLike, res: ResponseLike, body: unknown) => Promise<void> }) | undefined;
+  let cleanupPromise: Promise<void> | null = null;
+
+  const runCleanup = (reason: string): Promise<void> => {
+    if (cleanupPromise) {
+      return cleanupPromise;
+    }
+
+    cleanupPromise = (async () => {
+      const cleanupErrors: string[] = [];
+      logLifecycle('mcp.request.cleanup.start', requestId, { reason });
+
+      if (transport?.close) {
+        try {
+          await transport.close();
+        } catch (error) {
+          const err = error as Error;
+          cleanupErrors.push(`transport.close: ${err.message}`);
+        }
+      }
+
+      if (server?.close) {
+        try {
+          await server.close();
+        } catch (error) {
+          const err = error as Error;
+          cleanupErrors.push(`server.close: ${err.message}`);
+        }
+      }
+
+      if (cleanupErrors.length > 0) {
+        logLifecycle('mcp.request.cleanup.error', requestId, { reason, errors: cleanupErrors });
+        return;
+      }
+
+      logLifecycle('mcp.request.cleanup.complete', requestId, { reason });
+    })();
+
+    return cleanupPromise;
+  };
+
+  const scheduleCleanup = (reason: string): void => {
+    void runCleanup(reason);
+  };
 
   try {
     // Extract API token from Authorization header or environment
@@ -168,33 +244,37 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
         error: 'Unauthorized',
         message: 'Missing Authorization header or T49_API_TOKEN environment variable',
       });
+      logLifecycle('mcp.request.complete', requestId, { reason: 'missing_api_token' });
       return;
     }
 
     setCorsHeaders(res);
 
-    // Create MCP server
-    const server = createTerminal49McpServer(apiToken, process.env.T49_API_BASE_URL);
-
-    // Create a new transport for each request to prevent request ID collisions
-    // Different clients may use the same JSON-RPC request IDs
-    const transport = new StreamableHTTPServerTransport({
+    // Create MCP server and per-request transport.
+    server = createTerminal49McpServer(apiToken, process.env.T49_API_BASE_URL);
+    transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined, // Stateless mode
       enableJsonResponse: true, // Return JSON instead of SSE
     });
 
-    // Clean up transport when response closes
+    // Clean up on response lifecycle and also in finally to guarantee closure.
     res.on('close', () => {
-      transport.close();
+      scheduleCleanup('response_close');
+    });
+    res.on('finish', () => {
+      scheduleCleanup('response_finish');
     });
 
     // Connect server to transport and handle request
     await server.connect(transport);
     await transport.handleRequest(req, res, req.body);
+    logLifecycle('mcp.request.complete', requestId, { reason: 'handled' });
   } catch (error) {
-    console.error('MCP handler error:', error);
-
     const err = error as Error;
+    logLifecycle('mcp.request.error', requestId, {
+      error: err.name,
+      message: err.message,
+    });
     if (!res.headersSent) {
       setCorsHeaders(res);
       res.status(500).json({
@@ -207,5 +287,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
         id: null,
       });
     }
+  } finally {
+    await runCleanup('finally');
   }
 }
