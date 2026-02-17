@@ -8,6 +8,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
 
 type RequestLike = {
@@ -24,10 +25,6 @@ type ResponseLike = {
   end(): void;
   on(event: 'close' | 'finish', listener: () => void): void;
 } & ServerResponse;
-
-type Closable = {
-  close?: () => Promise<void> | void;
-};
 
 function setCorsHeaders(res: ResponseLike): void {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -204,8 +201,8 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
     return;
   }
 
-  let server: (Closable & { connect: (transport: StreamableHTTPServerTransport) => Promise<void> }) | undefined;
-  let transport: (Closable & { handleRequest: (req: RequestLike, res: ResponseLike, body: unknown) => Promise<void> }) | undefined;
+  let server: McpServer | undefined;
+  let transport: StreamableHTTPServerTransport | undefined;
   let cleanupPromise: Promise<void> | null = null;
 
   const runCleanup = (reason: string): Promise<void> => {
