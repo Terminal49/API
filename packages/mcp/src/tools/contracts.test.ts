@@ -297,8 +297,89 @@ describe('MCP tool contracts', () => {
       event: 'container.transport.vessel_loaded',
     });
     expect(result.summary.milestones).toMatchObject({
-      vessel_loaded_at: '2025-01-01T00:00:00Z',
-      vessel_departed_at: '2025-01-02T00:00:00Z',
+      vessel_loaded_at: '2025-01-01T00:00:00.000Z',
+      vessel_departed_at: '2025-01-02T00:00:00.000Z',
+    });
+  });
+
+  it('search_container handles partially missing fields safely', async () => {
+    const client = asClient({
+      search: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: 'sr-3',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'container',
+              number: null,
+              shipping_line: null,
+            },
+          },
+          {
+            id: 'sr-4',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'shipment',
+              ref_numbers: null,
+              shipping_line: null,
+              containers_count: null,
+            },
+          },
+        ],
+      }),
+    });
+
+    const result = await executeSearchContainer({ query: 'XX' }, client);
+
+    expect(result.total_results).toBe(2);
+    expect(result.containers[0]).toMatchObject({
+      id: 'sr-3',
+      container_number: 'Unknown',
+      status: 'unknown',
+      shipping_line: 'Unknown',
+    });
+    expect(result.shipments[0]).toMatchObject({
+      id: 'sr-4',
+      ref_numbers: [],
+      container_count: 0,
+      shipping_line: 'Unknown',
+    });
+  });
+
+  it('track_container returns pending guidance when container is not yet linked', async () => {
+    const createFromInfer = vi.fn().mockResolvedValue({
+      infer: { inferred_type: 'container' },
+      trackingRequest: {
+        data: { type: 'tracking_request', id: 'tr-1' },
+      },
+    });
+
+    const getContainer = vi.fn();
+    const client = asClient({
+      createTrackingRequestFromInfer: createFromInfer,
+      containers: { get: getContainer },
+    });
+
+    const result = await executeTrackContainer(
+      { number: 'TEMU8347291', scac: 'TEMU' },
+      client,
+    );
+
+    expect(createFromInfer).toHaveBeenCalledWith('TEMU8347291', {
+      scac: 'TEMU',
+      numberType: undefined,
+      refNumbers: undefined,
+    });
+    expect(getContainer).not.toHaveBeenCalled();
+    expect(result.tracking_request_created).toBe(true);
+    expect(result.tracking_request).toMatchObject({
+      request_number: 'TEMU8347291',
+      number_type: undefined,
+      scac: 'TEMU',
+    });
+    expect(result._metadata).toMatchObject({
+      presentation_guidance:
+        'Tracking request was created, but no container is linked yet. Poll list_tracking_requests or retry in a short while.',
     });
   });
 

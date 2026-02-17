@@ -158,7 +158,7 @@ Once deployed, your MCP server will be at: `https://your-deployment.vercel.app/a
     "terminal49": {
       "url": "https://your-deployment.vercel.app/api/mcp",
       "headers": {
-        "Authorization": "Bearer your_api_token_here"
+        "Authorization": "Token your_api_token_here"
       }
     }
   }
@@ -174,7 +174,7 @@ Once deployed, your MCP server will be at: `https://your-deployment.vercel.app/a
       "terminal49": {
         "url": "https://your-deployment.vercel.app/api/mcp",
         "headers": {
-          "Authorization": "Bearer your_api_token_here"
+          "Authorization": "Token your_api_token_here"
         }
       }
     }
@@ -192,7 +192,7 @@ Once deployed, your MCP server will be at: `https://your-deployment.vercel.app/a
 
 **Headers:**
 ```
-Authorization: Bearer your_api_token_here
+Authorization: Token your_api_token_here
 Content-Type: application/json
 ```
 
@@ -250,8 +250,10 @@ T49_API_TOKEN=your_token_here
 
 Or include in request headers:
 ```
-Authorization: Bearer your_token_here
+Authorization: Token your_token_here
 ```
+
+`Token` is the preferred scheme. `Bearer your_token_here` is also accepted for backward compatibility.
 
 ### For Local stdio
 
@@ -343,7 +345,7 @@ vercel env add T49_API_TOKEN
 **Solution:** Ensure you're using `POST` method, not `GET`:
 ```bash
 curl -X POST https://your-deployment.vercel.app/api/mcp \
-  -H "Authorization: Bearer your_token" \
+  -H "Authorization: Token your_token" \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
 ```

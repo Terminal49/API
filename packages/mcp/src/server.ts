@@ -19,8 +19,19 @@ import { executeListContainers } from './tools/list-containers.js';
 import { executeListTrackingRequests } from './tools/list-tracking-requests.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
+import { queryGuidanceResource, readQueryGuidanceResource } from './resources/query-guidance.js';
 
 type ToolContent = { type: 'text'; text: string };
+
+type ResponseContract = {
+  purpose: string;
+  can_answer: string[];
+  requires_more_data: string[];
+  relevant_fields: string[];
+  presentation_guidance: string;
+  suggested_follow_ups: string[];
+  suggested_tools: string[];
+};
 
 function buildContentPayload(result: unknown): ToolContent[] {
   if (result && typeof result === 'object' && (result as any).mapped) {
@@ -80,15 +91,190 @@ function hasMetadataError(result: unknown): result is { _metadata: { error: stri
   return Boolean(metadata && typeof metadata.error === 'string');
 }
 
-function wrapTool<TArgs>(
-  handler: (args: TArgs) => Promise<unknown>
+const responseContractSchema = z.object({
+  purpose: z.string(),
+  can_answer: z.array(z.string()),
+  requires_more_data: z.array(z.string()),
+  relevant_fields: z.array(z.string()),
+  presentation_guidance: z.string(),
+  suggested_follow_ups: z.array(z.string()),
+  suggested_tools: z.array(z.string()),
+});
+
+function normalizeContract(contract: ResponseContract): ResponseContract {
+  return {
+    purpose: contract.purpose,
+    can_answer: contract.can_answer,
+    requires_more_data: contract.requires_more_data,
+    relevant_fields: contract.relevant_fields,
+    presentation_guidance: contract.presentation_guidance,
+    suggested_follow_ups: contract.suggested_follow_ups,
+    suggested_tools: contract.suggested_tools,
+  };
+}
+
+function attachResponseContract(
+  result: unknown,
+  contract: ResponseContract,
+): unknown {
+  if (!result || typeof result !== 'object' || Array.isArray(result)) {
+    return result;
+  }
+
+  return {
+    ...result,
+    _response_contract: normalizeContract(contract),
+  };
+}
+
+function buildSearchContract(result: any, args: { query: string }): ResponseContract {
+  const hasContainers = result.total_results > 0 && (result.containers?.length ?? 0) > 0;
+  const hasShipments = result.total_results > 0 && (result.shipments?.length ?? 0) > 0;
+
+  return {
+    purpose: `Resolve identifier ${args.query} into concrete container and shipment IDs.`,
+    can_answer: [
+      'container IDs and shipment references',
+      'carrier/scac hints for discovered items',
+      'what additional lookup step is needed',
+    ],
+    requires_more_data: hasContainers || hasShipments ? [] : ['A valid/refined identifier (container/BL/reference)'],
+    relevant_fields: ['containers', 'shipments', 'total_results'],
+    presentation_guidance:
+      hasContainers || hasShipments
+        ? 'Group matches by container and shipment. Ask for clarification only when multiple entities are strong candidates.'
+        : 'Ask for a clearer identifier and verify format before calling another tool.',
+    suggested_follow_ups: ['get_container', 'get_shipment_details'],
+    suggested_tools: hasContainers || hasShipments ? ['get_container', 'get_shipment_details'] : ['search_container'],
+  };
+}
+
+function buildTrackContract(result: any, args: { number: string }): ResponseContract {
+  const hasTrackedContainer = Boolean((result as any)?.id);
+  const isPending = Boolean((result as any)?.tracking_request_created) && !hasTrackedContainer;
+  const state = (result as any)?._metadata?.container_state || 'unknown';
+  return {
+    purpose: `Track ${args.number} and return the linked container view when possible.`,
+    can_answer: [
+      'tracking request creation state',
+      'basic container status and metadata',
+      'where to pull next (if container details are delayed)',
+    ],
+    requires_more_data: isPending ? ['container UUID (once linking finishes)'] : [],
+    relevant_fields: ['tracking_request_created', 'container_state', 'id', 'status'],
+    presentation_guidance:
+      isPending
+        ? 'Tracking request was created but container linking is not immediate. Mention this and provide next-check guidance.'
+        : `Use container state "${state}" to answer readiness, holds, and pickup timing.`,
+    suggested_follow_ups:
+      isPending
+        ? ['list_tracking_requests', 'get_container']
+        : ['get_container_transport_events'],
+    suggested_tools: ['get_container', 'get_container_transport_events'],
+  };
+}
+
+function buildTransportEventsContract(result: any, _args: { id: string }): ResponseContract {
+  const totalEvents = result.total_events ?? result.timeline?.length ?? 0;
+  return {
+    purpose: 'Summarize what happened and forecast next likely milestone for the container.',
+    can_answer: ['journey timeline', 'major milestones', 'rail/transshipment context'],
+    requires_more_data:
+      totalEvents > 0 ? [] : ['recent container events becoming available from carrier feed'],
+    relevant_fields: ['timeline', 'event_categories', 'milestones'],
+    presentation_guidance:
+      totalEvents > 0
+        ? 'Render in chronological order. Prioritize milestones over minor terminal noise.'
+        : 'No events found yet; recommend checking base container context and retrying later.',
+    suggested_follow_ups: ['get_container', 'get_container_route'],
+    suggested_tools: ['get_container', 'get_container_route'],
+  };
+}
+
+function buildShippingLineContract(result: any): ResponseContract {
+  return {
+    purpose: 'Help user identify a supported SCAC before creating a track request.',
+    can_answer: ['SCAC lookup', 'carrier aliases and names', 'supported carrier search'],
+    requires_more_data: result.total_lines > 0 ? [] : ['additional query context'],
+    relevant_fields: ['shipping_lines', 'total_lines'],
+    presentation_guidance: 'Sort carriers alphabetically and show both SCAC and company names.',
+    suggested_follow_ups: ['track_container'],
+    suggested_tools: ['track_container'],
+  };
+}
+
+function buildRouteContract(result: any, _args: { id: string }): ResponseContract {
+  const available = Array.isArray(result.route_locations);
+  return {
+    purpose: 'Communicate container routing and vessel itinerary.',
+    can_answer: [
+      'transshipment structure',
+      'leg-by-leg ETD/ETA',
+      'carrier and vessel coverage',
+    ],
+    requires_more_data: available ? [] : ['event timeline via get_container_transport_events'],
+    relevant_fields: ['route_locations', 'total_legs', 'alternative'],
+    presentation_guidance: available
+      ? 'Show origin → transshipments → destination. Emphasize missing legs and ETA changes.'
+      : 'This account has no route payload; switch to events and container snapshot.',
+    suggested_follow_ups: ['get_container_transport_events', 'get_container'],
+    suggested_tools: ['get_container_transport_events', 'get_container'],
+  };
+}
+
+function buildContainerContract(): ResponseContract {
+  return {
+    purpose: 'Provide current container snapshot and readiness context.',
+    can_answer: ['status', 'location', 'pickup readiness', 'rail and shipment context'],
+    requires_more_data: ['holds, fees, and timeline by demand'],
+    relevant_fields: ['id', 'container_number', 'status', 'pod_terminal', 'demurrage'],
+    presentation_guidance:
+      'Summarize state first, then call out LFD, holds, and fees if present. If terminal availability is unclear, suggest transport events.',
+    suggested_follow_ups: ['get_container_transport_events', 'get_container_route'],
+    suggested_tools: ['get_container_transport_events', 'get_container_route'],
+  };
+}
+
+function buildShipmentContract(): ResponseContract {
+  return {
+    purpose: 'Explain shipment-level routing, container counts, and references.',
+    can_answer: ['shipment identifiers', 'routing summary', 'container list'],
+    requires_more_data: ['container-level ETA confidence when only one terminal is visible'],
+    relevant_fields: ['id', 'bill_of_lading', 'status', 'containers', 'routing'],
+    presentation_guidance:
+      'Group by shipment summary then container health signals (pickup ETA, pickup_lfd, holds).',
+    suggested_follow_ups: ['get_container', 'list_containers'],
+    suggested_tools: ['get_container', 'list_containers'],
+  };
+}
+
+function buildListContract(result: any): ResponseContract {
+  const count = result?.items ? result.items.length : 0;
+  return {
+    purpose: 'Surface aggregate operational worklist results.',
+    can_answer: ['which records match filters', 'count and paging state'],
+    requires_more_data: count === 0 ? ['alternative filters or tighter date ranges'] : [],
+    relevant_fields: ['items', 'links', 'meta', 'count'],
+    presentation_guidance: 'Return only top-level actionable summary unless user requests full records.',
+    suggested_follow_ups: ['list_containers', 'list_tracking_requests'],
+    suggested_tools: ['list_containers', 'list_tracking_requests', 'get_container'],
+  };
+}
+
+function wrapToolWithContract<TArgs>(
+  handler: (args: TArgs) => Promise<unknown>,
+  buildContract?: (result: unknown, args: TArgs) => ResponseContract,
 ): (args: TArgs) => Promise<{ content: ToolContent[]; structuredContent: any }> {
   return async (args: TArgs) => {
     try {
       const result = await handler(args);
+      const structuredContent = buildContract
+        ? attachResponseContract(result, buildContract(result, args))
+        : result;
+
       return {
         content: buildContentPayload(result),
-        structuredContent: normalizeStructuredContent(result),
+        structuredContent: normalizeStructuredContent(structuredContent),
       };
     } catch (error) {
       const err = error as Error;
@@ -140,9 +326,13 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
           container_count: z.number(),
         })),
         total_results: z.number(),
+        _response_contract: responseContractSchema,
       },
     },
-    wrapTool(async ({ query }) => executeSearchContainer({ query }, client))
+    wrapToolWithContract(
+      async ({ query }) => executeSearchContainer({ query }, client),
+      (result, args) => buildSearchContract(result as any, args),
+    )
   );
 
   // Tool 2: Track Container
@@ -173,10 +363,16 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         status: z.string().optional(),
         tracking_request_created: z.boolean().optional(),
         infer_result: z.any().optional(),
+        _response_contract: responseContractSchema.optional(),
       },
     },
-    wrapTool(async ({ number, numberType, containerNumber, scac, bookingNumber, refNumbers }) =>
-      executeTrackContainer({ number, numberType, containerNumber, scac, bookingNumber, refNumbers }, client)
+    wrapToolWithContract(
+      async ({ number, numberType, containerNumber, scac, bookingNumber, refNumbers }) =>
+        executeTrackContainer(
+          { number, numberType, containerNumber, scac, bookingNumber, refNumbers },
+          client,
+        ),
+      (result, args) => buildTrackContract(result as any, { number: args.number || args.containerNumber || args.bookingNumber || '' })
     )
   );
 
@@ -202,8 +398,16 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
             '• transport_events: Full event history, rail tracking (heavy 50-100 events, use for journey/timeline questions)'
           ),
       },
+      outputSchema: z
+        .object({
+          _response_contract: responseContractSchema,
+        })
+        .passthrough(),
     },
-    wrapTool(async ({ id, include }) => executeGetContainer({ id, include }, client))
+    wrapToolWithContract(
+      async ({ id, include }) => executeGetContainer({ id, include }, client),
+      () => buildContainerContract(),
+    )
   );
 
   // Tool 4: Get Shipment Details
@@ -219,9 +423,16 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         id: z.string().uuid().describe('The Terminal49 shipment ID (UUID format)'),
         include_containers: z.boolean().optional().default(true).describe('Include list of containers in this shipment. Default: true'),
       },
-    },
-    wrapTool(async ({ id, include_containers }) =>
-      executeGetShipmentDetails({ id, include_containers }, client)
+      outputSchema: z
+        .object({
+          _response_contract: responseContractSchema,
+        })
+        .passthrough(),
+      },
+    wrapToolWithContract(
+      async ({ id, include_containers }) =>
+        executeGetShipmentDetails({ id, include_containers }, client),
+      () => buildShipmentContract(),
     )
   );
 
@@ -264,6 +475,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
             })
           ),
           milestones: z.record(z.string(), z.string().nullable()),
+          _response_contract: responseContractSchema,
           _metadata: z.object({
             presentation_guidance: z.string(),
           }),
@@ -295,6 +507,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
               })
             ),
             milestones: z.record(z.string(), z.string().nullable()),
+            _response_contract: responseContractSchema,
             _metadata: z.object({
               presentation_guidance: z.string(),
             }),
@@ -302,7 +515,10 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         }),
       ]),
     },
-    wrapTool(async ({ id }) => executeGetContainerTransportEvents({ id }, client))
+    wrapToolWithContract(
+      async ({ id }) => executeGetContainerTransportEvents({ id }, client),
+      (result, args) => buildTransportEventsContract(result as any, args),
+    )
   );
 
   // Tool 6: Get Supported Shipping Lines
@@ -333,9 +549,13 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
           error: z.string().optional(),
           remediation: z.string().optional(),
         }),
+        _response_contract: responseContractSchema,
       },
     },
-    wrapTool(async ({ search }) => executeGetSupportedShippingLines({ search }, client))
+    wrapToolWithContract(
+      async ({ search }) => executeGetSupportedShippingLines({ search }, client),
+      (result) => buildShippingLineContract(result as any),
+    )
   );
 
   // Tool 7: Get Container Route
@@ -406,9 +626,13 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         error: z.string().optional(),
         message: z.string().optional(),
         alternative: z.string().optional(),
+        _response_contract: responseContractSchema.optional(),
       }),
     },
-    wrapTool(async ({ id }) => executeGetContainerRoute({ id }, client))
+    wrapToolWithContract(
+      async ({ id }) => executeGetContainerRoute({ id }, client),
+      (result, args) => buildRouteContract(result as any, args),
+    )
   );
 
   // Tool 8: List Shipments
@@ -435,9 +659,13 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         items: z.array(z.record(z.string(), z.any())),
         links: z.record(z.string(), z.string()).optional(),
         meta: z.record(z.string(), z.any()).optional(),
+        _response_contract: responseContractSchema,
       }),
     },
-    wrapTool(async (args) => executeListShipments(args, client))
+    wrapToolWithContract(
+      async (args) => executeListShipments(args, client),
+      (result) => buildListContract(result as any),
+    )
   );
 
   // Tool 9: List Containers
@@ -464,9 +692,13 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         items: z.array(z.record(z.string(), z.any())),
         links: z.record(z.string(), z.string()).optional(),
         meta: z.record(z.string(), z.any()).optional(),
+        _response_contract: responseContractSchema,
       }),
     },
-    wrapTool(async (args) => executeListContainers(args, client))
+    wrapToolWithContract(
+      async (args) => executeListContainers(args, client),
+      (result) => buildListContract(result as any),
+    )
   );
 
   // Tool 10: List Tracking Requests
@@ -493,9 +725,13 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         items: z.array(z.record(z.string(), z.any())),
         links: z.record(z.string(), z.string()).optional(),
         meta: z.record(z.string(), z.any()).optional(),
+        _response_contract: responseContractSchema,
       }),
     },
-    wrapTool(async (args) => executeListTrackingRequests(args, client))
+    wrapToolWithContract(
+      async (args) => executeListTrackingRequests(args, client),
+      (result) => buildListContract(result as any),
+    )
   );
 
   // ==================== PROMPTS ====================
@@ -617,6 +853,29 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
     }
   );
 
+  // Resource 3: Query Guidance (internal LLM tool routing hints)
+  server.registerResource(
+    'query-guidance',
+    queryGuidanceResource.uri,
+    {
+      title: queryGuidanceResource.name,
+      description: queryGuidanceResource.description,
+      mimeType: queryGuidanceResource.mimeType,
+    },
+    async () => {
+      const resource = readQueryGuidanceResource();
+      return {
+        contents: [
+          {
+            uri: queryGuidanceResource.uri,
+            mimeType: queryGuidanceResource.mimeType,
+            text: resource,
+          },
+        ],
+      };
+    }
+  );
+
   return server;
 }
 
@@ -641,6 +900,6 @@ export async function runStdioServer() {
   await server.connect(transport);
 
   console.error('Terminal49 MCP Server v1.0.0 running on stdio');
-  console.error('Available: 10 tools | 3 prompts | 2 resources');
+  console.error('Available: 10 tools | 3 prompts | 3 resources');
   console.error('SDK: @modelcontextprotocol/sdk (McpServer API)');
 }

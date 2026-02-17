@@ -48,6 +48,6 @@ jobs:
       - name: Build MCP
         run: npm run build --workspace @terminal49/mcp
       - name: Test MCP
-        run: npm run test --workspace @terminal49/mcp -- --run
+        run: npm run test --workspace @terminal49/mcp -- --run --coverage
       - name: Lint MCP (Biome)
         run: npm run lint --workspace @terminal49/mcp

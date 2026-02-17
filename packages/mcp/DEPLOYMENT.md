@@ -58,7 +58,7 @@ vercel --prod
 
 ```bash
 curl -X POST https://your-deployment.vercel.app/api/mcp \
-  -H "Authorization: Bearer your_token" \
+  -H "Authorization: Token your_token" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -114,7 +114,7 @@ Vercel will:
 
 ```bash
 curl -X POST https://terminal49-mcp.vercel.app/api/mcp \
-  -H "Authorization: Bearer your_token" \
+  -H "Authorization: Token your_token" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",

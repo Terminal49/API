@@ -53,18 +53,56 @@ export const trackContainerTool = {
   },
 };
 
+function normalizeText(value: string | undefined): string | undefined {
+  const text = value?.trim();
+  if (!text) {
+    return undefined;
+  }
+
+  return text.toUpperCase();
+}
+
+function normalizeTrackingNumber(value: string): string {
+  return value.trim().replace(/\s+/g, '').toUpperCase();
+}
+
+function normalizeNumberType(value: string | undefined): string | undefined {
+  const normalized = normalizeText(value);
+  if (!normalized) {
+    return undefined;
+  }
+
+  if (normalized === 'BOOKING') {
+    return 'booking_number';
+  }
+
+  if (normalized === 'BL' || normalized === 'B/L' || normalized === 'BILL_OF_LADING') {
+    return 'bill_of_lading';
+  }
+
+  return normalized;
+}
+
+function inferScacFromPrefix(number: string): string | undefined {
+  const match = number.match(/^([A-Za-z]{4})/);
+  return match ? match[1].toUpperCase() : undefined;
+}
+
 export async function executeTrackContainer(
   args: TrackContainerArgs,
   client: Terminal49Client
 ): Promise<any> {
-  const number = args.number || args.containerNumber || args.bookingNumber;
+  const number = normalizeTrackingNumber(args.number || args.containerNumber || args.bookingNumber || '');
   if (!number || number.trim() === '') {
     throw new Error('Tracking number is required');
   }
 
   const numberTypeOverride =
-    args.numberType ||
-    (args.containerNumber ? 'container' : args.bookingNumber ? 'booking_number' : undefined);
+    normalizeNumberType(
+      args.numberType ||
+        (args.containerNumber ? 'container' : args.bookingNumber ? 'booking_number' : undefined),
+    );
+  const scac = normalizeText(args.scac) || inferScacFromPrefix(number);
 
   const startTime = Date.now();
   console.error(
@@ -72,7 +110,7 @@ export async function executeTrackContainer(
       event: 'tool.execute.start',
       tool: 'track_container',
       number,
-      scac: args.scac,
+      scac,
       timestamp: new Date().toISOString(),
     })
   );
@@ -80,7 +118,7 @@ export async function executeTrackContainer(
   try {
     // Step 1: Infer + create tracking request
     const { infer, trackingRequest } = await client.createTrackingRequestFromInfer(number, {
-      scac: args.scac,
+      scac,
       numberType: numberTypeOverride,
       refNumbers: args.refNumbers,
     });
@@ -89,10 +127,30 @@ export async function executeTrackContainer(
     const containerId = extractContainerId(trackingRequest);
 
     if (!containerId) {
-      throw new Error(
-        'Could not find container ID in tracking response. ' +
-          'The container may not be in the system yet, or there was an error creating the tracking request.'
+      console.error(
+        JSON.stringify({
+          event: 'tracking_request.pending',
+          number,
+          numberType: numberTypeOverride,
+          scac,
+          timestamp: new Date().toISOString(),
+        })
       );
+
+      return {
+        tracking_request_created: true,
+        infer_result: infer,
+        tracking_request: {
+          request_number: number,
+          number_type: numberTypeOverride,
+          scac,
+        },
+        _metadata: {
+          presentation_guidance:
+            'Tracking request was created, but no container is linked yet. Poll list_tracking_requests or retry in a short while.',
+          recommendations: ['list_tracking_requests', 'get_container'],
+        },
+      };
     }
 
     console.error(
@@ -126,6 +184,27 @@ export async function executeTrackContainer(
     };
   } catch (error) {
     const duration = Date.now() - startTime;
+    const message = (error as Error).message;
+
+    if (
+      /Unable to infer/.test(message) ||
+      /SCAC/.test(message) ||
+      /request_number/.test(message) ||
+      /request type/.test(message)
+    ) {
+      console.error(
+        JSON.stringify({
+          event: 'tracking_request.hint',
+          number,
+          message,
+          timestamp: new Date().toISOString(),
+        })
+      );
+      throw new Error(
+        `${message}. Provide a valid tracking number and either an explicit numberType (` +
+          'container | booking_number | bill_of_lading) and/or scac.'
+      );
+    }
 
     console.error(
       JSON.stringify({
@@ -133,7 +212,7 @@ export async function executeTrackContainer(
         tool: 'track_container',
         number,
         error: (error as Error).name,
-        message: (error as Error).message,
+        message,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
       })

@@ -29,7 +29,7 @@ export T49_API_TOKEN='your_token_here'
 ```
 
 **What it tests:**
-- ✅ All 7 tools (list, search, get, track, etc.)
+- ✅ All 10 tools, 3 prompts, and resources
 - ✅ All 3 prompts (track-shipment, analyze-delays, etc.)
 - ✅ Resources (container status, milestone glossary)
 - ✅ SCAC completions
@@ -53,38 +53,20 @@ export T49_API_TOKEN='your_token_here'
 
 ---
 
-### 2. **Vitest Unit Tests** (Coming Soon)
+### 2. **Vitest Unit Tests**
 
-The project is configured with Vitest but doesn't have unit tests yet.
-
-**To run (when available):**
-```bash
-cd packages/mcp
-npm test
-```
-
-**To create unit tests:**
-
-Create test files in `packages/mcp/src/**/*.test.ts`:
-
-```typescript
-// Example: src/tools/search-container.test.ts
-import { describe, it, expect } from 'vitest';
-import { executeSearchContainer } from './search-container.js';
-
-describe('search_container', () => {
-  it('should search for containers', async () => {
-    // Test implementation
-  });
-});
-```
+The project includes unit tests for tool execution, MCP wiring, and HTTP handler behavior.
 
 **Run tests:**
 ```bash
 cd packages/mcp
-npm test                # Run all tests
-npm test -- --watch     # Watch mode
-npm test -- --coverage  # With coverage
+npm test
+npm test -- --coverage
+```
+
+```bash
+cd packages/mcp
+npm test -- --watch   # Watch mode
 ```
 
 ---
@@ -158,7 +140,7 @@ export T49_API_TOKEN='your_token_here'
 
 # Test tools/list
 curl -X POST https://your-url.vercel.app/mcp \
-  -H "Authorization: Bearer $T49_API_TOKEN" \
+  -H "Authorization: Token $T49_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -168,7 +150,7 @@ curl -X POST https://your-url.vercel.app/mcp \
 
 # Test search_container
 curl -X POST https://your-url.vercel.app/mcp \
-  -H "Authorization: Bearer $T49_API_TOKEN" \
+  -H "Authorization: Token $T49_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -193,8 +175,11 @@ cd packages/mcp && ./test-interactive.sh
 # 2. MCP Inspector (visual)
 npx @modelcontextprotocol/inspector packages/mcp/src/index.ts
 
-# 3. Unit tests (when available)
+# 3. Unit tests (includes coverage targets)
 cd packages/mcp && npm test
+
+# 3b. Unit tests + coverage report
+cd packages/mcp && npm test -- --coverage
 
 # 4. Type checking
 cd packages/mcp && npm run type-check
@@ -250,23 +235,27 @@ echo '{
 
 ## ✅ Test Coverage Goals
 
-Current coverage status documented in `TEST_RESULTS_V2.md`.
+Coverage is enforced in CI with the shared MCP test script:
 
 **What's tested:**
-- ✅ All 7 tools execute without errors
-- ✅ All 3 prompts generate correctly
-- ✅ Resources are accessible
-- ✅ Zod schemas validate inputs
-- ✅ structuredContent returned properly
+- ✅ Tool, prompt, and resource registration
+- ✅ Tool output contract injection in schema and wrapper tests
+- ✅ Error handling and null-safe response formatting
+- ✅ HTTP handler auth and lifecycle behavior
+- ✅ Unit coverage for contract-rich response shaping
 
-**Future coverage:**
-- [ ] Unit tests for each tool
-- [ ] Unit tests for client methods
-- [ ] Integration tests with mocked API
-- [ ] Error handling tests
-- [ ] Schema validation tests
+```bash
+cd packages/mcp
+npm test -- --coverage
+```
 
----
+Coverage thresholds are currently set to pragmatic minimums that must be met in CI:
+Branches: 40%
+Functions: 55%
+Lines: 57%
+Statements: 57%
+
+--- 
 
 ## 📊 Performance Testing
 
@@ -294,7 +283,7 @@ brew install hey
 # Load test HTTP endpoint
 hey -n 100 -c 10 \
   -m POST \
-  -H "Authorization: Bearer $T49_API_TOKEN" \
+  -H "Authorization: Token $T49_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}' \
   https://your-url.vercel.app/mcp
@@ -365,7 +354,7 @@ npx @modelcontextprotocol/inspector packages/mcp/src/index.ts
 ```bash
 # Test deployed endpoints
 curl -X POST https://your-url.vercel.app/mcp \
-  -H "Authorization: Bearer $T49_API_TOKEN" \
+  -H "Authorization: Token $T49_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
 ```

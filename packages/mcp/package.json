@@ -7,6 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "test": "vitest",
+    "test:coverage": "vitest --run --coverage",
     "lint": "biome lint src",
     "type-check": "tsc --noEmit",
     "mcp:stdio": "tsx src/index.ts",

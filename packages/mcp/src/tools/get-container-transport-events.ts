@@ -85,7 +85,11 @@ export async function executeGetContainerTransportEvents(
 }
 
 function formatTransportEventsResponse(apiResponse: any): any {
-  const events = apiResponse.data || [];
+  const events = Array.isArray(apiResponse)
+    ? apiResponse
+    : Array.isArray(apiResponse?.data)
+      ? apiResponse.data
+      : [];
   const included = apiResponse.included || [];
 
   // Sort events chronologically
@@ -102,21 +106,24 @@ function formatTransportEventsResponse(apiResponse: any): any {
   const formattedEvents = sortedEvents.map((event: any) => {
     const attrs = event.attributes || {};
     const relationships = event.relationships || {};
+    const eventType = normalizeText(attrs.event);
+    const timestamp = normalizeTimestamp(attrs.timestamp);
 
     // Find location info from included data
     const locationId = relationships.location?.data?.id;
     const location = included.find((item: any) => item.id === locationId);
 
     return {
-      event: attrs.event,
-      timestamp: attrs.timestamp,
-      timezone: attrs.timezone,
-      voyage_number: attrs.voyage_number,
+      event: eventType,
+      timestamp,
+      timezone: normalizeText(attrs.timezone),
+      voyage_number: normalizeText(attrs.voyage_number),
       location: location
         ? {
-            name: location.attributes?.name,
-            code: location.attributes?.code || location.attributes?.locode,
-            type: location.type,
+            name: normalizeText(location.attributes?.name),
+            code:
+              normalizeText(location.attributes?.code) || normalizeText(location.attributes?.locode),
+            type: normalizeText(location.type),
           }
         : null,
     };
@@ -146,7 +153,7 @@ function categorizeEvents(events: any[]): any {
   };
 
   events.forEach((event: any) => {
-    const eventType = event.attributes?.event || '';
+    const eventType = normalizeText(event.attributes?.event) || '';
 
     if (eventType.includes('vessel') || eventType.includes('ship')) {
       categories.vessel.push(eventType);
@@ -178,8 +185,8 @@ function extractKeyMilestones(events: any[]): any {
   const milestones: any = {};
 
   events.forEach((event: any) => {
-    const eventType = event.attributes?.event || '';
-    const timestamp = event.attributes?.timestamp;
+    const eventType = normalizeText(event.attributes?.event) || '';
+    const timestamp = normalizeTimestamp(event.attributes?.timestamp);
 
     // Map common milestone events
     if (eventType.includes('vessel.loaded') || eventType === 'container.transport.vessel_loaded') {
@@ -214,4 +221,27 @@ function extractKeyMilestones(events: any[]): any {
   });
 
   return milestones;
+}
+
+function normalizeText(value: unknown): string | undefined {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+
+  const text = String(value).trim();
+  return text.length > 0 ? text : undefined;
+}
+
+function normalizeTimestamp(value: unknown): string {
+  const text = normalizeText(value);
+  if (!text) {
+    return '';
+  }
+
+  const parsed = Date.parse(text);
+  if (Number.isNaN(parsed)) {
+    return text;
+  }
+
+  return new Date(parsed).toISOString();
 }
