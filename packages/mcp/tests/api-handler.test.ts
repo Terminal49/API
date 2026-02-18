@@ -173,13 +173,35 @@ describe('api/mcp handler lifecycle', () => {
     expect(mockState.serverCreateArgs[0]?.apiToken).toBe('token-scheme-value');
   });
 
-  it('falls back to T49_API_TOKEN when Authorization header is absent', async () => {
+  it('returns 401 when Authorization header is absent even if T49_API_TOKEN is set', async () => {
     process.env.T49_API_TOKEN = 'env-token-value';
 
     const { default: handler } = await import('../../../api/mcp.ts');
     const req = createRequest({
       headers: {
         host: 'localhost',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.payload).toMatchObject({
+      error: 'Unauthorized',
+    });
+    expect(mockState.servers).toHaveLength(0);
+    expect(mockState.transports).toHaveLength(0);
+  });
+
+  it('uses T49_API_TOKEN as upstream credential when Authorization is present', async () => {
+    process.env.T49_API_TOKEN = 'env-token-value';
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Bearer client-auth-token',
       },
     });
     const res = new MockResponse();
