@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createTerminal49McpServer } from './server.js';
+import { buildListContract, createTerminal49McpServer } from './server.js';
 
 function _hasResponseContract(schema: unknown): boolean {
   const typedSchema = schema as {
@@ -286,5 +286,24 @@ describe('MCP server wiring', () => {
       const outputSchema = tools[name]?.outputSchema;
       expect(_hasDisplayHintsInResponseContract(outputSchema)).toBe(true);
     }
+  });
+
+  it('buildListContract keeps display hints for empty list responses with entity hints', () => {
+    const emptyResult = { items: [] };
+
+    const containerContract = buildListContract(emptyResult, 'container');
+    expect(containerContract.display?.empty_state).toBe(
+      'No matching containers found for the current filters.',
+    );
+
+    const shipmentContract = buildListContract(emptyResult, 'shipment');
+    expect(shipmentContract.display?.empty_state).toBe(
+      'No matching shipments found for the current filters.',
+    );
+
+    const trackingContract = buildListContract(emptyResult, 'tracking_request');
+    expect(trackingContract.display?.empty_state).toBe(
+      'No tracking requests found for the current filters.',
+    );
   });
 });

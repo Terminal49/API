@@ -312,7 +312,9 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
 }
 
-function detectListEntityType(result: any): 'container' | 'shipment' | 'tracking_request' | 'unknown' {
+type ListEntityType = 'container' | 'shipment' | 'tracking_request' | 'unknown';
+
+function detectListEntityType(result: any): ListEntityType {
   const firstItem = Array.isArray(result?.items) ? asRecord(result.items[0]) : {};
 
   if ('requestType' in firstItem || 'request_type' in firstItem || 'requestNumber' in firstItem) {
@@ -540,9 +542,15 @@ function buildTrackingRequestListDisplay(): ResponseDisplay {
   };
 }
 
-function buildListContract(result: any): ResponseContract {
+export function buildListContract(
+  result: any,
+  entityTypeHint?: ListEntityType,
+): ResponseContract {
   const count = result?.items ? result.items.length : 0;
-  const entityType = detectListEntityType(result);
+  const entityType =
+    entityTypeHint && entityTypeHint !== 'unknown'
+      ? entityTypeHint
+      : detectListEntityType(result);
   const display =
     entityType === 'container'
       ? buildContainerListDisplay()
@@ -910,7 +918,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
     },
     wrapToolWithContract(
       async (args) => executeListShipments(args, client),
-      (result) => buildListContract(result as any),
+      (result) => buildListContract(result as any, 'shipment'),
     )
   );
 
@@ -943,7 +951,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
     },
     wrapToolWithContract(
       async (args) => executeListContainers(args, client),
-      (result) => buildListContract(result as any),
+      (result) => buildListContract(result as any, 'container'),
     )
   );
 
@@ -976,7 +984,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
     },
     wrapToolWithContract(
       async (args) => executeListTrackingRequests(args, client),
-      (result) => buildListContract(result as any),
+      (result) => buildListContract(result as any, 'tracking_request'),
     )
   );
 
