@@ -66,6 +66,139 @@ function _hasResponseContract(schema: unknown): boolean {
   }
 }
 
+function _hasDisplayHintsInResponseContract(schema: unknown): boolean {
+  const typedSchema = schema as {
+    _def?: {
+      typeName?: string;
+      type?: string;
+      shape?: unknown;
+      properties?: unknown;
+      options?: unknown;
+      innerType?: unknown;
+      schema?: unknown;
+    };
+    def?: {
+      typeName?: string;
+      shape?: unknown;
+      properties?: unknown;
+      options?: unknown;
+      innerType?: unknown;
+      schema?: unknown;
+    };
+  };
+  const def = typedSchema._def ?? typedSchema.def;
+  if (!typedSchema || !def) {
+    return false;
+  }
+
+  const type = def.typeName ?? (def as { type?: string }).type;
+
+  switch (type) {
+    case 'ZodObject':
+    case 'object': {
+      const shape = typeof def.shape === 'function' ? def.shape() : def.shape;
+      const shapeRecord = shape && typeof shape === 'object' ? (shape as Record<string, unknown>) : null;
+      if (shapeRecord && Object.hasOwn(shapeRecord, '_response_contract')) {
+        return _schemaHasDisplay(shapeRecord._response_contract);
+      }
+
+      const properties =
+        def.properties && typeof def.properties === 'object'
+          ? (def.properties as Record<string, unknown>)
+          : null;
+      if (properties && Object.hasOwn(properties, '_response_contract')) {
+        return _schemaHasDisplay(properties._response_contract);
+      }
+
+      return false;
+    }
+    case 'ZodUnion':
+    case 'union':
+      return (
+        Array.isArray(def.options) &&
+        (def.options as unknown[]).some((option) => _hasDisplayHintsInResponseContract(option))
+      );
+    case 'ZodOptional':
+    case 'ZodNullable':
+    case 'ZodDefault':
+    case 'ZodCatch':
+    case 'optional':
+    case 'nullable':
+    case 'default':
+    case 'catch':
+      return _hasDisplayHintsInResponseContract((def as { innerType?: unknown }).innerType);
+    case 'ZodEffects':
+    case 'ZodTransform':
+    case 'effects':
+    case 'transform':
+      return _hasDisplayHintsInResponseContract((def as { schema?: unknown }).schema);
+    default:
+      return false;
+  }
+}
+
+function _schemaHasDisplay(schema: unknown): boolean {
+  const typedSchema = schema as {
+    _def?: {
+      typeName?: string;
+      type?: string;
+      shape?: unknown;
+      properties?: unknown;
+      options?: unknown;
+      innerType?: unknown;
+      schema?: unknown;
+    };
+    def?: {
+      typeName?: string;
+      shape?: unknown;
+      properties?: unknown;
+      options?: unknown;
+      innerType?: unknown;
+      schema?: unknown;
+    };
+  };
+  const def = typedSchema._def ?? typedSchema.def;
+  if (!typedSchema || !def) {
+    return false;
+  }
+
+  const type = def.typeName ?? (def as { type?: string }).type;
+  switch (type) {
+    case 'ZodObject':
+    case 'object': {
+      const shape = typeof def.shape === 'function' ? def.shape() : def.shape;
+      if (shape && typeof shape === 'object' && Object.hasOwn(shape as object, 'display')) {
+        return true;
+      }
+
+      return Boolean(
+        def.properties &&
+          typeof def.properties === 'object' &&
+          Object.hasOwn(def.properties as object, 'display'),
+      );
+    }
+    case 'ZodUnion':
+    case 'union':
+      return Array.isArray(def.options) && (def.options as unknown[]).some((option) => _schemaHasDisplay(option));
+    case 'ZodOptional':
+    case 'ZodNullable':
+    case 'ZodDefault':
+    case 'ZodCatch':
+    case 'optional':
+    case 'nullable':
+    case 'default':
+    case 'catch':
+      return _schemaHasDisplay((def as { innerType?: unknown }).innerType);
+    case 'ZodEffects':
+    case 'ZodTransform':
+    case 'effects':
+    case 'transform':
+      return _schemaHasDisplay((def as { schema?: unknown }).schema);
+    default:
+      return false;
+  }
+}
+
 // Minimal mock transport implementing start/close
 class MockTransport {
   start = vi.fn();
@@ -137,6 +270,21 @@ describe('MCP server wiring', () => {
       const outputSchema = tools[name]?.outputSchema;
       const hasResponseContract = _hasResponseContract(outputSchema);
       expect(hasResponseContract).toBe(true);
+    }
+  });
+
+  it('list tool contracts include display hints for table rendering', () => {
+    const server = createTerminal49McpServer('token');
+    const tools = (server as any)._registeredTools as Record<
+      string,
+      { outputSchema: { def: { shape: Record<string, unknown> } } }
+    >;
+
+    const listTools = ['list_shipments', 'list_containers', 'list_tracking_requests'];
+
+    for (const name of listTools) {
+      const outputSchema = tools[name]?.outputSchema;
+      expect(_hasDisplayHintsInResponseContract(outputSchema)).toBe(true);
     }
   });
 });

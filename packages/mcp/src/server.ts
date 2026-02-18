@@ -23,6 +23,32 @@ import { queryGuidanceResource, readQueryGuidanceResource } from './resources/qu
 
 type ToolContent = { type: 'text'; text: string };
 
+type ResponseDisplayColumn = {
+  key: string;
+  label: string;
+  path?: string;
+  description?: string;
+  compute?: string;
+};
+
+type ResponseDisplayColumnSet = {
+  intent: string;
+  when_user_asks: string[];
+  columns: string[];
+};
+
+type ResponseDisplay = {
+  preferred_format: 'table' | 'list';
+  table_when_rows_gte: number;
+  max_rows: number;
+  default_columns: string[];
+  sort: Array<{ key: string; direction: 'asc' | 'desc' }>;
+  empty_state: string;
+  column_catalog: ResponseDisplayColumn[];
+  column_sets: ResponseDisplayColumnSet[];
+  selection_strategy: string;
+};
+
 type ResponseContract = {
   purpose: string;
   can_answer: string[];
@@ -31,6 +57,7 @@ type ResponseContract = {
   presentation_guidance: string;
   suggested_follow_ups: string[];
   suggested_tools: string[];
+  display?: ResponseDisplay;
 };
 
 function buildContentPayload(result: unknown): ToolContent[] {
@@ -91,6 +118,37 @@ function hasMetadataError(result: unknown): result is { _metadata: { error: stri
   return Boolean(metadata && typeof metadata.error === 'string');
 }
 
+const responseDisplayColumnSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  path: z.string().optional(),
+  description: z.string().optional(),
+  compute: z.string().optional(),
+});
+
+const responseDisplayColumnSetSchema = z.object({
+  intent: z.string(),
+  when_user_asks: z.array(z.string()),
+  columns: z.array(z.string()),
+});
+
+const responseDisplaySchema = z.object({
+  preferred_format: z.enum(['table', 'list']),
+  table_when_rows_gte: z.number().int().positive(),
+  max_rows: z.number().int().positive(),
+  default_columns: z.array(z.string()),
+  sort: z.array(
+    z.object({
+      key: z.string(),
+      direction: z.enum(['asc', 'desc']),
+    }),
+  ),
+  empty_state: z.string(),
+  column_catalog: z.array(responseDisplayColumnSchema),
+  column_sets: z.array(responseDisplayColumnSetSchema),
+  selection_strategy: z.string(),
+});
+
 const responseContractSchema = z.object({
   purpose: z.string(),
   can_answer: z.array(z.string()),
@@ -99,6 +157,7 @@ const responseContractSchema = z.object({
   presentation_guidance: z.string(),
   suggested_follow_ups: z.array(z.string()),
   suggested_tools: z.array(z.string()),
+  display: responseDisplaySchema.optional(),
 });
 
 function normalizeContract(contract: ResponseContract): ResponseContract {
@@ -110,6 +169,7 @@ function normalizeContract(contract: ResponseContract): ResponseContract {
     presentation_guidance: contract.presentation_guidance,
     suggested_follow_ups: contract.suggested_follow_ups,
     suggested_tools: contract.suggested_tools,
+    display: contract.display,
   };
 }
 
@@ -248,16 +308,262 @@ function buildShipmentContract(): ResponseContract {
   };
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+}
+
+function detectListEntityType(result: any): 'container' | 'shipment' | 'tracking_request' | 'unknown' {
+  const firstItem = Array.isArray(result?.items) ? asRecord(result.items[0]) : {};
+
+  if ('requestType' in firstItem || 'request_type' in firstItem || 'requestNumber' in firstItem) {
+    return 'tracking_request';
+  }
+
+  if ('billOfLading' in firstItem || 'bill_of_lading' in firstItem || 'podVesselName' in firstItem) {
+    return 'shipment';
+  }
+
+  if ('number' in firstItem || 'container_number' in firstItem || 'podDischargedAt' in firstItem) {
+    return 'container';
+  }
+
+  return 'unknown';
+}
+
+function buildContainerListDisplay(): ResponseDisplay {
+  return {
+    preferred_format: 'table',
+    table_when_rows_gte: 2,
+    max_rows: 25,
+    default_columns: [
+      'number',
+      'currentStatus',
+      'podDischargedAt',
+      'podFullOutAt',
+      'availableForPickup',
+      'pickupLfd',
+      'holdsCount',
+      'terminals.podTerminal.name',
+    ],
+    sort: [{ key: 'pickupLfd', direction: 'asc' }],
+    empty_state: 'No matching containers found for the current filters.',
+    column_catalog: [
+      { key: 'number', label: 'Container', path: 'number' },
+      { key: 'currentStatus', label: 'Status', path: 'currentStatus' },
+      { key: 'podDischargedAt', label: 'Discharged', path: 'podDischargedAt' },
+      { key: 'podFullOutAt', label: 'Picked Up', path: 'podFullOutAt' },
+      { key: 'availableForPickup', label: 'Ready', path: 'availableForPickup' },
+      { key: 'pickupLfd', label: 'LFD', path: 'pickupLfd' },
+      { key: 'pickupAppointmentAt', label: 'Pickup Appt', path: 'pickupAppointmentAt' },
+      {
+        key: 'holdsCount',
+        label: 'Holds',
+        path: 'holdsAtPodTerminal',
+        compute: 'length',
+        description: 'Count of active holds at POD terminal',
+      },
+      { key: 'holdsAtPodTerminal', label: 'Hold Details', path: 'holdsAtPodTerminal' },
+      {
+        key: 'feesCount',
+        label: 'Fees',
+        path: 'feesAtPodTerminal',
+        compute: 'length',
+        description: 'Count of fee items at POD terminal',
+      },
+      { key: 'locationAtPodTerminal', label: 'Terminal Location', path: 'locationAtPodTerminal' },
+      { key: 'terminals.podTerminal.name', label: 'POD Terminal', path: 'terminals.podTerminal.name' },
+      { key: 'shipment.billOfLading', label: 'BL', path: 'shipment.billOfLading' },
+      { key: 'shipment.shippingLineScac', label: 'SCAC', path: 'shipment.shippingLineScac' },
+      { key: 'podRailCarrierScac', label: 'Rail Carrier', path: 'podRailCarrierScac' },
+      { key: 'indEtaAt', label: 'Inland ETA', path: 'indEtaAt' },
+      { key: 'indAtaAt', label: 'Inland ATA', path: 'indAtaAt' },
+    ],
+    column_sets: [
+      {
+        intent: 'discharged_not_picked_up',
+        when_user_asks: ['discharged but not picked up', 'not picked up', 'still at terminal'],
+        columns: [
+          'number',
+          'currentStatus',
+          'podDischargedAt',
+          'podFullOutAt',
+          'availableForPickup',
+          'pickupLfd',
+          'holdsCount',
+          'terminals.podTerminal.name',
+        ],
+      },
+      {
+        intent: 'pickup_readiness',
+        when_user_asks: ['ready for pickup', 'can we pick up', 'pickup status'],
+        columns: [
+          'number',
+          'availableForPickup',
+          'pickupLfd',
+          'holdsCount',
+          'feesCount',
+          'locationAtPodTerminal',
+          'terminals.podTerminal.name',
+        ],
+      },
+      {
+        intent: 'holds_and_blocks',
+        when_user_asks: ['holds', 'blocked', 'customs hold', 'why not available'],
+        columns: [
+          'number',
+          'currentStatus',
+          'holdsCount',
+          'holdsAtPodTerminal',
+          'pickupLfd',
+          'terminals.podTerminal.name',
+        ],
+      },
+      {
+        intent: 'inland_rail',
+        when_user_asks: ['on rail', 'inland arrival', 'destination eta'],
+        columns: [
+          'number',
+          'podRailCarrierScac',
+          'indEtaAt',
+          'indAtaAt',
+          'shipment.shippingLineScac',
+          'shipment.billOfLading',
+        ],
+      },
+    ],
+    selection_strategy:
+      'Choose the column_set whose when_user_asks best matches the user question. If none match, use default_columns. Use markdown table when row count >= table_when_rows_gte.',
+  };
+}
+
+function buildShipmentListDisplay(): ResponseDisplay {
+  return {
+    preferred_format: 'table',
+    table_when_rows_gte: 2,
+    max_rows: 25,
+    default_columns: [
+      'billOfLading',
+      'shippingLineScac',
+      'podVesselName',
+      'portOfDischargeName',
+      'podEtaAt',
+      'podAtaAt',
+      'destinationEtaAt',
+    ],
+    sort: [{ key: 'podEtaAt', direction: 'asc' }],
+    empty_state: 'No matching shipments found for the current filters.',
+    column_catalog: [
+      { key: 'billOfLading', label: 'BL', path: 'billOfLading' },
+      { key: 'shippingLineScac', label: 'SCAC', path: 'shippingLineScac' },
+      { key: 'shippingLineName', label: 'Carrier', path: 'shippingLineName' },
+      { key: 'podVesselName', label: 'Vessel', path: 'podVesselName' },
+      { key: 'podVoyageNumber', label: 'Voyage', path: 'podVoyageNumber' },
+      { key: 'portOfDischargeName', label: 'POD', path: 'portOfDischargeName' },
+      { key: 'podEtaAt', label: 'POD ETA', path: 'podEtaAt' },
+      { key: 'podAtaAt', label: 'POD ATA', path: 'podAtaAt' },
+      { key: 'destinationName', label: 'Destination', path: 'destinationName' },
+      { key: 'destinationEtaAt', label: 'Dest ETA', path: 'destinationEtaAt' },
+      { key: 'lineTrackingLastSucceededAt', label: 'Last Update', path: 'lineTrackingLastSucceededAt' },
+    ],
+    column_sets: [
+      {
+        intent: 'vessel_arrivals',
+        when_user_asks: ['when is vessel arriving', 'vessel arrival', 'eta by vessel'],
+        columns: [
+          'podVesselName',
+          'podVoyageNumber',
+          'portOfDischargeName',
+          'podEtaAt',
+          'podAtaAt',
+          'billOfLading',
+          'shippingLineScac',
+        ],
+      },
+      {
+        intent: 'arrivals_by_port',
+        when_user_asks: ['arriving at', 'arrivals this week', 'port arrivals'],
+        columns: [
+          'billOfLading',
+          'podVesselName',
+          'portOfDischargeName',
+          'podEtaAt',
+          'podAtaAt',
+          'destinationName',
+        ],
+      },
+    ],
+    selection_strategy:
+      'Prefer vessel_arrivals for vessel questions, arrivals_by_port for location/time-window questions, otherwise default_columns.',
+  };
+}
+
+function buildTrackingRequestListDisplay(): ResponseDisplay {
+  return {
+    preferred_format: 'table',
+    table_when_rows_gte: 2,
+    max_rows: 25,
+    default_columns: [
+      'requestNumber',
+      'requestType',
+      'status',
+      'scac',
+      'createdAt',
+      'updatedAt',
+      'failedReason',
+    ],
+    sort: [{ key: 'updatedAt', direction: 'desc' }],
+    empty_state: 'No tracking requests found for the current filters.',
+    column_catalog: [
+      { key: 'requestNumber', label: 'Request Number', path: 'requestNumber' },
+      { key: 'requestType', label: 'Type', path: 'requestType' },
+      { key: 'status', label: 'Status', path: 'status' },
+      { key: 'scac', label: 'SCAC', path: 'scac' },
+      { key: 'createdAt', label: 'Created', path: 'createdAt' },
+      { key: 'updatedAt', label: 'Updated', path: 'updatedAt' },
+      { key: 'failedReason', label: 'Failure Reason', path: 'failedReason' },
+      { key: 'isRetrying', label: 'Retrying', path: 'isRetrying' },
+    ],
+    column_sets: [
+      {
+        intent: 'failed_requests',
+        when_user_asks: ['failed tracking', 'why failed', 'tracking errors'],
+        columns: ['requestNumber', 'requestType', 'status', 'scac', 'failedReason', 'updatedAt'],
+      },
+      {
+        intent: 'tracking_activity',
+        when_user_asks: ['recent tracking activity', 'latest requests', 'tracking queue'],
+        columns: ['requestNumber', 'requestType', 'status', 'scac', 'createdAt', 'updatedAt'],
+      },
+    ],
+    selection_strategy:
+      'Use failed_requests when user asks about errors/failures; otherwise tracking_activity.',
+  };
+}
+
 function buildListContract(result: any): ResponseContract {
   const count = result?.items ? result.items.length : 0;
+  const entityType = detectListEntityType(result);
+  const display =
+    entityType === 'container'
+      ? buildContainerListDisplay()
+      : entityType === 'shipment'
+      ? buildShipmentListDisplay()
+      : entityType === 'tracking_request'
+      ? buildTrackingRequestListDisplay()
+      : undefined;
+
   return {
     purpose: 'Surface aggregate operational worklist results.',
     can_answer: ['which records match filters', 'count and paging state'],
     requires_more_data: count === 0 ? ['alternative filters or tighter date ranges'] : [],
     relevant_fields: ['items', 'links', 'meta', 'count'],
-    presentation_guidance: 'Return only top-level actionable summary unless user requests full records.',
+    presentation_guidance:
+      count <= 1
+        ? 'For a single result, provide a concise row summary. For multiple rows, render a markdown table.'
+        : 'Render a markdown table using the response_contract display hints. Avoid dumping full nested records.',
     suggested_follow_ups: ['list_containers', 'list_tracking_requests'],
     suggested_tools: ['list_containers', 'list_tracking_requests', 'get_container'],
+    display,
   };
 }
 
@@ -449,71 +755,11 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       inputSchema: {
         id: z.string().uuid().describe('The Terminal49 container ID (UUID format)'),
       },
-      outputSchema: z.union([
-        z.object({
-          total_events: z.number(),
-          event_categories: z.object({
-            vessel_events: z.number(),
-            rail_events: z.number(),
-            truck_events: z.number(),
-            terminal_events: z.number(),
-            other_events: z.number(),
-          }),
-          timeline: z.array(
-            z.object({
-              event: z.string(),
-              timestamp: z.string(),
-              timezone: z.string().optional(),
-              voyage_number: z.string().optional().nullable(),
-              location: z
-                .object({
-                  name: z.string().optional(),
-                  code: z.string().optional(),
-                  type: z.string().optional(),
-                })
-                .nullable(),
-            })
-          ),
-          milestones: z.record(z.string(), z.string().nullable()),
+      outputSchema: z
+        .object({
           _response_contract: responseContractSchema,
-          _metadata: z.object({
-            presentation_guidance: z.string(),
-          }),
-        }),
-        z.object({
-          mapped: z.array(z.record(z.string(), z.any())),
-          summary: z.object({
-            total_events: z.number(),
-            event_categories: z.object({
-              vessel_events: z.number(),
-              rail_events: z.number(),
-              truck_events: z.number(),
-              terminal_events: z.number(),
-              other_events: z.number(),
-            }),
-            timeline: z.array(
-              z.object({
-                event: z.string(),
-                timestamp: z.string(),
-                timezone: z.string().optional(),
-                voyage_number: z.string().optional().nullable(),
-                location: z
-                  .object({
-                    name: z.string().optional(),
-                    code: z.string().optional(),
-                    type: z.string().optional(),
-                  })
-                  .nullable(),
-              })
-            ),
-            milestones: z.record(z.string(), z.string().nullable()),
-            _response_contract: responseContractSchema,
-            _metadata: z.object({
-              presentation_guidance: z.string(),
-            }),
-          }),
-        }),
-      ]),
+        })
+        .passthrough(),
     },
     wrapToolWithContract(
       async ({ id }) => executeGetContainerTransportEvents({ id }, client),
