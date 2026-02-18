@@ -191,6 +191,77 @@ describe('MCP tool contracts', () => {
     expect(result.container_number).toBe('CAIU1234567');
   });
 
+  it('track_container bypasses infer when container is already tracked via search', async () => {
+    const createFromInfer = vi.fn();
+    const getContainer = vi.fn().mockResolvedValue({
+      raw: buildContainerRaw('container-42'),
+      mapped: { id: 'container-42' },
+    });
+
+    const client = asClient({
+      search: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: 'container-42',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'container',
+              number: 'SELU4039824',
+              scac: 'CMDU',
+            },
+          },
+        ],
+      }),
+      createTrackingRequestFromInfer: createFromInfer,
+      containers: { get: getContainer },
+    });
+
+    const result = await executeTrackContainer({ number: 'SELU4039824' }, client);
+
+    expect(createFromInfer).not.toHaveBeenCalled();
+    expect(getContainer).toHaveBeenCalledWith('container-42', ['shipment'], { format: 'both' });
+    expect(result.tracking_request_created).toBe(false);
+    expect(result.container_number).toBe('CAIU1234567');
+    expect(result.infer_result).toMatchObject({
+      source: 'search_match',
+      selected_scac: 'CMDU',
+    });
+  });
+
+  it('track_container falls back to direct create when infer endpoint validation fails', async () => {
+    const createFromInfer = vi
+      .fn()
+      .mockRejectedValue(new Error('Unprocessable Entity (/data/attributes/number)'));
+    const createTrackingRequest = vi.fn().mockResolvedValue({
+      included: [{ id: 'container-77', type: 'container' }],
+    });
+    const getContainer = vi.fn().mockResolvedValue({
+      raw: buildContainerRaw('container-77'),
+      mapped: { id: 'container-77' },
+    });
+
+    const client = asClient({
+      createTrackingRequestFromInfer: createFromInfer,
+      createTrackingRequest,
+      containers: { get: getContainer },
+    });
+
+    const result = await executeTrackContainer(
+      { number: 'MSCU1234567', numberType: 'container', scac: 'MSCU' },
+      client,
+    );
+
+    expect(createFromInfer).toHaveBeenCalledTimes(1);
+    expect(createTrackingRequest).toHaveBeenCalledWith({
+      requestType: 'container',
+      requestNumber: 'MSCU1234567',
+      scac: 'MSCU',
+      refNumbers: undefined,
+    });
+    expect(result.tracking_request_created).toBe(true);
+    expect(result.id).toBe('container-77');
+  });
+
   it('get_container returns stable shape with metadata and events summary', async () => {
     const client = asClient({
       containers: {
@@ -246,44 +317,46 @@ describe('MCP tool contracts', () => {
   });
 
   it('get_container_transport_events returns timeline and milestone summary', async () => {
+    const events = vi.fn().mockResolvedValue({
+      raw: {
+        data: [
+          {
+            id: 'evt-2',
+            type: 'transport_event',
+            attributes: {
+              event: 'container.transport.vessel_departed',
+              timestamp: '2025-01-02T00:00:00Z',
+            },
+            relationships: {
+              location: { data: { id: 'loc-1', type: 'port' } },
+            },
+          },
+          {
+            id: 'evt-1',
+            type: 'transport_event',
+            attributes: {
+              event: 'container.transport.vessel_loaded',
+              timestamp: '2025-01-01T00:00:00Z',
+            },
+            relationships: {
+              location: { data: { id: 'loc-1', type: 'port' } },
+            },
+          },
+        ],
+        included: [
+          {
+            id: 'loc-1',
+            type: 'port',
+            attributes: { name: 'Shanghai', locode: 'CNSHA' },
+          },
+        ],
+      },
+      mapped: [{ id: 'evt-1' }, { id: 'evt-2' }],
+    });
+
     const client = asClient({
       containers: {
-        events: vi.fn().mockResolvedValue({
-          raw: {
-            data: [
-              {
-                id: 'evt-2',
-                type: 'transport_event',
-                attributes: {
-                  event: 'container.transport.vessel_departed',
-                  timestamp: '2025-01-02T00:00:00Z',
-                },
-                relationships: {
-                  location: { data: { id: 'loc-1', type: 'port' } },
-                },
-              },
-              {
-                id: 'evt-1',
-                type: 'transport_event',
-                attributes: {
-                  event: 'container.transport.vessel_loaded',
-                  timestamp: '2025-01-01T00:00:00Z',
-                },
-                relationships: {
-                  location: { data: { id: 'loc-1', type: 'port' } },
-                },
-              },
-            ],
-            included: [
-              {
-                id: 'loc-1',
-                type: 'port',
-                attributes: { name: 'Shanghai', locode: 'CNSHA' },
-              },
-            ],
-          },
-          mapped: [{ id: 'evt-1' }, { id: 'evt-2' }],
-        }),
+        events,
       },
     });
 
@@ -292,6 +365,7 @@ describe('MCP tool contracts', () => {
       client,
     );
 
+    expect(events).toHaveBeenCalledWith('container-1', { format: 'raw' });
     expect(result.summary.total_events).toBe(2);
     expect(result.summary.timeline[0]).toMatchObject({
       event: 'container.transport.vessel_loaded',
@@ -299,6 +373,25 @@ describe('MCP tool contracts', () => {
     expect(result.summary.milestones).toMatchObject({
       vessel_loaded_at: '2025-01-01T00:00:00.000Z',
       vessel_departed_at: '2025-01-02T00:00:00.000Z',
+    });
+  });
+
+  it('get_container_transport_events returns empty summary when events fetch fails', async () => {
+    const client = asClient({
+      containers: {
+        events: vi.fn().mockRejectedValue(new Error('Not Found')),
+      },
+    });
+
+    const result = await executeGetContainerTransportEvents(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(result.total_events).toBe(0);
+    expect(result.timeline).toEqual([]);
+    expect(result._metadata).toMatchObject({
+      error: 'Not Found',
     });
   });
 
@@ -374,7 +467,7 @@ describe('MCP tool contracts', () => {
     expect(result.tracking_request_created).toBe(true);
     expect(result.tracking_request).toMatchObject({
       request_number: 'TEMU8347291',
-      number_type: undefined,
+      number_type: 'container',
       scac: 'TEMU',
     });
     expect(result._metadata).toMatchObject({

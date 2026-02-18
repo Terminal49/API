@@ -47,7 +47,7 @@ export async function executeGetContainerTransportEvents(
   );
 
   try {
-    const result = await client.containers.events(args.id, { format: 'both' });
+    const result = await client.containers.events(args.id, { format: 'raw' });
     const raw = (result as any)?.raw ?? result;
     const mapped = (result as any)?.mapped;
     const duration = Date.now() - startTime;
@@ -67,6 +67,7 @@ export async function executeGetContainerTransportEvents(
     return mapped ? { mapped, summary } : summary;
   } catch (error) {
     const duration = Date.now() - startTime;
+    const message = (error as Error).message;
 
     console.error(
       JSON.stringify({
@@ -74,13 +75,31 @@ export async function executeGetContainerTransportEvents(
         tool: 'get_container_transport_events',
         container_id: args.id,
         error: (error as Error).name,
-        message: (error as Error).message,
+        message,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
       })
     );
 
-    throw error;
+    return {
+      total_events: 0,
+      event_categories: {
+        vessel_events: 0,
+        rail_events: 0,
+        truck_events: 0,
+        terminal_events: 0,
+        other_events: 0,
+      },
+      timeline: [],
+      milestones: {},
+      _metadata: {
+        presentation_guidance:
+          'No transport events were returned for this container. Use get_container for current status and retry later.',
+        error: message,
+        remediation:
+          'Confirm the container ID exists and has event data, then retry get_container_transport_events.',
+      },
+    };
   }
 }
 
