@@ -57,7 +57,7 @@ The SDK exposes a `Terminal49Client` with methods grouped by resource type. Each
 |--------|-------------|
 | `client.trackContainer(params)` | Convenience helper that creates a tracking request using a container or booking number. |
 | `client.listTrackRequests(filters?, options?)` | Alias for `client.trackingRequests.list`. |
-| `client.getDemurrage(containerId)` | Returns a subset of demurrage-related fields for a container. |
+| `client.getDemurrage(containerId)` | Returns a subset of demurrage-related fields for a container. See [holds, fees, and release readiness](/api-docs/in-depth-guides/holds-and-fees) for context. |
 | `client.getRailMilestones(containerId)` | Returns rail milestones derived from transport events. |
 | `client.deserialize<T>(document)` | Deserialize a JSON:API document into plain objects using JSONA. |
 

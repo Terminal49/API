@@ -204,7 +204,11 @@ function listShipmentValues(shipment_values){
 
 ## List all your Tracked Containers
 
-You can also list out all of your Containers. Container data includes Terminal availability, last free day, and other logistical information that you might use for drayage operations at port.
+You can also list out all of your Containers. Container data includes terminal availability, last free day, holds, fees, and other logistical information that you might use for drayage operations at port.
+
+<Tip>
+To learn how to use holds and fees data to determine if a container is ready for pickup, see [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
+</Tip>
 
 **Try it below. Click "Headers" and replace YOUR_API_KEY with your API key.**
 
@@ -245,7 +249,6 @@ Now that you've got a list of containers, let's examine the response you've rece
         "equipment_height": null,
         "weight_in_lbs": 54807,
 
-        //currently no known fees; this list will expand.
         "fees_at_pod_terminal": [],
         "holds_at_pod_terminal": [],
         // here is your last free day.

@@ -41,6 +41,7 @@
               "api-docs/in-depth-guides/tracking-request-lifecycle",
               "api-docs/in-depth-guides/auto-detect-carrier",
               "api-docs/in-depth-guides/container-statuses",
+              "api-docs/in-depth-guides/holds-and-fees",
               "api-docs/in-depth-guides/event-timestamps",
               "api-docs/in-depth-guides/terminal49-map",
               "api-docs/in-depth-guides/terminal49-widget",
@@ -187,6 +188,21 @@
         ]
       },
       {
+        "tab": "MCP",
+        "groups": [
+          {
+            "group": "MCP",
+            "pages": [
+              "mcp/home",
+              "mcp/project-overview",
+              "api-docs/in-depth-guides/mcp",
+              "mcp/hosted-http-oauth-requirements",
+              "mcp/hosted-http-oauth-test-plan"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "DataSync",
         "groups": [
           {
@@ -217,7 +233,7 @@
         ]
       },
       {
-        "tab": "Updates",
+        "tab": "Changelog",
         "groups": [
           {
             "group": "Updates",

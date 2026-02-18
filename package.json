@@ -16,6 +16,7 @@
     "node": "24.x"
   },
   "dependencies": {
+    "mintlify": "^4.2.359",
     "openapi-fetch": "^0.15.2",
     "openapi-typescript": "^7.13.0"
   },

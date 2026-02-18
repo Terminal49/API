@@ -20,7 +20,7 @@ The `current_status` field can have one of the following values:
 - Any time the container is loaded on a vessel
 
 ### available
-**Ready for pickup** - The container has arrived at the POD or inland destination and is confirmed available for pickup. You can proceed with arranging pickup when you see this status.
+**Ready for pickup** - The container has arrived at the POD or inland destination and is confirmed available for pickup. You can proceed with arranging pickup when you see this status. For a definitive readiness check that combines `available_for_pickup` with hold data, see [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
 
 ### not_available
 **Arrived but not ready** - The container is at the POD or inland destination but is not yet available for pickup. This could be due to:
@@ -28,6 +28,8 @@ The `current_status` field can have one of the following values:
 - Terminal holds
 - Documentation requirements
 - Other restrictions
+
+See [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees) for details on specific hold types and how to determine when the container is released.
 
 ### grounded
 **Availability unknown** - The container is physically at the POD, but we don't currently know whether it's available for pickup or not. This typically means the terminal isn't providing real-time availability data.

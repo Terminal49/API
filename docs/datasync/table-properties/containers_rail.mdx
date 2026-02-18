@@ -91,9 +91,9 @@ _Columns marked with * are only included with the Intermodal Rail product._
 | `ind_full_out_at_local`           | Inland Destination Full Out event, as a string in the Inland Destination local time zone                               | `text`     |
 | `empty_terminated_at`             | Container Empty Returned event, as a UTC timestamp                                                                     | `timestamp`|
 | `empty_terminated_at_local`       | Container Empty Returned event, as a string in the Destination or POD local time zone                                  | `text`     |
-| `fees_at_pod_terminal`            | Current fee amounts at the POD terminal, in JSON format                                                                | `text`     |
-| `demurrage_at_pod_terminal`       | Current demurrage amount owed at the POD terminal                                                                      | `text`     |
-| `holds_at_pod_terminal`           | Current terminal hold statuses at the POD, in JSON format                                                              | `text`     |
+| `fees_at_pod_terminal`            | Current fee amounts at the POD terminal, in JSON format. See [hold and fee types](/api-docs/in-depth-guides/holds-and-fees). | `text`     |
+| `demurrage_at_pod_terminal`       | Current demurrage amount owed at the POD terminal. See [fee types](/api-docs/in-depth-guides/holds-and-fees#fee-types-at-a-glance). | `text`     |
+| `holds_at_pod_terminal`           | Current terminal hold statuses at the POD, in JSON format. See [hold types](/api-docs/in-depth-guides/holds-and-fees#hold-types-at-a-glance). | `text`     |
 | `freight_hold_at_pod_terminal`    | Current freight hold at the POD terminal, value is either "Hold" or empty                                              | `text`     |
 | `customs_hold_at_pod_terminal`    | Current customs hold at the POD terminal, value is either "Hold" or empty                                              | `text`     |
 | `usda_hold_at_pod_terminal`       | Current USDA hold at the POD terminal, value is either "Hold" or empty                                                 | `text`     |

@@ -96,9 +96,9 @@ This is a large table with denormalized columns to make it easy to use for repor
 | `destination_full_out_at_local`   | Destination Full Out event, as a string in the Destination local time zone                                     | `text`      |
 | `empty_terminated_at`             | Container Empty Returned event, as a UTC timestamp                                                             | `timestamp` |
 | `empty_terminated_at_local`       | Container Empty Returned event, as a string in the Destination or POD local time zone                          | `text`      |
-| `fees_at_pod_terminal`            | Current fee amounts, in JSON format                                                                            | `text`      |
-| `demurrage_at_pod_terminal`       | Current demurrage amount owed                                                                                  | `text`      |
-| `holds_at_pod_terminal`           | Current terminal hold statuses, in JSON format                                                                 | `text`      |
+| `fees_at_pod_terminal`            | Current fee amounts, in JSON format. See [hold and fee types](/api-docs/in-depth-guides/holds-and-fees).       | `text`      |
+| `demurrage_at_pod_terminal`       | Current demurrage amount owed. See [fee types](/api-docs/in-depth-guides/holds-and-fees#fee-types-at-a-glance). | `text`      |
+| `holds_at_pod_terminal`           | Current terminal hold statuses, in JSON format. See [hold types](/api-docs/in-depth-guides/holds-and-fees#hold-types-at-a-glance). | `text`      |
 | `freight_hold_at_pod_terminal`    | Current freight hold, value is either Hold or empty                                                            | `text`      |
 | `customs_hold_at_pod_terminal`    | Current customs hold, value is either Hold or empty                                                            | `text`      |
 | `usda_hold_at_pod_terminal`       | Current USDA hold, value is either Hold or empty                                                               | `text`      |

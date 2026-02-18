@@ -9,6 +9,25 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="February 2026" description="Container Holds, Fees, and Release Readiness guide" tags={['API', 'DataSync']}
+  rss="New guide: Container Holds, Fees, and Release Readiness — decision logic, enum references, webhook examples, and FAQ for determining when a container is ready for pickup."
+>
+  ### Container Holds, Fees, and Release Readiness
+
+Published a comprehensive guide for working with holds and fees data in the Terminal49 API. The guide covers:
+
+- **Pickup readiness logic** — a decision flowchart and code example showing how to combine `available_for_pickup` with `holds_at_pod_terminal` to determine if a container can be picked up
+- **Hold and fee enum references** — quick-reference tables for all hold names and fee types, with expandable details for each value
+- **Webhook changeset examples** — how to subscribe to `container.updated` and react to hold/fee changes in real time
+- **Rail and inland destinations** — clarification that the same fields apply at inland rail terminals, not just the port of discharge
+- **FAQ** — answers to common integration questions like double-counting fees, sync lag between holds and availability, and case-sensitive hold names
+
+<Card title="Read the guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
+  Container Holds, Fees, and Release Readiness
+</Card>
+
+</Update>
+
 <Update label="December 2025" description="Infer Tracking Number (Beta)" tags={['API']}
   rss="Added Infer Tracking Number (beta) to predict VOCC SCAC + number type prior to creating tracking requests."
 >
