@@ -1,0 +1,26 @@
+{
+  "name": "terminal49-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Terminal49 API with MCP Server",
+  "workspaces": [
+    "packages/*",
+    "sdks/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm test --workspaces"
+  },
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.15.2",
+    "openapi-typescript": "^7.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.13",
+    "dotenv": "^17.3.1"
+  }
+}

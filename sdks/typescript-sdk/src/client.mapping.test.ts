@@ -361,7 +361,7 @@ describe('Terminal49Client mapping helpers', () => {
 
     const polRef = relationships.port_of_lading?.data;
     const podRef = relationships.port_of_discharge?.data;
-    const destRef = relationships.destination?.data;
+    const _destRef = relationships.destination?.data;
     const podTerminalRef = relationships.pod_terminal?.data;
     const destinationTerminalRef = relationships.destination_terminal?.data;
     const containerRef = relationships.containers?.data?.[0];

@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, feature/**]
+  pull_request:
+    branches: [main, master, feature/**]
+
+jobs:
+  sdk:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [18, 20, 22, 24]
+    defaults:
+      run:
+        working-directory: sdks/typescript-sdk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: sdks/typescript-sdk/package-lock.json
+      - name: Install SDK deps
+        run: npm ci
+      - name: Build SDK
+        run: npm run build
+      - name: Test SDK
+        run: npm test -- --run
+      - name: Lint SDK (Biome)
+        run: npm run lint
+
+  mcp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install MCP deps (published SDK)
+        run: npm ci
+      - name: Build SDK (workspace dependency)
+        run: npm run build --workspace @terminal49/sdk
+      - name: Build MCP
+        run: npm run build --workspace @terminal49/mcp
+      - name: Test MCP
+        run: npm run test --workspace @terminal49/mcp -- --run --coverage
+      - name: Lint MCP (Biome)
+        run: npm run lint --workspace @terminal49/mcp

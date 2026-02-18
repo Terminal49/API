@@ -1,0 +1,38 @@
+{
+  "name": "@terminal49/mcp",
+  "version": "0.1.0",
+  "description": "Terminal49 MCP Server for Vercel - TypeScript implementation",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "test": "vitest",
+    "test:coverage": "vitest --run --coverage",
+    "lint": "biome lint src",
+    "type-check": "tsc --noEmit",
+    "mcp:stdio": "tsx src/index.ts",
+    "sdk:setup": "node ./scripts/sdk-setup.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "terminal49",
+    "container-tracking",
+    "vercel"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@terminal49/sdk": "^0.1.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.15",
+    "@types/node": "^24.10.13",
+    "tsx": "^4.20.6",
+    "typescript": "^5.6.3",
+    "vitest": "^4.0.13"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}

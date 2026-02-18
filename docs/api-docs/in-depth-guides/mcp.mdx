@@ -1,0 +1,384 @@
+---
+title: MCP Server Quickstart
+description: Full setup guide for the Terminal49 MCP server
+---
+
+# MCP Server Quickstart
+
+This guide covers everything you need to connect Claude or Cursor to Terminal49's container tracking data via MCP.
+
+<Note>
+Just want to get started fast? See [MCP Overview](/mcp/home) for a 5-minute setup.
+</Note>
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+<CardGroup cols={2}>
+  <Card title="Terminal49 Account" icon="user">
+    A Terminal49 account with API access
+  </Card>
+  <Card title="API Token" icon="key">
+    A `T49_API_TOKEN` from the [dashboard](https://app.terminal49.com/developers/api-keys)
+  </Card>
+  <Card title="Node.js 18+" icon="node-js">
+    Required if running the MCP server locally
+  </Card>
+  <Card title="MCP Client" icon="robot">
+    Claude Desktop or Cursor IDE
+  </Card>
+</CardGroup>
+
+**Technical Details:**
+- **MCP SDK**: `@modelcontextprotocol/sdk ^1.26.0`
+- **TypeScript SDK**: `@terminal49/sdk`
+- **Runtime**: Node.js 18+
+
+---
+
+## Transports
+
+| Transport | Endpoint | Best For |
+|-----------|----------|----------|
+| HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Serverless, short-lived requests |
+
+**Authentication**: API token only (OAuth not required for this release).  
+Pass `Authorization: Bearer <T49_API_TOKEN>` or `Authorization: Token <T49_API_TOKEN>`.  
+Server falls back to `T49_API_TOKEN` environment variable.
+
+<Tip>
+Claude Desktop and Cursor use the HTTP transport. For hosted production usage, use Streamable HTTP at `/mcp`.
+</Tip>
+
+---
+
+## Configure Your MCP Client
+
+### Claude Desktop
+
+<Tabs>
+  <Tab title="macOS">
+    Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "terminal49": {
+          "url": "https://mcp.terminal49.com/mcp",
+          "headers": {
+            "Authorization": "Bearer <T49_API_TOKEN>"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Windows">
+    Edit `%APPDATA%\Claude\claude_desktop_config.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "terminal49": {
+          "url": "https://mcp.terminal49.com/mcp",
+          "headers": {
+            "Authorization": "Bearer <T49_API_TOKEN>"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Linux">
+    Edit `~/.config/Claude/claude_desktop_config.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "terminal49": {
+          "url": "https://mcp.terminal49.com/mcp",
+          "headers": {
+            "Authorization": "Bearer <T49_API_TOKEN>"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Cursor IDE
+
+Add to your Cursor settings:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "terminal49": {
+        "url": "https://mcp.terminal49.com/mcp",
+        "headers": {
+          "Authorization": "Bearer <T49_API_TOKEN>"
+        }
+      }
+    }
+  }
+}
+```
+
+### Local stdio (Development)
+
+For local development without a hosted server:
+
+```json
+{
+  "mcpServers": {
+    "terminal49": {
+      "command": "node",
+      "args": ["/path/to/API/packages/mcp/dist/index.js"],
+      "env": {
+        "T49_API_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+```
+
+<Warning>
+Build the MCP server first:
+`cd packages/mcp && npm install && T49_SDK_SOURCE=published npm run sdk:setup && npm run build`
+</Warning>
+
+<Accordion title="Contributor mode: switch SDK source">
+Use published SDK by default:
+```bash
+cd packages/mcp
+T49_SDK_SOURCE=published npm run sdk:setup
+```
+
+Use local SDK build during development:
+```bash
+cd packages/mcp
+T49_SDK_SOURCE=local npm run sdk:setup
+```
+</Accordion>
+
+---
+
+## Test Your Setup
+
+Once configured, verify everything works:
+
+<Steps>
+  <Step title="Restart your MCP client">
+    Close and reopen Claude Desktop or Cursor to load the new config.
+  </Step>
+  <Step title="Ask Claude to list tools">
+    > "List the tools available in the Terminal49 MCP server."
+
+    Claude should respond with a list of 10 tools including `search_container`, `track_container`, and list tools.
+  </Step>
+  <Step title="Search for a test container">
+    > "Using the Terminal49 MCP server, search for container TCLU1234567 and summarize its status."
+
+    If configured correctly, Claude will call `search_container` and return container details.
+  </Step>
+  <Step title="Try a multi-step query">
+    > "Using Terminal49, find container CAIU1234567, check its demurrage risk, and tell me if I need to pick it up urgently."
+
+    Claude should chain multiple tools together to answer.
+  </Step>
+</Steps>
+
+<Note>
+Need test container numbers? See [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+</Note>
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely Cause | How to Fix |
+|---------|--------------|------------|
+| "Cannot connect to MCP server" | Wrong URL or config path | Confirm URL is `https://mcp.terminal49.com/mcp` and config file path matches your OS |
+| `401 Unauthorized` | Missing or invalid token | Create a new API token in [dashboard](https://app.terminal49.com/developers/api-keys); ensure `Authorization: Bearer <token>` header is set |
+| `429 Too Many Requests` | Rate limit exceeded | See [Rate Limiting](/api-docs/in-depth-guides/rate-limiting); use webhooks instead of polling |
+| Tools list is empty | Config not loaded | Restart Claude/Cursor; check MCP inspector for errors |
+| "Tool not found" | Typo in tool name | Use exact names: `search_container`, `get_container`, etc. |
+| Slow responses | Large data requests | Use `include` parameter to load only what you need |
+
+<Accordion title="Check MCP server logs">
+If using the hosted server, check your Terminal49 dashboard for API logs.
+
+If running locally:
+```bash
+cd packages/mcp
+T49_API_TOKEN=your_token npm run mcp:stdio 2>&1 | head -20
+```
+</Accordion>
+
+---
+
+## MCP Capabilities
+
+### Tools (10)
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `search_container` | Find containers by number, BL, booking, or ref | `query: string` |
+| `track_container` | Start tracking a container | `number`, `numberType?`, `scac?`, `refNumbers?` |
+| `get_container` | Get container with optional includes | `id: uuid`, `include?: ['shipment', 'pod_terminal', 'transport_events']` |
+| `get_shipment_details` | Get shipment and containers | `id: uuid`, `include_containers?: boolean` |
+| `get_container_transport_events` | Get event timeline | `id: uuid` |
+| `get_supported_shipping_lines` | List carriers with SCAC codes | `search?: string` |
+| `get_container_route` | Get multi-leg routing (paid feature) | `id: uuid` |
+| `list_shipments` | List shipments with filters + pagination | `status?`, `port?`, `carrier?`, `updated_after?`, `include_containers?`, `page?`, `page_size?` |
+| `list_containers` | List containers with filters + pagination | `status?`, `port?`, `carrier?`, `updated_after?`, `include?`, `page?`, `page_size?` |
+| `list_tracking_requests` | List tracking requests with filters | `filters?`, `status?`, `request_type?`, `page?`, `page_size?` |
+
+### Prompts (3)
+
+| Prompt | Description | Arguments |
+|--------|-------------|-----------|
+| `track-shipment` | Quick tracking workflow | `container_number`, `carrier?` |
+| `check-demurrage` | Demurrage risk analysis | `container_id` |
+| `analyze-delays` | Journey delay analysis | `container_id` |
+
+### Resources (2)
+
+| URI | Description |
+|-----|-------------|
+| `terminal49://container/{id}` | Container data as resource |
+| `terminal49://docs/milestone-glossary` | Event/milestone reference |
+
+For detailed examples and response formats, see [MCP Overview → Tools Reference](/mcp/home#tools-reference).
+
+---
+
+## SDK Usage
+
+The TypeScript SDK provides the same capabilities as MCP tools, plus additional APIs not yet exposed via MCP.
+
+```bash
+npm install @terminal49/sdk
+```
+
+```typescript
+import { Terminal49Client } from '@terminal49/sdk';
+
+const client = new Terminal49Client({
+  apiToken: process.env.T49_API_TOKEN!,
+  defaultFormat: 'mapped'
+});
+
+// Get container with shipment and terminal
+const container = await client.containers.get(
+  'container-uuid',
+  ['shipment', 'pod_terminal']
+);
+
+// Search for containers
+const results = await client.search('CAIU1234567');
+
+// List shipments with filters (not available via MCP)
+const shipments = await client.shipments.list({
+  status: 'in_transit',
+  carrier: 'MAEU'
+});
+```
+
+### Response Formats
+
+| Format | Description |
+|--------|-------------|
+| `raw` | JSON:API response with `data`, `attributes`, `relationships` |
+| `mapped` | Simplified, camelCase objects with IDs resolved |
+| `both` | `{ raw, mapped }` for debugging |
+
+<Accordion title="Raw vs Mapped example">
+**Raw format:**
+```json
+{
+  "data": {
+    "type": "container",
+    "id": "abc-123",
+    "attributes": {
+      "container_number": "CAIU1234567",
+      "available_for_pickup": true
+    }
+  }
+}
+```
+
+**Mapped format:**
+```json
+{
+  "id": "abc-123",
+  "containerNumber": "CAIU1234567",
+  "availableForPickup": true
+}
+```
+</Accordion>
+
+---
+
+## Deployment
+
+### Vercel (Production)
+
+The `vercel.json` configures the MCP server:
+
+```json
+{
+  "buildCommand": "cd packages/mcp && npm ci && npm run build",
+  "functions": {
+    "api/mcp.ts": { "maxDuration": 30, "memory": 1024 }
+  },
+  "rewrites": [
+    { "source": "/mcp", "destination": "/api/mcp" }
+  ]
+}
+```
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `T49_API_TOKEN` | Yes | Terminal49 API token |
+| `T49_API_BASE_URL` | No | Override API URL (default: `https://api.terminal49.com/v2`) |
+| `T49_MCP_ALLOWED_HOSTS` | No | Comma-separated host allowlist for request Host validation |
+| `T49_MCP_ALLOWED_ORIGINS` | No | Comma-separated origin allowlist for request Origin validation |
+
+---
+
+## Testing Locally
+
+```bash
+# Build the MCP server
+cd packages/mcp
+npm install
+npm run build
+
+# Test tools/list
+echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | T49_API_TOKEN=your_token npm run mcp:stdio
+
+# Test search_container
+echo '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"search_container","arguments":{"query":"CAIU1234567"}},"id":2}' | T49_API_TOKEN=your_token npm run mcp:stdio
+
+# Test the hosted endpoint
+curl -X POST https://mcp.terminal49.com/mcp \
+  -H "Authorization: Bearer $T49_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+```
+
+---
+
+## Related Guides
+
+- [MCP Overview](/mcp/home) – Quick start and tools reference
+- [Rate Limiting](/api-docs/in-depth-guides/rate-limiting) – API limits (same for MCP)
+- [Test Numbers](/api-docs/useful-info/test-numbers) – Containers for testing
+- [Webhooks](/api-docs/in-depth-guides/webhooks) – Real-time updates
+- [API Data Sources](/api-docs/useful-info/api-data-sources-availability) – Data freshness and coverage
