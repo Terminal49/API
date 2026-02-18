@@ -260,7 +260,7 @@ function getShipmentPresentationGuidance(status: string, shipment: any): string 
     case 'awaiting_departure':
       return 'Vessel has not yet departed. Emphasize ETD and vessel details.';
 
-    case 'in_transit':
+    case 'in_transit': {
       const eta = shipment.pod_eta_at ? new Date(shipment.pod_eta_at) : null;
       const now = new Date();
       if (eta) {
@@ -268,6 +268,7 @@ function getShipmentPresentationGuidance(status: string, shipment: any): string 
         return `Shipment is in transit. ETA in ${daysToArrival} days. Focus on vessel name, route, and arrival timing.`;
       }
       return 'Shipment is in transit. Focus on vessel and expected arrival.';
+    }
 
     case 'arrived_at_pod':
       return 'Shipment has arrived at destination port. Focus on containers and their discharge/availability status.';

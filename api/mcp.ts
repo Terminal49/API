@@ -6,7 +6,7 @@
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
@@ -57,6 +57,17 @@ function extractAuthorizationToken(
   return {};
 }
 
+function isMatchingClientSecret(providedToken: string, expectedSecret: string): boolean {
+  const providedBuffer = Buffer.from(providedToken);
+  const expectedBuffer = Buffer.from(expectedSecret);
+
+  if (providedBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(providedBuffer, expectedBuffer);
+}
+
 function buildRequestId(req: RequestLike): string {
   const incomingId = getHeaderValue(req.headers['x-request-id']);
   if (incomingId?.trim()) {
@@ -91,12 +102,12 @@ function parseAllowList(value: string | undefined): Set<string> {
 }
 
 function isAllowedHost(hostHeader: string | undefined, allowList: Set<string>): boolean {
-  if (!hostHeader) {
-    return false;
-  }
-
   if (allowList.size === 0) {
     return true;
+  }
+
+  if (!hostHeader) {
+    return false;
   }
 
   const hostname = hostHeader.split(':')[0];
@@ -260,10 +271,38 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
       return;
     }
 
-    const apiToken = process.env.T49_API_TOKEN?.trim() || callerToken;
+    const configuredApiToken = process.env.T49_API_TOKEN?.trim();
+    const configuredClientSecret = process.env.T49_MCP_CLIENT_SECRET?.trim();
+    let apiToken = callerToken;
+    let authSource: 'authorization' | 'environment' = resolvedAuth.source ?? 'authorization';
+
+    if (configuredApiToken) {
+      if (!configuredClientSecret) {
+        setCorsHeaders(res);
+        res.status(500).json({
+          error: 'Server misconfiguration',
+          message: 'T49_MCP_CLIENT_SECRET must be set when T49_API_TOKEN is configured.',
+        });
+        logLifecycle('mcp.request.complete', requestId, { reason: 'missing_client_secret' });
+        return;
+      }
+
+      if (!isMatchingClientSecret(callerToken, configuredClientSecret)) {
+        setCorsHeaders(res);
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'Invalid client credentials.',
+        });
+        logLifecycle('mcp.request.complete', requestId, { reason: 'invalid_client_secret' });
+        return;
+      }
+
+      apiToken = configuredApiToken;
+      authSource = 'environment';
+    }
 
     logLifecycle('mcp.request.auth', requestId, {
-      auth_source: process.env.T49_API_TOKEN?.trim() ? 'environment' : resolvedAuth.source,
+      auth_source: authSource,
     });
 
     setCorsHeaders(res);

@@ -306,4 +306,14 @@ describe('MCP server wiring', () => {
       'No tracking requests found for the current filters.',
     );
   });
+
+  it('tool error responses omit structuredContent to avoid output schema mismatches', async () => {
+    const server = createTerminal49McpServer('token');
+    const searchTool = (server as any)._registeredTools.search_container;
+
+    const result = await searchTool.handler({ query: '   ' });
+
+    expect(result.content[0].text).toContain('Error: Search query is required');
+    expect(Object.prototype.hasOwnProperty.call(result, 'structuredContent')).toBe(false);
+  });
 });

@@ -92,6 +92,7 @@ describe('api/mcp handler lifecycle', () => {
     mockState.serverCreateArgs.length = 0;
     mockState.handleRequestImpl = undefined;
     delete process.env.T49_API_TOKEN;
+    delete process.env.T49_MCP_CLIENT_SECRET;
     delete process.env.T49_API_BASE_URL;
     delete process.env.T49_MCP_ALLOWED_HOSTS;
     delete process.env.T49_MCP_ALLOWED_ORIGINS;
@@ -173,6 +174,22 @@ describe('api/mcp handler lifecycle', () => {
     expect(mockState.serverCreateArgs[0]?.apiToken).toBe('token-scheme-value');
   });
 
+  it('allows requests without Host header when allow-list is not configured', async () => {
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: undefined,
+        authorization: 'Bearer test-token',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(mockState.servers).toHaveLength(1);
+    expect(res.statusCode).toBe(200);
+  });
+
   it('returns 401 when Authorization header is absent even if T49_API_TOKEN is set', async () => {
     process.env.T49_API_TOKEN = 'env-token-value';
 
@@ -196,12 +213,13 @@ describe('api/mcp handler lifecycle', () => {
 
   it('uses T49_API_TOKEN as upstream credential when Authorization is present', async () => {
     process.env.T49_API_TOKEN = 'env-token-value';
+    process.env.T49_MCP_CLIENT_SECRET = 'mcp-client-secret';
 
     const { default: handler } = await import('../../../api/mcp.ts');
     const req = createRequest({
       headers: {
         host: 'localhost',
-        authorization: 'Bearer client-auth-token',
+        authorization: 'Bearer mcp-client-secret',
       },
     });
     const res = new MockResponse();
@@ -209,6 +227,52 @@ describe('api/mcp handler lifecycle', () => {
     await handler(req as any, res as any);
 
     expect(mockState.serverCreateArgs[0]?.apiToken).toBe('env-token-value');
+  });
+
+  it('returns 401 when Authorization token does not match T49_MCP_CLIENT_SECRET', async () => {
+    process.env.T49_API_TOKEN = 'env-token-value';
+    process.env.T49_MCP_CLIENT_SECRET = 'expected-client-secret';
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Bearer wrong-client-secret',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.payload).toMatchObject({
+      error: 'Unauthorized',
+      message: 'Invalid client credentials.',
+    });
+    expect(mockState.servers).toHaveLength(0);
+    expect(mockState.transports).toHaveLength(0);
+  });
+
+  it('returns 500 when T49_API_TOKEN is set without T49_MCP_CLIENT_SECRET', async () => {
+    process.env.T49_API_TOKEN = 'env-token-value';
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Bearer any-client-token',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({
+      error: 'Server misconfiguration',
+    });
+    expect(mockState.servers).toHaveLength(0);
+    expect(mockState.transports).toHaveLength(0);
   });
 
   it('returns 401 when neither Authorization header nor T49_API_TOKEN is set', async () => {

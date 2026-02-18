@@ -36,8 +36,6 @@ export interface ShippingLineRecord {
   notes?: string;
 }
 
-let cachedLines: ShippingLineRecord[] | null = null;
-
 export async function executeGetSupportedShippingLines(
   args: { search?: string },
   client: Terminal49Client
@@ -65,10 +63,6 @@ export async function executeGetSupportedShippingLines(
 }
 
 async function loadShippingLines(client: Terminal49Client): Promise<ShippingLineRecord[]> {
-  if (cachedLines !== null) {
-    return cachedLines;
-  }
-
   const response = await client.shippingLines.list(undefined, { format: 'mapped' });
   const data = Array.isArray(response) ? response : [];
 
@@ -80,9 +74,7 @@ async function loadShippingLines(client: Terminal49Client): Promise<ShippingLine
     notes: item.notes,
   }));
 
-  cachedLines = mapped
+  return mapped
     .filter((item): item is ShippingLineRecord => item != null && Boolean(item.scac) && Boolean(item.name))
     .sort((a: ShippingLineRecord, b: ShippingLineRecord) => a.name.localeCompare(b.name));
-
-  return cachedLines;
 }

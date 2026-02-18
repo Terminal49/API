@@ -61,12 +61,12 @@ type ResponseContract = {
 };
 
 function buildContentPayload(result: unknown): ToolContent[] {
-  if (result && typeof result === 'object' && (result as any).mapped) {
-    return [{ type: 'text', text: formatAsText((result as any).mapped) }];
-  }
-
   if (result && typeof result === 'object' && (result as any).summary) {
     return [{ type: 'text', text: formatAsText((result as any).summary) }];
+  }
+
+  if (result && typeof result === 'object' && (result as any).mapped) {
+    return [{ type: 'text', text: formatAsText((result as any).mapped) }];
   }
 
   if (isFeatureNotEnabledResult(result)) {
@@ -90,10 +90,6 @@ function buildContentPayload(result: unknown): ToolContent[] {
   }
 
   return [{ type: 'text', text: formatAsText(result) }];
-}
-
-function normalizeStructuredContent(result: unknown): unknown {
-  return result;
 }
 
 function formatAsText(result: unknown): string {
@@ -578,7 +574,7 @@ export function buildListContract(
 function wrapToolWithContract<TArgs>(
   handler: (args: TArgs) => Promise<unknown>,
   buildContract?: (result: unknown, args: TArgs) => ResponseContract,
-): (args: TArgs) => Promise<{ content: ToolContent[]; structuredContent: any }> {
+): (args: TArgs) => Promise<{ content: ToolContent[]; structuredContent?: any }> {
   return async (args: TArgs) => {
     try {
       const result = await handler(args);
@@ -588,13 +584,12 @@ function wrapToolWithContract<TArgs>(
 
       return {
         content: buildContentPayload(result),
-        structuredContent: normalizeStructuredContent(structuredContent),
+        structuredContent,
       };
     } catch (error) {
       const err = error as Error;
       return {
         content: [{ type: 'text', text: `Error: ${err.message}` }],
-        structuredContent: { error: err.name, message: err.message },
       };
     }
   };
@@ -1151,9 +1146,11 @@ export async function runStdioServer() {
   const server = createTerminal49McpServer(apiToken, apiBaseUrl);
   const transport = new StdioServerTransport();
 
-  await server.connect(transport);
+  if (process.env.T49_MCP_STDIO_BANNER === '1') {
+    console.error('Terminal49 MCP Server v1.0.0 running on stdio');
+    console.error('Available: 10 tools | 3 prompts | 3 resources');
+    console.error('SDK: @modelcontextprotocol/sdk (McpServer API)');
+  }
 
-  console.error('Terminal49 MCP Server v1.0.0 running on stdio');
-  console.error('Available: 10 tools | 3 prompts | 3 resources');
-  console.error('SDK: @modelcontextprotocol/sdk (McpServer API)');
+  await server.connect(transport);
 }

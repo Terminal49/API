@@ -266,7 +266,8 @@ function determineContainerState(
   if (!container.pod_discharged_at) return 'arrived';
   if (container.pod_rail_loaded_at && !container.final_destination_full_out_at) return 'on_rail';
   if (container.final_destination_full_out_at || container.pod_full_out_at) return 'delivered';
-  if (container.available_for_pickup) return 'available_for_pickup';
+  if (container.available_for_pickup === true) return 'available_for_pickup';
+  if (container.available_for_pickup === false) return 'discharged';
   return 'at_terminal';
 }
 
@@ -431,7 +432,7 @@ function getRelevantFieldsForState(state: string, container: any): string[] {
       ];
 
     case 'at_terminal':
-    case 'available_for_pickup':
+    case 'available_for_pickup': {
       const fields = [
         'location.available_for_pickup - Ready to pick up?',
         'demurrage.pickup_lfd - Last Free Day (avoid demurrage)',
@@ -445,6 +446,7 @@ function getRelevantFieldsForState(state: string, container: any): string[] {
         fields.push('demurrage.pickup_appointment_at - Scheduled pickup time');
       }
       return fields;
+    }
 
     case 'on_rail':
       return [

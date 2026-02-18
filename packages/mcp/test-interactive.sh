@@ -64,7 +64,7 @@ echo "💬 Test 6: Getting 'track-shipment' prompt..."
 PROMPT_RESULT=$(echo '{
   "jsonrpc":"2.0",
   "method":"prompts/get",
-  "params":{"name":"track-shipment","arguments":{"number":"TEST123","carrier":"MAEU"}},
+  "params":{"name":"track-shipment","arguments":{"container_number":"TEST123","carrier":"MAEU"}},
   "id":6
 }' | npm run mcp:stdio 2>/dev/null)
 
@@ -75,7 +75,7 @@ echo ""
 echo "✅ All tests passed!"
 echo ""
 echo "📊 Summary:"
-echo "  • 7 tools available"
+echo "  • 10 tools available"
 echo "  • 3 prompts available"
 echo "  • 1+ resources available"
 echo "  • SCAC completions working"

@@ -5,18 +5,19 @@
   "buildCommand": "npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp",
   "functions": {
     "api/mcp.ts": {
+      "runtime": "nodejs22.x",
       "maxDuration": 30
     }
   },
   "rewrites": [
     {
-      "source": "/mcp",
+      "source": "/",
       "destination": "/api/mcp"
     }
   ],
   "headers": [
     {
-      "source": "/mcp",
+      "source": "/",
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",

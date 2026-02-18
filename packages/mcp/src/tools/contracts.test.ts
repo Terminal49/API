@@ -321,6 +321,29 @@ describe('MCP tool contracts', () => {
     ]);
   });
 
+  it('get_container classifies discharged containers when not available for pickup', async () => {
+    const rawContainer = buildContainerRaw('container-discharged');
+    rawContainer.data.attributes.available_for_pickup = false;
+    rawContainer.data.attributes.pod_arrived_at = '2026-02-10T00:00:00Z';
+    rawContainer.data.attributes.pod_discharged_at = '2026-02-11T00:00:00Z';
+    (rawContainer.data.attributes as any).pod_full_out_at = null;
+    (rawContainer.data.attributes as any).final_destination_full_out_at = null;
+    (rawContainer.data.attributes as any).pod_rail_loaded_at = null;
+
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({
+          raw: rawContainer,
+          mapped: { id: 'container-discharged' },
+        }),
+      },
+    });
+
+    const result = await executeGetContainer({ id: 'container-discharged' }, client);
+
+    expect(result.status).toBe('discharged');
+  });
+
   it('get_shipment_details returns shipment summary and container list', async () => {
     const shipmentsGet = vi
       .fn()
@@ -528,6 +551,29 @@ describe('MCP tool contracts', () => {
     });
 
     await expect(executeSupportedShippingLines({ search: 'mae' }, client)).rejects.toThrow('downstream failure');
+  });
+
+  it('get_supported_shipping_lines does not reuse module cache across different clients', async () => {
+    vi.resetModules();
+    const { executeGetSupportedShippingLines } = await import('./get-supported-shipping-lines.js');
+
+    const listForClientA = vi.fn().mockResolvedValue([
+      { scac: 'MSCU', name: 'MSC', shortName: 'MSC' },
+    ]);
+    const listForClientB = vi.fn().mockResolvedValue([
+      { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
+    ]);
+
+    const clientA = asClient({ shippingLines: { list: listForClientA } });
+    const clientB = asClient({ shippingLines: { list: listForClientB } });
+
+    const resultA = await executeGetSupportedShippingLines({}, clientA);
+    const resultB = await executeGetSupportedShippingLines({}, clientB);
+
+    expect(listForClientA).toHaveBeenCalledTimes(1);
+    expect(listForClientB).toHaveBeenCalledTimes(1);
+    expect(resultA.shipping_lines[0]?.scac).toBe('MSCU');
+    expect(resultB.shipping_lines[0]?.scac).toBe('MAEU');
   });
 
   it('get_container_route returns route summary when route data exists', async () => {
