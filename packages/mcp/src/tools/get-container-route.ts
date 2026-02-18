@@ -62,7 +62,6 @@ export async function executeGetContainerRoute(
   try {
     const result = await client.containers.route(args.id, { format: 'both' });
     const raw = (result as any)?.raw ?? result;
-    const mapped = (result as any)?.mapped;
     const duration = Date.now() - startTime;
 
     console.error(
@@ -76,7 +75,7 @@ export async function executeGetContainerRoute(
     );
 
     const summary = formatRouteResponse(raw);
-    return mapped ? { mapped, summary } : summary;
+    return summary;
   } catch (error) {
     const duration = Date.now() - startTime;
     const err = error as any;

@@ -31,8 +31,13 @@ export async function readContainerResource(
   }
 
   const containerId = match[1];
-  const result = await client.getContainer(containerId);
-  const container = result.data?.attributes || {};
+  const result = await client.getContainer(
+    containerId,
+    ['shipment', 'pod_terminal'],
+    { format: 'raw' },
+  );
+  const rawResult = (result as any)?.raw ?? result;
+  const container = rawResult?.data?.attributes || {};
 
   const summary = generateSummary(containerId, container);
 

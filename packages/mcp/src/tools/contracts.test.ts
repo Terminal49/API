@@ -153,6 +153,33 @@ describe('MCP tool contracts', () => {
     expect(result.shipments[0]).toMatchObject({ id: 'sr-2', shipping_line: 'MSCU' });
   });
 
+  it('search_container prioritizes full_out over discharged/arrived status', async () => {
+    const client = asClient({
+      search: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: 'container-legacy-1',
+            type: 'container',
+            attributes: {
+              number: 'TIIU1234567',
+              shipping_line_name: 'MSCU',
+              pod_full_out_at: '2026-02-17T01:00:00Z',
+              pod_discharged_at: '2026-02-16T01:00:00Z',
+              pod_arrived_at: '2026-02-15T01:00:00Z',
+            },
+          },
+        ],
+      }),
+    });
+
+    const result = await executeSearchContainer({ query: 'TIIU1234567' }, client);
+
+    expect(result.containers[0]).toMatchObject({
+      id: 'container-legacy-1',
+      status: 'full_out',
+    });
+  });
+
   it('track_container creates tracking request and returns enriched container summary', async () => {
     const createFromInfer = vi.fn().mockResolvedValue({
       infer: { inferred_type: 'container' },
@@ -550,9 +577,9 @@ describe('MCP tool contracts', () => {
 
     const result = await executeGetContainerRoute({ id: 'container-1' }, client);
 
-    expect(result.summary.route_id).toBe('route-1');
-    expect(result.summary.total_legs).toBe(1);
-    expect(result.summary.route_locations[0].port).toMatchObject({ code: 'USLAX' });
+    expect(result.route_id).toBe('route-1');
+    expect(result.total_legs).toBe(1);
+    expect(result.route_locations[0].port).toMatchObject({ code: 'USLAX' });
   });
 
   it('get_container_route returns feature-not-enabled contract instead of throwing', async () => {

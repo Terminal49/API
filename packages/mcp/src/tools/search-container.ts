@@ -268,12 +268,12 @@ function formatShipment(shipment: any, _included: any[]): SearchResult['shipment
 function determineContainerStatus(attrs: any): string {
   if (attrs.available_for_pickup) {
     return 'available_for_pickup';
+  } else if (attrs.pod_full_out_at) {
+    return 'full_out';
   } else if (attrs.pod_discharged_at) {
     return 'discharged';
   } else if (attrs.pod_arrived_at) {
     return 'arrived';
-  } else if (attrs.pod_full_out_at) {
-    return 'full_out';
   } else if (attrs.pol_loaded_at) {
     return 'in_transit';
   }
