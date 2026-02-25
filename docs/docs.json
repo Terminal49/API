@@ -67,6 +67,10 @@
               "api-docs/api-reference/shipments/list-shipments",
               "api-docs/api-reference/shipments/get-a-shipment",
               "api-docs/api-reference/shipments/edit-a-shipment",
+              "api-docs/api-reference/shipments/list-shipment-custom-fields",
+              "api-docs/api-reference/shipments/create-shipment-custom-field",
+              "api-docs/api-reference/shipments/update-shipment-custom-field",
+              "api-docs/api-reference/shipments/delete-shipment-custom-field",
               "api-docs/api-reference/shipments/stop-tracking-shipment",
               "api-docs/api-reference/shipments/resume-tracking-shipment"
             ]
@@ -110,10 +114,44 @@
               "api-docs/api-reference/containers/list-containers",
               "api-docs/api-reference/containers/edit-a-container",
               "api-docs/api-reference/containers/get-a-container",
+              "api-docs/api-reference/containers/list-container-custom-fields",
+              "api-docs/api-reference/containers/create-container-custom-field",
+              "api-docs/api-reference/containers/update-container-custom-field",
+              "api-docs/api-reference/containers/delete-container-custom-field",
               "api-docs/api-reference/containers/refresh-container",
               "api-docs/api-reference/containers/get-container-map-geojson",
               "api-docs/api-reference/containers/get-a-containers-raw-events",
               "api-docs/api-reference/containers/get-a-containers-transport-events"
+            ]
+          },
+          {
+            "group": "Custom Field Definitions",
+            "pages": [
+              "api-docs/api-reference/custom-fields/list-custom-field-definitions",
+              "api-docs/api-reference/custom-fields/get-a-custom-field-definition",
+              "api-docs/api-reference/custom-fields/create-a-custom-field-definition",
+              "api-docs/api-reference/custom-fields/update-a-custom-field-definition",
+              "api-docs/api-reference/custom-fields/delete-a-custom-field-definition"
+            ]
+          },
+          {
+            "group": "Custom Field Options",
+            "pages": [
+              "api-docs/api-reference/custom-fields/list-custom-field-options",
+              "api-docs/api-reference/custom-fields/get-a-custom-field-option",
+              "api-docs/api-reference/custom-fields/create-a-custom-field-option",
+              "api-docs/api-reference/custom-fields/update-a-custom-field-option",
+              "api-docs/api-reference/custom-fields/delete-a-custom-field-option"
+            ]
+          },
+          {
+            "group": "Custom Fields",
+            "pages": [
+              "api-docs/api-reference/custom-fields/list-custom-fields",
+              "api-docs/api-reference/custom-fields/get-a-custom-field",
+              "api-docs/api-reference/custom-fields/create-a-custom-field",
+              "api-docs/api-reference/custom-fields/update-a-custom-field",
+              "api-docs/api-reference/custom-fields/delete-a-custom-field"
             ]
           },
           {

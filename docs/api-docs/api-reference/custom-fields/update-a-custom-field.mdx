@@ -1,0 +1,27 @@
+---
+title: Update a custom field
+og:title: Update a Custom Field | Terminal49 API Documentation
+og:description: Update an existing custom field value using Terminal49's API.
+openapi: patch /custom_fields/{id}
+---
+
+Use this endpoint to update an existing custom field value.
+
+## Path parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `id` | The unique identifier of the custom field value to update |
+
+## Request body
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `value` | Yes | The new field value (must match the definition's data type) |
+
+## Behavior
+
+- The new value is validated against the field definition's data type
+- For enum fields, the value must match one of the definition's configured options
+- The `updated_by` user is recorded for audit purposes
+- Update pathway tracking records the source of the change

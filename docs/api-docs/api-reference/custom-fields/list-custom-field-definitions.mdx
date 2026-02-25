@@ -1,0 +1,16 @@
+---
+title: List custom field definitions
+og:title: List Custom Field Definitions | Terminal49 API Documentation
+og:description: List custom field definitions for shipments and containers using Terminal49's API.
+openapi: get /custom_field_definitions
+---
+
+List all custom field definitions available to your account.
+
+## Query filters
+
+| Filter | Description |
+|--------|-------------|
+| `filter[entity_type]` | Filter by entity type (`Shipment` or `Cargo`) |
+| `filter[data_type]` | Filter by data type |
+| `filter[display_name]` | Filter by display name (prefix match) |

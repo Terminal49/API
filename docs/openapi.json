@@ -6863,7 +6863,1283 @@
         "tags": [
           "Parties"
         ]
+    },
+    "/custom_field_definitions": {
+      "get": {
+        "summary": "List custom field definitions",
+        "operationId": "get-custom-field-definitions",
+        "tags": [
+          "Custom Field Definitions"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "in": "query",
+            "name": "page[number]"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "default": 25
+            },
+            "in": "query",
+            "name": "page[size]"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "filter[entity_type]",
+            "description": "Filter by entity type (Shipment or Cargo)"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "filter[data_type]",
+            "description": "Filter by data type"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "filter[display_name]",
+            "description": "Filter by display name (prefix match)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/custom_field_definition"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a custom field definition",
+        "operationId": "post-custom-field-definitions",
+        "tags": [
+          "Custom Field Definitions"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field_definition"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field_definition"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "required": [
+                          "entity_type",
+                          "api_slug",
+                          "display_name",
+                          "data_type"
+                        ],
+                        "properties": {
+                          "entity_type": {
+                            "type": "string",
+                            "enum": [
+                              "Shipment",
+                              "Cargo"
+                            ]
+                          },
+                          "api_slug": {
+                            "type": "string"
+                          },
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "data_type": {
+                            "type": "string",
+                            "enum": [
+                              "short_text",
+                              "number",
+                              "date",
+                              "datetime",
+                              "boolean",
+                              "enum",
+                              "enum_multi",
+                              "reference"
+                            ]
+                          },
+                          "reference_type": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "validation": {
+                            "type": "object",
+                            "nullable": true,
+                            "additionalProperties": true
+                          },
+                          "default_format": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "default_value": {
+                            "$ref": "#/components/schemas/custom_field_value"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
+    },
+    "/custom_field_definitions/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Custom field definition ID"
+        }
+      ],
+      "get": {
+        "summary": "Get a custom field definition",
+        "operationId": "get-custom-field-definitions-id",
+        "tags": [
+          "Custom Field Definitions"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field_definition"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update a custom field definition",
+        "operationId": "patch-custom-field-definitions-id",
+        "tags": [
+          "Custom Field Definitions"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field_definition"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field_definition"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "validation": {
+                            "type": "object",
+                            "nullable": true,
+                            "additionalProperties": true
+                          },
+                          "default_format": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "default_value": {
+                            "$ref": "#/components/schemas/custom_field_value"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a custom field definition",
+        "operationId": "delete-custom-field-definitions-id",
+        "tags": [
+          "Custom Field Definitions"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/custom_field_definitions/{definition_id}/options": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "definition_id",
+          "in": "path",
+          "required": true,
+          "description": "Custom field definition ID"
+        }
+      ],
+      "get": {
+        "summary": "List custom field options",
+        "operationId": "get-custom-field-options",
+        "tags": [
+          "Custom Field Options"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/custom_field_option"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a custom field option",
+        "operationId": "post-custom-field-options",
+        "tags": [
+          "Custom Field Options"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field_option"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field_option"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "required": [
+                          "label",
+                          "value"
+                        ],
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          },
+                          "position": {
+                            "type": "integer",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/custom_field_definitions/{definition_id}/options/{option_id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "definition_id",
+          "in": "path",
+          "required": true,
+          "description": "Custom field definition ID"
+        },
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "option_id",
+          "in": "path",
+          "required": true,
+          "description": "Custom field option ID"
+        }
+      ],
+      "get": {
+        "summary": "Get a custom field option",
+        "operationId": "get-custom-field-options-id",
+        "tags": [
+          "Custom Field Options"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field_option"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update a custom field option",
+        "operationId": "patch-custom-field-options-id",
+        "tags": [
+          "Custom Field Options"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field_option"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field_option"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "position": {
+                            "type": "integer",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a custom field option",
+        "operationId": "delete-custom-field-options-id",
+        "tags": [
+          "Custom Field Options"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/custom_fields": {
+      "get": {
+        "summary": "List custom fields",
+        "operationId": "get-custom-fields",
+        "tags": [
+          "Custom Fields"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "in": "query",
+            "name": "page[number]"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "default": 25
+            },
+            "in": "query",
+            "name": "page[size]"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "filter[entity_type]",
+            "description": "Filter by entity type (Shipment or Cargo)"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "filter[entity_id]",
+            "description": "Filter by entity ID"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "filter[definition_id]",
+            "description": "Filter by custom field definition ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/custom_field"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a custom field",
+        "operationId": "post-custom-fields",
+        "tags": [
+          "Custom Fields"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes",
+                      "relationships"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "required": [
+                          "api_slug",
+                          "value"
+                        ],
+                        "properties": {
+                          "api_slug": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "$ref": "#/components/schemas/custom_field_value"
+                          }
+                        }
+                      },
+                      "relationships": {
+                        "type": "object",
+                        "properties": {
+                          "entity": {
+                            "type": "object",
+                            "properties": {
+                              "data": {
+                                "type": "object",
+                                "required": [
+                                  "type",
+                                  "id"
+                                ],
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "shipment",
+                                      "container"
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/custom_fields/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Custom field ID"
+        }
+      ],
+      "get": {
+        "summary": "Get a custom field",
+        "operationId": "get-custom-fields-id",
+        "tags": [
+          "Custom Fields"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update a custom field",
+        "operationId": "patch-custom-fields-id",
+        "tags": [
+          "Custom Fields"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "required": [
+                          "value"
+                        ],
+                        "properties": {
+                          "value": {
+                            "$ref": "#/components/schemas/custom_field_value"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a custom field",
+        "operationId": "delete-custom-fields-id",
+        "tags": [
+          "Custom Fields"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/shipments/{shipment_id}/custom_fields": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "shipment_id",
+          "in": "path",
+          "required": true,
+          "description": "Shipment ID"
+        }
+      ],
+      "get": {
+        "summary": "List shipment custom fields",
+        "operationId": "get-shipments-custom-fields",
+        "tags": [
+          "Shipments"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/custom_field"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a shipment custom field",
+        "operationId": "post-shipments-custom-fields",
+        "tags": [
+          "Shipments"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "required": [
+                          "api_slug",
+                          "value"
+                        ],
+                        "properties": {
+                          "api_slug": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "$ref": "#/components/schemas/custom_field_value"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/shipments/{shipment_id}/custom_fields/{api_slug}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "shipment_id",
+          "in": "path",
+          "required": true,
+          "description": "Shipment ID"
+        },
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "api_slug",
+          "in": "path",
+          "required": true,
+          "description": "Custom field api_slug"
+        }
+      ],
+      "patch": {
+        "summary": "Update a shipment custom field",
+        "operationId": "patch-shipments-custom-fields-api-slug",
+        "tags": [
+          "Shipments"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "required": [
+                          "value"
+                        ],
+                        "properties": {
+                          "value": {
+                            "$ref": "#/components/schemas/custom_field_value"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a shipment custom field",
+        "operationId": "delete-shipments-custom-fields-api-slug",
+        "tags": [
+          "Shipments"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/containers/{container_id}/custom_fields": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "container_id",
+          "in": "path",
+          "required": true,
+          "description": "Container ID"
+        }
+      ],
+      "get": {
+        "summary": "List container custom fields",
+        "operationId": "get-containers-custom-fields",
+        "tags": [
+          "Containers"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/custom_field"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a container custom field",
+        "operationId": "post-containers-custom-fields",
+        "tags": [
+          "Containers"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "required": [
+                          "api_slug",
+                          "value"
+                        ],
+                        "properties": {
+                          "api_slug": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "$ref": "#/components/schemas/custom_field_value"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/containers/{container_id}/custom_fields/{api_slug}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "container_id",
+          "in": "path",
+          "required": true,
+          "description": "Container ID"
+        },
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "api_slug",
+          "in": "path",
+          "required": true,
+          "description": "Custom field api_slug"
+        }
+      ],
+      "patch": {
+        "summary": "Update a container custom field",
+        "operationId": "patch-containers-custom-fields-api-slug",
+        "tags": [
+          "Containers"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "required": [
+                          "value"
+                        ],
+                        "properties": {
+                          "value": {
+                            "$ref": "#/components/schemas/custom_field_value"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a container custom field",
+        "operationId": "delete-containers-custom-fields-api-slug",
+        "tags": [
+          "Containers"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    }
     },
     "/parties/{id}": {
       "parameters": [
@@ -7009,6 +8285,9 @@
       "tags": [
         "Shipments",
         "Containers",
+        "Custom Field Definitions",
+        "Custom Field Options",
+        "Custom Fields",
         "Tracking Requests",
         "Webhooks",
         "Webhook Notifications",
@@ -10180,6 +11459,239 @@
         },
         "required": ["type", "coordinates"]
       },
+      "custom_field_value": {
+        "description": "Raw custom field value (type depends on definition)",
+        "nullable": true,
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "type": "object"
+          }
+        ]
+      },
+      "custom_field": {
+        "title": "Custom field",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "custom_field"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "api_slug": {
+                "type": "string"
+              },
+              "value": {
+                "$ref": "#/components/schemas/custom_field_value"
+              },
+              "display_value": {
+                "type": "string",
+                "nullable": true,
+                "description": "Formatted value for display"
+              }
+            },
+            "required": [
+              "api_slug"
+            ]
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "shipment",
+                          "container"
+                        ]
+                      },
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "id"
+                    ]
+                  }
+                }
+              },
+              "definition": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field_definition"
+                        ]
+                      },
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "id"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "custom_field_definition": {
+        "title": "Custom field definition",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "custom_field_definition"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "entity_type": {
+                "type": "string",
+                "enum": [
+                  "Shipment",
+                  "Cargo"
+                ]
+              },
+              "api_slug": {
+                "type": "string"
+              },
+              "display_name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string",
+                "nullable": true
+              },
+              "data_type": {
+                "type": "string",
+                "enum": [
+                  "short_text",
+                  "number",
+                  "date",
+                  "datetime",
+                  "boolean",
+                  "enum",
+                  "enum_multi",
+                  "reference"
+                ]
+              },
+              "reference_type": {
+                "type": "string",
+                "nullable": true
+              },
+              "validation": {
+                "type": "object",
+                "nullable": true,
+                "additionalProperties": true
+              },
+              "default_format": {
+                "type": "string",
+                "nullable": true
+              },
+              "default_value": {
+                "$ref": "#/components/schemas/custom_field_value"
+              }
+            },
+            "required": [
+              "entity_type",
+              "api_slug",
+              "display_name",
+              "data_type"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "custom_field_option": {
+        "title": "Custom field option",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "custom_field_option"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "position": {
+                "type": "integer",
+                "nullable": true
+              }
+            },
+            "required": [
+              "label",
+              "value"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
       "lineStringGeometry": {
         "title": "LineString",
         "type": "object",
@@ -10220,6 +11732,15 @@
   "tags": [
     {
       "name": "Containers"
+    },
+    {
+      "name": "Custom Field Definitions"
+    },
+    {
+      "name": "Custom Field Options"
+    },
+    {
+      "name": "Custom Fields"
     },
     {
       "name": "Shipments"

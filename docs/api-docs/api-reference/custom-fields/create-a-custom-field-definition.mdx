@@ -1,0 +1,22 @@
+---
+title: Create a custom field definition
+og:title: Create a Custom Field Definition | Terminal49 API Documentation
+og:description: Create a custom field definition for shipments or containers using Terminal49's API.
+openapi: post /custom_field_definitions
+---
+
+Create a custom field definition to describe metadata you want to store on shipments or containers.
+
+## Request body
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `entity_type` | Yes | The entity type this field applies to (`Shipment` or `Cargo`) |
+| `api_slug` | Yes | Unique identifier for the field |
+| `display_name` | Yes | Human-readable name for the field |
+| `data_type` | Yes | Data type for values (for example: `short_text`, `number`, `date`) |
+| `description` | No | Optional description of the field's purpose |
+| `validation` | No | Validation rules (for example: `required`, `pattern`, `max_length`) |
+| `default_format` | No | Default format string for numbers or dates |
+| `default_value` | No | Default value for new custom fields |
+| `reference_type` | No | Required when `data_type` is `reference` |
