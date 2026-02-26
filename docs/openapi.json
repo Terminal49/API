@@ -6863,6 +6863,7 @@
         "tags": [
           "Parties"
         ]
+      }
     },
     "/custom_field_definitions": {
       "get": {
@@ -8139,7 +8140,6 @@
           }
         }
       }
-    }
     },
     "/parties/{id}": {
       "parameters": [

@@ -232,10 +232,7 @@
             "group": "MCP",
             "pages": [
               "mcp/home",
-              "mcp/project-overview",
-              "api-docs/in-depth-guides/mcp",
-              "mcp/hosted-http-oauth-requirements",
-              "mcp/hosted-http-oauth-test-plan"
+              "api-docs/in-depth-guides/mcp"
             ]
           }
         ]
