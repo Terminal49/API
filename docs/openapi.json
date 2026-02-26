@@ -960,24 +960,21 @@
                             "example": [
                               "REFNUMBER10"
                             ],
-                            "description": "Shipment ref numbers.",
+                            "description": "Shipment reference numbers. This should be unique to the shipment.",
                             "items": {
                               "type": "string"
                             }
                           },
                           "tags": {
                             "type": "array",
-                            "x-stoplight": {
-                              "id": "02itol38fmg55"
-                            },
+                            "example": [
+                              "tag1", 
+                              "tag2"
+                            ],
                             "uniqueItems": true,
-                            "description": "Tags related to a shipment",
+                            "description": "Tags related to a shipment. This will replace any existing tags on the shipment.",
                             "items": {
-                              "x-stoplight": {
-                                "id": "64x90wvr9d6nd"
-                              },
-                              "type": "string",
-                              "example": "tag1, tag2"
+                              "type": "string"
                             }
                           }
                         }
