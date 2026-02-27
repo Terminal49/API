@@ -1,0 +1,36 @@
+---
+title: Event Timestamps
+og:title: Event Timestamps Guide | Terminal49 API Documentation
+og:description: Learn how event timestamps are captured and processed through Terminal49's API for improved shipment visibility.
+---
+Throughout a container's lifecycle, events occur across multiple time zones. Whenever you see a timestamp for a transportation event, there should be a corresponding [IANA Time Zone](https://www.iana.org/time-zones) identifier.
+
+Event timestamps are stored and returned in UTC (Coordinated Universal Time). If you wish to present them in local time, you need to convert the UTC timestamp using the corresponding time zone.
+
+### Example
+
+When you receive a container model with these attributes:
+```
+  'pod_arrived_at': '2022-12-22T07:00:00Z',
+  'pod_timezone': 'America/Los_Angeles',
+```
+The local time of the `pod_arrived_at` timestamp would be `2022-12-21T23:00:00 PST -08:00`.
+
+
+## When the Corresponding Time Zone is Null
+When an event occurs where Terminal49 cannot determine the location (and therefore the time zone) of the event, the system is unable to store the event in true UTC.
+
+In this scenario, we take the timestamp as given from the source and parse it in UTC. 
+
+### Example
+If you receive:
+```
+  'pod_arrived_at': '2022-12-22T07:00:00Z',
+  'pod_timezone': null,
+```
+
+The time would remain as `2022-12-22T07:00:00` and the time zone would be unknown. (This assumes the source was returning localized timestamps.)
+
+
+## System Timestamps
+Timestamps representing changes within the Terminal49 system (e.g., `created_at`, `updated_at`, `terminal_checked_at`) are stored and represented in UTC and do not have an associated time zone.
