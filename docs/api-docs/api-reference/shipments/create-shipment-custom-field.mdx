@@ -1,0 +1,35 @@
+---
+title: Create shipment custom field
+og:title: Create Shipment Custom Field | Terminal49 API Documentation
+og:description: Create or update a custom field on a shipment using Terminal49's API.
+openapi: post /shipments/{shipment_id}/custom_fields
+---
+
+Creates or updates a custom field on a shipment. If a custom field with the specified `api_slug` already exists, it will be updated.
+
+## Path parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `shipment_id` | Yes | The ID of the shipment |
+
+## Request body
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `api_slug` | Yes | The slug of the custom field definition |
+| `value` | Yes | The value to set (type depends on the definition's data type) |
+
+## Authorization
+
+Requires `update` permission on the shipment.
+
+## Response
+
+Returns `201 Created` with the custom field resource on success.
+
+## Behavior
+
+- Uses `find_or_initialize_by` internally, so it creates if missing or updates if it exists
+- Values are validated against the definition's data type
+- For enum fields, values are validated against the definition's options

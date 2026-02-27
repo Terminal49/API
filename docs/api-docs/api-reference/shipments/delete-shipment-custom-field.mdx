@@ -1,0 +1,23 @@
+---
+title: Delete shipment custom field
+og:title: Delete Shipment Custom Field | Terminal49 API Documentation
+og:description: Delete a specific custom field from a shipment by its api_slug using Terminal49's API.
+openapi: delete /shipments/{shipment_id}/custom_fields/{api_slug}
+---
+
+Deletes a specific custom field from a shipment by its `api_slug`.
+
+## Path parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `shipment_id` | Yes | The ID of the shipment |
+| `api_slug` | Yes | The api_slug of the custom field definition |
+
+## Authorization
+
+Requires `update` permission on the shipment.
+
+## Response
+
+Returns `204 No Content` on success.

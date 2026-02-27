@@ -1,0 +1,19 @@
+---
+title: Update a custom field option
+og:title: Update a Custom Field Option | Terminal49 API Documentation
+og:description: Update a custom field option using Terminal49's API.
+openapi: patch /custom_field_definitions/{definition_id}/options/{option_id}
+---
+
+Update an existing custom field option.
+
+## Path parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `definition_id` | The unique identifier of the custom field definition |
+| `option_id` | The unique identifier of the option |
+
+## Request body
+
+Provide the fields you want to update, such as `label` or `position`.

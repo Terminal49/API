@@ -1,0 +1,26 @@
+---
+title: Create a custom field option
+og:title: Create a Custom Field Option | Terminal49 API Documentation
+og:description: Create an option for an enum custom field definition using Terminal49's API.
+openapi: post /custom_field_definitions/{definition_id}/options
+---
+
+Create a new option for an `enum` or `enum_multi` custom field definition.
+
+## Path parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `definition_id` | The unique identifier of the custom field definition |
+
+## Request body
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `label` | Yes | Display label shown to users |
+| `value` | Yes | Stored value (unique per definition) |
+| `position` | No | Sort order for the option |
+
+## Notes
+
+Options can only be added to definitions with `data_type` of `enum` or `enum_multi`.
