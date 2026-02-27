@@ -9,6 +9,25 @@
   },
   "favicon": "/logos/favicon.svg",
   "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Contact",
+          "icon": "phone",
+          "href": "https://www.terminal49.com/contact/"
+        },
+        {
+          "anchor": "Schedule Demo",
+          "icon": "calendar-days",
+          "href": "https://www.terminal49.com/demo/"
+        },
+        {
+          "anchor": "Blog",
+          "icon": "newspaper",
+          "href": "https://www.terminal49.com/blog/"
+        }
+      ]
+    },
     "tabs": [
       {
         "tab": "API Docs",
@@ -61,6 +80,17 @@
             ]
           },
           {
+            "group": "Tracking Requests",
+            "icon": "search",
+            "pages": [
+              "api-docs/api-reference/tracking-requests/list-tracking-requests",
+              "api-docs/api-reference/tracking-requests/create-a-tracking-request",
+              "api-docs/api-reference/tracking-requests/get-a-single-tracking-request",
+              "api-docs/api-reference/tracking-requests/edit-a-tracking-request",
+              "api-docs/api-reference/tracking-requests/auto-detect-carrier"
+            ]
+          },
+          {
             "group": "Shipments",
             "icon": "package",
             "pages": [
@@ -76,14 +106,20 @@
             ]
           },
           {
-            "group": "Tracking Requests",
-            "icon": "search",
+            "group": "Containers",
+            "icon": "container",
             "pages": [
-              "api-docs/api-reference/tracking-requests/list-tracking-requests",
-              "api-docs/api-reference/tracking-requests/create-a-tracking-request",
-              "api-docs/api-reference/tracking-requests/get-a-single-tracking-request",
-              "api-docs/api-reference/tracking-requests/edit-a-tracking-request",
-              "api-docs/api-reference/tracking-requests/auto-detect-carrier"
+              "api-docs/api-reference/containers/list-containers",
+              "api-docs/api-reference/containers/edit-a-container",
+              "api-docs/api-reference/containers/get-a-container",
+              "api-docs/api-reference/containers/list-container-custom-fields",
+              "api-docs/api-reference/containers/create-container-custom-field",
+              "api-docs/api-reference/containers/update-container-custom-field",
+              "api-docs/api-reference/containers/delete-container-custom-field",
+              "api-docs/api-reference/containers/refresh-container",
+              "api-docs/api-reference/containers/get-container-map-geojson",
+              "api-docs/api-reference/containers/get-a-containers-raw-events",
+              "api-docs/api-reference/containers/get-a-containers-transport-events"
             ]
           },
           {
@@ -105,23 +141,6 @@
               "api-docs/api-reference/webhook-notifications/get-a-single-webhook-notification",
               "api-docs/api-reference/webhook-notifications/list-webhook-notifications",
               "api-docs/api-reference/webhook-notifications/get-webhook-notification-payload-examples"
-            ]
-          },
-          {
-            "group": "Containers",
-            "icon": "container",
-            "pages": [
-              "api-docs/api-reference/containers/list-containers",
-              "api-docs/api-reference/containers/edit-a-container",
-              "api-docs/api-reference/containers/get-a-container",
-              "api-docs/api-reference/containers/list-container-custom-fields",
-              "api-docs/api-reference/containers/create-container-custom-field",
-              "api-docs/api-reference/containers/update-container-custom-field",
-              "api-docs/api-reference/containers/delete-container-custom-field",
-              "api-docs/api-reference/containers/refresh-container",
-              "api-docs/api-reference/containers/get-container-map-geojson",
-              "api-docs/api-reference/containers/get-a-containers-raw-events",
-              "api-docs/api-reference/containers/get-a-containers-transport-events"
             ]
           },
           {
@@ -279,26 +298,7 @@
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Contact",
-          "href": "https://www.terminal49.com/contact/",
-          "icon": "phone"
-        },
-        {
-          "anchor": "Schedule Demo",
-          "href": "https://www.terminal49.com/demo/",
-          "icon": "calendar-days"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://www.terminal49.com/blog/",
-          "icon": "newspaper"
-        }
-      ]
-    }
+    ]
   },
   "logo": "/logos/light.svg",
   "appearance": {
