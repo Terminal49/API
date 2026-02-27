@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "cd ../sdks/typescript-sdk && npm run build && cd ../../sdk-showcase && pnpm build",
+  "installCommand": "cd ../sdks/typescript-sdk && npm install && cd ../../sdk-showcase && pnpm install"
+}
