@@ -19,8 +19,8 @@ Before you begin, make sure you have:
   <Card title="Terminal49 Account" icon="user">
     A Terminal49 account with API access
   </Card>
-  <Card title="API Token" icon="key">
-    A `T49_API_TOKEN` from the [dashboard](https://app.terminal49.com/developers/api-keys)
+  <Card title="OAuth Client Setup" icon="key">
+    Discovery + registration + browser auth for hosted MCP (preferred)
   </Card>
   <Card title="Node.js 18+" icon="node-js">
     Required if running the MCP server locally
@@ -43,23 +43,30 @@ Before you begin, make sure you have:
 |-----------|----------|----------|
 | HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Serverless, short-lived requests |
 
-**Authentication**: API token only (OAuth not required for this release).  
-Pass `Authorization: Bearer <T49_API_TOKEN>` or `Authorization: Token <T49_API_TOKEN>`.  
-Server falls back to `T49_API_TOKEN` environment variable.
+**Authentication**: OAuth 2.1 for hosted MCP (preferred).  
+Discover OAuth metadata from `GET /.well-known/oauth-authorization-server`, register via `POST /oauth/register`, then complete auth and call MCP with bearer tokens.  
+On unauthenticated requests, server returns `401` with:
+`WWW-Authenticate: Bearer resource_metadata="https://api.terminal49.com/.well-known/oauth-authorization-server"`.
+
+Legacy compatibility mode still accepts:
+`Authorization: Bearer <T49_API_TOKEN>` or `Authorization: Token <T49_API_TOKEN>`.
 
 <Tip>
 Claude Desktop and Cursor use the HTTP transport. For hosted production usage, use Streamable HTTP at `/mcp`.
 </Tip>
 
 <Note>
-For hosted OAuth implementation planning, see [Hosted HTTP OAuth Requirements](/mcp/hosted-http-oauth-requirements) and [Hosted HTTP OAuth Test Plan](/mcp/hosted-http-oauth-test-plan).
+For hosted OAuth requirements and validation:
+- [Hosted HTTP OAuth Requirements](/mcp/hosted-http-oauth-requirements)
+- [Hosted HTTP OAuth Test Plan](/mcp/hosted-http-oauth-test-plan)
+- [OAuth E2E Smoke Test](/mcp/oauth-e2e-smoke)
 </Note>
 
 ---
 
 ## Configure Your MCP Client
 
-### Claude Desktop
+### Claude Desktop (legacy compatibility example)
 
 <Tabs>
   <Tab title="macOS">
@@ -112,7 +119,7 @@ For hosted OAuth implementation planning, see [Hosted HTTP OAuth Requirements](/
   </Tab>
 </Tabs>
 
-### Cursor IDE
+### Cursor IDE (legacy compatibility example)
 
 Add to your Cursor settings:
 

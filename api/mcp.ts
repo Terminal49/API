@@ -9,6 +9,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { looksLikeJwt, verifyWorkosJwt } from '../packages/mcp/src/auth/workos-jwt.js';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
 
 type RequestLike = {
@@ -42,14 +43,18 @@ function getHeaderValue(value: string | string[] | undefined): string | undefine
 
 function extractAuthorizationToken(
   authorizationHeader: string | undefined,
-): { token?: string; source?: 'authorization' } {
+): { token?: string; source?: 'authorization'; scheme?: 'bearer' | 'token' } {
   if (authorizationHeader?.trim()) {
     const trimmed = authorizationHeader.trim();
     const authMatch = trimmed.match(/^(bearer|token)\s+(.+)$/i);
     if (authMatch?.[2]) {
       const token = authMatch[2].trim();
       if (token.length > 0) {
-        return { token, source: 'authorization' };
+        return {
+          token,
+          source: 'authorization',
+          scheme: authMatch[1]?.toLowerCase() === 'bearer' ? 'bearer' : 'token',
+        };
       }
     }
   }
@@ -176,6 +181,57 @@ function validateRequestSecurity(req: RequestLike, res: ResponseLike): boolean {
   return true;
 }
 
+function oauthResourceMetadataUrl(): string {
+  return (
+    process.env.T49_MCP_RESOURCE_METADATA_URL?.trim() ??
+    'https://api.terminal49.com/.well-known/oauth-authorization-server'
+  );
+}
+
+function setOAuthChallengeHeader(res: ResponseLike): void {
+  res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${oauthResourceMetadataUrl()}"`);
+}
+
+function unauthorized(res: ResponseLike, payload: { error: string; message: string }): void {
+  setCorsHeaders(res);
+  setOAuthChallengeHeader(res);
+  res.status(401).json(payload);
+}
+
+async function verifyViaInternalPrincipal(token: string): Promise<boolean> {
+  const verifyUrl = process.env.T49_MCP_TOKEN_VERIFY_URL?.trim();
+  const internalAuthToken = process.env.T49_MCP_INTERNAL_AUTH_TOKEN?.trim();
+  if (!verifyUrl || !internalAuthToken) {
+    return false;
+  }
+
+  const abortController = new AbortController();
+  const timeout = setTimeout(() => abortController.abort(), 2000);
+
+  try {
+    const response = await fetch(verifyUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${internalAuthToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token }),
+      signal: abortController.signal,
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const payload = (await response.json()) as { active?: boolean; user_id?: string; account_id?: string };
+    return Boolean(payload?.active && payload?.user_id && payload?.account_id);
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 /**
  * Main handler for Vercel serverless function
  */
@@ -259,10 +315,10 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
     const authHeader = getHeaderValue(req.headers.authorization);
     const resolvedAuth = extractAuthorizationToken(authHeader);
     const callerToken = resolvedAuth.token;
+    const callerScheme = resolvedAuth.scheme;
 
     if (!callerToken) {
-      setCorsHeaders(res);
-      res.status(401).json({
+      unauthorized(res, {
         error: 'Unauthorized',
         message:
           'Missing valid Authorization header. Use `Authorization: Bearer <token>` or `Authorization: Token <token>`.',
@@ -274,9 +330,29 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
     const configuredApiToken = process.env.T49_API_TOKEN?.trim();
     const configuredClientSecret = process.env.T49_MCP_CLIENT_SECRET?.trim();
     let apiToken = callerToken;
-    let authSource: 'authorization' | 'environment' = resolvedAuth.source ?? 'authorization';
+    let authSource: 'authorization' | 'environment' | 'oauth_local' | 'oauth_remote' =
+      resolvedAuth.source ?? 'authorization';
 
-    if (configuredApiToken) {
+    const jwtLikeBearerToken = callerScheme === 'bearer' && looksLikeJwt(callerToken);
+    if (jwtLikeBearerToken) {
+      const localVerificationPayload = await verifyWorkosJwt(callerToken);
+      if (localVerificationPayload) {
+        apiToken = `Bearer ${callerToken}`;
+        authSource = 'oauth_local';
+      } else if (await verifyViaInternalPrincipal(callerToken)) {
+        apiToken = `Bearer ${callerToken}`;
+        authSource = 'oauth_remote';
+      } else {
+        unauthorized(res, {
+          error: 'Unauthorized',
+          message: 'Invalid OAuth bearer token.',
+        });
+        logLifecycle('mcp.request.complete', requestId, { reason: 'invalid_oauth_bearer' });
+        return;
+      }
+    }
+
+    if (configuredApiToken && authSource !== 'oauth_local' && authSource !== 'oauth_remote') {
       if (!configuredClientSecret) {
         setCorsHeaders(res);
         res.status(500).json({
@@ -288,8 +364,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
       }
 
       if (!isMatchingClientSecret(callerToken, configuredClientSecret)) {
-        setCorsHeaders(res);
-        res.status(401).json({
+        unauthorized(res, {
           error: 'Unauthorized',
           message: 'Invalid client credentials.',
         });
