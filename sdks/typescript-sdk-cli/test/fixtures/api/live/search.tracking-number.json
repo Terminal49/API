@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "command": "search",
+  "data": {
+    "data": [
+      {
+        "id": "efec94ff-eb13-4625-9059-d395541524ff",
+        "type": "search_result",
+        "attributes": {
+          "entity_type": "shipment",
+          "number": "ZIMUNGB20745474",
+          "shipment_id": null,
+          "scac": "ZIMU",
+          "port_of_lading_name": "Ningbo",
+          "port_of_discharge_name": "Savannah",
+          "containers_count": 1,
+          "tracking_stopped": false,
+          "tracking_stopped_reason": null,
+          "status": null,
+          "failed_reason": null,
+          "ref_numbers": [],
+          "created_at": "2026-02-28T15:10:41Z",
+          "updated_at": "2026-02-28T19:21:38Z"
+        }
+      }
+    ],
+    "links": {
+      "self": "https://api.terminal49.com/v2/search?query=ZIMUNGB20745474",
+      "current": "https://api.terminal49.com/v2/search?page[number]=1&query=ZIMUNGB20745474"
+    }
+  }
+}
