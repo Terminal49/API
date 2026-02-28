@@ -75,6 +75,24 @@ describe('Terminal49Client', () => {
     );
   });
 
+  it('preserves Bearer-prefixed tokens when building auth header', async () => {
+    const { fetchImpl, calls } = createMockFetch({
+      '/containers/abc?include=shipment,pod_terminal': () =>
+        jsonResponse({ data: { id: 'abc', attributes: {} } }),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'Bearer jwt-token-value',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.getContainer('abc');
+
+    const headers = new Headers(calls[0].init?.headers);
+    expect(headers.get('Authorization')).toBe('Bearer jwt-token-value');
+  });
+
   it('sets include params on shipment and lists shipping lines with search', async () => {
     const { fetchImpl, calls } = createMockFetch({
       '/shipments/ship-1?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal':

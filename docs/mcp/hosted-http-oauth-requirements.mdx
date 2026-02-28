@@ -1,0 +1,175 @@
+---
+title: Hosted HTTP OAuth Requirements
+description: Phase 1 requirements and protocol contract for OAuth 2.1 on Terminal49 hosted MCP
+---
+
+# Hosted HTTP OAuth Requirements
+
+<Warning>
+This is a delivery specification for the Terminal49 monorepo team (Rails + UI). It defines required OAuth behavior for hosted MCP over HTTP.
+</Warning>
+
+## Current State
+
+Hosted MCP now supports OAuth 2.1 bootstrap/discovery and bearer-token auth semantics for MCP clients.
+
+Current deployed behavior:
+- OAuth discovery metadata at `GET /.well-known/oauth-authorization-server`
+- Dynamic registration at `POST /oauth/register`
+- OAuth challenge headers on unauthenticated `POST /mcp` requests
+- Temporary dual-mode compatibility for legacy API-token clients
+
+## Scope
+
+### In
+
+- Hosted MCP HTTP auth for `POST /mcp`
+- OAuth Authorization Server in TMT API Rails
+- Consent flow and OAuth app management UI in monorepo
+- Multi-client support via static OAuth app registry
+- Compatibility certification for Claude/local agents and ChatGPT apps
+- Dual-mode migration from API token auth to OAuth
+
+### Out
+
+- stdio auth flow changes
+- Dynamic Client Registration
+- Per-tool scopes (phase 1 uses a single scope)
+- Migration of non-MCP REST endpoints to OAuth
+
+## Phase 1 Decisions (Locked)
+
+- Authorization Server location: Rails in Terminal49 monorepo
+- Client onboarding: static admin-managed OAuth applications
+- Grant profile: Authorization Code + PKCE only
+- Access token format: opaque tokens with server-side validation
+- Scope model: single `mcp` scope
+- Consent behavior: prompt once per `user + client + scope`, skip repeat consent
+- Rollout mode: dual auth (`oauth` and legacy API token), then deprecate API token
+
+## Normative Requirements
+
+| ID | Requirement |
+|----|-------------|
+| `MCP-OAUTH-001` | Hosted MCP `POST /mcp` MUST accept OAuth bearer access tokens and reject invalid tokens before MCP method execution. |
+| `MCP-OAUTH-002` | Authorization Server MUST support multiple OAuth applications with per-client redirect URI allowlists and enable/disable controls. |
+| `MCP-OAUTH-003` | Phase 1 MUST support `authorization_code` grant with PKCE (`S256`) and MUST reject non-PKCE requests. |
+| `MCP-OAUTH-004` | Access tokens MUST be opaque and validated server-side in Rails. |
+| `MCP-OAUTH-005` | Authorization decisions for MCP MUST require scope `mcp` and resolve user/account context. |
+| `MCP-OAUTH-006` | Consent MUST be shown on first grant and MAY be skipped for repeat grants of same `user + client + scope`. |
+| `MCP-OAUTH-007` | Authorization code MUST be one-time use, short-lived, and protected against replay. |
+| `MCP-OAUTH-008` | Refresh tokens MUST rotate on use and revoke chain on replay detection. |
+| `MCP-OAUTH-009` | Authorization endpoint MUST enforce exact redirect URI matching against registered client URIs. |
+| `MCP-OAUTH-010` | OAuth metadata/discovery endpoint(s) needed by MCP OAuth clients MUST be exposed and accurate. |
+| `MCP-OAUTH-011` | On auth failure, MCP endpoint MUST return `401` with an RFC-compliant `WWW-Authenticate` header suitable for OAuth bootstrapping. |
+| `MCP-OAUTH-012` | Legacy API token auth MAY remain temporarily in dual-mode but MUST emit telemetry tagged as legacy auth. |
+| `MCP-OAUTH-013` | Auth endpoints MUST be rate-limited and audited (authorize, token, revoke, failed/blocked auth). |
+| `MCP-OAUTH-014` | Before GA, end-to-end compatibility MUST pass for Claude/local-agent path and ChatGPT app path. |
+| `MCP-OAUTH-015` | GA MUST include a dated deprecation plan for legacy API token auth on hosted MCP. |
+
+## OAuth Endpoint Contract (Monorepo)
+
+### `GET /oauth/authorize`
+
+- Validates client, redirect URI, scope, session, and PKCE challenge.
+- Presents consent when needed.
+- Redirects with authorization code and `state`.
+
+### `POST /oauth/token`
+
+- Supports `authorization_code` and `refresh_token`.
+- Validates code verifier against stored PKCE challenge.
+- Issues opaque access token and rotating refresh token.
+
+### `POST /oauth/revoke`
+
+- Revokes access or refresh token.
+- Returns success semantics for valid and already-revoked tokens.
+
+### `GET /.well-known/oauth-authorization-server`
+
+- Provides authorization server metadata used by OAuth-capable MCP clients.
+- MUST include authorization endpoint, token endpoint, supported grant types, and supported code challenge methods.
+
+## MCP Endpoint Auth Contract
+
+### `POST /mcp`
+
+- Accepts bearer tokens from OAuth flow.
+- Resolves auth context:
+  - `user_id`
+  - `account_id`
+  - `client_id`
+  - `scopes`
+  - `auth_type` (`oauth` or `legacy_api_token`)
+- Rejects missing/invalid/expired/revoked tokens with `401`.
+
+### Required auth error shape
+
+- `HTTP 401`
+- `WWW-Authenticate: Bearer ...`
+- Response body may include JSON-RPC error payload, but transport-level auth semantics must remain standards-compliant.
+
+## Data Model Contract (Monorepo)
+
+Minimum entities for phase 1:
+
+- `oauth_applications`
+  - `name`
+  - `client_id`
+  - `client_secret` (nullable for public clients)
+  - `redirect_uris` (array)
+  - `scopes` (includes `mcp`)
+  - `is_first_party`
+  - `active`
+- `oauth_authorization_codes`
+  - `user_id`
+  - `account_id`
+  - `oauth_application_id`
+  - `scope`
+  - `code_challenge`
+  - `expires_at`
+  - `consumed_at`
+- `oauth_access_tokens`
+  - `token_hash`
+  - `user_id`
+  - `account_id`
+  - `oauth_application_id`
+  - `scope`
+  - `expires_at`
+  - `revoked_at`
+- `oauth_refresh_tokens`
+  - `token_hash`
+  - `oauth_access_token_id` or chain pointer
+  - `expires_at`
+  - `revoked_at`
+  - `rotated_from_id`
+  - `compromised`
+
+## Security Requirements
+
+- PKCE `S256` required for public clients
+- Strict redirect URI matching
+- CSRF/state verification on authorize callback
+- Code replay protection and single-use codes
+- Refresh token rotation and replay revocation
+- Token hashes at rest
+- Structured audit logs for auth events
+- Rate limits on auth endpoints and abusive-client protections
+
+## Rollout Requirements
+
+1. Internal enablement with OAuth-only clients.
+2. Dual-mode beta: OAuth + legacy API token at `/mcp`.
+3. Public migration documentation with target dates.
+4. Deprecation notice and cutoff date for legacy API token.
+5. Legacy auth removal after adoption and stability gates pass.
+
+## Handoff Deliverables
+
+- Rails OAuth endpoint implementation per contract above
+- UI consent and app-management screens
+- MCP auth middleware using opaque token validation
+- Telemetry dashboard for legacy vs OAuth usage
+- Certification evidence for Claude and ChatGPT tracks
+- Migration runbook and deprecation timeline
