@@ -1,0 +1,305 @@
+{
+  "ok": true,
+  "command": "containers.get",
+  "data": {
+    "data": {
+      "id": "d094ee98-a9bd-4edf-a278-7f6cf73d025a",
+      "type": "container",
+      "attributes": {
+        "number": "OOLU9970918",
+        "seal_number": null,
+        "created_at": "2026-02-25T15:03:44Z",
+        "ref_numbers": [],
+        "pod_arrived_at": "2026-02-20T17:45:11Z",
+        "pod_discharged_at": "2026-02-20T21:33:25Z",
+        "final_destination_full_out_at": "2026-02-26T14:53:00Z",
+        "holds_at_pod_terminal": [],
+        "available_for_pickup": false,
+        "delivered_at": null,
+        "current_status": "picked_up",
+        "empty_out_at": null,
+        "pol_full_in_at": null,
+        "pol_vessel_loaded_at": null,
+        "pol_vessel_departed_at": "2025-12-25T06:01:23Z",
+        "equipment_type": "dry",
+        "equipment_length": 40,
+        "equipment_height": "high_cube",
+        "pod_full_out_at": null,
+        "empty_terminated_at": null,
+        "terminal_checked_at": "2026-02-28T22:09:48Z",
+        "fees_at_pod_terminal": [],
+        "pickup_lfd": "2026-02-26T05:00:00Z",
+        "pickup_appointment_at": null,
+        "pod_full_out_chassis_number": null,
+        "location_at_pod_terminal": null,
+        "pod_last_tracking_request_at": "2026-02-28T22:05:43Z",
+        "shipment_last_tracking_request_at": "2026-02-28T19:15:21Z",
+        "rail_last_tracking_request_at": "2026-02-25T18:54:43Z",
+        "availability_known": true,
+        "pod_timezone": "America/New_York",
+        "final_destination_timezone": "America/Detroit",
+        "weight_in_lbs": 23272,
+        "empty_terminated_timezone": "America/Detroit",
+        "pod_rail_carrier_scac": "NSRR",
+        "ind_rail_carrier_scac": "NSRR",
+        "pod_rail_loaded_at": null,
+        "pod_rail_departed_at": null,
+        "ind_eta_at": null,
+        "ind_ata_at": null,
+        "ind_rail_unloaded_at": "2026-02-25T10:26:00Z",
+        "ind_facility_holds": null,
+        "ind_facility_fees": null,
+        "ind_facility_lfd_on": "2026-02-26T05:00:00Z",
+        "import_deadlines": {
+          "pickup_lfd_terminal": null,
+          "pickup_lfd_rail": "2026-02-26T05:00:00Z",
+          "pickup_lfd_line": null
+        },
+        "ssl_lfd": null
+      },
+      "relationships": {
+        "shipment": {
+          "data": {
+            "id": "0406ec2a-736e-4312-a4b7-a2b1f6266bcd",
+            "type": "shipment"
+          }
+        },
+        "pickup_facility": {
+          "data": {
+            "id": "1d9b95ec-2c3d-42e0-a6b7-7378b82625e7",
+            "type": "terminal"
+          }
+        },
+        "pod_terminal": {
+          "data": {
+            "id": "359c10f2-b69b-481d-b26e-d030b03fa9bf",
+            "type": "terminal"
+          }
+        },
+        "transport_events": {
+          "data": [
+            {
+              "id": "f42dfc85-6a98-4c71-823d-4410d6577dc2",
+              "type": "transport_event"
+            },
+            {
+              "id": "d12d1930-9c23-47bb-beb8-e8d2c1258c95",
+              "type": "transport_event"
+            },
+            {
+              "id": "aa70a3b0-26d4-491c-9146-82a410959e14",
+              "type": "transport_event"
+            },
+            {
+              "id": "b0054875-c11d-49d5-afed-dc0123402ed7",
+              "type": "transport_event"
+            },
+            {
+              "id": "d4f02aab-6230-4c7e-92d1-f9379dc72bed",
+              "type": "transport_event"
+            },
+            {
+              "id": "78823f78-a5ee-47e2-aade-be5183699f12",
+              "type": "transport_event"
+            },
+            {
+              "id": "da2c4758-00ca-473e-9b6b-e6bbc2b3903d",
+              "type": "transport_event"
+            },
+            {
+              "id": "b6f3f2f0-395f-43d4-8187-a36f87cedb8b",
+              "type": "transport_event"
+            },
+            {
+              "id": "a1e6df65-6a6a-474d-8ce0-814692fb58d1",
+              "type": "transport_event"
+            },
+            {
+              "id": "7da152d2-9f4d-406b-913f-bea2ef827c21",
+              "type": "transport_event"
+            },
+            {
+              "id": "f3ef41c2-b74c-416d-802a-d8301239d8b5",
+              "type": "transport_event"
+            }
+          ]
+        },
+        "raw_events": {
+          "data": [
+            {
+              "id": "f9f159e1-300c-43ef-82dc-4ab6fa826f35",
+              "type": "raw_event"
+            },
+            {
+              "id": "a2c2de6e-21d4-4c85-8126-7ae65de7fed0",
+              "type": "raw_event"
+            },
+            {
+              "id": "206ea09d-1e73-420a-ab6b-8560e5043b68",
+              "type": "raw_event"
+            },
+            {
+              "id": "769d0ca9-4ff1-47c5-83ae-19145018b422",
+              "type": "raw_event"
+            },
+            {
+              "id": "8a96db5f-ed01-4925-94e5-9bc397b89bcb",
+              "type": "raw_event"
+            },
+            {
+              "id": "8e31ae64-a8c5-4e3b-80f4-3b08ec161a94",
+              "type": "raw_event"
+            },
+            {
+              "id": "9fe6d776-7b3c-4a42-8e68-f16ddb437837",
+              "type": "raw_event"
+            },
+            {
+              "id": "666fc420-cc59-45de-ae3b-d4feb55c3dce",
+              "type": "raw_event"
+            },
+            {
+              "id": "ad9b9a41-8c30-4b04-9ea4-454cb4729ac2",
+              "type": "raw_event"
+            }
+          ]
+        }
+      }
+    },
+    "links": {
+      "self": "https://api.terminal49.com/v2/containers/d094ee98-a9bd-4edf-a278-7f6cf73d025a?include=shipment%2Cpod_terminal"
+    },
+    "included": [
+      {
+        "id": "0406ec2a-736e-4312-a4b7-a2b1f6266bcd",
+        "type": "shipment",
+        "attributes": {
+          "created_at": "2026-02-25T15:03:42Z",
+          "ref_numbers": [],
+          "tags": [],
+          "bill_of_lading_number": "COSU6436376650",
+          "normalized_number": "6436376650",
+          "shipping_line_scac": "COSU",
+          "shipping_line_name": "COSCO",
+          "shipping_line_short_name": "COSCO",
+          "customer_name": "Sodor Steamworks",
+          "port_of_lading_locode": "IDJKT",
+          "port_of_lading_name": "Jakarta, Java",
+          "port_of_discharge_locode": "USORF",
+          "port_of_discharge_name": "Virginia",
+          "pod_vessel_name": "OOCL FRANCE",
+          "pod_vessel_imo": "9622617",
+          "pod_voyage_number": "068E",
+          "destination_locode": "USDET",
+          "destination_name": "Detroit",
+          "destination_timezone": "America/Detroit",
+          "destination_ata_at": null,
+          "destination_eta_at": "2026-02-25T17:00:00Z",
+          "pol_etd_at": null,
+          "pol_atd_at": "2025-12-25T06:01:23Z",
+          "pol_timezone": "Asia/Jakarta",
+          "pod_eta_at": null,
+          "pod_original_eta_at": null,
+          "pol_original_etd_at": null,
+          "destination_original_eta_at": "2026-02-25T17:00:00Z",
+          "pod_ata_at": "2026-02-20T17:45:11Z",
+          "pod_timezone": "America/New_York",
+          "line_tracking_last_attempted_at": "2026-02-28T19:15:13Z",
+          "line_tracking_last_succeeded_at": "2026-02-28T19:15:21Z",
+          "line_tracking_stopped_at": null,
+          "line_tracking_stopped_reason": null
+        },
+        "links": {
+          "self": "/v2/shipments/0406ec2a-736e-4312-a4b7-a2b1f6266bcd"
+        },
+        "relationships": {
+          "port_of_lading": {
+            "data": {
+              "id": "379ee729-42fb-449e-80fa-da6512c26db3",
+              "type": "port"
+            }
+          },
+          "port_of_discharge": {
+            "data": {
+              "id": "c4554ebb-5476-4b5e-b79f-1e873f7b86fa",
+              "type": "port"
+            }
+          },
+          "pod_terminal": {
+            "data": {
+              "id": "359c10f2-b69b-481d-b26e-d030b03fa9bf",
+              "type": "terminal"
+            }
+          },
+          "destination": {
+            "data": {
+              "id": "edee0f16-8aad-42a5-8836-9a3a8ecd2321",
+              "type": "port"
+            }
+          },
+          "destination_terminal": {
+            "data": {
+              "id": "1d9b95ec-2c3d-42e0-a6b7-7378b82625e7",
+              "type": "terminal"
+            }
+          },
+          "line_tracking_stopped_by_user": {
+            "data": null
+          },
+          "containers": {
+            "data": [
+              {
+                "id": "d094ee98-a9bd-4edf-a278-7f6cf73d025a",
+                "type": "container"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "359c10f2-b69b-481d-b26e-d030b03fa9bf",
+        "type": "terminal",
+        "attributes": {
+          "id": "359c10f2-b69b-481d-b26e-d030b03fa9bf",
+          "nickname": "Virginia (VIG)",
+          "name": "Virginia International Gateway",
+          "firms_code": "N195",
+          "smdg_code": "VIG",
+          "bic_facility_code": "USORFUNYS",
+          "provided_data": {
+            "pickup_lfd": true,
+            "pod_full_out_at": true,
+            "pickup_lfd_notes": "",
+            "available_for_pickup": true,
+            "fees_at_pod_terminal": false,
+            "holds_at_pod_terminal": true,
+            "pickup_appointment_at": false,
+            "location_at_pod_terminal": true,
+            "available_for_pickup_notes": "",
+            "fees_at_pod_terminal_notes": "",
+            "holds_at_pod_terminal_notes": "",
+            "pickup_appointment_at_notes": "",
+            "pod_full_out_chassis_number": false,
+            "location_at_pod_terminal_notes": "",
+            "pod_full_out_chassis_number_notes": ""
+          },
+          "street": "1000 Virginia International Gateway Blvd",
+          "city": "Portsmouth",
+          "state": "Virginia",
+          "state_abbr": "VA",
+          "zip": "23703-2361",
+          "country": "United States",
+          "facility_type": "ocean_terminal"
+        },
+        "relationships": {
+          "port": {
+            "data": {
+              "id": "c4554ebb-5476-4b5e-b79f-1e873f7b86fa",
+              "type": "port"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

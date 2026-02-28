@@ -17,6 +17,7 @@
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run test/integration",
     "test:e2e": "vitest run test/e2e",
+    "fixtures:capture:live": "bash scripts/capture-live-fixtures.sh",
     "lint": "biome check src/ test/ bin/",
     "lint:fix": "biome check --write src/ test/ bin/",
     "prepublishOnly": "npm run build"
@@ -38,7 +39,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@terminal49/sdk": "^0.1.0",
+    "@terminal49/sdk": "workspace:*",
     "commander": "^13.0.0",
     "chalk": "^5.4.0",
     "cli-table3": "^0.6.5"

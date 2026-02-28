@@ -1,0 +1,21 @@
+{
+  "ok": false,
+  "command": "webhook-notifications.examples",
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Bad Request",
+    "status": 400,
+    "details": {
+      "errors": [
+        {
+          "status": "400",
+          "source": {
+            "parameter": "event"
+          },
+          "title": "Bad Request",
+          "detail": null
+        }
+      ]
+    }
+  }
+}
