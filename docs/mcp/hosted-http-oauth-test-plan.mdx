@@ -1,0 +1,124 @@
+---
+title: Hosted HTTP OAuth Test Plan
+description: Requirement-driven test and certification plan for OAuth 2.1 on hosted MCP HTTP
+---
+
+# Hosted HTTP OAuth Test Plan
+
+Use this plan to validate the hosted MCP OAuth implementation in the Terminal49 monorepo.
+
+## Test Objectives
+
+- Verify all phase 1 OAuth requirements for hosted MCP.
+- Prove compatibility with both target client tracks:
+  - Claude/local-agent path
+  - ChatGPT app path
+- Validate safe migration from legacy API token auth to OAuth.
+- Validate RFC-compliant OAuth challenge semantics (`WWW-Authenticate` + `resource_metadata`).
+
+## Test Tracks
+
+| Track | Purpose |
+|-------|---------|
+| Unit | PKCE, token lifecycle, scope checks, replay protections |
+| Integration (Rails) | OAuth endpoint behavior and error handling |
+| Integration (MCP) | `/mcp` bearer validation and auth semantics |
+| End-to-End Client | Real OAuth flow and MCP calls from target clients |
+| Security | Abuse/replay/redirect/state attack resistance |
+| Rollout/Operations | Metrics, deprecation readiness, regression watch |
+
+## Requirement Traceability Matrix
+
+| Requirement | Unit | Integration | E2E | Security |
+|-------------|------|-------------|-----|----------|
+| `MCP-OAUTH-001` | - | Yes | Yes | - |
+| `MCP-OAUTH-002` | - | Yes | Yes | - |
+| `MCP-OAUTH-003` | Yes | Yes | Yes | Yes |
+| `MCP-OAUTH-004` | Yes | Yes | Yes | Yes |
+| `MCP-OAUTH-005` | Yes | Yes | Yes | - |
+| `MCP-OAUTH-006` | - | Yes | Yes | - |
+| `MCP-OAUTH-007` | Yes | Yes | - | Yes |
+| `MCP-OAUTH-008` | Yes | Yes | - | Yes |
+| `MCP-OAUTH-009` | - | Yes | Yes | Yes |
+| `MCP-OAUTH-010` | - | Yes | Yes | - |
+| `MCP-OAUTH-011` | - | Yes | Yes | - |
+| `MCP-OAUTH-012` | - | Yes | Yes | - |
+| `MCP-OAUTH-013` | - | Yes | - | Yes |
+| `MCP-OAUTH-014` | - | - | Yes | - |
+| `MCP-OAUTH-015` | - | Yes | - | - |
+
+## Core Test Cases
+
+### OAuth Endpoint Integration
+
+1. `AUTH-001` Valid auth code + PKCE exchange returns access and refresh tokens.
+2. `AUTH-002` Missing PKCE verifier fails token exchange.
+3. `AUTH-003` Reused authorization code is rejected.
+4. `AUTH-004` Invalid redirect URI is rejected.
+5. `AUTH-005` Invalid `state` is rejected.
+6. `AUTH-006` Refresh token rotates and old refresh token is invalidated.
+7. `AUTH-007` Revoked token cannot be used at `/mcp`.
+8. `AUTH-008` Discovery metadata endpoints return expected values.
+
+### MCP Auth Integration
+
+1. `MCP-001` Valid OAuth token succeeds for `initialize`.
+2. `MCP-002` Valid OAuth token succeeds for `tools/list`.
+3. `MCP-003` Valid OAuth token succeeds for `tools/call`.
+4. `MCP-004` Expired token returns `401` with `WWW-Authenticate`.
+5. `MCP-005` Missing token returns `401` with `WWW-Authenticate`.
+6. `MCP-006` Wrong scope returns `401` or `403` per contract and is logged.
+7. `MCP-007` Legacy API token succeeds during dual-mode and emits `auth_type=legacy_api_token`.
+
+### Security Tests
+
+1. `SEC-001` Authorization code replay attempt is blocked.
+2. `SEC-002` Refresh token replay marks token chain compromised and blocks reuse.
+3. `SEC-003` Redirect URI tampering attempt is blocked.
+4. `SEC-004` CSRF/state mismatch is blocked.
+5. `SEC-005` PKCE downgrade/non-`S256` is blocked.
+6. `SEC-006` Auth endpoint rate limits trigger under abuse load.
+
+## Client Certification Scenarios
+
+### Claude / Local-Agent Certification
+
+1. Configure client with registered OAuth app and redirect URI.
+2. Complete OAuth sign-in and consent.
+3. Run MCP handshake (`initialize`, `tools/list`).
+4. Execute one read-only tool and one write-like tracking tool.
+5. Force token expiry and verify refresh path succeeds.
+6. Confirm no fallback to legacy token was required.
+
+### ChatGPT App Certification
+
+1. Configure ChatGPT app OAuth settings with registered Terminal49 client.
+2. Complete OAuth sign-in and consent.
+3. Confirm app can call hosted MCP endpoint with issued access token.
+4. Validate refresh and revoke behavior in app session lifecycle.
+5. Verify auth failures are actionable and standards-compliant.
+
+## Rollout Validation
+
+Track these metrics during dual-mode:
+
+- OAuth auth success rate
+- OAuth token issuance and refresh success
+- `/mcp` auth failures by reason
+- Legacy-token request share over time
+- Per-client error rate (Claude app vs ChatGPT app)
+- Median and p95 auth latency for `/oauth/token` and `/mcp`
+
+## Quick Smoke Validation
+
+For repeatable smoke checks, run the [OAuth E2E Smoke Test](/mcp/oauth-e2e-smoke) runbook and script.
+
+## Exit Criteria (GA Gate)
+
+All must pass:
+
+1. All `AUTH-*`, `MCP-*`, and `SEC-*` critical tests green.
+2. Claude/local-agent and ChatGPT certifications completed and documented.
+3. Legacy-token migration adoption target met.
+4. No open critical vulnerabilities in OAuth or auth middleware.
+5. Deprecation date for legacy API token auth communicated and approved.

@@ -640,9 +640,10 @@ export class Terminal49Client {
       init?: RequestInit,
     ): Promise<Response> => {
       const headers = new Headers(init?.headers);
-      const authHeader = this.apiToken.startsWith('Token ')
-        ? this.apiToken
-        : `Token ${this.apiToken}`;
+      const rawToken = this.apiToken.trim();
+      const authHeader = /^(Token|Bearer)\s+/i.test(rawToken)
+        ? rawToken
+        : `Token ${rawToken}`;
       headers.set('Authorization', authHeader);
       headers.set('Accept', 'application/json');
       if (init?.body !== undefined && !headers.has('Content-Type')) {

@@ -1,0 +1,74 @@
+---
+title: OAuth E2E Smoke Test
+description: End-to-end validation for hosted MCP OAuth discovery, registration, challenge, and authenticated calls
+---
+
+# OAuth E2E Smoke Test
+
+Use this runbook to validate the hosted MCP OAuth 2.1 integration.
+
+## Prerequisites
+
+1. `curl` and `jq` installed.
+2. Reachable API and MCP endpoints.
+3. A redirect URI for client registration (for example `http://localhost:5050/callback`).
+4. Optional: a valid OAuth access token to run authenticated MCP calls.
+
+## Environment variables
+
+```bash
+export API_BASE_URL="https://api.terminal49.com"
+export MCP_BASE_URL="https://mcp.terminal49.com/mcp"
+export MCP_REDIRECT_URI="http://localhost:5050/callback"
+export MCP_CLIENT_NAME="Terminal49 MCP Smoke Client"
+
+# Optional for authenticated phase
+export MCP_ACCESS_TOKEN="<oauth_access_token>"
+```
+
+## Run
+
+From the `API` repo root:
+
+```bash
+bash scripts/mcp-oauth-e2e-smoke.sh
+```
+
+## What this validates
+
+1. Discovery endpoint returns required metadata:
+- `issuer`
+- `authorization_endpoint`
+- `token_endpoint`
+- `revocation_endpoint`
+- `code_challenge_methods_supported`
+
+2. Dynamic registration succeeds:
+- `POST /oauth/register` returns `client_id`
+- no `client_secret` is returned
+
+3. Unauthenticated MCP request is standards-compliant:
+- `POST /mcp` returns `401`
+- `WWW-Authenticate` includes:
+`Bearer resource_metadata="https://api.terminal49.com/.well-known/oauth-authorization-server"`
+
+4. Authenticated MCP calls (if `MCP_ACCESS_TOKEN` provided):
+- `initialize` returns success
+- `tools/list` returns a non-empty tools list
+
+## Troubleshooting
+
+1. `401` with missing `resource_metadata`:
+- Verify `T49_MCP_RESOURCE_METADATA_URL` in the MCP deployment.
+
+2. Registration fails with `invalid_client_metadata`:
+- Validate `redirect_uris` format.
+- Use `https://` callbacks or localhost http callbacks.
+
+3. OAuth bearer token rejected:
+- Confirm token contains `mcp` scope.
+- Confirm issuer/audience/JWKS env vars:
+`WORKOS_MCP_ISSUER`, `WORKOS_MCP_AUDIENCE`, `WORKOS_MCP_JWKS_URL`.
+
+4. Internal fallback verification fails:
+- Confirm `T49_MCP_TOKEN_VERIFY_URL` and `T49_MCP_INTERNAL_AUTH_TOKEN` match Rails internal endpoint config.
