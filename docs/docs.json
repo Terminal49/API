@@ -123,6 +123,13 @@
             ]
           },
           {
+            "group": "Search",
+            "icon": "magnifying-glass",
+            "pages": [
+              "api-docs/api-reference/search/search"
+            ]
+          },
+          {
             "group": "Webhooks",
             "icon": "webhook",
             "pages": [
