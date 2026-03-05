@@ -87,6 +87,7 @@ describe('api/mcp handler lifecycle', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
     mockState.servers.length = 0;
     mockState.transports.length = 0;
     mockState.serverCreateArgs.length = 0;
@@ -96,6 +97,12 @@ describe('api/mcp handler lifecycle', () => {
     delete process.env.T49_API_BASE_URL;
     delete process.env.T49_MCP_ALLOWED_HOSTS;
     delete process.env.T49_MCP_ALLOWED_ORIGINS;
+    delete process.env.T49_MCP_RESOURCE_METADATA_URL;
+    delete process.env.T49_MCP_TOKEN_VERIFY_URL;
+    delete process.env.T49_MCP_INTERNAL_AUTH_TOKEN;
+    delete process.env.WORKOS_MCP_ISSUER;
+    delete process.env.WORKOS_MCP_AUDIENCE;
+    delete process.env.WORKOS_MCP_JWKS_URL;
   });
 
   it('closes transport and server after successful request handling', async () => {
@@ -207,6 +214,9 @@ describe('api/mcp handler lifecycle', () => {
     expect(res.payload).toMatchObject({
       error: 'Unauthorized',
     });
+    expect(res.headers['WWW-Authenticate']).toBe(
+      'Bearer resource_metadata="https://api.terminal49.com/.well-known/oauth-authorization-server"',
+    );
     expect(mockState.servers).toHaveLength(0);
     expect(mockState.transports).toHaveLength(0);
   });
@@ -249,6 +259,9 @@ describe('api/mcp handler lifecycle', () => {
       error: 'Unauthorized',
       message: 'Invalid client credentials.',
     });
+    expect(res.headers['WWW-Authenticate']).toBe(
+      'Bearer resource_metadata="https://api.terminal49.com/.well-known/oauth-authorization-server"',
+    );
     expect(mockState.servers).toHaveLength(0);
     expect(mockState.transports).toHaveLength(0);
   });
@@ -290,7 +303,65 @@ describe('api/mcp handler lifecycle', () => {
     expect(res.payload).toMatchObject({
       error: 'Unauthorized',
     });
+    expect(res.headers['WWW-Authenticate']).toBe(
+      'Bearer resource_metadata="https://api.terminal49.com/.well-known/oauth-authorization-server"',
+    );
     expect(mockState.servers).toHaveLength(0);
     expect(mockState.transports).toHaveLength(0);
+  });
+
+  it('returns 401 with OAuth challenge for invalid JWT-like bearer tokens', async () => {
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Bearer header.payload.signature',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.payload).toMatchObject({
+      error: 'Unauthorized',
+      message: 'Invalid OAuth bearer token.',
+    });
+    expect(res.headers['WWW-Authenticate']).toBe(
+      'Bearer resource_metadata="https://api.terminal49.com/.well-known/oauth-authorization-server"',
+    );
+    expect(mockState.servers).toHaveLength(0);
+    expect(mockState.transports).toHaveLength(0);
+  });
+
+  it('accepts JWT-like OAuth bearer token when internal fallback verification succeeds', async () => {
+    process.env.T49_MCP_TOKEN_VERIFY_URL = 'https://api.terminal49.com/internal/mcp/token_principal';
+    process.env.T49_MCP_INTERNAL_AUTH_TOKEN = 'internal-auth-token';
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({ active: true, user_id: 'user-1', account_id: 'account-1' }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Bearer header.payload.signature',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(200);
+    expect(mockState.serverCreateArgs[0]?.apiToken).toBe('Bearer header.payload.signature');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
