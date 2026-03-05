@@ -99,11 +99,11 @@ This is a large table with denormalized columns to make it easy to use for repor
 | `fees_at_pod_terminal`            | Current fee amounts, in JSON format. See [hold and fee types](/api-docs/in-depth-guides/holds-and-fees).       | `text`      |
 | `demurrage_at_pod_terminal`       | Current demurrage amount owed. See [fee types](/api-docs/in-depth-guides/holds-and-fees#fee-types-at-a-glance). | `text`      |
 | `holds_at_pod_terminal`           | Current terminal hold statuses, in JSON format. See [hold types](/api-docs/in-depth-guides/holds-and-fees#hold-types-at-a-glance). | `text`      |
-| `freight_hold_at_pod_terminal`    | Current freight hold, value is either Hold or empty                                                            | `text`      |
-| `customs_hold_at_pod_terminal`    | Current customs hold, value is either Hold or empty                                                            | `text`      |
-| `usda_hold_at_pod_terminal`       | Current USDA hold, value is either Hold or empty                                                               | `text`      |
-| `tmf_hold_at_pod_terminal`        | Current Traffic Mitigation Fee hold, value is either Hold or empty                                             | `text`      |
-| `other_hold_at_pod_terminal`      | Any other current hold, value is either Hold or empty                                                          | `text`      |
+| `freight_hold_at_pod_terminal`    | Current freight hold, value is either "Hold", "Pending", or blank                                              | `text`      |
+| `customs_hold_at_pod_terminal`    | Current customs hold, value is either "Hold", "Pending", or blank                                              | `text`      |
+| `usda_hold_at_pod_terminal`       | Current USDA hold, value is either "Hold", "Pending", or blank                                                 | `text`      |
+| `tmf_hold_at_pod_terminal`        | Current Traffic Mitigation Fee hold, value is either "Hold", "Pending", or blank                               | `text`      |
+| `other_hold_at_pod_terminal`      | Any other current hold, value is either "Hold", "Pending", or blank                                            | `text`      |
 | `location_at_pod_terminal`        | Location at port of discharge terminal                                                                         | `text`      |
 | `availability_known`              | Yes if Terminal49 is receiving availability status from the terminal, No otherwise.                            | `text`      |
 | `available_for_pickup`            | If availability_known is Yes, then Yes if the container is available to be picked up at terminal, No otherwise | `text`      |
