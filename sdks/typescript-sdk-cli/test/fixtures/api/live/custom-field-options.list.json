@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "command": "custom-field-options.list",
+  "data": {
+    "links": {
+      "self": "https://api.terminal49.com/v2/custom_field_definitions/5596c4ec-7517-4221-b62b-54800cdb8b67/options?page%5Bsize%5D=2",
+      "current": "https://api.terminal49.com/v2/custom_field_definitions/5596c4ec-7517-4221-b62b-54800cdb8b67/options?page[number]=1&page[size]=2"
+    },
+    "data": []
+  }
+}

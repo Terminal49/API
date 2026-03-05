@@ -1,0 +1,187 @@
+{
+  "ok": true,
+  "command": "shipments.list",
+  "data": {
+    "items": [
+      {
+        "id": "5fdb5605-647d-46fc-98f9-e93ccaba8bff",
+        "billOfLading": "HLCUHAM260113347",
+        "shippingLineScac": "HLCU",
+        "customerName": "Sodor Steamworks",
+        "containers": [
+          {
+            "id": "cd085a4f-f981-4a78-9a9f-6cdf873a4931",
+            "number": "XHCU5741275"
+          }
+        ],
+        "createdAt": "2026-02-28T18:58:30Z",
+        "refNumbers": [],
+        "tags": [],
+        "billOfLadingNumber": "HLCUHAM260113347",
+        "normalizedNumber": "HLCUHAM260113347",
+        "shippingLineName": "Hapag-Lloyd",
+        "shippingLineShortName": "Hapag-Lloyd",
+        "portOfLadingLocode": "DEHAM",
+        "portOfLadingName": "Hamburg",
+        "portOfDischargeLocode": "USPEF",
+        "portOfDischargeName": "Port Everglades",
+        "podVesselName": "SEASPAN SAIGON",
+        "podVesselImo": "9301809",
+        "podVoyageNumber": "608N",
+        "destinationLocode": null,
+        "destinationName": null,
+        "destinationTimezone": null,
+        "destinationAtaAt": null,
+        "destinationEtaAt": null,
+        "polEtdAt": null,
+        "polAtdAt": "2026-01-16T15:15:57Z",
+        "polTimezone": "Europe/Berlin",
+        "podEtaAt": null,
+        "podOriginalEtaAt": null,
+        "polOriginalEtdAt": null,
+        "destinationOriginalEtaAt": null,
+        "podAtaAt": "2026-02-23T19:21:09Z",
+        "podTimezone": "America/New_York",
+        "lineTrackingLastAttemptedAt": "2026-02-28T18:58:30Z",
+        "lineTrackingLastSucceededAt": "2026-02-28T18:58:30Z",
+        "lineTrackingStoppedAt": null,
+        "lineTrackingStoppedReason": null,
+        "vesselAtPod": {
+          "name": "SEASPAN SAIGON",
+          "imo": "9301809",
+          "voyageNumber": "608N"
+        },
+        "ports": {
+          "portOfLading": {
+            "name": "Hamburg",
+            "code": "DEHAM",
+            "countryCode": "DE",
+            "etd": null,
+            "atd": "2026-01-16T15:15:57Z",
+            "timezone": "Europe/Berlin"
+          },
+          "portOfDischarge": {
+            "name": "Port Everglades",
+            "code": "USPEF",
+            "countryCode": "US",
+            "eta": null,
+            "ata": "2026-02-23T19:21:09Z",
+            "originalEta": null,
+            "timezone": "America/New_York",
+            "terminal": {
+              "id": "4a55655c-5ad5-4027-af0c-a154e05abcfc",
+              "name": "Florida International Terminal",
+              "nickname": "FIT",
+              "firmsCode": "N751"
+            }
+          },
+          "destination": null
+        },
+        "tracking": {
+          "lineTrackingLastAttemptedAt": "2026-02-28T18:58:30Z",
+          "lineTrackingLastSucceededAt": "2026-02-28T18:58:30Z",
+          "lineTrackingStoppedAt": null,
+          "lineTrackingStoppedReason": null
+        }
+      },
+      {
+        "id": "c905cb3c-7f52-4bcc-bb84-a9446b8749ac",
+        "billOfLading": "HLCURTM260109546",
+        "shippingLineScac": "HLCU",
+        "customerName": "Sodor Steamworks",
+        "containers": [
+          {
+            "id": "cb39a91a-a652-4afe-829a-5ace4719e043",
+            "number": "FANU1665305"
+          }
+        ],
+        "createdAt": "2026-02-28T18:58:17Z",
+        "refNumbers": [],
+        "tags": [],
+        "billOfLadingNumber": "HLCURTM260109546",
+        "normalizedNumber": "HLCURTM260109546",
+        "shippingLineName": "Hapag-Lloyd",
+        "shippingLineShortName": "Hapag-Lloyd",
+        "portOfLadingLocode": "NLRTM",
+        "portOfLadingName": "Rotterdam",
+        "portOfDischargeLocode": "USORF",
+        "portOfDischargeName": "Virginia",
+        "podVesselName": "MAERSK GARONNE",
+        "podVesselImo": "9235579",
+        "podVoyageNumber": "605W",
+        "destinationLocode": "USCVG",
+        "destinationName": "Cincinnati",
+        "destinationTimezone": "America/New_York",
+        "destinationAtaAt": null,
+        "destinationEtaAt": null,
+        "polEtdAt": null,
+        "polAtdAt": "2026-02-06T23:06:36Z",
+        "polTimezone": "Europe/Amsterdam",
+        "podEtaAt": null,
+        "podOriginalEtaAt": null,
+        "polOriginalEtdAt": null,
+        "destinationOriginalEtaAt": null,
+        "podAtaAt": "2026-02-23T10:07:45Z",
+        "podTimezone": "America/New_York",
+        "lineTrackingLastAttemptedAt": "2026-02-28T18:58:17Z",
+        "lineTrackingLastSucceededAt": "2026-02-28T18:58:17Z",
+        "lineTrackingStoppedAt": null,
+        "lineTrackingStoppedReason": null,
+        "vesselAtPod": {
+          "name": "MAERSK GARONNE",
+          "imo": "9235579",
+          "voyageNumber": "605W"
+        },
+        "ports": {
+          "portOfLading": {
+            "name": "Rotterdam",
+            "code": "NLRTM",
+            "countryCode": "NL",
+            "etd": null,
+            "atd": "2026-02-06T23:06:36Z",
+            "timezone": "Europe/Amsterdam"
+          },
+          "portOfDischarge": {
+            "name": "Virginia",
+            "code": "USORF",
+            "countryCode": "US",
+            "eta": null,
+            "ata": "2026-02-23T10:07:45Z",
+            "originalEta": null,
+            "timezone": "America/New_York",
+            "terminal": {
+              "id": "359c10f2-b69b-481d-b26e-d030b03fa9bf",
+              "name": "Virginia International Gateway",
+              "nickname": "Virginia (VIG)",
+              "firmsCode": "N195"
+            }
+          },
+          "destination": {
+            "locode": "USCVG",
+            "name": "Cincinnati",
+            "eta": null,
+            "ata": null,
+            "timezone": "America/New_York",
+            "terminal": null
+          }
+        },
+        "tracking": {
+          "lineTrackingLastAttemptedAt": "2026-02-28T18:58:17Z",
+          "lineTrackingLastSucceededAt": "2026-02-28T18:58:17Z",
+          "lineTrackingStoppedAt": null,
+          "lineTrackingStoppedReason": null
+        }
+      }
+    ],
+    "links": {
+      "self": "https://api.terminal49.com/v2/shipments?include=containers%2Cpod_terminal%2Cport_of_lading%2Cport_of_discharge%2Cdestination%2Cdestination_terminal&page[size]=2",
+      "current": "https://api.terminal49.com/v2/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=1&page[size]=2",
+      "next": "https://api.terminal49.com/v2/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=2&page[size]=2",
+      "last": "https://api.terminal49.com/v2/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=87346&page[size]=2"
+    },
+    "meta": {
+      "total": 174691,
+      "size": 2
+    }
+  }
+}

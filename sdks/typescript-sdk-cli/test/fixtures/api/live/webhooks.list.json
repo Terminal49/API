@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "command": "webhooks.list",
+  "data": {
+    "links": {
+      "self": "https://api.terminal49.com/v2/webhooks?page[size]=2",
+      "current": "https://api.terminal49.com/v2/webhooks?page[number]=1&page[size]=2"
+    },
+    "data": []
+  }
+}
