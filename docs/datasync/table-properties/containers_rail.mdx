@@ -94,11 +94,11 @@ _Columns marked with * are only included with the Intermodal Rail product._
 | `fees_at_pod_terminal`            | Current fee amounts at the POD terminal, in JSON format. See [hold and fee types](/api-docs/in-depth-guides/holds-and-fees). | `text`     |
 | `demurrage_at_pod_terminal`       | Current demurrage amount owed at the POD terminal. See [fee types](/api-docs/in-depth-guides/holds-and-fees#fee-types-at-a-glance). | `text`     |
 | `holds_at_pod_terminal`           | Current terminal hold statuses at the POD, in JSON format. See [hold types](/api-docs/in-depth-guides/holds-and-fees#hold-types-at-a-glance). | `text`     |
-| `freight_hold_at_pod_terminal`    | Current freight hold at the POD terminal, value is either "Hold" or empty                                              | `text`     |
-| `customs_hold_at_pod_terminal`    | Current customs hold at the POD terminal, value is either "Hold" or empty                                              | `text`     |
-| `usda_hold_at_pod_terminal`       | Current USDA hold at the POD terminal, value is either "Hold" or empty                                                 | `text`     |
-| `tmf_hold_at_pod_terminal`        | Current Traffic Mitigation Fee hold at the POD terminal, value is either "Hold" or empty                               | `text`     |
-| `other_hold_at_pod_terminal`      | Any other current hold at the POD terminal, value is either "Hold" or empty                                            | `text`     |
+| `freight_hold_at_pod_terminal`    | Current freight hold at the POD terminal, value is either "Hold", "Pending", or blank                                  | `text`     |
+| `customs_hold_at_pod_terminal`    | Current customs hold at the POD terminal, value is either "Hold", "Pending", or blank                                  | `text`     |
+| `usda_hold_at_pod_terminal`       | Current USDA hold at the POD terminal, value is either "Hold", "Pending", or blank                                     | `text`     |
+| `tmf_hold_at_pod_terminal`        | Current Traffic Mitigation Fee hold at the POD terminal, value is either "Hold", "Pending", or blank                   | `text`     |
+| `other_hold_at_pod_terminal`      | Any other current hold at the POD terminal, value is either "Hold", "Pending", or blank                                | `text`     |
 | `location_at_pod_terminal`        | Location at the port of discharge terminal                                                                             | `text`     |
 | `availability_known`              | Yes if Terminal49 is receiving availability status from the POD terminal, No otherwise.                                | `text`     |
 | `available_for_pickup`            | If availability_known is Yes, then Yes if the container is available to be picked up at the POD terminal, No otherwise | `text`     |
