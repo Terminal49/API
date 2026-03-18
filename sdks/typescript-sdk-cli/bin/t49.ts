@@ -10,4 +10,4 @@
 import { createProgram } from '../src/index.js';
 
 const program = createProgram();
-program.parse(process.argv);
+await program.parseAsync(process.argv);

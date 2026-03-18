@@ -5,7 +5,8 @@
  * Exported as a factory so integration tests can create isolated instances.
  */
 
-import { Command } from 'commander';
+import { createRequire } from 'node:module';
+import { Command, InvalidArgumentError } from 'commander';
 import { registerContainersCommand } from './commands/containers.js';
 import { registerConfigCommand } from './commands/config.js';
 import { registerCommandsCommand } from './commands/commands.js';
@@ -26,6 +27,9 @@ import { registerWebhooksCommand } from './commands/webhooks.js';
 import { registerWebhookNotificationsCommand } from './commands/webhook-notifications.js';
 
 export function createProgram(): Command {
+  const require = createRequire(import.meta.url);
+  const { version } = require('../package.json') as { version: string };
+
   const program = new Command();
 
   program
@@ -33,11 +37,10 @@ export function createProgram(): Command {
     .description(
       'Terminal49 container tracking CLI — for LLM agents, chat interfaces, and humans',
     )
-    .version('0.1.0')
+    .version(version)
     // Global flags
-    .option('--json', 'Force JSON output')
-    .option('--table', 'Force table output')
-    .option('--raw', 'Output raw JSON:API document')
+    .option('--json', 'Force JSON output (mutually exclusive with --table)')
+    .option('--table', 'Force table output (mutually exclusive with --json)')
     .option('--compact', 'Minified JSON (reduces LLM token usage)')
     .option('--fields <fields>', 'Comma-separated field projection')
     .option('--auth-scheme <scheme>', 'Authorization header scheme (Token|Bearer)')
@@ -53,6 +56,12 @@ export function createProgram(): Command {
 
   program.hook('preAction', (_command: Command, actionCommand: Command) => {
     const global = actionCommand.optsWithGlobals();
+
+    // Enforce mutual exclusion of --json and --table
+    if (global.json && global.table) {
+      throw new InvalidArgumentError('--json and --table are mutually exclusive');
+    }
+
     if (typeof global.authScheme === 'string') {
       process.env.T49_AUTH_SCHEME = global.authScheme;
     }
