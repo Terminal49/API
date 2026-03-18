@@ -86,9 +86,9 @@ export async function loadConfig(): Promise<CliConfig> {
 
 export async function writeConfig(input: Partial<CliConfig>): Promise<CliConfig> {
   const merged = sanitizeConfig({
-    ...((await loadConfig()) as Record<string, unknown>),
-    ...input,
-  } as Record<string, unknown>);
+    ...((await loadConfig()) as unknown as Record<string, unknown>),
+    ...(input as unknown as Record<string, unknown>),
+  });
 
   const configPath = defaultConfigPath();
   const configDir = path.dirname(configPath);

@@ -14,7 +14,7 @@ import {
   Terminal49Client,
   type ResponseFormat,
 } from '@terminal49/sdk';
-import { loadConfig } from './config';
+import { loadConfig } from './config.js';
 
 export interface CliGlobalOptions {
   token?: string;

@@ -18,13 +18,13 @@ function normalizePathList(fields?: string): string[] {
 
 function getValue(input: unknown, path: string): unknown {
   const parts = path.split('.');
-  return parts.reduce((current, part) => {
+  return parts.reduce<unknown>((current, part) => {
     if (current === null || current === undefined) return undefined;
     if (typeof current !== 'object' || Array.isArray(current)) {
       return undefined;
     }
     return (current as Record<string, unknown>)[part];
-  }, input as Record<string, unknown> | null);
+  }, input);
 }
 
 function setValue(target: Record<string, unknown>, path: string, value: unknown) {
