@@ -1,0 +1,19 @@
+{
+  "ok": true,
+  "command": "webhook-notifications.list",
+  "data": {
+    "meta": {
+      "size": 0,
+      "total": 0,
+      "pagination": {
+        "current": 1,
+        "records": 0
+      }
+    },
+    "links": {
+      "self": "https://api.terminal49.com/v2/webhook_notifications?page[size]=2",
+      "current": "https://api.terminal49.com/v2/webhook_notifications?page[number]=1&page[size]=2"
+    },
+    "data": []
+  }
+}

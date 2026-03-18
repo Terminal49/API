@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "command": "webhooks.ips",
+  "data": {
+    "webhook_notification_ips": [
+      "35.222.62.171",
+      "3.230.67.145",
+      "44.217.15.129"
+    ],
+    "last_updated": "2023-10-17T21:23:16Z"
+  }
+}
