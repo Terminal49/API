@@ -131,6 +131,7 @@
               "api-docs/api-reference/webhooks/edit-a-webhook",
               "api-docs/api-reference/webhooks/list-webhooks",
               "api-docs/api-reference/webhooks/create-a-webhook",
+              "api-docs/api-reference/webhooks/trigger-a-webhook",
               "api-docs/api-reference/webhooks/list-webhook-ips"
             ]
           },
