@@ -3615,6 +3615,165 @@
         "parameters": []
       }
     },
+    "/webhooks/trigger": {
+      "post": {
+        "summary": "Trigger a webhook test delivery",
+        "operationId": "post-webhooks-trigger",
+        "tags": [
+          "Webhooks"
+        ],
+        "description": "Send a one-time test webhook notification payload to a target HTTPS URL without creating a webhook endpoint.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "event"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "example": "https://webhook.site/your-endpoint",
+                    "description": "Destination URL for the test webhook delivery. Must be HTTPS."
+                  },
+                  "event": {
+                    "type": "string",
+                    "example": "tracking_request.succeeded",
+                    "description": "Webhook event name to use for generating an example payload."
+                  },
+                  "secret": {
+                    "type": "string",
+                    "example": "optional-test-secret",
+                    "description": "Optional secret used to sign the request in `X-T49-Webhook-Signature`."
+                  }
+                }
+              },
+              "examples": {
+                "Trigger webhook test delivery": {
+                  "value": {
+                    "url": "https://webhook.site/your-endpoint",
+                    "event": "tracking_request.succeeded",
+                    "secret": "optional-test-secret"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook test delivery attempt result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "Destination URL that the test webhook delivery attempted to call."
+                    },
+                    "succeeded": {
+                      "type": "boolean",
+                      "description": "Whether the webhook delivery attempt was considered successful (HTTP 200, 201, 202, or 204)."
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message captured when delivery failed, or `null` when no error occurred."
+                    },
+                    "status_code": {
+                      "type": "integer",
+                      "nullable": true,
+                      "description": "HTTP status code returned by the destination endpoint, or `null` if no response was received."
+                    },
+                    "request_headers": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Headers sent by Terminal49 with the test webhook request."
+                    },
+                    "request_body": {
+                      "type": "string",
+                      "description": "Serialized JSON payload delivered to the target URL."
+                    },
+                    "response_headers": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "nullable": true,
+                      "description": "Headers returned by the destination endpoint, or `null` when unavailable."
+                    },
+                    "response_body": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Raw response body returned by the destination endpoint, or `null` when unavailable."
+                    }
+                  }
+                },
+                "examples": {
+                  "Delivery succeeded": {
+                    "value": {
+                      "url": "https://webhook.site/your-endpoint",
+                      "succeeded": true,
+                      "error": null,
+                      "status_code": 200,
+                      "request_headers": {
+                        "Content-Type": "application/json",
+                        "User-Agent": "Terminal49 Webhook Bot",
+                        "X-T49-Webhook-Signature": "abc123"
+                      },
+                      "request_body": "webhook notification payload JSON",
+                      "response_headers": {
+                        "content-type": "application/json"
+                      },
+                      "response_body": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "detail": {
+                            "type": "string",
+                            "example": "url is required"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "Missing url": {
+                    "value": {
+                      "errors": [
+                        {
+                          "detail": "url is required"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/containers": {
       "get": {
         "summary": "List containers",
