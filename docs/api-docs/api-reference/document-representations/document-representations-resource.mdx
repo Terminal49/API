@@ -1,0 +1,26 @@
+---
+title: Document Representations Resource
+description: Understand how document representation resources are returned through includes and webhook payloads.
+og:title: Document Representations Resource | Terminal49 API Documentation
+og:description: Include-only document representation resource for extracted document payloads.
+---
+
+`document_representation` is a **resource type**, not a standalone endpoint.
+
+You receive it through:
+
+- document includes: `include=last_document_representation`
+- email submission nested includes: `include=documents.last_document_representation`
+- document webhook payloads (`document.extracted`, `document.extraction_failed`) in `included`
+
+## Resource shape
+
+- `type`: `document_representation`
+- `attributes.schema_version`: public schema version string
+- `attributes.payload`: extracted key/value payload object
+- `attributes.created_at`
+- `attributes.updated_at`
+
+## Where to fetch related schemas
+
+Use [`GET /document_schemas/{id}`](/api-docs/api-reference/document-schemas/get-a-document-schema) to retrieve schema metadata and payload contracts for document extraction outputs.

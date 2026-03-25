@@ -901,6 +901,49 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "invalid_rotation": {
+                    "summary": "Invalid rotation degrees",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "422",
+                          "title": "Invalid rotation",
+                          "detail": "degrees must be one of: 90, 180, 270"
+                        }
+                      ]
+                    }
+                  },
+                  "no_document_attached": {
+                    "summary": "No file attached",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "422",
+                          "title": "No document attached"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "operationId": "get-shipment-id",
@@ -1604,7 +1647,9 @@
                     "example": "WHLU1234560"
                   }
                 },
-                "required": ["number"]
+                "required": [
+                  "number"
+                ]
               },
               "examples": {
                 "Container Number": {
@@ -1645,7 +1690,11 @@
                           "properties": {
                             "number_type": {
                               "type": "string",
-                              "enum": ["container", "bill_of_lading", "booking"]
+                              "enum": [
+                                "container",
+                                "bill_of_lading",
+                                "booking"
+                              ]
                             },
                             "validation": {
                               "type": "object",
@@ -1656,7 +1705,10 @@
                                 },
                                 "type": {
                                   "type": "string",
-                                  "enum": ["container", "shipment"]
+                                  "enum": [
+                                    "container",
+                                    "shipment"
+                                  ]
                                 },
                                 "check_digit_passed": {
                                   "type": "boolean",
@@ -1677,7 +1729,11 @@
                               "properties": {
                                 "decision": {
                                   "type": "string",
-                                  "enum": ["auto_select", "needs_confirmation", "no_prediction"]
+                                  "enum": [
+                                    "auto_select",
+                                    "needs_confirmation",
+                                    "no_prediction"
+                                  ]
                                 },
                                 "selected": {
                                   "type": "object",
@@ -1739,13 +1795,13 @@
                             "selected": {
                               "scac": "WHLC",
                               "name": "Wan Hai Lines",
-                              "confidence": 1.0
+                              "confidence": 1
                             },
                             "candidates": [
                               {
                                 "scac": "WHLC",
                                 "name": "Wan Hai Lines",
-                                "confidence": 1.0
+                                "confidence": 1
                               }
                             ]
                           }
@@ -2337,7 +2393,9 @@
                                 "container.transport.estimated.arrived_at_inland_destination",
                                 "container.pickup_lfd.changed",
                                 "container.pickup_lfd_line.changed",
-                                "container.transport.available"
+                                "container.transport.available",
+                                "document.extracted",
+                                "document.extraction_failed"
                               ]
                             }
                           },
@@ -2557,7 +2615,9 @@
                                 "container.transport.estimated.arrived_at_inland_destination",
                                 "container.pickup_lfd.changed",
                                 "container.pickup_lfd_line.changed",
-                                "container.transport.available"
+                                "container.transport.available",
+                                "document.extracted",
+                                "document.extraction_failed"
                               ],
                               "example": "tracking_request.succeeded"
                             }
@@ -3555,7 +3615,9 @@
                 "container.transport.estimated.arrived_at_inland_destination",
                 "container.pickup_lfd.changed",
                 "container.pickup_lfd_line.changed",
-                "container.transport.available"
+                "container.transport.available",
+                "document.extracted",
+                "document.extraction_failed"
               ],
               "example": "container.transport.full_out"
             },
@@ -5783,7 +5845,9 @@
                                 "properties": {
                                   "type": {
                                     "type": "string",
-                                    "enum": ["Point"]
+                                    "enum": [
+                                      "Point"
+                                    ]
                                   },
                                   "coordinates": {
                                     "type": "array",
@@ -5792,10 +5856,16 @@
                                     },
                                     "minItems": 2,
                                     "maxItems": 2,
-                                    "example": [100.896831042, 13.065302386]
+                                    "example": [
+                                      100.896831042,
+                                      13.065302386
+                                    ]
                                   }
                                 },
-                                "required": ["type", "coordinates"]
+                                "required": [
+                                  "type",
+                                  "coordinates"
+                                ]
                               },
                               {
                                 "title": "LineString",
@@ -5803,7 +5873,9 @@
                                 "properties": {
                                   "type": {
                                     "type": "string",
-                                    "enum": ["LineString"]
+                                    "enum": [
+                                      "LineString"
+                                    ]
                                   },
                                   "coordinates": {
                                     "type": "array",
@@ -5817,12 +5889,21 @@
                                     },
                                     "minItems": 2,
                                     "example": [
-                                      [100.868768333, 13.07306],
-                                      [100.839155, 13.079318333]
+                                      [
+                                        100.868768333,
+                                        13.07306
+                                      ],
+                                      [
+                                        100.839155,
+                                        13.079318333
+                                      ]
                                     ]
                                   }
                                 },
-                                "required": ["type", "coordinates"]
+                                "required": [
+                                  "type",
+                                  "coordinates"
+                                ]
                               }
                             ]
                           },
@@ -8436,6 +8517,1537 @@
           "Parties"
         ]
       }
+    },
+    "/documents": {
+      "get": {
+        "summary": "List documents",
+        "description": "Returns documents for the authenticated account. Supports filters, sorting, includes, and pagination.",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated includes. Allowed: shipments, cargos, account, user, parent_document, last_document_representation, email_submission, current_extraction (alias for last_document_representation)."
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Sortable fields: document_type, added_by, created_at. Prefix with - for descending."
+          },
+          {
+            "in": "query",
+            "name": "filter[filename]",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by filename (full-text match)."
+          },
+          {
+            "in": "query",
+            "name": "filter[parent_document_id]",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by parent document id."
+          },
+          {
+            "in": "query",
+            "name": "filter[reference]",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by reference token."
+          },
+          {
+            "in": "query",
+            "name": "filter[document_types]",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated document types."
+          },
+          {
+            "in": "query",
+            "name": "page[number]",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "page[size]",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/document"
+                      }
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/account"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
+                          },
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_email_submission"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_representation"
+                          }
+                        ]
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "invalid_include": {
+                    "summary": "Invalid include parameter",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "400",
+                          "title": "Bad Request",
+                          "detail": "invalid_relation is not specified as a relationship on V2::DocumentSerializer",
+                          "source": {
+                            "parameter": "include"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Missing or invalid API token",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "401",
+                          "title": "Unauthorized",
+                          "detail": "Invalid or missing API token."
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-documents"
+      },
+      "post": {
+        "summary": "Upload a document",
+        "description": "Creates a document record. Provide an ActiveStorage signed blob id in `attached_document`.",
+        "tags": [
+          "Documents"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "document"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "attached_document"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "attached_document": {
+                            "type": "string",
+                            "description": "ActiveStorage signed blob id from direct upload."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/document"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/account"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
+                          },
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_email_submission"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_representation"
+                          }
+                        ]
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "example": "409"
+                          },
+                          "code": {
+                            "type": "string",
+                            "example": "duplicate_document"
+                          },
+                          "title": {
+                            "type": "string",
+                            "example": "Duplicate document"
+                          },
+                          "detail": {
+                            "type": "string"
+                          },
+                          "meta": {
+                            "type": "object",
+                            "properties": {
+                              "existing_document_id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "existing_document_name": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-documents"
+      }
+    },
+    "/documents/types": {
+      "get": {
+        "summary": "List document types",
+        "description": "Returns account-scoped allowed document types and labels.",
+        "tags": [
+          "Documents"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "document_types": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "label"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-documents-types"
+      }
+    },
+    "/documents/{id}": {
+      "get": {
+        "summary": "Get a document",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated includes. Allowed: shipments, cargos, account, user, parent_document, last_document_representation, email_submission, current_extraction (alias for last_document_representation)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/document"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/account"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
+                          },
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_email_submission"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_representation"
+                          }
+                        ]
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "document_not_found": {
+                    "summary": "Document not found",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "404",
+                          "title": "Not Found",
+                          "detail": "Couldn't find Document"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-documents-id"
+      },
+      "patch": {
+        "summary": "Edit a document",
+        "description": "Updates manual extraction and classification fields.",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "document"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "document_type_manual": {
+                            "type": "string",
+                            "description": "Manually override the document type."
+                          },
+                          "extracted_data_manual": {
+                            "type": "object",
+                            "nullable": true,
+                            "description": "Manually provide extracted key/value data. Set to null to clear manual values.",
+                            "additionalProperties": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/document"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/account"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
+                          },
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_email_submission"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_representation"
+                          }
+                        ]
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "document_not_found": {
+                    "summary": "Document not found",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "404",
+                          "title": "Not Found",
+                          "detail": "Couldn't find Document"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "patch-documents-id"
+      },
+      "delete": {
+        "summary": "Delete a document",
+        "description": "Soft-deletes (discards) the document.",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "document_not_found": {
+                    "summary": "Document not found",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "404",
+                          "title": "Not Found",
+                          "detail": "Couldn't find Document"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "delete-documents-id"
+      }
+    },
+    "/documents/{id}/download_url": {
+      "get": {
+        "summary": "Get a document download URL",
+        "description": "Returns a presigned URL for downloading/viewing the current document file.",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "download_url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "required": [
+                    "download_url"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "document_not_found": {
+                    "summary": "Document not found",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "404",
+                          "title": "Not Found",
+                          "detail": "Couldn't find Document"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-documents-id-download_url"
+      }
+    },
+    "/documents/{id}/reextract": {
+      "post": {
+        "summary": "Re-extract a document",
+        "description": "Triggers asynchronous extraction for the document.",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "accepted"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "document_not_found": {
+                    "summary": "Document not found",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "404",
+                          "title": "Not Found",
+                          "detail": "Couldn't find Document"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-documents-id-reextract"
+      }
+    },
+    "/documents/{id}/reclassify": {
+      "post": {
+        "summary": "Re-classify a document",
+        "description": "Triggers asynchronous classification for the document.",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "accepted"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "document_not_found": {
+                    "summary": "Document not found",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "404",
+                          "title": "Not Found",
+                          "detail": "Couldn't find Document"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-documents-id-reclassify"
+      }
+    },
+    "/documents/{id}/relink": {
+      "post": {
+        "summary": "Re-link a document",
+        "description": "Re-runs reference linking for the document.",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "accepted"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "document_not_found": {
+                    "summary": "Document not found",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "404",
+                          "title": "Not Found",
+                          "detail": "Couldn't find Document"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-documents-id-relink"
+      }
+    },
+    "/documents/{id}/rotate": {
+      "post": {
+        "summary": "Rotate a document",
+        "description": "Queues a rotation update for image document types only. Non-image documents are not rotatable.",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "degrees": {
+                    "type": "integer",
+                    "enum": [
+                      90,
+                      180,
+                      270
+                    ]
+                  }
+                },
+                "required": [
+                  "degrees"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "accepted"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "document_not_found": {
+                    "summary": "Document not found",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "404",
+                          "title": "Not Found",
+                          "detail": "Couldn't find Document"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "invalid_rotation": {
+                    "summary": "Invalid rotation degrees",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "422",
+                          "title": "Invalid rotation",
+                          "detail": "degrees must be one of: 90, 180, 270"
+                        }
+                      ]
+                    }
+                  },
+                  "no_document_attached": {
+                    "summary": "No file attached",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "422",
+                          "title": "No document attached"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-documents-id-rotate"
+      }
+    },
+    "/email_submissions": {
+      "get": {
+        "summary": "List email submissions",
+        "description": "Returns email submissions for the authenticated account.",
+        "tags": [
+          "Email Submissions"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Allowed: account, user, documents, documents.last_document_representation. Defaults to documents + documents.last_document_representation."
+          },
+          {
+            "in": "query",
+            "name": "page[number]",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "page[size]",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/email_submission"
+                      }
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/account"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
+                          },
+                          {
+                            "$ref": "#/components/schemas/email_submission_document"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_representation"
+                          }
+                        ]
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-email_submissions"
+      }
+    },
+    "/email_submissions/{id}": {
+      "get": {
+        "summary": "Get an email submission",
+        "tags": [
+          "Email Submissions"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Allowed: account, user, documents, documents.last_document_representation. Defaults to documents + documents.last_document_representation."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/email_submission"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/account"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
+                          },
+                          {
+                            "$ref": "#/components/schemas/email_submission_document"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_representation"
+                          }
+                        ]
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "email_submission_not_found": {
+                    "summary": "Email submission not found",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "404",
+                          "title": "Not Found",
+                          "detail": "Couldn't find EmailSubmission"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-email_submissions-id"
+      }
+    },
+    "/document_schemas/{id}": {
+      "get": {
+        "summary": "Get a document schema",
+        "tags": [
+          "Document Schemas"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Schema id in full-version format, e.g. commercial_invoice@2026-03-23."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/document_schema"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "schema_not_found": {
+                    "summary": "Document schema not found",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "404",
+                          "title": "Not Found",
+                          "detail": "Couldn't find DocumentSchema with 'id'=unknown@2026-03-23"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-document_schemas-id"
+      }
     }
   },
   "x-tagGroups": [
@@ -8450,7 +10062,10 @@
         "Tracking Requests",
         "Webhooks",
         "Webhook Notifications",
-        "Metro Areas"
+        "Metro Areas",
+        "Documents",
+        "Email Submissions",
+        "Document Schemas"
       ]
     },
     {
@@ -9046,7 +10661,7 @@
           "type": {
             "type": "string",
             "enum": [
-              "container"
+              "account"
             ]
           },
           "attributes": {
@@ -9560,7 +11175,7 @@
           "type": {
             "type": "string",
             "enum": [
-              "container"
+              "account"
             ]
           },
           "attributes": {
@@ -9619,13 +11234,7 @@
           "meta": {
             "type": "object",
             "nullable": true,
-            "properties": {
-              "tracking_request_id": {
-                "type": "string",
-                "format": "uuid",
-                "nullable": true
-              }
-            }
+            "additionalProperties": true
           }
         },
         "required": [
@@ -10108,7 +11717,9 @@
                     "container.transport.estimated.arrived_at_inland_destination",
                     "container.pickup_lfd.changed",
                     "container.pickup_lfd_line.changed",
-                    "container.transport.available"
+                    "container.transport.available",
+                    "document.extracted",
+                    "document.extraction_failed"
                   ]
                 }
               },
@@ -10291,7 +11902,9 @@
                   "container.transport.estimated.arrived_at_inland_destination",
                   "container.pickup_lfd.changed",
                   "container.pickup_lfd_line.changed",
-                  "container.transport.available"
+                  "container.transport.available",
+                  "document.extracted",
+                  "document.extraction_failed"
                 ]
               },
               "voyage_number": {
@@ -10479,7 +12092,9 @@
               "event": {
                 "type": "string",
                 "enum": [
-                  "shipment.estimated.arrival"
+                  "shipment.estimated.arrival",
+                  "document.extracted",
+                  "document.extraction_failed"
                 ]
               },
               "location_locode": {
@@ -10645,7 +12260,9 @@
                   "container.transport.estimated.arrived_at_inland_destination",
                   "container.pickup_lfd.changed",
                   "container.pickup_lfd_line.changed",
-                  "container.transport.available"
+                  "container.transport.available",
+                  "document.extracted",
+                  "document.extraction_failed"
                 ]
               },
               "delivery_status": {
@@ -11279,7 +12896,9 @@
         "properties": {
           "feature_type": {
             "type": "string",
-            "enum": ["port"]
+            "enum": [
+              "port"
+            ]
           },
           "ports_sequence": {
             "type": "integer",
@@ -11295,7 +12914,9 @@
           },
           "location_type": {
             "type": "string",
-            "enum": ["Port"]
+            "enum": [
+              "Port"
+            ]
           },
           "name": {
             "type": "string",
@@ -11358,7 +12979,9 @@
             "description": "Last update timestamp from the shipment (ISO 8601)"
           }
         },
-        "required": ["feature_type"]
+        "required": [
+          "feature_type"
+        ]
       },
       "currentVesselFeatureProperties": {
         "title": "Current Vessel",
@@ -11366,7 +12989,9 @@
         "properties": {
           "feature_type": {
             "type": "string",
-            "enum": ["current_vessel"]
+            "enum": [
+              "current_vessel"
+            ]
           },
           "ports_sequence": {
             "type": "integer",
@@ -11491,7 +13116,9 @@
             "description": "Timezone of arrival port"
           }
         },
-        "required": ["feature_type"]
+        "required": [
+          "feature_type"
+        ]
       },
       "pastVesselLocationsFeatureProperties": {
         "title": "Past Vessel Locations",
@@ -11499,7 +13126,9 @@
         "properties": {
           "feature_type": {
             "type": "string",
-            "enum": ["past_vessel_locations"]
+            "enum": [
+              "past_vessel_locations"
+            ]
           },
           "ports_sequence": {
             "type": "integer",
@@ -11542,7 +13171,9 @@
             "description": "Estimated time of arrival at the destination port (ISO 8601)"
           }
         },
-        "required": ["feature_type"]
+        "required": [
+          "feature_type"
+        ]
       },
       "estimatedFullLegFeatureProperties": {
         "title": "Estimated Full Leg",
@@ -11550,7 +13181,9 @@
         "properties": {
           "feature_type": {
             "type": "string",
-            "enum": ["estimated_full_legs"]
+            "enum": [
+              "estimated_full_legs"
+            ]
           },
           "ports_sequence": {
             "type": "integer",
@@ -11569,7 +13202,9 @@
             "description": "Number of coordinate points in the LineString"
           }
         },
-        "required": ["feature_type"]
+        "required": [
+          "feature_type"
+        ]
       },
       "estimatedPartialLegFeatureProperties": {
         "title": "Estimated Partial Leg",
@@ -11577,7 +13212,9 @@
         "properties": {
           "feature_type": {
             "type": "string",
-            "enum": ["estimated_partial_leg"]
+            "enum": [
+              "estimated_partial_leg"
+            ]
           },
           "ports_sequence": {
             "type": "integer",
@@ -11596,7 +13233,9 @@
             "description": "Number of coordinate points in the LineString"
           }
         },
-        "required": ["feature_type"]
+        "required": [
+          "feature_type"
+        ]
       },
       "pointGeometry": {
         "title": "Point",
@@ -11604,7 +13243,9 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["Point"]
+            "enum": [
+              "Point"
+            ]
           },
           "coordinates": {
             "type": "array",
@@ -11613,10 +13254,16 @@
             },
             "minItems": 2,
             "maxItems": 2,
-            "example": [100.896831042, 13.065302386]
+            "example": [
+              100.896831042,
+              13.065302386
+            ]
           }
         },
-        "required": ["type", "coordinates"]
+        "required": [
+          "type",
+          "coordinates"
+        ]
       },
       "custom_field_value": {
         "description": "Raw custom field value (type depends on definition)",
@@ -11857,7 +13504,9 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["LineString"]
+            "enum": [
+              "LineString"
+            ]
           },
           "coordinates": {
             "type": "array",
@@ -11871,12 +13520,707 @@
             },
             "minItems": 2,
             "example": [
-              [100.868768333, 13.07306],
-              [100.839155, 13.079318333]
+              [
+                100.868768333,
+                13.07306
+              ],
+              [
+                100.839155,
+                13.079318333
+              ]
             ]
           }
         },
-        "required": ["type", "coordinates"]
+        "required": [
+          "type",
+          "coordinates"
+        ]
+      },
+      "document_representation": {
+        "title": "Document Representation",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "document_representation"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "schema_version": {
+                "type": "string"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "email_submission": {
+        "title": "Email Submission",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "email_submission"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "subject": {
+                "type": "string",
+                "description": "Email subject line."
+              },
+              "body": {
+                "type": "string",
+                "nullable": true,
+                "description": "Email body content captured from the inbound message."
+              },
+              "from": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Sender email addresses."
+              },
+              "to": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Primary recipient email addresses."
+              },
+              "cc": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "CC recipient email addresses."
+              },
+              "sent_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "description": "Timestamp from the inbound email header."
+              },
+              "message_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Message-ID header value."
+              },
+              "in_reply_to": {
+                "type": "string",
+                "nullable": true,
+                "description": "In-Reply-To header value."
+              },
+              "references": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "References header values."
+              },
+              "content_type": {
+                "type": "string",
+                "nullable": true,
+                "description": "Top-level MIME content type of the inbound email."
+              },
+              "documents_count": {
+                "type": "integer",
+                "description": "Number of non-discarded documents created from this email."
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When the email submission record was created."
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When the email submission record was last updated."
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "account": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "account"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "documents": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "document"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "document_schema": {
+        "title": "Document Schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "document_schema"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "document_type": {
+                "type": "string",
+                "description": "Document type this schema applies to (for example, commercial_invoice)."
+              },
+              "label": {
+                "type": "string",
+                "description": "Human-readable label for the document type."
+              },
+              "schema_version": {
+                "type": "string",
+                "description": "Public schema version identifier."
+              },
+              "full_version": {
+                "type": "string",
+                "description": "Fully-qualified schema version id (for example, commercial_invoice@2026-03-23)."
+              },
+              "current": {
+                "type": "boolean",
+                "description": "Whether this schema version is currently active."
+              },
+              "draft": {
+                "type": "boolean",
+                "description": "Whether this schema version is marked as draft."
+              },
+              "active_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "description": "Timestamp when this schema version became active."
+              },
+              "schema_format": {
+                "type": "string",
+                "enum": [
+                  "json_schema"
+                ],
+                "description": "Schema payload format."
+              },
+              "description": {
+                "type": "string",
+                "nullable": true,
+                "description": "Optional notes describing this schema."
+              },
+              "schema_payload": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "JSON Schema payload used to validate and describe extracted fields."
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When this schema record was created."
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When this schema record was last updated."
+              }
+            }
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "document": {
+        "title": "Document",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "document"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "document_type": {
+                "type": "string"
+              },
+              "document_type_manual": {
+                "type": "string",
+                "nullable": true
+              },
+              "classification_notes": {
+                "type": "string",
+                "nullable": true
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "upload",
+                  "api",
+                  "email",
+                  "split_document"
+                ]
+              },
+              "source_email": {
+                "type": "string",
+                "nullable": true
+              },
+              "file_name": {
+                "type": "string"
+              },
+              "file_content_type": {
+                "type": "string",
+                "nullable": true
+              },
+              "file_size_bytes": {
+                "type": "integer",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "account": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "account"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "email_submission": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "email_submission"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "parent_document": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "document"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "last_document_representation": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "document_representation"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "shipments": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "shipment"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "cargos": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "container"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "string"
+              },
+              "download": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "document_email_submission": {
+        "title": "Document Email Submission",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "email_submission"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "subject": {
+                "type": "string",
+                "nullable": true
+              },
+              "body_preview": {
+                "type": "string",
+                "nullable": true
+              },
+              "from": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "to": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "cc": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "message_id": {
+                "type": "string",
+                "nullable": true
+              },
+              "sent_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "email_submission_document": {
+        "title": "Email Submission Document",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "document"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "upload",
+                  "api",
+                  "email",
+                  "split_document"
+                ]
+              },
+              "document_type": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "last_document_representation": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "document_representation"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
       }
     },
     "securitySchemes": {
@@ -11930,6 +14274,15 @@
     },
     {
       "name": "Routing (Paid)"
+    },
+    {
+      "name": "Documents"
+    },
+    {
+      "name": "Email Submissions"
+    },
+    {
+      "name": "Document Schemas"
     }
   ],
   "security": [

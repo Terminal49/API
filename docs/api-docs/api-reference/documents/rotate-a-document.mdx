@@ -1,0 +1,7 @@
+---
+openapi: post /documents/{id}/rotate
+---
+
+<Warning>
+After rotation is accepted, request [`GET /documents/{id}/download_url`](/api-docs/api-reference/documents/get-a-document-download-url) again to retrieve the updated image.
+</Warning>
