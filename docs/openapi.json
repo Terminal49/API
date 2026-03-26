@@ -13857,24 +13857,30 @@
             "type": "object",
             "properties": {
               "id": {
+                "description": "Unique identifier for the document.",
                 "type": "string",
                 "format": "uuid"
               },
               "name": {
+                "description": "Display name of the document.",
                 "type": "string"
               },
               "document_type": {
+                "description": "System-classified document type.",
                 "type": "string"
               },
               "document_type_manual": {
+                "description": "Document type set manually by a user, when available.",
                 "type": "string",
                 "nullable": true
               },
               "classification_notes": {
+                "description": "Additional notes captured during document classification.",
                 "type": "string",
                 "nullable": true
               },
               "source": {
+                "description": "How the document was created in Terminal49.",
                 "type": "string",
                 "enum": [
                   "upload",
@@ -13883,26 +13889,49 @@
                   "split_document"
                 ]
               },
-              "source_email": {
-                "type": "string",
-                "nullable": true
+              "parsed": {
+                "description": "Parsed metadata extracted from the document.",
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "packetSegment": {
+                    "description": "Page range identifying this document segment within a packet.",
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "startPage": {
+                        "description": "First page number (1-indexed) for this segment.",
+                        "type": "integer"
+                      },
+                      "endPage": {
+                        "description": "Last page number (1-indexed) for this segment.",
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
               },
               "file_name": {
+                "description": "Original file name of the uploaded or generated document.",
                 "type": "string"
               },
               "file_content_type": {
+                "description": "MIME type of the document file.",
                 "type": "string",
                 "nullable": true
               },
               "file_size_bytes": {
+                "description": "File size in bytes.",
                 "type": "integer",
                 "nullable": true
               },
               "created_at": {
+                "description": "Timestamp when the document was created.",
                 "type": "string",
                 "format": "date-time"
               },
               "updated_at": {
+                "description": "Timestamp when the document was last updated.",
                 "type": "string",
                 "format": "date-time"
               }
