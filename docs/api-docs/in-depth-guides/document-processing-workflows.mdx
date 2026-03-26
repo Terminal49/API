@@ -147,10 +147,10 @@ Response (`201`):
           }
         },
         "email_submission": {
-          "data": null
-        },
-        "parent_document": {
-          "data": null
+          "data": {
+            "id": "7de2c356-5d2a-4d6e-99f4-6f0d2d63e357",
+            "type": "email_submission"
+          }
         },
         "last_document_representation": {
           "data": {
@@ -162,6 +162,25 @@ Response (`201`):
       "links": {
         "self": "/documents/5ab53a5e-0d68-4a8f-8d3d-1d24555d20cb",
         "download": "/documents/5ab53a5e-0d68-4a8f-8d3d-1d24555d20cb/download_url"
+      }
+    },
+    {
+      "id": "7de2c356-5d2a-4d6e-99f4-6f0d2d63e357",
+      "type": "email_submission",
+      "attributes": {
+        "subject": "Invoice #INV-10027",
+        "body_preview": "Please find attached invoice INV-10027.",
+        "from": [
+          "ap@acme-manufacturing.com"
+        ],
+        "to": [
+          "docs+account@terminal49.com"
+        ],
+        "cc": [],
+        "message_id": "<abc123@acme-manufacturing.com>",
+        "sent_at": "2026-03-26T08:14:11Z",
+        "created_at": "2026-03-26T08:14:12Z",
+        "updated_at": "2026-03-26T08:14:12Z"
       }
     },
     {

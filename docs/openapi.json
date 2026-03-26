@@ -8532,7 +8532,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Comma-separated includes. Allowed: shipments, cargos, account, user, parent_document, last_document_representation, email_submission, current_extraction (alias for last_document_representation)."
+            "description": "Comma-separated includes. Allowed: shipments, cargos, account, user, last_document_representation, email_submission, current_extraction (alias for last_document_representation)."
           },
           {
             "in": "query",
@@ -8549,15 +8549,6 @@
               "type": "string"
             },
             "description": "Filter by filename (full-text match)."
-          },
-          {
-            "in": "query",
-            "name": "filter[parent_document_id]",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "Filter by parent document id."
           },
           {
             "in": "query",
@@ -8962,7 +8953,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Comma-separated includes. Allowed: shipments, cargos, account, user, parent_document, last_document_representation, email_submission, current_extraction (alias for last_document_representation)."
+            "description": "Comma-separated includes. Allowed: shipments, cargos, account, user, last_document_representation, email_submission, current_extraction (alias for last_document_representation)."
           }
         ],
         "responses": {
@@ -13974,27 +13965,6 @@
                         "type": "string",
                         "enum": [
                           "email_submission"
-                        ]
-                      }
-                    }
-                  }
-                }
-              },
-              "parent_document": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "nullable": true,
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "type": {
-                        "type": "string",
-                        "enum": [
-                          "document"
                         ]
                       }
                     }
