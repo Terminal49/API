@@ -1,47 +1,36 @@
 ---
-title: Document Management Workflows
-description: Submit documents by email or dashboard upload, then consume extraction results via webhooks.
-og:title: Document Management Workflows | Terminal49 API Documentation
-og:description: Customer-facing guide for document submission, extraction, and webhook consumption.
-sidebarTitle: Document Management
+title: "Document Processing Workflows"
+description: "Submit documents by email or API, then consume extraction results via webhooks."
+og:title: "Document Management Workflows | Terminal49 API Documentation"
+og:description: "Customer-facing guide for document submission, extraction, and webhook consumption."
+sidebarTitle: "Document Management"
 ---
 
 This guide is for first-time integrators building document automation.
 
 You can submit documents in two ways:
 
-- Email attachments to your docs alias
-- Upload files in the Documents dashboard
+- Email attachments to your unique account docs alias
+- API endpoint
 
-Both follow the same customer-facing lifecycle: submit -> classify -> extract -> webhook result.
+Both follow the same customer-facing lifecycle: submit -\> classify -\> extract -\> webhook result.
 
 ## Workflow Diagrams
 
-### Email submission
-
 ```mermaid
 flowchart LR
-    A[User emails document attachments] --> B[Terminal49 receives and parses documents]
-    B --> C[Terminal49 classifies documents]
-    C --> D[Terminal49 extracts structured data]
-    D --> E[Terminal49 sends webhook result]
+    A[User emails document attachments] --> B[API POST /doc] 
+    B --> C[Terminal49 receives and parses documents]
+    C --> D[Terminal49 classifies documents]
+    D --> E[Terminal49 extracts structured data]
+    E --> F[Terminal49 sends webhook result]
 ```
 
-### Dashboard upload
-
-```mermaid
-flowchart LR
-    A[User uploads document in dashboard] --> B[Terminal49 receives and parses document]
-    B --> C[Terminal49 classifies document]
-    C --> D[Terminal49 extracts structured data]
-    D --> E[Terminal49 sends webhook result]
-```
-
-## Step-by-Step
+## Workflow: Step-by-Step
 
 <Steps>
   <Step title="Submit document">
-    Use email (attachments to your docs alias) or dashboard upload.
+    Use email (attachments to your docs alias)
   </Step>
   <Step title="Terminal49 processes document">
     Terminal49 classifies and extracts data asynchronously.
@@ -52,10 +41,13 @@ flowchart LR
   <Step title="Handle duplicates">
     If the same file content already exists for your account, it is treated as duplicate and not processed again.
   </Step>
+  <Step title="API POST document">
+    POST document through endpoint. Used by email 
+  </Step>
 </Steps>
 
 <Tip>
-Treat submission as asynchronous. Do not assume extraction is complete immediately after upload/email.
+  Treat submission as asynchronous. Do not assume extraction is complete immediately after upload/email.
 </Tip>
 
 ## Technical Implementation (One End-to-End Example)
@@ -204,7 +196,7 @@ Use these endpoints while integrating:
 - [`POST /webhooks/trigger`](/api-docs/api-reference/webhooks/trigger-a-webhook)
 
 <Info>
-Webhook event availability depends on your account configuration. If you are not receiving expected events, contact Terminal49 support.
+  Webhook event availability depends on your account configuration. If you are not receiving expected events, contact Terminal49 support.
 </Info>
 
 ## APIs Involved
