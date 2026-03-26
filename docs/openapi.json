@@ -13889,28 +13889,6 @@
                   "split_document"
                 ]
               },
-              "parsed": {
-                "description": "Parsed metadata extracted from the document.",
-                "type": "object",
-                "nullable": true,
-                "properties": {
-                  "packetSegment": {
-                    "description": "Page range identifying this document segment within a packet.",
-                    "type": "object",
-                    "nullable": true,
-                    "properties": {
-                      "startPage": {
-                        "description": "First page number (1-indexed) for this segment.",
-                        "type": "integer"
-                      },
-                      "endPage": {
-                        "description": "Last page number (1-indexed) for this segment.",
-                        "type": "integer"
-                      }
-                    }
-                  }
-                }
-              },
               "file_name": {
                 "description": "Original file name of the uploaded or generated document.",
                 "type": "string"
