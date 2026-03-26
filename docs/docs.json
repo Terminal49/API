@@ -55,6 +55,8 @@
               "api-docs/in-depth-guides/quickstart",
               "api-docs/in-depth-guides/rate-limiting",
               "api-docs/in-depth-guides/webhooks",
+              "api-docs/in-depth-guides/direct-upload-documents",
+              "api-docs/in-depth-guides/document-processing-workflows",
               "api-docs/in-depth-guides/including-resources",
               "api-docs/in-depth-guides/adding-customer",
               "api-docs/in-depth-guides/tracking-request-lifecycle",
@@ -92,7 +94,7 @@
           },
           {
             "group": "Shipments",
-            "icon": "package",
+            "icon": "ship",
             "pages": [
               "api-docs/api-reference/shipments/list-shipments",
               "api-docs/api-reference/shipments/get-a-shipment",
@@ -107,7 +109,7 @@
           },
           {
             "group": "Containers",
-            "icon": "container",
+            "icon": "warehouse",
             "pages": [
               "api-docs/api-reference/containers/list-containers",
               "api-docs/api-reference/containers/edit-a-container",
@@ -120,6 +122,45 @@
               "api-docs/api-reference/containers/get-container-map-geojson",
               "api-docs/api-reference/containers/get-a-containers-raw-events",
               "api-docs/api-reference/containers/get-a-containers-transport-events"
+            ]
+          },
+          {
+            "group": "Documents",
+            "icon": "file",
+            "pages": [
+              "api-docs/api-reference/documents/list-documents",
+              "api-docs/api-reference/documents/upload-a-document",
+              "api-docs/api-reference/documents/get-a-document",
+              "api-docs/api-reference/documents/edit-a-document",
+              "api-docs/api-reference/documents/delete-a-document",
+              "api-docs/api-reference/documents/list-document-types",
+              "api-docs/api-reference/documents/get-a-document-download-url",
+              "api-docs/api-reference/documents/re-extract-a-document",
+              "api-docs/api-reference/documents/re-classify-a-document",
+              "api-docs/api-reference/documents/re-link-a-document",
+              "api-docs/api-reference/documents/rotate-a-document"
+            ]
+          },
+          {
+            "group": "Email Submissions",
+            "icon": "envelope",
+            "pages": [
+              "api-docs/api-reference/email-submissions/list-email-submissions",
+              "api-docs/api-reference/email-submissions/get-an-email-submission"
+            ]
+          },
+          {
+            "group": "Document Schemas",
+            "icon": "brackets-curly",
+            "pages": [
+              "api-docs/api-reference/document-schemas/get-a-document-schema"
+            ]
+          },
+          {
+            "group": "Document Representations",
+            "icon": "binary",
+            "pages": [
+              "api-docs/api-reference/document-representations/document-representations-resource"
             ]
           },
           {

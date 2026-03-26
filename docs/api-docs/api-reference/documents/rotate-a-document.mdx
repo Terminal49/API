@@ -1,0 +1,11 @@
+---
+openapi: post /documents/{id}/rotate
+---
+
+<Info>
+  **Beta Feature** - This endpoint is currently in beta. The API is stable, but the schema and behavior may evolve based on feedback.
+</Info>
+
+<Warning>
+After rotation is accepted, request [`GET /documents/{id}/download_url`](/api-docs/api-reference/documents/get-a-document-download-url) again to retrieve the updated image.
+</Warning>
