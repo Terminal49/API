@@ -127,6 +127,7 @@
           {
             "group": "Documents",
             "icon": "file",
+            "hidden": true,
             "pages": [
               "api-docs/api-reference/documents/list-documents",
               "api-docs/api-reference/documents/upload-a-document",
@@ -152,6 +153,7 @@
           {
             "group": "Document Schemas",
             "icon": "brackets-curly",
+            "hidden": true,
             "pages": [
               "api-docs/api-reference/document-schemas/get-a-document-schema"
             ]
@@ -159,6 +161,7 @@
           {
             "group": "Document Representations",
             "icon": "binary",
+            "hidden": true,
             "pages": [
               "api-docs/api-reference/document-representations/document-representations-resource"
             ]

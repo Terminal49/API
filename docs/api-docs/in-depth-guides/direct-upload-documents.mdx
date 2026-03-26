@@ -4,6 +4,7 @@ description: "Upload files with the direct upload flow, then create Terminal49 d
 og:title: "Direct Upload for Documents | Terminal49 API Documentation"
 og:description: "Step-by-step guide to request a direct upload, upload bytes to S3, and create a document using attached_document."
 sidebarTitle: "Direct Upload for Documents"
+hidden: true
 ---
 
 Use this guide when your app needs to upload a file first and then create a Terminal49 document.
@@ -90,8 +91,7 @@ Example response:
 
 ## 2) Upload the file bytes to `direct_upload.url`
 
-Use `direct_upload.url` to send the file, and send the `direct_upload.headers` object as request headers.
-Use whatever response is returned by that upload request.
+Use `direct_upload.url` to send the file, and send the `direct_upload.headers` object as request headers. Use whatever response is returned by that upload request.
 
 ```bash
 curl -X PUT "$DIRECT_UPLOAD_URL" \

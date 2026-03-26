@@ -1,5 +1,6 @@
 ---
-openapi: post /documents/{id}/rotate
+openapi: "post /documents/{id}/rotate"
+hidden: true
 ---
 
 <Info>
@@ -7,5 +8,5 @@ openapi: post /documents/{id}/rotate
 </Info>
 
 <Warning>
-After rotation is accepted, request [`GET /documents/{id}/download_url`](/api-docs/api-reference/documents/get-a-document-download-url) again to retrieve the updated image.
+  After rotation is accepted, request [`GET /documents/{id}/download_url`](/api-docs/api-reference/documents/get-a-document-download-url) again to retrieve the updated image.
 </Warning>

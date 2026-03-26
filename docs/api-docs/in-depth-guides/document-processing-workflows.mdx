@@ -4,6 +4,7 @@ description: "Submit documents by email or API, then consume extraction results 
 og:title: "Document Management Workflows | Terminal49 API Documentation"
 og:description: "Customer-facing guide for document submission, extraction, and webhook consumption."
 sidebarTitle: "Document Processing Workflows"
+hidden: true
 ---
 
 This guide is for first-time integrators building document automation.
@@ -56,10 +57,9 @@ Example scenario: user uploads one file, `invoice.pdf`.
 
 ### 1) Submit the document
 
-`POST /documents` 
+`POST /documents`
 
-Before creating the document, complete the direct upload flow and get a `signed_id`:
-[`Direct Upload for Documents`](/api-docs/in-depth-guides/direct-upload-documents).
+Before creating the document, complete the direct upload flow and get a `signed_id`: [`Direct Upload for Documents`](/api-docs/in-depth-guides/direct-upload-documents).
 
 Note: `attached_document` is the S3 `signed_id` from the file direct upload.
 
