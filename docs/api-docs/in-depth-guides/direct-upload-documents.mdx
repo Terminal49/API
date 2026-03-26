@@ -1,0 +1,127 @@
+---
+title: "Direct Upload for Documents"
+description: "Upload files with the direct upload flow, then create Terminal49 documents with the returned signed_id."
+og:title: "Direct Upload for Documents | Terminal49 API Documentation"
+og:description: "Step-by-step guide to request a direct upload, upload bytes to S3, and create a document using attached_document."
+sidebarTitle: "Direct Upload for Documents"
+---
+
+Use this guide when your app needs to upload a file first and then create a Terminal49 document.
+
+<Info>
+  Any client stack can use this flow as long as it can make standard HTTP requests.
+</Info>
+
+## Overview
+
+1. Request a direct upload blob payload from Terminal49.
+2. Upload the file bytes to the returned `direct_upload.url` using the returned headers.
+3. Store the returned `signed_id`.
+4. Create a Terminal49 document with `attached_document = signed_id`.
+
+## 1) Request a direct upload blob
+
+Endpoint: `POST /rails/active_storage/direct_uploads`
+
+Send metadata for the file you want to upload:
+
+```json
+{
+  "blob": {
+    "filename": "1462486 order.pdf",
+    "content_type": "application/pdf",
+    "byte_size": 35672,
+    "checksum": "tZTfawHSrI1hiuOZQ0cQRg=="
+  }
+}
+```
+
+### Blob attributes explained
+
+| Attribute | Type | What it is | How to create it |
+| --- | --- | --- | --- |
+| `filename` | string | Original file name users see. | Use the file name from the uploaded file (for example `1462486 order.pdf`). |
+| `content_type` | string | MIME type of the file. | Detect from file extension or file bytes (for PDF use `application/pdf`). |
+| `byte_size` | integer | Exact file size in bytes. | Read the file size from your filesystem or uploaded file object. |
+| `checksum` | string | Base64-encoded MD5 digest of the raw file bytes. | Compute MD5 on file bytes, then Base64-encode the binary MD5 result. |
+
+### Example ways to generate values
+
+Get file size in bytes:
+
+```bash
+wc -c < "1462486 order.pdf"
+```
+
+Compute checksum (`Base64(MD5(file_bytes))`):
+
+```bash
+openssl md5 -binary "1462486 order.pdf" | openssl base64
+```
+
+<Tip>
+  `checksum` must match the exact bytes you upload in step 2, or the upload will fail.
+</Tip>
+
+Example response:
+
+```json
+{
+  "id": "96b6d878-0341-4ce3-8b3c-06767f6f08eb",
+  "key": "883c4cf4-b086-4698-a620-5ffa16cc95ef/pqjug51un0gobs6x72ez0q9e4so4",
+  "filename": "1462486 order.pdf",
+  "content_type": "application/pdf",
+  "metadata": {},
+  "service_name": "amazon",
+  "byte_size": 35672,
+  "checksum": "tZTfawHSrI1hiuOZQ0cQRg==",
+  "created_at": "2026-03-26T18:49:37Z",
+  "signed_id": "eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaWs1Tm1JMlpEZzNPQzB3TXpReExUUmpaVE10T0dJell5MHdOamMyTjJZMlpqQTRaV0lHT2daRlZBPT0iLCJleHAiOm51bGwsInB1ciI6ImJsb2JfaWQifX0=--f5605d2c1e90ce3b54ef1a193f84530f954184a5",
+  "direct_upload": {
+    "url": "https://...s3.amazonaws.com/...signature...",
+    "headers": {
+      "Content-Type": "application/pdf",
+      "Content-MD5": "tZTfawHSrI1hiuOZQ0cQRg==",
+      "Content-Disposition": "inline; filename=\"1462486 order.pdf\"; filename*=UTF-8''1462486%20order.pdf"
+    }
+  }
+}
+```
+
+## 2) Upload the file bytes to `direct_upload.url`
+
+Use `direct_upload.url` to send the file, and send the `direct_upload.headers` object as request headers.
+Use whatever response is returned by that upload request.
+
+```bash
+curl -X PUT "$DIRECT_UPLOAD_URL" \
+  -H "Content-Length: 35672" \
+  -H "Content-Type: application/pdf" \
+  -H "Content-MD5: tZTfawHSrI1hiuOZQ0cQRg==" \
+  -H "Content-Disposition: inline; filename=\"1462486 order.pdf\"; filename*=UTF-8''1462486%20order.pdf" \
+  --data-binary @"/path/to/1462486 order.pdf"
+```
+
+## 3) Persist `signed_id` in your app
+
+Save the `signed_id` with your internal record. You will use this value in the next step.
+
+<Tip>
+  Do not send the S3 URL to `POST /documents`. Send `signed_id` in `attached_document`.
+</Tip>
+
+## 4) Create the document using `attached_document`
+
+```json
+{
+  "data": {
+    "type": "document",
+    "attributes": {
+      "name": "1462486 order.pdf",
+      "attached_document": "eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaWs1Tm1JMlpEZzNPQzB3TXpReExUUmpaVE10T0dJell5MHdOamMyTjJZMlpqQTRaV0lHT2daRlZBPT0iLCJleHAiOm51bGwsInB1ciI6ImJsb2JfaWQifX0=--f5605d2c1e90ce3b54ef1a193f84530f954184a5"
+    }
+  }
+}
+```
+
+Endpoint: [`POST /documents`](/api-docs/api-reference/documents/upload-a-document)

@@ -58,7 +58,10 @@ Example scenario: user uploads one file, `invoice.pdf`.
 
 `POST /documents` 
 
-Note: `attached_document` is the S3 signed id from the file direct upload.
+Before creating the document, complete the direct upload flow and get a `signed_id`:
+[`Direct Upload for Documents`](/api-docs/in-depth-guides/direct-upload-documents).
+
+Note: `attached_document` is the S3 `signed_id` from the file direct upload.
 
 ```json
 {
