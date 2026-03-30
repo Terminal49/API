@@ -144,6 +144,7 @@
           {
             "group": "Email Submissions",
             "icon": "envelope",
+            "hidden": true,
             "pages": [
               "api-docs/api-reference/email-submissions/list-email-submissions",
               "api-docs/api-reference/email-submissions/get-an-email-submission"
