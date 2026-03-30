@@ -2723,8 +2723,8 @@
                                 "container.transport.available",
                                 "container.transport.not_available",
                                 "container.transport.delivered",
-                                "document.extracted",
-                                "document.extraction_failed"
+                                "document_representation.created",
+                                "document_representation.failed"
                               ]
                             }
                           },
@@ -2952,8 +2952,8 @@
                                 "container.transport.available",
                                 "container.transport.not_available",
                                 "container.transport.delivered",
-                                "document.extracted",
-                                "document.extraction_failed"
+                                "document_representation.created",
+                                "document_representation.failed"
                               ],
                               "example": "tracking_request.succeeded"
                             }
@@ -4065,8 +4065,8 @@
                 "container.transport.available",
                 "container.transport.not_available",
                 "container.transport.delivered",
-                "document.extracted",
-                "document.extraction_failed"
+                "document_representation.created",
+                "document_representation.failed"
               ],
               "example": "container.transport.full_out"
             },
@@ -12451,8 +12451,8 @@
                     "container.transport.available",
                     "container.transport.not_available",
                     "container.transport.delivered",
-                    "document.extracted",
-                    "document.extraction_failed"
+                    "document_representation.created",
+                    "document_representation.failed"
                   ]
                 }
               },
@@ -12643,8 +12643,8 @@
                   "container.transport.available",
                   "container.transport.not_available",
                   "container.transport.delivered",
-                  "document.extracted",
-                  "document.extraction_failed"
+                  "document_representation.created",
+                  "document_representation.failed"
                 ]
               },
               "voyage_number": {
@@ -12833,8 +12833,8 @@
                 "type": "string",
                 "enum": [
                   "shipment.estimated.arrival",
-                  "document.extracted",
-                  "document.extraction_failed"
+                  "document_representation.created",
+                  "document_representation.failed"
                 ]
               },
               "location_locode": {
@@ -13008,8 +13008,8 @@
                   "container.transport.available",
                   "container.transport.not_available",
                   "container.transport.delivered",
-                  "document.extracted",
-                  "document.extraction_failed"
+                  "document_representation.created",
+                  "document_representation.failed"
                 ]
               },
               "delivery_status": {
