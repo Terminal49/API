@@ -44,7 +44,7 @@ flowchart LR
     Terminal49 classifies and extracts data asynchronously.
   </Step>
   <Step title="Receive webhook result">
-    You receive `document.extracted` or `document.extraction_failed`.
+    You receive `document_representation.created` or `document_representation.failed`.
   </Step>
   <Step title="Handle duplicates">
     If the same file content already exists for your account, it is treated as duplicate and not processed again.
@@ -104,7 +104,7 @@ Response (`201`):
 
 ### 2) Receive extraction webhook
 
-`document.extracted` example:
+`document_representation.created` example:
 
 ```json
 {
@@ -112,7 +112,7 @@ Response (`201`):
     "id": "40cb28de-63ee-4542-909e-a19efe46904d",
     "type": "webhook_notification",
     "attributes": {
-      "event": "document.extracted",
+      "event": "document_representation.created",
       "delivery_status": "pending",
       "created_at": "2026-03-26T08:17:06Z",
       "version": "2026-03-10"
@@ -218,8 +218,8 @@ Use the webhook `event` and included `document` payload to update your internal 
 
 | Event | Meaning |
 | --- | --- |
-| `document.extracted` | Extraction completed successfully |
-| `document.extraction_failed` | Extraction did not complete |
+| `document_representation.created` | Extraction completed successfully |
+| `document_representation.failed` | Extraction did not complete |
 
 ## Use these endpoints while integrating
 
