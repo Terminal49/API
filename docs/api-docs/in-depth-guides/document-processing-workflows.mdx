@@ -14,9 +14,36 @@ keywords:
 hidden: false
 ---
 
-This guide is for first-time integrators building document automation.
+Shipping documents — House Bills of Lading, Master Bills of Lading, arrival notices, delivery orders, and more — arrive in shared inboxes and have traditionally required manual classification, data entry, and filing. This integration automates that workflow: Terminal49 receives each document by email, classifies it, extracts structured fields, and delivers the results to your system via webhook.
 
-Submit documents by emailing attachments to your unique account docs alias. Terminal49 then follows the same lifecycle for every document: submit -\> classify -\> extract -\> webhook result.
+The outcome is less manual re-keying, faster time-to-file, and fewer errors from misfiled or delayed documents — shifting your team's time from routine data entry to true exceptions.
+
+Submit documents by emailing attachments to your account docs alias. Terminal49 then handles the rest: classify -\> extract -\> webhook result.
+
+## Coming Soon
+
+- **Webhook testing scenarios** — Terminal49 is building a way to trigger realistic `document_representation.created` and `document_representation.failed` webhook payloads for specific document types without needing to email a real document. This will let you develop and test your endpoint without incurring processing costs.
+- **`email_submission.created` event** — a webhook fired immediately on email receipt, before classification and extraction complete.
+- **Action required flow** — documentation in progress.
+
+## Before You Start
+
+Make sure you have the following in place before building:
+
+<Steps>
+  <Step title="Terminal49 account access">
+    Confirm you can log in and switch between the test and production accounts (see [Environments](#environments) below).
+  </Step>
+  <Step title="API key">
+    Generate an API key from **User > Developers > API Keys**. You'll need this to register your webhook and call the API.
+  </Step>
+  <Step title="A publicly accessible HTTPS endpoint">
+    Your server needs a reachable HTTPS URL to receive webhook POST requests from Terminal49. For local development, use a tool like [ngrok](https://ngrok.com) to expose a local port.
+  </Step>
+  <Step title="Webhook subscription">
+    Register your endpoint and subscribe to `document_representation.created` and `document_representation.failed` (see [Subscribing to Events](#subscribing-to-events) below).
+  </Step>
+</Steps>
 
 ## Environments
 
@@ -28,7 +55,7 @@ Your Terminal49 account has two environments, both accessible from the account s
 | Production | Wayfair LLC |
 
 <Warning>
-  Both environments make live calls. Documents submitted under either account are processed and costs will be incurred. There is no free sandbox for document processing at this time — see [Planned](#planned-not-live-yet) below for upcoming test tooling.
+  Both environments make live calls. Documents submitted under either account are processed and costs will be incurred. There is no free sandbox for document processing at this time — see [Coming Soon](#coming-soon) above for upcoming test tooling.
 </Warning>
 
 ## Authentication
@@ -41,42 +68,121 @@ Authorization: Token YOUR_API_KEY
 
 To get your API key, go to **User > Developers > API Keys** (click your username in the bottom-left corner of the navigation). For more detail, see [Start Here](/api-docs/getting-started/start-here).
 
+## Subscribing to Events
+
+Register a webhook endpoint to receive document processing notifications:
+
+```bash
+curl -X POST https://api.terminal49.com/v2/webhooks \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "webhook",
+      "attributes": {
+        "url": "https://your-server.com/webhooks/t49-documents",
+        "active": true,
+        "events": [
+          "document_representation.created",
+          "document_representation.failed"
+        ]
+      }
+    }
+  }'
+```
+
+You can also configure webhooks from the Terminal49 dashboard:
+
+1. Click your username in the bottom-left corner of the navigation.
+2. Go to **User > Developers > Webhooks**.
+3. To add a new endpoint, click **Create Webhook**, fill in your URL, and select the relevant events under **Document Events**.
+4. To update an existing endpoint, click into it and toggle on the document events you need.
+
+## Webhook Endpoint Requirements
+
+Your endpoint must meet the following requirements to reliably receive webhook notifications:
+
+**Response codes:** Return HTTP `200`, `201`, `202`, or `204`. Any other response — including a timeout — is treated as a delivery failure and will trigger retries.
+
+**Retries:** Terminal49 will retry failed deliveries multiple times. Design your endpoint to be idempotent — use `data.id` (the `webhook_notification` UUID) as your idempotency key to avoid processing the same event twice.
+
+**HTTPS:** Your endpoint must be accessible over HTTPS.
+
+**IP allowlist:** Webhook notifications are sent from the following IP addresses. Allowlist these if your infrastructure restricts inbound traffic:
+
+```
+35.222.62.171
+3.230.67.145
+44.217.15.129
+```
+
+**Signature verification (recommended):** Each webhook is signed using HMAC SHA-256. The signature is included in the `X-T49-Webhook-Signature` header. To verify, retrieve the `secret` from your webhook configuration and compute the HMAC digest of the raw request body — it should match the header value.
+
+```ruby
+secret = ENV.fetch('T49_WEBHOOK_SECRET')
+hmac = OpenSSL::HMAC.hexdigest('SHA256', secret, request.body.read)
+verified = request.headers['X-T49-Webhook-Signature'] == hmac
+```
+
 ## Workflow Diagrams
 
 ```mermaid
 flowchart LR
-    A[User emails document attachments] --> B[Terminal49 receives and parses documents]
-    B --> C[Terminal49 classifies documents]
-    C --> D[Terminal49 extracts structured data]
-    D --> E[Terminal49 sends webhook result]
+    A[Email sent to docs alias] --> B[Terminal49 receives document]
+    B --> C{Duplicate?}
+    C -- Yes --> Z[Ignored — no webhook]
+    C -- No --> D[Terminal49 classifies document]
+    D --> E[Terminal49 extracts structured data]
+    E --> F{Extraction outcome}
+    F -- Success --> G[document_representation.created]
+    F -- Failure --> H[document_representation.failed]
 ```
 
 ## Workflow: Step-by-Step
 
 <Steps>
   <Step title="Submit document">
-    Email attachments to your unique account docs alias.
+    Email attachments to your account docs alias:
+
+    | Environment | Email address |
+    | --- | --- |
+    | Test | `wayfair-development-castlegate-logistics-60@docs.terminal49.com` |
+    | Production | `wayfair-llc-96@docs.terminal49.com` |
+
+    **Supported file types:** PDF, PNG, JPEG, XLSX, XLS, CSV, Word (.doc, .docx).
+
+    **Multiple attachments:** Each attachment in a single email is processed independently and generates its own webhook event. All resulting webhooks reference the same `email_submission`.
+
+    **Unsupported files:** Encrypted or password-protected files cannot be processed and will result in a `document_representation.failed` event.
   </Step>
   <Step title="Terminal49 processes document">
-    Terminal49 classifies and extracts data asynchronously.
+    Terminal49 classifies and extracts structured data asynchronously. Processing typically completes within seconds to a few minutes depending on document complexity.
   </Step>
   <Step title="Receive webhook result">
-    You receive `document_representation.created` or `document_representation.failed`.
-  </Step>
-  <Step title="Handle duplicates">
-    If the same file content already exists for your account, it is treated as duplicate and not processed again.
+    You receive `document_representation.created` (extraction succeeded) or `document_representation.failed` (extraction could not complete). Parse the payload, route by `document_type`, store the extracted fields, and trigger your downstream processes.
   </Step>
 </Steps>
 
 <Tip>
-  Treat submission as asynchronous. Do not assume extraction is complete immediately after sending the email.
+  Treat submission as fire-and-forget. Do not poll or wait for a response after sending the email — the webhook is the signal that processing is complete.
 </Tip>
 
-## Technical Implementation (One End-to-End Example)
+<Note>
+  If the same file content has already been processed for your account, it is treated as a duplicate and ignored. No webhook is fired.
+</Note>
 
-Example scenario: a user emails `invoice.pdf` to their account docs alias.
+## Webhooks You Should Handle
 
-### 1) Receive extraction webhook
+A `document_representation` is the structured extraction result for a document. `document_representation.created` means extraction succeeded and structured data is available in the payload. `document_representation.failed` means Terminal49 could not produce an extraction result.
+
+| Event | Meaning | Signal |
+| --- | --- | --- |
+| `document_representation.created` | Extraction completed successfully | `document_type` is set; `payload` contains extracted fields |
+| `document_representation.failed` | Extraction did not complete | `document_type` is `"unknown"`; `last_document_representation` is `null` |
+
+## Webhook Payload Structure
+
+Every document webhook follows the same envelope structure. The `payload` object inside `document_representation` contains the extracted fields and varies by document type — see [Document Types in Scope](#document-types-in-scope) for full examples.
 
 `document_representation.created` envelope:
 
@@ -104,7 +210,7 @@ Example scenario: a user emails `invoice.pdf` to their account docs alias.
       "id": "b3abc297-624a-4eaa-a0e9-4ac4ebbd064f",
       "type": "document_representation",
       "attributes": {
-        "schema_version": "final_house_bill_of_lading@2026-03-23",
+        "schema_version": "draft_house_bill_of_lading@2026-03-23",
         "payload": {},
         "created_at": "2026-03-27T20:05:39Z",
         "updated_at": "2026-03-27T20:05:39Z"
@@ -114,9 +220,9 @@ Example scenario: a user emails `invoice.pdf` to their account docs alias.
       "id": "e75541c0-9ad5-408b-9747-23415adfbca0",
       "type": "document",
       "attributes": {
-        "document_type": "final_house_bill_of_lading",
+        "document_type": "draft_house_bill_of_lading",
         "source": "email",
-        "file_name": "c4b16d8360049ea688367f6192dba07b.pdf",
+        "file_name": "invoice.pdf",
         "file_url": "https://t49-documents-prod.s3.amazonaws.com/..."
       },
       "relationships": {
@@ -159,7 +265,7 @@ Replace `{id}` with the document `id` from the webhook payload. Response:
 }
 ```
 
-### 2) Understand the schema version
+### Schema versioning
 
 Every webhook payload includes a `schema_version` field that identifies the document type and the schema date in use:
 
@@ -175,7 +281,7 @@ Your account is pinned to a specific schema date. All document types will use th
 
 Use `schema_version` to route your parsing logic — if you support multiple versions, branch on this field.
 
-### 3) Persist extracted outcome in your system
+### Persisting extracted data
 
 Use the `document_type` and `schema_version` to look up the expected `payload` fields for that document type, then store the extracted data in your system.
 
@@ -240,148 +346,20 @@ If extraction fails, you will receive `document_representation.failed` instead. 
   `document_type: "unknown"` means Terminal49 could not classify or extract the document. Log the document `id` and `file_url` for investigation. If failures recur on the same document type, contact Terminal49 support.
 </Warning>
 
-## Subscribing to Events
-
-Register a webhook endpoint to receive document processing notifications:
-
-```bash
-curl -X POST https://api.terminal49.com/v2/webhooks \
-  -H "Authorization: Token YOUR_API_KEY" \
-  -H "Content-Type: application/vnd.api+json" \
-  -d '{
-    "data": {
-      "type": "webhook",
-      "attributes": {
-        "url": "https://your-server.com/webhooks/t49-documents",
-        "active": true,
-        "events": [
-          "document_representation.created",
-          "document_representation.failed"
-        ]
-      }
-    }
-  }'
-```
-
-You can also configure webhooks from the Terminal49 dashboard:
-
-1. Click your username in the bottom-left corner of the navigation.
-2. Go to **User > Developers > Webhooks**.
-3. To add a new endpoint, click **Create Webhook**, fill in your URL, and select the relevant events under **Document Events**.
-4. To update an existing endpoint, click into it and toggle on the document events you need.
-
 ## Document Types in Scope
 
-The current integration focuses on House Bills of Lading. Two variants are in scope:
+The table below maps Wayfair's document type names to the `document_type` values returned by the API, along with the actual source documents Terminal49 may receive and classify into each type.
 
-| Document type | `document_type` value | Notes |
-| --- | --- | --- |
-| Draft House Bill of Lading | `draft_house_bill_of_lading` | `hbl_type: "DRAFT"` in payload |
-| Final House Bill of Lading | `final_house_bill_of_lading` | `hbl_type: "TELEX"` in payload |
-| Importer Security Filing | `importer_security_filing` | |
-| Master Bill of Lading | `master_bill_of_lading` | |
-| Delivery Order | `dray_only_delivery_order` | |
+| Wayfair Document Type | `document_type` value | Observed Documents | Notes |
+| --- | --- | --- | --- |
+| Draft House Bill of Lading | `draft_house_bill_of_lading` | House Bill of Lading | `hbl_type: "DRAFT"` in payload |
+| Final House Bill of Lading | `final_house_bill_of_lading` | House Bill of Lading | `hbl_type: "TELEX"` in payload |
+| Importer Security Filing | `importer_security_filing` | Importer Security Filing | |
+| Master Bill of Lading | `master_bill_of_lading` | Sea Waybill | |
+| Dray Delivery Order | `dray_delivery_order` | Delivery Order — Castlegate variant, Delivery Order — Non-Castlegate variant | Both variants map to the same `document_type` |
+| ARC | _pending — see note_ | Arrival Notice, General Notice, Container Available Notice, In Bond, Freight Invoice | Wayfair uses "ARC" as an umbrella label, but these are distinct document types. Terminal49 recommends surfacing each as its own `document_type` so Wayfair can route without secondary classification and receive more accurate extracted data — each document type has its own schema with fields specific to that document. Mapping to a single `arc` type would require additional work on Terminal49's side and would reduce data resolution if Wayfair stores the webhook payload. Specific values TBD. |
 
 Additional document types will be added in future phases.
-
-### Delivery Order — full webhook payload
-
-`schema_version: dray_only_delivery_order@2026-03-30`
-
-```json
-{
-  "data": {
-    "id": "89ec3520-cea3-447d-8404-341e0bfd3aa6",
-    "type": "webhook_notification",
-    "attributes": {
-      "event": "document_representation.created",
-      "delivery_status": "pending",
-      "created_at": "2026-03-27T20:05:39Z"
-    },
-    "relationships": {
-      "document": {
-        "data": { "id": "e75541c0-9ad5-408b-9747-23415adfbca0", "type": "document" }
-      }
-    }
-  },
-  "included": [
-    {
-      "id": "b3abc297-624a-4eaa-a0e9-4ac4ebbd064f",
-      "type": "document_representation",
-      "attributes": {
-        "schema_version": "dray_only_delivery_order@2026-03-30",
-        "created_at": "2026-03-27T20:05:39Z",
-        "updated_at": "2026-03-27T20:05:39Z",
-        "payload": {
-          "issuer_name": "CastleGate Logistics Inc",
-          "issuer_fmc_oti_number": "026564N",
-          "document_date": null,
-          "document_number": null,
-          "consol_number": null,
-          "prepared_by": null,
-          "prepared_date": null,
-          "pickup_terminal_name": "APM Terminal, New Jersey",
-          "pickup_address_name": "New York APM Terminal, New Jersey",
-          "pickup_address": null,
-          "pickup_address_phone": null,
-          "delivery_name": "Wayfair Warehouse Cranbury",
-          "delivery_address": "48 Station Road Cranbury, New Jersey 08512 US",
-          "ocean_carrier": "Hapag-Lloyd",
-          "mbol": "HLCUSGN2512AWAC8",
-          "hbol": null,
-          "vessel_name": "CAUTIN",
-          "voyage_number": "2516E",
-          "transport_mode": null,
-          "port_of_loading": "Vung Tau",
-          "port_of_discharge": "New York",
-          "eta": "02/23/2026 EST",
-          "door_eta": null,
-          "entry_number": null,
-          "freight_payment_terms": null,
-          "service_type": null,
-          "movement_type": null,
-          "customer": "Haomaijia Technology (Shenzhen) Co., LTD",
-          "goods_description": null,
-          "package_count": null,
-          "measurement_cbm": null,
-          "measurement_cft": null,
-          "cargo_references": ["WHS-58624-41985386"],
-          "delivery_notes": null,
-          "delivery_carrier": "Cargomatic",
-          "routing_legs": null,
-          "containers": [
-            {
-              "container_number": "HAMU1717557",
-              "seal_number": "HLC3251157",
-              "container_type": "ISO_45G0",
-              "gross_weight_kg": null,
-              "gross_weight_lb": 16762.0
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": "e75541c0-9ad5-408b-9747-23415adfbca0",
-      "type": "document",
-      "attributes": {
-        "document_type": "dray_only_delivery_order",
-        "source": "email",
-        "file_name": "delivery_order_2902654.pdf",
-        "file_url": "https://t49-documents-prod.s3.amazonaws.com/..."
-      },
-      "relationships": {
-        "last_document_representation": {
-          "data": { "id": "b3abc297-624a-4eaa-a0e9-4ac4ebbd064f", "type": "document_representation" }
-        },
-        "email_submission": {
-          "data": { "id": "048bfec4-1249-4239-ab5b-63ad1e8f70cf", "type": "email_submission" }
-        }
-      }
-    }
-  ]
-}
-```
 
 ## Null Fields in Payloads
 
@@ -931,14 +909,104 @@ Additional document types will be added in future phases.
 }
 ```
 
-## Webhooks You Should Handle
+### Delivery Order — full webhook payload
 
-A `document_representation` is the structured extraction result for a document. `document_representation.created` means extraction succeeded and structured data is available in the payload. `document_representation.failed` means Terminal49 could not produce an extraction result.
+`schema_version: dray_delivery_order@2026-03-30`
 
-| Event | Meaning | Signal |
-| --- | --- | --- |
-| `document_representation.created` | Extraction completed successfully | `document_type` is set; `payload` contains extracted fields |
-| `document_representation.failed` | Extraction did not complete | `document_type` is `"unknown"`; `last_document_representation` is `null` |
+```json
+{
+  "data": {
+    "id": "89ec3520-cea3-447d-8404-341e0bfd3aa6",
+    "type": "webhook_notification",
+    "attributes": {
+      "event": "document_representation.created",
+      "delivery_status": "pending",
+      "created_at": "2026-03-27T20:05:39Z"
+    },
+    "relationships": {
+      "document": {
+        "data": { "id": "e75541c0-9ad5-408b-9747-23415adfbca0", "type": "document" }
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "b3abc297-624a-4eaa-a0e9-4ac4ebbd064f",
+      "type": "document_representation",
+      "attributes": {
+        "schema_version": "dray_delivery_order@2026-03-30",
+        "created_at": "2026-03-27T20:05:39Z",
+        "updated_at": "2026-03-27T20:05:39Z",
+        "payload": {
+          "issuer_name": "CastleGate Logistics Inc",
+          "issuer_fmc_oti_number": "026564N",
+          "document_date": null,
+          "document_number": null,
+          "consol_number": null,
+          "prepared_by": null,
+          "prepared_date": null,
+          "pickup_terminal_name": "APM Terminal, New Jersey",
+          "pickup_address_name": "New York APM Terminal, New Jersey",
+          "pickup_address": null,
+          "pickup_address_phone": null,
+          "delivery_name": "Wayfair Warehouse Cranbury",
+          "delivery_address": "48 Station Road Cranbury, New Jersey 08512 US",
+          "ocean_carrier": "Hapag-Lloyd",
+          "mbol": "HLCUSGN2512AWAC8",
+          "hbol": null,
+          "vessel_name": "CAUTIN",
+          "voyage_number": "2516E",
+          "transport_mode": null,
+          "port_of_loading": "Vung Tau",
+          "port_of_discharge": "New York",
+          "eta": "02/23/2026 EST",
+          "door_eta": null,
+          "entry_number": null,
+          "freight_payment_terms": null,
+          "service_type": null,
+          "movement_type": null,
+          "customer": "Haomaijia Technology (Shenzhen) Co., LTD",
+          "goods_description": null,
+          "package_count": null,
+          "measurement_cbm": null,
+          "measurement_cft": null,
+          "cargo_references": ["WHS-58624-41985386"],
+          "delivery_notes": null,
+          "delivery_carrier": "Cargomatic",
+          "routing_legs": null,
+          "containers": [
+            {
+              "container_number": "HAMU1717557",
+              "seal_number": "HLC3251157",
+              "container_type": "ISO_45G0",
+              "gross_weight_kg": null,
+              "gross_weight_lb": 16762.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "e75541c0-9ad5-408b-9747-23415adfbca0",
+      "type": "document",
+      "attributes": {
+        "document_type": "dray_delivery_order",
+        "source": "email",
+        "file_name": "delivery_order_2902654.pdf",
+        "file_url": "https://t49-documents-prod.s3.amazonaws.com/..."
+      },
+      "relationships": {
+        "last_document_representation": {
+          "data": { "id": "b3abc297-624a-4eaa-a0e9-4ac4ebbd064f", "type": "document_representation" }
+        },
+        "email_submission": {
+          "data": { "id": "048bfec4-1249-4239-ab5b-63ad1e8f70cf", "type": "email_submission" }
+        }
+      }
+    }
+  ]
+}
+```
 
 ## Use these endpoints while integrating
 
@@ -959,7 +1027,3 @@ A `document_representation` is the structured extraction result for a document. 
 - [`GET /document_schemas/{id}`](/api-docs/api-reference/document-schemas/get-a-document-schema)
 - [`Document representations resource`](/api-docs/api-reference/document-representations/document-representations-resource)
 
-## Planned (Not Live Yet)
-
-- `email_submission.created` webhook event after inbound email acceptance.
-- Mocked webhook scenarios for document processing — will allow you to trigger realistic webhook payloads without submitting real documents, so you can build and test your integration without incurring processing costs.
