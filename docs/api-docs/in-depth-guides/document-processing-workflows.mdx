@@ -14,17 +14,17 @@ keywords:
 hidden: false
 ---
 
-Shipping documents — House Bills of Lading, Master Bills of Lading, arrival notices, delivery orders, and more — arrive in shared inboxes and have traditionally required manual classification, data entry, and filing. This integration automates that workflow: Terminal49 receives each document by email, classifies it, extracts structured fields, and delivers the results to your system via webhook.
+Shipping documents (House Bills of Lading, Master Bills of Lading, arrival notices, delivery orders, and more) arrive in shared inboxes and have traditionally required manual classification, data entry, and filing. This integration automates that workflow: Terminal49 receives each document by email, classifies it, extracts structured fields, and delivers the results to your system via webhook.
 
-The outcome is less manual re-keying, faster time-to-file, and fewer errors from misfiled or delayed documents — shifting your team's time from routine data entry to true exceptions.
+The outcome is less manual re-keying, faster time-to-file, and fewer errors from misfiled or delayed documents, freeing your team from routine data entry to focus on true exceptions.
 
 Submit documents by emailing attachments to your account docs alias. Terminal49 then handles the rest: classify -\> extract -\> webhook result.
 
 ## Coming Soon
 
-- **Webhook testing scenarios** — Terminal49 is building a way to trigger realistic `document_representation.created` and `document_representation.failed` webhook payloads for specific document types without needing to email a real document. This will let you develop and test your endpoint without incurring processing costs.
-- **`email_submission.created` event** — a webhook fired immediately on email receipt, before classification and extraction complete.
-- **Action required flow** — documentation in progress.
+- **Webhook testing scenarios:** Terminal49 is building a way to trigger realistic `document_representation.created` and `document_representation.failed` webhook payloads for specific document types without needing to email a real document. This will let you develop and test your endpoint without incurring processing costs.
+- **`email_submission.created` event:** a webhook fired immediately on email receipt, before classification and extraction complete.
+- **Action required flow:** documentation in progress.
 
 ## Before You Start
 
@@ -55,7 +55,7 @@ Your Terminal49 account has two environments, both accessible from the account s
 | Production | Wayfair LLC |
 
 <Warning>
-  Both environments make live calls. Documents submitted under either account are processed and costs will be incurred. There is no free sandbox for document processing at this time — see [Coming Soon](#coming-soon) above for upcoming test tooling.
+  Both environments make live calls. Documents submitted under either account are processed and costs will be incurred. There is no free sandbox for document processing at this time. See [Coming Soon](#coming-soon) above for upcoming test tooling.
 </Warning>
 
 ## Authentication
@@ -102,9 +102,9 @@ You can also configure webhooks from the Terminal49 dashboard:
 
 Your endpoint must meet the following requirements to reliably receive webhook notifications:
 
-**Response codes:** Return HTTP `200`, `201`, `202`, or `204`. Any other response — including a timeout — is treated as a delivery failure and will trigger retries.
+**Response codes:** Return HTTP `200`, `201`, `202`, or `204`. Any other response (including a timeout) is treated as a delivery failure and will trigger retries.
 
-**Retries:** Terminal49 will retry failed deliveries multiple times. Design your endpoint to be idempotent — use `data.id` (the `webhook_notification` UUID) as your idempotency key to avoid processing the same event twice.
+**Retries:** Terminal49 will retry failed deliveries multiple times. Design your endpoint to be idempotent. Use `data.id` (the `webhook_notification` UUID) as your idempotency key to avoid processing the same event twice.
 
 **HTTPS:** Your endpoint must be accessible over HTTPS.
 
@@ -116,7 +116,7 @@ Your endpoint must meet the following requirements to reliably receive webhook n
 44.217.15.129
 ```
 
-**Signature verification (recommended):** Each webhook is signed using HMAC SHA-256. The signature is included in the `X-T49-Webhook-Signature` header. To verify, retrieve the `secret` from your webhook configuration and compute the HMAC digest of the raw request body — it should match the header value.
+**Signature verification (recommended):** Each webhook is signed using HMAC SHA-256. The signature is included in the `X-T49-Webhook-Signature` header. To verify, retrieve the `secret` from your webhook configuration and compute the HMAC digest of the raw request body; it should match the header value.
 
 ```ruby
 secret = ENV.fetch('T49_WEBHOOK_SECRET')
@@ -130,7 +130,7 @@ verified = request.headers['X-T49-Webhook-Signature'] == hmac
 flowchart LR
     A[Email sent to docs alias] --> B[Terminal49 receives document]
     B --> C{Duplicate?}
-    C -- Yes --> Z[Ignored — no webhook]
+    C -- Yes --> Z[Ignored, no webhook fired]
     C -- No --> D[Terminal49 classifies document]
     D --> E[Terminal49 extracts structured data]
     E --> F{Extraction outcome}
@@ -164,7 +164,7 @@ flowchart LR
 </Steps>
 
 <Tip>
-  Treat submission as fire-and-forget. Do not poll or wait for a response after sending the email — the webhook is the signal that processing is complete.
+  Treat submission as fire-and-forget. Do not poll or wait for a response after sending the email. The webhook is the signal that processing is complete.
 </Tip>
 
 <Note>
@@ -182,7 +182,7 @@ A `document_representation` is the structured extraction result for a document. 
 
 ## Webhook Payload Structure
 
-Every document webhook follows the same envelope structure. The `payload` object inside `document_representation` contains the extracted fields and varies by document type — see [Document Types in Scope](#document-types-in-scope) for full examples.
+Every document webhook follows the same envelope structure. The `payload` object inside `document_representation` contains the extracted fields and varies by document type. See [Document Types in Scope](#document-types-in-scope) for full examples.
 
 `document_representation.created` envelope:
 
@@ -279,7 +279,7 @@ Your account is pinned to a specific schema date. All document types will use th
 - Breaking changes (fields removed, renamed, or restructured) increment the date. Terminal49 will either support parallel versions during a migration window or coordinate a cutover date with you.
 - Non-breaking additions (new optional fields) do not change the version.
 
-Use `schema_version` to route your parsing logic — if you support multiple versions, branch on this field.
+Use `schema_version` to route your parsing logic. If you support multiple versions, branch on this field.
 
 ### Persisting extracted data
 
@@ -287,7 +287,7 @@ Use the `document_type` and `schema_version` to look up the expected `payload` f
 
 ### Handling a failed extraction
 
-If extraction fails, you will receive `document_representation.failed` instead. The key signal is `"document_type": "unknown"` — the document was received but could not be classified or extracted. There is no `document_representation` in `included` and `last_document_representation` will be `null`.
+If extraction fails, you will receive `document_representation.failed` instead. The key signal is `"document_type": "unknown"` means the document was received but could not be classified or extracted. There is no `document_representation` in `included` and `last_document_representation` will be `null`.
 
 ```json
 {
@@ -356,16 +356,16 @@ The table below maps Wayfair's document type names to the `document_type` values
 | Final House Bill of Lading | `final_house_bill_of_lading` | House Bill of Lading | `hbl_type: "TELEX"` in payload |
 | Importer Security Filing | `importer_security_filing` | Importer Security Filing | |
 | Master Bill of Lading | `master_bill_of_lading` | Sea Waybill | |
-| Dray Delivery Order | `dray_delivery_order` | Delivery Order — Castlegate variant, Delivery Order — Non-Castlegate variant | Both variants map to the same `document_type` |
-| ARC | _pending — see note_ | Arrival Notice, General Notice, Container Available Notice, In Bond, Freight Invoice | Wayfair uses "ARC" as an umbrella label, but these are distinct document types. Terminal49 recommends surfacing each as its own `document_type` so Wayfair can route without secondary classification and receive more accurate extracted data — each document type has its own schema with fields specific to that document. Mapping to a single `arc` type would require additional work on Terminal49's side and would reduce data resolution if Wayfair stores the webhook payload. Specific values TBD. |
+| Dray Delivery Order | `dray_delivery_order` | Delivery Order (Castlegate variant), Delivery Order (Non-Castlegate variant) | Both variants map to the same `document_type` |
+| ARC | _pending (see note)_ | Arrival Notice, General Notice, Container Available Notice, In Bond, Freight Invoice | Wayfair uses "ARC" as an umbrella label, but these are distinct document types. Terminal49 recommends surfacing each as its own `document_type` so Wayfair can route without secondary classification and receive more accurate extracted data, as each document type has its own schema with fields specific to that document. Mapping to a single `arc` type would require additional work on Terminal49's side and would reduce data resolution if Wayfair stores the webhook payload. Specific values TBD. |
 
 Additional document types will be added in future phases.
 
 ## Null Fields in Payloads
 
-`null` values in any payload are intentional. They mean Terminal49 looked for that field in the source document but did not find it. Treat `null` as "checked, not present" — not as "field not supported" or "not checked".
+`null` values in any payload are intentional. They mean Terminal49 looked for that field in the source document but did not find it. Treat `null` as "checked, not present" rather than "field not supported" or "not checked".
 
-### Draft House Bill of Lading — full webhook payload
+### Draft House Bill of Lading: Full Webhook Payload
 
 `schema_version: draft_house_bill_of_lading@2026-03-23`
 
@@ -495,7 +495,7 @@ Additional document types will be added in future phases.
 }
 ```
 
-### Final House Bill of Lading — full webhook payload
+### Final House Bill of Lading: Full Webhook Payload
 
 `schema_version: final_house_bill_of_lading@2026-03-23`
 
@@ -648,7 +648,7 @@ Additional document types will be added in future phases.
 }
 ```
 
-### ISF (Importer Security Filing) — full webhook payload
+### ISF (Importer Security Filing): Full Webhook Payload
 
 `schema_version: importer_security_filing@2026-03-30`
 
@@ -773,7 +773,7 @@ Additional document types will be added in future phases.
 }
 ```
 
-### Master Bill of Lading — full webhook payload
+### Master Bill of Lading: Full Webhook Payload
 
 `schema_version: master_bill_of_lading@2026-03-23`
 
@@ -909,7 +909,7 @@ Additional document types will be added in future phases.
 }
 ```
 
-### Delivery Order — full webhook payload
+### Delivery Order: Full Webhook Payload
 
 `schema_version: dray_delivery_order@2026-03-30`
 
