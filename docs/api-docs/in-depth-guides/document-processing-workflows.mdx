@@ -350,7 +350,7 @@ The table below maps Wayfair's document type names to the `document_type` values
 | Importer Security Filing | `importer_security_filing` | Importer Security Filing | |
 | Master Bill of Lading | `master_bill_of_lading` | Sea Waybill | |
 | Dray Delivery Order | `dray_delivery_order` | Delivery Order (Castlegate variant), Delivery Order (Non-Castlegate variant) | Both variants map to the same `document_type` |
-| ARC | _pending (see note)_ | Arrival Notice, General Notice, Container Available Notice, In Bond, Freight Invoice | Wayfair uses "ARC" as an umbrella label, but these are distinct document types. Terminal49 recommends surfacing each as its own `document_type` so Wayfair can route without secondary classification and receive more accurate extracted data, as each document type has its own schema with fields specific to that document. Mapping to a single `arc` type would require additional work on Terminal49's side and would reduce data resolution if Wayfair stores the webhook payload. Specific values TBD. |
+| ARC | One of: `arrival_notice`, `general_notice`, `customs_entry`, `other` etc. | Arrival Notice, General Notice, Container Available Notice, In Bond, Freight Invoice | Wayfair uses "ARC" as an umbrella label, but these are distinct document types. Mapping is: Arrival Notice → `arrival_notice`; General Notice / Container Available Notice → `general_notice`; In Bond → `customs_entry`; Freight Invoice → `other` (in Wayfair schema). |
 
 Additional document types will be added in future phases.
 
@@ -1019,4 +1019,3 @@ Additional document types will be added in future phases.
 - [`GET /email_submissions/{id}`](/api-docs/api-reference/email-submissions/get-an-email-submission)
 - [`GET /document_schemas/{id}`](/api-docs/api-reference/document-schemas/get-a-document-schema)
 - [`Document representations resource`](/api-docs/api-reference/document-representations/document-representations-resource)
-
