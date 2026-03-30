@@ -9,6 +9,81 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="March 2026" description="TypeScript SDK, MCP server, Custom Fields API, webhook trigger endpoint, and DataSync improvements" tags={['API', 'SDK', 'MCP', 'DataSync']}
+  rss="March 2026: TypeScript SDK, MCP server for AI-powered tracking, Custom Fields API, webhook trigger endpoint, and DataSync improvements including shipping line LFD columns and pending hold status."
+>
+  ### TypeScript SDK
+
+Released the **Terminal49 TypeScript SDK** (`@terminal49/sdk`), a typed client for Node.js 18+ with built-in retry logic, error handling, and JSON:API deserialization.
+
+- Track containers, retrieve shipments, and manage tracking requests with type-safe methods
+- Automatic retry with exponential backoff for rate limits and server errors
+- Flexible response formats: raw JSON:API, mapped objects, or both
+
+```bash
+npm install @terminal49/sdk
+```
+
+<Card title="SDK docs" icon="code" href="/sdk/introduction">
+  Get started with the TypeScript SDK
+</Card>
+
+---
+
+  ### MCP server
+
+Launched the **Terminal49 MCP server**, letting you query live container and shipment data from Claude Desktop, Cursor, or any MCP-compatible AI client.
+
+- **10 tools** — search, track, get container details, shipment routing, transport events, and more
+- **3 prompts** — pre-built workflows for tracking, demurrage analysis, and delay root cause analysis
+- Connect with a single config block — no custom code required
+
+<Card title="MCP setup guide" icon="robot" href="/mcp/home">
+  Connect your AI client to Terminal49
+</Card>
+
+---
+
+  ### Custom Fields API
+
+You can now create and manage **custom fields** on shipments and containers via the API. Define your own field schemas (text, number, date, single-select, multi-select), create option lists, and attach values to individual shipments or containers.
+
+- **Custom Field Definitions** — create, update, list, and delete field schemas scoped to shipments or containers
+- **Custom Field Options** — manage allowed values for select-type fields
+- **Custom Fields** — assign values to specific shipments or containers
+
+<Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+  View the Custom Fields API reference
+</Card>
+
+---
+
+  ### Webhook trigger endpoint
+
+Added `POST /webhooks/trigger` to send a one-time test webhook delivery to any HTTPS URL — without creating a webhook endpoint first. Use it to validate your webhook handler before going live.
+
+<Card title="Trigger a webhook" icon="webhook" href="/api-docs/api-reference/webhooks/trigger-a-webhook">
+  API reference for the trigger endpoint
+</Card>
+
+---
+
+  ### DataSync improvements
+
+- **Shipping line Last Free Day** — new `ssl_last_free_day_on` and `ssl_last_free_day_on_local` columns on both the `containers` and `containers_rail` tables, so you can distinguish the shipping line's LFD from the terminal's LFD
+- **Pending hold status** — individual hold columns (`freight_hold`, `customs_hold`, `usda_hold`, `tmf_hold`, `other_hold`) now support a `"Pending"` value in addition to `"Hold"` and blank, giving you earlier visibility into holds before they become active
+
+<CardGroup cols={2}>
+  <Card title="Container table properties" icon="table" href="/datasync/table-properties/containers">
+    DataSync containers reference
+  </Card>
+  <Card title="Holds and fees guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
+    How to work with holds and fees data
+  </Card>
+</CardGroup>
+
+</Update>
+
 <Update label="February 2026" description="Container Holds, Fees, and Release Readiness guide" tags={['API', 'DataSync']}
   rss="New guide: Container Holds, Fees, and Release Readiness — decision logic, enum references, webhook examples, and FAQ for determining when a container is ready for pickup."
 >
