@@ -2394,8 +2394,8 @@
                                 "container.pickup_lfd.changed",
                                 "container.pickup_lfd_line.changed",
                                 "container.transport.available",
-                                "document.extracted",
-                                "document.extraction_failed"
+                                "document_representation.created",
+                                "document_representation.failed"
                               ]
                             }
                           },
@@ -2616,8 +2616,8 @@
                                 "container.pickup_lfd.changed",
                                 "container.pickup_lfd_line.changed",
                                 "container.transport.available",
-                                "document.extracted",
-                                "document.extraction_failed"
+                                "document_representation.created",
+                                "document_representation.failed"
                               ],
                               "example": "tracking_request.succeeded"
                             }
@@ -3616,8 +3616,8 @@
                 "container.pickup_lfd.changed",
                 "container.pickup_lfd_line.changed",
                 "container.transport.available",
-                "document.extracted",
-                "document.extraction_failed"
+                "document_representation.created",
+                "document_representation.failed"
               ],
               "example": "container.transport.full_out"
             },
@@ -11709,8 +11709,8 @@
                     "container.pickup_lfd.changed",
                     "container.pickup_lfd_line.changed",
                     "container.transport.available",
-                    "document.extracted",
-                    "document.extraction_failed"
+                    "document_representation.created",
+                    "document_representation.failed"
                   ]
                 }
               },
@@ -11894,8 +11894,8 @@
                   "container.pickup_lfd.changed",
                   "container.pickup_lfd_line.changed",
                   "container.transport.available",
-                  "document.extracted",
-                  "document.extraction_failed"
+                  "document_representation.created",
+                  "document_representation.failed"
                 ]
               },
               "voyage_number": {
@@ -12084,8 +12084,8 @@
                 "type": "string",
                 "enum": [
                   "shipment.estimated.arrival",
-                  "document.extracted",
-                  "document.extraction_failed"
+                  "document_representation.created",
+                  "document_representation.failed"
                 ]
               },
               "location_locode": {
@@ -12252,8 +12252,8 @@
                   "container.pickup_lfd.changed",
                   "container.pickup_lfd_line.changed",
                   "container.transport.available",
-                  "document.extracted",
-                  "document.extraction_failed"
+                  "document_representation.created",
+                  "document_representation.failed"
                 ]
               },
               "delivery_status": {
