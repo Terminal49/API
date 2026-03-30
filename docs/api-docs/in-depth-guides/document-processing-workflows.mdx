@@ -11,7 +11,7 @@ keywords:
   - "document extraction"
   - "document webhooks"
   - "email submissions"
-hidden: true
+hidden: false
 ---
 
 This guide is for first-time integrators building document automation.
@@ -27,7 +27,7 @@ Both follow the same customer-facing lifecycle: submit -\> classify -\> extract 
 
 ```mermaid
 flowchart LR
-    A[User emails document attachments] --> B[Upload File] --> C[API /POST Documents] 
+    A[User emails document attachments] --> B[Upload File] --> C[API /POST Documents]
     C --> D[Terminal49 receives and parses documents]
     D --> E[Terminal49 classifies documents]
     E --> F[Terminal49 extracts structured data]
