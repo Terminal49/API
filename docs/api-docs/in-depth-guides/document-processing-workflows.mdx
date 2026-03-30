@@ -361,9 +361,9 @@ The table below maps Wayfair's document type names to the `document_type` values
 
 Additional document types will be added in future phases.
 
-## Null Fields in Payloads
-
-`null` values in any payload are intentional. They mean Terminal49 looked for that field in the source document but did not find it. Treat `null` as "checked, not present" rather than "field not supported" or "not checked".
+<Info>
+  **Null fields are intentional.** A `null` value means Terminal49 looked for that field in the source document but did not find it. Treat `null` as "checked, not present" rather than "field not supported" or "not checked".
+</Info>
 
 ### Draft House Bill of Lading: Full Webhook Payload
 
