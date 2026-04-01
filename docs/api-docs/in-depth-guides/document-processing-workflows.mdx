@@ -22,7 +22,6 @@ Submit documents by emailing attachments to your account docs alias. Terminal49 
 
 ## Coming Soon
 
-- **Webhook testing scenarios:** Terminal49 is building a way to trigger realistic `document_representation.created` and `document_representation.failed` webhook payloads for specific document types without needing to email a real document. This will let you develop and test your endpoint without incurring processing costs.
 - **`email_submission.created` event:** a webhook fired immediately on email receipt, before classification and extraction complete.
 - **Action required flow:** documentation in progress.
 
@@ -55,7 +54,7 @@ Your Terminal49 account has two environments, both accessible from the account s
 | Production | Wayfair LLC |
 
 <Warning>
-  Both environments make live calls. Documents submitted under either account are processed and costs will be incurred. There is no free sandbox for document processing at this time. See [Coming Soon](#coming-soon) above for upcoming test tooling.
+  Both environments make live calls. Documents submitted under either account are processed and costs will be incurred. There is no free sandbox for document processing at this time.
 </Warning>
 
 ## Authentication
@@ -1012,6 +1011,21 @@ Additional document types will be added in future phases.
 
 - [`GET /webhook_notifications/examples`](/api-docs/api-reference/webhook-notifications/get-webhook-notification-payload-examples)
 - [`POST /webhooks/trigger`](/api-docs/api-reference/webhooks/trigger-a-webhook)
+
+For Wayfair document webhook events, you can trigger a test payload for a specific document type without sending an email:
+
+```bash
+curl -X POST https://api.terminal49.com/v2/webhooks/trigger \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-endpoint.example/webhooks",
+    "event": "document_representation.created",
+    "sample": {
+      "document_type": "dray_delivery_order"
+    }
+  }'
+```
 
 <Info>
   Webhook event availability depends on your account configuration. If you are not receiving expected events, contact Terminal49 support.
