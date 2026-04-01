@@ -3238,6 +3238,15 @@
                           },
                           {
                             "$ref": "#/components/schemas/container_updated_event"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_representation"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_email_submission"
                           }
                         ]
                       }
@@ -3925,6 +3934,18 @@
                           },
                           {
                             "$ref": "#/components/schemas/estimated_event"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container_updated_event"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_representation"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_email_submission"
                           }
                         ]
                       }
@@ -4004,6 +4025,18 @@
                           },
                           {
                             "$ref": "#/components/schemas/estimated_event"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container_updated_event"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_representation"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_email_submission"
                           }
                         ]
                       }
@@ -13086,18 +13119,19 @@
                         "type": "string",
                         "format": "uuid"
                       },
-                      "type": {
-                        "type": "string",
-                        "enum": [
-                          "tracking_request",
-                          "estimated_event",
-                          "transport_event",
-                          "container_updated_event"
-                        ]
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "tracking_request",
+                            "estimated_event",
+                            "transport_event",
+                            "container_updated_event",
+                            "document"
+                          ]
+                        }
                       }
                     }
                   }
-                }
               }
             },
             "required": [
