@@ -3684,7 +3684,7 @@
         "tags": [
           "Webhooks"
         ],
-        "description": "Send a one-time test webhook notification payload to a target HTTPS URL without creating a webhook endpoint.",
+        "description": "Send a one-time test webhook notification payload to a target HTTPS URL without creating a webhook endpoint. For Wayfair document webhook events (`document_representation.created` and `document_representation.failed`), you can pass `sample.document_type` to test a specific document type payload.",
         "requestBody": {
           "required": true,
           "content": {
@@ -3711,6 +3711,18 @@
                     "type": "string",
                     "example": "optional-test-secret",
                     "description": "Optional secret used to sign the request in `X-T49-Webhook-Signature`."
+                  },
+                  "sample": {
+                    "type": "object",
+                    "description": "Optional test payload controls. Currently only supports `document_type` for Wayfair document webhook events.",
+                    "additionalProperties": false,
+                    "properties": {
+                      "document_type": {
+                        "type": "string",
+                        "example": "dray_delivery_order",
+                        "description": "Specific Wayfair document type to use when generating example payloads for `document_representation.created` or `document_representation.failed`. If omitted for these events, Terminal49 selects a default document type."
+                      }
+                    }
                   }
                 }
               },
@@ -3720,6 +3732,15 @@
                     "url": "https://webhook.site/your-endpoint",
                     "event": "tracking_request.succeeded",
                     "secret": "optional-test-secret"
+                  }
+                },
+                "Trigger document webhook with specific document type": {
+                  "value": {
+                    "url": "https://webhook.site/your-endpoint",
+                    "event": "document_representation.created",
+                    "sample": {
+                      "document_type": "dray_delivery_order"
+                    }
                   }
                 }
               }
