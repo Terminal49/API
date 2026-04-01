@@ -236,6 +236,40 @@ Every document webhook follows the same envelope structure. The `payload` object
 }
 ```
 
+When the webhook document is a child document (split from a larger packet), the document include also contains `attributes.parsed.packetSegment` and a `parent_document` relationship:
+
+```json
+{
+  "id": "child-document-id",
+  "type": "document",
+  "attributes": {
+    "document_type": "arrival_notice",
+    "file_name": "packet_child_1.pdf",
+    "file_url": "https://t49-documents-prod.s3.amazonaws.com/...",
+    "parsed": {
+      "packetSegment": {
+        "startPage": 3,
+        "endPage": 7
+      }
+    }
+  },
+  "relationships": {
+    "parent_document": {
+      "data": {
+        "id": "parent-document-id",
+        "type": "document"
+      }
+    },
+    "last_document_representation": {
+      "data": {
+        "id": "b3abc297-624a-4eaa-a0e9-4ac4ebbd064f",
+        "type": "document_representation"
+      }
+    }
+  }
+}
+```
+
 <Note>
   `file_url` is a pre-signed S3 URL and expires after 1 hour. Download the file promptly after receiving the webhook, or fetch a fresh URL using the endpoint below.
 </Note>

@@ -13915,6 +13915,27 @@
                 "type": "integer",
                 "nullable": true
               },
+              "parsed": {
+                "description": "Additional parsing metadata. Present for child documents created from a split packet.",
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "packetSegment": {
+                    "type": "object",
+                    "description": "Page range of the child document within the original packet.",
+                    "properties": {
+                      "startPage": {
+                        "type": "integer",
+                        "description": "Start page number (inclusive) in the parent packet."
+                      },
+                      "endPage": {
+                        "type": "integer",
+                        "description": "End page number (inclusive) in the parent packet."
+                      }
+                    }
+                  }
+                }
+              },
               "created_at": {
                 "description": "Timestamp when the document was created.",
                 "type": "string",
@@ -14007,6 +14028,28 @@
                         "type": "string",
                         "enum": [
                           "document_representation"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "parent_document": {
+                "type": "object",
+                "description": "Present for child documents created from a split packet.",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "document"
                         ]
                       }
                     }
