@@ -10,14 +10,15 @@ Use the Terminal49 MCP server to let Claude or Cursor answer questions with live
 ## TL;DR – Get Started in 5 Minutes
 
 <Steps>
-  <Step title="Get your API token">
-    Go to the [Terminal49 dashboard](https://app.terminal49.com/developers/api-keys) → Settings → API Tokens and create a `T49_API_TOKEN`.
+  <Step title="Choose auth mode">
+    Preferred: OAuth 2.1 (discovery + registration + browser authorization).  
+    Compatibility: API token header is still supported during migration.
   </Step>
   <Step title="Pick your MCP client">
     - **Claude Desktop** (macOS / Windows / Linux)
     - **Cursor IDE**
   </Step>
-  <Step title="Paste this config (Claude Desktop)">
+  <Step title="Paste config (legacy compatibility)">
     Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
     ```json
@@ -60,6 +61,10 @@ Use the Terminal49 MCP server to let Claude or Cursor answer questions with live
 </Steps>
 
 <Note>
+For OAuth-native hosted setup and validation, use [OAuth E2E Smoke Test](/mcp/oauth-e2e-smoke).
+</Note>
+
+<Note>
 Need test container numbers? See [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
 </Note>
 
@@ -74,16 +79,23 @@ For the full walkthrough (including local stdio dev, deployment, and SDK example
 | HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Serverless, short-lived requests |
 
 **Authentication**:
-- API token only (OAuth not required for this release)
-- Header: `Authorization: Bearer <T49_API_TOKEN>` or `Authorization: Token <T49_API_TOKEN>`
-- Or set `T49_API_TOKEN` environment variable when self-hosting
+- OAuth 2.1 for hosted MCP (preferred)
+- Discovery: `GET /.well-known/oauth-authorization-server`
+- Dynamic registration: `POST /oauth/register` (public clients, no secret)
+- On unauthenticated calls, MCP responds with:
+`WWW-Authenticate: Bearer resource_metadata="https://api.terminal49.com/.well-known/oauth-authorization-server"`
+- Legacy compatibility mode still accepts API tokens during migration:
+`Authorization: Bearer <T49_API_TOKEN>` or `Authorization: Token <T49_API_TOKEN>`
 
 <Tip>
 Claude Desktop and Cursor use the HTTP transport at `https://mcp.terminal49.com/mcp`.
 </Tip>
 
 <Note>
-Planning OAuth for hosted MCP? Use the [Hosted HTTP OAuth Requirements](/mcp/hosted-http-oauth-requirements) and [Hosted HTTP OAuth Test Plan](/mcp/hosted-http-oauth-test-plan).
+For implementation details and validation, use:
+- [Hosted HTTP OAuth Requirements](/mcp/hosted-http-oauth-requirements)
+- [Hosted HTTP OAuth Test Plan](/mcp/hosted-http-oauth-test-plan)
+- [OAuth E2E Smoke Test](/mcp/oauth-e2e-smoke)
 </Note>
 
 The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP endpoints as the REST API.
