@@ -9,6 +9,58 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="April 2026" description="Smart Last Free Day, inland destination ETA source transparency, and bug fixes" tags={['API', 'Dashboard']}
+  rss="April 2026: Smart Last Free Day with per-source LFD breakdown, inland destination ETA source transparency, expanded SSL LFD coverage, and bug fixes."
+>
+  ### Smart Last Free Day
+
+The container API now returns a detailed breakdown of **Last Free Day (LFD)** data within the `import_deadlines` field. Instead of a single date, you get separate LFD values from the shipping line and the terminal facility — at both the port of discharge and the inland destination.
+
+Each source includes:
+
+- **Original** — the first LFD reported
+- **Current** — the latest LFD reported
+- **Calculated** — a derived value when the raw date needs adjustment
+
+A **unified** selection shows which source Terminal49 considers the best current LFD and why.
+
+<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+  View the container resource
+</Card>
+
+---
+
+  ### Inland destination ETA source transparency
+
+Containers now include an `inland_destination_eta_source_summary` field that tells you exactly where the displayed inland destination ETA comes from. Possible sources are:
+
+- **Shipping line** — ETA provided by the carrier
+- **Rail** — ETA from the rail carrier
+- **T49 operations team** — manually verified ETA
+- **T49 prediction engine** — machine-learning-based estimate
+
+The Terminal49 dashboard also shows the active ETA source, and hovering over it displays all available estimates so you can compare.
+
+---
+
+  ### Expanded shipping line LFD coverage
+
+Shipping line Last Free Day data is now collected from additional SSA terminals, improving LFD accuracy for containers moving through those facilities.
+
+<Card title="Container table properties" icon="table" href="/datasync/table-properties/containers">
+  DataSync containers reference
+</Card>
+
+---
+
+  ### Bug fixes
+
+- **Hapag-Lloyd booking tracking** — Fixed an error that could prevent booking equipment data from being returned for Hapag-Lloyd shipments
+- **Dashboard copy/paste** — Copy and paste keyboard shortcuts in the container dashboard no longer interfere with text input fields
+- **Webhook notification links** — The dashboard webhook notifications page now correctly displays reference links for events with multiple related resources
+
+</Update>
+
 <Update label="March 2026" description="TypeScript SDK, MCP server, Custom Fields API, webhook trigger endpoint, and DataSync improvements" tags={['API', 'SDK', 'MCP', 'DataSync']}
   rss="March 2026: TypeScript SDK, MCP server for AI-powered tracking, Custom Fields API, webhook trigger endpoint, and DataSync improvements including shipping line LFD columns and pending hold status."
 >
