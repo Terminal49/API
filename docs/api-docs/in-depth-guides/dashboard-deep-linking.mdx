@@ -11,17 +11,17 @@ You can link directly to any shipment or container in Terminal49 using an identi
 The deep link URL pattern is:
 
 ```
-https://app.terminal49.com/shipments/deep-link?q={identifier}
+https://app.terminal49.com/shipments/find?q={identifier}
 ```
 
 Replace `{identifier}` with the container number, BOL, booking number, or reference number you want to look up.
 
 | Identifier type | Example | URL |
 | --- | --- | --- |
-| Container number | `TCLU6718159` | `https://app.terminal49.com/shipments/deep-link?q=TCLU6718159` |
-| Bill of lading number | `MEDUFR030802` | `https://app.terminal49.com/shipments/deep-link?q=MEDUFR030802` |
-| Booking number | `BKG12345678` | `https://app.terminal49.com/shipments/deep-link?q=BKG12345678` |
-| Reference number | `PO-2024-00123` | `https://app.terminal49.com/shipments/deep-link?q=PO-2024-00123` |
+| Container number | `TCLU6718159` | `https://app.terminal49.com/shipments/find?q=TCLU6718159` |
+| Bill of lading number | `MEDUFR030802` | `https://app.terminal49.com/shipments/find?q=MEDUFR030802` |
+| Booking number | `BKG12345678` | `https://app.terminal49.com/shipments/find?q=BKG12345678` |
+| Reference number | `PO-2024-00123` | `https://app.terminal49.com/shipments/find?q=PO-2024-00123` |
 
 <Tip>
 The query is case-insensitive and normalizes formatting — spaces and dashes in container numbers are stripped automatically, so `MSCU 1234567` and `MSCU1234567` both resolve to the same container.
@@ -54,7 +54,7 @@ If your TMS or ERP stores container numbers or purchase order numbers, you can b
 For example, if your system stores a container number per shipment record, construct the URL as:
 
 ```
-https://app.terminal49.com/shipments/deep-link?q={container_number}
+https://app.terminal49.com/shipments/find?q={container_number}
 ```
 
 Most TMS platforms support configurable URL fields or "external link" columns — configure one pointing to this URL pattern.
@@ -64,7 +64,7 @@ Most TMS platforms support configurable URL fields or "external link" columns �
 Add a formula column to your shipment spreadsheet that generates a clickable Terminal49 link. Works in Google Sheets, Excel, and most spreadsheet tools.
 
 ```
-=HYPERLINK("https://app.terminal49.com/shipments/deep-link?q=" & A2, "View in Terminal49")
+=HYPERLINK("https://app.terminal49.com/shipments/find?q=" & A2, "View in Terminal49")
 ```
 
 Where `A2` contains the container number, BOL, or reference number.
@@ -75,7 +75,7 @@ Include deep links in automated alerts so recipients can jump directly to the re
 
 ```
 Container TCLU6718159 has been discharged at port.
-View details: https://app.terminal49.com/shipments/deep-link?q=TCLU6718159
+View details: https://app.terminal49.com/shipments/find?q=TCLU6718159
 ```
 
 This works in Slack messages, email templates, PagerDuty alerts, or any notification channel that renders URLs as clickable links.
@@ -86,7 +86,7 @@ When processing Terminal49 webhook events, you already have the container number
 
 ```javascript
 function buildDashboardLink(containerNumber) {
-  return `https://app.terminal49.com/shipments/deep-link?q=${encodeURIComponent(containerNumber)}`;
+  return `https://app.terminal49.com/shipments/find?q=${encodeURIComponent(containerNumber)}`;
 }
 ```
 
@@ -97,7 +97,7 @@ Embed deep links in Looker, Metabase, Retool, or similar tools. For example, in 
 ```sql
 SELECT
   container_number,
-  CONCAT('https://app.terminal49.com/shipments/deep-link?q=', container_number) AS terminal49_link
+  CONCAT('https://app.terminal49.com/shipments/find?q=', container_number) AS terminal49_link
 FROM shipments
 ```
 
