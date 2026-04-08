@@ -1,0 +1,193 @@
+---
+title: Direct Links to Shipments and Containers
+sidebarTitle: Tracking Page Links
+description: Link directly to a shipment or container's tracking page using container numbers, bill of lading numbers, or reference numbers — no Terminal49 internal IDs required.
+---
+
+You can link directly to any shipment or container in Terminal49 using an identifier you already have — a container number, bill of lading, booking number, or any reference number you've attached to a shipment. The link resolves to the correct tracking page automatically, so your team doesn't need to know Terminal49's internal UUIDs. This is especially useful when linking from a TMS, ERP, spreadsheet, internal tool, or automated notification.
+
+## URL format
+
+The deep link URL pattern is:
+
+```
+https://app.terminal49.com/shipments/find?q={identifier}
+```
+
+Replace `{identifier}` with the container number, BOL, booking number, or reference number you want to look up.
+
+| Identifier type | Example | URL |
+| --- | --- | --- |
+| Container number | `TCLU6718159` | `https://app.terminal49.com/shipments/find?q=TCLU6718159` |
+| Bill of lading number | `MEDUFR030802` | `https://app.terminal49.com/shipments/find?q=MEDUFR030802` |
+| Booking number | `BKG12345678` | `https://app.terminal49.com/shipments/find?q=BKG12345678` |
+| Reference number | `PO-2024-00123` | `https://app.terminal49.com/shipments/find?q=PO-2024-00123` |
+
+<Tip>
+The query is case-insensitive and normalizes formatting — spaces and dashes in container numbers are stripped automatically, so `MSCU 1234567` and `MSCU1234567` both resolve to the same container.
+</Tip>
+
+## How resolution works
+
+The deep link searches your Terminal49 account and redirects to the best match, in this order:
+
+1. **Exact container number match** → Opens the shipment detail page with that container selected
+2. **Exact shipment number or reference number match** → Opens that shipment's detail page
+3. **First container result (partial match)** → Opens the associated shipment with that container selected
+4. **First shipment result (partial match)** → Opens that shipment
+5. **No match found** → Falls back to the shipments list with the search query pre-filled, so the user can refine manually
+
+<Note>
+The deep link only matches shipments and containers tracked in your Terminal49 account. If an identifier isn't found, check that the shipment is actively tracked and that the reference number has been added.
+</Note>
+
+<Tip>
+When multiple shipments match (e.g., the same reference number on two shipments), the deep link resolves to the first match. Use unique reference numbers to ensure deterministic resolution.
+</Tip>
+
+## Use cases
+
+### Link from a TMS or ERP
+
+If your TMS or ERP stores container numbers or purchase order numbers, you can build a deep link for each record. This gives your logistics team one-click access to real-time tracking data without leaving their primary workflow.
+
+For example, if your system stores a container number per shipment record, construct the URL as:
+
+```
+https://app.terminal49.com/shipments/find?q={container_number}
+```
+
+Most TMS platforms support configurable URL fields or "external link" columns — configure one pointing to this URL pattern.
+
+### Link from a spreadsheet
+
+Add a formula column to your shipment spreadsheet that generates a clickable Terminal49 link. Works in Google Sheets, Excel, and most spreadsheet tools.
+
+```
+=HYPERLINK("https://app.terminal49.com/shipments/find?q=" & A2, "View in Terminal49")
+```
+
+Where `A2` contains the container number, BOL, or reference number.
+
+### Link from Slack or email notifications
+
+Include deep links in automated alerts so recipients can jump directly to the relevant shipment:
+
+```
+Container TCLU6718159 has been discharged at port.
+View details: https://app.terminal49.com/shipments/find?q=TCLU6718159
+```
+
+This works in Slack messages, email templates, PagerDuty alerts, or any notification channel that renders URLs as clickable links.
+
+### Link from webhook handlers
+
+When processing Terminal49 webhook events, you already have the container number or BOL in the payload. Construct a deep link to include in your internal tools, ticketing systems, or dashboards:
+
+```javascript
+function buildDashboardLink(containerNumber) {
+  return `https://app.terminal49.com/shipments/find?q=${encodeURIComponent(containerNumber)}`;
+}
+```
+
+### Link from internal dashboards or BI tools
+
+Embed deep links in Looker, Metabase, Retool, or similar tools. For example, in a SQL-based dashboard, construct the link in your query:
+
+```sql
+SELECT
+  container_number,
+  CONCAT('https://app.terminal49.com/shipments/find?q=', container_number) AS terminal49_link
+FROM shipments
+```
+
+### Customer portal integration
+
+If you build a customer-facing portal, deep link your customers directly to their shipment status in Terminal49 using the PO number or reference they already know. No need to store or expose Terminal49 internal IDs.
+
+## Supported identifiers
+
+The deep link matches against these identifier types:
+
+- **Container number** — the standard ISO container number (e.g., `TCLU6718159`). Matched against tracked containers in your account.
+- **Master bill of lading** — the original BOL number used to create the tracking request.
+- **Booking number** — the carrier booking reference.
+- **Reference numbers** — any custom reference numbers you've added to the shipment or container (e.g., purchase order numbers, house bill of lading numbers, internal IDs).
+
+## Adding reference numbers
+
+To deep link using your internal identifiers, attach reference numbers to shipments or containers in Terminal49. There are three ways to do this.
+
+### When creating a tracking request
+
+Include `ref_numbers` in the tracking request payload:
+
+```json
+{
+  "data": {
+    "type": "tracking_request",
+    "attributes": {
+      "request_type": "bill_of_lading",
+      "request_number": "MEDUFR030802",
+      "scac": "MSCU",
+      "ref_numbers": ["PO-2024-00123", "HBL-5678"]
+    }
+  }
+}
+```
+
+See [Create a tracking request](/api-docs/api-reference/tracking-requests/create-a-tracking-request) for full details.
+
+### By editing a shipment
+
+```bash
+curl -X PATCH https://api.terminal49.com/v2/shipments/{shipment_id} \
+  -H "Content-Type: application/vnd.api+json" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -d '{
+    "data": {
+      "type": "shipment",
+      "attributes": {
+        "ref_numbers": ["PO-2024-00123", "HBL-5678"]
+      }
+    }
+  }'
+```
+
+See [Edit a shipment](/api-docs/api-reference/shipments/edit-a-shipment) for full details.
+
+### By editing a container
+
+```bash
+curl -X PATCH https://api.terminal49.com/v2/containers/{container_id} \
+  -H "Content-Type: application/vnd.api+json" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -d '{
+    "data": {
+      "type": "container",
+      "attributes": {
+        "ref_numbers": ["PO-2024-00123"]
+      }
+    }
+  }'
+```
+
+See [Edit a container](/api-docs/api-reference/containers/edit-a-container) for full details.
+
+<Tip>
+Reference numbers added at tracking request creation are propagated to both the shipment and its containers. You can also add different reference numbers to individual containers for more granular deep linking.
+</Tip>
+
+## Related guides
+
+<CardGroup cols={2}>
+  <Card title="Tracking Widget" icon="browser" href="/api-docs/in-depth-guides/terminal49-widget">
+    Embed tracking on your website
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/api-docs/in-depth-guides/webhooks">
+    Get notified when shipments update
+  </Card>
+  <Card title="Tracking Request Lifecycle" icon="arrows-spin" href="/api-docs/in-depth-guides/tracking-request-lifecycle">
+    Understand request statuses
+  </Card>
+</CardGroup>
