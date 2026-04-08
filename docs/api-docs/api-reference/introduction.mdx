@@ -1,0 +1,107 @@
+---
+title: Introduction
+og:title: Terminal49 API Reference
+og:description: REST API reference for tracking ocean shipments and containers. Supports BOL, booking, and container number tracking with real-time webhooks.
+---
+
+The Terminal49 API gives you a single integration to track Bills of Lading (BOLs), bookings, and container numbers across global ocean carriers. You get complete import milestones — from empty-out at origin to empty-return at destination, including rail data in North America.
+
+## Prerequisites
+
+Before making API calls, you need:
+
+- A Terminal49 account ([start a free trial](https://app.terminal49.com/register))
+- An API key from the [Developer Portal](https://app.terminal49.com/developers/api-keys)
+
+## Base URL
+
+```
+https://api.terminal49.com/v2
+```
+
+## Authentication
+
+Include your API key in the `Authorization` header, prefixed with `Token`:
+
+```bash
+curl https://api.terminal49.com/v2/shipments \
+  -H "Authorization: Token YOUR_API_KEY"
+```
+
+## Request and response format
+
+- The API follows the [JSON:API](https://jsonapi.org/) specification
+- All responses return `application/vnd.api+json` content type
+- Requests that include a body should set `Content-Type: application/vnd.api+json`
+- [JSON:API client libraries](https://jsonapi.org/implementations/#client-libraries) are available in most languages
+
+### Example response
+
+```json
+{
+  "data": {
+    "id": "dabf9e1c-4ddc-4e4b-a701-2de1cdb38010",
+    "type": "shipment",
+    "attributes": {
+      "status": "in_transit",
+      "pod_eta": "2025-04-15T00:00:00Z",
+      "shipping_line_name": "Maersk"
+    }
+  }
+}
+```
+
+## Rate limits
+
+| Detail | Value |
+| --- | --- |
+| Limit | 100 requests per minute |
+| Scope | Per API key |
+| Window | Rolling 60 seconds |
+| Over-limit response | `429 Too Many Requests` |
+
+See the [rate limiting guide](/api-docs/in-depth-guides/rate-limiting) for retry strategies and best practices.
+
+<Tip>
+  Use [webhooks](/api-docs/in-depth-guides/webhooks) instead of polling to receive real-time updates. This keeps you well within rate limits and gives you faster data.
+</Tip>
+
+## Core resources
+
+<CardGroup cols={2}>
+  <Card title="Tracking Requests" icon="search" href="/api-docs/api-reference/tracking-requests/create-a-tracking-request">
+    Create and manage tracking requests by BOL, booking, or container number.
+  </Card>
+  <Card title="Shipments" icon="ship" href="/api-docs/api-reference/shipments/list-shipments">
+    Retrieve shipment details, ETAs, and milestones.
+  </Card>
+  <Card title="Containers" icon="warehouse" href="/api-docs/api-reference/containers/list-containers">
+    Container-level statuses, transport events, and map data.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/api-docs/api-reference/webhooks/list-webhooks">
+    Subscribe to real-time push notifications when shipment data changes.
+  </Card>
+</CardGroup>
+
+## Supporting resources
+
+<CardGroup cols={3}>
+  <Card title="Custom Fields" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+    Attach your own metadata to shipments and containers.
+  </Card>
+  <Card title="Shipping Lines" href="/api-docs/api-reference/shipping-lines/shipping-lines">
+    Look up supported carriers and SCACs.
+  </Card>
+  <Card title="Vessels" href="/api-docs/api-reference/vessels/get-a-vessel-using-the-id">
+    Vessel details and future position data.
+  </Card>
+  <Card title="Ports" href="/api-docs/api-reference/ports/get-a-port-using-the-locode-or-the-id">
+    Port lookups by UN/LOCODE.
+  </Card>
+  <Card title="Terminals" href="/api-docs/api-reference/terminals/get-a-terminal-using-the-id">
+    Terminal details at destination ports.
+  </Card>
+  <Card title="Parties" href="/api-docs/api-reference/parties/list-parties">
+    Manage customer and partner references.
+  </Card>
+</CardGroup>

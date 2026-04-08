@@ -9,28 +9,11 @@
   },
   "favicon": "/logos/favicon.svg",
   "navigation": {
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Contact",
-          "icon": "phone",
-          "href": "https://www.terminal49.com/contact/"
-        },
-        {
-          "anchor": "Schedule Demo",
-          "icon": "calendar-days",
-          "href": "https://www.terminal49.com/demo/"
-        },
-        {
-          "anchor": "Blog",
-          "icon": "newspaper",
-          "href": "https://www.terminal49.com/blog/"
-        }
-      ]
-    },
+    "global": {},
     "tabs": [
       {
-        "tab": "API Docs",
+        "tab": "Developer Guide",
+        "icon": "book",
         "groups": [
           {
             "group": " ",
@@ -79,6 +62,18 @@
               "api-docs/useful-info/test-numbers",
               "api-docs/useful-info/tracking-request-retrying",
               "api-docs/useful-info/webhook-events-examples"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "icon": "code",
+        "groups": [
+          {
+            "group": " ",
+            "pages": [
+              "api-docs/api-reference/introduction"
             ]
           },
           {
@@ -271,6 +266,7 @@
       },
       {
         "tab": "SDK Docs",
+        "icon": "rectangle-terminal",
         "groups": [
           {
             "group": "Getting Started",
@@ -291,6 +287,7 @@
       },
       {
         "tab": "MCP",
+        "icon": "plug",
         "groups": [
           {
             "group": "MCP",
@@ -303,6 +300,7 @@
       },
       {
         "tab": "DataSync",
+        "icon": "database",
         "groups": [
           {
             "group": " ",
@@ -333,6 +331,7 @@
       },
       {
         "tab": "Changelog",
+        "icon": "clock-rotate-left",
         "groups": [
           {
             "group": "Updates",
@@ -356,21 +355,53 @@
   "navbar": {
     "links": [
       {
-        "label": "Start your free trial",
-        "href": "https://app.terminal49.com/register"
+        "label": "Talk To Us",
+        "href": "https://www.terminal49.com/demo/"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Sign in",
-      "href": "https://app.terminal49.com/"
+      "label": "Get Started",
+      "href": "https://app.terminal49.com/register"
     }
   },
   "footer": {
     "socials": {
       "twitter": "https://twitter.com/terminal49",
       "linkedin": "https://www.linkedin.com/company/terminal49/"
-    }
+    },
+    "links": [
+      {
+        "header": "Resources",
+        "items": [
+          {
+            "label": "Blog",
+            "href": "https://www.terminal49.com/blog/"
+          },
+          {
+            "label": "Contact",
+            "href": "https://www.terminal49.com/contact/"
+          },
+          {
+            "label": "Book a Demo",
+            "href": "https://www.terminal49.com/demo/"
+          }
+        ]
+      },
+      {
+        "header": "Product",
+        "items": [
+          {
+            "label": "Sign in",
+            "href": "https://app.terminal49.com/"
+          },
+          {
+            "label": "Start Free Trial",
+            "href": "https://app.terminal49.com/register"
+          }
+        ]
+      }
+    ]
   },
   "redirects": [
     {
