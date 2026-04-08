@@ -1,7 +1,16 @@
 ---
-title: Tracking Request Lifecycle
+title: "Tracking Request Lifecycle"
+description: "Learn how Terminal49 retries tracking requests, handles awaiting_manifest cases, and marks failed requests."
+keywords:
+  - "Terminal49 API"
+  - "container tracking API"
+  - "shipment visibility"
+  - "developer guide"
+  - "tracking request lifecycle"
+  - "awaiting_manifest"
+  - "retry logic"
+  - "failed tracking request"
 ---
-
 When you submit a tracking request your request is added to our queue to being checked at the shipping line. So what happens if the request doesn't go through correctly?
 
 If we are having difficulty connecting to the shipping line, or if we are unable to parse the response from the shipping line, we will keep retrying up to 14 times.
