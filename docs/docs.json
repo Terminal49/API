@@ -3,9 +3,9 @@
   "theme": "aspen",
   "name": "Terminal49",
   "colors": {
-    "primary": "#00A2FF",
-    "light": "#52bfff",
-    "dark": "#00A2FF"
+    "primary": "#1A9E52",
+    "light": "#1A9E52",
+    "dark": "#2ACD6C"
   },
   "favicon": "/logos/favicon.svg",
   "navigation": {
@@ -345,7 +345,10 @@
       }
     ]
   },
-  "logo": "/logos/light.svg",
+  "logo": {
+    "light": "/logos/light.svg",
+    "dark": "/logos/dark.svg"
+  },
   "appearance": {
     "default": "light",
     "strict": false
