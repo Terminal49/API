@@ -1,0 +1,127 @@
+export const ProductTiles = ({ categories, hideButtons = false }) => {
+  const [activeCategory, setActiveCategory] = useState(categories[0].id)
+  const [activeSubTab, setActiveSubTab] = useState(
+    categories[0].items[0]?.id ?? null
+  )
+
+  const currentCategory = categories.find((cat) => cat.id === activeCategory)
+  const currentSub = currentCategory?.items.find(
+    (item) => item.id === activeSubTab
+  )
+
+  return (
+    <div className="not-prose space-y-6">
+      {!hideButtons && (
+        <div className="flex flex-wrap gap-2">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => {
+                setActiveCategory(cat.id)
+                setActiveSubTab(cat.items[0]?.id ?? null)
+              }}
+              className={`px-4 py-2 text-sm rounded-full font-medium transition-colors ${
+                activeCategory === cat.id
+                  ? 'bg-[#0A0B0D] text-white dark:bg-white dark:text-[#0A0B0D]'
+                  : 'bg-gray-100 dark:bg-white/10 text-black dark:text-white'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div>
+        {currentCategory?.items?.length ? (
+          <div className="flex flex-col lg:flex-row gap-6 bg-gray-50 dark:bg-[#141414] rounded-2xl">
+            <div className="flex flex-col w-full lg:w-1/2 space-y-1 p-4">
+              {currentCategory.items.map((item) => (
+                <a
+                  key={item.id}
+                  href={item.href}
+                  onMouseOver={() => setActiveSubTab(item.id)}
+                  className={`flex items-start gap-3 text-left px-5 py-4 rounded-2xl transition-all no-underline ${
+                    activeSubTab === item.id
+                      ? 'bg-white dark:bg-white/5 shadow-sm'
+                      : 'hover:bg-white/50 dark:hover:bg-white/[0.02]'
+                  }`}
+                >
+                  <div className="mt-0.5 min-w-[28px] flex items-center justify-center">
+                    <Icon icon={item.icon} size={18} className={activeSubTab === item.id ? 'text-primary' : 'text-gray-400 dark:text-gray-500'} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-[15px] text-black dark:text-white m-0">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 m-0 mt-1 leading-snug">
+                      {item.desc}
+                    </p>
+                  </div>
+                  <div
+                    className={`flex items-center justify-center min-w-[20px] self-center transition-opacity ${
+                      activeSubTab === item.id ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  >
+                    <div className="hidden dark:block">
+                      <Icon icon="chevron-right" size="12" color="#FFF" />
+                    </div>
+                    <div className="block dark:hidden">
+                      <Icon icon="chevron-right" size="12" color="#0A0B0D" />
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+            <div className="w-full lg:w-1/2 rounded-2xl flex items-stretch overflow-hidden min-h-[380px] p-4 pl-0">
+              {currentSub && (
+                <div className="w-full bg-white dark:bg-white/5 rounded-xl p-8 flex flex-col">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                      <Icon icon={currentSub.icon} size={22} className="text-primary dark:text-primary-light" />
+                    </div>
+                    <span className="text-sm font-semibold tracking-wide uppercase text-primary dark:text-primary-light">
+                      {currentSub.detailLabel}
+                    </span>
+                  </div>
+                  {currentSub.detailPoints && (
+                    <ul className="space-y-4 mb-5 flex-1">
+                      {currentSub.detailPoints.map((point, i) => (
+                        <li key={i} className="flex items-start gap-3 text-[15px] text-gray-700 dark:text-gray-300 leading-relaxed">
+                          <div className="mt-1 min-w-[18px]">
+                            <Icon icon="check" size={13} className="text-primary dark:text-primary-light" />
+                          </div>
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {currentSub.events && (
+                    <div className="pt-4 border-t border-gray-100 dark:border-white/10">
+                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 m-0">Events</p>
+                      <div className="flex flex-wrap gap-2">
+                        {currentSub.events.map((evt, i) => (
+                          <code key={i} className="text-xs bg-gray-50 dark:bg-white/10 border border-gray-200 dark:border-white/10 px-2.5 py-1 rounded-md text-gray-700 dark:text-gray-300 font-mono">{evt}</code>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-auto pt-5">
+                    <a href={currentSub.href} className="inline-flex items-center gap-2 text-[15px] font-semibold text-primary dark:text-primary-light hover:underline no-underline">
+                      Learn more
+                      <Icon icon="arrow-right" size={13} />
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            No features available for this category.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}

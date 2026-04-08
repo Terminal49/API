@@ -1,0 +1,70 @@
+---
+title: "Why Webhooks"
+sidebarTitle: "Overview"
+description: "Terminal49 is event-driven. Use webhooks to receive real-time tracking updates instead of polling the API."
+keywords:
+  - "Terminal49 API"
+  - "webhooks"
+  - "event-driven"
+  - "real-time tracking"
+  - "container tracking"
+  - "shipment updates"
+---
+
+Terminal49 tracking is fully event-driven. When a carrier reports a status change, Terminal49 processes it and pushes a webhook notification to your system within minutes. You never need to poll.
+
+## How it works
+
+```mermaid
+sequenceDiagram
+    participant Carrier
+    participant Terminal49
+    participant Your System
+
+    Carrier->>Terminal49: Reports status change
+    Terminal49->>Terminal49: Processes and normalizes data
+    Terminal49->>Your System: Sends webhook notification
+    Your System->>Terminal49: Returns 2xx response
+```
+
+1. You [create a tracking request](/api-docs/getting-started/tracking-shipments-and-containers) with a Bill of Lading (BOL) or container number.
+2. Terminal49 monitors the carrier and destination terminal for changes.
+3. When something changes — an ETA update, a milestone event, a container hold — Terminal49 sends a `POST` request to your webhook URL with the full event payload.
+4. Your system processes the event and returns a `2xx` status code.
+
+## Why webhooks instead of polling
+
+| | Webhooks | Polling |
+|---|---|---|
+| **Latency** | Minutes after carrier reports | Depends on your poll interval |
+| **Efficiency** | Only fires when data changes | Most requests return unchanged data |
+| **Rate limits** | No API calls consumed | Each poll consumes a request |
+| **Complexity** | Handle incoming POST requests | Build and maintain a polling loop |
+| **Recommended** | Yes | Only for on-demand data retrieval |
+
+Terminal49 exposes over 30 distinct events covering the full container lifecycle — from empty-out at origin to empty-return at destination. Webhooks let you react to each of these in real time.
+
+<Warning>
+Polling the API to check for updates is discouraged. It consumes your rate limit, adds latency, and misses the event context that webhooks provide (such as which specific field changed on a `container.updated` event). Use the [List](/api-docs/api-reference/shipments/list-shipments) and [Get](/api-docs/api-reference/shipments/get-a-shipment) endpoints for on-demand lookups, not status monitoring.
+</Warning>
+
+## What you can do with webhooks
+
+Webhooks power most Terminal49 integrations. Common patterns include:
+
+- **[ETA monitoring](/api-docs/webhooks/use-cases/eta-monitoring)** — alert your team when a shipment's arrival estimate changes
+- **[LFD and availability alerts](/api-docs/webhooks/use-cases/lfd-alerts)** — trigger dispatch when a container clears holds and is ready for pickup
+- **[Milestone tracking](/api-docs/webhooks/use-cases/milestone-tracking)** — build a complete timeline of a container's journey from origin to destination
+- **Data sync** — push every update into your database, ERP, or TMS as it happens
+- **Customer notifications** — surface tracking updates to your end customers in real time
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Set up webhooks" icon="gear" href="/api-docs/in-depth-guides/webhooks">
+    Create your first webhook and subscribe to events.
+  </Card>
+  <Card title="Event catalog" icon="list" href="/api-docs/webhooks/event-catalog">
+    Browse all available webhook events by category.
+  </Card>
+</CardGroup>

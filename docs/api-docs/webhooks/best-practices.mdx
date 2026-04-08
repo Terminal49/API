@@ -1,0 +1,130 @@
+---
+title: "Webhook Best Practices"
+sidebarTitle: "Best Practices"
+description: "Handle retries, ensure idempotency, and build reliable webhook consumers for the Terminal49 API."
+keywords:
+  - "Terminal49 API"
+  - "webhooks"
+  - "best practices"
+  - "retry handling"
+  - "idempotency"
+  - "webhook security"
+  - "webhook reliability"
+---
+
+Webhooks are the primary way to receive tracking updates from Terminal49. Follow these practices to build a consumer that handles every edge case reliably.
+
+## Respond quickly with a 2xx
+
+Terminal49 expects your endpoint to return one of these status codes: `200`, `201`, `202`, or `204`. Return the response **before** doing any heavy processing.
+
+```javascript
+app.post("/webhooks/terminal49", (req, res) => {
+  // Acknowledge immediately
+  res.sendStatus(200);
+
+  // Process asynchronously
+  processWebhookAsync(req.body).catch(console.error);
+});
+```
+
+Any other response — including a timeout — triggers retries. If your endpoint consistently fails, Terminal49 will retry up to a dozen times before marking the notification as failed.
+
+## Handle retries and duplicate deliveries
+
+Terminal49 retries failed deliveries, which means your endpoint may receive the same notification more than once. Design your consumer to be **idempotent**.
+
+Every webhook notification has a unique `id` in `data.id`. Use it to deduplicate:
+
+```javascript
+async function processWebhook(payload) {
+  const notificationId = payload.data.id;
+
+  // Check if already processed
+  const alreadyProcessed = await db.webhookLog.findOne({
+    where: { notificationId },
+  });
+  if (alreadyProcessed) {
+    return; // Skip duplicate
+  }
+
+  // Process the event
+  await handleEvent(payload);
+
+  // Record that we processed it
+  await db.webhookLog.create({ notificationId, processedAt: new Date() });
+}
+```
+
+<Tip>
+If you use a message queue (SQS, RabbitMQ, etc.), enqueue the raw payload immediately and return `200`. Your queue consumer can handle deduplication and processing at its own pace.
+</Tip>
+
+## Verify the webhook source
+
+Terminal49 publishes the IP addresses that webhook notifications originate from. Use the [List Webhook IPs](/api-docs/api-reference/webhooks/list-webhook-ips) endpoint to fetch the current list and validate incoming requests:
+
+```javascript
+const ALLOWED_IPS = await fetchTerminal49WebhookIPs();
+
+app.post("/webhooks/terminal49", (req, res) => {
+  const sourceIp = req.ip;
+  if (!ALLOWED_IPS.includes(sourceIp)) {
+    return res.sendStatus(403);
+  }
+
+  // Process the webhook
+  res.sendStatus(200);
+});
+```
+
+<Info>
+Cache the IP list and refresh it periodically (e.g., daily). The list rarely changes, but checking the endpoint ensures you stay current.
+</Info>
+
+## Monitor delivery status
+
+Use the [Webhook Notifications API](/api-docs/api-reference/webhook-notifications/list-webhook-notifications) to check delivery status and catch any notifications your endpoint may have missed:
+
+```bash
+curl -s "https://api.terminal49.com/v2/webhook_notifications?filter[delivery_status]=failed" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json"
+```
+
+Review failed notifications regularly to identify issues with your endpoint before they cause data gaps.
+
+## Handle downtime gracefully
+
+If your endpoint goes down, Terminal49 retries failed deliveries. When your endpoint recovers:
+
+1. Check the [Webhook Notifications API](/api-docs/api-reference/webhook-notifications/list-webhook-notifications) for any notifications with `delivery_status: failed`.
+2. Use the [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint to replay specific notifications.
+3. For longer outages, list recent shipments via the API to catch up on any missed state changes.
+
+## Keep your webhook active
+
+Terminal49 may deactivate a webhook after repeated delivery failures. Check your webhook's `active` status periodically:
+
+```bash
+curl -s "https://api.terminal49.com/v2/webhooks" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json"
+```
+
+If your webhook has been deactivated, fix the endpoint issue and [update the webhook](/api-docs/api-reference/webhooks/edit-a-webhook) to set `active: true`.
+
+## Summary checklist
+
+- [ ] Return `2xx` immediately, process asynchronously
+- [ ] Deduplicate using the notification `id`
+- [ ] Validate the source IP against the webhook IPs list
+- [ ] Monitor for failed notifications and replay as needed
+- [ ] Subscribe only to the events you need
+- [ ] Log raw payloads for debugging
+
+## Related
+
+- [Setting up webhooks](/api-docs/in-depth-guides/webhooks) — create and configure endpoints
+- [Event catalog](/api-docs/webhooks/event-catalog) — all available events
+- [Webhook API Reference](/api-docs/api-reference/webhooks/create-a-webhook) — CRUD operations for webhooks

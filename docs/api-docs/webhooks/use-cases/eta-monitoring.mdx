@@ -1,0 +1,92 @@
+---
+title: "Monitor ETA Changes with Webhooks"
+sidebarTitle: "ETA Monitoring"
+description: "Subscribe to ETA change events and alert your team when a shipment's estimated arrival shifts."
+keywords:
+  - "Terminal49 API"
+  - "webhooks"
+  - "ETA monitoring"
+  - "estimated arrival"
+  - "shipment visibility"
+  - "arrival alerts"
+---
+
+Carriers frequently revise arrival estimates as vessels encounter weather, port congestion, or schedule changes. The `shipment.estimated.arrival` event fires every time Terminal49 detects an ETA change so you can react immediately.
+
+## Events to subscribe to
+
+| Event | When it fires |
+|-------|---------------|
+| `shipment.estimated.arrival` | ETA changes for the port of discharge |
+| `container.transport.estimated.arrived_at_inland_destination` | ETA changes for the inland destination (rail moves) |
+
+## What the payload includes
+
+When a `shipment.estimated.arrival` event fires, the `included` array contains:
+
+- An `estimated_event` object with the new `estimated_timestamp`
+- The full `shipment` object with updated `pod_eta_at` and related fields
+- The `tracking_request` object so you can match it to your internal reference
+
+## Handle the webhook
+
+Parse the incoming notification, extract the new ETA, and compare it to your stored value:
+
+```javascript
+app.post("/webhooks/terminal49", (req, res) => {
+  const { data, included } = req.body;
+
+  if (data.attributes.event !== "shipment.estimated.arrival") {
+    return res.sendStatus(200);
+  }
+
+  const shipment = included.find((obj) => obj.type === "shipment");
+  const trackingRequest = included.find((obj) => obj.type === "tracking_request");
+  const estimatedEvent = included.find((obj) => obj.type === "estimated_event");
+
+  const newEta = estimatedEvent.attributes.estimated_timestamp;
+  const bolNumber = shipment.attributes.bill_of_lading_number;
+  const portOfDischarge = shipment.attributes.port_of_discharge_name;
+
+  // Compare against your stored ETA
+  const previousEta = await getStoredEta(bolNumber);
+  const changeInHours = Math.abs(
+    (new Date(newEta) - new Date(previousEta)) / (1000 * 60 * 60)
+  );
+
+  if (changeInHours > 12) {
+    await notifyTeam({
+      message: `ETA for ${bolNumber} at ${portOfDischarge} shifted by ${Math.round(changeInHours)} hours`,
+      newEta,
+      previousEta,
+    });
+  }
+
+  await updateStoredEta(bolNumber, newEta);
+
+  res.sendStatus(200);
+});
+```
+
+<Tip>
+ETA events can fire multiple times per day as carriers update their schedules. Filter for significant changes (e.g., more than 12 hours) to avoid alert fatigue.
+</Tip>
+
+## Inland destination ETAs
+
+For shipments with an inland rail move, subscribe to `container.transport.estimated.arrived_at_inland_destination` as well. This event fires when the estimated arrival at the rail ramp or inland depot changes.
+
+The payload structure is the same — look for the `estimated_event` object in `included` and read the `estimated_timestamp` field.
+
+## Common patterns
+
+- **Threshold alerts** — only notify when the ETA shifts by more than N hours
+- **Direction tracking** — distinguish delays (ETA moved later) from early arrivals (ETA moved earlier)
+- **Customer notifications** — forward ETA changes to your customers with a human-readable message
+- **Planning updates** — adjust warehouse receiving schedules or drayage bookings automatically
+
+## Related
+
+- [Event catalog](/api-docs/webhooks/event-catalog) — full list of available events
+- [Payload examples](/api-docs/useful-info/webhook-events-examples) — complete JSON payloads
+- [Event timestamps](/api-docs/in-depth-guides/event-timestamps) — how Terminal49 stores and returns timestamps in UTC

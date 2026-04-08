@@ -33,37 +33,60 @@
             ]
           },
           {
-            "group": "In Depth Guides",
-            "icon": "book-open",
+            "group": "Tracking Fundamentals",
+            "icon": "compass",
             "pages": [
-              "api-docs/in-depth-guides/quickstart",
-              "api-docs/in-depth-guides/rate-limiting",
-              "api-docs/in-depth-guides/webhooks",
-              "api-docs/in-depth-guides/direct-upload-documents",
-              "api-docs/in-depth-guides/document-processing-workflows",
-              "api-docs/in-depth-guides/including-resources",
-              "api-docs/in-depth-guides/adding-customer",
               "api-docs/in-depth-guides/tracking-request-lifecycle",
-              "api-docs/in-depth-guides/auto-detect-carrier",
               "api-docs/in-depth-guides/container-statuses",
-              "api-docs/in-depth-guides/holds-and-fees",
               "api-docs/in-depth-guides/event-timestamps",
-              "api-docs/in-depth-guides/terminal49-map",
-              "api-docs/in-depth-guides/terminal49-widget",
-              "api-docs/in-depth-guides/rail-integration-guide",
-              "api-docs/in-depth-guides/routing",
-              "api-docs/in-depth-guides/dashboard-deep-linking"
+              "api-docs/in-depth-guides/holds-and-fees",
+              "api-docs/in-depth-guides/auto-detect-carrier",
+              "api-docs/in-depth-guides/adding-customer"
             ]
           },
           {
-            "group": "Useful Info",
-            "icon": "info",
+            "group": "Webhooks & Events",
+            "icon": "webhook",
             "pages": [
+              "api-docs/webhooks/overview",
+              "api-docs/in-depth-guides/webhooks",
+              "api-docs/webhooks/event-catalog",
+              {
+                "group": "Use Cases",
+                "pages": [
+                  "api-docs/webhooks/use-cases/eta-monitoring",
+                  "api-docs/webhooks/use-cases/lfd-alerts",
+                  "api-docs/webhooks/use-cases/milestone-tracking"
+                ]
+              },
+              "api-docs/useful-info/webhook-events-examples",
+              "api-docs/webhooks/best-practices"
+            ]
+          },
+          {
+            "group": "Integrations & Embeds",
+            "icon": "puzzle-piece",
+            "pages": [
+              "api-docs/in-depth-guides/rail-integration-guide",
+              "api-docs/in-depth-guides/routing",
+              "api-docs/in-depth-guides/terminal49-map",
+              "api-docs/in-depth-guides/terminal49-widget",
+              "api-docs/in-depth-guides/dashboard-deep-linking",
+              "api-docs/in-depth-guides/document-processing-workflows",
+              "api-docs/in-depth-guides/direct-upload-documents"
+            ]
+          },
+          {
+            "group": "Platform & Reference",
+            "icon": "book-open",
+            "pages": [
+              "api-docs/in-depth-guides/rate-limiting",
+              "api-docs/in-depth-guides/including-resources",
+              "api-docs/in-depth-guides/quickstart",
               "api-docs/useful-info/api-data-sources-availability",
               "api-docs/useful-info/pricing",
               "api-docs/useful-info/test-numbers",
-              "api-docs/useful-info/tracking-request-retrying",
-              "api-docs/useful-info/webhook-events-examples"
+              "api-docs/useful-info/tracking-request-retrying"
             ]
           }
         ]
@@ -417,6 +440,10 @@
     {
       "source": "/api-docs/api-reference/tracking-requests/infer-number",
       "destination": "/api-docs/api-reference/tracking-requests/auto-detect-carrier"
+    },
+    {
+      "source": "/api-docs/getting-started/sdk-quickstart",
+      "destination": "/sdk/quickstart"
     }
   ],
   "contextual": {

@@ -1,0 +1,113 @@
+---
+title: "Webhook Event Catalog"
+sidebarTitle: "Event Catalog"
+description: "Browse all Terminal49 webhook events by category — tracking requests, transport milestones, container updates, and ETA changes."
+keywords:
+  - "Terminal49 API"
+  - "webhook events"
+  - "event catalog"
+  - "container events"
+  - "shipment events"
+  - "transport events"
+  - "tracking request events"
+---
+
+Terminal49 sends webhook notifications for over 30 events across the container lifecycle. Each event represents a specific change to a tracking request, shipment, or container.
+
+Subscribe to individual events when [creating a webhook](/api-docs/in-depth-guides/webhooks), or subscribe to all events and filter in your handler.
+
+## Tracking request events
+
+These events fire when a tracking request changes status.
+
+| Event | Description |
+|-------|-------------|
+| `tracking_request.succeeded` | Shipment created and linked to the tracking request. Your tracking is active. |
+| `tracking_request.failed` | The tracking request failed. The carrier could not find the shipment. |
+| `tracking_request.awaiting_manifest` | The carrier has not yet manifested this shipment. Terminal49 will retry automatically. |
+| `tracking_request.tracking_stopped` | Terminal49 is no longer updating this tracking request (shipment delivered or manually stopped). |
+
+## Transport milestone events
+
+These events map to physical milestones in a container's journey. They fire in roughly chronological order as a container moves from origin to destination.
+
+### Origin
+
+| Event | Description |
+|-------|-------------|
+| `container.transport.empty_out` | Empty container picked up at port of lading. |
+| `container.transport.full_in` | Full container returned to port of lading. |
+| `container.transport.vessel_loaded` | Container loaded onto the vessel at port of lading. |
+| `container.transport.vessel_departed` | Vessel departed the port of lading. |
+
+### Transshipment
+
+| Event | Description |
+|-------|-------------|
+| `container.transport.transshipment_arrived` | Container arrived at a transshipment port. |
+| `container.transport.transshipment_discharged` | Container discharged at the transshipment port. |
+| `container.transport.transshipment_loaded` | Container loaded onto a new vessel at the transshipment port. |
+| `container.transport.transshipment_departed` | Vessel departed the transshipment port. |
+
+### Feeder vessel
+
+| Event | Description |
+|-------|-------------|
+| `container.transport.feeder_arrived` | Container arrived on a feeder vessel or barge. |
+| `container.transport.feeder_discharged` | Container discharged from the feeder vessel or barge. |
+| `container.transport.feeder_loaded` | Container loaded onto a feeder vessel or barge. |
+| `container.transport.feeder_departed` | Feeder vessel or barge departed. |
+
+### Destination
+
+| Event | Description |
+|-------|-------------|
+| `container.transport.vessel_arrived` | Vessel arrived at the port of discharge. |
+| `container.transport.vessel_berthed` | Vessel berthed at the port of discharge. |
+| `container.transport.vessel_discharged` | Container discharged from the vessel at the port of discharge. |
+| `container.transport.available` | Container is available for pickup at the destination. |
+| `container.transport.full_out` | Container picked up (gated out) at the port of discharge. |
+| `container.transport.empty_in` | Empty container returned at the destination. |
+
+### Rail (inland moves)
+
+| Event | Description |
+|-------|-------------|
+| `container.transport.rail_loaded` | Container loaded onto a rail car. |
+| `container.transport.rail_departed` | Rail car departed. |
+| `container.transport.rail_arrived` | Rail car arrived at the inland destination. |
+| `container.transport.rail_unloaded` | Container unloaded from the rail car. |
+| `container.transport.arrived_at_inland_destination` | Container arrived at the final inland destination. |
+
+## ETA and estimate events
+
+These events fire when an estimated arrival time changes.
+
+| Event | Description |
+|-------|-------------|
+| `shipment.estimated.arrival` | ETA changed for the port of discharge. |
+| `container.transport.estimated.arrived_at_inland_destination` | ETA changed for the inland destination. |
+
+## Container update events
+
+These events fire when container attributes change.
+
+| Event | Description |
+|-------|-------------|
+| `container.created` | A new container was added to a shipment. Common for bookings where containers are assigned after sailing. |
+| `container.updated` | One or more container attributes changed (weight, seal number, equipment type, etc.). The payload includes the updated fields. |
+| `container.pod_terminal_changed` | The port of discharge terminal assignment changed for the container. |
+| `container.pickup_lfd.changed` | The terminal Last Free Day (LFD) changed. |
+| `container.pickup_lfd_line.changed` | The shipping line Last Free Day (LFD) changed. |
+
+## Payload structure
+
+Every webhook notification follows the same structure: a `data` object containing the event metadata, and an `included` array with the related shipment, container, and event objects.
+
+See [Payload Examples](/api-docs/useful-info/webhook-events-examples) for complete JSON payloads for each event type.
+
+## Related
+
+- [Setting up webhooks](/api-docs/in-depth-guides/webhooks) — create and configure webhook endpoints
+- [Best practices](/api-docs/webhooks/best-practices) — retry handling, idempotency, and reliability
+- [Webhook API Reference](/api-docs/api-reference/webhooks/create-a-webhook) — programmatic webhook management

@@ -2,6 +2,7 @@
 title: "Terminal49 Developer Documentation"
 sidebarTitle: "Home"
 description: "Developer docs for the Terminal49 container tracking API, DataSync, TypeScript SDK, and MCP server."
+mode: "frame"
 keywords:
   - "Terminal49"
   - "container tracking API"
@@ -10,41 +11,71 @@ keywords:
   - "DataSync"
   - "MCP server"
 ---
-We offer two fantastic ways to track your shipments from origin to destination.
 
-    1. [Terminal49 DataSync](/datasync/overview). Get tables full of fresh information delivered into your current data system. Easy to set up, and perfect for complementing your current data.
-    2. [Terminal49 API](/api-docs/getting-started/start-here). Connect directly with the API, pull data for specific shipments and containers, and get updates via webhooks.
+import { Container, Title } from '/snippets/home/utility.mdx';
+import { ProductTiles } from '/snippets/home/product-tiles.mdx';
+import { appCategories } from '/snippets/home/data.mdx';
 
-If you already have a data store that feeds the rest of your system, DataSync is probably what you want.
+<div className="px-5 divide-y divide-gray-100 dark:divide-white/10">
+  <Container>
+    <div className="w-full flex flex-col">
+      <div className="flex flex-col items-start justify-center w-full max-w-4xl text-left">
+        <div className="text-gray-900 dark:text-gray-200 text-4xl tracking-tight">
+          Terminal49 Developer Docs
+        </div>
+        <p className="text-md text-gray-600 dark:text-gray-400 text-left mt-3 mb-4">
+          Automated container tracking from empty-out at origin to empty-return at destination. 100+ integrations covering over 98% of global container volume.
+        </p>
+        <div className="flex flex-row gap-4 mt-5">
+          <a href="/api-docs/getting-started/start-here">
+            <button
+              type="button"
+              className="px-5 flex items-center font-medium text-sm rounded-full py-2 shadow-sm text-white dark:text-gray-900 bg-primary-dark dark:bg-primary-light hover:opacity-[0.9] hover:bg-primary justify-center"
+            >
+              Get started
+              <svg
+                className="size-3 ml-2 bg-white dark:bg-gray-900"
+                style={{
+                  maskImage: 'url("https://mintlify.b-cdn.net/solid/arrow-right-long.svg")',
+                  maskRepeat: 'no-repeat',
+                  maskPosition: 'center center'
+                }}
+              />
+            </button>
+          </a>
+        </div>
+      </div>
+    </div>
+  </Container>
 
-## What can I use Terminal49 data for?
+  <Container>
+    <div className="flex flex-col w-full mb-8">
+      <Title>
+        Build with Terminal49
+      </Title>
+      <p className="text-[#5B616E] dark:text-gray-300 text-md mb-1 mt-3">
+        Track shipments by Bill of Lading, container number, or booking. Integrate data from ocean carriers, rail terminals, port terminals, and vessel positions into a single stream.
+      </p>
+    </div>
+    <ProductTiles categories={appCategories} />
+  </Container>
 
-Here are just a few of the data points we return and possible use-cases.
-
-| DATA                                   | EXAMPLE USE CASE                                                         |
-| -------------------------------------- | ------------------------------------------------------------------------ |
-| Destination ETA                        | Surface ETA changes to your relevant teams as they're reported           |
-| Last Free Day and terminal status¹     | Track containers approaching LFD and prioritize dispatching              |
-| Fees and holds at destination terminal | Clear your cargo to keep you containers moving                           |
-| Actual departure and arrival times     | Report journey times by route to compare your ocean carriers performance |
-
-_1. At container ports in the US_
-
-## How it works
-
-All you need to provide are your BOL numbers and SCACs. Terminal 49 will lookup the shipment with the carrier and populate shipment details including containers.
-
-<Tip>
-  **Don't know your SCAC?** Our [Auto-Detect
-  Carrier](/api-docs/in-depth-guides/auto-detect-carrier) API can identify it
-  automatically from your tracking number.
-</Tip>
-
-Once the shipment is set up, Terminal 49 periodically checks with the carrier and the destination terminal.
-
-If any of the details of your shipment or containers change (for example - if the ETA changes) we'll ensure you're always kept up to date.
-
-    - If you're using DataSync, we'll update the data in your system
-    - If you're using the API, we'll post the shipment to the the webhook you provide
-
-👈🏽 Please click API Docs or Data Sync on the left to get started!
+  <Container>
+    <div className="flex flex-col w-full mb-5">
+      <Title>
+        Resources
+      </Title>
+    </div>
+    <Columns cols={3}>
+      <Card title="Changelog" icon="clock-rotate-left" href="/updates/home">
+        Latest API and DataSync updates and release notes.
+      </Card>
+      <Card title="Test Numbers" icon="flask-vial" href="/api-docs/useful-info/test-numbers">
+        Sample tracking numbers for testing your integration.
+      </Card>
+      <Card title="Pricing" icon="tag" href="/api-docs/useful-info/pricing">
+        API pricing, rate limits, and plan details.
+      </Card>
+    </Columns>
+  </Container>
+</div>

@@ -1,0 +1,90 @@
+---
+title: "Alert on LFD Changes and Container Availability"
+sidebarTitle: "LFD & Availability Alerts"
+description: "Use webhooks to monitor Last Free Day changes and container availability so you can dispatch pickups before demurrage charges begin."
+keywords:
+  - "Terminal49 API"
+  - "webhooks"
+  - "last free day"
+  - "LFD"
+  - "container availability"
+  - "demurrage"
+  - "pickup readiness"
+---
+
+Last Free Day (LFD) is the deadline to pick up a container before demurrage charges start. Terminals and shipping lines can change the LFD at any time. Terminal49 sends webhook events whenever the LFD changes or a container becomes available for pickup so you can act before costs accrue.
+
+## Events to subscribe to
+
+| Event | When it fires |
+|-------|---------------|
+| `container.pickup_lfd.changed` | The terminal's Last Free Day changed |
+| `container.pickup_lfd_line.changed` | The shipping line's Last Free Day changed |
+| `container.transport.available` | The container is available for pickup at the destination |
+| `container.updated` | Container attributes changed (may include holds or availability updates) |
+
+## Handle LFD change events
+
+When a `container.pickup_lfd.changed` event fires, the `included` array contains the full container object with the updated `pickup_lfd` field:
+
+```javascript
+app.post("/webhooks/terminal49", (req, res) => {
+  const { data, included } = req.body;
+  const event = data.attributes.event;
+
+  if (event === "container.pickup_lfd.changed") {
+    const container = included.find((obj) => obj.type === "container");
+    const shipment = included.find((obj) => obj.type === "shipment");
+
+    const containerNumber = container.attributes.number;
+    const newLfd = container.attributes.pickup_lfd;
+    const bolNumber = shipment.attributes.bill_of_lading_number;
+
+    const daysUntilLfd = Math.ceil(
+      (new Date(newLfd) - new Date()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (daysUntilLfd <= 2) {
+      await alertDispatch({
+        priority: "urgent",
+        message: `Container ${containerNumber} (${bolNumber}) — LFD is ${newLfd}, ${daysUntilLfd} days away`,
+      });
+    }
+  }
+
+  res.sendStatus(200);
+});
+```
+
+## Determine pickup readiness
+
+A container is ready for pickup when `available_for_pickup` is `true` **and** there are no active holds. Combine the `container.transport.available` event with hold checking:
+
+```javascript
+function isReadyForPickup(container) {
+  const { available_for_pickup, holds_at_pod_terminal } = container.attributes;
+  const hasActiveHolds = holds_at_pod_terminal?.some(
+    (h) => h.status === "hold"
+  );
+  return available_for_pickup === true && !hasActiveHolds;
+}
+```
+
+For a deeper explanation of holds, fees, and the `available_for_pickup` field, see [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
+
+<Tip>
+Subscribe to both `container.transport.available` and `container.updated` events. The `available` event fires when the terminal first marks the container as released, but subsequent hold changes arrive as `container.updated` events.
+</Tip>
+
+## Common patterns
+
+- **Demurrage prevention** — alert when LFD is within 48 hours and the container has not been dispatched
+- **Automated dispatch** — trigger a drayage order as soon as the container clears holds
+- **LFD comparison** — track both terminal and shipping line LFDs; the earlier date is the one that matters
+- **Hold monitoring** — watch for `container.updated` events where `holds_at_pod_terminal` changes
+
+## Related
+
+- [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees) — full guide to hold and fee fields
+- [Event catalog](/api-docs/webhooks/event-catalog) — all available events
+- [Payload examples](/api-docs/useful-info/webhook-events-examples) — complete JSON payloads
