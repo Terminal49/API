@@ -1,10 +1,16 @@
 ---
-title: Container Holds, Fees, and Release Readiness
-description: Determine when an import container is released for pickup by reading holds, fees, and availability data.
-og:title: Container Holds, Fees, and Release Readiness | Terminal49 API Documentation
-og:description: Learn how to determine when a container is released for pickup by reading holds, fees, and availability data from the Terminal49 API.
+title: "Container Holds, Fees, and Release Readiness"
+description: "Determine when an import container is released for pickup by reading holds, fees, and availability data."
+keywords:
+  - "Terminal49 API"
+  - "container tracking API"
+  - "shipment visibility"
+  - "developer guide"
+  - "container holds"
+  - "container fees"
+  - "last free day"
+  - "pickup readiness"
 ---
-
 After a container is discharged at the Port of Discharge (POD), the terminal and government agencies may place holds or assess fees before the container can be picked up. For shipments with inland rail moves, holds and fees can also apply at the inland destination. Your integration needs to monitor these fields to determine when a container is actually released and ready for pickup.
 
 Terminal49 normalizes hold and fee data across 150+ terminal sources into two structured arrays on the container object: `holds_at_pod_terminal` and `fees_at_pod_terminal`. This guide shows you how to use them.

@@ -1,0 +1,7 @@
+[agents]
+# Keep broad docs sweeps parallel, but avoid recursive fan-out.
+max_threads = 6
+max_depth = 1
+
+# Long enough for larger content batches without leaving workers open indefinitely.
+job_max_runtime_seconds = 1200

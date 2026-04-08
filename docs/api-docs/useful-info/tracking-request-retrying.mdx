@@ -1,9 +1,15 @@
 ---
-title: Tracking Request Retrying
-og:title: Tracking Request Retrying | Terminal49 API Documentation
-og:description: Retry tracking requests through Terminal49's API for uninterrupted shipment monitoring.
+title: "Tracking Request Retry Behavior"
+description: "See how Terminal49 retries failed tracking requests, what failures trigger retries, and how to inspect retry status."
+keywords:
+  - "Terminal49 API"
+  - "integration guide"
+  - "developer documentation"
+  - "retry logic"
+  - "tracking_request.failed"
+  - "awaiting_manifest"
+  - "request status"
 ---
-
 When you submit a tracking request your request is added to our queue to being checked at the shipping line. So what happens if the request doesn't go through correctly?
 
 If we are having difficulty connecting to the shipping line, or if we are unable to parse the response from the shipping line, we will keep retrying up to 14 times with an exponential back off. This process can take up to approximately 24 hours. You will not receive a `tracking_request.failed` webhook notification until we have exhausted the retries.
