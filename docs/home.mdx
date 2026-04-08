@@ -15,6 +15,7 @@ keywords:
 import { Container, Title } from '/snippets/home/utility.mdx';
 import { ProductTiles } from '/snippets/home/product-tiles.mdx';
 import { appCategories } from '/snippets/home/data.mdx';
+import { capabilityCategories } from '/snippets/home/capabilities-data.mdx';
 
 <div className="px-5 divide-y divide-gray-100 dark:divide-white/10">
   <Container>
@@ -61,21 +62,14 @@ import { appCategories } from '/snippets/home/data.mdx';
   </Container>
 
   <Container>
-    <div className="flex flex-col w-full mb-5">
+    <div className="flex flex-col w-full mb-8">
       <Title>
-        Resources
+        Data Sources & Capabilities
       </Title>
+      <p className="text-[#5B616E] dark:text-gray-300 text-md mb-1 mt-3">
+        Integrated data from ocean carriers, port terminals, rail providers, and vessel positions — normalized into a single stream for every container.
+      </p>
     </div>
-    <Columns cols={3}>
-      <Card title="Changelog" icon="clock-rotate-left" href="/updates/home">
-        Latest API and DataSync updates and release notes.
-      </Card>
-      <Card title="Test Numbers" icon="flask-vial" href="/api-docs/useful-info/test-numbers">
-        Sample tracking numbers for testing your integration.
-      </Card>
-      <Card title="Pricing" icon="tag" href="/api-docs/useful-info/pricing">
-        API pricing, rate limits, and plan details.
-      </Card>
-    </Columns>
+    <ProductTiles categories={capabilityCategories} />
   </Container>
 </div>

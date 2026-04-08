@@ -51,8 +51,11 @@ export const ProductTiles = ({ categories, hideButtons = false }) => {
                     <Icon icon={item.icon} size={18} className={activeSubTab === item.id ? 'text-primary' : 'text-gray-400 dark:text-gray-500'} />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-[15px] text-black dark:text-white m-0">
+                    <h3 className="font-medium text-[15px] text-black dark:text-white m-0 flex items-center gap-2">
                       {item.title}
+                      {item.badge && (
+                        <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">{item.badge}</span>
+                      )}
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 m-0 mt-1 leading-snug">
                       {item.desc}
