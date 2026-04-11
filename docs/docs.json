@@ -467,5 +467,11 @@
       "twitter:card": "summary_large_image",
       "twitter:site": "@terminal49"
     }
+  },
+  "integrations": {
+    "posthog": {
+      "apiKey": "phc_l2adbBndDdciWoPv3AkNV2UtUUxeo6iotxQfX6EQ2fL",
+      "apiHost": "https://api-posthog-worker.t49.workers.dev"
+    }
   }
 }
