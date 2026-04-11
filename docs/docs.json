@@ -472,6 +472,9 @@
     "posthog": {
       "apiKey": "phc_l2adbBndDdciWoPv3AkNV2UtUUxeo6iotxQfX6EQ2fL",
       "apiHost": "https://api-posthog-worker.t49.workers.dev"
+    },
+    "segment": {
+      "key": "QGH911NkPhgr2Ai31FL9EZYphywFL7j2"
     }
   }
 }
