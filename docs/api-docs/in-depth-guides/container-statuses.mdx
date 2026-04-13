@@ -13,7 +13,7 @@ keywords:
 ---
 The `current_status` attribute on container objects provides a high-level view of where a container is in its journey. This guide explains the different status values and their meanings.
 
-## Available Status Values
+## Available status values
 
 The `current_status` field can have one of the following values:
 
@@ -70,9 +70,9 @@ This status is specific to shipments with inland rail movements.
 ### loaded
 **Not currently used** - This status value is defined but not actively used in the system.
 
-## Important Considerations
+## Important considerations
 
-### Status Accuracy
+### Status accuracy
 The logic to derive container statuses is complex and involves processing data from multiple sources including:
 - Shipping line updates
 - Terminal systems
@@ -83,13 +83,13 @@ The logic to derive container statuses is complex and involves processing data f
 - Cross-referencing with transport events
 - Contacting the terminal directly for time-sensitive pickups
 
-### Status Transitions
+### Status transitions
 Containers don't always follow a linear path through these statuses. For example:
 - A container may go from `on_ship` directly to `available` if terminal data arrives quickly
 - A container might alternate between `available` and `not_available` if holds are placed and removed
 - The status may remain as `new` for some time if data from the shipping line is delayed
 
-### API Usage
+### API usage
 To get the current status of a container, you can read the container's `current_status` attribute in your API responses:
 
 ```bash

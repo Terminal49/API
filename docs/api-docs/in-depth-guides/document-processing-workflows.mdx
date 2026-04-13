@@ -23,7 +23,7 @@ You can submit documents in two ways:
 
 Both follow the same customer-facing lifecycle: submit -\> classify -\> extract -\> webhook result.
 
-## Workflow Diagrams
+## Workflow diagrams
 
 ```mermaid
 flowchart LR
@@ -34,7 +34,7 @@ flowchart LR
     F --> G[Terminal49 sends webhook result]
 ```
 
-## Workflow: Step-by-Step
+## Workflow: step-by-step
 
 <Steps>
   <Step title="Submit document">
@@ -58,7 +58,7 @@ flowchart LR
   Treat submission as asynchronous. Do not assume extraction is complete immediately after upload/email.
 </Tip>
 
-## Technical Implementation (One End-to-End Example)
+## Technical implementation (one end-to-end example)
 
 Example scenario: user uploads one file, `invoice.pdf`.
 
@@ -214,7 +214,7 @@ Response (`201`):
 
 Use the webhook `event` and included `document` payload to update your internal record for that document.
 
-## Webhooks You Should Handle
+## Webhooks you should handle
 
 | Event | Meaning |
 | --- | --- |
@@ -230,7 +230,7 @@ Use the webhook `event` and included `document` payload to update your internal 
   Webhook event availability depends on your account configuration. If you are not receiving expected events, contact Terminal49 support.
 </Info>
 
-## APIs Involved
+## APIs involved
 
 - [`POST /documents`](/api-docs/api-reference/documents/upload-a-document)
 - [`GET /documents`](/api-docs/api-reference/documents/list-documents)
@@ -241,6 +241,6 @@ Use the webhook `event` and included `document` payload to update your internal 
 - [`GET /document_schemas/{id}`](/api-docs/api-reference/document-schemas/get-a-document-schema)
 - [`Document representations resource`](/api-docs/api-reference/document-representations/document-representations-resource)
 
-## Planned (Not Live Yet)
+## Planned (not live yet)
 
 - `email_submission.created` webhook event after inbound email acceptance.

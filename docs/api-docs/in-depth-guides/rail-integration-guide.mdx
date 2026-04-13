@@ -18,18 +18,18 @@ This is a technical article about rail data within Terminal49's API and DataSync
 For a broader overview, including the reasons why you'd want rail visibility and how to use it in the Terminal49 dashboard,
  [read our announcement post](https://www.terminal49.com/blog/launching-north-american-intermodal-rail-visibility-on-terminal49/).
 
-## Table of Contents
+## Table of contents
 
-- [Supported Rail Carriers](#supported-rail-carriers)
-- [Supported Rail Events and Data Attributes](#supported-rail-events-and-data-attributes)
-  - [Rail-specific Transport Events](#rail-specific-transport-events)
-  - [Webhook Notifications](#webhook-notifications)
-  - [Rail Container Attributes](#rail-container-attributes)
-- [Integration Methods](#integration-methods)
+- [Supported rail carriers](#supported-rail-carriers)
+- [Supported rail events and data attributes](#supported-rail-events-and-data-attributes)
+  - [Rail-specific transport events](#rail-specific-transport-events)
+  - [Webhook notifications](#webhook-notifications)
+  - [Rail container attributes](#rail-container-attributes)
+- [Integration methods](#integration-methods)
   - [Integration via API](#a-integration-via-api)
   - [Integration via DataSync](#b-integration-via-datasync)
 
-## Supported Rail Carriers
+## Supported rail carriers
 
 Terminal49 container tracking platform integrates with all North American Class-1 railroads that handle container shipping, providing comprehensive visibility into your rail container movements.
 
@@ -42,7 +42,7 @@ Terminal49 container tracking platform integrates with all North American Class-
 
 By integrating with these carriers, Terminal49 ensures that you have direct access to critical tracking data, enabling better decision-making and operational efficiency.
 
-## Supported Rail Events and Data Attributes
+## Supported rail events and data attributes
 
 Terminal49 seamlessly tracks your containers as they go from container ship, to ocean terminal, to rail carrier.
 
@@ -102,7 +102,7 @@ graph LR
     G --> E[Full Out]
 ``` */}
 
-### Webhook Notifications
+### Webhook notifications
 
 Terminal49 provides webhook notifications to keep you updated on key Transport Events in a container's rail journey. These notifications allow you to integrate near real-time tracking data directly into your applications.
 
@@ -131,7 +131,7 @@ Finally, we have a webhook notifications for when the destination ETA changes.
 
 Integrate these notifications by subscribing to the webhooks and handling the incoming data to update your systems.
 
-#### Rail Container Attributes
+#### Rail container attributes
 
 The following are new attributes that are specific to rail container tracking.
 
@@ -148,7 +148,7 @@ The following are new attributes that are specific to rail container tracking.
 
 These attributes can be found on [container objects](/api-docs/api-reference/containers/get-a-container).
 
-## Integration Methods
+## Integration methods
 
 There are two methods to integrate Terminal49's rail tracking data programmatically: via API and DataSync.
 

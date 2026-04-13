@@ -12,7 +12,7 @@ keywords:
   - "booking tracking"
   - "container tracking"
 ---
-## What is a Tracking Request?
+## What is a tracking request?
 
 Your tracking request includes two pieces of data:
 
@@ -44,7 +44,7 @@ You can see a complete list of supported SCACs in row 2 of the Carrier Data Matr
     - Seal numbers
     - Internally generated numbers, for example PO numbers or customer reference numbers.
 
-## How do I use Tracking Requests?
+## How do I use tracking requests?
 
 Terminal49 is an event-based API, which means that the API can be used asynchronously. In general the data flow is:
 
@@ -86,7 +86,7 @@ Support [dev@terminal49.com](mailto:dev@terminal49.com)
 Authorization: Token YOUR_API_KEY
 ```
 
-## How to Create a Tracking Request
+## How to create a tracking request
 
 Here is javascript code that demonstates sending a tracking request
 
@@ -116,7 +116,7 @@ fetch("https://api.terminal49.com/v2/tracking_requests", {
 });
 ```
 
-## Anatomy of a Tracking Request Response
+## Anatomy of a tracking request response
 
 Here's what you'll see in a Response to a tracking request.
 
@@ -174,7 +174,7 @@ The Terminal49 API is JSON API compliant, which means that there are nifty libra
 
 </Info>
 
-## Try It: Make a Tracking Request
+## Try it: make a tracking request
 
 Try it using the request maker below!
 
@@ -217,7 +217,7 @@ It is entirely possible that's neither us nor you but the shipping line is givin
 }
 ```
 
-## Try It: List Your Active Tracking Requests
+## Try it: list your active tracking requests
 
 We have not yet set up a webook to receive status updates from the Terminal49 API, so we will need to manually poll to check if the Tracking Request has succeeded or failed.
 
@@ -234,7 +234,7 @@ We have not yet set up a webook to receive status updates from the Terminal49 AP
 }
 ```
 
-## Next Up: Get your Shipments
+## Next up: get your shipments
 
 Now that you've made a tracking request, let's see how you can list your shipments and retrieve the relevant data.
 

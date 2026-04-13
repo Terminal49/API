@@ -27,7 +27,7 @@ But what if you don't know the SCAC? That's where the Infer API comes in.
   the carrier. Now this same intelligence is available via API.
 </Card>
 
-## Why SCAC Matters
+## Why SCAC matters
 
 To track a shipment or container, Terminal49 needs to know **which shipping line to ask** (also called the vessel-operating common carrier (VOCC)).
 The SCAC (Standard Carrier Alpha Code) we use here is the **shipping line SCAC for tracking** — i.e., the carrier operating the move we’re querying for events and shipment data.
@@ -44,7 +44,7 @@ The SCAC (Standard Carrier Alpha Code) we use here is the **shipping line SCAC f
   increase the likelihood your tracking request succeeds.
 </Info>
 
-## How the Infer API Helps
+## How the Infer API helps
 
 Submit any tracking number, and the API returns:
 
@@ -68,7 +68,7 @@ Submit any tracking number, and the API returns:
   </Step>
 </Steps>
 
-## Examples by Number Type
+## Examples by number type
 
 <Tabs>
   <Tab title="Container Number" icon="box">
@@ -275,7 +275,7 @@ Submit any tracking number, and the API returns:
   </Tab>
 </Tabs>
 
-## Understanding the Response
+## Understanding the response
 
 <AccordionGroup>
   <Accordion title="Decision Types Explained" icon="code-branch" defaultOpen>
@@ -324,7 +324,7 @@ Submit any tracking number, and the API returns:
   </Accordion>
 </AccordionGroup>
 
-## Integration Guide
+## Integration guide
 
 For developers implementing this API, here are code examples in different languages:
 
@@ -417,7 +417,7 @@ curl -X POST https://api.terminal49.com/v2/tracking_requests/infer_number \
   </Tab>
 </Tabs>
 
-## Rate Limits
+## Rate limits
 
 | Setting             | Value                   |
 | ------------------- | ----------------------- |
@@ -429,7 +429,7 @@ curl -X POST https://api.terminal49.com/v2/tracking_requests/infer_number \
   header to avoid extended throttling.
 </Warning>
 
-## What's Next?
+## What's next?
 
 <CardGroup cols={2}>
   <Card

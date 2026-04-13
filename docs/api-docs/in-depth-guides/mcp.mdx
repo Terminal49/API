@@ -62,7 +62,7 @@ Claude Desktop and Cursor use the HTTP transport. For hosted production usage, u
 
 ---
 
-## Configure Your MCP Client
+## Configure your MCP client
 
 ### Claude Desktop
 
@@ -136,7 +136,7 @@ Add to your Cursor settings:
 }
 ```
 
-### Local stdio (Development)
+### Local stdio (development)
 
 For local development without a hosted server:
 
@@ -175,7 +175,7 @@ T49_SDK_SOURCE=local npm run sdk:setup
 
 ---
 
-## Test Your Setup
+## Test your setup
 
 Once configured, verify everything works:
 
@@ -229,9 +229,9 @@ T49_API_TOKEN=your_token npm run mcp:stdio 2>&1 | head -20
 
 ---
 
-## MCP Capabilities
+## MCP capabilities
 
-### Tools (10)
+### Tools
 
 | Tool | Description | Parameters |
 |------|-------------|------------|
@@ -246,7 +246,7 @@ T49_API_TOKEN=your_token npm run mcp:stdio 2>&1 | head -20
 | `list_containers` | List containers with filters + pagination | `status?`, `port?`, `carrier?`, `updated_after?`, `include?`, `page?`, `page_size?` |
 | `list_tracking_requests` | List tracking requests with filters | `filters?`, `status?`, `request_type?`, `page?`, `page_size?` |
 
-### Prompts (3)
+### Prompts
 
 | Prompt | Description | Arguments |
 |--------|-------------|-----------|
@@ -254,7 +254,7 @@ T49_API_TOKEN=your_token npm run mcp:stdio 2>&1 | head -20
 | `check-demurrage` | Demurrage risk analysis | `container_id` |
 | `analyze-delays` | Journey delay analysis | `container_id` |
 
-### Resources (2)
+### Resources
 
 | URI | Description |
 |-----|-------------|
@@ -265,7 +265,7 @@ For detailed examples and response formats, see [MCP Overview → Tools Referenc
 
 ---
 
-## SDK Usage
+## SDK usage
 
 The TypeScript SDK provides the same capabilities as MCP tools, plus additional APIs not yet exposed via MCP.
 
@@ -297,7 +297,7 @@ const shipments = await client.shipments.list({
 });
 ```
 
-### Response Formats
+### Response formats
 
 | Format | Description |
 |--------|-------------|
@@ -334,7 +334,7 @@ const shipments = await client.shipments.list({
 
 ## Deployment
 
-### Vercel (Production)
+### Vercel (production)
 
 The `vercel.json` configures the MCP server:
 
@@ -350,7 +350,7 @@ The `vercel.json` configures the MCP server:
 }
 ```
 
-### Environment Variables
+### Environment variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
@@ -361,7 +361,7 @@ The `vercel.json` configures the MCP server:
 
 ---
 
-## Testing Locally
+## Testing locally
 
 ```bash
 # Build the MCP server
@@ -384,7 +384,7 @@ curl -X POST https://mcp.terminal49.com/mcp \
 
 ---
 
-## Related Guides
+## Related guides
 
 - [MCP Overview](/mcp/home) – Quick start and tools reference
 - [Rate Limiting](/api-docs/in-depth-guides/rate-limiting) – API limits (same for MCP)
