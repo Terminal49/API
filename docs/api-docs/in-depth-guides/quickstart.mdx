@@ -12,7 +12,7 @@ keywords:
   - "SCAC"
   - "first integration"
 ---
-## Before You Begin
+## Before you begin
 
 You'll need a four things to get started.
 
@@ -27,7 +27,7 @@ You'll need a four things to get started.
   from your tracking number.
 </Tip>
 
-## Track a Shipment
+## Track a shipment
 
 You can try this using the embedded request maker below, or using Postman.
 
@@ -48,7 +48,7 @@ Note that you can also access sample code, include a cURL template, by clicking 
 }
 ```
 
-## Check Your Tracking Request Succeeded
+## Check your tracking request succeeded
 
 We have not yet set up a webook to receive status updates from the Terminal49 API, so we will need to manually poll to check if the Tracking Request has succeeded or failed.
 
@@ -73,7 +73,7 @@ We have not yet set up a webook to receive status updates from the Terminal49 AP
 }
 ```
 
-## List your Tracked Shipments
+## List your tracked shipments
 
 If your tracking request was successful, you will now be able to list your tracked shipments.
 
@@ -94,7 +94,7 @@ If you had trouble adding your first shipment, try adding a few more.
 }
 ```
 
-## List all your Tracked Containers
+## List all your tracked containers
 
 You can also list out all of your containers, if you'd like to track at that level.
 
@@ -111,7 +111,7 @@ Try it after replacing `<YOUR_API_KEY>` with your API key.
 }
 ```
 
-## Listening for Updates with Webhooks
+## Listening for updates with webhooks
 
 The true power of Terminal49's API is that it is asynchronous. You can register a Webhook, which is essentially a callback URL that our systems HTTP Post to when there are updates.
 

@@ -12,7 +12,7 @@ keywords:
   - "shipment events"
   - "container events"
 ---
-## Using Webhooks to Receive Status Updates
+## Using webhooks to receive status updates
 
 Terminal49 posts status updates to a webhook that you register with us.
 
@@ -20,7 +20,7 @@ A Webhook is another name for a web-based callback URL, or a HTTP Push API. They
 
 The HTTP Post request from Terminal49 has a JSON payload which you can parse to extract the relevant information.
 
-## How do I use a Webhook with Terminal49?
+## How do I use a webhook with Terminal49?
 
 First, you need to register a webhook. You can register as many webhooks as you like. Webhooks are associated with your account. All updates relating to that account are sent to the Webhook associated with it.
 
@@ -37,7 +37,7 @@ This means you send your API Key as your token in every request.
 
 Webhooks are associated with API tokens, and this is how the Terminal49 knows who to return relevant shipment information to.
 
-## Anatomy of a Webhook Notification
+## Anatomy of a webhook notification
 
 Here's what you'll see in a Webhook Notification, which arrives as a POST request to your designated URL.
 
@@ -156,7 +156,7 @@ You can find what type of event you have received by looking at the "attributes"
 }
 ```
 
-### Inclusions: Tracking Requests & Shipment Data
+### Inclusions: tracking requests and shipment data
 
 When a tracking request has succeeded, the webhook event **includes** information about the shipment, the containers in the shipment, and the milestones for that container, so your app can present this information to your end users without making further queries to the API.
 
@@ -227,9 +227,9 @@ Some objects have **relationships**. These are simply links to another object. T
    ]
 ```
 
-## Code Examples
+## Code examples
 
-### Registering a Webhook
+### Registering a webhook
 
 ```jsx
 function registerWebhook(){
@@ -257,7 +257,7 @@ function registerWebhook(){
 }
 ```
 
-### Receiving a Post Webhook
+### Receiving a POST webhook
 
 Here's an example of some Javascript code that receives a Post request and parses out some of the desired data.
 
@@ -307,7 +307,7 @@ function isTrackingRequest(item){
 }
 ```
 
-## Try It Out & See More Sample Code
+## Try it out and see more sample code
 
 Update your API key below, and register a simple Webhook.
 

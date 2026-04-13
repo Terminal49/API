@@ -15,13 +15,13 @@ keywords:
 
 Terminal49 API implements rate limiting to ensure fair usage and maintain service quality for all users.
 
-## Rate Limit Details
+## Rate limit details
 
 - **Limit**: 100 requests per minute per account
 - **Scope**: Applied per API key/account
 - **Window**: Rolling 60-second window
 
-## Rate Limit Response
+## Rate limit response
 
 When you exceed the rate limit, the API will return:
 
@@ -43,9 +43,9 @@ When you exceed the rate limit, the API will return:
 }
 ```
 
-## Best Practices
+## Best practices
 
-### 1. Use Webhooks Instead of Polling
+### 1. Use webhooks instead of polling
 
 The most effective way to avoid rate limits is to use **webhooks** for real-time updates instead of repeatedly polling the API:
 
@@ -54,7 +54,7 @@ The most effective way to avoid rate limits is to use **webhooks** for real-time
 - Provides instant updates without consuming your rate limit
 - See the [Webhooks](/api-docs/api-reference/webhooks) section for setup instructions
 
-### 2. Implement Exponential Backoff
+### 2. Implement exponential backoff
 
 If you receive a `429` response:
 
@@ -63,19 +63,19 @@ If you receive a `429` response:
 3. Implement exponential backoff for subsequent failures
 4. Don't retry immediately, as this will consume your limit further
 
-### 3. Batch Your Requests
+### 3. Batch your requests
 
 - Use list endpoints with filtering instead of multiple individual requests
 - Leverage the [`include` parameter](/api-docs/in-depth-guides/including-resources) to fetch related resources in a single request
 - Cache responses when appropriate to reduce redundant calls
 
-### 4. Monitor Your Usage
+### 4. Monitor your usage
 
 - Track your request patterns
 - Identify and optimize high-frequency operations
 - Consider spreading requests over time rather than bursting
 
-## Need a Higher Limit?
+## Need a higher limit?
 
 If your use case requires a higher rate limit:
 
@@ -132,7 +132,7 @@ response = make_request_with_retry(
 )
 ```
 
-## Tips for High-Volume Applications
+## Tips for high-volume applications
 
 If you're building a high-volume application:
 

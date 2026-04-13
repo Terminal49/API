@@ -17,7 +17,7 @@ If we are having difficulty connecting to the shipping line, or if we are unable
 
 This process can take up to approximately 24 hours. You will not receive a `tracking_request.failed` webhook notification until we have exhausted the retries, and the `status` field will not be changed to `failed` until then.
 
-## Request Number Not Found / Awaiting Manifest
+## Request number not found / awaiting manifest
 
 If the shipping line returns a response that it cannot find the provided number we either immediately fail the tracking request or keep trying depending on whether the `request_type` is a container or not:
 
@@ -32,9 +32,9 @@ If the shipping line returns a response that it cannot find the provided number 
   and identify the correct SCAC before submitting.
 </Tip>
 
-## Failed Reason
+## Failed reason
 
-### Temporary
+### Temporary reasons
 
 The `failed_reason` field can take one of the following temporary values:
 
@@ -43,7 +43,7 @@ The `failed_reason` field can take one of the following temporary values:
 - `internal_processing_error` when we faced other issue,
 - `awaiting_manifest` if the shipping line indidicates a bill of lading number is found, but data is not yet available, or if the requested number could not be found.
 
-### Permanent
+### Permanent reasons
 
 Temporary reasons can become permanent when the `status` changes to `failed`:
 
@@ -73,6 +73,6 @@ Terminal49 will stop tracking requests for the following reasons:
 
 In addition end-users may stop tracking a shipment through the dashboard.
 
-## Retrieving Status
+## Retrieving status
 
 If you want to see the status of your tracking request you can make a [GET request](/api-docs/api-reference/tracking-requests/get-a-single-tracking-request) on what the most recent failure reason was (`failed_reason` field).

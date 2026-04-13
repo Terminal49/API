@@ -12,7 +12,7 @@ keywords:
   - "shipment data"
   - "container data"
 ---
-## Shipment and Container Data in Terminal49
+## Shipment and container data in Terminal49
 
 After you've successfully made a tracking request, Terminal49 will begin to track shipments and store relevant information about that shipment on your behalf.
 
@@ -22,7 +22,7 @@ You can access data about shipments and containers on your tracked shipments any
 
 Keep in mind, however, that apart from initialization code, you would not usually access shipment data in this way. You would use Webhooks (described in the next section). A Webhook is another name for a web-based callback URL, or a HTTP Push API. They provide a method for an API to post a notification to your service. Specifically, a webhook is simply a URL that can receive HTTP Post Requests from the Terminal49 API.
 
-## List all your Tracked Shipments
+## List all your tracked shipments
 
 If your tracking request was successful, you will now be able to list your tracked shipments.
 
@@ -58,7 +58,7 @@ This means you send your API Key as your token in every request.
 Webhooks are associated with API tokens, and this is how the Terminal49 knows who to return relevant shipment information to.
 
 
-## Anatomy of Shipments JSON Response
+## Anatomy of shipments JSON response
 
 Here's what you'll see come back after you get the /shipments endpoint.
 
@@ -130,7 +130,7 @@ You can write code to access these structured elements from the API. The advanta
 }
 ```
 
-## Sample Code: Listing Tracked Shipment into a Google Sheet
+## Sample code: listing tracked shipments in a Google Sheet
 
 Below is code written in Google App Script that lists the current shipments into the current sheet of a spreadsheet. App Script is very similar to Javascript.
 
@@ -213,7 +213,7 @@ function listShipmentValues(shipment_values){
 ```
 
 
-## List all your Tracked Containers
+## List all your tracked containers
 
 You can also list out all of your Containers. Container data includes terminal availability, last free day, holds, fees, and other logistical information that you might use for drayage operations at port.
 
@@ -237,7 +237,7 @@ To learn how to use holds and fees data to determine if a container is ready for
 }
 ```
 
-## Anatomy of Containers JSON Response
+## Anatomy of containers JSON response
 Now that you've got a list of containers, let's examine the response you've received.
 
 ```jsx

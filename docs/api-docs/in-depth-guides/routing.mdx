@@ -18,22 +18,22 @@ This is a technical article describing how to use our Routing Data feature, usin
     Routing Data (Container Map GeoJSON API) is a paid feature. These APIs are subject to additional terms of usage and pricing. If you are interested in using these APIs, please contact <a href="mailto:sales@terminal49.com">sales@terminal49.com</a>.
 </Note>
 
-## Table of Contents
+## Table of contents
 
 - [Overview](#overview)
-- [Getting Started](#getting-started)
-- [Understanding the Response](#understanding-the-response)
-  - [GeoJSON FeatureCollection Structure](#geojson-featurecollection-structure)
-  - [Feature Types](#feature-types)
+- [Getting started](#getting-started)
+- [Understanding the response](#understanding-the-response)
+  - [GeoJSON FeatureCollection structure](#geojson-featurecollection-structure)
+  - [Feature types](#feature-types)
     - [Port](#port)
-    - [Current Vessel](#current-vessel)
-    - [Past Vessel Locations](#past-vessel-locations)
-    - [Estimated Full Leg](#estimated-full-leg)
-    - [Estimated Partial Leg](#estimated-partial-leg)
-- [Building Your Map](#building-your-map)
-- [Use Cases](#use-cases)
-- [Recommendations and Best Practices](#recommendations-and-best-practices)
-- [Frequently Asked Questions](#frequently-asked-questions)
+    - [Current vessel](#current-vessel)
+    - [Past vessel locations](#past-vessel-locations)
+    - [Estimated full leg](#estimated-full-leg)
+    - [Estimated partial leg](#estimated-partial-leg)
+- [Building your map](#building-your-map)
+- [Use cases](#use-cases)
+- [Recommendations and best practices](#recommendations-and-best-practices)
+- [Frequently asked questions](#frequently-asked-questions)
 
 ## Overview
 
@@ -48,7 +48,7 @@ The endpoint returns a GeoJSON FeatureCollection containing:
 
 ![Example of a shipment map](/images/map_example.png "Example of a shipment map")
 
-## Getting Started
+## Getting started
 
 To retrieve the map data for a container, make a simple GET request to the endpoint:
 
@@ -115,9 +115,9 @@ The response is a standard GeoJSON FeatureCollection that can be directly used w
     ```
 </Accordion>
 
-## Understanding the Response
+## Understanding the response
 
-### GeoJSON FeatureCollection Structure
+### GeoJSON FeatureCollection structure
 
 The response follows the [GeoJSON specification](https://geojson.org/) and contains:
 
@@ -129,7 +129,7 @@ Each feature contains:
 - `geometry`: A GeoJSON geometry object (Point or LineString)
 - `properties`: An object containing metadata specific to the feature type
 
-### Feature Types
+### Feature types
 
 The `properties.feature_type` field identifies what each feature represents. The following feature types are available:
 
@@ -194,7 +194,7 @@ Port features represent all ports in the container's route: the port of lading (
 | `updated_at` | string \| null | Last update timestamp from the shipment (ISO 8601) |
 </Accordion>
 
-#### Current Vessel
+#### Current vessel
 
 Geometry Type: `Point`
 
@@ -276,7 +276,7 @@ This feature is only present when the container is currently on a vessel at sea.
 | `arrival_port_time_zone` | string \| null | Timezone of arrival port |
 </Accordion>
 
-#### Past Vessel Locations
+#### Past vessel locations
 
 Geometry Type: `LineString`
 
@@ -333,7 +333,7 @@ These features represent the actual historical paths taken by vessels for comple
 | `inbound_eta_at` | string \| null | Estimated time of arrival at the destination port (ISO 8601) |
 </Accordion>
 
-#### Estimated Full Leg
+#### Estimated full leg
 
 Geometry Type: `LineString`
 
@@ -374,7 +374,7 @@ These features represent predicted vessel paths for future legs that have not ye
 | `point_count` | integer | Number of coordinate points in the LineString |
 </Accordion>
 
-#### Estimated Partial Leg
+#### Estimated partial leg
 
 Geometry Type: `LineString`
 
@@ -424,7 +424,7 @@ This feature represents the predicted path from the vessel's current position to
 </Accordion>
 **Note:** This feature is only present when there is a `current_vessel` feature. The LineString starts from the vessel's current position (which matches the `current_vessel` feature coordinates) and extends to the next port.
 
-## Building Your Map
+## Building your map
 
 To visualize a container's journey using the GeoJSON response on your own map (similar to [the embeddable map](/api-docs/in-depth-guides/terminal49-map)):
 
@@ -491,7 +491,7 @@ To visualize a container's journey using the GeoJSON response on your own map (s
     ```
 </Accordion>
 
-## Use Cases
+## Use cases
 
 Integrating Terminal49's Vessel and Container Route APIs enables a variety of advanced capabilities:
 - **Track Complete Shipment Journeys Visually:** Monitor shipments across multiple legs on a map, from the port of lading to the port of discharge, including all transshipment points.
@@ -499,7 +499,7 @@ Integrating Terminal49's Vessel and Container Route APIs enables a variety of ad
 - **Correlate Timestamps with Locations:** Visually connect ETDs, ETAs, ATDs, and ATAs for every leg with their geographical points on the map for precise planning and exception management.
 - **Improve Internal Logistics Dashboards:** Offer your operations team a clear visual overview of all ongoing shipments and their current locations.
 
-## Recommendations and Best Practices
+## Recommendations and best practices
 
 - **Polling Intervals**: For active containers (currently at sea), we recommend refreshing the map data up to once per hour to get updated vessel positions. For containers that have completed their journey, you can cache the data as it won't change.
 
@@ -534,7 +534,7 @@ If you decide to create your own map:
   
   - **No Crossings**: If no antimeridian crossings are detected, render all features in the standard world view without any special handling.
 
-## Frequently Asked Questions
+## Frequently asked questions
 
 **Q: How up-to-date is the vessel position data?**
 A: Vessel location data is updated every 15 minutes, although that does not guarantee there will be a new position every 15 minutes due to factors like whether the vessel is transmitting or within range of a satellite or base station.
