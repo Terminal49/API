@@ -17,6 +17,56 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="April 14, 2026" description="Dashboard deep linking, calculated LFD, Smart LFD dashboard columns, and bug fixes" tags={['API', 'Dashboard']}
+  rss="April 14, 2026: Dashboard deep linking via URL, calculated Last Free Day from carrier tariffs, Smart LFD dashboard columns, and Hapag-Lloyd booking bug fix."
+>
+  ### Dashboard deep linking
+
+You can now link directly to any shipment or container in the Terminal49 dashboard using a container number, bill of lading, booking number, or reference number — no internal IDs needed.
+
+Use the URL pattern:
+
+```
+https://app.terminal49.com/shipments/find?q={identifier}
+```
+
+The link automatically resolves to the correct tracking page, making it easy to link from a TMS, ERP, spreadsheet, or automated notification.
+
+<Card title="Deep linking guide" icon="link" href="/api-docs/in-depth-guides/dashboard-deep-linking">
+  How to build direct links to shipments and containers
+</Card>
+
+---
+
+  ### Calculated Last Free Day
+
+The Smart LFD system now includes a **calculated Last Free Day** derived from carrier demurrage tariff rules. When a shipping line or terminal hasn't reported an LFD, Terminal49 computes one using the applicable tariff — including free days, start events, holidays, and business-day rules.
+
+Calculated values appear as a fallback in the `import_deadlines` field on the container API. If a reported LFD is available from the carrier or terminal, it takes priority.
+
+<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+  View the container resource
+</Card>
+
+---
+
+  ### Smart LFD dashboard columns
+
+The container dashboard now includes two new columns for accounts with Smart LFD enabled:
+
+- **Calc. Line LFD** — the calculated Last Free Day derived from carrier tariff rules
+- **Smart LFD** — the best available LFD with its source displayed, so you can see at a glance whether the date comes from the shipping line, terminal, or a tariff calculation
+
+Click the Smart LFD value to open a detail modal showing the full calculation breakdown, including tariff inputs, free days, and the day-by-day calendar.
+
+---
+
+  ### Bug fixes
+
+- **Hapag-Lloyd booking tracking** — Fixed an issue where certain Hapag-Lloyd bookings could return an invalid number error, preventing container data from loading
+
+</Update>
+
 <Update label="April 2026" description="Smart Last Free Day, inland destination ETA source transparency, and bug fixes" tags={['API', 'Dashboard']}
   rss="April 2026: Smart Last Free Day with per-source LFD breakdown, inland destination ETA source transparency, expanded SSL LFD coverage, and bug fixes."
 >
