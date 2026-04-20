@@ -46,11 +46,11 @@ By integrating with these carriers, Terminal49 ensures that you have direct acce
 
 Terminal49 seamlessly tracks your containers as they go from container ship, to ocean terminal, to rail carrier.
 
-We provide a [set of Transport Events](#webhook-notifications) that let you track the status of your containers as they move through the rail system.  You can be notified by webhook whenever these events occur.
+Terminal49 provides a [set of transport events](#webhook-notifications) that let you track the status of your containers as they move through the rail system. You can receive webhook notifications whenever these events occur.
 
-We also provide a set of attributes [on the container model](/api-docs/api-reference/containers/get-a-container) that let you know the current status of your container at any given time, as well as useful information such as ETA, pickup facility, and availability information. For details on hold types, fee types, and how to determine release readiness at the port or an inland destination, see [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
+Terminal49 also provides a set of attributes [on the container model](/api-docs/api-reference/containers/get-a-container) with the current status of your container at any given time, including ETA, pickup facility, and availability information. For details on hold types, fee types, and how to determine release readiness at the port or an inland destination, see [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
 
-### Rail-Specific Transport Events
+### Rail-specific transport events
 
 There are several core Transport Events that occur on most rail journeys.  Some rail carriers do not share all events, but in general these are the key events for a container.
 
@@ -123,7 +123,7 @@ There's also a set of events that are triggered when the status of the container
 | Full Out       | `container.transport.full_out`      | The full container leaves the rail terminal. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-full-out" target="_blank">Example</a> |
 | Empty In       | `container.transport.empty_in`      | The empty container is returned to the terminal. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-empty-in" target="_blank">Example</a> |
 
-Finally, we have a webhook notifications for when the destination ETA changes.
+Finally, there is a webhook notification for when the destination ETA changes.
 
 | Transport Event | Webhook Notification | Description | Example |
 |----------------|----------------------|-------------|---------|

@@ -11,7 +11,7 @@ keywords:
   - "timezone conversion"
   - "IANA timezone"
 ---
-Through the typical container lifecycle events occur across multiple timezones. Wheverever you see a timestamp for some kind of transporation event, there should be a corresponding [IANA tz](https://www.iana.org/time-zones).
+Through the typical container lifecycle, events occur across multiple timezones. Wherever you see a timestamp for a transport event, there should be a corresponding [IANA timezone](https://www.iana.org/time-zones).
 
 Event timestamps are stored and returned in UTC. If you wish to present them in the local time you need to convert that UTC timestamp using the corresponding timezone.
 
@@ -26,9 +26,9 @@ then the local time of the `pod_arrived_at` timestamp would be `2022-12-21T23:00
 
 
 ## When the corresponding timezone is null
-When there is event that occurs where Terminal49 cannot determine the location (and therefore the timezone) of the event the system is unable to store the event in true UTC.
+When an event occurs and Terminal49 cannot determine the location (and therefore the timezone), the system cannot store the event in true UTC.
 
-In this scenario we take timestamp as given from the source and parse it in UTC. 
+In this scenario, Terminal49 takes the timestamp as given from the source and parses it in UTC.
 
 ### Example
 ```

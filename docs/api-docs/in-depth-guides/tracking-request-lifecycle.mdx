@@ -11,19 +11,19 @@ keywords:
   - "retry logic"
   - "failed tracking request"
 ---
-When you submit a tracking request your request is added to our queue to being checked at the shipping line. So what happens if the request doesn't go through correctly?
+When you submit a tracking request, your request is added to a queue to be checked with the shipping line. What happens if the request does not go through correctly?
 
-If we are having difficulty connecting to the shipping line, or if we are unable to parse the response from the shipping line, we will keep retrying up to 14 times.
+If Terminal49 has difficulty connecting to the shipping line or cannot parse the response, it retries up to 14 times.
 
 This process can take up to approximately 24 hours. You will not receive a `tracking_request.failed` webhook notification until we have exhausted the retries, and the `status` field will not be changed to `failed` until then.
 
 ## Request number not found / awaiting manifest
 
-If the shipping line returns a response that it cannot find the provided number we either immediately fail the tracking request or keep trying depending on whether the `request_type` is a container or not:
+If the shipping line returns a response that it cannot find the provided number, Terminal49 either immediately fails the tracking request or keeps trying, depending on the `request_type`:
 
 - **Containers** fail straight away after a not found response from the shipping line.
-- **Bill of lading** and **booking numbers** do not fail instantly. We change the `status` to `awaiting_manifest` and will keep checking your request daily. You will receive a `tracking_request.awaiting_manifest` webhook notification the first time it happens. If your request number cannot be found after 7 days we will mark the tracking request as failed by changing the `status` field `failed` and sending the `tracking_request.failed` event to your webhook.
-- Should you wish to adjust the duration before marking your tracking requests as failed, please contact us through support@terminal49.com.
+- **Bill of lading** and **booking numbers** do not fail instantly. The `status` changes to `awaiting_manifest` and Terminal49 keeps checking your request daily. You receive a `tracking_request.awaiting_manifest` webhook notification the first time this happens. If the request number cannot be found after 7 days, the tracking request is marked as failed with the `status` set to `failed` and the `tracking_request.failed` event sent to your webhook.
+- To adjust the duration before marking tracking requests as failed, contact support@terminal49.com.
 - **Incorrect request number type** if the request number type (ex. booking number) is incorrect, the tracking request will still fail even though the request number is correct.
 
 <Tip>
@@ -41,14 +41,14 @@ The `failed_reason` field can take one of the following temporary values:
 - `unrecognized_response` when we could not parse the response from the shipping line,
 - `shipping_line_unreachable` if the shipping line was unreachable,
 - `internal_processing_error` when we faced other issue,
-- `awaiting_manifest` if the shipping line indidicates a bill of lading number is found, but data is not yet available, or if the requested number could not be found.
+- `awaiting_manifest` if the shipping line indicates a bill of lading number is found but data is not yet available, or if the requested number could not be found.
 
 ### Permanent reasons
 
 Temporary reasons can become permanent when the `status` changes to `failed`:
 
 - `duplicate` when the shipment already existed,
-- `expired` when the tracking request was created more than 7 days ago and still not succeded,
+- `expired` when the tracking request was created more than 7 days ago and still has not succeeded,
 - `retries_exhausted` if we tried for 14 times to no avail,
 - `not_found` if the shipping line could not find the BL number.
 - `invalid_number` if the shipping line rejects the formatting of the number.
@@ -68,7 +68,7 @@ Terminal49 will stop tracking requests for the following reasons:
 - The booking was cancelled.
 - The data is no longer available at the shipping line.
 - All shipment containers are marked `empty_returned`.
-- More than 56 days have passed since the shipment arrived at it's destination.
+- More than 56 days have passed since the shipment arrived at its destination.
 - There have been no updates from the shipping line for more than 56 days.
 
 In addition end-users may stop tracking a shipment through the dashboard.
