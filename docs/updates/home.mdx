@@ -17,6 +17,37 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="April 20, 2026" description="Improved document linking, mark-as-delivered fix, LFD accuracy improvements, and terminal data fixes" tags={['API', 'Dashboard']}
+  rss="April 20, 2026: Smarter document-to-shipment linking via PO numbers, mark-as-delivered fix in the dashboard, LFD accuracy improvements, and multiple terminal data collection fixes."
+>
+  ### Smarter document-to-shipment linking
+
+Documents are now matched to shipments using **indirect references** such as purchase order (PO) numbers. Previously, a document had to contain a direct identifier like a bill of lading or container number. Now, if a document references a PO number that appears on another already-linked document, Terminal49 can connect the two — reducing unlinked documents and manual work.
+
+<Card title="Document processing guide" icon="file" href="/api-docs/in-depth-guides/document-processing-workflows">
+  How document linking works
+</Card>
+
+---
+
+  ### Improved document extraction accuracy
+
+Document data extraction now uses the original filename as additional context, improving field-level accuracy when the filename contains shipment identifiers or document type hints.
+
+---
+
+  ### Bug fixes
+
+- **Mark as delivered** — Fixed an issue where marking a container as delivered from the dashboard event viewer could fail. User-submitted delivery events are now accepted correctly
+- **Stale terminal LFD dates** — Fixed a bug where outdated Last Free Day dates from a previous cycle could appear on containers still in transit. Terminal LFD events are now rejected until the container arrives at the port
+- **MSC departure events** — Corrected incorrect departure-from-POD events being reported for certain MSC containers
+- **Hapag-Lloyd tracking** — Fixed an error that could occur when Hapag-Lloyd returns an empty shipment overview, preventing container data from loading
+- **Norfolk Southern rail LFD timezone** — Fixed incorrect timezone parsing for Norfolk Southern rail Last Free Day dates, which could shift the date by a day
+- **Dashboard event viewer** — Fixed display issues in the unified event viewer for user-submitted events
+- **Terminal data collection** — Resolved connectivity and data retrieval issues at Goport, Maher, and Packer Avenue terminals, restoring terminal-sourced hold, fee, and availability data for containers at those facilities
+
+</Update>
+
 <Update label="April 14, 2026" description="Dashboard deep linking, calculated LFD, Smart LFD dashboard columns, and bug fixes" tags={['API', 'Dashboard']}
   rss="April 14, 2026: Dashboard deep linking via URL, calculated Last Free Day from carrier tariffs, Smart LFD dashboard columns, and Hapag-Lloyd booking bug fix."
 >
