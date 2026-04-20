@@ -16,7 +16,7 @@ keywords:
 
 Terminal49 posts status updates to a webhook that you register with us.
 
-A Webhook is another name for a web-based callback URL, or a HTTP Push API. They provide a method for an API to post a notification to your service. Specifically, a webhook is simply a URL that can receive HTTP Post Requests from the Terminal49 API.
+A webhook is a callback URL that receives HTTP POST requests from the Terminal49 API whenever tracking data changes.
 
 The HTTP Post request from Terminal49 has a JSON payload which you can parse to extract the relevant information.
 
@@ -35,7 +35,7 @@ The API uses HTTP Bearer Token authentication.
 
 This means you send your API Key as your token in every request.
 
-Webhooks are associated with API tokens, and this is how the Terminal49 knows who to return relevant shipment information to.
+Webhooks are associated with API tokens, which is how Terminal49 identifies which account to send shipment updates to.
 
 ## Anatomy of a webhook notification
 
@@ -43,13 +43,13 @@ Here's what you'll see in a Webhook Notification, which arrives as a POST reques
 
 For more information, refer to the Webhook In Depth guide.
 
-Note that for clarity I've deleted some of the data that is less useful right now, and replaced them with ellipses (...). Bolded areas are also mine to point out important data.
+For clarity, some fields have been replaced with ellipses (...) and key areas are bolded.
 
-Note that there are two main sections:
+There are two main sections:
 
 **Data.** The core information being returned.
 
-**Included**. Included are relevant objects that you are included for convenience.
+**Included**. Related objects included for convenience.
 
 ```jsx
 {
@@ -131,8 +131,8 @@ Note that there are two main sections:
 }
 ```
 
-> ### Why so much JSON? (A note on JSON API)
->The Terminal49 API is JSON API compliant, which means that there are nifty libraries which can translate JSON into a fully fledged object model that can be used with an ORM. This is very powerful, but it also requires a larger, more structured payload to power the framework. The tradeoff, therefore, is that it's less convenient if you're parsing the JSON directly. Ultimately we strongly recommend you set yourself up with a good library to use JSON API to its fullest extent. But for the purposes of understanding the API's fundamentals and getting your feet wet, we'll work with the data directly.
+> ### Why so much JSON? (A note on JSON:API)
+>The Terminal49 API is JSON:API compliant. JSON:API libraries can translate the response into a full object model compatible with an ORM, which is powerful but produces larger, more structured payloads. If you parse JSON directly, this can feel verbose. For production use, consider adopting a [JSON:API client library](https://jsonapi.org/implementations/#client-libraries) to get the most out of the format. For this tutorial, you will work with the data directly.
 
 ### What type of webhook event is this?
 
@@ -162,7 +162,7 @@ When a tracking request has succeeded, the webhook event **includes** informatio
 
 In the payload below (again, truncated by ellipses for clarity) you'll see a list of JSON objects in the "included" section. Each object has a **type** and **attributes**. The type tells you what the object is. The attributes tell you the data that the object carries.
 
-Some objects have **relationships**. These are simply links to another object. The most essential objects in relationships are often included, but objects that don't change very often, for example an object that describes a teminal, are not included - once you query these, you should consider caching them locally.
+Some objects have **relationships** that link to other objects. The most essential related objects are included in the payload, but objects that rarely change (for example, a terminal) are not. Consider caching these locally after you query them.
 
 ```jsx
  "included":[

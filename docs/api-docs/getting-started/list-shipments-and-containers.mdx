@@ -16,11 +16,11 @@ keywords:
 
 After you've successfully made a tracking request, Terminal49 will begin to track shipments and store relevant information about that shipment on your behalf.
 
-The initial tracking request starts this process, collecting available data from Carriers and Terminals. Then, Terminal49 periodically checks for new updates adn pulls data from the carriers and terminals to keep the data we store up to date.
+The initial tracking request starts this process, collecting available data from carriers and terminals. Terminal49 then periodically checks for new updates and pulls data from carriers and terminals to keep the stored data up to date.
 
 You can access data about shipments and containers on your tracked shipments any time. We will introduce the basics of this method below.
 
-Keep in mind, however, that apart from initialization code, you would not usually access shipment data in this way. You would use Webhooks (described in the next section). A Webhook is another name for a web-based callback URL, or a HTTP Push API. They provide a method for an API to post a notification to your service. Specifically, a webhook is simply a URL that can receive HTTP Post Requests from the Terminal49 API.
+In practice, you would typically use webhooks (described in the next section) rather than polling for shipment data. A webhook is a callback URL that receives HTTP POST requests from the Terminal49 API whenever tracking data changes.
 
 ## List all your tracked shipments
 
@@ -46,8 +46,8 @@ If you had trouble adding your first shipment, try adding a few more.
 ```
 
 
-> ### Why so much JSON? (A note on JSON API)
->The Terminal49 API is JSON API compliant, which means that there are nifty libraries which can translate JSON into a fully fledged object model that can be used with an ORM. This is very powerful, but it also requires a larger, more structured payload to power the framework. The tradeoff, therefore, is that it's less convenient if you're parsing the JSON directly. Ultimately we strongly recommend you set yourself up with a good library to use JSON API to its fullest extent. But for the purposes of understanding the API's fundamentals and getting your feet wet, we'll work with the data directly.
+> ### Why so much JSON? (A note on JSON:API)
+>The Terminal49 API is JSON:API compliant. JSON:API libraries can translate the response into a full object model compatible with an ORM, which is powerful but produces larger, more structured payloads. If you parse JSON directly, this can feel verbose. For production use, consider adopting a [JSON:API client library](https://jsonapi.org/implementations/#client-libraries) to get the most out of the format. For this tutorial, you will work with the data directly.
 
 ## Authentication
 
@@ -55,18 +55,18 @@ The API uses HTTP Bearer Token authentication.
 
 This means you send your API Key as your token in every request.
 
-Webhooks are associated with API tokens, and this is how the Terminal49 knows who to return relevant shipment information to.
+Webhooks are associated with API tokens, which is how Terminal49 identifies which account to send shipment updates to.
 
 
 ## Anatomy of shipments JSON response
 
 Here's what you'll see come back after you get the /shipments endpoint.
 
-Note that for clarity I've deleted some of the data that is less useful right now, and replaced them with ellipses (...). Bolded areas are also mine to point out important data.
+For clarity, some fields have been replaced with ellipses (...) and key areas are bolded.
 
-The **Data** attribute contains an array of objects. Each object is of type "shipment" and includes attributes such as bill of lading number, the port of lading, and so forth. Each Shipment object also has Relationships to structured data objects, for example, Ports and Terminals, as well as a list of Containers which are on this shipment.
+The **data** attribute contains an array of objects. Each object is of type `shipment` and includes attributes such as bill of lading number and port of lading. Each shipment object also has relationships to structured data objects like ports and terminals, as well as a list of containers on the shipment.
 
-You can write code to access these structured elements from the API. The advantage of this approach is that Terminal49 cleans and enhances the data that is provided from the steamship line, meaning that you can access a pre-defined object definition for a specific port in Los Angeles.
+You can access these structured elements through the API. Terminal49 cleans and enhances the data from the shipping line, so you get a pre-defined object for each port, terminal, and other entity.
 
 
 ```jsx
