@@ -17,6 +17,73 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="April 27, 2026" description="Booking number type inference, delivered date filter, document fuzzy search, hold descriptions, and bug fixes" tags={['API', 'Dashboard']}
+  rss="April 27, 2026: Booking number type inference, delivered date filter on the container dashboard, document fuzzy search, hold descriptions, custom field reference number flag, and a wave of carrier and terminal bug fixes."
+>
+  ### Booking number support in Infer Tracking Number
+
+The [Infer Tracking Number](/api-docs/api-reference/tracking-requests/auto-detect-carrier) endpoint now predicts the carrier and number type for **booking numbers**, in addition to container numbers and bills of lading. Send a booking number you aren't sure how to route, and Terminal49 returns a confidence-scored decision so you can create the tracking request with the correct VOCC SCAC and `request_type`.
+
+<Card title="Infer Tracking Number guide" icon="wand-magic-sparkles" href="/api-docs/in-depth-guides/auto-detect-carrier">
+  How to use Infer Tracking Number in your workflow
+</Card>
+
+---
+
+  ### Delivered date filter and column on the container dashboard
+
+The container dashboard now includes a **Delivered at** column and date-range filter, plus delivered-date sorting. Quickly find recently delivered containers, sort by delivery date, or filter to a specific window for reporting and reconciliation.
+
+---
+
+  ### Fuzzy search for documents
+
+Document search is now fuzzy across shipment, container, and tracking request reference numbers. Minor typos, format differences, or partial reference numbers still return the right document, reducing time spent hunting for paperwork.
+
+---
+
+  ### Hold descriptions on container holds
+
+Each hold returned on a container now includes a plain-language description explaining what the hold means and what's typically required to clear it. The descriptions are surfaced wherever holds appear so your team — and your customers — can act without looking up terminology.
+
+<Card title="Holds and fees guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
+  How to work with holds and fees data
+</Card>
+
+---
+
+  ### Reference number flag on custom field definitions
+
+Custom field definitions now support a `reference_number` flag. Mark a custom field as a reference number and Terminal49 will treat its value as a searchable identifier alongside built-in references like PO numbers and BOLs.
+
+<Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+  Custom Fields API reference
+</Card>
+
+---
+
+  ### PO number normalization for document linking
+
+Document-to-shipment linking via PO numbers now normalizes common format variants (separators, prefixes, and casing differences), so documents match shipments even when the PO is written slightly differently across systems.
+
+---
+
+  ### Bug fixes
+
+- **Containers requiring attention** — Picked-up, on-rail, empty-returned, and delivered containers no longer appear under the "needs attention" LFD view. Only containers still active at a terminal show up
+- **Tideworks fees** — Containers reported as on a vessel or on rail no longer return stale terminal fees from a previous move
+- **MSC Port of Discharge events** — Improved criteria for selecting the correct POD arrival event on MSC shipments
+- **LBCT inland transfers** — Fixed handling of on-dock-to-inland transfer events at LBCT, so rail moves out of the terminal are tracked correctly
+- **COSCO vessel departure** — Improved logic for determining when a COSCO vessel has departed the port of loading
+- **Vessel event deduplication** — Fixed duplicate vessel events on the shipment timeline coming from carriers and from the CSE invalidation pipeline
+- **Document linking race condition** — Eliminated a race condition that could leave a document briefly unlinked when references arrived from multiple sources at once
+- **Webhook notifications page** — Fixed an exception that could occur when listing webhook notifications containing document processing events
+- **Carrier integrations** — Fixes to MAEU auth handling (now treats 403 correctly), APM Empty In OAuth requests, BNSF rail scraping, NSRR equipment requests, Hapag-Lloyd booking sweeps for shipments with no containers, and Voyager terminal request headers
+- **Terminal data** — Updated headers for SSAMX and Holt agent terminals, and added external location mapping for PCIU
+- **Document email intake** — Tightened sender-email rules so unrelated inbox messages are filtered out, and fixed an edge case where a single email recipient was not handled as an array
+
+</Update>
+
 <Update label="April 20, 2026" description="Improved document linking, mark-as-delivered fix, LFD accuracy improvements, and terminal data fixes" tags={['API', 'Dashboard']}
   rss="April 20, 2026: Smarter document-to-shipment linking via PO numbers, mark-as-delivered fix in the dashboard, LFD accuracy improvements, and multiple terminal data collection fixes."
 >
