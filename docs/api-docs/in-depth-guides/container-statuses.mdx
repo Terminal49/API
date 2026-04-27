@@ -18,7 +18,7 @@ The `current_status` attribute on container objects provides a high-level view o
 The `current_status` field can have one of the following values:
 
 ### new
-**Default state** - The container is tracked but we don't yet have enough information to determine its actual status. This is the initial state when tracking begins.
+**Default state** - The container is tracked but Terminal49 doesn't yet have enough information to determine its actual status. This is the initial state when tracking begins.
 
 ### on_ship
 **In transit by vessel** - The container is on a ship at any point prior to arrival at the Port of Discharge (POD). This status can apply at multiple stages:
@@ -39,7 +39,7 @@ The `current_status` field can have one of the following values:
 See [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees) for details on specific hold types and how to determine when the container is released.
 
 ### grounded
-**Availability unknown** - The container is physically at the POD, but we don't currently know whether it's available for pickup or not. This typically means the terminal isn't providing real-time availability data.
+**Availability unknown** - The container is physically at the POD, but Terminal49 doesn't currently know whether it's available for pickup or not. This typically means the terminal isn't providing real-time availability data.
 
 ### awaiting_inland_transfer
 **Moving inland** - The container is either:
@@ -79,7 +79,7 @@ The logic to derive container statuses is complex and involves processing data f
 - Rail carrier feeds
 - Manual updates
 
-**There can sometimes be errors in the reported `current_status`**. When making critical business decisions, we recommend:
+**There can sometimes be errors in the reported `current_status`**. When making critical business decisions:
 - Cross-referencing with transport events
 - Contacting the terminal directly for time-sensitive pickups
 

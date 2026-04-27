@@ -75,7 +75,7 @@ You can view a complete list of supported terminals and attributes on [Google Sh
 
 Shipment data is populated from requests to the shipping lines.
 
-Below are a list of known issues with our data sources:
+Below is a list of known issues with the Terminal49 data sources:
 
 ### Cma-Cgm, APL, ANL
 
@@ -104,8 +104,8 @@ Below are a list of known issues with our data sources:
 
 ### Evergreen
 
-- All dates are provided as dates, not datetimes. We record and return them all as midnight at the location the event happened (when location is available) or midnight UTC.
-- Only Dry, Reefer, and Flatpack container types are mapped to our system
+- All dates are provided as dates, not datetimes. Terminal49 records and returns them all as midnight at the location the event happened (when location is available) or midnight UTC.
+- Only Dry, Reefer, and Flatpack container types are mapped to the Terminal49 system
 
 ### COSCO
 
@@ -117,7 +117,7 @@ Below are a list of known issues with our data sources:
 
 ### ONE
 
-- Only Dry, and Reefer container types are mapped to our system
+- Only Dry and Reefer container types are mapped to the Terminal49 system
 
 ### Yang-Ming
 
@@ -135,7 +135,7 @@ Below are a list of known issues with our data sources:
 ### Westwood Shipping
 
 - No container weight
-- Only Dry container types are mapped to our system
+- Only Dry container types are mapped to the Terminal49 system
 
 {/* Rail Coverage section archived */}
 
@@ -199,7 +199,7 @@ When a milestone passes, the Terminal49 API will ping one of your webhooks with 
 | Milestone Data | Description                                                     |
 | -------------- | --------------------------------------------------------------- |
 | Event Name     | the name of the event. e.g. 'container.transport.vessel_loaded' |
-| Created At     | when the event was created in our system                        |
+| Created At     | when the event was created in the Terminal49 system             |
 | Timestamp      | when the event occured                                          |
 | Timezone       | Which timezone did the event occur in.                          |
 | Voyage Number  | the voyage number of the vessel                                 |

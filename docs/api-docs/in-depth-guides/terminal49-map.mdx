@@ -14,9 +14,9 @@ keywords:
 ### Prerequisites
 
 - A Terminal49 account.
-- A Publishable API key, you can get one by reaching out to us at support@terminal49.com.
-- Familiarity with our [Shipments API](/api-docs/api-reference/shipments/list-shipments) and [Containers API](/api-docs/api-reference/containers/list-containers).
-In the following examples we'll be passing a `containerId` and `shipmentId` variables to the embedded map.
+- A Publishable API key, which you can get by reaching out to support@terminal49.com.
+- Familiarity with the [Shipments API](/api-docs/api-reference/shipments/list-shipments) and [Containers API](/api-docs/api-reference/containers/list-containers).
+The following examples pass `containerId` and `shipmentId` variables to the embedded map.
 They relate to `id` attributes of the container and shipment objects that are returned by the API.
 
 ### How do I embed the map on my website?
@@ -118,7 +118,7 @@ Or you can use module attribute to use top-level async/await.
 ![terminal49-map.png](/images/terminal49-map.png)
 
 Additionally, the map element doesn't have to be an element id but can be a DOM element reference instead.
-Consider this example where we use a query selector to select the map element.
+Consider this example, which uses a query selector to select the map element.
 
 ```javascript
 const element = document.querySelector("#map");
@@ -138,7 +138,7 @@ The styles are written in [BEM](https://getbem.com/) style as well as they're sc
 By default the map will take the full width of its container and some height. The map is expandable by clicking on the expand button on the bottom left corner of the map.
 You can also override the default styles to customize the map to your liking.
 
-Let's say you want to tell the map to take 60% of the total viewport size when expanded, we'd do this as follows:
+For example, to tell the map to take 60% of the total viewport size when expanded, do the following:
 
 ```css
 .tntm .tntm__container.--expanded {
@@ -150,7 +150,7 @@ Let's say you want to tell the map to take 60% of the total viewport size when e
 
 #### Colors
 
-We expose a number of CSS variables that you can use to customize the map colors.
+Terminal49 exposes a number of CSS variables that you can use to customize the map colors.
 All of the variables are bound to the `.tntm` class to avoid style conflicts with your website.
 ```css
 .tntm {
@@ -162,13 +162,12 @@ All of the variables are bound to the `.tntm` class to avoid style conflicts wit
 }
 ```
 
-By default their values are set to the Terminal49 brand colors, which we don't recommend changing and only focus on the `--marker` variants instead.
-Additionally the variables might require adjusting for different states of the map markers.
+By default, their values are set to the Terminal49 brand colors. Don't change these — focus on the `--marker` variants instead.
+Additionally, the variables might require adjusting for different states of the map markers.
 
-What does that mean?
-Let's say we want to display markers 'visited' by a vessel as orange and the others - that we call are in 'on-the-way' state as blue.
+For example, to display markers 'visited' by a vessel as orange and others (in the 'on-the-way' state) as blue:
 
-First let's define the default, blue color:
+First, define the default, blue color:
 
 ```css
 .tntm [data-journey-state='on-the-way'] {
@@ -194,7 +193,7 @@ Result:
 
 You can also change the marker colors based on whether they are hovered over or not.
 
-This is what we do on the Terminal49 website to style the map markers to our needs:
+This is how the Terminal49 website styles the map markers:
 
 ```css
 [data-journey-state='visited'] {
