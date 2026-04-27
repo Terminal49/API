@@ -23,14 +23,14 @@ Every tracking request requires two things: **your tracking number** and **the s
 But what if you don't know the SCAC? That's where the Infer API comes in.
 
 <Card title="Already using the Terminal49 Dashboard?" icon="browser" horizontal>
-  You've seen this feature in action — when you enter a number, we auto-suggest
+  You've seen this feature in action — when you enter a number, Terminal49 auto-suggests
   the carrier. Now this same intelligence is available via API.
 </Card>
 
 ## Why SCAC matters
 
 To track a shipment or container, Terminal49 needs to know **which shipping line to ask** (also called the vessel-operating common carrier (VOCC)).
-The SCAC (Standard Carrier Alpha Code) we use here is the **shipping line SCAC for tracking** — i.e., the carrier operating the move we’re querying for events and shipment data.
+The SCAC (Standard Carrier Alpha Code) used here is the **shipping line SCAC for tracking** — that is, the carrier operating the move you're querying for events and shipment data.
 
 | You Have                        | You Need                           | The Challenge                                                                                                               |
 | ------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
@@ -117,7 +117,7 @@ Submit any tracking number, and the API returns:
     </CodeGroup>
 
     <Tip>
-      For container numbers, we use historical data to identify the shipping line with high accuracy (9/10 times).
+      For container numbers, Terminal49 uses historical data to identify the shipping line with high accuracy (9/10 times).
       Always check the `decision` field to know if you should ask the user for confirmation.
     </Tip>
 
@@ -452,7 +452,7 @@ curl -X POST https://api.terminal49.com/v2/tracking_requests/infer_number \
     icon="ship"
     href="/api-docs/useful-info/api-data-sources-availability"
   >
-    See which carriers we support and their data availability
+    See which carriers Terminal49 supports and their data availability
   </Card>
   <Card
     title="Tracking Request Lifecycle"

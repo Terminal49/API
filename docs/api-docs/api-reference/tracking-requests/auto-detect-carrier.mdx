@@ -14,17 +14,17 @@ openapi: post /tracking_requests/infer_number
 
 ## What this endpoint does
 
-Give us a tracking number (container, bill of lading, or booking). We return:
+Provide a tracking number (container, bill of lading, or booking). The endpoint returns:
 
 - The **predicted VOCC carrier SCAC** to use for tracking
 - The **predicted number type**
 - A confidence-driven **decision** (`auto_select`, `needs_confirmation`, `no_prediction`)
 
 <Info>
-  We use machine learning prediction across container, bill of lading, and
-  booking numbers. For container numbers, we leverage tens of millions of
-  historical container movements to predict which carrier is moving the
-  container (about 9 out of 10 times).
+  Terminal49 uses machine learning prediction across container, bill of lading,
+  and booking numbers. For container numbers, Terminal49 leverages tens of
+  millions of historical container movements to predict which carrier is moving
+  the container (about 9 out of 10 times).
 </Info>
 
 ## How to use the result

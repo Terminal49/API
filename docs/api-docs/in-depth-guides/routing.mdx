@@ -12,7 +12,7 @@ keywords:
   - "routing data"
 mode: "wide"
 ---
-This is a technical article describing how to use our Routing Data feature, using the map as an example.
+This is a technical article describing how to use the Routing Data feature, using the map as an example.
 
 <Note>
     Routing Data (Container Map GeoJSON API) is a paid feature. These APIs are subject to additional terms of usage and pricing. If you are interested in using these APIs, please contact <a href="mailto:sales@terminal49.com">sales@terminal49.com</a>.
@@ -501,7 +501,7 @@ Integrating Terminal49's Vessel and Container Route APIs enables a variety of ad
 
 ## Recommendations and best practices
 
-- **Polling Intervals**: For active containers (currently at sea), we recommend refreshing the map data up to once per hour to get updated vessel positions. For containers that have completed their journey, you can cache the data as it won't change.
+- **Polling Intervals**: For active containers (currently at sea), refresh the map data up to once per hour to get updated vessel positions. For containers that have completed their journey, you can cache the data as it won't change.
 
 - **Error Handling**: Implement proper error handling for API requests. If a container doesn't have route data yet, the endpoint will return an empty FeatureCollection (`{"type": "FeatureCollection", "features": []}`).
 
