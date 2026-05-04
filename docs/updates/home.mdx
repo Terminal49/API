@@ -17,6 +17,88 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="May 4, 2026" description="Global vessel map, custom field search, sensitive custom fields, expanded terminal coverage, and bug fixes" tags={['API', 'Dashboard']}
+  rss="May 4, 2026: Global vessel map in the dashboard, search by custom field values, sensitive custom fields, Felixstowe and DP World Vancouver scraper alternatives, destination ETAs without rail data, xlsm document support, and a wave of carrier and terminal bug fixes."
+>
+  ### Global vessel map
+
+The Terminal49 dashboard now includes a **global vessel map** showing live positions for vessels carrying your shipments. Click any vessel to see its current voyage, route, and the shipments on board. The map streams updates over a websocket connection so positions stay current without manual refresh.
+
+---
+
+  ### Search by custom field values
+
+Shipments and containers can now be searched by **custom field values** alongside built-in identifiers. Use the same search you already use for container numbers or PO numbers to find records by any custom field you've defined.
+
+<Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+  Custom Fields API reference
+</Card>
+
+---
+
+  ### Sensitive custom fields
+
+Custom field definitions now support a `sensitive` flag. Mark a field as sensitive to restrict its visibility to authorized users — useful for fields containing internal references, financial data, or PII.
+
+---
+
+  ### Configurable duplicate document handling
+
+Accounts can now configure how duplicate documents are handled at upload time. Choose whether to reject duplicates, replace the existing document, or accept both, so document intake matches your team's workflow.
+
+<Card title="Document processing guide" icon="file" href="/api-docs/in-depth-guides/document-processing-workflows">
+  How document linking works
+</Card>
+
+---
+
+  ### xlsm spreadsheet support
+
+Macro-enabled Excel files (`.xlsm`) are now accepted by the document upload pipeline and converted to CSV for reference extraction. Previously only `.xls` and `.xlsx` were processed; mixed Excel uploads now flow through end-to-end without manual conversion.
+
+---
+
+  ### Destination ETA for non-US/CA containers without rail data
+
+Containers routed to inland destinations outside the US and Canada now return a destination ETA even when no rail tracking data is available, expanding ETA coverage for international inland moves.
+
+<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+  View the container resource
+</Card>
+
+---
+
+  ### New terminal scrapers
+
+- **Felixstowe** — added a mobile-site-based scraper as an alternative data source, improving reliability for containers moving through Felixstowe
+- **DP World Vancouver (3380)** — added a public-API scraper for terminal data at DP World Vancouver
+
+---
+
+  ### Promo codes and coupon links for Pay-As-You-Go checkout
+
+Pay-As-You-Go customers can now enter a promo code at Stripe Checkout, or follow a coupon link that pre-applies the discount during signup.
+
+---
+
+  ### Bug fixes
+
+- **YMLU transshipment events** — Fixed spurious full-out events generated at transshipment ports and corrected port-of-discharge mismatches for YMLU shipments
+- **MSC inland voyage numbers** — Stabilized voyage number assignment for MSC inland feeder and barge legs so the same leg no longer appears under different voyage numbers across updates
+- **ONE event timestamps** — Rail unloaded and other ONE events now use port-local time consistently, fixing display and ordering issues for ONE-tracked containers
+- **Bulk email CSV uploads** — Fixed an issue where rows using alternative SCACs were silently dropped from CSVs submitted by email
+- **Rail carrier lookup** — Rail carrier resolution now considers neighboring ports, improving carrier assignment for containers transferring between adjacent rail-served facilities
+- **Tideworks terminal sessions** — A 403 on the CSV endpoint now clears the cached session immediately, preventing a cascade of failed terminal lookups across containers
+- **Steamship tracker reliability** — Proxy and firewall blocks at carrier websites are now classified as `TrackerBlocked` errors, surfacing a clearer failure reason and enabling targeted retries
+- **POMTOC (L239)** — Routed POMTOC Tideworks requests through a residential proxy and added required Referer/Origin headers to restore data collection
+- **Free plan container limits** — Free plan accounts now meter against active container concurrency rather than monthly cumulative counts, so picked-up and delivered containers no longer count toward the limit
+- **Duplicate tags** — Eliminated a race condition that could cause duplicate tag creation to fail with a unique constraint error
+- **Postmark email intake** — Recipient email lookups are now case-insensitive, fixing missed matches on inbound document emails
+- **Pay-As-You-Go cancellation** — Fixed handling of Stripe subscription period dates so the cancel response returns accurate end-of-period timing for newer subscription structures
+- **Daily digest jobs** — Database errors during daily digest delivery now release the cache lock cleanly so the next run can proceed
+
+</Update>
+
 <Update label="April 27, 2026" description="Booking number type inference, delivered date filter, document fuzzy search, hold descriptions, and bug fixes" tags={['API', 'Dashboard']}
   rss="April 27, 2026: Booking number type inference, delivered date filter on the container dashboard, document fuzzy search, hold descriptions, custom field reference number flag, and a wave of carrier and terminal bug fixes."
 >
