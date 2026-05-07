@@ -10,7 +10,8 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "test": "npm test --workspaces"
+    "test": "npm test --workspaces",
+    "sdk:docs": "npm run docs --workspace @terminal49/sdk"
   },
   "engines": {
     "node": "24.x"

@@ -1,0 +1,538 @@
+---
+title: "Class: Terminal49Client"
+---
+
+# Class: Terminal49Client
+
+Server-side TypeScript client for the Terminal49 JSON:API.
+
+Use this client to create tracking requests, list and fetch shipments and
+containers, retrieve transport events, and work with core Terminal49 tracking
+data from Node.js applications.
+
+## Constructors
+
+### Constructor
+
+> **new Terminal49Client**(`config`): `Terminal49Client`
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `config` | [`Terminal49ClientConfig`](/sdk/reference/client/interfaces/Terminal49ClientConfig) |
+
+#### Returns
+
+`Terminal49Client`
+
+## Properties
+
+| Property | Modifier | Type | Description |
+| ------ | ------ | ------ | ------ |
+| <a id="property-containers"></a> `containers` | `public` | `object` | Container resource methods. |
+| `containers.events` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
+| `containers.get` | `public` | (`id`, `include?`, `options?`) => `Promise`\<`any`\> | - |
+| `containers.list` | `public` | (`filters`, `options?`) => `Promise`\<`any`\> | - |
+| `containers.rawEvents` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
+| `containers.refresh` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
+| `containers.route` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
+| <a id="property-shipments"></a> `shipments` | `public` | `object` | Shipment resource methods. |
+| `shipments.get` | `public` | (`id`, `includeContainers`, `options?`) => `Promise`\<`any`\> | - |
+| `shipments.list` | `public` | (`filters`, `options?`) => `Promise`\<`any`\> | - |
+| `shipments.resumeTracking` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
+| `shipments.stopTracking` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
+| `shipments.update` | `public` | (`id`, `attrs`, `options?`) => `Promise`\<`any`\> | - |
+| <a id="property-shippinglines"></a> `shippingLines` | `public` | `object` | Shipping line resource methods. |
+| `shippingLines.list` | `public` | (`search?`, `options?`) => `Promise`\<`any`\> | - |
+| <a id="property-trackingrequests"></a> `trackingRequests` | `public` | `object` | Tracking request resource methods. |
+| `trackingRequests.create` | `public` | (`params`) => `Promise`\<`any`\> | - |
+| `trackingRequests.createFromInfer` | `public` | (`number`, `options?`) => `Promise`\<\{ `infer`: `any`; `trackingRequest`: `any`; \}\> | - |
+| `trackingRequests.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
+| `trackingRequests.inferNumber` | `public` | (`number`) => `Promise`\<`any`\> | - |
+| `trackingRequests.list` | `public` | (`filters`, `options?`) => `Promise`\<`any`\> | - |
+| `trackingRequests.update` | `public` | (`id`, `attrs`, `options?`) => `Promise`\<`any`\> | - |
+
+## Methods
+
+### createTrackingRequest()
+
+> **createTrackingRequest**(`params`): `Promise`\<`any`\>
+
+Create a tracking request with an explicit number type and carrier SCAC.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `params` | \{ `refNumbers?`: `string`[]; `requestNumber`: `string`; `requestType`: [`TrackingRequestType`](/sdk/reference/client/type-aliases/TrackingRequestType); `scac?`: `string`; `shipmentTags?`: `string`[]; \} |
+| `params.refNumbers?` | `string`[] |
+| `params.requestNumber` | `string` |
+| `params.requestType` | [`TrackingRequestType`](/sdk/reference/client/type-aliases/TrackingRequestType) |
+| `params.scac?` | `string` |
+| `params.shipmentTags?` | `string`[] |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### createTrackingRequestFromInfer()
+
+> **createTrackingRequestFromInfer**(`number`, `options?`): `Promise`\<\{ `infer`: `any`; `trackingRequest`: `any`; \}\>
+
+Infer carrier/number type, then create a tracking request from the result.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `number` | `string` |
+| `options` | [`CreateTrackingRequestFromInferOptions`](/sdk/reference/client/interfaces/CreateTrackingRequestFromInferOptions) |
+
+#### Returns
+
+`Promise`\<\{ `infer`: `any`; `trackingRequest`: `any`; \}\>
+
+***
+
+### deserialize()
+
+> **deserialize**\<`T`\>(`document`): `T`
+
+Deserialize a JSON:API document into plain objects.
+Useful when you want a simplified shape instead of JSON:API.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `document` | `unknown` |
+
+#### Returns
+
+`T`
+
+#### Remarks
+
+The cast is unchecked at runtime — the caller is responsible
+for verifying the returned shape matches `T`.
+
+***
+
+### getContainer()
+
+> **getContainer**(`id`, `include?`, `options?`): `Promise`\<`any`\>
+
+Fetch a container by ID with optional included relationships.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `include` | `string`[] |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getContainerRawEvents()
+
+> **getContainerRawEvents**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch raw carrier/terminal events for a container.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getContainerRoute()
+
+> **getContainerRoute**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch routing details for a container. This may require a paid Terminal49 feature.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getContainerTransportEvents()
+
+> **getContainerTransportEvents**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch normalized transport events for a container.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getDemurrage()
+
+> **getDemurrage**(`containerId`): `Promise`\<`any`\>
+
+Return a demurrage-focused subset of container fields.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `containerId` | `string` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getRailMilestones()
+
+> **getRailMilestones**(`containerId`): `Promise`\<`any`\>
+
+Return rail milestone fields and rail transport events for a container.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `containerId` | `string` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getShipment()
+
+> **getShipment**(`id`, `includeContainers?`, `options?`): `Promise`\<`any`\>
+
+Fetch a shipment by ID, optionally including related containers.
+
+#### Parameters
+
+| Parameter | Type | Default value |
+| ------ | ------ | ------ |
+| `id` | `string` | `undefined` |
+| `includeContainers` | `boolean` | `true` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) | `undefined` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getTrackingRequest()
+
+> **getTrackingRequest**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch a tracking request by ID.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### inferTrackingNumber()
+
+> **inferTrackingNumber**(`number`): `Promise`\<`any`\>
+
+Infer a tracking number's type and likely carrier candidates.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `number` | `string` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### listContainers()
+
+> **listContainers**(`filters?`, `options?`): `Promise`\<`any`\>
+
+List containers with optional filters and pagination.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `filters` | \{ `carrier?`: `string`; `include?`: `string`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
+| `filters.carrier?` | `string` |
+| `filters.include?` | `string` |
+| `filters.port?` | `string` |
+| `filters.status?` | `string` |
+| `filters.updatedAfter?` | `string` |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### listShipments()
+
+> **listShipments**(`filters?`, `options?`): `Promise`\<`any`\>
+
+List shipments with optional filters and pagination.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `filters` | \{ `carrier?`: `string`; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
+| `filters.carrier?` | `string` |
+| `filters.includeContainers?` | `boolean` |
+| `filters.port?` | `string` |
+| `filters.status?` | `string` |
+| `filters.updatedAfter?` | `string` |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### listShippingLines()
+
+> **listShippingLines**(`search?`, `options?`): `Promise`\<`any`\>
+
+List supported shipping lines, optionally filtered by search text.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `search?` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### listTrackingRequests()
+
+> **listTrackingRequests**(`filters?`, `options?`): `Promise`\<`any`\>
+
+List tracking requests with optional filters and pagination.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `filters` | `Record`\<`string`, `string`\> |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### listTrackRequests()
+
+> **listTrackRequests**(`filters?`, `options?`): `Promise`\<`any`\>
+
+Alias for [listTrackingRequests](#listtrackingrequests).
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `filters` | `Record`\<`string`, `string`\> |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### refreshContainer()
+
+> **refreshContainer**(`id`, `options?`): `Promise`\<`any`\>
+
+Request an immediate refresh for a container. This may require a paid Terminal49 feature.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### resumeTrackingShipment()
+
+> **resumeTrackingShipment**(`id`, `options?`): `Promise`\<`any`\>
+
+Resume tracking a previously stopped shipment.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### search()
+
+> **search**(`query`): `Promise`\<`any`\>
+
+Search across shipments and containers by number, reference, or keyword.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `query` | `string` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### stopTrackingShipment()
+
+> **stopTrackingShipment**(`id`, `options?`): `Promise`\<`any`\>
+
+Stop tracking a shipment and its containers.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### trackContainer()
+
+> **trackContainer**(`params`): `Promise`\<`any`\>
+
+Convenience helper for creating a tracking request from a container or booking number.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `params` | \{ `bookingNumber?`: `string`; `containerNumber?`: `string`; `refNumbers?`: `string`[]; `scac?`: `string`; \} |
+| `params.bookingNumber?` | `string` |
+| `params.containerNumber?` | `string` |
+| `params.refNumbers?` | `string`[] |
+| `params.scac?` | `string` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### updateShipment()
+
+> **updateShipment**(`id`, `attrs`, `options?`): `Promise`\<`any`\>
+
+Update shipment attributes such as reference numbers or tags.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `attrs` | `Record`\<`string`, `any`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### updateTrackingRequest()
+
+> **updateTrackingRequest**(`id`, `attrs`, `options?`): `Promise`\<`any`\>
+
+Update tracking request attributes.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `attrs` | `Record`\<`string`, `any`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>

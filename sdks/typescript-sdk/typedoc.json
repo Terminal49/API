@@ -1,0 +1,34 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "Terminal49 TypeScript SDK",
+  "entryPoints": [
+    "src/client.ts",
+    "src/types/models.ts",
+    "src/types/options.ts"
+  ],
+  "out": "../../docs/sdk/reference",
+  "plugin": ["typedoc-plugin-markdown"],
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "includeVersion": true,
+  "disableSources": true,
+  "entryFileName": "index",
+  "fileExtension": ".mdx",
+  "hideBreadcrumbs": true,
+  "hidePageHeader": true,
+  "indexFormat": "table",
+  "parametersFormat": "table",
+  "interfacePropertiesFormat": "table",
+  "classPropertiesFormat": "table",
+  "typeAliasPropertiesFormat": "table",
+  "typeDeclarationFormat": "table",
+  "propertyMembersFormat": "table",
+  "enumMembersFormat": "table",
+  "pageTitleTemplates": {
+    "index": "TypeScript SDK API Reference",
+    "module": "{name}",
+    "member": "{kind}: {name}"
+  }
+}

@@ -308,6 +308,57 @@
               "sdk/filtering-pagination",
               "sdk/error-handling"
             ]
+          },
+          {
+            "group": "TypeScript API Reference",
+            "pages": [
+              "sdk/reference/index",
+              {
+                "group": "Client",
+                "pages": [
+                  "sdk/reference/client/index",
+                  "sdk/reference/client/classes/Terminal49Client",
+                  "sdk/reference/client/interfaces/Terminal49ClientConfig",
+                  "sdk/reference/client/interfaces/CreateTrackingRequestFromInferOptions",
+                  "sdk/reference/client/type-aliases/TrackingRequestType"
+                ]
+              },
+              {
+                "group": "Errors",
+                "pages": [
+                  "sdk/reference/client/classes/AuthenticationError",
+                  "sdk/reference/client/classes/AuthorizationError",
+                  "sdk/reference/client/classes/FeatureNotEnabledError",
+                  "sdk/reference/client/classes/NotFoundError",
+                  "sdk/reference/client/classes/RateLimitError",
+                  "sdk/reference/client/classes/Terminal49Error",
+                  "sdk/reference/client/classes/UpstreamError",
+                  "sdk/reference/client/classes/ValidationError"
+                ]
+              },
+              {
+                "group": "Models",
+                "pages": [
+                  "sdk/reference/types/models/index",
+                  "sdk/reference/types/models/interfaces/Container",
+                  "sdk/reference/types/models/interfaces/PaginatedResult",
+                  "sdk/reference/types/models/interfaces/PaginationLinks",
+                  "sdk/reference/types/models/interfaces/Route",
+                  "sdk/reference/types/models/interfaces/Shipment",
+                  "sdk/reference/types/models/interfaces/ShippingLine",
+                  "sdk/reference/types/models/interfaces/TrackingRequest"
+                ]
+              },
+              {
+                "group": "Options",
+                "pages": [
+                  "sdk/reference/types/options/index",
+                  "sdk/reference/types/options/interfaces/CallOptions",
+                  "sdk/reference/types/options/interfaces/ListOptions",
+                  "sdk/reference/types/options/type-aliases/ResponseFormat"
+                ]
+              }
+            ]
           }
         ]
       },

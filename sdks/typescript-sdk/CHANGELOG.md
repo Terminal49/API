@@ -1,0 +1,36 @@
+# Changelog
+
+All notable changes to `@terminal49/sdk` are documented here.
+
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+- TypeDoc-generated API reference with Mintlify-compatible MDX output
+- JSDoc comments on all public classes, interfaces, methods, and types
+- `npm run docs` script for regenerating SDK reference pages
+
+## [0.1.0] — 2026-03-01
+
+### Added
+
+- `Terminal49Client` with resource namespaces: `shipments`, `containers`, `trackingRequests`, `shippingLines`
+- Direct method aliases: `getShipment`, `listShipments`, `getContainer`, `listContainers`, etc.
+- Convenience helpers: `trackContainer`, `getDemurrage`, `getRailMilestones`
+- `search(query)` for cross-resource lookup
+- `inferTrackingNumber` and `createTrackingRequestFromInfer` for auto-detect workflows
+- Response formats: `raw`, `mapped`, `both`
+- JSON:API deserialization via `deserialize<T>()`
+- Typed errors: `AuthenticationError`, `AuthorizationError`, `NotFoundError`, `ValidationError`, `RateLimitError`, `FeatureNotEnabledError`, `UpstreamError`
+- Automatic retry with exponential backoff for `429` and `5xx` responses
+- Pagination support for list methods
+- Configurable `fetch` implementation for testing and custom runtimes
+- OpenAPI-generated types from `docs/openapi.json`
+- CI matrix testing across Node 18, 20, 22, 24
+- Publish workflow triggered by GitHub releases
+
+[Unreleased]: https://github.com/Terminal49/API/compare/sdk-v0.1.0...HEAD
+[0.1.0]: https://github.com/Terminal49/API/releases/tag/sdk-v0.1.0

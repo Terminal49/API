@@ -68,6 +68,9 @@ npm run example
 # Generate types from OpenAPI
 npm run generate:types
 
+# Generate Mintlify-compatible TypeDoc pages
+npm run docs
+
 # Type-check
 npm run type-check
 
@@ -122,9 +125,61 @@ obfuscated to preserve shape without exposing real values.
 List endpoints are captured without `include` for performance guidance. Single-resource
 fixtures include both base and `include` variants where supported.
 
-## Publishing (prep)
-- Add a `prepublishOnly` or `prepare` script to run `npm run build` so `dist/` is fresh.
-- Ensure `files`/`exports` only ship built JS/typings (currently `main/types/exports` point to `dist/`).
+## Documentation generation
+
+The SDK uses TypeDoc with `typedoc-plugin-markdown` to generate Mintlify-compatible MDX pages.
+
+```bash
+cd sdks/typescript-sdk
+npm run docs
+```
+
+Generated files are written to `../../docs/sdk/reference/` and are included in the Mintlify navigation in `docs/docs.json`.
+
+From the repo root, you can also run:
+
+```bash
+npm run sdk:docs
+```
+
+## Releasing a new version
+
+Releases are automated via [release-please](https://github.com/googleapis/release-please).
+
+### Automated flow (default)
+
+1. Merge PRs to `main` with [conventional commit](https://www.conventionalcommits.org/) prefixes
+   (`feat:`, `fix:`, `docs:`, `chore:`, etc.) that touch `sdks/typescript-sdk/`.
+2. Release-please automatically opens a release PR that bumps `package.json`,
+   updates `CHANGELOG.md`, and updates the manifest.
+3. Merge the release PR.
+4. Release-please creates a GitHub release with the `sdk-v-v<version>` tag.
+5. The publish workflow builds, tests, and publishes to npm automatically.
+
+### Manual release (fallback)
+
+If you need to release without release-please:
+
+1. Update `CHANGELOG.md` and bump version:
+   ```bash
+   cd sdks/typescript-sdk
+   npm version patch   # or minor / major
+   ```
+2. Commit and push:
+   ```bash
+   git add package.json package-lock.json CHANGELOG.md
+   git commit -m "chore: release @terminal49/sdk v$(node -p "require('./package.json').version")"
+   git push
+   ```
+3. Create a GitHub release with tag `sdk-v<version>` (e.g. `sdk-v0.2.0`).
+   The publish workflow will build, test, and publish to npm.
+
+### Post-release
+
+Regenerate docs if the public API changed:
+```bash
+npm run sdk:docs
+```
 
 ## Notes
 - Server-only: uses Node fetch (undici types) and targets Node 18+.

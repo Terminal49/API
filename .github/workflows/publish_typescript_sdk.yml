@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
           registry-url: https://registry.npmjs.org/
 
       - name: Read SDK version
@@ -30,7 +30,7 @@ jobs:
         run: |
           tag="${{ github.event.release.tag_name }}"
           version="${{ steps.sdk-version.outputs.version }}"
-          if [[ "$tag" == "v$version" || "$tag" == "sdk-v$version" || "$tag" == "$version" ]]; then
+          if [[ "$tag" == "v$version" || "$tag" == "sdk-v$version" || "$tag" == "$version" || "$tag" == "sdk-v-v$version" ]]; then
             echo "publish=true" >> "$GITHUB_OUTPUT"
           else
             echo "publish=false" >> "$GITHUB_OUTPUT"
@@ -46,6 +46,11 @@ jobs:
         if: steps.tag-check.outputs.publish == 'true'
         working-directory: sdks/typescript-sdk
         run: npm run build
+
+      - name: Test
+        if: steps.tag-check.outputs.publish == 'true'
+        working-directory: sdks/typescript-sdk
+        run: npm test -- --run
 
       - name: Publish
         if: steps.tag-check.outputs.publish == 'true'
