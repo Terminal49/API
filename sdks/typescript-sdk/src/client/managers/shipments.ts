@@ -1,5 +1,5 @@
 import type { PaginatedResult, Shipment } from '../../types/models.js';
-import type { CallOptions, ListOptions } from '../../types/options.js';
+import type { CallOptions, ListOptions, ShipmentInclude } from '../../types/options.js';
 import { mapShipment, mapShipmentList } from '../mappers.js';
 import { BaseManager } from './base.js';
 
@@ -7,17 +7,22 @@ export class ShipmentManager extends BaseManager {
   async get(
     id: string,
     includeContainers = true,
-    options?: CallOptions,
+    options?: CallOptions & { include?: ShipmentInclude[] },
   ): Promise<any> {
-    const includes = includeContainers
-      ? 'containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal'
-      : 'pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal';
+    let includesStr: string | undefined;
+    if (options?.include) {
+      includesStr = options.include.join(',');
+    } else {
+      includesStr = includeContainers
+        ? 'containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal'
+        : 'pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal';
+    }
 
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/shipments/{id}', {
         params: {
           path: { id },
-          query: { include: includes } as any,
+          query: includesStr ? ({ include: includesStr } as any) : undefined,
         },
       }),
     );
@@ -31,24 +36,25 @@ export class ShipmentManager extends BaseManager {
       carrier?: string;
       updatedAfter?: string;
       includeContainers?: boolean;
+      include?: ShipmentInclude[];
     } = {},
     options?: ListOptions,
   ): Promise<any> {
-    const params: Record<string, string> = {
-      include:
-        'containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal',
-    };
+    const params: Record<string, string> = {};
+
+    if (filters.include) {
+      params.include = filters.include.join(',');
+    } else {
+      params.include = filters.includeContainers === false
+        ? 'pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal'
+        : 'containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal';
+    }
 
     if (filters.status) params['filter[status]'] = filters.status;
     if (filters.port) params['filter[pod_locode]'] = filters.port;
     if (filters.carrier) params['filter[line_scac]'] = filters.carrier;
     if (filters.updatedAfter)
       params['filter[updated_at]'] = filters.updatedAfter;
-
-    if (filters.includeContainers === false) {
-      params.include =
-        'pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal';
-    }
 
     this.applyPagination(params, options);
 
@@ -59,6 +65,16 @@ export class ShipmentManager extends BaseManager {
     );
     return this.formatResult(raw, options?.format, (doc) =>
       this.mapListResult(doc, mapShipmentList),
+    );
+  }
+
+  iterate(
+    filters: Parameters<ShipmentManager['list']>[0] = {},
+    options?: Omit<ListOptions, 'page'>,
+  ): AsyncGenerator<Shipment, void, unknown> {
+    return this.createIterator<Shipment>(
+      (pageOpts) => this.list(filters, { ...options, ...pageOpts, format: 'mapped' }),
+      options,
     );
   }
 

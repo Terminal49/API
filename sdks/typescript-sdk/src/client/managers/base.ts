@@ -1,7 +1,5 @@
-import type {
-  PaginatedResult,
-  ResponseFormat,
-} from '../../types/options.js';
+import type { PaginatedResult } from '../../types/models.js';
+import type { ResponseFormat } from '../../types/options.js';
 import type { Transport } from '../transport.js';
 
 export abstract class BaseManager {
@@ -45,5 +43,34 @@ export abstract class BaseManager {
       params['page[number]'] = String(options.page);
     if (options.pageSize !== undefined)
       params['page[size]'] = String(options.pageSize);
+  }
+
+  /**
+   * Helper to create an async iterator from a list method that returns PaginatedResult
+   */
+  protected async *createIterator<T>(
+    listMethod: (options: { page?: number; pageSize?: number }) => Promise<PaginatedResult<T> | any>,
+    options?: { pageSize?: number },
+  ): AsyncGenerator<T, void, unknown> {
+    let currentPage = 1;
+    while (true) {
+      const result = await listMethod({ page: currentPage, pageSize: options?.pageSize });
+      // If the user requested raw or both format, we might need to extract mapped.
+      // Iterate is meant for mapped items.
+      const paginatedResult = result.mapped ? result.mapped : result;
+
+      if (!paginatedResult || !Array.isArray(paginatedResult.items) || paginatedResult.items.length === 0) {
+        break;
+      }
+
+      for (const item of paginatedResult.items) {
+        yield item;
+      }
+
+      if (!paginatedResult.links?.next) {
+        break;
+      }
+      currentPage++;
+    }
   }
 }

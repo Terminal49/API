@@ -14,3 +14,19 @@ export interface ListOptions extends CallOptions {
   /** Number of records per page. */
   pageSize?: number;
 }
+
+export type ShipmentInclude =
+  | 'containers'
+  | 'pod_terminal'
+  | 'port_of_lading'
+  | 'port_of_discharge'
+  | 'destination'
+  | 'destination_terminal';
+
+export type ContainerInclude =
+  | 'shipment'
+  | 'pod_terminal'
+  | 'destination_terminal'
+  | 'transport_events';
+
+export type TrackingRequestInclude = 'shipment' | 'container';

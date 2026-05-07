@@ -1,6 +1,7 @@
 import { ValidationError } from '../errors.js';
 import { mapTrackingRequest, mapTrackingRequestList } from '../mappers.js';
-import type { CallOptions, ListOptions } from '../../types/options.js';
+import type { TrackingRequest } from '../../types/models.js';
+import type { CallOptions, ListOptions, TrackingRequestInclude } from '../../types/options.js';
 import { BaseManager } from './base.js';
 
 export type TrackingRequestType =
@@ -17,10 +18,13 @@ export interface CreateTrackingRequestFromInferOptions {
 
 export class TrackingRequestManager extends BaseManager {
   async list(
-    filters: Record<string, string> = {},
+    filters: Record<string, string> & { include?: TrackingRequestInclude[] } = {},
     options?: ListOptions,
   ): Promise<any> {
-    const params: Record<string, string> = { ...filters };
+    const params: Record<string, string> = { ...filters } as any;
+    if (filters.include) {
+      params.include = filters.include.join(',');
+    }
     this.applyPagination(params, options);
 
     const raw = await this.transport.execute(() =>
@@ -33,10 +37,25 @@ export class TrackingRequestManager extends BaseManager {
     );
   }
 
-  async get(id: string, options?: CallOptions): Promise<any> {
+  iterate(
+    filters: Parameters<TrackingRequestManager['list']>[0] = {},
+    options?: Omit<ListOptions, 'page'>,
+  ): AsyncGenerator<TrackingRequest, void, unknown> {
+    return this.createIterator<TrackingRequest>(
+      (pageOpts) => this.list(filters, { ...options, ...pageOpts, format: 'mapped' }),
+      options,
+    );
+  }
+
+  async get(id: string, options?: CallOptions & { include?: TrackingRequestInclude[] }): Promise<any> {
+    const query: any = {};
+    if (options?.include) {
+      query.include = options.include.join(',');
+    }
+
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/tracking_requests/{id}', {
-        params: { path: { id } },
+        params: { path: { id }, query: Object.keys(query).length > 0 ? query : undefined },
       }),
     );
     return this.formatResult(raw, options?.format, mapTrackingRequest);

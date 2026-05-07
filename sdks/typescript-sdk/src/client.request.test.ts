@@ -166,7 +166,7 @@ describe('Terminal49Client request building', () => {
     await client.listContainers(
       {
         status: 'in_transit',
-        include: 'shipment,pod_terminal,transport_events',
+        include: ['shipment', 'pod_terminal', 'transport_events'],
       },
       { page: 3, pageSize: 10 },
     );
@@ -505,5 +505,47 @@ describe('Terminal49Client request building', () => {
 
     const result = await client.search('ABC123');
     expect(result).toEqual({ hits: 2 });
+  });
+
+  it('provides an async iterator for paginated endpoints', async () => {
+    const { fetchImpl } = createMockFetch({
+      '/shipments?include=containers%2Cpod_terminal%2Cport_of_lading%2Cport_of_discharge%2Cdestination%2Cdestination_terminal&page%5Bnumber%5D=1&page%5Bsize%5D=1': () =>
+        jsonResponse({
+          data: [{ id: 'ship-1', type: 'shipment', attributes: { status: 'in_transit' } }],
+          links: { next: 'page=2' },
+        }),
+      '/shipments?include=containers%2Cpod_terminal%2Cport_of_lading%2Cport_of_discharge%2Cdestination%2Cdestination_terminal&page%5Bnumber%5D=2&page%5Bsize%5D=1': () =>
+        jsonResponse({
+          data: [{ id: 'ship-2', type: 'shipment', attributes: { status: 'discharged' } }],
+          links: { next: null },
+        }),
+      '/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=1&page[size]=1': () =>
+        jsonResponse({
+          data: [{ id: 'ship-1', type: 'shipment', attributes: { status: 'in_transit' } }],
+          links: { next: 'page=2' },
+        }),
+      '/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=2&page[size]=1': () =>
+        jsonResponse({
+          data: [{ id: 'ship-2', type: 'shipment', attributes: { status: 'discharged' } }],
+          links: { next: null },
+        }),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    const items = [];
+    for await (const shipment of client.shipments.iterate({}, { pageSize: 1 })) {
+      items.push(shipment);
+    }
+
+    expect(items).toHaveLength(2);
+    expect(items[0].id).toBe('ship-1');
+    expect(items[0].status).toBe('in_transit');
+    expect(items[1].id).toBe('ship-2');
+    expect(items[1].status).toBe('discharged');
   });
 });

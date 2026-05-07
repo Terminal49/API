@@ -1,6 +1,11 @@
 import createClient, { type FetchResponse } from 'openapi-fetch';
 import type { paths } from '../generated/terminal49.js';
-import { extractErrorMessage, toTerminal49Error } from './errors.js';
+import {
+  AuthInterceptor,
+  ErrorMappingInterceptor,
+  RetryInterceptor,
+  type Interceptor,
+} from './interceptors.js';
 
 export interface TransportConfig {
   apiToken: string;
@@ -26,88 +31,48 @@ export class Transport {
 
     this.client = createClient<paths>({
       baseUrl: this.baseUrl,
-      fetch: this.buildFetch(this.fetchImpl),
+      fetch: this.fetchImpl,
     });
+
+    // Register built-in middlewares
+    this.client.use(new AuthInterceptor(this.apiToken));
+    this.client.use(new ErrorMappingInterceptor());
+    this.client.use(new RetryInterceptor(this.maxRetries, this.fetchImpl));
   }
 
-  private buildFetch(fetchImpl: typeof fetch) {
-    return async (
-      input: Request | URL | string,
-      init?: RequestInit,
-    ): Promise<Response> => {
-      const headers = new Headers(init?.headers);
-      const authHeader = this.apiToken.startsWith('Token ')
-        ? this.apiToken
-        : `Token ${this.apiToken}`;
-      headers.set('Authorization', authHeader);
-      headers.set('Accept', 'application/json');
-      if (init?.body !== undefined && !headers.has('Content-Type')) {
-        headers.set('Content-Type', 'application/json');
-      }
-
-      return fetchImpl(input, { ...init, headers });
-    };
+  public use(interceptor: Interceptor) {
+    this.client.use(interceptor);
   }
 
   public async execute<T = any>(
     fn: () => Promise<FetchResponse<any, any, any>>,
   ): Promise<T> {
-    return this.executeWithRetry(fn, 0);
-  }
-
-  private async executeWithRetry<T = any>(
-    fn: () => Promise<FetchResponse<any, any, any>>,
-    attempt: number,
-  ): Promise<T> {
-    const { data, error, response } = await fn();
-
-    if (data !== undefined && response?.ok !== false) {
-      return data as T;
-    }
-
-    const status = response?.status ?? 500;
-
-    if ((status === 429 || status >= 500) && attempt < this.maxRetries) {
-      const delay = 2 ** attempt * 500;
-      await this.sleep(delay);
-      return this.executeWithRetry(fn, attempt + 1);
-    }
-
-    const errorBody = error ?? (await this.safeParse(response));
-    throw toTerminal49Error(status, extractErrorMessage(errorBody), errorBody);
+    const { data } = await fn();
+    return data as T;
   }
 
   public async executeManual<T = any>(
     input: Request | URL | string,
     init?: RequestInit,
   ): Promise<T> {
-    return this.executeWithRetry(
-      async (): Promise<FetchResponse<any, any, any>> => {
-        const response = await this.buildFetch(this.fetchImpl)(input, init);
-        let body: any;
-        try {
-          body = await response.clone().json();
-        } catch {}
-        return {
-          data: response.ok ? (body as T) : undefined,
-          error: response.ok ? undefined : body,
-          response,
-        };
-      },
-      0,
-    );
-  }
+    // This goes through the raw fetchImpl, bypassing openapi-fetch middleware for now,
+    // or we could construct a Request and run it through the middleware manually.
+    // For search(), which is the only user, we'll just run it directly.
+    const req = new Request(input, init);
+    const auth = new AuthInterceptor(this.apiToken);
+    const retry = new RetryInterceptor(this.maxRetries, this.fetchImpl);
+    const errorMap = new ErrorMappingInterceptor();
 
-  private async safeParse(response?: Response | null): Promise<any> {
-    if (!response) return null;
+    const authedReq = auth.onRequest({ request: req } as any) || req;
+    let res = await this.fetchImpl(authedReq);
+    res = await retry.onResponse({ request: authedReq, response: res } as any);
+    await errorMap.onResponse({ response: res } as any);
+
     try {
-      return await response.clone().json();
+      return (await res.clone().json()) as T;
     } catch {
-      return null;
+      return undefined as any;
     }
   }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
 }
+
