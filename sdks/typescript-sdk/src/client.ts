@@ -142,6 +142,9 @@ export class Terminal49Client {
   /**
    * Deserialize a JSON:API document into plain objects.
    * Useful when you want a simplified shape instead of JSON:API.
+   *
+   * @remarks The cast is unchecked at runtime — the caller is responsible
+   * for verifying the returned shape matches `T`.
    */
   deserialize<T>(document: unknown): T {
     return this.jsona.deserialize(document as any) as T;

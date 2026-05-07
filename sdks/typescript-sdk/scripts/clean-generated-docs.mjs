@@ -1,3 +1,4 @@
+/** Wipe the TypeDoc output directory before regeneration. */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

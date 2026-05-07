@@ -1,5 +1,5 @@
 ---
-title: "client"
+title: "Client Module"
 ---
 
 # client
@@ -8,15 +8,15 @@ title: "client"
 
 | Class | Description |
 | ------ | ------ |
-| [AuthenticationError](/sdk/reference/client/classes/AuthenticationError) | Terminal49 API Client Typed wrapper around Terminal49's JSON:API using openapi-fetch + openapi-typescript. Can be used standalone or plugged into the MCP tools. |
-| [AuthorizationError](/sdk/reference/client/classes/AuthorizationError) | Terminal49 API Client Typed wrapper around Terminal49's JSON:API using openapi-fetch + openapi-typescript. Can be used standalone or plugged into the MCP tools. |
-| [FeatureNotEnabledError](/sdk/reference/client/classes/FeatureNotEnabledError) | Terminal49 API Client Typed wrapper around Terminal49's JSON:API using openapi-fetch + openapi-typescript. Can be used standalone or plugged into the MCP tools. |
-| [NotFoundError](/sdk/reference/client/classes/NotFoundError) | Terminal49 API Client Typed wrapper around Terminal49's JSON:API using openapi-fetch + openapi-typescript. Can be used standalone or plugged into the MCP tools. |
-| [RateLimitError](/sdk/reference/client/classes/RateLimitError) | Terminal49 API Client Typed wrapper around Terminal49's JSON:API using openapi-fetch + openapi-typescript. Can be used standalone or plugged into the MCP tools. |
+| [AuthenticationError](/sdk/reference/client/classes/AuthenticationError) | Thrown when the API token is invalid or missing (HTTP 401). |
+| [AuthorizationError](/sdk/reference/client/classes/AuthorizationError) | Thrown when the API token is valid but lacks permission for the request (HTTP 403). |
+| [FeatureNotEnabledError](/sdk/reference/client/classes/FeatureNotEnabledError) | Thrown when the requested feature requires a plan upgrade (HTTP 403). |
+| [NotFoundError](/sdk/reference/client/classes/NotFoundError) | Thrown when the requested resource does not exist (HTTP 404). |
+| [RateLimitError](/sdk/reference/client/classes/RateLimitError) | Thrown when the API rate limit has been exceeded (HTTP 429). The SDK retries automatically. |
 | [Terminal49Client](/sdk/reference/client/classes/Terminal49Client) | Server-side TypeScript client for the Terminal49 JSON:API. |
-| [Terminal49Error](/sdk/reference/client/classes/Terminal49Error) | Terminal49 API Client Typed wrapper around Terminal49's JSON:API using openapi-fetch + openapi-typescript. Can be used standalone or plugged into the MCP tools. |
-| [UpstreamError](/sdk/reference/client/classes/UpstreamError) | Terminal49 API Client Typed wrapper around Terminal49's JSON:API using openapi-fetch + openapi-typescript. Can be used standalone or plugged into the MCP tools. |
-| [ValidationError](/sdk/reference/client/classes/ValidationError) | Terminal49 API Client Typed wrapper around Terminal49's JSON:API using openapi-fetch + openapi-typescript. Can be used standalone or plugged into the MCP tools. |
+| [Terminal49Error](/sdk/reference/client/classes/Terminal49Error) | Base error for all Terminal49 API errors. Subclassed by status-specific errors. |
+| [UpstreamError](/sdk/reference/client/classes/UpstreamError) | Thrown when the carrier or terminal upstream API is unavailable (HTTP 5xx). |
+| [ValidationError](/sdk/reference/client/classes/ValidationError) | Thrown when the request payload fails server-side validation (HTTP 400/422). |
 
 ## Interfaces
 

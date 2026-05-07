@@ -1,6 +1,6 @@
 # Terminal49 TypeScript SDK Status
 
-_Last updated: 2026-05-07_
+_Last updated: see `git log -1 --format=%ci SDK_STATUS.md`_
 
 ## Summary
 

@@ -310,7 +310,7 @@
             ]
           },
           {
-            "group": "Generated API Reference",
+            "group": "TypeScript API Reference",
             "pages": [
               "sdk/reference/index",
               {

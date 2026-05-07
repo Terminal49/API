@@ -1,3 +1,4 @@
+/** Base error for all Terminal49 API errors. Subclassed by status-specific errors. */
 export class Terminal49Error extends Error {
   status?: number;
   details?: unknown;
@@ -10,6 +11,7 @@ export class Terminal49Error extends Error {
   }
 }
 
+/** Thrown when the API token is invalid or missing (HTTP 401). */
 export class AuthenticationError extends Terminal49Error {
   constructor(message: string, status = 401, details?: unknown) {
     super(message, status, details);
@@ -17,6 +19,7 @@ export class AuthenticationError extends Terminal49Error {
   }
 }
 
+/** Thrown when the API token is valid but lacks permission for the request (HTTP 403). */
 export class AuthorizationError extends Terminal49Error {
   constructor(message: string, status = 403, details?: unknown) {
     super(message, status, details);
@@ -24,6 +27,7 @@ export class AuthorizationError extends Terminal49Error {
   }
 }
 
+/** Thrown when the requested feature requires a plan upgrade (HTTP 403). */
 export class FeatureNotEnabledError extends AuthorizationError {
   constructor(message: string, status = 403, details?: unknown) {
     super(message, status, details);
@@ -31,6 +35,7 @@ export class FeatureNotEnabledError extends AuthorizationError {
   }
 }
 
+/** Thrown when the requested resource does not exist (HTTP 404). */
 export class NotFoundError extends Terminal49Error {
   constructor(message: string, status = 404, details?: unknown) {
     super(message, status, details);
@@ -38,6 +43,7 @@ export class NotFoundError extends Terminal49Error {
   }
 }
 
+/** Thrown when the request payload fails server-side validation (HTTP 400/422). */
 export class ValidationError extends Terminal49Error {
   constructor(message: string, status = 400, details?: unknown) {
     super(message, status, details);
@@ -45,6 +51,7 @@ export class ValidationError extends Terminal49Error {
   }
 }
 
+/** Thrown when the API rate limit has been exceeded (HTTP 429). The SDK retries automatically. */
 export class RateLimitError extends Terminal49Error {
   constructor(message: string, status = 429, details?: unknown) {
     super(message, status, details);
@@ -52,6 +59,7 @@ export class RateLimitError extends Terminal49Error {
   }
 }
 
+/** Thrown when the carrier or terminal upstream API is unavailable (HTTP 5xx). */
 export class UpstreamError extends Terminal49Error {
   constructor(message: string, status = 500, details?: unknown) {
     super(message, status, details);
