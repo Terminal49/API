@@ -14,7 +14,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest",
     "generate:types": "openapi-typescript ../../docs/openapi.json -o src/generated/terminal49.ts",
-    "docs": "npm run docs:clean && typedoc --options typedoc.json",
+    "docs": "npm run docs:clean && typedoc --options typedoc.json && node scripts/postprocess-generated-docs.mjs",
     "docs:clean": "node scripts/clean-generated-docs.mjs",
     "docs:mintlify": "npm run docs",
     "example": "node -r dotenv/config dist/scripts/example.js",
