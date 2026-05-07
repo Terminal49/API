@@ -115,6 +115,7 @@ Here's a list of the rail-specific events which support webhook notifications:
 | Rail Arrived   | `container.transport.rail_arrived`  | The container arrives at a rail terminal (not always at the destination terminal). | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-rail-arrived" target="_blank">Example</a> |
 | Arrived At Inland Destination | `container.transport.arrived_at_inland_destination` | The container arrives at the destination terminal. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-arrived-at-inland-destination" target="_blank">Example</a> |
 | Rail Unloaded  | `container.transport.rail_unloaded` | The container is unloaded from a railcar. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-rail-unloaded" target="_blank">Example</a> |
+| Rail LFD Changed | `container.pickup_lfd_rail.changed` | The Rail Last Free Day (LFD) for the container has changed. |  |
 
 There's also a set of events that are triggered when the status of the container at the destination rail terminal changes.  For containers without rail, they would have been triggered at the ocean terminal.
 
