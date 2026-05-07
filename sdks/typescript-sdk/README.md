@@ -142,9 +142,34 @@ From the repo root, you can also run:
 npm run sdk:docs
 ```
 
-## Publishing (prep)
-- Add a `prepublishOnly` or `prepare` script to run `npm run build` so `dist/` is fresh.
-- Ensure `files`/`exports` only ship built JS/typings (currently `main/types/exports` point to `dist/`).
+## Releasing a new version
+
+1. **Update the changelog** — add a new section to `CHANGELOG.md` under `[Unreleased]`,
+   then rename it to the new version with today's date.
+
+2. **Bump the version** in `package.json`:
+   ```bash
+   cd sdks/typescript-sdk
+   npm version patch   # or minor / major
+   ```
+
+3. **Commit and push**:
+   ```bash
+   git add package.json package-lock.json CHANGELOG.md
+   git commit -m "chore: release @terminal49/sdk v$(node -p "require('./package.json').version")"
+   git push
+   ```
+
+4. **Create a GitHub release** with tag `sdk-v<version>` (e.g. `sdk-v0.2.0`).
+   The publish workflow will automatically:
+   - Verify the tag matches `package.json`
+   - Build and test
+   - Publish to npm
+
+5. **Regenerate docs** if the public API changed:
+   ```bash
+   npm run sdk:docs
+   ```
 
 ## Notes
 - Server-only: uses Node fetch (undici types) and targets Node 18+.
