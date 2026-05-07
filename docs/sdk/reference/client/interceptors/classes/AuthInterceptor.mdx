@@ -4,10 +4,6 @@ title: "Class: AuthInterceptor"
 
 # Class: AuthInterceptor
 
-## Implements
-
-- [`Interceptor`](/sdk/reference/client/interceptors/interfaces/Interceptor)
-
 ## Constructors
 
 ### Constructor
@@ -34,13 +30,8 @@ title: "Class: AuthInterceptor"
 
 | Parameter | Type |
 | ------ | ------ |
-| `__namedParameters` | \{ `request`: `Request`; \} |
-| `__namedParameters.request` | `Request` |
+| `__namedParameters` | `Pick`\<`MiddlewareCallbackParams`, `"id"` \| `"request"`\> |
 
 #### Returns
 
 `Request`
-
-#### Implementation of
-
-[`Interceptor`](/sdk/reference/client/interceptors/interfaces/Interceptor).[`onRequest`](/sdk/reference/client/interceptors/interfaces/Interceptor#onrequest)

@@ -1,11 +1,13 @@
 import type { TrackingRequest } from '../../types/models.js';
 import type {
   CallOptions,
+  IncludeParam,
   ListOptions,
   TrackingRequestInclude,
 } from '../../types/options.js';
 import { ValidationError } from '../errors.js';
 import { mapTrackingRequest, mapTrackingRequestList } from '../mappers.js';
+import { copyStringParams, normalizeInclude } from '../query.js';
 import { BaseManager } from './base.js';
 
 export type TrackingRequestType =
@@ -20,17 +22,20 @@ export interface CreateTrackingRequestFromInferOptions {
   shipmentTags?: string[];
 }
 
+export interface TrackingRequestListFilters {
+  [key: string]: IncludeParam<TrackingRequestInclude> | string | undefined;
+  include?: IncludeParam<TrackingRequestInclude>;
+}
+
 export class TrackingRequestManager extends BaseManager {
   async list(
-    filters: Record<string, string> & {
-      include?: TrackingRequestInclude[];
-    } = {},
+    filters: TrackingRequestListFilters = {},
     options?: ListOptions,
   ): Promise<any> {
-    const params: Record<string, string> = { ...filters } as any;
-    if (filters.include) {
-      params.include = filters.include.join(',');
-    }
+    const params: Record<string, string> = {};
+    copyStringParams(params, filters, ['include']);
+    const includesStr = normalizeInclude(filters.include);
+    if (includesStr) params.include = includesStr;
     this.applyPagination(params, options);
 
     const raw = await this.transport.execute(() =>
@@ -56,12 +61,11 @@ export class TrackingRequestManager extends BaseManager {
 
   async get(
     id: string,
-    options?: CallOptions & { include?: TrackingRequestInclude[] },
+    options?: CallOptions & { include?: IncludeParam<TrackingRequestInclude> },
   ): Promise<any> {
     const query: any = {};
-    if (options?.include) {
-      query.include = options.include.join(',');
-    }
+    const includesStr = normalizeInclude(options?.include);
+    if (includesStr) query.include = includesStr;
 
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/tracking_requests/{id}', {

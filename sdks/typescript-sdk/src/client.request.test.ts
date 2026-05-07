@@ -145,6 +145,32 @@ describe('Terminal49Client request building', () => {
     expect(include).not.toContain('containers');
   });
 
+  it('accepts comma-separated listShipments include strings', async () => {
+    const search = buildSearchParams([
+      ['include', 'containers,pod_terminal'],
+      ['filter[status]', 'in_transit'],
+    ]);
+
+    const { fetchImpl, calls } = createMockFetch({
+      [`/shipments?${search}`]: () => jsonResponse({ data: [] }),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.listShipments({
+      status: 'in_transit',
+      include: 'containers,pod_terminal',
+    });
+
+    expect(calls[0].url.searchParams.get('include')).toBe(
+      'containers,pod_terminal',
+    );
+  });
+
   it('builds listContainers filters and pagination with custom include', async () => {
     const search = buildSearchParams([
       ['include', 'shipment,pod_terminal,transport_events'],
@@ -251,6 +277,36 @@ describe('Terminal49Client request building', () => {
     await client.listTrackRequests({}, { page: 2, pageSize: 25 });
 
     expect(calls.length).toBe(2);
+  });
+
+  it('accepts comma-separated tracking request include strings', async () => {
+    const search = buildSearchParams([
+      ['filter[status]', 'pending'],
+      ['include', 'shipment,container'],
+    ]);
+
+    const { fetchImpl, calls } = createMockFetch({
+      [`/tracking_requests?${search}`]: () => jsonResponse({ data: [] }),
+      '/tracking_requests/tr-1?include=shipment,container': () =>
+        jsonResponse({ data: { id: 'tr-1' } }),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.listTrackingRequests({
+      'filter[status]': 'pending',
+      include: 'shipment,container',
+    });
+    await client.getTrackingRequest('tr-1', {
+      include: 'shipment,container',
+    });
+
+    expect(calls[0].url.searchParams.get('include')).toBe('shipment,container');
+    expect(calls[1].url.searchParams.get('include')).toBe('shipment,container');
   });
 
   it('sends JSON:API payload for updateTrackingRequest', async () => {

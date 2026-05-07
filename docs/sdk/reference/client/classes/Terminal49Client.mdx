@@ -120,7 +120,7 @@ Fetch a container by ID with optional included relationships.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `include` | `string` \| [`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)[] |
+| `include` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
@@ -289,9 +289,9 @@ List containers with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: `string` \| [`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)[]; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\>; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
 | `filters.carrier?` | `string` |
-| `filters.include?` | `string` \| [`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)[] |
+| `filters.include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
 | `filters.port?` | `string` |
 | `filters.status?` | `string` |
 | `filters.updatedAfter?` | `string` |
@@ -313,9 +313,9 @@ List shipments with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: [`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)[]; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\>; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
 | `filters.carrier?` | `string` |
-| `filters.include?` | [`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)[] |
+| `filters.include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\> |
 | `filters.includeContainers?` | `boolean` |
 | `filters.port?` | `string` |
 | `filters.status?` | `string` |
@@ -357,7 +357,7 @@ List tracking requests with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | `Record`\<`string`, `string`\> & `object` |
+| `filters` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
@@ -376,7 +376,7 @@ Alias for [listTrackingRequests](#listtrackingrequests).
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | `Record`\<`string`, `string`\> & `object` |
+| `filters` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns

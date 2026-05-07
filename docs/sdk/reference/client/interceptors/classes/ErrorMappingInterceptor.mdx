@@ -4,10 +4,6 @@ title: "Class: ErrorMappingInterceptor"
 
 # Class: ErrorMappingInterceptor
 
-## Implements
-
-- [`Interceptor`](/sdk/reference/client/interceptors/interfaces/Interceptor)
-
 ## Constructors
 
 ### Constructor
@@ -28,13 +24,8 @@ title: "Class: ErrorMappingInterceptor"
 
 | Parameter | Type |
 | ------ | ------ |
-| `__namedParameters` | \{ `response`: `Response`; \} |
-| `__namedParameters.response` | `Response` |
+| `__namedParameters` | `Pick`\<`MiddlewareCallbackParams`, `"id"` \| `"request"`\> & `object` |
 
 #### Returns
 
 `Promise`\<`Response`\>
-
-#### Implementation of
-
-[`Interceptor`](/sdk/reference/client/interceptors/interfaces/Interceptor).[`onResponse`](/sdk/reference/client/interceptors/interfaces/Interceptor#onresponse)

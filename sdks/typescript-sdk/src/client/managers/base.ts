@@ -1,5 +1,6 @@
 import type { PaginatedResult } from '../../types/models.js';
-import type { ResponseFormat } from '../../types/options.js';
+import type { ListOptions, ResponseFormat } from '../../types/options.js';
+import { applyPagination } from '../query.js';
 import type { Transport } from '../transport.js';
 
 export abstract class BaseManager {
@@ -36,13 +37,9 @@ export abstract class BaseManager {
 
   protected applyPagination(
     params: Record<string, string>,
-    options?: { page?: number; pageSize?: number },
+    options?: Pick<ListOptions, 'page' | 'pageSize'>,
   ) {
-    if (!options) return;
-    if (options.page !== undefined)
-      params['page[number]'] = String(options.page);
-    if (options.pageSize !== undefined)
-      params['page[size]'] = String(options.pageSize);
+    applyPagination(params, options);
   }
 
   /**

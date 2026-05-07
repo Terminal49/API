@@ -2,18 +2,20 @@ import type { Container } from '../../types/models.js';
 import type {
   CallOptions,
   ContainerInclude,
+  IncludeParam,
   ListOptions,
 } from '../../types/options.js';
 import { mapContainerList, mapRoute, mapTransportEvents } from '../mappers.js';
+import { normalizeInclude, normalizeIncludeWithDefault } from '../query.js';
 import { BaseManager } from './base.js';
 
 export class ContainerManager extends BaseManager {
   async get(
     id: string,
-    include: ContainerInclude[] | string = ['shipment', 'pod_terminal'],
+    include: IncludeParam<ContainerInclude> = ['shipment', 'pod_terminal'],
     options?: CallOptions,
   ): Promise<any> {
-    const includeParam = normalizeIncludeParam(include);
+    const includeParam = normalizeInclude(include);
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/containers/{id}', {
         params: {
@@ -31,14 +33,14 @@ export class ContainerManager extends BaseManager {
       port?: string;
       carrier?: string;
       updatedAfter?: string;
-      include?: ContainerInclude[] | string;
+      include?: IncludeParam<ContainerInclude>;
     } = {},
     options?: ListOptions,
   ): Promise<any> {
-    const includeParam =
-      filters.include === undefined
-        ? 'shipment,pod_terminal'
-        : normalizeIncludeParam(filters.include);
+    const includeParam = normalizeIncludeWithDefault(filters.include, [
+      'shipment',
+      'pod_terminal',
+    ]);
     const params: Record<string, string> = {};
     if (includeParam) params.include = includeParam;
     if (filters.status) params['filter[status]'] = filters.status;
@@ -111,14 +113,4 @@ export class ContainerManager extends BaseManager {
     );
     return this.formatResult(raw, options?.format);
   }
-}
-
-function normalizeIncludeParam(
-  include: ContainerInclude[] | string,
-): string | undefined {
-  if (typeof include === 'string') {
-    return include.length > 0 ? include : undefined;
-  }
-
-  return include.length > 0 ? include.join(',') : undefined;
 }

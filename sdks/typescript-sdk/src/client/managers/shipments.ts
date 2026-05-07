@@ -1,26 +1,43 @@
 import type { Shipment } from '../../types/models.js';
 import type {
   CallOptions,
+  IncludeParam,
   ListOptions,
   ShipmentInclude,
 } from '../../types/options.js';
 import { mapShipment, mapShipmentList } from '../mappers.js';
+import { normalizeInclude, normalizeIncludeWithDefault } from '../query.js';
 import { BaseManager } from './base.js';
+
+const DEFAULT_SHIPMENT_INCLUDES = [
+  'containers',
+  'pod_terminal',
+  'port_of_lading',
+  'port_of_discharge',
+  'destination',
+  'destination_terminal',
+] as const satisfies readonly ShipmentInclude[];
+
+const SHIPMENT_INCLUDES_WITHOUT_CONTAINERS = [
+  'pod_terminal',
+  'port_of_lading',
+  'port_of_discharge',
+  'destination',
+  'destination_terminal',
+] as const satisfies readonly ShipmentInclude[];
 
 export class ShipmentManager extends BaseManager {
   async get(
     id: string,
     includeContainers = true,
-    options?: CallOptions & { include?: ShipmentInclude[] },
+    options?: CallOptions & { include?: IncludeParam<ShipmentInclude> },
   ): Promise<any> {
-    let includesStr: string | undefined;
-    if (options?.include) {
-      includesStr = options.include.join(',');
-    } else {
-      includesStr = includeContainers
-        ? 'containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal'
-        : 'pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal';
-    }
+    const includesStr = normalizeIncludeWithDefault(
+      options?.include,
+      includeContainers
+        ? DEFAULT_SHIPMENT_INCLUDES
+        : SHIPMENT_INCLUDES_WITHOUT_CONTAINERS,
+    );
 
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/shipments/{id}', {
@@ -40,20 +57,18 @@ export class ShipmentManager extends BaseManager {
       carrier?: string;
       updatedAfter?: string;
       includeContainers?: boolean;
-      include?: ShipmentInclude[];
+      include?: IncludeParam<ShipmentInclude>;
     } = {},
     options?: ListOptions,
   ): Promise<any> {
     const params: Record<string, string> = {};
-
-    if (filters.include) {
-      params.include = filters.include.join(',');
-    } else {
-      params.include =
-        filters.includeContainers === false
-          ? 'pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal'
-          : 'containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal';
-    }
+    const includesStr = normalizeInclude(
+      filters.include ??
+        (filters.includeContainers === false
+          ? SHIPMENT_INCLUDES_WITHOUT_CONTAINERS
+          : DEFAULT_SHIPMENT_INCLUDES),
+    );
+    if (includesStr) params.include = includesStr;
 
     if (filters.status) params['filter[status]'] = filters.status;
     if (filters.port) params['filter[pod_locode]'] = filters.port;

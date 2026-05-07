@@ -15,6 +15,10 @@ export interface ListOptions extends CallOptions {
   pageSize?: number;
 }
 
+export type IncludeParam<TInclude extends string> =
+  | readonly TInclude[]
+  | string;
+
 export type ShipmentInclude =
   | 'containers'
   | 'pod_terminal'

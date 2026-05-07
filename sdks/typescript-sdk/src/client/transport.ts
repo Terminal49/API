@@ -1,4 +1,8 @@
-import createClient, { type FetchResponse } from 'openapi-fetch';
+import { randomUUID } from 'node:crypto';
+import createClient, {
+  type FetchResponse,
+  type MiddlewareCallbackParams,
+} from 'openapi-fetch';
 import type { paths } from '../generated/terminal49.js';
 import {
   AuthInterceptor,
@@ -34,16 +38,13 @@ export class Transport {
       fetch: this.fetchImpl,
     });
 
-    // Register built-in middlewares
-    this.client.use(new AuthInterceptor(this.apiToken) as any);
-    this.client.use(new ErrorMappingInterceptor() as any);
-    this.client.use(
-      new RetryInterceptor(this.maxRetries, this.fetchImpl) as any,
-    );
+    this.client.use(new AuthInterceptor(this.apiToken));
+    this.client.use(new ErrorMappingInterceptor());
+    this.client.use(new RetryInterceptor(this.maxRetries, this.fetchImpl));
   }
 
   public use(interceptor: Interceptor) {
-    this.client.use(interceptor as any);
+    this.client.use(interceptor);
   }
 
   public async execute<T = any>(
@@ -65,19 +66,35 @@ export class Transport {
     const retry = new RetryInterceptor(this.maxRetries, this.fetchImpl);
     const errorMap = new ErrorMappingInterceptor();
 
-    const authedReq = auth.onRequest({ request: req } as any) || req;
-    const retryableReq = retry.onRequest({ request: authedReq } as any);
+    const middlewareContext = this.manualMiddlewareContext(req);
+    const authedReq = auth.onRequest(middlewareContext) || req;
+    const retryContext = this.manualMiddlewareContext(authedReq);
+    const retryableReq = retry.onRequest(retryContext);
     let res = await this.fetchImpl(retryableReq);
     res = await retry.onResponse({
       request: retryableReq,
       response: res,
-    } as any);
-    await errorMap.onResponse({ response: res } as any);
+      id: retryContext.id,
+    });
+    await errorMap.onResponse({
+      request: retryableReq,
+      response: res,
+      id: retryContext.id,
+    });
 
     try {
       return (await res.clone().json()) as T;
     } catch {
       return undefined as any;
     }
+  }
+
+  private manualMiddlewareContext(
+    request: Request,
+  ): Pick<MiddlewareCallbackParams, 'id' | 'request'> {
+    return {
+      request,
+      id: `manual:${randomUUID()}`,
+    };
   }
 }

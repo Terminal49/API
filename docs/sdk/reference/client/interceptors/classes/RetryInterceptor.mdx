@@ -4,10 +4,6 @@ title: "Class: RetryInterceptor"
 
 # Class: RetryInterceptor
 
-## Implements
-
-- [`Interceptor`](/sdk/reference/client/interceptors/interfaces/Interceptor)
-
 ## Constructors
 
 ### Constructor
@@ -27,6 +23,22 @@ title: "Class: RetryInterceptor"
 
 ## Methods
 
+### onError()
+
+> **onError**(`__namedParameters`): `void`
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `__namedParameters` | `Pick`\<`MiddlewareCallbackParams`, `"id"` \| `"request"`\> & `object` |
+
+#### Returns
+
+`void`
+
+***
+
 ### onRequest()
 
 > **onRequest**(`__namedParameters`): `Request`
@@ -35,17 +47,11 @@ title: "Class: RetryInterceptor"
 
 | Parameter | Type |
 | ------ | ------ |
-| `__namedParameters` | \{ `id?`: `string`; `request`: `Request`; \} |
-| `__namedParameters.id?` | `string` |
-| `__namedParameters.request` | `Request` |
+| `__namedParameters` | `Pick`\<`MiddlewareCallbackParams`, `"id"` \| `"request"`\> |
 
 #### Returns
 
 `Request`
-
-#### Implementation of
-
-[`Interceptor`](/sdk/reference/client/interceptors/interfaces/Interceptor).[`onRequest`](/sdk/reference/client/interceptors/interfaces/Interceptor#onrequest)
 
 ***
 
@@ -57,15 +63,8 @@ title: "Class: RetryInterceptor"
 
 | Parameter | Type |
 | ------ | ------ |
-| `__namedParameters` | \{ `id?`: `string`; `request`: `Request`; `response`: `Response`; \} |
-| `__namedParameters.id?` | `string` |
-| `__namedParameters.request` | `Request` |
-| `__namedParameters.response` | `Response` |
+| `__namedParameters` | `Pick`\<`MiddlewareCallbackParams`, `"id"` \| `"request"`\> & `object` |
 
 #### Returns
 
 `Promise`\<`Response`\>
-
-#### Implementation of
-
-[`Interceptor`](/sdk/reference/client/interceptors/interfaces/Interceptor).[`onResponse`](/sdk/reference/client/interceptors/interfaces/Interceptor#onresponse)

@@ -17,12 +17,14 @@ import {
 } from './client/managers/index.js';
 import type {
   CreateTrackingRequestFromInferOptions,
+  TrackingRequestListFilters,
   TrackingRequestType,
 } from './client/managers/tracking-requests.js';
 import { Transport } from './client/transport.js';
 import type {
   CallOptions,
   ContainerInclude,
+  IncludeParam,
   ListOptions,
   ResponseFormat,
   ShipmentInclude,
@@ -141,7 +143,7 @@ export class Terminal49Client {
   /** Fetch a container by ID with optional included relationships. */
   async getContainer(
     id: string,
-    include: ContainerInclude[] | string = ['shipment', 'pod_terminal'],
+    include: IncludeParam<ContainerInclude> = ['shipment', 'pod_terminal'],
     options?: CallOptions,
   ): Promise<any> {
     return this.containers.get(id, include, options);
@@ -201,7 +203,7 @@ export class Terminal49Client {
   async getShipment(
     id: string,
     includeContainers = true,
-    options?: CallOptions & { include?: ShipmentInclude[] },
+    options?: CallOptions & { include?: IncludeParam<ShipmentInclude> },
   ): Promise<any> {
     return this.shipments.get(id, includeContainers, options);
   }
@@ -214,7 +216,7 @@ export class Terminal49Client {
       carrier?: string;
       updatedAfter?: string;
       includeContainers?: boolean;
-      include?: ShipmentInclude[];
+      include?: IncludeParam<ShipmentInclude>;
     } = {},
     options?: ListOptions,
   ): Promise<any> {
@@ -312,7 +314,7 @@ export class Terminal49Client {
       port?: string;
       carrier?: string;
       updatedAfter?: string;
-      include?: ContainerInclude[] | string;
+      include?: IncludeParam<ContainerInclude>;
     } = {},
     options?: ListOptions,
   ): Promise<any> {
@@ -331,9 +333,7 @@ export class Terminal49Client {
 
   /** List tracking requests with optional filters and pagination. */
   async listTrackingRequests(
-    filters: Record<string, string> & {
-      include?: TrackingRequestInclude[];
-    } = {},
+    filters: TrackingRequestListFilters = {},
     options?: ListOptions,
   ): Promise<any> {
     return this.trackingRequests.list(filters, options);
@@ -341,9 +341,7 @@ export class Terminal49Client {
 
   /** Alias for {@link listTrackingRequests}. */
   async listTrackRequests(
-    filters: Record<string, string> & {
-      include?: TrackingRequestInclude[];
-    } = {},
+    filters: TrackingRequestListFilters = {},
     options?: ListOptions,
   ): Promise<any> {
     return this.listTrackingRequests(filters, options);
@@ -352,7 +350,7 @@ export class Terminal49Client {
   /** Fetch a tracking request by ID. */
   async getTrackingRequest(
     id: string,
-    options?: CallOptions & { include?: TrackingRequestInclude[] },
+    options?: CallOptions & { include?: IncludeParam<TrackingRequestInclude> },
   ): Promise<any> {
     return this.trackingRequests.get(id, options);
   }

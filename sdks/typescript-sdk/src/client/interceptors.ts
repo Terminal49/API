@@ -1,25 +1,12 @@
+import type { Middleware, MiddlewareCallbackParams } from 'openapi-fetch';
 import { extractErrorMessage, toTerminal49Error } from './errors.js';
 
-export interface Interceptor {
-  onRequest?(options: {
-    request: Request;
-    schemaPath: string;
-    params: Record<string, unknown>;
-    id?: string;
-  }): Request | undefined | Promise<Request | undefined>;
-  onResponse?(options: {
-    request: Request;
-    response: Response;
-    schemaPath: string;
-    params: Record<string, unknown>;
-    id?: string;
-  }): Response | undefined | Promise<Response | undefined>;
-}
+export type Interceptor = Middleware;
 
-export class AuthInterceptor implements Interceptor {
+export class AuthInterceptor {
   constructor(private apiToken: string) {}
 
-  onRequest({ request }: { request: Request }) {
+  onRequest({ request }: Pick<MiddlewareCallbackParams, 'id' | 'request'>) {
     const authHeader = this.apiToken.startsWith('Token ')
       ? this.apiToken
       : `Token ${this.apiToken}`;
@@ -32,7 +19,7 @@ export class AuthInterceptor implements Interceptor {
   }
 }
 
-export class RetryInterceptor implements Interceptor {
+export class RetryInterceptor {
   private replayableRequests = new Map<Request | string, Request>();
 
   constructor(
@@ -40,7 +27,7 @@ export class RetryInterceptor implements Interceptor {
     private fetchImpl: typeof fetch = fetch,
   ) {}
 
-  onRequest({ request, id }: { request: Request; id?: string }) {
+  onRequest({ request, id }: Pick<MiddlewareCallbackParams, 'id' | 'request'>) {
     try {
       this.replayableRequests.set(
         this.requestKey(request, id),
@@ -56,10 +43,8 @@ export class RetryInterceptor implements Interceptor {
     request,
     response,
     id,
-  }: {
-    request: Request;
+  }: Pick<MiddlewareCallbackParams, 'id' | 'request'> & {
     response: Response;
-    id?: string;
   }): Promise<Response> {
     const requestKey = this.requestKey(request, id);
     const replayableRequest = this.replayableRequests.get(requestKey);
@@ -85,13 +70,26 @@ export class RetryInterceptor implements Interceptor {
     }
   }
 
+  onError({
+    request,
+    id,
+  }: Pick<MiddlewareCallbackParams, 'id' | 'request'> & {
+    error: unknown;
+  }) {
+    this.replayableRequests.delete(this.requestKey(request, id));
+  }
+
   private requestKey(request: Request, id?: string) {
     return id ?? request;
   }
 }
 
-export class ErrorMappingInterceptor implements Interceptor {
-  async onResponse({ response }: { response: Response }): Promise<Response> {
+export class ErrorMappingInterceptor {
+  async onResponse({
+    response,
+  }: Pick<MiddlewareCallbackParams, 'id' | 'request'> & {
+    response: Response;
+  }): Promise<Response> {
     if (response.ok) {
       return response;
     }
