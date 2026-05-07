@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   publish:
@@ -56,5 +57,3 @@ jobs:
         if: steps.tag-check.outputs.publish == 'true'
         working-directory: sdks/typescript-sdk
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

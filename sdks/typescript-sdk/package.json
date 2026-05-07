@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "Terminal49 TypeScript SDK (JSON:API, openapi-fetch)",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Terminal49/API.git",
+    "directory": "sdks/typescript-sdk"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
