@@ -509,26 +509,54 @@ describe('Terminal49Client request building', () => {
 
   it('provides an async iterator for paginated endpoints', async () => {
     const { fetchImpl } = createMockFetch({
-      '/shipments?include=containers%2Cpod_terminal%2Cport_of_lading%2Cport_of_discharge%2Cdestination%2Cdestination_terminal&page%5Bnumber%5D=1&page%5Bsize%5D=1': () =>
-        jsonResponse({
-          data: [{ id: 'ship-1', type: 'shipment', attributes: { status: 'in_transit' } }],
-          links: { next: 'page=2' },
-        }),
-      '/shipments?include=containers%2Cpod_terminal%2Cport_of_lading%2Cport_of_discharge%2Cdestination%2Cdestination_terminal&page%5Bnumber%5D=2&page%5Bsize%5D=1': () =>
-        jsonResponse({
-          data: [{ id: 'ship-2', type: 'shipment', attributes: { status: 'discharged' } }],
-          links: { next: null },
-        }),
-      '/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=1&page[size]=1': () =>
-        jsonResponse({
-          data: [{ id: 'ship-1', type: 'shipment', attributes: { status: 'in_transit' } }],
-          links: { next: 'page=2' },
-        }),
-      '/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=2&page[size]=1': () =>
-        jsonResponse({
-          data: [{ id: 'ship-2', type: 'shipment', attributes: { status: 'discharged' } }],
-          links: { next: null },
-        }),
+      '/shipments?include=containers%2Cpod_terminal%2Cport_of_lading%2Cport_of_discharge%2Cdestination%2Cdestination_terminal&page%5Bnumber%5D=1&page%5Bsize%5D=1':
+        () =>
+          jsonResponse({
+            data: [
+              {
+                id: 'ship-1',
+                type: 'shipment',
+                attributes: { status: 'in_transit' },
+              },
+            ],
+            links: { next: 'page=2' },
+          }),
+      '/shipments?include=containers%2Cpod_terminal%2Cport_of_lading%2Cport_of_discharge%2Cdestination%2Cdestination_terminal&page%5Bnumber%5D=2&page%5Bsize%5D=1':
+        () =>
+          jsonResponse({
+            data: [
+              {
+                id: 'ship-2',
+                type: 'shipment',
+                attributes: { status: 'discharged' },
+              },
+            ],
+            links: { next: null },
+          }),
+      '/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=1&page[size]=1':
+        () =>
+          jsonResponse({
+            data: [
+              {
+                id: 'ship-1',
+                type: 'shipment',
+                attributes: { status: 'in_transit' },
+              },
+            ],
+            links: { next: 'page=2' },
+          }),
+      '/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=2&page[size]=1':
+        () =>
+          jsonResponse({
+            data: [
+              {
+                id: 'ship-2',
+                type: 'shipment',
+                attributes: { status: 'discharged' },
+              },
+            ],
+            links: { next: null },
+          }),
     });
 
     const client = new Terminal49Client({
@@ -538,7 +566,10 @@ describe('Terminal49Client request building', () => {
     });
 
     const items = [];
-    for await (const shipment of client.shipments.iterate({}, { pageSize: 1 })) {
+    for await (const shipment of client.shipments.iterate(
+      {},
+      { pageSize: 1 },
+    )) {
       items.push(shipment);
     }
 

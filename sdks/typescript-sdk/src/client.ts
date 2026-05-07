@@ -6,34 +6,28 @@ import {
   NotFoundError,
   RateLimitError,
   Terminal49Error,
-  ValidationError,
   UpstreamError,
+  ValidationError,
 } from './client/errors.js';
-import { Transport } from './client/transport.js';
 import {
-  ShipmentManager,
   ContainerManager,
-  TrackingRequestManager,
+  ShipmentManager,
   ShippingLineManager,
+  TrackingRequestManager,
 } from './client/managers/index.js';
 import type {
-  Container,
-  PaginatedResult,
-  Shipment,
-  TrackingRequest,
-} from './types/models.js';
+  CreateTrackingRequestFromInferOptions,
+  TrackingRequestType,
+} from './client/managers/tracking-requests.js';
+import { Transport } from './client/transport.js';
 import type {
   CallOptions,
+  ContainerInclude,
   ListOptions,
   ResponseFormat,
-  ContainerInclude,
   ShipmentInclude,
   TrackingRequestInclude,
 } from './types/options.js';
-import type {
-  TrackingRequestType,
-  CreateTrackingRequestFromInferOptions,
-} from './client/managers/tracking-requests.js';
 
 /**
  * Terminal49 API Client
@@ -337,7 +331,9 @@ export class Terminal49Client {
 
   /** List tracking requests with optional filters and pagination. */
   async listTrackingRequests(
-    filters: Record<string, string> & { include?: TrackingRequestInclude[] } = {},
+    filters: Record<string, string> & {
+      include?: TrackingRequestInclude[];
+    } = {},
     options?: ListOptions,
   ): Promise<any> {
     return this.trackingRequests.list(filters, options);
@@ -345,14 +341,19 @@ export class Terminal49Client {
 
   /** Alias for {@link listTrackingRequests}. */
   async listTrackRequests(
-    filters: Record<string, string> & { include?: TrackingRequestInclude[] } = {},
+    filters: Record<string, string> & {
+      include?: TrackingRequestInclude[];
+    } = {},
     options?: ListOptions,
   ): Promise<any> {
     return this.listTrackingRequests(filters, options);
   }
 
   /** Fetch a tracking request by ID. */
-  async getTrackingRequest(id: string, options?: CallOptions & { include?: TrackingRequestInclude[] }): Promise<any> {
+  async getTrackingRequest(
+    id: string,
+    options?: CallOptions & { include?: TrackingRequestInclude[] },
+  ): Promise<any> {
     return this.trackingRequests.get(id, options);
   }
 

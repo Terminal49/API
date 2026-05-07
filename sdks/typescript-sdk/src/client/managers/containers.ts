@@ -1,10 +1,10 @@
 import type { Container } from '../../types/models.js';
-import type { CallOptions, ListOptions, ContainerInclude } from '../../types/options.js';
-import {
-  mapContainerList,
-  mapRoute,
-  mapTransportEvents,
-} from '../mappers.js';
+import type {
+  CallOptions,
+  ContainerInclude,
+  ListOptions,
+} from '../../types/options.js';
+import { mapContainerList, mapRoute, mapTransportEvents } from '../mappers.js';
 import { BaseManager } from './base.js';
 
 export class ContainerManager extends BaseManager {
@@ -36,7 +36,9 @@ export class ContainerManager extends BaseManager {
     options?: ListOptions,
   ): Promise<any> {
     const params: Record<string, string> = {
-      include: filters.include ? filters.include.join(',') : 'shipment,pod_terminal',
+      include: filters.include
+        ? filters.include.join(',')
+        : 'shipment,pod_terminal',
     };
     if (filters.status) params['filter[status]'] = filters.status;
     if (filters.port) params['filter[pod_locode]'] = filters.port;
@@ -61,7 +63,8 @@ export class ContainerManager extends BaseManager {
     options?: Omit<ListOptions, 'page'>,
   ): AsyncGenerator<Container, void, unknown> {
     return this.createIterator<Container>(
-      (pageOpts) => this.list(filters, { ...options, ...pageOpts, format: 'mapped' }),
+      (pageOpts) =>
+        this.list(filters, { ...options, ...pageOpts, format: 'mapped' }),
       options,
     );
   }

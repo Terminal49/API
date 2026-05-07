@@ -45,7 +45,7 @@ export async function executeListContainers(
         port: args.port,
         carrier: args.carrier,
         updatedAfter: args.updated_after,
-        include,
+        include: include ? (include.split(',').map((s) => s.trim()) as any) : undefined,
       },
       {
         format: 'mapped',

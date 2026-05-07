@@ -1,8 +1,17 @@
 import { extractErrorMessage, toTerminal49Error } from './errors.js';
 
 export interface Interceptor {
-  onRequest?(options: { request: Request; schemaPath: string; params: Record<string, unknown> }): Request | undefined | Promise<Request | undefined>;
-  onResponse?(options: { request: Request; response: Response; schemaPath: string; params: Record<string, unknown> }): Response | undefined | Promise<Response | undefined>;
+  onRequest?(options: {
+    request: Request;
+    schemaPath: string;
+    params: Record<string, unknown>;
+  }): Request | undefined | Promise<Request | undefined>;
+  onResponse?(options: {
+    request: Request;
+    response: Response;
+    schemaPath: string;
+    params: Record<string, unknown>;
+  }): Response | undefined | Promise<Response | undefined>;
 }
 
 export class AuthInterceptor implements Interceptor {
@@ -27,7 +36,13 @@ export class RetryInterceptor implements Interceptor {
     private fetchImpl: typeof fetch = fetch,
   ) {}
 
-  async onResponse({ request, response }: { request: Request; response: Response }): Promise<Response> {
+  async onResponse({
+    request,
+    response,
+  }: {
+    request: Request;
+    response: Response;
+  }): Promise<Response> {
     let currentResponse = response;
     let attempt = 0;
 
@@ -37,7 +52,7 @@ export class RetryInterceptor implements Interceptor {
     ) {
       const delay = 2 ** attempt * 500;
       await new Promise((resolve) => setTimeout(resolve, delay));
-      
+
       currentResponse = await this.fetchImpl(request.clone());
       attempt++;
     }

@@ -690,7 +690,7 @@ describe('MCP tool contracts', () => {
         port: undefined,
         carrier: undefined,
         updatedAfter: undefined,
-        include: 'shipment,pod_terminal',
+        include: ['shipment', 'pod_terminal'],
       },
       { format: 'mapped', page: 1, pageSize: 50 },
     );

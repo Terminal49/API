@@ -49,17 +49,27 @@ export abstract class BaseManager {
    * Helper to create an async iterator from a list method that returns PaginatedResult
    */
   protected async *createIterator<T>(
-    listMethod: (options: { page?: number; pageSize?: number }) => Promise<PaginatedResult<T> | any>,
+    listMethod: (options: {
+      page?: number;
+      pageSize?: number;
+    }) => Promise<PaginatedResult<T> | any>,
     options?: { pageSize?: number },
   ): AsyncGenerator<T, void, unknown> {
     let currentPage = 1;
     while (true) {
-      const result = await listMethod({ page: currentPage, pageSize: options?.pageSize });
+      const result = await listMethod({
+        page: currentPage,
+        pageSize: options?.pageSize,
+      });
       // If the user requested raw or both format, we might need to extract mapped.
       // Iterate is meant for mapped items.
       const paginatedResult = result.mapped ? result.mapped : result;
 
-      if (!paginatedResult || !Array.isArray(paginatedResult.items) || paginatedResult.items.length === 0) {
+      if (
+        !paginatedResult ||
+        !Array.isArray(paginatedResult.items) ||
+        paginatedResult.items.length === 0
+      ) {
         break;
       }
 

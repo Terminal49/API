@@ -1,4 +1,3 @@
-import { JsonApiDocument } from './jsonapi.js';
 import type {
   Container,
   Route,
@@ -6,6 +5,7 @@ import type {
   ShippingLine,
   TrackingRequest,
 } from '../types/models.js';
+import { JsonApiDocument } from './jsonapi.js';
 
 export function mapTransportEvents(doc: any) {
   const apiDoc = new JsonApiDocument(doc);
@@ -41,16 +41,22 @@ export function mapTransportEvents(doc: any) {
 export function mapRoute(doc: any): Route {
   const apiDoc = new JsonApiDocument(doc);
   const route = apiDoc.getAttributes(apiDoc.data, false);
-  const routeLocations = apiDoc.getRelationship(apiDoc.data, 'route_locations') || [];
+  const routeLocations =
+    apiDoc.getRelationship(apiDoc.data, 'route_locations') || [];
 
-  const locations = (Array.isArray(routeLocations) ? routeLocations : [routeLocations])
+  const locations = (
+    Array.isArray(routeLocations) ? routeLocations : [routeLocations]
+  )
     .map((location: any) => {
       if (!location) return null;
 
       const attrs = location.attributes || {};
       const port = apiDoc.getRelationship(location, 'port');
       const inboundVessel = apiDoc.getRelationship(location, 'inbound_vessel');
-      const outboundVessel = apiDoc.getRelationship(location, 'outbound_vessel');
+      const outboundVessel = apiDoc.getRelationship(
+        location,
+        'outbound_vessel',
+      );
 
       return {
         port: port
@@ -234,9 +240,7 @@ export function mapShipment(doc: any): Shipment {
   const shipment: Shipment = {
     id: data?.id,
     billOfLading:
-      attrs.bill_of_lading_number ||
-      attrs.bill_of_lading ||
-      attrs.bl_number,
+      attrs.bill_of_lading_number || attrs.bill_of_lading || attrs.bl_number,
     shippingLineScac: attrs.shipping_line_scac,
     customerName: attrs.customer_name,
     containers: [],

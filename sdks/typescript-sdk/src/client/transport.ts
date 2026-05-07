@@ -3,8 +3,8 @@ import type { paths } from '../generated/terminal49.js';
 import {
   AuthInterceptor,
   ErrorMappingInterceptor,
-  RetryInterceptor,
   type Interceptor,
+  RetryInterceptor,
 } from './interceptors.js';
 
 export interface TransportConfig {
@@ -37,7 +37,9 @@ export class Transport {
     // Register built-in middlewares
     this.client.use(new AuthInterceptor(this.apiToken) as any);
     this.client.use(new ErrorMappingInterceptor() as any);
-    this.client.use(new RetryInterceptor(this.maxRetries, this.fetchImpl) as any);
+    this.client.use(
+      new RetryInterceptor(this.maxRetries, this.fetchImpl) as any,
+    );
   }
 
   public use(interceptor: Interceptor) {
@@ -75,4 +77,3 @@ export class Transport {
     }
   }
 }
-

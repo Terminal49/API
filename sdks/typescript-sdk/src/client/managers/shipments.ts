@@ -1,5 +1,9 @@
-import type { PaginatedResult, Shipment } from '../../types/models.js';
-import type { CallOptions, ListOptions, ShipmentInclude } from '../../types/options.js';
+import type { Shipment } from '../../types/models.js';
+import type {
+  CallOptions,
+  ListOptions,
+  ShipmentInclude,
+} from '../../types/options.js';
 import { mapShipment, mapShipmentList } from '../mappers.js';
 import { BaseManager } from './base.js';
 
@@ -45,9 +49,10 @@ export class ShipmentManager extends BaseManager {
     if (filters.include) {
       params.include = filters.include.join(',');
     } else {
-      params.include = filters.includeContainers === false
-        ? 'pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal'
-        : 'containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal';
+      params.include =
+        filters.includeContainers === false
+          ? 'pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal'
+          : 'containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal';
     }
 
     if (filters.status) params['filter[status]'] = filters.status;
@@ -73,7 +78,8 @@ export class ShipmentManager extends BaseManager {
     options?: Omit<ListOptions, 'page'>,
   ): AsyncGenerator<Shipment, void, unknown> {
     return this.createIterator<Shipment>(
-      (pageOpts) => this.list(filters, { ...options, ...pageOpts, format: 'mapped' }),
+      (pageOpts) =>
+        this.list(filters, { ...options, ...pageOpts, format: 'mapped' }),
       options,
     );
   }
