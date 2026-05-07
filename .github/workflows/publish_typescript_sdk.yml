@@ -3,6 +3,12 @@ name: Publish TypeScript SDK
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish, for example sdk-v-v0.2.0
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -11,8 +17,14 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve release tag
+        id: release-tag
+        run: echo "tag=${{ github.event.release.tag_name || inputs.tag }}" >> "$GITHUB_OUTPUT"
+
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release-tag.outputs.tag }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -28,7 +40,7 @@ jobs:
       - name: Check release tag matches SDK version
         id: tag-check
         run: |
-          tag="${{ github.event.release.tag_name }}"
+          tag="${{ steps.release-tag.outputs.tag }}"
           version="${{ steps.sdk-version.outputs.version }}"
           if [[ "$tag" == "v$version" || "$tag" == "sdk-v$version" || "$tag" == "$version" || "$tag" == "sdk-v-v$version" ]]; then
             echo "publish=true" >> "$GITHUB_OUTPUT"
