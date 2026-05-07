@@ -661,4 +661,38 @@ describe('Terminal49Client request building', () => {
     expect(items[1].id).toBe('ship-2');
     expect(items[1].status).toBe('discharged');
   });
+
+  it('preserves Content-Type from openapi-fetch Request on POST writes', async () => {
+    // Regression for a bug that caused 422 on every write: previously
+    // `authedFetch` (now AuthInterceptor) created fresh Headers from init
+    // only and replaced the Request's headers — dropping Content-Type and
+    // making the body unparseable server-side. The current implementation
+    // mutates `request.headers` in place, which preserves whatever
+    // openapi-fetch set. Asserts the regression stays fixed.
+    const { fetchImpl, calls } = createMockFetch({
+      '/tracking_requests/infer_number': () =>
+        jsonResponse({
+          data: {
+            type: 'infer_number_results',
+            attributes: { number_type: 'bill_of_lading' },
+          },
+        }),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.trackingRequests.inferNumber('HLCUAMM260301785');
+
+    expect(calls.length).toBe(1);
+    const headers = new Headers(calls[0].init?.headers);
+    expect(headers.get('Authorization')).toBe('Token token-123');
+    expect(headers.get('Content-Type')).toBe('application/json');
+    expect(calls[0].init?.body).toBe(
+      JSON.stringify({ number: 'HLCUAMM260301785' }),
+    );
+  });
 });

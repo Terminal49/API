@@ -13,6 +13,15 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - JSDoc comments on all public classes, interfaces, methods, and types
 - `npm run docs` script for regenerating SDK reference pages
 
+### Tests
+
+- Regression test for `Content-Type` preservation through the auth interceptor.
+  Pins the invariant that body-bearing requests reach the wire with their
+  `Content-Type` intact (a class of bug that caused every write to 422 in an
+  earlier `buildFetch`-based design before the architecture refactor moved
+  header handling into `AuthInterceptor.onRequest`, which mutates
+  `request.headers` in place).
+
 ## [0.1.0] — 2026-03-01
 
 ### Added
