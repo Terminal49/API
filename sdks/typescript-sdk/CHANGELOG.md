@@ -5,6 +5,13 @@ All notable changes to `@terminal49/sdk` are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0](https://github.com/Terminal49/API/compare/sdk-v-v0.1.0...sdk-v-v0.2.0) (2026-05-07)
+
+
+### Features
+
+* **sdk:** add TypeScript SDK + SDK Docs ([#174](https://github.com/Terminal49/API/issues/174)) ([e49ed54](https://github.com/Terminal49/API/commit/e49ed54c9918a8769ad007b0d90973c844d60372))
+
 ## [Unreleased]
 
 ### Added
