@@ -30,7 +30,7 @@ jobs:
         run: |
           tag="${{ github.event.release.tag_name }}"
           version="${{ steps.sdk-version.outputs.version }}"
-          if [[ "$tag" == "v$version" || "$tag" == "sdk-v$version" || "$tag" == "$version" ]]; then
+          if [[ "$tag" == "v$version" || "$tag" == "sdk-v$version" || "$tag" == "$version" || "$tag" == "sdk-v-v$version" ]]; then
             echo "publish=true" >> "$GITHUB_OUTPUT"
           else
             echo "publish=false" >> "$GITHUB_OUTPUT"

@@ -144,32 +144,42 @@ npm run sdk:docs
 
 ## Releasing a new version
 
-1. **Update the changelog** — add a new section to `CHANGELOG.md` under `[Unreleased]`,
-   then rename it to the new version with today's date.
+Releases are automated via [release-please](https://github.com/googleapis/release-please).
 
-2. **Bump the version** in `package.json`:
+### Automated flow (default)
+
+1. Merge PRs to `main` with [conventional commit](https://www.conventionalcommits.org/) prefixes
+   (`feat:`, `fix:`, `docs:`, `chore:`, etc.) that touch `sdks/typescript-sdk/`.
+2. Release-please automatically opens a release PR that bumps `package.json`,
+   updates `CHANGELOG.md`, and updates the manifest.
+3. Merge the release PR.
+4. Release-please creates a GitHub release with the `sdk-v-v<version>` tag.
+5. The publish workflow builds, tests, and publishes to npm automatically.
+
+### Manual release (fallback)
+
+If you need to release without release-please:
+
+1. Update `CHANGELOG.md` and bump version:
    ```bash
    cd sdks/typescript-sdk
    npm version patch   # or minor / major
    ```
-
-3. **Commit and push**:
+2. Commit and push:
    ```bash
    git add package.json package-lock.json CHANGELOG.md
    git commit -m "chore: release @terminal49/sdk v$(node -p "require('./package.json').version")"
    git push
    ```
+3. Create a GitHub release with tag `sdk-v<version>` (e.g. `sdk-v0.2.0`).
+   The publish workflow will build, test, and publish to npm.
 
-4. **Create a GitHub release** with tag `sdk-v<version>` (e.g. `sdk-v0.2.0`).
-   The publish workflow will automatically:
-   - Verify the tag matches `package.json`
-   - Build and test
-   - Publish to npm
+### Post-release
 
-5. **Regenerate docs** if the public API changed:
-   ```bash
-   npm run sdk:docs
-   ```
+Regenerate docs if the public API changed:
+```bash
+npm run sdk:docs
+```
 
 ## Notes
 - Server-only: uses Node fetch (undici types) and targets Node 18+.
