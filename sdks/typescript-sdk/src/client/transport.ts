@@ -35,13 +35,13 @@ export class Transport {
     });
 
     // Register built-in middlewares
-    this.client.use(new AuthInterceptor(this.apiToken));
-    this.client.use(new ErrorMappingInterceptor());
-    this.client.use(new RetryInterceptor(this.maxRetries, this.fetchImpl));
+    this.client.use(new AuthInterceptor(this.apiToken) as any);
+    this.client.use(new ErrorMappingInterceptor() as any);
+    this.client.use(new RetryInterceptor(this.maxRetries, this.fetchImpl) as any);
   }
 
   public use(interceptor: Interceptor) {
-    this.client.use(interceptor);
+    this.client.use(interceptor as any);
   }
 
   public async execute<T = any>(

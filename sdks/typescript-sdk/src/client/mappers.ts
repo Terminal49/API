@@ -92,7 +92,7 @@ export function mapRoute(doc: any): Route {
   return {
     id: apiDoc.data?.id,
     totalLegs: locations.length,
-    locations,
+    locations: locations as any,
     createdAt: route.created_at,
     updatedAt: route.updated_at,
   };
