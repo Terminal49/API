@@ -28,30 +28,12 @@ data from Node.js applications.
 
 ## Properties
 
-| Property | Modifier | Type | Description |
-| ------ | ------ | ------ | ------ |
-| <a id="property-containers"></a> `containers` | `public` | `object` | Container resource methods. |
-| `containers.events` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
-| `containers.get` | `public` | (`id`, `include?`, `options?`) => `Promise`\<`any`\> | - |
-| `containers.list` | `public` | (`filters`, `options?`) => `Promise`\<`any`\> | - |
-| `containers.rawEvents` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
-| `containers.refresh` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
-| `containers.route` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
-| <a id="property-shipments"></a> `shipments` | `public` | `object` | Shipment resource methods. |
-| `shipments.get` | `public` | (`id`, `includeContainers`, `options?`) => `Promise`\<`any`\> | - |
-| `shipments.list` | `public` | (`filters`, `options?`) => `Promise`\<`any`\> | - |
-| `shipments.resumeTracking` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
-| `shipments.stopTracking` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
-| `shipments.update` | `public` | (`id`, `attrs`, `options?`) => `Promise`\<`any`\> | - |
-| <a id="property-shippinglines"></a> `shippingLines` | `public` | `object` | Shipping line resource methods. |
-| `shippingLines.list` | `public` | (`search?`, `options?`) => `Promise`\<`any`\> | - |
-| <a id="property-trackingrequests"></a> `trackingRequests` | `public` | `object` | Tracking request resource methods. |
-| `trackingRequests.create` | `public` | (`params`) => `Promise`\<`any`\> | - |
-| `trackingRequests.createFromInfer` | `public` | (`number`, `options?`) => `Promise`\<\{ `infer`: `any`; `trackingRequest`: `any`; \}\> | - |
-| `trackingRequests.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> | - |
-| `trackingRequests.inferNumber` | `public` | (`number`) => `Promise`\<`any`\> | - |
-| `trackingRequests.list` | `public` | (`filters`, `options?`) => `Promise`\<`any`\> | - |
-| `trackingRequests.update` | `public` | (`id`, `attrs`, `options?`) => `Promise`\<`any`\> | - |
+| Property | Modifier | Type |
+| ------ | ------ | ------ |
+| <a id="property-containers"></a> `containers` | `public` | [`ContainerManager`](/sdk/reference/client/managers/classes/ContainerManager) |
+| <a id="property-shipments"></a> `shipments` | `public` | [`ShipmentManager`](/sdk/reference/client/managers/classes/ShipmentManager) |
+| <a id="property-shippinglines"></a> `shippingLines` | `public` | [`ShippingLineManager`](/sdk/reference/client/managers/classes/ShippingLineManager) |
+| <a id="property-trackingrequests"></a> `trackingRequests` | `public` | [`TrackingRequestManager`](/sdk/reference/client/managers/classes/TrackingRequestManager) |
 
 ## Methods
 
@@ -65,10 +47,10 @@ Create a tracking request with an explicit number type and carrier SCAC.
 
 | Parameter | Type |
 | ------ | ------ |
-| `params` | \{ `refNumbers?`: `string`[]; `requestNumber`: `string`; `requestType`: [`TrackingRequestType`](/sdk/reference/client/type-aliases/TrackingRequestType); `scac?`: `string`; `shipmentTags?`: `string`[]; \} |
+| `params` | \{ `refNumbers?`: `string`[]; `requestNumber`: `string`; `requestType`: [`TrackingRequestType`](/sdk/reference/client/managers/type-aliases/TrackingRequestType); `scac?`: `string`; `shipmentTags?`: `string`[]; \} |
 | `params.refNumbers?` | `string`[] |
 | `params.requestNumber` | `string` |
-| `params.requestType` | [`TrackingRequestType`](/sdk/reference/client/type-aliases/TrackingRequestType) |
+| `params.requestType` | [`TrackingRequestType`](/sdk/reference/client/managers/type-aliases/TrackingRequestType) |
 | `params.scac?` | `string` |
 | `params.shipmentTags?` | `string`[] |
 
@@ -89,7 +71,7 @@ Infer carrier/number type, then create a tracking request from the result.
 | Parameter | Type |
 | ------ | ------ |
 | `number` | `string` |
-| `options` | [`CreateTrackingRequestFromInferOptions`](/sdk/reference/client/interfaces/CreateTrackingRequestFromInferOptions) |
+| `options` | [`CreateTrackingRequestFromInferOptions`](/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) |
 
 #### Returns
 
@@ -138,7 +120,7 @@ Fetch a container by ID with optional included relationships.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `include` | `string`[] |
+| `include` | [`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)[] |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
@@ -252,7 +234,7 @@ Fetch a shipment by ID, optionally including related containers.
 | ------ | ------ | ------ |
 | `id` | `string` | `undefined` |
 | `includeContainers` | `boolean` | `true` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) | `undefined` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` | `undefined` |
 
 #### Returns
 
@@ -271,7 +253,7 @@ Fetch a tracking request by ID.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` |
 
 #### Returns
 
@@ -307,9 +289,9 @@ List containers with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: `string`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)[]; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
 | `filters.carrier?` | `string` |
-| `filters.include?` | `string` |
+| `filters.include?` | [`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)[] |
 | `filters.port?` | `string` |
 | `filters.status?` | `string` |
 | `filters.updatedAfter?` | `string` |
@@ -331,8 +313,9 @@ List shipments with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)[]; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
 | `filters.carrier?` | `string` |
+| `filters.include?` | [`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)[] |
 | `filters.includeContainers?` | `boolean` |
 | `filters.port?` | `string` |
 | `filters.status?` | `string` |
@@ -374,7 +357,7 @@ List tracking requests with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | `Record`\<`string`, `string`\> |
+| `filters` | `Record`\<`string`, `string`\> & `object` |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
@@ -393,7 +376,7 @@ Alias for [listTrackingRequests](#listtrackingrequests).
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | `Record`\<`string`, `string`\> |
+| `filters` | `Record`\<`string`, `string`\> & `object` |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns

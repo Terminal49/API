@@ -1,0 +1,140 @@
+---
+title: "Class: ShipmentManager"
+---
+
+# Class: ShipmentManager
+
+## Extends
+
+- [`BaseManager`](/sdk/reference/client/managers/classes/BaseManager)
+
+## Constructors
+
+### Constructor
+
+> **new ShipmentManager**(`transport`, `defaultFormat?`): `ShipmentManager`
+
+#### Parameters
+
+| Parameter | Type | Default value |
+| ------ | ------ | ------ |
+| `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
+| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+
+#### Returns
+
+`ShipmentManager`
+
+#### Inherited from
+
+[`BaseManager`](/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/sdk/reference/client/managers/classes/BaseManager#constructor)
+
+## Methods
+
+### get()
+
+> **get**(`id`, `includeContainers?`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type | Default value |
+| ------ | ------ | ------ |
+| `id` | `string` | `undefined` |
+| `includeContainers` | `boolean` | `true` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` | `undefined` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### iterate()
+
+> **iterate**(`filters?`, `options?`): `AsyncGenerator`\<[`Shipment`](/sdk/reference/types/models/interfaces/Shipment), `void`, `unknown`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)[]; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} \| `undefined` |
+| `options?` | `Omit`\<[`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
+
+#### Returns
+
+`AsyncGenerator`\<[`Shipment`](/sdk/reference/types/models/interfaces/Shipment), `void`, `unknown`\>
+
+***
+
+### list()
+
+> **list**(`filters?`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)[]; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
+| `filters.carrier?` | `string` |
+| `filters.include?` | [`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)[] |
+| `filters.includeContainers?` | `boolean` |
+| `filters.port?` | `string` |
+| `filters.status?` | `string` |
+| `filters.updatedAfter?` | `string` |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### resumeTracking()
+
+> **resumeTracking**(`id`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### stopTracking()
+
+> **stopTracking**(`id`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### update()
+
+> **update**(`id`, `attrs`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `attrs` | `Record`\<`string`, `any`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>

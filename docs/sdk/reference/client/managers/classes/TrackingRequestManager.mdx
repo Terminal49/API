@@ -1,0 +1,153 @@
+---
+title: "Class: TrackingRequestManager"
+---
+
+# Class: TrackingRequestManager
+
+## Extends
+
+- [`BaseManager`](/sdk/reference/client/managers/classes/BaseManager)
+
+## Constructors
+
+### Constructor
+
+> **new TrackingRequestManager**(`transport`, `defaultFormat?`): `TrackingRequestManager`
+
+#### Parameters
+
+| Parameter | Type | Default value |
+| ------ | ------ | ------ |
+| `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
+| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+
+#### Returns
+
+`TrackingRequestManager`
+
+#### Inherited from
+
+[`BaseManager`](/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/sdk/reference/client/managers/classes/BaseManager#constructor)
+
+## Methods
+
+### create()
+
+> **create**(`params`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `params` | \{ `refNumbers?`: `string`[]; `requestNumber`: `string`; `requestType`: [`TrackingRequestType`](/sdk/reference/client/managers/type-aliases/TrackingRequestType); `scac?`: `string`; `shipmentTags?`: `string`[]; \} |
+| `params.refNumbers?` | `string`[] |
+| `params.requestNumber` | `string` |
+| `params.requestType` | [`TrackingRequestType`](/sdk/reference/client/managers/type-aliases/TrackingRequestType) |
+| `params.scac?` | `string` |
+| `params.shipmentTags?` | `string`[] |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### createFromInfer()
+
+> **createFromInfer**(`number`, `options?`): `Promise`\<\{ `infer`: `any`; `trackingRequest`: `any`; \}\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `number` | `string` |
+| `options` | [`CreateTrackingRequestFromInferOptions`](/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) |
+
+#### Returns
+
+`Promise`\<\{ `infer`: `any`; `trackingRequest`: `any`; \}\>
+
+***
+
+### get()
+
+> **get**(`id`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### inferNumber()
+
+> **inferNumber**(`number`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `number` | `string` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### iterate()
+
+> **iterate**(`filters?`, `options?`): `AsyncGenerator`\<[`TrackingRequest`](/sdk/reference/types/models/interfaces/TrackingRequest), `void`, `unknown`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `filters` | `Record`\<`string`, `string`\> & `object` \| `undefined` |
+| `options?` | `Omit`\<[`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
+
+#### Returns
+
+`AsyncGenerator`\<[`TrackingRequest`](/sdk/reference/types/models/interfaces/TrackingRequest), `void`, `unknown`\>
+
+***
+
+### list()
+
+> **list**(`filters?`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `filters` | `Record`\<`string`, `string`\> & `object` |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### update()
+
+> **update**(`id`, `attrs`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `attrs` | `Record`\<`string`, `any`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>

@@ -1,0 +1,48 @@
+---
+title: "Class: RetryInterceptor"
+---
+
+# Class: RetryInterceptor
+
+## Implements
+
+- [`Interceptor`](/sdk/reference/client/interceptors/interfaces/Interceptor)
+
+## Constructors
+
+### Constructor
+
+> **new RetryInterceptor**(`maxRetries`, `fetchImpl?`): `RetryInterceptor`
+
+#### Parameters
+
+| Parameter | Type | Default value |
+| ------ | ------ | ------ |
+| `maxRetries` | `number` | `undefined` |
+| `fetchImpl` | (`input`, `init?`) => `Promise`\<`Response`\> | `fetch` |
+
+#### Returns
+
+`RetryInterceptor`
+
+## Methods
+
+### onResponse()
+
+> **onResponse**(`__namedParameters`): `Promise`\<`Response`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `__namedParameters` | \{ `request`: `Request`; `response`: `Response`; \} |
+| `__namedParameters.request` | `Request` |
+| `__namedParameters.response` | `Response` |
+
+#### Returns
+
+`Promise`\<`Response`\>
+
+#### Implementation of
+
+[`Interceptor`](/sdk/reference/client/interceptors/interfaces/Interceptor).[`onResponse`](/sdk/reference/client/interceptors/interfaces/Interceptor#onresponse)
