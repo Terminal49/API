@@ -36,7 +36,8 @@ jobs:
       - name: Read SDK version
         id: sdk-version
         run: |
-          node -e "const { version } = require('./sdks/typescript-sdk/package.json'); const fs = require('fs'); fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);"
+          version=$(node -p "require('./sdks/typescript-sdk/package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Check release tag matches SDK version
         id: tag-check
