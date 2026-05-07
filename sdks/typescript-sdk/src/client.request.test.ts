@@ -145,6 +145,32 @@ describe('Terminal49Client request building', () => {
     expect(include).not.toContain('containers');
   });
 
+  it('accepts comma-separated listShipments include strings', async () => {
+    const search = buildSearchParams([
+      ['include', 'containers,pod_terminal'],
+      ['filter[status]', 'in_transit'],
+    ]);
+
+    const { fetchImpl, calls } = createMockFetch({
+      [`/shipments?${search}`]: () => jsonResponse({ data: [] }),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.listShipments({
+      status: 'in_transit',
+      include: 'containers,pod_terminal',
+    });
+
+    expect(calls[0].url.searchParams.get('include')).toBe(
+      'containers,pod_terminal',
+    );
+  });
+
   it('builds listContainers filters and pagination with custom include', async () => {
     const search = buildSearchParams([
       ['include', 'shipment,pod_terminal,transport_events'],
@@ -166,7 +192,7 @@ describe('Terminal49Client request building', () => {
     await client.listContainers(
       {
         status: 'in_transit',
-        include: 'shipment,pod_terminal,transport_events',
+        include: ['shipment', 'pod_terminal', 'transport_events'],
       },
       { page: 3, pageSize: 10 },
     );
@@ -178,6 +204,32 @@ describe('Terminal49Client request building', () => {
     expect(params.get('filter[status]')).toBe('in_transit');
     expect(params.get('page[number]')).toBe('3');
     expect(params.get('page[size]')).toBe('10');
+  });
+
+  it('accepts comma-separated listContainers include strings', async () => {
+    const search = buildSearchParams([
+      ['include', 'shipment,pod_terminal'],
+      ['filter[status]', 'available'],
+    ]);
+
+    const { fetchImpl, calls } = createMockFetch({
+      [`/containers?${search}`]: () => jsonResponse({ data: [] }),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.listContainers({
+      status: 'available',
+      include: 'shipment,pod_terminal',
+    });
+
+    expect(calls[0].url.searchParams.get('include')).toBe(
+      'shipment,pod_terminal',
+    );
   });
 
   it('hits container raw events and refresh endpoints', async () => {
@@ -225,6 +277,36 @@ describe('Terminal49Client request building', () => {
     await client.listTrackRequests({}, { page: 2, pageSize: 25 });
 
     expect(calls.length).toBe(2);
+  });
+
+  it('accepts comma-separated tracking request include strings', async () => {
+    const search = buildSearchParams([
+      ['filter[status]', 'pending'],
+      ['include', 'shipment,container'],
+    ]);
+
+    const { fetchImpl, calls } = createMockFetch({
+      [`/tracking_requests?${search}`]: () => jsonResponse({ data: [] }),
+      '/tracking_requests/tr-1?include=shipment,container': () =>
+        jsonResponse({ data: { id: 'tr-1' } }),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.listTrackingRequests({
+      'filter[status]': 'pending',
+      include: 'shipment,container',
+    });
+    await client.getTrackingRequest('tr-1', {
+      include: 'shipment,container',
+    });
+
+    expect(calls[0].url.searchParams.get('include')).toBe('shipment,container');
+    expect(calls[1].url.searchParams.get('include')).toBe('shipment,container');
   });
 
   it('sends JSON:API payload for updateTrackingRequest', async () => {
@@ -505,5 +587,78 @@ describe('Terminal49Client request building', () => {
 
     const result = await client.search('ABC123');
     expect(result).toEqual({ hits: 2 });
+  });
+
+  it('provides an async iterator for paginated endpoints', async () => {
+    const { fetchImpl } = createMockFetch({
+      '/shipments?include=containers%2Cpod_terminal%2Cport_of_lading%2Cport_of_discharge%2Cdestination%2Cdestination_terminal&page%5Bnumber%5D=1&page%5Bsize%5D=1':
+        () =>
+          jsonResponse({
+            data: [
+              {
+                id: 'ship-1',
+                type: 'shipment',
+                attributes: { status: 'in_transit' },
+              },
+            ],
+            links: { next: 'page=2' },
+          }),
+      '/shipments?include=containers%2Cpod_terminal%2Cport_of_lading%2Cport_of_discharge%2Cdestination%2Cdestination_terminal&page%5Bnumber%5D=2&page%5Bsize%5D=1':
+        () =>
+          jsonResponse({
+            data: [
+              {
+                id: 'ship-2',
+                type: 'shipment',
+                attributes: { status: 'discharged' },
+              },
+            ],
+            links: { next: null },
+          }),
+      '/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=1&page[size]=1':
+        () =>
+          jsonResponse({
+            data: [
+              {
+                id: 'ship-1',
+                type: 'shipment',
+                attributes: { status: 'in_transit' },
+              },
+            ],
+            links: { next: 'page=2' },
+          }),
+      '/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=2&page[size]=1':
+        () =>
+          jsonResponse({
+            data: [
+              {
+                id: 'ship-2',
+                type: 'shipment',
+                attributes: { status: 'discharged' },
+              },
+            ],
+            links: { next: null },
+          }),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    const items = [];
+    for await (const shipment of client.shipments.iterate(
+      {},
+      { pageSize: 1 },
+    )) {
+      items.push(shipment);
+    }
+
+    expect(items).toHaveLength(2);
+    expect(items[0].id).toBe('ship-1');
+    expect(items[0].status).toBe('in_transit');
+    expect(items[1].id).toBe('ship-2');
+    expect(items[1].status).toBe('discharged');
   });
 });

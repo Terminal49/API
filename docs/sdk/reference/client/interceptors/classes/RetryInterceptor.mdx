@@ -1,0 +1,70 @@
+---
+title: "Class: RetryInterceptor"
+---
+
+# Class: RetryInterceptor
+
+## Constructors
+
+### Constructor
+
+> **new RetryInterceptor**(`maxRetries`, `fetchImpl?`): `RetryInterceptor`
+
+#### Parameters
+
+| Parameter | Type | Default value |
+| ------ | ------ | ------ |
+| `maxRetries` | `number` | `undefined` |
+| `fetchImpl` | (`input`, `init?`) => `Promise`\<`Response`\> | `fetch` |
+
+#### Returns
+
+`RetryInterceptor`
+
+## Methods
+
+### onError()
+
+> **onError**(`__namedParameters`): `void`
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `__namedParameters` | `Pick`\<`MiddlewareCallbackParams`, `"id"` \| `"request"`\> & `object` |
+
+#### Returns
+
+`void`
+
+***
+
+### onRequest()
+
+> **onRequest**(`__namedParameters`): `Request`
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `__namedParameters` | `Pick`\<`MiddlewareCallbackParams`, `"id"` \| `"request"`\> |
+
+#### Returns
+
+`Request`
+
+***
+
+### onResponse()
+
+> **onResponse**(`__namedParameters`): `Promise`\<`Response`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `__namedParameters` | `Pick`\<`MiddlewareCallbackParams`, `"id"` \| `"request"`\> & `object` |
+
+#### Returns
+
+`Promise`\<`Response`\>

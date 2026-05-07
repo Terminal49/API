@@ -3,6 +3,9 @@
   "name": "Terminal49 TypeScript SDK",
   "entryPoints": [
     "src/client.ts",
+    "src/client/transport.ts",
+    "src/client/interceptors.ts",
+    "src/client/managers/index.ts",
     "src/types/models.ts",
     "src/types/options.ts"
   ],

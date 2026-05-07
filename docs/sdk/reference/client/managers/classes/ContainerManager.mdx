@@ -1,0 +1,155 @@
+---
+title: "Class: ContainerManager"
+---
+
+# Class: ContainerManager
+
+## Extends
+
+- [`BaseManager`](/sdk/reference/client/managers/classes/BaseManager)
+
+## Constructors
+
+### Constructor
+
+> **new ContainerManager**(`transport`, `defaultFormat?`): `ContainerManager`
+
+#### Parameters
+
+| Parameter | Type | Default value |
+| ------ | ------ | ------ |
+| `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
+| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+
+#### Returns
+
+`ContainerManager`
+
+#### Inherited from
+
+[`BaseManager`](/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/sdk/reference/client/managers/classes/BaseManager#constructor)
+
+## Methods
+
+### events()
+
+> **events**(`id`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### get()
+
+> **get**(`id`, `include?`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `include` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### iterate()
+
+> **iterate**(`filters?`, `options?`): `AsyncGenerator`\<[`Container`](/sdk/reference/types/models/interfaces/Container), `void`, `unknown`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\>; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} \| `undefined` |
+| `options?` | `Omit`\<[`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
+
+#### Returns
+
+`AsyncGenerator`\<[`Container`](/sdk/reference/types/models/interfaces/Container), `void`, `unknown`\>
+
+***
+
+### list()
+
+> **list**(`filters?`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\>; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
+| `filters.carrier?` | `string` |
+| `filters.include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
+| `filters.port?` | `string` |
+| `filters.status?` | `string` |
+| `filters.updatedAfter?` | `string` |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### rawEvents()
+
+> **rawEvents**(`id`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### refresh()
+
+> **refresh**(`id`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### route()
+
+> **route**(`id`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>

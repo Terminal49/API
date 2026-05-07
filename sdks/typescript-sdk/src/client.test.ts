@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   FeatureNotEnabledError,
   NotFoundError,
@@ -11,6 +11,7 @@ const baseUrl = 'https://api.test/v2';
 
 describe('Terminal49Client', () => {
   it('retries on 500 and succeeds on second attempt', async () => {
+    vi.useFakeTimers();
     let attempt = 0;
     const { fetchImpl, calls } = createMockFetch({
       '/containers/abc/route?include=port,vessel,route_location': () => {
@@ -29,9 +30,75 @@ describe('Terminal49Client', () => {
       maxRetries: 1,
     } as any);
 
-    const result = await client.getContainerRoute('abc');
-    expect(result.data.id).toBe('route-1');
-    expect(calls.length).toBe(2);
+    try {
+      const resultPromise = client.getContainerRoute('abc');
+      await vi.advanceTimersByTimeAsync(500);
+      const result = await resultPromise;
+
+      expect(result.data.id).toBe('route-1');
+      expect(calls.length).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('retries body requests after the original request is consumed', async () => {
+    vi.useFakeTimers();
+    let attempt = 0;
+    const requestBodies: string[] = [];
+    const fetchImpl = async (
+      input: Request | URL | string,
+      init?: RequestInit,
+    ) => {
+      const request =
+        input instanceof Request ? input : new Request(input, init);
+      const url = new URL(request.url);
+      const body = await request.text();
+      requestBodies.push(body);
+
+      if (url.pathname !== '/v2/tracking_requests') {
+        throw new Error(`Unexpected request to ${url.pathname}`);
+      }
+
+      attempt += 1;
+      if (attempt === 1) {
+        return jsonResponse({ errors: [{ detail: 'server error' }] }, 500);
+      }
+
+      return jsonResponse({ data: { id: 'tr-1' } });
+    };
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+      maxRetries: 1,
+    } as any);
+
+    try {
+      const resultPromise = client.createTrackingRequest({
+        requestType: 'container',
+        requestNumber: 'MSCU1234567',
+        scac: 'MSCU',
+      });
+      await vi.advanceTimersByTimeAsync(500);
+      const result = await resultPromise;
+
+      expect(result.data.id).toBe('tr-1');
+      expect(requestBodies).toHaveLength(2);
+      expect(JSON.parse(requestBodies[1])).toEqual({
+        data: {
+          type: 'tracking_request',
+          attributes: {
+            request_type: 'container',
+            request_number: 'MSCU1234567',
+            scac: 'MSCU',
+          },
+        },
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('maps 404 responses to NotFoundError', async () => {

@@ -1,0 +1,89 @@
+---
+title: "Class: Transport"
+---
+
+# Class: Transport
+
+## Constructors
+
+### Constructor
+
+> **new Transport**(`config`): `Transport`
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `config` | [`TransportConfig`](/sdk/reference/client/transport/interfaces/TransportConfig) |
+
+#### Returns
+
+`Transport`
+
+## Properties
+
+| Property | Modifier | Type |
+| ------ | ------ | ------ |
+| <a id="property-baseurl"></a> `baseUrl` | `public` | `string` |
+| <a id="property-client"></a> `client` | `public` | `Client` |
+
+## Methods
+
+### execute()
+
+> **execute**\<`T`\>(`fn`): `Promise`\<`T`\>
+
+#### Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `T` | `any` |
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | () => `Promise`\<`FetchResponse`\<`any`, `any`, `any`\>\> |
+
+#### Returns
+
+`Promise`\<`T`\>
+
+***
+
+### executeManual()
+
+> **executeManual**\<`T`\>(`input`, `init?`): `Promise`\<`T`\>
+
+#### Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `T` | `any` |
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `input` | `string` \| `Request` \| `URL` |
+| `init?` | `RequestInit` |
+
+#### Returns
+
+`Promise`\<`T`\>
+
+***
+
+### use()
+
+> **use**(`interceptor`): `void`
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `interceptor` | `Middleware` |
+
+#### Returns
+
+`void`

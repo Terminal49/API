@@ -154,7 +154,7 @@ Releases are automated via [release-please](https://github.com/googleapis/releas
    updates `CHANGELOG.md`, and updates the manifest.
 3. Merge the release PR.
 4. Release-please creates a GitHub release with the `sdk-v-v<version>` tag.
-5. The publish workflow builds, tests, and publishes to npm automatically.
+5. The publish workflow builds, tests, and publishes to npm automatically via npm Trusted Publishing.
 
 ### Manual release (fallback)
 
@@ -172,7 +172,7 @@ If you need to release without release-please:
    git push
    ```
 3. Create a GitHub release with tag `sdk-v<version>` (e.g. `sdk-v0.2.0`).
-   The publish workflow will build, test, and publish to npm.
+   The publish workflow will build, test, and publish to npm via npm Trusted Publishing.
 
 ### Post-release
 
