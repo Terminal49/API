@@ -5,12 +5,14 @@ export interface Interceptor {
     request: Request;
     schemaPath: string;
     params: Record<string, unknown>;
+    id?: string;
   }): Request | undefined | Promise<Request | undefined>;
   onResponse?(options: {
     request: Request;
     response: Response;
     schemaPath: string;
     params: Record<string, unknown>;
+    id?: string;
   }): Response | undefined | Promise<Response | undefined>;
 }
 
@@ -31,33 +33,60 @@ export class AuthInterceptor implements Interceptor {
 }
 
 export class RetryInterceptor implements Interceptor {
+  private replayableRequests = new Map<Request | string, Request>();
+
   constructor(
     private maxRetries: number,
     private fetchImpl: typeof fetch = fetch,
   ) {}
 
+  onRequest({ request, id }: { request: Request; id?: string }) {
+    try {
+      this.replayableRequests.set(
+        this.requestKey(request, id),
+        request.clone(),
+      );
+    } catch {
+      this.replayableRequests.delete(this.requestKey(request, id));
+    }
+    return request;
+  }
+
   async onResponse({
     request,
     response,
+    id,
   }: {
     request: Request;
     response: Response;
+    id?: string;
   }): Promise<Response> {
+    const requestKey = this.requestKey(request, id);
+    const replayableRequest = this.replayableRequests.get(requestKey);
     let currentResponse = response;
     let attempt = 0;
 
-    while (
-      (currentResponse.status === 429 || currentResponse.status >= 500) &&
-      attempt < this.maxRetries
-    ) {
-      const delay = 2 ** attempt * 500;
-      await new Promise((resolve) => setTimeout(resolve, delay));
+    try {
+      while (
+        replayableRequest &&
+        (currentResponse.status === 429 || currentResponse.status >= 500) &&
+        attempt < this.maxRetries
+      ) {
+        const delay = 2 ** attempt * 500;
+        await new Promise((resolve) => setTimeout(resolve, delay));
 
-      currentResponse = await this.fetchImpl(request.clone());
-      attempt++;
+        currentResponse = await this.fetchImpl(replayableRequest.clone());
+        attempt++;
+      }
+
+      return currentResponse;
+    } finally {
+      this.replayableRequests.delete(requestKey);
     }
+  }
 
-    return currentResponse;
+  private requestKey(request: Request, id?: string) {
+    return id ?? request;
   }
 }
 

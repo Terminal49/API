@@ -319,8 +319,8 @@
                   "sdk/reference/client/index",
                   "sdk/reference/client/classes/Terminal49Client",
                   "sdk/reference/client/interfaces/Terminal49ClientConfig",
-                  "sdk/reference/client/interfaces/CreateTrackingRequestFromInferOptions",
-                  "sdk/reference/client/type-aliases/TrackingRequestType"
+                  "sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions",
+                  "sdk/reference/client/managers/type-aliases/TrackingRequestType"
                 ]
               },
               {

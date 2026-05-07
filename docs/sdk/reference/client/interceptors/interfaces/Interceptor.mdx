@@ -14,7 +14,8 @@ title: "Interface: Interceptor"
 
 | Parameter | Type |
 | ------ | ------ |
-| `options` | \{ `params`: `Record`\<`string`, `unknown`\>; `request`: `Request`; `schemaPath`: `string`; \} |
+| `options` | \{ `id?`: `string`; `params`: `Record`\<`string`, `unknown`\>; `request`: `Request`; `schemaPath`: `string`; \} |
+| `options.id?` | `string` |
 | `options.params` | `Record`\<`string`, `unknown`\> |
 | `options.request` | `Request` |
 | `options.schemaPath` | `string` |
@@ -33,7 +34,8 @@ title: "Interface: Interceptor"
 
 | Parameter | Type |
 | ------ | ------ |
-| `options` | \{ `params`: `Record`\<`string`, `unknown`\>; `request`: `Request`; `response`: `Response`; `schemaPath`: `string`; \} |
+| `options` | \{ `id?`: `string`; `params`: `Record`\<`string`, `unknown`\>; `request`: `Request`; `response`: `Response`; `schemaPath`: `string`; \} |
+| `options.id?` | `string` |
 | `options.params` | `Record`\<`string`, `unknown`\> |
 | `options.request` | `Request` |
 | `options.response` | `Response` |

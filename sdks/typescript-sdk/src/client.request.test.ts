@@ -180,6 +180,32 @@ describe('Terminal49Client request building', () => {
     expect(params.get('page[size]')).toBe('10');
   });
 
+  it('accepts comma-separated listContainers include strings', async () => {
+    const search = buildSearchParams([
+      ['include', 'shipment,pod_terminal'],
+      ['filter[status]', 'available'],
+    ]);
+
+    const { fetchImpl, calls } = createMockFetch({
+      [`/containers?${search}`]: () => jsonResponse({ data: [] }),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.listContainers({
+      status: 'available',
+      include: 'shipment,pod_terminal',
+    });
+
+    expect(calls[0].url.searchParams.get('include')).toBe(
+      'shipment,pod_terminal',
+    );
+  });
+
   it('hits container raw events and refresh endpoints', async () => {
     const { fetchImpl, calls } = createMockFetch({
       '/containers/cont-1/raw_events': () => jsonResponse({ data: [] }),

@@ -27,6 +27,28 @@ title: "Class: RetryInterceptor"
 
 ## Methods
 
+### onRequest()
+
+> **onRequest**(`__namedParameters`): `Request`
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `__namedParameters` | \{ `id?`: `string`; `request`: `Request`; \} |
+| `__namedParameters.id?` | `string` |
+| `__namedParameters.request` | `Request` |
+
+#### Returns
+
+`Request`
+
+#### Implementation of
+
+[`Interceptor`](/sdk/reference/client/interceptors/interfaces/Interceptor).[`onRequest`](/sdk/reference/client/interceptors/interfaces/Interceptor#onrequest)
+
+***
+
 ### onResponse()
 
 > **onResponse**(`__namedParameters`): `Promise`\<`Response`\>
@@ -35,7 +57,8 @@ title: "Class: RetryInterceptor"
 
 | Parameter | Type |
 | ------ | ------ |
-| `__namedParameters` | \{ `request`: `Request`; `response`: `Response`; \} |
+| `__namedParameters` | \{ `id?`: `string`; `request`: `Request`; `response`: `Response`; \} |
+| `__namedParameters.id?` | `string` |
 | `__namedParameters.request` | `Request` |
 | `__namedParameters.response` | `Response` |
 

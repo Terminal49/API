@@ -10,10 +10,10 @@ import { BaseManager } from './base.js';
 export class ContainerManager extends BaseManager {
   async get(
     id: string,
-    include: ContainerInclude[] = ['shipment', 'pod_terminal'],
+    include: ContainerInclude[] | string = ['shipment', 'pod_terminal'],
     options?: CallOptions,
   ): Promise<any> {
-    const includeParam = include.length > 0 ? include.join(',') : undefined;
+    const includeParam = normalizeIncludeParam(include);
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/containers/{id}', {
         params: {
@@ -31,15 +31,16 @@ export class ContainerManager extends BaseManager {
       port?: string;
       carrier?: string;
       updatedAfter?: string;
-      include?: ContainerInclude[];
+      include?: ContainerInclude[] | string;
     } = {},
     options?: ListOptions,
   ): Promise<any> {
-    const params: Record<string, string> = {
-      include: filters.include
-        ? filters.include.join(',')
-        : 'shipment,pod_terminal',
-    };
+    const includeParam =
+      filters.include === undefined
+        ? 'shipment,pod_terminal'
+        : normalizeIncludeParam(filters.include);
+    const params: Record<string, string> = {};
+    if (includeParam) params.include = includeParam;
     if (filters.status) params['filter[status]'] = filters.status;
     if (filters.port) params['filter[pod_locode]'] = filters.port;
     if (filters.carrier) params['filter[line_scac]'] = filters.carrier;
@@ -110,4 +111,14 @@ export class ContainerManager extends BaseManager {
     );
     return this.formatResult(raw, options?.format);
   }
+}
+
+function normalizeIncludeParam(
+  include: ContainerInclude[] | string,
+): string | undefined {
+  if (typeof include === 'string') {
+    return include.length > 0 ? include : undefined;
+  }
+
+  return include.length > 0 ? include.join(',') : undefined;
 }

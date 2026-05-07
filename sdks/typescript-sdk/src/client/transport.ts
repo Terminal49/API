@@ -66,8 +66,12 @@ export class Transport {
     const errorMap = new ErrorMappingInterceptor();
 
     const authedReq = auth.onRequest({ request: req } as any) || req;
-    let res = await this.fetchImpl(authedReq);
-    res = await retry.onResponse({ request: authedReq, response: res } as any);
+    const retryableReq = retry.onRequest({ request: authedReq } as any);
+    let res = await this.fetchImpl(retryableReq);
+    res = await retry.onResponse({
+      request: retryableReq,
+      response: res,
+    } as any);
     await errorMap.onResponse({ response: res } as any);
 
     try {
