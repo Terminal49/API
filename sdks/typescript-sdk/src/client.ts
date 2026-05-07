@@ -52,14 +52,21 @@ export {
   ValidationError,
 };
 
+/** Configuration for {@link Terminal49Client}. */
 export interface Terminal49ClientConfig {
+  /** Terminal49 API token. Pass either the raw token or a value prefixed with `Token `. */
   apiToken: string;
+  /** API base URL. Defaults to `https://api.terminal49.com/v2`. */
   apiBaseUrl?: string;
+  /** Number of retry attempts for rate-limit and server errors. Defaults to `2`. */
   maxRetries?: number;
+  /** Optional fetch implementation, useful for tests or custom runtimes. */
   fetchImpl?: typeof fetch;
+  /** Default response format for methods that support mapped responses. Defaults to `raw`. */
   defaultFormat?: ResponseFormat;
 }
 
+/** Supported tracking request number types. */
 export type TrackingRequestType =
   | 'container'
   | 'bill_of_lading'
@@ -72,10 +79,15 @@ type FormattedResult<TDoc, TMapped> =
   | TMapped
   | { raw: TDoc; mapped: TMapped };
 
+/** Options for creating a tracking request after inferring carrier and number type. */
 export interface CreateTrackingRequestFromInferOptions {
+  /** Override the inferred carrier SCAC. */
   scac?: string;
+  /** Override the inferred number type. Accepts `container`, `bill_of_lading`, or `booking_number`. */
   numberType?: string;
+  /** Customer reference numbers to attach to the resulting shipment. */
   refNumbers?: string[];
+  /** Tags to attach to the resulting shipment. */
   shipmentTags?: string[];
 }
 
@@ -94,6 +106,13 @@ function normalizeBaseUrl(input?: string): string {
   }
 }
 
+/**
+ * Server-side TypeScript client for the Terminal49 JSON:API.
+ *
+ * Use this client to create tracking requests, list and fetch shipments and
+ * containers, retrieve transport events, and work with core Terminal49 tracking
+ * data from Node.js applications.
+ */
 export class Terminal49Client {
   private apiToken: string;
   private apiBaseUrl: string;
@@ -130,6 +149,7 @@ export class Terminal49Client {
 
   // ========= Resource namespaces =========
 
+  /** Shipment resource methods. */
   public shipments = {
     get: (id: string, includeContainers = true, options?: CallOptions) =>
       this.getShipment(id, includeContainers, options),
@@ -151,6 +171,7 @@ export class Terminal49Client {
       this.resumeTrackingShipment(id, options),
   };
 
+  /** Container resource methods. */
   public containers = {
     get: (id: string, include?: string[], options?: CallOptions) =>
       this.getContainer(id, include, options),
@@ -174,11 +195,13 @@ export class Terminal49Client {
       this.refreshContainer(id, options),
   };
 
+  /** Shipping line resource methods. */
   public shippingLines = {
     list: (search?: string, options?: CallOptions) =>
       this.listShippingLines(search, options),
   };
 
+  /** Tracking request resource methods. */
   public trackingRequests = {
     list: (filters: Record<string, string> = {}, options?: ListOptions) =>
       this.listTrackingRequests(filters, options),
@@ -202,11 +225,13 @@ export class Terminal49Client {
 
   // ========= API methods =========
 
+  /** Search across shipments and containers by number, reference, or keyword. */
   async search(query: string): Promise<any> {
     const params = new URLSearchParams({ query });
     return this.executeManual(`${this.apiBaseUrl}/search?${params.toString()}`);
   }
 
+  /** Fetch a container by ID with optional included relationships. */
   async getContainer(
     id: string,
     include: string[] = ['shipment', 'pod_terminal'],
@@ -224,6 +249,7 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
+  /** Convenience helper for creating a tracking request from a container or booking number. */
   async trackContainer(params: {
     containerNumber?: string;
     bookingNumber?: string;
@@ -249,6 +275,7 @@ export class Terminal49Client {
     });
   }
 
+  /** Create a tracking request with an explicit number type and carrier SCAC. */
   async createTrackingRequest(params: {
     requestType: TrackingRequestType;
     requestNumber: string;
@@ -287,6 +314,7 @@ export class Terminal49Client {
     );
   }
 
+  /** Infer a tracking number's type and likely carrier candidates. */
   async inferTrackingNumber(number: string): Promise<any> {
     if (!number || number.trim() === '') {
       throw new ValidationError('number is required (/data/attributes/number)');
@@ -299,6 +327,7 @@ export class Terminal49Client {
     );
   }
 
+  /** Infer carrier/number type, then create a tracking request from the result. */
   async createTrackingRequestFromInfer(
     number: string,
     options: CreateTrackingRequestFromInferOptions = {},
@@ -342,6 +371,7 @@ export class Terminal49Client {
     return { infer, trackingRequest };
   }
 
+  /** Fetch a shipment by ID, optionally including related containers. */
   async getShipment(
     id: string,
     includeContainers = true,
@@ -362,6 +392,7 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format, mapShipment);
   }
 
+  /** List shipments with optional filters and pagination. */
   async listShipments(
     filters: {
       status?: string;
@@ -400,6 +431,7 @@ export class Terminal49Client {
     );
   }
 
+  /** Update shipment attributes such as reference numbers or tags. */
   async updateShipment(
     id: string,
     attrs: Record<string, any>,
@@ -423,6 +455,7 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format, mapShipment);
   }
 
+  /** Stop tracking a shipment and its containers. */
   async stopTrackingShipment(id: string, options?: CallOptions): Promise<any> {
     const payload = { data: { type: 'shipment' as const, id } };
     const raw = await this.execute(() =>
@@ -434,6 +467,7 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format, mapShipment);
   }
 
+  /** Resume tracking a previously stopped shipment. */
   async resumeTrackingShipment(
     id: string,
     options?: CallOptions,
@@ -448,6 +482,7 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format, mapShipment);
   }
 
+  /** Return a demurrage-focused subset of container fields. */
   async getDemurrage(containerId: string): Promise<any> {
     const data = await this.getContainer(containerId, ['pod_terminal']);
     const container = data.data?.attributes || {};
@@ -463,6 +498,7 @@ export class Terminal49Client {
     };
   }
 
+  /** Fetch normalized transport events for a container. */
   async getContainerTransportEvents(
     id: string,
     options?: CallOptions,
@@ -478,6 +514,7 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format, mapTransportEvents);
   }
 
+  /** Fetch routing details for a container. This may require a paid Terminal49 feature. */
   async getContainerRoute(id: string, options?: CallOptions): Promise<any> {
     const raw = await this.execute(() =>
       this.client.GET('/containers/{id}/route', {
@@ -490,6 +527,7 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format, mapRoute);
   }
 
+  /** List supported shipping lines, optionally filtered by search text. */
   async listShippingLines(
     search?: string,
     options?: CallOptions,
@@ -503,6 +541,7 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format, mapShippingLines);
   }
 
+  /** Return rail milestone fields and rail transport events for a container. */
   async getRailMilestones(containerId: string): Promise<any> {
     const data = await this.getContainer(containerId, ['transport_events']);
     const container = data.data?.attributes || {};
@@ -527,6 +566,7 @@ export class Terminal49Client {
     };
   }
 
+  /** List containers with optional filters and pagination. */
   async listContainers(
     filters: {
       status?: string;
@@ -558,6 +598,7 @@ export class Terminal49Client {
     );
   }
 
+  /** Fetch raw carrier/terminal events for a container. */
   async getContainerRawEvents(id: string, options?: CallOptions): Promise<any> {
     const raw = await this.execute(() =>
       this.client.GET('/containers/{id}/raw_events', {
@@ -567,6 +608,7 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
+  /** Request an immediate refresh for a container. This may require a paid Terminal49 feature. */
   async refreshContainer(id: string, options?: CallOptions): Promise<any> {
     const raw = await this.execute(() =>
       this.client.PATCH('/containers/{id}/refresh', {
@@ -576,6 +618,7 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
+  /** List tracking requests with optional filters and pagination. */
   async listTrackingRequests(
     filters: Record<string, string> = {},
     options?: ListOptions,
@@ -593,6 +636,7 @@ export class Terminal49Client {
     );
   }
 
+  /** Alias for {@link listTrackingRequests}. */
   async listTrackRequests(
     filters: Record<string, string> = {},
     options?: ListOptions,
@@ -600,6 +644,7 @@ export class Terminal49Client {
     return this.listTrackingRequests(filters, options);
   }
 
+  /** Fetch a tracking request by ID. */
   async getTrackingRequest(id: string, options?: CallOptions): Promise<any> {
     const raw = await this.execute(() =>
       this.client.GET('/tracking_requests/{id}', {
@@ -609,6 +654,7 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format, mapTrackingRequest);
   }
 
+  /** Update tracking request attributes. */
   async updateTrackingRequest(
     id: string,
     attrs: Record<string, any>,

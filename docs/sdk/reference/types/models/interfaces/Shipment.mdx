@@ -1,0 +1,26 @@
+# Interface: Shipment
+
+Simplified shipment model returned by mapped SDK responses.
+
+## Indexable
+
+> \[`key`: `string`\]: `any`
+
+## Properties
+
+| Property | Type |
+| ------ | ------ |
+| <a id="property-billoflading"></a> `billOfLading?` | `string` |
+| <a id="property-containers"></a> `containers?` | `object`[] |
+| <a id="property-customername"></a> `customerName?` | `string` |
+| <a id="property-id"></a> `id` | `string` |
+| <a id="property-ports"></a> `ports?` | `object` |
+| `ports.destination?` | \{ `ata?`: `string` \| `null`; `eta?`: `string` \| `null`; `locode?`: `string` \| `null`; `name?`: `string` \| `null`; `terminal?`: \{ `firmsCode?`: `string`; `id?`: `string`; `name?`: `string`; `nickname?`: `string`; \} \| `null`; `timezone?`: `string` \| `null`; \} \| `null` |
+| `ports.portOfDischarge?` | \{ `ata?`: `string` \| `null`; `code?`: `string` \| `null`; `countryCode?`: `string` \| `null`; `eta?`: `string` \| `null`; `locode?`: `string` \| `null`; `name?`: `string` \| `null`; `originalEta?`: `string` \| `null`; `terminal?`: \{ `firmsCode?`: `string`; `id?`: `string`; `name?`: `string`; `nickname?`: `string`; \} \| `null`; `timezone?`: `string` \| `null`; \} \| `null` |
+| `ports.portOfLading?` | \{ `atd?`: `string` \| `null`; `code?`: `string` \| `null`; `countryCode?`: `string` \| `null`; `etd?`: `string` \| `null`; `locode?`: `string` \| `null`; `name?`: `string` \| `null`; `timezone?`: `string` \| `null`; \} \| `null` |
+| <a id="property-shippinglinescac"></a> `shippingLineScac?` | `string` |
+| <a id="property-tracking"></a> `tracking?` | `object` |
+| `tracking.lineTrackingLastAttemptedAt?` | `string` \| `null` |
+| `tracking.lineTrackingLastSucceededAt?` | `string` \| `null` |
+| `tracking.lineTrackingStoppedAt?` | `string` \| `null` |
+| `tracking.lineTrackingStoppedReason?` | `string` \| `null` |

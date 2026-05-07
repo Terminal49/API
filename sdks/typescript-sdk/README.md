@@ -68,6 +68,9 @@ npm run example
 # Generate types from OpenAPI
 npm run generate:types
 
+# Generate Mintlify-compatible TypeDoc pages
+npm run docs
+
 # Type-check
 npm run type-check
 
@@ -121,6 +124,23 @@ Numeric identifiers keep their original prefix while the last few characters are
 obfuscated to preserve shape without exposing real values.
 List endpoints are captured without `include` for performance guidance. Single-resource
 fixtures include both base and `include` variants where supported.
+
+## Documentation generation
+
+The SDK uses TypeDoc with `typedoc-plugin-markdown` to generate Mintlify-compatible MDX pages.
+
+```bash
+cd sdks/typescript-sdk
+npm run docs
+```
+
+Generated files are written to `../../docs/sdk/reference/` and are included in the Mintlify navigation in `docs/docs.json`.
+
+From the repo root, you can also run:
+
+```bash
+npm run sdk:docs
+```
 
 ## Publishing (prep)
 - Add a `prepublishOnly` or `prepare` script to run `npm run build` so `dist/` is fresh.

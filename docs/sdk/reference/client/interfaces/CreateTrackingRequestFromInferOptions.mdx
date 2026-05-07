@@ -1,0 +1,12 @@
+# Interface: CreateTrackingRequestFromInferOptions
+
+Options for creating a tracking request after inferring carrier and number type.
+
+## Properties
+
+| Property | Type | Description |
+| ------ | ------ | ------ |
+| <a id="property-numbertype"></a> `numberType?` | `string` | Override the inferred number type. Accepts `container`, `bill_of_lading`, or `booking_number`. |
+| <a id="property-refnumbers"></a> `refNumbers?` | `string`[] | Customer reference numbers to attach to the resulting shipment. |
+| <a id="property-scac"></a> `scac?` | `string` | Override the inferred carrier SCAC. |
+| <a id="property-shipmenttags"></a> `shipmentTags?` | `string`[] | Tags to attach to the resulting shipment. |

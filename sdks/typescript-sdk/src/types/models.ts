@@ -1,3 +1,4 @@
+/** Simplified shipping line returned by mapped SDK responses. */
 export interface ShippingLine {
   scac: string;
   name: string;
@@ -6,6 +7,7 @@ export interface ShippingLine {
   notes?: string;
 }
 
+/** Pagination links returned by Terminal49 list endpoints. */
 export interface PaginationLinks {
   self?: string;
   current?: string;
@@ -15,12 +17,14 @@ export interface PaginationLinks {
   last?: string;
 }
 
+/** Mapped list response containing records plus pagination metadata. */
 export interface PaginatedResult<T> {
   items: T[];
   links?: PaginationLinks;
   meta?: Record<string, any>;
 }
 
+/** Simplified container model returned by mapped SDK responses. */
 export interface Container {
   id: string;
   number?: string;
@@ -61,6 +65,7 @@ export interface Container {
   [key: string]: any;
 }
 
+/** Simplified shipment model returned by mapped SDK responses. */
 export interface Shipment {
   id: string;
   billOfLading?: string;
@@ -116,6 +121,7 @@ export interface Shipment {
   [key: string]: any;
 }
 
+/** Simplified container route model returned by mapped SDK responses. */
 export interface Route {
   id?: string;
   totalLegs: number;
@@ -145,6 +151,7 @@ export interface Route {
   updatedAt?: string | null;
 }
 
+/** Simplified tracking request model returned by mapped SDK responses. */
 export interface TrackingRequest {
   id: string;
   requestType?: string;
