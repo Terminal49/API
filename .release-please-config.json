@@ -9,7 +9,28 @@
       "tag-separator": "-",
       "include-component-in-tag": true,
       "component": "sdk-v",
-      "extra-files": []
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['sdks/typescript-sdk'].version"
+        },
+        {
+          "type": "json",
+          "path": "packages/mcp/package.json",
+          "jsonpath": "$.dependencies['@terminal49/sdk']"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['packages/mcp'].dependencies['@terminal49/sdk']"
+        },
+        {
+          "type": "json",
+          "path": "packages/mcp/package-lock.json",
+          "jsonpath": "$.packages[''].dependencies['@terminal49/sdk']"
+        }
+      ]
     }
   }
 }
