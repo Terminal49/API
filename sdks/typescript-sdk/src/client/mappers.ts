@@ -1,3 +1,4 @@
+import { JsonApiDocument } from './jsonapi.js';
 import type {
   Container,
   Route,
@@ -6,34 +7,18 @@ import type {
   TrackingRequest,
 } from '../types/models.js';
 
-function toCamelCase(obj: Record<string, any>): Record<string, any> {
-  const result: Record<string, any> = {};
-  for (const [key, value] of Object.entries(obj || {})) {
-    const camelKey = key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-    result[camelKey] = value;
-  }
-  return result;
-}
-
-function createIncludedFinder(included: any[]) {
-  return (id: string, type: string) =>
-    included.find((item: any) => item.id === id && item.type === type);
-}
-
 export function mapTransportEvents(doc: any) {
-  const events = doc?.data || [];
-  const included = doc?.included || [];
-  const findIncluded = createIncludedFinder(included);
+  const apiDoc = new JsonApiDocument(doc);
+  const events = Array.isArray(apiDoc.data) ? apiDoc.data : [];
 
   return events.map((item: any) => {
-    const evAttrs = item.attributes || {};
-    const locRef = item.relationships?.location?.data;
-    const termRef = item.relationships?.terminal?.data;
-    const location = locRef ? findIncluded(locRef.id, 'location') : null;
-    const terminal = termRef ? findIncluded(termRef.id, 'terminal') : null;
+    const attributes = apiDoc.getAttributes(item);
+    const location = apiDoc.getRelationship(item, 'location');
+    const terminal = apiDoc.getRelationship(item, 'terminal');
+
     return {
       id: item.id,
-      ...toCamelCase(evAttrs),
+      ...attributes,
       location: location
         ? {
             id: location.id,
@@ -54,34 +39,18 @@ export function mapTransportEvents(doc: any) {
 }
 
 export function mapRoute(doc: any): Route {
-  const route = doc.data?.attributes || {};
-  const relationships = doc.data?.relationships || {};
-  const included = doc.included || [];
+  const apiDoc = new JsonApiDocument(doc);
+  const route = apiDoc.getAttributes(apiDoc.data, false);
+  const routeLocations = apiDoc.getRelationship(apiDoc.data, 'route_locations') || [];
 
-  const routeLocationRefs = relationships.route_locations?.data || [];
-  const routeLocations = routeLocationRefs
-    .map((ref: any) => {
-      const location = included.find(
-        (item: any) => item.id === ref.id && item.type === 'route_location',
-      );
+  const locations = (Array.isArray(routeLocations) ? routeLocations : [routeLocations])
+    .map((location: any) => {
       if (!location) return null;
 
       const attrs = location.attributes || {};
-      const rels = location.relationships || {};
-
-      const portId = rels.port?.data?.id;
-      const port = included.find(
-        (item: any) => item.id === portId && item.type === 'port',
-      );
-
-      const inboundVesselId = rels.inbound_vessel?.data?.id;
-      const outboundVesselId = rels.outbound_vessel?.data?.id;
-      const inboundVessel = included.find(
-        (item: any) => item.id === inboundVesselId && item.type === 'vessel',
-      );
-      const outboundVessel = included.find(
-        (item: any) => item.id === outboundVesselId && item.type === 'vessel',
-      );
+      const port = apiDoc.getRelationship(location, 'port');
+      const inboundVessel = apiDoc.getRelationship(location, 'inbound_vessel');
+      const outboundVessel = apiDoc.getRelationship(location, 'outbound_vessel');
 
       return {
         port: port
@@ -121,9 +90,9 @@ export function mapRoute(doc: any): Route {
     .filter((loc: any) => loc !== null);
 
   return {
-    id: doc.data?.id,
-    totalLegs: routeLocations.length,
-    locations: routeLocations,
+    id: apiDoc.data?.id,
+    totalLegs: locations.length,
+    locations,
     createdAt: route.created_at,
     updatedAt: route.updated_at,
   };
@@ -148,38 +117,24 @@ export function mapShippingLines(doc: any): ShippingLine[] {
 }
 
 export function mapContainer(doc: any): Container {
-  const attrs = doc?.data?.attributes || {};
-  const attrCamel = toCamelCase(attrs);
-  const relationships = doc?.data?.relationships || {};
-  const included = doc?.included || [];
+  const apiDoc = new JsonApiDocument(doc);
+  const data = apiDoc.data;
+  const attrs = data?.attributes || {};
+  const attrCamel = apiDoc.getAttributes(data);
 
-  const findIncluded = createIncludedFinder(included);
+  const shipment = apiDoc.getRelationship(data, 'shipment');
+  const podTerminal = apiDoc.getRelationship(data, 'pod_terminal');
+  const destTerminal = apiDoc.getRelationship(data, 'destination_terminal');
 
-  const shipmentRef = relationships.shipment?.data;
-  const shipmentIncluded = shipmentRef
-    ? findIncluded(shipmentRef.id, 'shipment')
-    : null;
-
-  const podTerminalRef = relationships.pod_terminal?.data;
-  const destinationTerminalRef = relationships.destination_terminal?.data;
-  const podTerminal = podTerminalRef
-    ? findIncluded(podTerminalRef.id, 'terminal')
-    : null;
-  const destTerminal = destinationTerminalRef
-    ? findIncluded(destinationTerminalRef.id, 'terminal')
-    : null;
-
-  const transportEvents = included
+  const transportEvents = apiDoc.included
     .filter((item: any) => item.type === 'transport_event')
     .map((item: any) => {
-      const evAttrs = item.attributes || {};
-      const locRef = item.relationships?.location?.data;
-      const termRef = item.relationships?.terminal?.data;
-      const location = locRef ? findIncluded(locRef.id, 'location') : null;
-      const terminal = termRef ? findIncluded(termRef.id, 'terminal') : null;
+      const attributes = apiDoc.getAttributes(item);
+      const location = apiDoc.getRelationship(item, 'location');
+      const terminal = apiDoc.getRelationship(item, 'terminal');
       return {
         id: item.id,
-        ...toCamelCase(evAttrs),
+        ...attributes,
         location: location
           ? {
               id: location.id,
@@ -199,7 +154,7 @@ export function mapContainer(doc: any): Container {
     });
 
   return {
-    id: doc?.data?.id,
+    id: data?.id,
     ...attrCamel,
     number: attrs.number || attrs.container_number,
     status: attrs.status,
@@ -250,14 +205,14 @@ export function mapContainer(doc: any): Container {
       indAtaAt: attrs.ind_ata_at,
     },
     events: transportEvents,
-    shipment: shipmentIncluded
+    shipment: shipment
       ? {
-          id: shipmentIncluded.id,
+          id: shipment.id,
           billOfLading:
-            shipmentIncluded.attributes?.bill_of_lading_number ||
-            shipmentIncluded.attributes?.bill_of_lading ||
-            shipmentIncluded.attributes?.bl_number,
-          shippingLineScac: shipmentIncluded.attributes?.shipping_line_scac,
+            shipment.attributes?.bill_of_lading_number ||
+            shipment.attributes?.bill_of_lading ||
+            shipment.attributes?.bl_number,
+          shippingLineScac: shipment.attributes?.shipping_line_scac,
         }
       : null,
   };
@@ -271,30 +226,32 @@ export function mapContainerList(doc: any): Container[] {
 }
 
 export function mapShipment(doc: any): Shipment {
-  const attrs = doc?.data?.attributes || {};
-  const attrCamel = toCamelCase(attrs);
-  const relationships = doc?.data?.relationships || {};
-  const included = doc?.included || [];
-
-  const findIncluded = createIncludedFinder(included);
+  const apiDoc = new JsonApiDocument(doc);
+  const data = apiDoc.data;
+  const attrs = data?.attributes || {};
+  const attrCamel = apiDoc.getAttributes(data);
 
   const shipment: Shipment = {
-    id: doc?.data?.id,
+    id: data?.id,
     billOfLading:
       attrs.bill_of_lading_number ||
       attrs.bill_of_lading ||
-      attrs.bl_number ||
-      attrs.bill_of_lading_number,
+      attrs.bl_number,
     shippingLineScac: attrs.shipping_line_scac,
     customerName: attrs.customer_name,
     containers: [],
     ...attrCamel,
   };
 
-  const containerRefs = relationships.containers?.data || [];
-  shipment.containers = containerRefs
-    .map((ref: any) => {
-      const c = findIncluded(ref.id, 'container');
+  const containerRelationships = apiDoc.getRelationship(data, 'containers');
+  const containers = Array.isArray(containerRelationships)
+    ? containerRelationships
+    : containerRelationships
+      ? [containerRelationships]
+      : [];
+
+  shipment.containers = containers
+    .map((c: any) => {
       if (!c) return null;
       return {
         id: c.id,
@@ -311,21 +268,10 @@ export function mapShipment(doc: any): Shipment {
     voyageNumber: attrs.pod_voyage_number,
   };
 
-  const portOfLadingRef = relationships.port_of_lading?.data;
-  const portOfDischargeRef = relationships.port_of_discharge?.data;
-  const destinationTerminalRef = relationships.destination_terminal?.data;
-  const podTerminalRef = relationships.pod_terminal?.data;
-
-  const pol = portOfLadingRef ? findIncluded(portOfLadingRef.id, 'port') : null;
-  const pod = portOfDischargeRef
-    ? findIncluded(portOfDischargeRef.id, 'port')
-    : null;
-  const destTerminal = destinationTerminalRef
-    ? findIncluded(destinationTerminalRef.id, 'terminal')
-    : null;
-  const podTerminal = podTerminalRef
-    ? findIncluded(podTerminalRef.id, 'terminal')
-    : null;
+  const pol = apiDoc.getRelationship(data, 'port_of_lading');
+  const pod = apiDoc.getRelationship(data, 'port_of_discharge');
+  const destTerminal = apiDoc.getRelationship(data, 'destination_terminal');
+  const podTerminal = apiDoc.getRelationship(data, 'pod_terminal');
 
   shipment.ports = {
     portOfLading: pol
@@ -396,49 +342,40 @@ export function mapShipmentList(doc: any): Shipment[] {
 }
 
 export function mapTrackingRequest(doc: any): TrackingRequest {
-  const attrs = doc?.data?.attributes || {};
-  const relationships = doc?.data?.relationships || {};
-  const included = doc?.included || [];
+  const apiDoc = new JsonApiDocument(doc);
+  const data = apiDoc.data;
+  const attrs = data?.attributes || {};
 
-  const findIncluded = createIncludedFinder(included);
-
-  const shipmentRef = relationships.shipment?.data;
-  const containerRef = relationships.container?.data;
-
-  const shipmentIncluded = shipmentRef
-    ? findIncluded(shipmentRef.id, 'shipment')
-    : null;
-  const containerIncluded = containerRef
-    ? findIncluded(containerRef.id, 'container')
-    : null;
+  const shipment = apiDoc.getRelationship(data, 'shipment');
+  const container = apiDoc.getRelationship(data, 'container');
 
   return {
-    id: doc?.data?.id,
+    id: data?.id,
     requestType: attrs.request_type,
     requestNumber: attrs.request_number,
     status: attrs.status,
     scac: attrs.scac,
     refNumbers: attrs.ref_numbers,
-    shipment: shipmentIncluded
+    shipment: shipment
       ? {
-          id: shipmentIncluded.id,
+          id: shipment.id,
           billOfLading:
-            shipmentIncluded.attributes?.bill_of_lading_number ||
-            shipmentIncluded.attributes?.bill_of_lading ||
-            shipmentIncluded.attributes?.bl_number,
-          shippingLineScac: shipmentIncluded.attributes?.shipping_line_scac,
+            shipment.attributes?.bill_of_lading_number ||
+            shipment.attributes?.bill_of_lading ||
+            shipment.attributes?.bl_number,
+          shippingLineScac: shipment.attributes?.shipping_line_scac,
         }
       : null,
-    container: containerIncluded
+    container: container
       ? {
-          id: containerIncluded.id,
+          id: container.id,
           number:
-            containerIncluded.attributes?.number ||
-            containerIncluded.attributes?.container_number,
-          status: containerIncluded.attributes?.status,
+            container.attributes?.number ||
+            container.attributes?.container_number,
+          status: container.attributes?.status,
         }
       : null,
-    ...toCamelCase(attrs),
+    ...apiDoc.getAttributes(data),
   };
 }
 
