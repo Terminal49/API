@@ -27,6 +27,18 @@ Use the closest doc type before drafting:
 - **Reference**: exact, complete API behavior; avoid narrative.
 - **Concepts**: explain why something works (rate limits, lifecycle, data sources).
 
+Use Diataxis as the decision test for every page:
+- **Tutorial**: action that serves learning. Take responsibility for the reader's first success. Give a concrete outcome, small steps, and expected results. Keep explanations brief and link out.
+- **How-to guide**: action that serves work. Assume the reader already knows the domain goal and needs a reliable sequence. Focus on the task, prerequisites, decisions, and failure modes.
+- **Reference**: knowledge that serves work. Mirror the API or product surface. State facts, accepted values, limits, errors, examples, and links. Do not teach or persuade.
+- **Concept**: knowledge that serves understanding. Explain why Terminal49 behaves the way it does, what tradeoffs exist, and how related ideas fit together. Keep the scope tightly bounded.
+
+If a page mixes types, do not solve it by adding more content. Move or link the content to the right page type:
+- Move enum tables, request fields, event names, limits, and error bodies into reference pages.
+- Move "why" and background material into concept pages.
+- Move step-by-step operational flows into how-to guides.
+- Keep getting-started pages as tutorials with minimal branching and visible results.
+
 ## Voice, tone, and clarity
 - Use second person and active voice.
 - Sound like a domain expert while staying friendly and easy to understand.

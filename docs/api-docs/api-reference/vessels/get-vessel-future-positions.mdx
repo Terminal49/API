@@ -5,3 +5,26 @@ og:title: Get vessel future positions | Terminal49 API Documentation
 og:description: Get estimated future positions for a vessel based on its current AIS location and destination ports. Use the data to plot projected routes on a map.
 openapi: get /vessels/{id}/future_positions
 ---
+
+<Note>
+  This is a paid Routing Data endpoint. See [Entitlements and Paid Features](/docs/api-docs/useful-info/entitlements) for access requirements and non-entitled responses.
+</Note>
+
+## Required query parameters
+
+This endpoint requires both port IDs for the vessel leg you want to forecast:
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `port_id` | Yes | Destination port UUID for the forecasted leg |
+| `previous_port_id` | Yes | Previous port UUID for the same vessel leg |
+
+## How to find the port IDs
+
+If you are starting from a tracked container, call [`GET /v2/containers/{id}/map_geojson`](/docs/api-docs/api-reference/containers/get-container-map-geojson) and inspect the `port` features. Each port feature includes:
+
+- `properties.location_id` - the port UUID to pass as `port_id` or `previous_port_id`
+- `properties.ports_sequence` - the route order
+- `properties.label` - route label such as `POL`, `POD`, or transshipment labels
+
+Use the destination port's `location_id` as `port_id`, and the preceding port's `location_id` as `previous_port_id`.

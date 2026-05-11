@@ -14,7 +14,7 @@ keywords:
 ---
 <Note>
   **Beta Feature** — This guide covers the [Infer Number
-  API](/api-docs/api-reference/tracking-requests/auto-detect-carrier), currently
+  API](/docs/api-docs/api-reference/tracking-requests/auto-detect-carrier), currently
   in beta. The API is stable for production use, but features may expand based
   on feedback.
 </Note>
@@ -319,7 +319,7 @@ Submit any tracking number, and the API returns:
     | `shipping_line.selected` | object | Best match: `scac`, `name`, `confidence` |
     | `shipping_line.candidates` | array | All possible matches, ranked by confidence |
 
-    See the [API Reference](/api-docs/api-reference/tracking-requests/auto-detect-carrier) for complete schema details.
+    See the [API Reference](/docs/api-docs/api-reference/tracking-requests/auto-detect-carrier) for complete schema details.
 
   </Accordion>
 </AccordionGroup>
@@ -422,11 +422,12 @@ curl -X POST https://api.terminal49.com/v2/tracking_requests/infer_number \
 | Setting             | Value                   |
 | ------------------- | ----------------------- |
 | Requests per minute | 200                     |
+| Scope               | Per API key, in an endpoint-specific bucket |
 | Rate limit header   | `Retry-After` (seconds) |
 
 <Warning>
   Rate limit errors return HTTP 429 with a `Retry-After` header. Respect this
-  header to avoid extended throttling.
+  header before sending another Infer Tracking Number request.
 </Warning>
 
 ## What's next?
@@ -435,7 +436,7 @@ curl -X POST https://api.terminal49.com/v2/tracking_requests/infer_number \
   <Card
     title="Infer Number API Reference"
     icon="code"
-    href="/api-docs/api-reference/tracking-requests/auto-detect-carrier"
+    href="/docs/api-docs/api-reference/tracking-requests/auto-detect-carrier"
   >
     Full API specification with request/response schemas and try it in the
     playground
@@ -443,21 +444,21 @@ curl -X POST https://api.terminal49.com/v2/tracking_requests/infer_number \
   <Card
     title="Create a Tracking Request"
     icon="circle-plus"
-    href="/api-docs/api-reference/tracking-requests/create-a-tracking-request"
+    href="/docs/api-docs/api-reference/tracking-requests/create-a-tracking-request"
   >
     Use the detected SCAC to start tracking your shipment
   </Card>
   <Card
     title="Supported Carriers"
     icon="ship"
-    href="/api-docs/useful-info/api-data-sources-availability"
+    href="/docs/api-docs/useful-info/api-data-sources-availability"
   >
     See which carriers Terminal49 supports and their data availability
   </Card>
   <Card
     title="Tracking Request Lifecycle"
     icon="arrows-spin"
-    href="/api-docs/in-depth-guides/tracking-request-lifecycle"
+    href="/docs/api-docs/in-depth-guides/tracking-request-lifecycle"
   >
     Learn what happens after you submit a tracking request
   </Card>
