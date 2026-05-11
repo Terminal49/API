@@ -1,0 +1,119 @@
+---
+title: "Webhook Payloads"
+sidebarTitle: "Payloads"
+description: "Reference the Terminal49 webhook notification envelope, included resource patterns, and links to complete event payload examples."
+keywords:
+  - "Terminal49 API"
+  - "webhook payloads"
+  - "webhook examples"
+  - "JSON:API"
+  - "webhook notification"
+---
+Every Terminal49 webhook delivery is a JSON:API document with a `webhook_notification` primary resource and related records in `included`.
+
+Use this page as the payload reference. Use [Payload Examples](/docs/api-docs/useful-info/webhook-events-examples) when you need complete sample JSON.
+
+## Notification envelope
+
+```json
+{
+  "data": {
+    "id": "87d4f5e3-df7b-4725-85a3-b80acc572e5d",
+    "type": "webhook_notification",
+    "attributes": {
+      "event": "container.updated",
+      "delivery_status": "pending",
+      "created_at": "2026-05-11T18:30:00Z"
+    },
+    "relationships": {
+      "webhook": {
+        "data": {
+          "id": "8a5ffa8f-3dc1-48de-a0ea-09fc4f2cd96f",
+          "type": "webhook"
+        }
+      },
+      "reference_object": {
+        "data": {
+          "id": "e8f1976c-0089-4b98-96ae-90aa87fbdfee",
+          "type": "container_updated_event"
+        }
+      }
+    }
+  },
+  "included": []
+}
+```
+
+## Top-level fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `data.id` | UUID | Unique webhook notification ID. Use this as the idempotency key. |
+| `data.type` | string | Always `webhook_notification`. |
+| `data.attributes.event` | string | Event name, such as `tracking_request.succeeded` or `container.updated`. |
+| `data.attributes.delivery_status` | string | Delivery state for this notification. Values include `pending`, `succeeded`, and `failed`. |
+| `data.attributes.created_at` | timestamp | Time Terminal49 created the notification. |
+| `data.relationships.webhook` | relationship | Webhook endpoint that received the notification. |
+| `data.relationships.reference_object` | relationship | Event-specific object that caused the notification. |
+| `included` | array | Related records included for convenience. Contents vary by event. |
+
+## Reference object types
+
+| Event family | Common `reference_object.type` | Notes |
+| --- | --- | --- |
+| `tracking_request.*` | `tracking_request` | Includes the tracking request and, when available, shipment/container records. |
+| `container.transport.*` | `transport_event` | Includes the transport event, container, shipment, and location records that are available. |
+| `shipment.estimated.arrival` | `estimated_event` | Includes the estimate event and related shipment records. |
+| `container.updated` | `container_updated_event` | Includes a `changeset` describing changed container attributes. |
+| `container.created` | `container_created_event` | Includes the new container and related shipment. |
+| `container.pickup_lfd.*` | `container_updated_event` | Includes the changed Last Free Day field for terminal, line, or rail LFD. |
+| `document.*` | document-related event resource | Available for accounts using document processing. See [Document Processing Workflows](/docs/api-docs/in-depth-guides/document-processing-workflows). |
+
+## Included resources
+
+Webhook payloads may include:
+
+| Resource type | When included |
+| --- | --- |
+| `webhook` | Included on webhook notifications. |
+| `tracking_request` | Included for tracking request lifecycle events and related shipment updates. |
+| `shipment` | Included when the event relates to a shipment or one of its containers. |
+| `container` | Included for container lifecycle, status, availability, and milestone events. |
+| `transport_event` | Included for `container.transport.*` milestone events. |
+| `estimated_event` | Included for ETA change events. |
+| `container_updated_event` | Included for `container.updated` and LFD changes. |
+| `port` | Included when a payload references a port record. |
+| `terminal` | Included when a payload references a terminal record. |
+
+Do not require every resource to be present. Carrier, terminal, and event data can arrive at different times.
+
+## Container update changesets
+
+For `container.updated` events, the event resource includes a `changeset` object. Each key is a changed field. The value is a two-item array: `[previous_value, current_value]`.
+
+```json
+{
+  "changeset": {
+    "pickup_lfd": [null, "2026-05-14T07:00:00Z"],
+    "available_for_pickup": [false, true]
+  }
+}
+```
+
+Common changed fields include:
+
+- `fees_at_pod_terminal`
+- `holds_at_pod_terminal`
+- `pickup_lfd`
+- `pickup_lfd_line`
+- `pickup_lfd_rail`
+- `pickup_appointment_at`
+- `available_for_pickup`
+- `pod_terminal`
+
+## Related
+
+- [Event Catalog](/docs/api-docs/webhooks/event-catalog) - canonical event names
+- [Payload Examples](/docs/api-docs/useful-info/webhook-events-examples) - complete sample JSON
+- [Set Up Webhooks](/docs/api-docs/in-depth-guides/webhooks) - create and secure webhook endpoints
+- [Webhook Notifications API](/docs/api-docs/api-reference/webhook-notifications/list-webhook-notifications) - inspect notification delivery status

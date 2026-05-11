@@ -51,6 +51,7 @@
               "api-docs/webhooks/overview",
               "api-docs/in-depth-guides/webhooks",
               "api-docs/webhooks/event-catalog",
+              "api-docs/webhooks/payloads",
               {
                 "group": "Use Cases",
                 "pages": [
@@ -85,6 +86,7 @@
               "api-docs/in-depth-guides/quickstart",
               "api-docs/useful-info/api-data-sources-availability",
               "api-docs/useful-info/pricing",
+              "api-docs/useful-info/entitlements",
               "api-docs/useful-info/test-numbers",
               "api-docs/useful-info/tracking-request-retrying"
             ]
@@ -147,7 +149,6 @@
           {
             "group": "Documents",
             "icon": "file",
-            "hidden": true,
             "pages": [
               "api-docs/api-reference/documents/list-documents",
               "api-docs/api-reference/documents/upload-a-document",
@@ -165,7 +166,6 @@
           {
             "group": "Email Submissions",
             "icon": "envelope",
-            "hidden": true,
             "pages": [
               "api-docs/api-reference/email-submissions/list-email-submissions",
               "api-docs/api-reference/email-submissions/get-an-email-submission"
@@ -174,7 +174,6 @@
           {
             "group": "Document Schemas",
             "icon": "brackets-curly",
-            "hidden": true,
             "pages": [
               "api-docs/api-reference/document-schemas/get-a-document-schema"
             ]
@@ -182,7 +181,6 @@
           {
             "group": "Document Representations",
             "icon": "binary",
-            "hidden": true,
             "pages": [
               "api-docs/api-reference/document-representations/document-representations-resource"
             ]

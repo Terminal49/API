@@ -6,6 +6,8 @@ These instructions guide automated changes for the Terminal49 docs in this repos
 
 **For detailed writing standards, voice, terminology, and content guidelines, see [WRITING_GUIDE.md](WRITING_GUIDE.md).**
 
+For substantive documentation writing, use the repo-local skill at `skills/terminal49-docs-writing/SKILL.md`. It includes content-type-specific guides for tutorials, how-to guides, reference pages, concepts, webhook/event docs, SDK/MCP docs, DataSync/coverage docs, changelog/update posts, and navigation.
+
 ## Project Structure
 
 - `docs/` holds the Mintlify site content and configuration.

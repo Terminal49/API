@@ -6,7 +6,7 @@ title: "Class: ContainerManager"
 
 ## Extends
 
-- [`BaseManager`](/sdk/reference/client/managers/classes/BaseManager)
+- [`BaseManager`](/docs/sdk/reference/client/managers/classes/BaseManager)
 
 ## Constructors
 
@@ -18,8 +18,8 @@ title: "Class: ContainerManager"
 
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
-| `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
-| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+| `transport` | [`Transport`](/docs/sdk/reference/client/transport/classes/Transport) | `undefined` |
+| `defaultFormat` | [`ResponseFormat`](/docs/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
 
 #### Returns
 
@@ -27,7 +27,7 @@ title: "Class: ContainerManager"
 
 #### Inherited from
 
-[`BaseManager`](/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/sdk/reference/client/managers/classes/BaseManager#constructor)
+[`BaseManager`](/docs/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/docs/sdk/reference/client/managers/classes/BaseManager#constructor)
 
 ## Methods
 
@@ -40,7 +40,7 @@ title: "Class: ContainerManager"
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -57,8 +57,8 @@ title: "Class: ContainerManager"
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `include` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `include` | [`IncludeParam`](/docs/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/docs/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -68,18 +68,18 @@ title: "Class: ContainerManager"
 
 ### iterate()
 
-> **iterate**(`filters?`, `options?`): `AsyncGenerator`\<[`Container`](/sdk/reference/types/models/interfaces/Container), `void`, `unknown`\>
+> **iterate**(`filters?`, `options?`): `AsyncGenerator`\<[`Container`](/docs/sdk/reference/types/models/interfaces/Container), `void`, `unknown`\>
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\>; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} \| `undefined` |
-| `options?` | `Omit`\<[`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/docs/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/docs/sdk/reference/types/options/type-aliases/ContainerInclude)\>; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} \| `undefined` |
+| `options?` | `Omit`\<[`ListOptions`](/docs/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
 
 #### Returns
 
-`AsyncGenerator`\<[`Container`](/sdk/reference/types/models/interfaces/Container), `void`, `unknown`\>
+`AsyncGenerator`\<[`Container`](/docs/sdk/reference/types/models/interfaces/Container), `void`, `unknown`\>
 
 ***
 
@@ -91,13 +91,13 @@ title: "Class: ContainerManager"
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\>; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/docs/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/docs/sdk/reference/types/options/type-aliases/ContainerInclude)\>; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
 | `filters.carrier?` | `string` |
-| `filters.include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
+| `filters.include?` | [`IncludeParam`](/docs/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/docs/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
 | `filters.port?` | `string` |
 | `filters.status?` | `string` |
 | `filters.updatedAfter?` | `string` |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| `options?` | [`ListOptions`](/docs/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
 
@@ -114,7 +114,7 @@ title: "Class: ContainerManager"
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -131,7 +131,7 @@ title: "Class: ContainerManager"
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -148,7 +148,7 @@ title: "Class: ContainerManager"
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 

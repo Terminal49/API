@@ -15,52 +15,95 @@ keywords:
 - **Ocean carriers (aka steamship lines):** bill of lading/booking details, vessel eta, containers and milestones
 - **Container terminal operators:** container availability, last free day, holds, fees etc
 - **Container rail carriers:** container milestones via rail
-- **AIS data:** vessel details and real-time location tracking (coming soon!)
+- **Vessel position data:** vessel details and location tracking for entitled vessel, routing, and map features. Coverage and freshness vary by vessel and data source.
 
 ## Supported ocean carriers
 
-View a complete list of supported carriers and attributes on [Google Sheets](https://docs.google.com/spreadsheets/d/1cWK8sNpkjY5V-KlXe1fHi8mU_at2HcJYqjCvGQgixQk/edit#gid=0)
+The table below is the docs-published carrier coverage matrix. Coverage can vary by number type and source availability.
+
+| Carrier | Nickname | SCAC | BOL prefix | Support | Notes |
+| --- | --- | --- | --- | --- | --- |
+| American President Lines | APL | APLU | APLU | Yes | - |
+| Australia National Line | ANL | ANNU | ANLC | Yes | - |
+| China Ocean Shipping Company | COSCO | COSU | CCMJ | Yes | - |
+| CMA CGM | CMA CGM | CMDU | CMDU | Yes | - |
+| Evergreen | Evergreen | EGLV | EISU | Yes | - |
+| Hamburg Sud | Hamburg Sud | SUDU | SUDU | Yes | - |
+| Hapag-Lloyd | Hapag-Lloyd | HLCU | HLCU | Yes | - |
+| Hyundai Merchant Marine | Hyundai | HDMU | HDMU | Partial | No container numbers |
+| Maersk | Maersk | MAEU | MAEU | Yes | - |
+| Matson Navigation Company | Matson | MATS | MATS | Yes | - |
+| Mediterranean Shipping Company | MSC | MSCU | MEDU | Yes | - |
+| Ocean Network Express | ONE | ONEY | ONEY | Yes | - |
+| Orient Overseas Container Line | OOCL | OOLU | OOLU | Yes | - |
+| Pacific International Lines | PIL | PCIU | PABV | Yes | - |
+| Safmarine Container Line | Safmarine | SAFM | SAFM | Yes | - |
+| SeaLand | SeaLand | SEAL | SEAU | Yes | - |
+| Yangming Marine Transport | Yangming | YMLU | YMLU | Yes | - |
+| Wan Hai Lines | Wan Hai | WHLC | WHLC | Yes | - |
+| Matson | Matson | MATS | - | On roadmap | - |
+| Zim | Zim | ZIMU | ZIMU | Yes | - |
+| Seaboard Marine | Seaboard | CLAM | - | On roadmap | - |
+| Crowley | Crowley | CLAM | - | On roadmap | - |
 
 <Tip>
   You can also use the [Auto-Detect
-  Carrier](/api-docs/in-depth-guides/auto-detect-carrier) API to automatically
+  Carrier](/docs/api-docs/in-depth-guides/auto-detect-carrier) API to automatically
   identify the SCAC from a tracking number.
 </Tip>
 
-[![Carriers Screenshot](/images/carriers_screenshot.png "Carriers Screenshot")](https://docs.google.com/spreadsheets/d/1cWK8sNpkjY5V-KlXe1fHi8mU_at2HcJYqjCvGQgixQk/edit#gid=0)
-
 ## Ports and terminals
 
-Presently, the Terminal49 API integrates with terminals at the following ports:
+The table below is the docs-published terminal coverage matrix. Terminal data availability can vary by field, terminal source, and shipment state.
 
-- Baltimore
-- Boston
-- Charleston
-- Fraser Surrey (CA)
-- Halifax (CA)
-- Houston
-- Jacksonville
-- London Gateway (UK)
-- Long Beach
-- Los Angeles
-- Miami
-- Mobile
-- New Orleans
-- New York / New Jersey
-- Oakland
-- Philadelphia
-- Port Everglades
-- Portland
-- Prince Rupert (CA)
-- Savannah
-- Seattle
-- Southampton (UK)
-- Tacoma
-- Tampa
-- Vancouver (CA)
-- Virginia
-
-You can view a complete list of supported terminals and attributes on [Google Sheets](https://docs.google.com/spreadsheets/d/1cWK8sNpkjY5V-KlXe1fHi8mU_at2HcJYqjCvGQgixQk/edit#gid=1406366493)
+| Terminal | Nickname | FIRMS code | Port | Port code | Support |
+| --- | --- | --- | --- | --- | --- |
+| Dundalk Marine Terminal | Dundalk | A321 | Baltimore | USBAL | Yes |
+| Seagirt Terminal | Seagirt | C324 | Baltimore | USBAL | Yes |
+| Paul W Conley Terminal | Conley Terminal | A295 | Boston | USBOS | Yes |
+| Barbours Cut Terminal | APM | S787 | Houston | USHOU | Yes |
+| Bayport Container Terminal | Bayport | V136 | Houston | USHOU | Yes |
+| SSA Cooper | SSA Cooper | N296 | JAXPORT | USJAX | Yes |
+| Trapac Jacksonville Terminal | Trapac Jacksonville | M029 | JAXPORT | USJAX | Yes |
+| Long Beach Container Terminal | LBCT Pier F | W183 | Long Beach | USLGB | Yes |
+| Long Beach Container Terminal | LBCT Pier E | WAC8 | Long Beach | USLGB | Yes |
+| Total Terminals International | TTI | Z952 | Long Beach | USLGB | Yes |
+| International Transportation Service | ITS | Y309 | Long Beach | USLGB | Yes |
+| Pacific Container Terminal | PCT | W182 | Long Beach | USLGB | Yes |
+| SSA Pier A | Pier A | Z978 | Long Beach | USLGB | Yes |
+| APM Terminals | APMT | W185 | Los Angeles | USLAX | Yes |
+| Fenix Marine Services | FMS | Y257 | Los Angeles | USLAX | Yes |
+| West Basin Container Terminal | WBCT | Y773 | Los Angeles | USLAX | Yes |
+| Everport Terminal Serivces | ETS | Y124 | Los Angeles | USLAX | Yes |
+| TraPac LA | TraPac LA | Y258 | Los Angeles | USLAX | Yes |
+| Yusen Terminals | Yusen | Y790 | Los Angeles | USLAX | Yes |
+| Port of Miami Terminal Operating Company | POMTOC | L239 | Miami Seaport | USMIA | Yes |
+| South Florida Container Terminal | SFCT | N775 | Miami Seaport | USMIA | Yes |
+| APM Terminal | APM Mobile | R103 | Mobile | USMOB | Yes |
+| Napoleon Container Terminal | Napoleon | P260 | New Orleans | USMSY | Yes |
+| New Orleans Terminal | Milan | Q795 | New Orleans | USMSY | Yes |
+| Port Elizabeth | APM Terminals | E425 | New York / New Jersey | USNYC | Yes |
+| GCT New York LP | GCT | E005 | New York / New Jersey | USNYC | Yes |
+| Maher Terminals | Maher | E416 | New York / New Jersey | USNYC | Yes |
+| GCT Bayonne | GCTB | E364 | New York / New Jersey | USNYC | Yes |
+| Port Newark Container Terminal | PNCT | F577 | New York / New Jersey | USNYC | Yes |
+| Oakland International Container Terminal | SSA | Z985 | Oakland | USOAK | Yes |
+| TraPac Terminal | TraPac | Y549 | Oakland | USOAK | Yes |
+| Ben E. Nutter Terminal | Everport | Y738 | Oakland | USOAK | Yes |
+| Packer Avenue | Packer Avenue | C095 | PhilaPort | USPHL | Yes |
+| Florida International Terminal | FIT | N751 | Port Everglades | USPEF | Yes |
+| Tampa Bay Container Terminal | Tampa Bay | M669 | Port Tampa Bay | USPOT | Yes |
+| Garden City Terminals | GCT | L737 | Savannah | USSAV | Yes |
+| SSA Terminal 18 | Terminal 18 | X117 | Seattle | USSEA | Yes |
+| SSA Terminal 30 | Terminal 30 | Y197 | Seattle | USSEA | Yes |
+| Pierce County Terminal | PCT | X215 | Tacoma | USTIW | Yes |
+| Husky Terminal | Husky | Z693 | Tacoma | USTIW | Yes |
+| Washington United Terminals | WUT | Z705 | Tacoma | USTIW | Yes |
+| Tacoma Container Terminal | TCT | WAM2 | Tacoma | USTIW | Yes |
+| Richmond Marine Terminal | Richmond (RMT) | LAQ4 | Virginia | USORF | Yes |
+| Portsmouth Marine Terminal | Portsmouth (PMT) | L045 | Virginia | USORF | Yes |
+| Virginia International Gateway | Virginia (VIG) | N195 | Virginia | USORF | Yes |
+| Norfolk International Terminals | Norfolk (NIT) | L005 | Virginia | USORF | Yes |
 
 ## Rail carriers
 

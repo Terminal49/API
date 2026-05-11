@@ -12,27 +12,25 @@ keywords:
   - "shipment data"
   - "container data"
 ---
+In this tutorial, you will list the shipment and container records created from your tracking requests.
+
+Use this step after you have created at least one tracking request.
+
 ## Shipment and container data in Terminal49
 
-After you've successfully made a tracking request, Terminal49 will begin to track shipments and store relevant information about that shipment on your behalf.
+After Terminal49 accepts a tracking request, it starts collecting available data from carriers and terminals. You can retrieve the latest stored data at any time with the Shipments and Containers endpoints.
 
-The initial tracking request starts this process, collecting available data from carriers and terminals. Terminal49 then periodically checks for new updates and pulls data from carriers and terminals to keep the stored data up to date.
-
-You can access data about shipments and containers on your tracked shipments any time. The sections below introduce the basics of this method.
-
-In practice, you would typically use webhooks (described in the next section) rather than polling for shipment data. A webhook is a callback URL that receives HTTP POST requests from the Terminal49 API whenever tracking data changes.
+Use these endpoints for on-demand lookups. For ongoing status monitoring, use webhooks instead of polling.
 
 ## List all your tracked shipments
 
 If your tracking request was successful, you will now be able to list your tracked shipments.
 
-**Try it below. Click "Headers" and replace YOUR_API_KEY with your API key.**
+Replace `YOUR_API_KEY` with your API key.
 
-Sometimes it may take a while for the tracking request to show up, but usually no more than a few minutes.
+Sometimes it takes a few minutes for a new tracking request to appear as a shipment.
 
-If you had trouble adding your first shipment, try adding a few more.
-
-**We suggest copy and pasting the response returned into a text editor so you can examine it while continuing the tutorial.**
+Copy the response into a text editor so you can inspect it while continuing the tutorial.
 
 ```json http
 {
@@ -51,16 +49,20 @@ If you had trouble adding your first shipment, try adding a few more.
 
 ## Authentication
 
-The API uses HTTP Bearer Token authentication.
+The API uses a Token-prefixed API key in the `Authorization` header.
 
-This means you send your API Key as your token in every request.
+Send your API key with each request in this format:
+
+```http
+Authorization: Token YOUR_API_KEY
+```
 
 Webhooks are associated with API tokens, which is how Terminal49 identifies which account to send shipment updates to.
 
 
-## Anatomy of shipments JSON response
+## Inspect the shipment response
 
-Here's what you'll see come back after you get the /shipments endpoint.
+The `/shipments` response returns an array of `shipment` objects. Each shipment includes attributes, relationships to related records, and a `self` link.
 
 For clarity, some fields have been replaced with ellipses (...) and key areas are bolded.
 
@@ -218,7 +220,7 @@ function listShipmentValues(shipment_values){
 You can also list out all of your Containers. Container data includes terminal availability, last free day, holds, fees, and other logistical information that you might use for drayage operations at port.
 
 <Tip>
-To learn how to use holds and fees data to determine if a container is ready for pickup, see [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
+To learn how to use holds and fees data to determine if a container is ready for pickup, see [Container Holds, Fees, and Release Readiness](/docs/api-docs/in-depth-guides/holds-and-fees).
 </Tip>
 
 **Try it below. Click "Headers" and replace YOUR_API_KEY with your API key.**

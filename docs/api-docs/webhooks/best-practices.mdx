@@ -28,7 +28,7 @@ app.post("/webhooks/terminal49", (req, res) => {
 });
 ```
 
-Any other response — including a timeout — triggers retries. If your endpoint consistently fails, Terminal49 will retry up to a dozen times before marking the notification as failed.
+Any other response — including a timeout — triggers retries. If your endpoint consistently fails, Terminal49 retries up to 12 times before marking the notification as failed.
 
 ## Handle retries and duplicate deliveries
 
@@ -62,7 +62,7 @@ If you use a message queue (SQS, RabbitMQ, etc.), enqueue the raw payload immedi
 
 ## Verify the webhook source
 
-Terminal49 publishes the IP addresses that webhook notifications originate from. Use the [List Webhook IPs](/api-docs/api-reference/webhooks/list-webhook-ips) endpoint to fetch the current list and validate incoming requests:
+Terminal49 publishes the IP addresses that webhook notifications originate from. Use the [List Webhook IPs](/docs/api-docs/api-reference/webhooks/list-webhook-ips) endpoint to fetch the current list and validate incoming requests:
 
 ```javascript
 const ALLOWED_IPS = await fetchTerminal49WebhookIPs();
@@ -84,7 +84,7 @@ Cache the IP list and refresh it periodically (e.g., daily). The list rarely cha
 
 ## Monitor delivery status
 
-Use the [Webhook Notifications API](/api-docs/api-reference/webhook-notifications/list-webhook-notifications) to check delivery status and catch any notifications your endpoint may have missed:
+Use the [Webhook Notifications API](/docs/api-docs/api-reference/webhook-notifications/list-webhook-notifications) to check delivery status and catch any notifications your endpoint may have missed:
 
 ```bash
 curl -s "https://api.terminal49.com/v2/webhook_notifications?filter[delivery_status]=failed" \
@@ -98,8 +98,8 @@ Review failed notifications regularly to identify issues with your endpoint befo
 
 If your endpoint goes down, Terminal49 retries failed deliveries. When your endpoint recovers:
 
-1. Check the [Webhook Notifications API](/api-docs/api-reference/webhook-notifications/list-webhook-notifications) for any notifications with `delivery_status: failed`.
-2. Use the [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint to replay specific notifications.
+1. Check the [Webhook Notifications API](/docs/api-docs/api-reference/webhook-notifications/list-webhook-notifications) for any notifications with `delivery_status: failed`.
+2. Use the [Trigger Webhook](/docs/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint to replay specific notifications.
 3. For longer outages, list recent shipments via the API to catch up on any missed state changes.
 
 ## Keep your webhook active
@@ -112,7 +112,7 @@ curl -s "https://api.terminal49.com/v2/webhooks" \
   -H "Content-Type: application/vnd.api+json"
 ```
 
-If your webhook has been deactivated, fix the endpoint issue and [update the webhook](/api-docs/api-reference/webhooks/edit-a-webhook) to set `active: true`.
+If your webhook has been deactivated, fix the endpoint issue and [update the webhook](/docs/api-docs/api-reference/webhooks/edit-a-webhook) to set `active: true`.
 
 ## Summary checklist
 
@@ -125,6 +125,7 @@ If your webhook has been deactivated, fix the endpoint issue and [update the web
 
 ## Related
 
-- [Setting up webhooks](/api-docs/in-depth-guides/webhooks) — create and configure endpoints
-- [Event catalog](/api-docs/webhooks/event-catalog) — all available events
-- [Webhook API Reference](/api-docs/api-reference/webhooks/create-a-webhook) — CRUD operations for webhooks
+- [Setting up webhooks](/docs/api-docs/in-depth-guides/webhooks) — create and configure endpoints
+- [Event catalog](/docs/api-docs/webhooks/event-catalog) — all available events
+- [Webhook payloads](/docs/api-docs/webhooks/payloads) — notification envelope and included resources
+- [Webhook API Reference](/docs/api-docs/api-reference/webhooks/create-a-webhook) — CRUD operations for webhooks

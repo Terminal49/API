@@ -11,11 +11,24 @@ keywords:
   - "Postman"
   - "track shipments"
 ---
-Ready to start tracking your ocean shipments and containers? Follow this guide to get up and running.
+This getting-started path walks you through a first successful Terminal49 integration:
 
-The Terminal49 API uses [JSON:API](https://jsonapi.org/) schema. [Client libraries](https://jsonapi.org/implementations/#client-libraries) are available in almost every language and work with the API out of the box.
+1. Get an API key.
+2. Create a tracking request for a bill of lading, booking, or container number.
+3. List the shipment and container data Terminal49 stores for you.
+4. Register a webhook so your system receives updates when data changes.
 
-You can use any HTTP client to interact with the API. [Postman](https://www.postman.com/) is a good option — it provides a graphical interface and supports the OpenAPI specs published with the API. Use the collection below to test endpoints with your API key.
+By the end, you will have made an authenticated request to the API and seen the basic request/response shape used by the rest of the documentation.
+
+## Before you start
+
+You need:
+
+- A Terminal49 account with API access.
+- A shipment identifier from a carrier: master Bill of Lading (BOL), booking number, or container number.
+- The carrier Standard Carrier Alpha Code (SCAC), unless you plan to use carrier auto-detection.
+
+You can use any HTTP client. [Postman](https://www.postman.com/) is useful for a first pass because it can run the published OpenAPI collection with your API key.
 
 <Card icon = "caret-right" href="https://www.postman.com/terminal49-api/terminal49-api/collection/x2podso/terminal49-api-reference-public">
 **Run in Postman**
@@ -25,9 +38,22 @@ You can use any HTTP client to interact with the API. [Postman](https://www.post
 ## Get an API key
 Sign in to your Terminal49 account and go to the [developer portal](https://app.terminal49.com/developers/api-keys) to get your API key.
 
-### Authentication
-When passing your API key it should be prefixed with `Token`. For example, if your API Key is 'ABC123' then your Authorization header would look like:
+## Send the Authorization header
 
+The API uses a Token-prefixed API key in the `Authorization` header.
+
+If your API key is `ABC123`, send:
+
+```http
+Authorization: Token ABC123
 ```
-"Authorization": "Token ABC123"
-```
+
+<Tip>
+Keep your API key on your server. Do not put it in browser code or public repositories.
+</Tip>
+
+## Continue the tutorial
+
+<Card title="Create a tracking request" icon="ship" href="/docs/api-docs/getting-started/tracking-shipments-and-containers">
+  Send your first shipment identifier to Terminal49.
+</Card>

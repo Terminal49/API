@@ -12,10 +12,10 @@ Create a custom field definition to describe metadata you want to store on shipm
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `entity_type` | Yes | The entity type this field applies to (`Shipment` or `Cargo`) |
+| `entity_type` | Yes | The entity type this field applies to (`Shipment` or `Container`) |
 | `api_slug` | Yes | Unique identifier for the field |
 | `display_name` | Yes | Human-readable name for the field |
-| `data_type` | Yes | Data type for values (for example: `short_text`, `number`, `date`) |
+| `data_type` | Yes | Data type for values (for example: `short_text`, `number`, `date`, `reference`) |
 | `description` | No | Optional description of the field's purpose |
 | `validation` | No | Validation rules (for example: `required`, `pattern`, `max_length`) |
 | `default_format` | No | Default format string for numbers or dates |

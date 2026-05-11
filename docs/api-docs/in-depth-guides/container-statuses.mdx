@@ -27,7 +27,7 @@ The `current_status` field can have one of the following values:
 - Any time the container is loaded on a vessel
 
 ### available
-**Ready for pickup** - The container has arrived at the POD or inland destination and is confirmed available for pickup. You can proceed with arranging pickup when you see this status. For a definitive readiness check that combines `available_for_pickup` with hold data, see [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
+**Ready for pickup** - The container has arrived at the POD or inland destination and is confirmed available for pickup. You can proceed with arranging pickup when you see this status. For a definitive readiness check that combines `available_for_pickup` with hold data, see [Container Holds, Fees, and Release Readiness](/docs/api-docs/in-depth-guides/holds-and-fees).
 
 ### not_available
 **Arrived but not ready** - The container is at the POD or inland destination but is not yet available for pickup. This could be due to:
@@ -36,7 +36,7 @@ The `current_status` field can have one of the following values:
 - Documentation requirements
 - Other restrictions
 
-See [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees) for details on specific hold types and how to determine when the container is released.
+See [Container Holds, Fees, and Release Readiness](/docs/api-docs/in-depth-guides/holds-and-fees) for details on specific hold types and how to determine when the container is released.
 
 ### grounded
 **Availability unknown** - The container is physically at the POD, but Terminal49 doesn't currently know whether it's available for pickup or not. This typically means the terminal isn't providing real-time availability data.
@@ -65,10 +65,10 @@ This status is specific to shipments with inland rail movements.
 **Container returned empty** - The container has been emptied and returned to the shipping line or designated return location.
 
 ### dropped
-**Not currently used** - This status value is defined but not actively used in the system.
+**Reserved** - Terminal49 does not currently emit this status in public API responses. Keep a fallback branch for unknown or newly introduced statuses rather than building workflow logic around `dropped`.
 
 ### loaded
-**Not currently used** - This status value is defined but not actively used in the system.
+**Reserved** - Terminal49 does not currently emit this status in public API responses. Keep a fallback branch for unknown or newly introduced statuses rather than building workflow logic around `loaded`.
 
 ## Important considerations
 

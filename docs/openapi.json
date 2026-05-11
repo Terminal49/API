@@ -2393,6 +2393,7 @@
                                 "container.transport.estimated.arrived_at_inland_destination",
                                 "container.pickup_lfd.changed",
                                 "container.pickup_lfd_line.changed",
+                                "container.pickup_lfd_rail.changed",
                                 "container.transport.available",
                                 "document.extracted",
                                 "document.extraction_failed"
@@ -2615,6 +2616,7 @@
                                 "container.transport.estimated.arrived_at_inland_destination",
                                 "container.pickup_lfd.changed",
                                 "container.pickup_lfd_line.changed",
+                                "container.pickup_lfd_rail.changed",
                                 "container.transport.available",
                                 "document.extracted",
                                 "document.extraction_failed"
@@ -2697,6 +2699,7 @@
                           "container.transport.estimated.arrived_at_inland_destination",
                           "container.pickup_lfd.changed",
                           "container.pickup_lfd_line.changed",
+                          "container.pickup_lfd_rail.changed",
                           "container.transport.available"
                         ],
                         "active": true
@@ -3615,6 +3618,7 @@
                 "container.transport.estimated.arrived_at_inland_destination",
                 "container.pickup_lfd.changed",
                 "container.pickup_lfd_line.changed",
+                "container.pickup_lfd_rail.changed",
                 "container.transport.available",
                 "document.extracted",
                 "document.extraction_failed"
@@ -6243,7 +6247,7 @@
         "tags": [
           "Containers"
         ],
-        "description": "Schedules the container to be refreshed immediately from all relevant sources.<br /><br />To be alerted of updates you should subscribe to the [relevant webhooks](/api-docs/in-depth-guides/webhooks).<Info> This endpoint is limited to 10 requests per minute.</Info><Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
+        "description": "Schedules the container to be refreshed immediately from all relevant sources.<br /><br />To be alerted of updates you should subscribe to the [relevant webhooks](/docs/api-docs/in-depth-guides/webhooks).<Info> This endpoint is limited to 10 requests per minute.</Info><Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
         "responses": {
           "200": {
             "description": "OK",
@@ -7135,7 +7139,7 @@
             },
             "in": "query",
             "name": "filter[entity_type]",
-            "description": "Filter by entity type (Shipment or Cargo)"
+            "description": "Filter by entity type (Shipment or Container)"
           },
           {
             "schema": {
@@ -7239,7 +7243,7 @@
                             "type": "string",
                             "enum": [
                               "Shipment",
-                              "Cargo"
+                              "Container"
                             ]
                           },
                           "api_slug": {
@@ -7695,7 +7699,7 @@
             },
             "in": "query",
             "name": "filter[entity_type]",
-            "description": "Filter by entity type (Shipment or Cargo)"
+            "description": "Filter by entity type (Shipment or Container)"
           },
           {
             "schema": {
@@ -10885,7 +10889,7 @@
               },
               "current_status": {
                 "type": "string",
-                "description": "The current status of the container in its journey. [Read guide to learn more.](/api-docs/in-depth-guides/container-statuses)",
+                "description": "The current status of the container in its journey. [Read guide to learn more.](/docs/api-docs/in-depth-guides/container-statuses)",
                 "enum": [
                   "new",
                   "on_ship",
@@ -11708,6 +11712,7 @@
                     "container.transport.estimated.arrived_at_inland_destination",
                     "container.pickup_lfd.changed",
                     "container.pickup_lfd_line.changed",
+                    "container.pickup_lfd_rail.changed",
                     "container.transport.available",
                     "document.extracted",
                     "document.extraction_failed"
@@ -11893,6 +11898,7 @@
                   "container.transport.estimated.arrived_at_inland_destination",
                   "container.pickup_lfd.changed",
                   "container.pickup_lfd_line.changed",
+                  "container.pickup_lfd_rail.changed",
                   "container.transport.available",
                   "document.extracted",
                   "document.extraction_failed"
@@ -12251,6 +12257,7 @@
                   "container.transport.estimated.arrived_at_inland_destination",
                   "container.pickup_lfd.changed",
                   "container.pickup_lfd_line.changed",
+                  "container.pickup_lfd_rail.changed",
                   "container.transport.available",
                   "document.extracted",
                   "document.extraction_failed"
@@ -13394,7 +13401,7 @@
                 "type": "string",
                 "enum": [
                   "Shipment",
-                  "Cargo"
+                  "Container"
                 ]
               },
               "api_slug": {
@@ -14205,7 +14212,7 @@
         "name": "Authorization",
         "type": "apiKey",
         "in": "header",
-        "description": "`Token YOUR_API_TOKEN`\n\nThe APIs require authentication to be done using header-based API Key and Secret Authentication. \n\nAPI key and secret are sent va the `Authorization` request header.\n\nYou send your API key and secret in the following way:\n\n`Authorization: Token YOUR_API_KEY`"
+        "description": "Use a Terminal49 API key in the `Authorization` header with the `Token` prefix.\n\n`Authorization: Token YOUR_API_KEY`"
       }
     }
   },

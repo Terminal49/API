@@ -12,315 +12,115 @@ keywords:
   - "shipment events"
   - "container events"
 ---
-## Using webhooks to receive status updates
+In this tutorial, you will register a webhook endpoint and confirm the shape of the status updates Terminal49 sends.
 
-Terminal49 posts status updates to a webhook that you register.
+Use webhooks for ongoing tracking updates. Polling is useful for on-demand lookups, but it adds latency and consumes API rate limits.
 
-A webhook is a callback URL that receives HTTP POST requests from the Terminal49 API whenever tracking data changes.
+## Before you start
 
-The HTTP Post request from Terminal49 has a JSON payload which you can parse to extract the relevant information.
+You need:
 
-## How do I use a webhook with Terminal49?
+- A Terminal49 API key.
+- A public HTTPS endpoint that can receive `POST` requests.
+- At least one active tracking request.
 
-First, you need to register a webhook. You can register as many webhooks as you like. Webhooks are associated with your account. All updates relating to that account are sent to the Webhook associated with it.
+For local testing, use a temporary endpoint from a tool such as webhook.site. For production, use an endpoint in your own application.
 
-You can setup a new webhook by visiting https://app.terminal49.com/developers/webhooks and clicking the 'Create Webhook Endpoint' button.
+## Create a webhook endpoint
 
-![Webhook Editing Screen](https://raw.githubusercontent.com/Terminal49/t49-api-documentation/master/assets/images/new_webhook.png  "Webhook Editing Screen")
+You can create a webhook from the dashboard or the API.
 
+To use the dashboard:
 
-## Authentication
+1. Open [Developer Webhooks](https://app.terminal49.com/developers/webhooks).
+2. Click **Create Webhook Endpoint**.
+3. Enter your HTTPS endpoint URL.
+4. Choose the events you want to receive.
+5. Save the webhook.
 
-The API uses HTTP Bearer Token authentication.
+To use the API, send:
 
-This means you send your API Key as your token in every request.
-
-Webhooks are associated with API tokens, which is how Terminal49 identifies which account to send shipment updates to.
-
-## Anatomy of a webhook notification
-
-Here's what you'll see in a Webhook Notification, which arrives as a POST request to your designated URL.
-
-For more information, refer to the Webhook In Depth guide.
-
-For clarity, some fields have been replaced with ellipses (...) and key areas are bolded.
-
-There are two main sections:
-
-**Data.** The core information being returned.
-
-**Included**. Related objects included for convenience.
-
-```jsx
-{
-   "data": {
-      "id": "87d4f5e3-df7b-4725-85a3-b80acc572e5d",
-      "type": "webhook_notification",
+```bash
+curl -X POST "https://api.terminal49.com/v2/webhooks" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "webhook",
       "attributes": {
-         "id": "87d4f5e3-df7b-4725-85a3-b80acc572e5d",
-         "event": "tracking_request.succeeded",
-         "delivery_status": "pending",
-         "created_at": "2020-09-13 14:46:37 UTC"
-      },
-      "relationships": {
-        ...
-      }
-   },
-   "included":[
-      {
-         "id": "90873f19-f9e8-462d-b129-37e3d3b64c82",
-         "type": "tracking_request",
-         "attributes": {
-            "request_number": "MEDUNXXXXXX",
-             ...
-         },
-        ...
-      },
-      {
-         "id": "66db1d2a-eaa1-4f22-ba8d-0c41b051c411",
-         "type": "shipment",
-         "attributes": {
-            "created_at": "2020-09-13 14:46:36 UTC",
-            "bill_of_lading_number": "MEDUNXXXXXX",
-            "ref_numbers":[
-               null
-            ],
-            "shipping_line_scac": "MSCU",
-            "shipping_line_name": "Mediterranean Shipping Company",
-            "port_of_lading_locode": "PLGDY",
-            "port_of_lading_name": "Gdynia",
-            ....
-         },
-         "relationships": {
-            ...
-         },
-         "links": {
-            "self": "/v2/shipments/66db1d2a-eaa1-4f22-ba8d-0c41b051c411"
-         }
-      },
-      {
-         "id": "4d556105-015e-4c75-94a9-59cb8c272148",
-         "type": "container",
-         "attributes": {
-            "number": "CRLUYYYYYY",
-            "seal_number": null,
-            "created_at": "2020-09-13 14:46:36 UTC",
-            "equipment_type": "reefer",
-            "equipment_length": 40,
-            "equipment_height": "high_cube",
-            ...
-         },
-         "relationships": {
-          ....
-         }
-      },
-      {
-         "id": "129b695c-c52f-48a0-9949-e2821813690e",
-         "type": "transport_event",
-         "attributes": {
-            "event": "container.transport.vessel_loaded",
-            "created_at": "2020-09-13 14:46:36 UTC",
-            "voyage_number": "032A",
-            "timestamp": "2020-08-07 06:57:00 UTC",
-            "location_locode": "PLGDY",
-            "timezone": "Europe/Warsaw"
-         },
-       ...
-      }
-   ]
-}
-```
-
-> ### Why so much JSON? (A note on JSON:API)
->The Terminal49 API is JSON:API compliant. JSON:API libraries can translate the response into a full object model compatible with an ORM, which is powerful but produces larger, more structured payloads. If you parse JSON directly, this can feel verbose. For production use, consider adopting a [JSON:API client library](https://jsonapi.org/implementations/#client-libraries) to get the most out of the format. For this tutorial, you will work with the data directly.
-
-### What type of webhook event is this?
-
-This is the first question you need to answer so your code can handle the webhook.
-
-The type of update can be found in ["data"]["attributes"].
-
-The most common Webhook notifications are status updates on tracking requests, like **tracking_request.succeeded** and updates on ETAs, shipment milestone, and  terminal availability.
-
-You can find what type of event you have received by looking at the "attributes", "event".
-
-```jsx
-"data" : {
-  ...
-  "attributes": {
-         "id": "87d4f5e3-df7b-4725-85a3-b80acc572e5d",
-         "event": "tracking_request.succeeded",
-         "delivery_status": "pending",
-         "created_at": "2020-09-13 14:46:37 UTC"
-      },
-}
-```
-
-### Inclusions: tracking requests and shipment data
-
-When a tracking request has succeeded, the webhook event **includes** information about the shipment, the containers in the shipment, and the milestones for that container, so your app can present this information to your end users without making further queries to the API.
-
-In the payload below (again, truncated by ellipses for clarity) you'll see a list of JSON objects in the "included" section. Each object has a **type** and **attributes**. The type tells you what the object is. The attributes tell you the data that the object carries.
-
-Some objects have **relationships** that link to other objects. The most essential related objects are included in the payload, but objects that rarely change (for example, a terminal) are not. Consider caching these locally after you query them.
-
-```jsx
- "included":[
-      {
-         "id": "90873f19-f9e8-462d-b129-37e3d3b64c82",
-         "type": "tracking_request",
-         "attributes" : {
-              ...
-         }
-      },
-      {
-         "id": "66db1d2a-eaa1-4f22-ba8d-0c41b051c411",
-         "type": "shipment",
-         "attributes": {
-            "created_at": "2020-09-13 14:46:36 UTC",
-            "bill_of_lading_number": "MEDUNXXXXXX",
-            "ref_numbers":[
-               null
-            ],
-            "shipping_line_scac": "MSCU",
-            "shipping_line_name": "Mediterranean Shipping Company",
-            "port_of_lading_locode": "PLGDY",
-            "port_of_lading_name": "Gdynia",
-            ....
-         },
-         "relationships": {
-            ...
-         },
-         "links": {
-            "self": "/v2/shipments/66db1d2a-eaa1-4f22-ba8d-0c41b051c411"
-         }
-      },
-      {
-         "id": "4d556105-015e-4c75-94a9-59cb8c272148",
-         "type": "container",
-         "attributes": {
-            "number": "CRLUYYYYYY",
-            "seal_number": null,
-            "created_at": "2020-09-13 14:46:36 UTC",
-            "equipment_type": "reefer",
-            "equipment_length": 40,
-            "equipment_height": "high_cube",
-            ...
-         },
-         "relationships": {
-          ....
-         }
-      },
-      {
-         "id": "129b695c-c52f-48a0-9949-e2821813690e",
-         "type": "transport_event",
-         "attributes": {
-            "event": "container.transport.vessel_loaded",
-            "created_at": "2020-09-13 14:46:36 UTC",
-            "voyage_number": "032A",
-            "timestamp": "2020-08-07 06:57:00 UTC",
-            "location_locode": "PLGDY",
-            "timezone": "Europe/Warsaw"
-         },
-       ...
-      }
-   ]
-```
-
-## Code examples
-
-### Registering a webhook
-
-```jsx
-function registerWebhook(){
-  // Make a POST request with a JSON payload.
-  options = {
-    "method" : "POST"
-    "headers" : {
-      "content-type": "application/vnd.api+json",
-      "authorization" : "Token YOUR_API_KEY"
-    },
-    "payload" : {
-      "data": {  
-        "type": "webhook",
-        "attributes": {
-          "url": "http://yourwebhookurl.com/webhook",
-          "active": true,
-          "events": ["tracking_request.succeeded"]
-        }
+        "url": "https://example.com/webhooks/terminal49",
+        "active": true,
+        "events": ["tracking_request.succeeded", "container.updated"]
       }
     }
-  };
-
-  options.payload = JSON.stringify(data)
-  var response = UrlFetchApp.fetch('https://api.terminal49.com/v2/webhooks', options);
-}
+  }'
 ```
 
-### Receiving a POST webhook
+The response includes the webhook `id` and `secret`. Store the `secret` securely; you use it to verify webhook signatures.
 
-Here's an example of some Javascript code that receives a Post request and parses out some of the desired data.
+## Receive the first event
 
-```
-function receiveWebhook(postReq) {
-  try {
-    var json = postReq.postData.contents;
-    var webhook_raw = JSON.parse(json);
-    var webhook_data = webhook_raw["data"]
-    var notif_string = "";
-    if (webhook_data["type"] == "webhook_notification"){
-      if (webhook_data["attributes"]["event"] == "shipment.estimated.arrival"){
-        /* the webhook "event" attribute tell us what event we are being notified
-         * about. You will want to write a code path for each event type.     */
+After Terminal49 detects a change for one of your tracked shipments or containers, it sends a `POST` request to your endpoint.
 
-        var webhook_included = webhook_raw["included"];
-        // from the list of included objects, extract the information about the ETA update. This should be singleton.
-        var etas = webhook_included.filter(isEstimatedEvent);
-        // from the same list, extract the tracking Request information. This should be singleton.
-        var trackingReqs = webhook_included.filter(isTrackingRequest);
-        if(etas.length > 0 && trackingReqs.length > 0){
-          // therethis is an ETA updated for a specific tracking request.
-          notif_string = "Estimated Event Update: " +  etas[0]["attributes"]["event"] + " New Time: " +  etas[0]["attributes"]["estimated_timestamp"];
-          notif_string += " for Tracking Request: " + trackingReqs[0]["attributes"]["request_number"] + " Status: " + trackingReqs[0]["attributes"]["status"];
-        } else {
-          // this is a webhook type we haven't written handling code for.
-        notif_string = "Error. Webhook Returned Unexpected Data.";
-      }
-      if (webhook_data["attributes"]["event"] == "shipment.estimated.arrival"){
+Every notification has the same top-level shape:
 
-      }
-    }
-    return HtmlService.createHtmlOutput(notf_string);
-  } catch (error){
-      return HtmlService.createHtmlOutput("Webhook failed: " + error);
-  }
-
-}
-
-// JS helper functions to filter events of certain types.
-function isEstimatedEvent(item){
-  return item["type"] == "estimated_event";
-}
-
-function isTrackingRequest(item){
-  return item["type"] == "tracking_request";
-}
-```
-
-## Try it out and see more sample code
-
-Update your API key below, and register a simple Webhook.
-
-View the "Code Generation" button to see sample code.
-
-```json http
+```json
 {
-  "method": "post",
-  "url": "https://api.terminal49.com/v2/webhooks",
-  "headers": {
-    "Content-Type": "application/vnd.api+json",
-    "Authorization": "Token YOUR_API_KEY"
+  "data": {
+    "id": "87d4f5e3-df7b-4725-85a3-b80acc572e5d",
+    "type": "webhook_notification",
+    "attributes": {
+      "event": "tracking_request.succeeded",
+      "delivery_status": "pending",
+      "created_at": "2026-05-11T18:30:00Z"
+    }
   },
-  "body": "{\r\n  \"data\": {\r\n    \"type\": \"webhook\",\r\n    \"attributes\": {\r\n      \"url\": \"https:\/\/webhook.site\/\",\r\n      \"active\": true,\r\n      \"events\": [\r\n        \"tracking_request.succeeded\"\r\n      ]\r\n    }\r\n  }\r\n}"
+  "included": []
 }
 ```
+
+Check `data.attributes.event` first. This tells your handler which code path to run.
+
+Common first events are:
+
+- `tracking_request.succeeded`: Terminal49 found the shipment and created tracking records.
+- `tracking_request.failed`: Terminal49 could not create tracking for the submitted number.
+- `container.updated`: One or more container attributes changed.
+
+## Return a successful response
+
+Your endpoint should return `200`, `201`, `202`, or `204` after it accepts the event.
+
+```javascript
+app.post("/webhooks/terminal49", express.raw({ type: "application/json" }), (req, res) => {
+  const payload = JSON.parse(req.body.toString("utf8"));
+
+  queueWebhookForProcessing(payload);
+
+  res.sendStatus(202);
+});
+```
+
+If Terminal49 receives another response code or the request times out, it retries the notification.
+
+## Before you use webhooks in production
+
+Production webhook handlers should:
+
+1. Verify the `X-T49-Webhook-Signature` header against the raw request body.
+2. Allowlist Terminal49 webhook IPs.
+3. Deduplicate by `data.id`.
+4. Process asynchronously when work may take more than a few seconds.
+
+Follow [Setting up webhooks](/docs/api-docs/in-depth-guides/webhooks) for signature examples and [Webhook Best Practices](/docs/api-docs/webhooks/best-practices) for retry handling.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Event catalog" icon="list" href="/docs/api-docs/webhooks/event-catalog">
+    Choose the events your integration should subscribe to.
+  </Card>
+  <Card title="Payload reference" icon="brackets-curly" href="/docs/api-docs/webhooks/payloads">
+    Review the notification envelope and example payloads.
+  </Card>
+</CardGroup>

@@ -20,6 +20,7 @@ Last Free Day (LFD) is the deadline to pick up a container before demurrage char
 |-------|---------------|
 | `container.pickup_lfd.changed` | The terminal's Last Free Day changed |
 | `container.pickup_lfd_line.changed` | The shipping line's Last Free Day changed |
+| `container.pickup_lfd_rail.changed` | The rail terminal's Last Free Day changed for an inland rail move |
 | `container.transport.available` | The container is available for pickup at the destination |
 | `container.updated` | Container attributes changed (may include holds or availability updates) |
 
@@ -70,7 +71,7 @@ function isReadyForPickup(container) {
 }
 ```
 
-For a deeper explanation of holds, fees, and the `available_for_pickup` field, see [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
+For a deeper explanation of holds, fees, and the `available_for_pickup` field, see [Container Holds, Fees, and Release Readiness](/docs/api-docs/in-depth-guides/holds-and-fees).
 
 <Tip>
 Subscribe to both `container.transport.available` and `container.updated` events. The `available` event fires when the terminal first marks the container as released, but subsequent hold changes arrive as `container.updated` events.
@@ -80,11 +81,11 @@ Subscribe to both `container.transport.available` and `container.updated` events
 
 - **Demurrage prevention** — alert when LFD is within 48 hours and the container has not been dispatched
 - **Automated dispatch** — trigger a drayage order as soon as the container clears holds
-- **LFD comparison** — track both terminal and shipping line LFDs; the earlier date is the one that matters
+- **LFD comparison** — track terminal, rail terminal, and shipping line LFDs when applicable; the earlier date is the one that matters
 - **Hold monitoring** — watch for `container.updated` events where `holds_at_pod_terminal` changes
 
 ## Related
 
-- [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees) — full guide to hold and fee fields
-- [Event catalog](/api-docs/webhooks/event-catalog) — all available events
-- [Payload examples](/api-docs/useful-info/webhook-events-examples) — complete JSON payloads
+- [Container Holds, Fees, and Release Readiness](/docs/api-docs/in-depth-guides/holds-and-fees) — full guide to hold and fee fields
+- [Event catalog](/docs/api-docs/webhooks/event-catalog) — all available events
+- [Payload examples](/docs/api-docs/useful-info/webhook-events-examples) — complete JSON payloads

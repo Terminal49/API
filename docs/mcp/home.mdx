@@ -26,7 +26,13 @@ Use the Terminal49 MCP server to let Claude or Cursor answer questions with live
     - **Cursor IDE**
   </Step>
   <Step title="Paste this config (Claude Desktop)">
-    Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+    Edit the Claude Desktop config file for your operating system:
+
+    | OS | Config path |
+    | --- | --- |
+    | macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+    | Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+    | Linux | `~/.config/Claude/claude_desktop_config.json` |
 
     ```json
     {
@@ -34,7 +40,7 @@ Use the Terminal49 MCP server to let Claude or Cursor answer questions with live
         "terminal49": {
           "url": "https://mcp.terminal49.com/mcp",
           "headers": {
-            "Authorization": "Bearer <T49_API_TOKEN>"
+            "Authorization": "Token <T49_API_TOKEN>"
           }
         }
       }
@@ -49,7 +55,7 @@ Use the Terminal49 MCP server to let Claude or Cursor answer questions with live
           "terminal49": {
             "url": "https://mcp.terminal49.com/mcp",
             "headers": {
-              "Authorization": "Bearer <T49_API_TOKEN>"
+              "Authorization": "Token <T49_API_TOKEN>"
             }
           }
         }
@@ -68,10 +74,10 @@ Use the Terminal49 MCP server to let Claude or Cursor answer questions with live
 </Steps>
 
 <Note>
-Need test container numbers? See [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+Need test container numbers? See [Test Numbers](/docs/api-docs/useful-info/test-numbers) for containers you can use during development.
 </Note>
 
-For the full walkthrough (including local stdio dev, deployment, and SDK examples), see [MCP Server Quickstart](/api-docs/in-depth-guides/mcp).
+For the full walkthrough (including local stdio dev, deployment, and SDK examples), see [MCP Server Quickstart](/docs/api-docs/in-depth-guides/mcp).
 
 ---
 
@@ -83,16 +89,30 @@ For the full walkthrough (including local stdio dev, deployment, and SDK example
 
 **Authentication**:
 - API token only (OAuth not required for this release)
-- Header: `Authorization: Bearer <T49_API_TOKEN>` or `Authorization: Token <T49_API_TOKEN>`
+- Header: `Authorization: Token <T49_API_TOKEN>`
+- `Bearer <T49_API_TOKEN>` is accepted for backward compatibility, but `Token` is the canonical scheme.
 - Or set `T49_API_TOKEN` environment variable when self-hosting
 
 <Tip>
 Claude Desktop and Cursor use the HTTP transport at `https://mcp.terminal49.com/mcp`.
 </Tip>
 
-{/* OAuth hosted docs are not yet published. Links will be added when the pages are available. */}
+## Any MCP client
 
-The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP endpoints as the REST API.
+Use the same hosted Streamable HTTP endpoint in any MCP-compatible client:
+
+```json
+{
+  "url": "https://mcp.terminal49.com/mcp",
+  "headers": {
+    "Authorization": "Token <T49_API_TOKEN>"
+  }
+}
+```
+
+OAuth is not available for the hosted MCP server yet. Use a Terminal49 API token until OAuth support is published.
+
+The same [rate limits](/docs/api-docs/in-depth-guides/rate-limiting) apply to MCP endpoints as the REST API.
 
 ---
 
@@ -144,7 +164,7 @@ Find containers by container number, BL, booking, or your own reference. This is
 - "Find this container and tell me where it is"
 - "Show all containers with reference PO-12345"
 
-**REST equivalent**: [GET /containers](/api-docs/api-reference/containers/list-containers) with filters
+**REST equivalent**: [GET /containers](/docs/api-docs/api-reference/containers/list-containers) with filters
 
 ---
 
@@ -179,7 +199,7 @@ Start tracking a new container. Creates a tracking request and returns container
 - "Track container CAIU1234567 with Maersk"
 - "Start tracking this new shipment"
 
-**REST equivalent**: [POST /tracking_requests](/api-docs/api-reference/tracking-requests/create-a-tracking-request)
+**REST equivalent**: [POST /tracking_requests](/docs/api-docs/api-reference/tracking-requests/create-a-tracking-request)
 
 ---
 
@@ -247,7 +267,7 @@ Get detailed container information with flexible data loading. Choose what to in
 - "Is it available for pickup? Any holds?"
 - "When does demurrage start?"
 
-**REST equivalent**: [GET /containers/{id}](/api-docs/api-reference/containers/get-a-container)
+**REST equivalent**: [GET /containers/{id}](/docs/api-docs/api-reference/containers/get-a-container)
 
 ---
 
@@ -289,7 +309,7 @@ Get the full event timeline for a container's journey.
 - "What happened to this container?"
 - "How long was the rail portion?"
 
-**REST equivalent**: [GET /containers/{id}/transport_events](/api-docs/api-reference/containers/get-a-containers-transport-events)
+**REST equivalent**: [GET /containers/{id}/transport_events](/docs/api-docs/api-reference/containers/get-a-containers-transport-events)
 
 ---
 
@@ -306,7 +326,7 @@ Get shipment-level information including routing, BOL, and all containers.
 - "What containers are on this BL?"
 - "Show me the routing"
 
-**REST equivalent**: [GET /shipments/{id}](/api-docs/api-reference/shipments/get-a-shipment)
+**REST equivalent**: [GET /shipments/{id}](/docs/api-docs/api-reference/shipments/get-a-shipment)
 
 ---
 
@@ -321,7 +341,7 @@ List carriers supported by Terminal49 with their SCAC codes.
 - "What carriers do you support?"
 - "What's the SCAC code for CMA CGM?"
 
-**REST equivalent**: [GET /shipping_lines](/api-docs/api-reference/shipping-lines/shipping-lines)
+**REST equivalent**: [GET /shipping_lines](/docs/api-docs/api-reference/shipping-lines/shipping-lines)
 
 ---
 
@@ -331,6 +351,8 @@ Get detailed multi-leg routing with vessel itinerary.
 
 <Warning>
 This is a **paid feature**. If not enabled for your account, use `get_container_transport_events` for historical movement data instead.
+
+See [Entitlements and Paid Features](/docs/api-docs/useful-info/entitlements) for the related Routing Data entitlement.
 </Warning>
 
 **Parameters**
@@ -341,7 +363,7 @@ This is a **paid feature**. If not enabled for your account, use `get_container_
 - "Which transshipment ports?"
 - "What vessel is it on?"
 
-**REST equivalent**: [GET /containers/{id}](/api-docs/api-reference/containers/get-a-container) (route data is included with the container)
+**REST equivalent**: [GET /containers/{id}](/docs/api-docs/api-reference/containers/get-a-container) (route data is included with the container)
 
 ---
 
@@ -358,7 +380,7 @@ List shipments with optional filters and pagination.
 - "List recent shipments"
 - "Show in-transit shipments for MAEU"
 
-**REST equivalent**: [GET /shipments](/api-docs/api-reference/shipments/list-shipments)
+**REST equivalent**: [GET /shipments](/docs/api-docs/api-reference/shipments/list-shipments)
 
 ---
 
@@ -375,7 +397,7 @@ List containers with optional filters and pagination.
 - "List containers updated in the last 24h"
 - "Show containers at a specific POD port"
 
-**REST equivalent**: [GET /containers](/api-docs/api-reference/containers/list-containers)
+**REST equivalent**: [GET /containers](/docs/api-docs/api-reference/containers/list-containers)
 
 ---
 
@@ -391,7 +413,7 @@ List tracking requests with optional filters and pagination.
 - "Show failed tracking requests"
 - "List latest tracking activity"
 
-**REST equivalent**: [GET /tracking_requests](/api-docs/api-reference/tracking-requests/list-tracking-requests)
+**REST equivalent**: [GET /tracking_requests](/docs/api-docs/api-reference/tracking-requests/list-tracking-requests)
 
 ---
 
@@ -462,16 +484,16 @@ Resources provide static or dynamic data that AI clients can read.
 
 ## Not yet supported
 
-These Terminal49 API capabilities are available via the [SDK](/api-docs/in-depth-guides/mcp#sdk-usage) but not yet exposed as MCP tools:
+These Terminal49 API capabilities are available via the [SDK](/docs/api-docs/in-depth-guides/mcp#sdk-usage) but not yet exposed as MCP tools:
 
 | API | Description | Workaround |
 |-----|-------------|------------|
-| `update_shipment` | Update shipment ref numbers/tags | Use [REST API](/api-docs/api-reference/shipments/edit-a-shipment) |
-| `stop_tracking` | Stop tracking a shipment | Use [REST API](/api-docs/api-reference/shipments/stop-tracking-shipment) |
-| `resume_tracking` | Resume tracking a shipment | Use [REST API](/api-docs/api-reference/shipments/resume-tracking-shipment) |
-| `raw_events` | Get raw EDI event data | Use [REST API](/api-docs/api-reference/containers/get-a-containers-raw-events) |
-| `refresh_container` | Force refresh container data | Use [REST API](/api-docs/api-reference/containers/refresh-container) |
-| Webhooks | Real-time event notifications | Configure via [dashboard](/api-docs/in-depth-guides/webhooks) |
+| `update_shipment` | Update shipment ref numbers/tags | Use [REST API](/docs/api-docs/api-reference/shipments/edit-a-shipment) |
+| `stop_tracking` | Stop tracking a shipment | Use [REST API](/docs/api-docs/api-reference/shipments/stop-tracking-shipment) |
+| `resume_tracking` | Resume tracking a shipment | Use [REST API](/docs/api-docs/api-reference/shipments/resume-tracking-shipment) |
+| `raw_events` | Get raw EDI event data | Use [REST API](/docs/api-docs/api-reference/containers/get-a-containers-raw-events) |
+| `refresh_container` | Force refresh container data | Use [REST API](/docs/api-docs/api-reference/containers/refresh-container) |
+| Webhooks | Real-time event notifications | Configure via [dashboard](/docs/api-docs/in-depth-guides/webhooks) |
 
 <Info>
 Shipment/container list operations are available via MCP. Update/stop/resume tracking operations still require REST API or direct SDK usage.
@@ -481,7 +503,7 @@ Shipment/container list operations are available via MCP. Update/stop/resume tra
 
 ## Related guides
 
-- [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, local dev, deployment
-- [Rate Limiting](/api-docs/in-depth-guides/rate-limiting) – Same limits apply to MCP
-- [Test Numbers](/api-docs/useful-info/test-numbers) – Containers for testing
-- [Webhooks](/api-docs/in-depth-guides/webhooks) – Real-time updates (use with MCP for best results)
+- [MCP Server Quickstart](/docs/api-docs/in-depth-guides/mcp) – Full setup, local dev, deployment
+- [Rate Limiting](/docs/api-docs/in-depth-guides/rate-limiting) – Same limits apply to MCP
+- [Test Numbers](/docs/api-docs/useful-info/test-numbers) – Containers for testing
+- [Webhooks](/docs/api-docs/in-depth-guides/webhooks) – Real-time updates (use with MCP for best results)

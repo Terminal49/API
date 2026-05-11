@@ -15,7 +15,7 @@ keywords:
 This guide covers everything you need to connect Claude or Cursor to Terminal49's container tracking data via MCP.
 
 <Note>
-Just want to get started fast? See [MCP Overview](/mcp/home) for a 5-minute setup.
+Just want to get started fast? See [MCP Overview](/docs/mcp/home) for a 5-minute setup.
 </Note>
 
 ## Prerequisites
@@ -51,7 +51,7 @@ Before you begin, make sure you have:
 | HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Serverless, short-lived requests |
 
 **Authentication**: API token only (OAuth not required for this release).  
-Pass `Authorization: Bearer <T49_API_TOKEN>` or `Authorization: Token <T49_API_TOKEN>`.  
+Pass `Authorization: Token <T49_API_TOKEN>`. `Bearer <T49_API_TOKEN>` is accepted for backward compatibility, but `Token` is the canonical scheme.
 Server falls back to `T49_API_TOKEN` environment variable.
 
 <Tip>
@@ -76,7 +76,7 @@ Claude Desktop and Cursor use the HTTP transport. For hosted production usage, u
         "terminal49": {
           "url": "https://mcp.terminal49.com/mcp",
           "headers": {
-            "Authorization": "Bearer <T49_API_TOKEN>"
+            "Authorization": "Token <T49_API_TOKEN>"
           }
         }
       }
@@ -92,7 +92,7 @@ Claude Desktop and Cursor use the HTTP transport. For hosted production usage, u
         "terminal49": {
           "url": "https://mcp.terminal49.com/mcp",
           "headers": {
-            "Authorization": "Bearer <T49_API_TOKEN>"
+            "Authorization": "Token <T49_API_TOKEN>"
           }
         }
       }
@@ -108,7 +108,7 @@ Claude Desktop and Cursor use the HTTP transport. For hosted production usage, u
         "terminal49": {
           "url": "https://mcp.terminal49.com/mcp",
           "headers": {
-            "Authorization": "Bearer <T49_API_TOKEN>"
+            "Authorization": "Token <T49_API_TOKEN>"
           }
         }
       }
@@ -128,7 +128,7 @@ Add to your Cursor settings:
       "terminal49": {
         "url": "https://mcp.terminal49.com/mcp",
         "headers": {
-          "Authorization": "Bearer <T49_API_TOKEN>"
+          "Authorization": "Token <T49_API_TOKEN>"
         }
       }
     }
@@ -201,7 +201,7 @@ Once configured, verify everything works:
 </Steps>
 
 <Note>
-Need test container numbers? See [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+Need test container numbers? See [Test Numbers](/docs/api-docs/useful-info/test-numbers) for containers you can use during development.
 </Note>
 
 ---
@@ -211,8 +211,8 @@ Need test container numbers? See [Test Numbers](/api-docs/useful-info/test-numbe
 | Symptom | Likely Cause | How to Fix |
 |---------|--------------|------------|
 | "Cannot connect to MCP server" | Wrong URL or config path | Confirm URL is `https://mcp.terminal49.com/mcp` and config file path matches your OS |
-| `401 Unauthorized` | Missing or invalid token | Create a new API token in [dashboard](https://app.terminal49.com/developers/api-keys); ensure `Authorization: Bearer <token>` header is set |
-| `429 Too Many Requests` | Rate limit exceeded | See [Rate Limiting](/api-docs/in-depth-guides/rate-limiting); use webhooks instead of polling |
+| `401 Unauthorized` | Missing or invalid token | Create a new API token in [dashboard](https://app.terminal49.com/developers/api-keys); ensure `Authorization: Token <token>` header is set |
+| `429 Too Many Requests` | Rate limit exceeded | See [Rate Limiting](/docs/api-docs/in-depth-guides/rate-limiting); use webhooks instead of polling |
 | Tools list is empty | Config not loaded | Restart Claude/Cursor; check MCP inspector for errors |
 | "Tool not found" | Typo in tool name | Use exact names: `search_container`, `get_container`, etc. |
 | Slow responses | Large data requests | Use `include` parameter to load only what you need |
@@ -261,7 +261,7 @@ T49_API_TOKEN=your_token npm run mcp:stdio 2>&1 | head -20
 | `terminal49://container/{id}` | Container data as resource |
 | `terminal49://docs/milestone-glossary` | Event/milestone reference |
 
-For detailed examples and response formats, see [MCP Overview → Tools Reference](/mcp/home#tools-reference).
+For detailed examples and response formats, see [MCP Overview → Tools Reference](/docs/mcp/home#tools-reference).
 
 ---
 
@@ -377,7 +377,7 @@ echo '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"search_container"
 
 # Test the hosted endpoint
 curl -X POST https://mcp.terminal49.com/mcp \
-  -H "Authorization: Bearer $T49_API_TOKEN" \
+  -H "Authorization: Token $T49_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
 ```
@@ -386,8 +386,8 @@ curl -X POST https://mcp.terminal49.com/mcp \
 
 ## Related guides
 
-- [MCP Overview](/mcp/home) – Quick start and tools reference
-- [Rate Limiting](/api-docs/in-depth-guides/rate-limiting) – API limits (same for MCP)
-- [Test Numbers](/api-docs/useful-info/test-numbers) – Containers for testing
-- [Webhooks](/api-docs/in-depth-guides/webhooks) – Real-time updates
-- [API Data Sources](/api-docs/useful-info/api-data-sources-availability) – Data freshness and coverage
+- [MCP Overview](/docs/mcp/home) – Quick start and tools reference
+- [Rate Limiting](/docs/api-docs/in-depth-guides/rate-limiting) – API limits (same for MCP)
+- [Test Numbers](/docs/api-docs/useful-info/test-numbers) – Containers for testing
+- [Webhooks](/docs/api-docs/in-depth-guides/webhooks) – Real-time updates
+- [API Data Sources](/docs/api-docs/useful-info/api-data-sources-availability) – Data freshness and coverage

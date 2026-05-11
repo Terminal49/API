@@ -11,7 +11,6 @@ keywords:
   - "document extraction"
   - "document webhooks"
   - "email submissions"
-hidden: true
 ---
 
 This guide is for first-time integrators building document automation.
@@ -66,7 +65,7 @@ Example scenario: user uploads one file, `invoice.pdf`.
 
 `POST /documents`
 
-Before creating the document, complete the direct upload flow and get a `signed_id`: [`Direct Upload for Documents`](/api-docs/in-depth-guides/direct-upload-documents).
+Before creating the document, complete the direct upload flow and get a `signed_id`: [`Direct Upload for Documents`](/docs/api-docs/in-depth-guides/direct-upload-documents).
 
 Note: `attached_document` is the S3 `signed_id` from the file direct upload.
 
@@ -223,8 +222,8 @@ Use the webhook `event` and included `document` payload to update your internal 
 
 ## Use these endpoints while integrating
 
-- [`GET /webhook_notifications/examples`](/api-docs/api-reference/webhook-notifications/get-webhook-notification-payload-examples)
-- [`POST /webhooks/trigger`](/api-docs/api-reference/webhooks/trigger-a-webhook)
+- [`GET /webhook_notifications/examples`](/docs/api-docs/api-reference/webhook-notifications/get-webhook-notification-payload-examples)
+- [`POST /webhooks/trigger`](/docs/api-docs/api-reference/webhooks/trigger-a-webhook)
 
 <Info>
   Webhook event availability depends on your account configuration. If you are not receiving expected events, contact Terminal49 support.
@@ -232,14 +231,14 @@ Use the webhook `event` and included `document` payload to update your internal 
 
 ## APIs involved
 
-- [`POST /documents`](/api-docs/api-reference/documents/upload-a-document)
-- [`GET /documents`](/api-docs/api-reference/documents/list-documents)
-- [`GET /documents/{id}`](/api-docs/api-reference/documents/get-a-document)
-- [`GET /documents/{id}/download_url`](/api-docs/api-reference/documents/get-a-document-download-url)
-- [`GET /email_submissions`](/api-docs/api-reference/email-submissions/list-email-submissions)
-- [`GET /email_submissions/{id}`](/api-docs/api-reference/email-submissions/get-an-email-submission)
-- [`GET /document_schemas/{id}`](/api-docs/api-reference/document-schemas/get-a-document-schema)
-- [`Document representations resource`](/api-docs/api-reference/document-representations/document-representations-resource)
+- [`POST /documents`](/docs/api-docs/api-reference/documents/upload-a-document)
+- [`GET /documents`](/docs/api-docs/api-reference/documents/list-documents)
+- [`GET /documents/{id}`](/docs/api-docs/api-reference/documents/get-a-document)
+- [`GET /documents/{id}/download_url`](/docs/api-docs/api-reference/documents/get-a-document-download-url)
+- [`GET /email_submissions`](/docs/api-docs/api-reference/email-submissions/list-email-submissions)
+- [`GET /email_submissions/{id}`](/docs/api-docs/api-reference/email-submissions/get-an-email-submission)
+- [`GET /document_schemas/{id}`](/docs/api-docs/api-reference/document-schemas/get-a-document-schema)
+- [`Document representations resource`](/docs/api-docs/api-reference/document-representations/document-representations-resource)
 
 ## Planned (not live yet)
 

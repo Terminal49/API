@@ -12,53 +12,53 @@ keywords:
   - "booking tracking"
   - "container tracking"
 ---
-## What is a tracking request?
+In this tutorial, you will create a tracking request. A tracking request tells Terminal49 which shipment or container to monitor.
 
-Your tracking request includes two pieces of data:
+Each tracking request needs two values:
 
-    - Your Bill of Lading, Booking number, or container number from the carrier.
-    - The SCAC code for that carrier.
+- A Bill of Lading (BOL), booking number, or container number from the carrier.
+- The carrier Standard Carrier Alpha Code (SCAC).
 
 <Tip>
   **Don't know the SCAC?** Use the [Auto-Detect
-  Carrier](/api-docs/in-depth-guides/auto-detect-carrier) endpoint to
+  Carrier](/docs/api-docs/in-depth-guides/auto-detect-carrier) endpoint to
   automatically identify the shipping line from your tracking number.
 </Tip>
 
 You can see a complete list of supported SCACs in row 2 of the Carrier Data Matrix.
 
-## What sort of numbers can I track?
+## Choose a tracking number
 
 **Supported numbers**
 
-    1. Master Bill of Lading from the carrier (recommended)
-    2. Booking number from the carrier
-    3. Container number
+1. Master Bill of Lading from the carrier (recommended)
+2. Booking number from the carrier
+3. Container number
 
 - Container number tracking support across ocean carriers is sometimes more limited. Please refer to the Carrier Data Matrix to see which SCACs are compatible with Container number tracking.
 
 **Unsupported numbers**
 
-    - House Bill of Lading numbers (HBOL)
-    - Customs entry numbers
-    - Seal numbers
-    - Internally generated numbers, for example PO numbers or customer reference numbers.
+- House Bill of Lading (HBOL) numbers
+- Customs entry numbers
+- Seal numbers
+- Internally generated numbers, such as purchase order numbers or customer reference numbers
 
-## How do I use tracking requests?
+## What happens after you create one
 
-Terminal49 is an event-based API, which means you can use it asynchronously. The general data flow is:
+Terminal49 works asynchronously:
 
-    1. You send a tracking request to the API with your Bill of Lading number and SCAC.
-    2. The API confirms it received your tracking request and returns the shipment data available at that time.
-    3. After you submit a tracking request, Terminal49 automatically tracks the shipment and all of its containers.
-    4. Terminal49 sends updates to the webhook you have registered whenever data changes. Updates typically occur when containers reach milestones. ETA updates can happen at any time. As the ship approaches port, you receive terminal availability data, Last Free Day, and more.
-    5. You can request a list of shipments and containers from Terminal49 at any time. This is covered in a separate guide.
+1. You send a tracking request with a shipment identifier and SCAC.
+2. Terminal49 accepts the request and returns a `tracking_request`.
+3. Terminal49 monitors the carrier and creates shipment/container records as data becomes available.
+4. If you have a webhook, Terminal49 sends updates whenever data changes.
+5. You can list shipments and containers at any time.
 
 ## How do you receive tracking request data?
 
 You have two options. First, you can poll for updates.
 
-Poll the `GET /tracking_request/{id}` endpoint to check the status of your request. You only need the tracking request ID, which the API returns when you create the request.
+Poll the `GET /tracking_requests/{id}` endpoint to check the status of your request. You only need the tracking request ID, which the API returns when you create the request.
 
 The second option is to register a webhook so the API posts updates as they happen. This is more efficient and the preferred approach, but it requires some setup.
 
@@ -74,49 +74,45 @@ If there is a problem, Terminal49 sends the `tracking_request.failed` event.
 
 ## Authentication
 
-The API uses Bearer Token style authentication. This means you send your API Key as your token in every request.
+The API uses a Token-prefixed API key in the `Authorization` header.
 
 Sign in to Terminal49 and go to your [account API settings](https://app.terminal49.com/settings/api) to get your API token.
 
 Send the token with each API request in the Authorization header:
 
-```
+```http
 Authorization: Token YOUR_API_KEY
 ```
 
 ## How to create a tracking request
 
-Here is JavaScript code that demonstrates sending a tracking request
+Replace `YOUR_API_KEY`, `REQUEST_NUMBER`, and `SCAC` before running this example.
 
-```json
-fetch("https://api.terminal49.com/v2/tracking_requests", {
-  "method": "POST",
-  "headers": {
-    "content-type": "application/vnd.api+json",
-    "authorization": "Token YOUR_API_KEY"
+```javascript
+const response = await fetch("https://api.terminal49.com/v2/tracking_requests", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/vnd.api+json",
+    "Authorization": "Token YOUR_API_KEY"
   },
-  "body": {
-    "data": {
-      "attributes": {
-        "request_type": "bill_of_lading",
-        "request_number": "",
-        "scac": ""
-      },
-      "type": "tracking_request"
+  body: JSON.stringify({
+    data: {
+      type: "tracking_request",
+      attributes: {
+        request_type: "bill_of_lading",
+        request_number: "REQUEST_NUMBER",
+        scac: "SCAC"
+      }
     }
-  }
-})
-.then(response => {
-  console.log(response);
-})
-.catch(err => {
-  console.error(err);
+  })
 });
+
+console.log(await response.json());
 ```
 
 ## Anatomy of a tracking request response
 
-Here's what you'll see in a Response to a tracking request.
+The response confirms that Terminal49 accepted the request. A new request usually starts with `status: "pending"` while Terminal49 checks the carrier.
 
 ```json
 {
@@ -188,9 +184,9 @@ The most common issue people encounter is that they are entering the wrong numbe
 
 Check that you are entering a Bill of Lading number, booking number, or container number — not an internal reference from your company or freight forwarder. Verify the number by going to the carrier's website and tracking the shipment with it. If that works and the SCAC is supported by Terminal49, you should be able to track it through the API.
 
-If you are unsure of the correct SCAC, try the [Auto-Detect Carrier](/api-docs/api-reference/tracking-requests/auto-detect-carrier) endpoint first.
+If you are unsure of the correct SCAC, try the [Auto-Detect Carrier](/docs/api-docs/api-reference/tracking-requests/auto-detect-carrier) endpoint first.
 
-Sometimes the issue is on the shipping line's side. Temporary network problems, unpopulated manifests, and other issues can occur. See the [Tracking Request Retrying](/api-docs/useful-info/tracking-request-retrying) section for how Terminal49 handles these cases.
+Sometimes the issue is on the shipping line's side. Temporary network problems, unpopulated manifests, and other issues can occur. See the [Tracking Request Retrying](/docs/api-docs/useful-info/tracking-request-retrying) section for how Terminal49 handles these cases.
 
 </Warning>
 

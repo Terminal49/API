@@ -13,7 +13,7 @@ keywords:
 ---
 After a container is discharged at the Port of Discharge (POD), the terminal and government agencies may place holds or assess fees before the container can be picked up. For shipments with inland rail moves, holds and fees can also apply at the inland destination. Your integration needs to monitor these fields to determine when a container is actually released and ready for pickup.
 
-Terminal49 normalizes hold and fee data across 150+ terminal sources into two structured arrays on the container object: `holds_at_pod_terminal` and `fees_at_pod_terminal`. This guide shows you how to use them.
+Terminal49 normalizes hold and fee data from supported terminal sources into two structured arrays on the container object: `holds_at_pod_terminal` and `fees_at_pod_terminal`. This guide shows you how to use them.
 
 <Info>
 The field names reference `pod_terminal` for historical reasons, but these fields report hold and fee data regardless of whether the container is at a port terminal or an inland rail destination. The same readiness logic applies in both scenarios.
@@ -60,7 +60,7 @@ Both fields live on the container's `attributes` object in the V2 API:
 - `holds_at_pod_terminal` — active holds blocking or flagging pickup
 - `fees_at_pod_terminal` — fees assessed at the terminal
 
-[`GET /v2/containers/{id}`](/api-docs/api-reference/containers/get-a-container)
+[`GET /v2/containers/{id}`](/docs/api-docs/api-reference/containers/get-a-container)
 
 ```json
 {
@@ -325,7 +325,7 @@ In this example, the container has two active holds (`customs` and `freight`) an
 
 Subscribe to the `container.updated` webhook to run your release-readiness check in real time whenever holds or fees change. The `changeset` on the `container_updated_event` shows the old value and new value side by side — old first, new second.
 
-For full details on setting up webhooks, see [Webhooks](/api-docs/in-depth-guides/webhooks).
+For full details on setting up webhooks, see [Webhooks](/docs/api-docs/in-depth-guides/webhooks).
 
 <Tabs>
   <Tab title="Hold placed" icon="circle-plus">
@@ -482,16 +482,16 @@ const totalAmount = lineItems.reduce((acc, f) => acc + f.amount, 0);
 ## Related guides
 
 <CardGroup cols={2}>
-  <Card title="Container Statuses" icon="signal-bars" href="/api-docs/in-depth-guides/container-statuses">
+  <Card title="Container Statuses" icon="signal-bars" href="/docs/api-docs/in-depth-guides/container-statuses">
     How `available_for_pickup` and `current_status` are derived
   </Card>
-  <Card title="Webhooks" icon="webhook" href="/api-docs/in-depth-guides/webhooks">
+  <Card title="Webhooks" icon="webhook" href="/docs/api-docs/in-depth-guides/webhooks">
     Subscribe to `container.updated` events
   </Card>
-  <Card title="Event Timestamps" icon="clock" href="/api-docs/in-depth-guides/event-timestamps">
+  <Card title="Event Timestamps" icon="clock" href="/docs/api-docs/in-depth-guides/event-timestamps">
     When terminal data was captured
   </Card>
-  <Card title="Rail Integration" icon="train" href="/api-docs/in-depth-guides/rail-integration-guide">
+  <Card title="Rail Integration" icon="train" href="/docs/api-docs/in-depth-guides/rail-integration-guide">
     Inland rail moves and container tracking at rail destinations
   </Card>
 </CardGroup>

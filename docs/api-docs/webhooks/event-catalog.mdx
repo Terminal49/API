@@ -14,7 +14,7 @@ keywords:
 
 Terminal49 sends webhook notifications for over 30 events across the container lifecycle. Each event represents a specific change to a tracking request, shipment, or container.
 
-Subscribe to individual events when [creating a webhook](/api-docs/in-depth-guides/webhooks), or subscribe to all events and filter in your handler.
+Subscribe to individual events when [creating a webhook](/docs/api-docs/in-depth-guides/webhooks), or subscribe to all events and filter in your handler.
 
 ## Tracking request events
 
@@ -99,15 +99,28 @@ These events fire when container attributes change.
 | `container.pod_terminal_changed` | The port of discharge terminal assignment changed for the container. |
 | `container.pickup_lfd.changed` | The terminal Last Free Day (LFD) changed. |
 | `container.pickup_lfd_line.changed` | The shipping line Last Free Day (LFD) changed. |
+| `container.pickup_lfd_rail.changed` | The rail terminal Last Free Day (LFD) changed for an inland rail move. |
+
+## Document processing events
+
+These events fire when document extraction completes for accounts using document processing.
+
+| Event | Description |
+|-------|-------------|
+| `document.extracted` | Document classification and extraction completed successfully. |
+| `document.extraction_failed` | Document extraction did not complete successfully. |
+
+See [Document Processing Workflows](/docs/api-docs/in-depth-guides/document-processing-workflows) for payload structure and related document resources.
 
 ## Payload structure
 
 Every webhook notification follows the same structure: a `data` object containing the event metadata, and an `included` array with the related shipment, container, and event objects.
 
-See [Payload Examples](/api-docs/useful-info/webhook-events-examples) for complete JSON payloads for each event type.
+See [Webhook Payloads](/docs/api-docs/webhooks/payloads) for the common envelope and included-resource patterns. See [Payload Examples](/docs/api-docs/useful-info/webhook-events-examples) for complete JSON samples.
 
 ## Related
 
-- [Setting up webhooks](/api-docs/in-depth-guides/webhooks) — create and configure webhook endpoints
-- [Best practices](/api-docs/webhooks/best-practices) — retry handling, idempotency, and reliability
-- [Webhook API Reference](/api-docs/api-reference/webhooks/create-a-webhook) — programmatic webhook management
+- [Setting up webhooks](/docs/api-docs/in-depth-guides/webhooks) — create and configure webhook endpoints
+- [Webhook Payloads](/docs/api-docs/webhooks/payloads) — notification envelope and included resources
+- [Best practices](/docs/api-docs/webhooks/best-practices) — retry handling, idempotency, and reliability
+- [Webhook API Reference](/docs/api-docs/api-reference/webhooks/create-a-webhook) — programmatic webhook management

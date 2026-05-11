@@ -8,6 +8,10 @@ openapi: post /tracking_requests
 
 <Tip>
   **Don't know the SCAC?** Call [Auto-Detect
-  Carrier](/api-docs/api-reference/tracking-requests/auto-detect-carrier) first
+  Carrier](/docs/api-docs/api-reference/tracking-requests/auto-detect-carrier) first
   to identify the shipping line from your tracking number.
 </Tip>
+
+<Info>
+  This endpoint has its own rate-limit bucket: 100 tracking requests per minute per API key/account.
+</Info>

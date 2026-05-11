@@ -6,7 +6,7 @@ title: "Class: TrackingRequestManager"
 
 ## Extends
 
-- [`BaseManager`](/sdk/reference/client/managers/classes/BaseManager)
+- [`BaseManager`](/docs/sdk/reference/client/managers/classes/BaseManager)
 
 ## Constructors
 
@@ -18,8 +18,8 @@ title: "Class: TrackingRequestManager"
 
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
-| `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
-| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+| `transport` | [`Transport`](/docs/sdk/reference/client/transport/classes/Transport) | `undefined` |
+| `defaultFormat` | [`ResponseFormat`](/docs/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
 
 #### Returns
 
@@ -27,7 +27,7 @@ title: "Class: TrackingRequestManager"
 
 #### Inherited from
 
-[`BaseManager`](/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/sdk/reference/client/managers/classes/BaseManager#constructor)
+[`BaseManager`](/docs/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/docs/sdk/reference/client/managers/classes/BaseManager#constructor)
 
 ## Methods
 
@@ -39,10 +39,10 @@ title: "Class: TrackingRequestManager"
 
 | Parameter | Type |
 | ------ | ------ |
-| `params` | \{ `refNumbers?`: `string`[]; `requestNumber`: `string`; `requestType`: [`TrackingRequestType`](/sdk/reference/client/managers/type-aliases/TrackingRequestType); `scac?`: `string`; `shipmentTags?`: `string`[]; \} |
+| `params` | \{ `refNumbers?`: `string`[]; `requestNumber`: `string`; `requestType`: [`TrackingRequestType`](/docs/sdk/reference/client/managers/type-aliases/TrackingRequestType); `scac?`: `string`; `shipmentTags?`: `string`[]; \} |
 | `params.refNumbers?` | `string`[] |
 | `params.requestNumber` | `string` |
-| `params.requestType` | [`TrackingRequestType`](/sdk/reference/client/managers/type-aliases/TrackingRequestType) |
+| `params.requestType` | [`TrackingRequestType`](/docs/sdk/reference/client/managers/type-aliases/TrackingRequestType) |
 | `params.scac?` | `string` |
 | `params.shipmentTags?` | `string`[] |
 
@@ -61,7 +61,7 @@ title: "Class: TrackingRequestManager"
 | Parameter | Type |
 | ------ | ------ |
 | `number` | `string` |
-| `options` | [`CreateTrackingRequestFromInferOptions`](/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) |
+| `options` | [`CreateTrackingRequestFromInferOptions`](/docs/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) |
 
 #### Returns
 
@@ -78,7 +78,7 @@ title: "Class: TrackingRequestManager"
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) & `object` |
 
 #### Returns
 
@@ -104,18 +104,18 @@ title: "Class: TrackingRequestManager"
 
 ### iterate()
 
-> **iterate**(`filters?`, `options?`): `AsyncGenerator`\<[`TrackingRequest`](/sdk/reference/types/models/interfaces/TrackingRequest), `void`, `unknown`\>
+> **iterate**(`filters?`, `options?`): `AsyncGenerator`\<[`TrackingRequest`](/docs/sdk/reference/types/models/interfaces/TrackingRequest), `void`, `unknown`\>
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) \| `undefined` |
-| `options?` | `Omit`\<[`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
+| `filters` | [`TrackingRequestListFilters`](/docs/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) \| `undefined` |
+| `options?` | `Omit`\<[`ListOptions`](/docs/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
 
 #### Returns
 
-`AsyncGenerator`\<[`TrackingRequest`](/sdk/reference/types/models/interfaces/TrackingRequest), `void`, `unknown`\>
+`AsyncGenerator`\<[`TrackingRequest`](/docs/sdk/reference/types/models/interfaces/TrackingRequest), `void`, `unknown`\>
 
 ***
 
@@ -127,8 +127,8 @@ title: "Class: TrackingRequestManager"
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| `filters` | [`TrackingRequestListFilters`](/docs/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
+| `options?` | [`ListOptions`](/docs/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
 
@@ -146,7 +146,7 @@ title: "Class: TrackingRequestManager"
 | ------ | ------ |
 | `id` | `string` |
 | `attrs` | `Record`\<`string`, `any`\> |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 

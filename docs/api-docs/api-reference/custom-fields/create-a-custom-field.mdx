@@ -27,9 +27,11 @@ Use this endpoint to create a custom field value on a shipment or container. The
 | `boolean` | `true` or `false` |
 | `enum` | String matching one of the definition's option values |
 | `enum_multi` | Array of strings matching the definition's option values |
+| `reference` | Object identifying the referenced record, for example `{ "type": "shipment", "id": "SHIPMENT_ID" }` |
 
 ## Validation
 
 - Values are validated against the definition's data type
 - Enum values must match one of the definition's configured options
+- Reference values must match the definition's configured `reference_type`
 - The `api_slug` must reference a definition belonging to your account or a Terminal49 template

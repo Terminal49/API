@@ -20,7 +20,7 @@ data from Node.js applications.
 
 | Parameter | Type |
 | ------ | ------ |
-| `config` | [`Terminal49ClientConfig`](/sdk/reference/client/interfaces/Terminal49ClientConfig) |
+| `config` | [`Terminal49ClientConfig`](/docs/sdk/reference/client/interfaces/Terminal49ClientConfig) |
 
 #### Returns
 
@@ -30,10 +30,10 @@ data from Node.js applications.
 
 | Property | Modifier | Type |
 | ------ | ------ | ------ |
-| <a id="property-containers"></a> `containers` | `public` | [`ContainerManager`](/sdk/reference/client/managers/classes/ContainerManager) |
-| <a id="property-shipments"></a> `shipments` | `public` | [`ShipmentManager`](/sdk/reference/client/managers/classes/ShipmentManager) |
-| <a id="property-shippinglines"></a> `shippingLines` | `public` | [`ShippingLineManager`](/sdk/reference/client/managers/classes/ShippingLineManager) |
-| <a id="property-trackingrequests"></a> `trackingRequests` | `public` | [`TrackingRequestManager`](/sdk/reference/client/managers/classes/TrackingRequestManager) |
+| <a id="property-containers"></a> `containers` | `public` | [`ContainerManager`](/docs/sdk/reference/client/managers/classes/ContainerManager) |
+| <a id="property-shipments"></a> `shipments` | `public` | [`ShipmentManager`](/docs/sdk/reference/client/managers/classes/ShipmentManager) |
+| <a id="property-shippinglines"></a> `shippingLines` | `public` | [`ShippingLineManager`](/docs/sdk/reference/client/managers/classes/ShippingLineManager) |
+| <a id="property-trackingrequests"></a> `trackingRequests` | `public` | [`TrackingRequestManager`](/docs/sdk/reference/client/managers/classes/TrackingRequestManager) |
 
 ## Methods
 
@@ -47,10 +47,10 @@ Create a tracking request with an explicit number type and carrier SCAC.
 
 | Parameter | Type |
 | ------ | ------ |
-| `params` | \{ `refNumbers?`: `string`[]; `requestNumber`: `string`; `requestType`: [`TrackingRequestType`](/sdk/reference/client/managers/type-aliases/TrackingRequestType); `scac?`: `string`; `shipmentTags?`: `string`[]; \} |
+| `params` | \{ `refNumbers?`: `string`[]; `requestNumber`: `string`; `requestType`: [`TrackingRequestType`](/docs/sdk/reference/client/managers/type-aliases/TrackingRequestType); `scac?`: `string`; `shipmentTags?`: `string`[]; \} |
 | `params.refNumbers?` | `string`[] |
 | `params.requestNumber` | `string` |
-| `params.requestType` | [`TrackingRequestType`](/sdk/reference/client/managers/type-aliases/TrackingRequestType) |
+| `params.requestType` | [`TrackingRequestType`](/docs/sdk/reference/client/managers/type-aliases/TrackingRequestType) |
 | `params.scac?` | `string` |
 | `params.shipmentTags?` | `string`[] |
 
@@ -71,7 +71,7 @@ Infer carrier/number type, then create a tracking request from the result.
 | Parameter | Type |
 | ------ | ------ |
 | `number` | `string` |
-| `options` | [`CreateTrackingRequestFromInferOptions`](/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) |
+| `options` | [`CreateTrackingRequestFromInferOptions`](/docs/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) |
 
 #### Returns
 
@@ -120,8 +120,8 @@ Fetch a container by ID with optional included relationships.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `include` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `include` | [`IncludeParam`](/docs/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/docs/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -140,7 +140,7 @@ Fetch raw carrier/terminal events for a container.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -159,7 +159,7 @@ Fetch routing details for a container. This may require a paid Terminal49 featur
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -178,7 +178,7 @@ Fetch normalized transport events for a container.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -234,7 +234,7 @@ Fetch a shipment by ID, optionally including related containers.
 | ------ | ------ | ------ |
 | `id` | `string` | `undefined` |
 | `includeContainers` | `boolean` | `true` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` | `undefined` |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) & `object` | `undefined` |
 
 #### Returns
 
@@ -253,7 +253,7 @@ Fetch a tracking request by ID.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) & `object` |
 
 #### Returns
 
@@ -289,13 +289,13 @@ List containers with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\>; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/docs/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/docs/sdk/reference/types/options/type-aliases/ContainerInclude)\>; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
 | `filters.carrier?` | `string` |
-| `filters.include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
+| `filters.include?` | [`IncludeParam`](/docs/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/docs/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
 | `filters.port?` | `string` |
 | `filters.status?` | `string` |
 | `filters.updatedAfter?` | `string` |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| `options?` | [`ListOptions`](/docs/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
 
@@ -313,14 +313,14 @@ List shipments with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\>; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/docs/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/docs/sdk/reference/types/options/type-aliases/ShipmentInclude)\>; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
 | `filters.carrier?` | `string` |
-| `filters.include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\> |
+| `filters.include?` | [`IncludeParam`](/docs/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/docs/sdk/reference/types/options/type-aliases/ShipmentInclude)\> |
 | `filters.includeContainers?` | `boolean` |
 | `filters.port?` | `string` |
 | `filters.status?` | `string` |
 | `filters.updatedAfter?` | `string` |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| `options?` | [`ListOptions`](/docs/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
 
@@ -339,7 +339,7 @@ List supported shipping lines, optionally filtered by search text.
 | Parameter | Type |
 | ------ | ------ |
 | `search?` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -357,8 +357,8 @@ List tracking requests with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| `filters` | [`TrackingRequestListFilters`](/docs/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
+| `options?` | [`ListOptions`](/docs/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
 
@@ -376,8 +376,8 @@ Alias for [listTrackingRequests](#listtrackingrequests).
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| `filters` | [`TrackingRequestListFilters`](/docs/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
+| `options?` | [`ListOptions`](/docs/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
 
@@ -396,7 +396,7 @@ Request an immediate refresh for a container. This may require a paid Terminal49
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -415,7 +415,7 @@ Resume tracking a previously stopped shipment.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -452,7 +452,7 @@ Stop tracking a shipment and its containers.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -494,7 +494,7 @@ Update shipment attributes such as reference numbers or tags.
 | ------ | ------ |
 | `id` | `string` |
 | `attrs` | `Record`\<`string`, `any`\> |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -514,7 +514,7 @@ Update tracking request attributes.
 | ------ | ------ |
 | `id` | `string` |
 | `attrs` | `Record`\<`string`, `any`\> |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 

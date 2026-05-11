@@ -1,0 +1,7 @@
+interface:
+  display_name: "Terminal49 Docs Writing"
+  short_description: "Write Terminal49 docs by content type"
+  default_prompt: "Use $terminal49-docs-writing to improve this Terminal49 documentation page for its correct content type."
+
+policy:
+  allow_implicit_invocation: true

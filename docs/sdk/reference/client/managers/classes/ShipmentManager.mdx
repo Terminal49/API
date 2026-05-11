@@ -6,7 +6,7 @@ title: "Class: ShipmentManager"
 
 ## Extends
 
-- [`BaseManager`](/sdk/reference/client/managers/classes/BaseManager)
+- [`BaseManager`](/docs/sdk/reference/client/managers/classes/BaseManager)
 
 ## Constructors
 
@@ -18,8 +18,8 @@ title: "Class: ShipmentManager"
 
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
-| `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
-| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+| `transport` | [`Transport`](/docs/sdk/reference/client/transport/classes/Transport) | `undefined` |
+| `defaultFormat` | [`ResponseFormat`](/docs/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
 
 #### Returns
 
@@ -27,7 +27,7 @@ title: "Class: ShipmentManager"
 
 #### Inherited from
 
-[`BaseManager`](/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/sdk/reference/client/managers/classes/BaseManager#constructor)
+[`BaseManager`](/docs/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/docs/sdk/reference/client/managers/classes/BaseManager#constructor)
 
 ## Methods
 
@@ -41,7 +41,7 @@ title: "Class: ShipmentManager"
 | ------ | ------ | ------ |
 | `id` | `string` | `undefined` |
 | `includeContainers` | `boolean` | `true` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` | `undefined` |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) & `object` | `undefined` |
 
 #### Returns
 
@@ -51,18 +51,18 @@ title: "Class: ShipmentManager"
 
 ### iterate()
 
-> **iterate**(`filters?`, `options?`): `AsyncGenerator`\<[`Shipment`](/sdk/reference/types/models/interfaces/Shipment), `void`, `unknown`\>
+> **iterate**(`filters?`, `options?`): `AsyncGenerator`\<[`Shipment`](/docs/sdk/reference/types/models/interfaces/Shipment), `void`, `unknown`\>
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\>; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} \| `undefined` |
-| `options?` | `Omit`\<[`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/docs/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/docs/sdk/reference/types/options/type-aliases/ShipmentInclude)\>; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} \| `undefined` |
+| `options?` | `Omit`\<[`ListOptions`](/docs/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
 
 #### Returns
 
-`AsyncGenerator`\<[`Shipment`](/sdk/reference/types/models/interfaces/Shipment), `void`, `unknown`\>
+`AsyncGenerator`\<[`Shipment`](/docs/sdk/reference/types/models/interfaces/Shipment), `void`, `unknown`\>
 
 ***
 
@@ -74,14 +74,14 @@ title: "Class: ShipmentManager"
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\>; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/docs/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/docs/sdk/reference/types/options/type-aliases/ShipmentInclude)\>; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
 | `filters.carrier?` | `string` |
-| `filters.include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\> |
+| `filters.include?` | [`IncludeParam`](/docs/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/docs/sdk/reference/types/options/type-aliases/ShipmentInclude)\> |
 | `filters.includeContainers?` | `boolean` |
 | `filters.port?` | `string` |
 | `filters.status?` | `string` |
 | `filters.updatedAfter?` | `string` |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| `options?` | [`ListOptions`](/docs/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
 
@@ -98,7 +98,7 @@ title: "Class: ShipmentManager"
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -115,7 +115,7 @@ title: "Class: ShipmentManager"
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -133,7 +133,7 @@ title: "Class: ShipmentManager"
 | ------ | ------ |
 | `id` | `string` |
 | `attrs` | `Record`\<`string`, `any`\> |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`CallOptions`](/docs/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 

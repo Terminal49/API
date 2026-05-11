@@ -30,7 +30,7 @@ The Terminal49 dashboard now includes a **global vessel map** showing live posit
 
 Shipments and containers can now be searched by **custom field values** alongside built-in identifiers. Use the same search you already use for container numbers or PO numbers to find records by any custom field you've defined.
 
-<Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+<Card title="Custom Field Definitions" icon="brackets-curly" href="/docs/api-docs/api-reference/custom-fields/list-custom-field-definitions">
   Custom Fields API reference
 </Card>
 
@@ -46,7 +46,7 @@ Custom field definitions now support a `sensitive` flag. Mark a field as sensiti
 
 Accounts can now configure how duplicate documents are handled at upload time. Choose whether to reject duplicates, replace the existing document, or accept both, so document intake matches your team's workflow.
 
-<Card title="Document processing guide" icon="file" href="/api-docs/in-depth-guides/document-processing-workflows">
+<Card title="Document processing guide" icon="file" href="/docs/api-docs/in-depth-guides/document-processing-workflows">
   How document linking works
 </Card>
 
@@ -62,7 +62,7 @@ Macro-enabled Excel files (`.xlsm`) are now accepted by the document upload pipe
 
 Containers routed to inland destinations outside the US and Canada now return a destination ETA even when no rail tracking data is available, expanding ETA coverage for international inland moves.
 
-<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+<Card title="Container API reference" icon="warehouse" href="/docs/api-docs/api-reference/containers/get-a-container">
   View the container resource
 </Card>
 
@@ -104,9 +104,9 @@ Pay-As-You-Go customers can now enter a promo code at Stripe Checkout, or follow
 >
   ### Booking number support in Infer Tracking Number
 
-The [Infer Tracking Number](/api-docs/api-reference/tracking-requests/auto-detect-carrier) endpoint now predicts the carrier and number type for **booking numbers**, in addition to container numbers and bills of lading. Send a booking number you aren't sure how to route, and Terminal49 returns a confidence-scored decision so you can create the tracking request with the correct VOCC SCAC and `request_type`.
+The [Infer Tracking Number](/docs/api-docs/api-reference/tracking-requests/auto-detect-carrier) endpoint now predicts the carrier and number type for **booking numbers**, in addition to container numbers and bills of lading. Send a booking number you aren't sure how to route, and Terminal49 returns a confidence-scored decision so you can create the tracking request with the correct VOCC SCAC and `request_type`.
 
-<Card title="Infer Tracking Number guide" icon="wand-magic-sparkles" href="/api-docs/in-depth-guides/auto-detect-carrier">
+<Card title="Infer Tracking Number guide" icon="wand-magic-sparkles" href="/docs/api-docs/in-depth-guides/auto-detect-carrier">
   How to use Infer Tracking Number in your workflow
 </Card>
 
@@ -128,7 +128,7 @@ Document search is now fuzzy across shipment, container, and tracking request re
 
 Each hold returned on a container now includes a plain-language description explaining what the hold means and what's typically required to clear it. The descriptions are surfaced wherever holds appear so your team — and your customers — can act without looking up terminology.
 
-<Card title="Holds and fees guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
+<Card title="Holds and fees guide" icon="book-open" href="/docs/api-docs/in-depth-guides/holds-and-fees">
   How to work with holds and fees data
 </Card>
 
@@ -138,7 +138,7 @@ Each hold returned on a container now includes a plain-language description expl
 
 Custom field definitions now support a `reference_number` flag. Mark a custom field as a reference number and Terminal49 will treat its value as a searchable identifier alongside built-in references like PO numbers and BOLs.
 
-<Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+<Card title="Custom Field Definitions" icon="brackets-curly" href="/docs/api-docs/api-reference/custom-fields/list-custom-field-definitions">
   Custom Fields API reference
 </Card>
 
@@ -173,7 +173,7 @@ Document-to-shipment linking via PO numbers now normalizes common format variant
 
 Documents are now matched to shipments using **indirect references** such as purchase order (PO) numbers. Previously, a document had to contain a direct identifier like a bill of lading or container number. Now, if a document references a PO number that appears on another already-linked document, Terminal49 can connect the two — reducing unlinked documents and manual work.
 
-<Card title="Document processing guide" icon="file" href="/api-docs/in-depth-guides/document-processing-workflows">
+<Card title="Document processing guide" icon="file" href="/docs/api-docs/in-depth-guides/document-processing-workflows">
   How document linking works
 </Card>
 
@@ -212,7 +212,7 @@ https://app.terminal49.com/shipments/find?q={identifier}
 
 The link automatically resolves to the correct tracking page, making it easy to link from a TMS, ERP, spreadsheet, or automated notification.
 
-<Card title="Deep linking guide" icon="link" href="/api-docs/in-depth-guides/dashboard-deep-linking">
+<Card title="Deep linking guide" icon="link" href="/docs/api-docs/in-depth-guides/dashboard-deep-linking">
   How to build direct links to shipments and containers
 </Card>
 
@@ -224,7 +224,7 @@ The Smart LFD system now includes a **calculated Last Free Day** derived from ca
 
 Calculated values appear as a fallback in the `import_deadlines` field on the container API. If a reported LFD is available from the carrier or terminal, it takes priority.
 
-<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+<Card title="Container API reference" icon="warehouse" href="/docs/api-docs/api-reference/containers/get-a-container">
   View the container resource
 </Card>
 
@@ -262,7 +262,7 @@ Each source includes:
 
 A **unified** selection shows which source Terminal49 considers the best current LFD and why.
 
-<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+<Card title="Container API reference" icon="warehouse" href="/docs/api-docs/api-reference/containers/get-a-container">
   View the container resource
 </Card>
 
@@ -285,7 +285,7 @@ The Terminal49 dashboard also shows the active ETA source, and hovering over it 
 
 Shipping line Last Free Day data is now collected from additional SSA terminals, improving LFD accuracy for containers moving through those facilities.
 
-<Card title="Container table properties" icon="table" href="/datasync/table-properties/containers">
+<Card title="Container table properties" icon="table" href="/docs/datasync/table-properties/containers">
   DataSync containers reference
 </Card>
 
@@ -314,7 +314,7 @@ Released the **Terminal49 TypeScript SDK** (`@terminal49/sdk`), a typed client f
 npm install @terminal49/sdk
 ```
 
-<Card title="SDK docs" icon="code" href="/sdk/introduction">
+<Card title="SDK docs" icon="code" href="/docs/sdk/introduction">
   Get started with the TypeScript SDK
 </Card>
 
@@ -328,7 +328,7 @@ Launched the **Terminal49 MCP server**, letting you query live container and shi
 - **3 prompts** — pre-built workflows for tracking, demurrage analysis, and delay root cause analysis
 - Connect with a single config block — no custom code required
 
-<Card title="MCP setup guide" icon="robot" href="/mcp/home">
+<Card title="MCP setup guide" icon="robot" href="/docs/mcp/home">
   Connect your AI client to Terminal49
 </Card>
 
@@ -342,7 +342,7 @@ You can now create and manage **custom fields** on shipments and containers via 
 - **Custom Field Options** — manage allowed values for select-type fields
 - **Custom Fields** — assign values to specific shipments or containers
 
-<Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+<Card title="Custom Field Definitions" icon="brackets-curly" href="/docs/api-docs/api-reference/custom-fields/list-custom-field-definitions">
   View the Custom Fields API reference
 </Card>
 
@@ -352,7 +352,7 @@ You can now create and manage **custom fields** on shipments and containers via 
 
 Added `POST /webhooks/trigger` to send a one-time test webhook delivery to any HTTPS URL — without creating a webhook endpoint first. Use it to validate your webhook handler before going live.
 
-<Card title="Trigger a webhook" icon="webhook" href="/api-docs/api-reference/webhooks/trigger-a-webhook">
+<Card title="Trigger a webhook" icon="webhook" href="/docs/api-docs/api-reference/webhooks/trigger-a-webhook">
   API reference for the trigger endpoint
 </Card>
 
@@ -364,10 +364,10 @@ Added `POST /webhooks/trigger` to send a one-time test webhook delivery to any H
 - **Pending hold status** — individual hold columns (`freight_hold`, `customs_hold`, `usda_hold`, `tmf_hold`, `other_hold`) now support a `"Pending"` value in addition to `"Hold"` and blank, giving you earlier visibility into holds before they become active
 
 <CardGroup cols={2}>
-  <Card title="Container table properties" icon="table" href="/datasync/table-properties/containers">
+  <Card title="Container table properties" icon="table" href="/docs/datasync/table-properties/containers">
     DataSync containers reference
   </Card>
-  <Card title="Holds and fees guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
+  <Card title="Holds and fees guide" icon="book-open" href="/docs/api-docs/in-depth-guides/holds-and-fees">
     How to work with holds and fees data
   </Card>
 </CardGroup>
@@ -387,7 +387,7 @@ Published a comprehensive guide for working with holds and fees data in the Term
 - **Rail and inland destinations** — clarification that the same fields apply at inland rail terminals, not just the port of discharge
 - **FAQ** — answers to common integration questions like double-counting fees, sync lag between holds and availability, and case-sensitive hold names
 
-<Card title="Read the guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
+<Card title="Read the guide" icon="book-open" href="/docs/api-docs/in-depth-guides/holds-and-fees">
   Container Holds, Fees, and Release Readiness
 </Card>
 
@@ -408,14 +408,14 @@ Added the **Infer Tracking Number** endpoint to help you predict:
   <Card
     title="API Reference"
     icon="code"
-    href="/api-docs/api-reference/tracking-requests/auto-detect-carrier"
+    href="/docs/api-docs/api-reference/tracking-requests/auto-detect-carrier"
   >
     Infer Tracking Number endpoint details
   </Card>
   <Card
     title="Guide"
     icon="book"
-    href="/api-docs/in-depth-guides/auto-detect-carrier"
+    href="/docs/api-docs/in-depth-guides/auto-detect-carrier"
   >
     How to use Infer Tracking Number in your workflow
   </Card>
