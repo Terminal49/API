@@ -17,6 +17,102 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="May 11, 2026" description="link.created webhook, Bookings preview, new terminal integrations, expanded CSV bulk update, and bug fixes" tags={['API', 'Dashboard']}
+  rss="May 11, 2026: link.created webhook for document-to-cargo links, Bookings preview, Port Houston and Port of Wilmington integrations, draft demurrage tariff rules for ONE/Evergreen/CMA CGM, value_timestamp on SSL LFD events, expanded CSV bulk update, per-account terminal scraper selection, and a wave of carrier and terminal bug fixes."
+>
+  ### `link.created` webhook
+
+A new `link.created` webhook event fires whenever a document is linked to a shipment or container. Subscribe to it to react in real time when reference extraction connects an inbound document to your cargo — no polling required.
+
+<Card title="Event catalog" icon="list" href="/api-docs/webhooks/event-catalog">
+  Browse all webhook events
+</Card>
+
+---
+
+  ### Bookings (preview)
+
+A new **Bookings** workspace is available as an early-access preview. Bookings ingests carrier schedules, surfaces gate-in cutoffs and vessel phase, and automatically initiates tracking once a booking has the schedule context it needs (POL, vessel, ETD). Contact your account team to enable the preview on your account.
+
+---
+
+  ### New terminal integrations
+
+- **Port Houston (Barbours Cut, S787)** — added a direct API integration for container status, holds, fees, and last free day at Port Houston
+- **Port of Wilmington (L194)** — added a Voyager-based scraper for Port of Wilmington container data
+
+---
+
+  ### Per-account terminal scraper selection
+
+Accounts can now opt into specific terminal scraper integrations independently, so you can pilot new data sources or stay on the existing one on a per-account basis.
+
+---
+
+  ### `value_timestamp` on shipping line LFD transport events
+
+The `value` and `value_timestamp` fields on transport events are now always returned in the API and on webhook payloads, including for shipping line Last Free Day events. Previously these were gated by a rail data permission; you can now see when an SSL LFD was reported without extra configuration.
+
+<Card title="Container transport events" icon="bolt" href="/api-docs/api-reference/containers/get-a-containers-transport-events">
+  Transport events API reference
+</Card>
+
+---
+
+  ### Draft demurrage tariff rules for ONE, Evergreen, and CMA CGM
+
+Added draft demurrage tariff rule datasets for **ONE (ONEY)**, **Evergreen (EGLV)**, and **CMA CGM (CMDU)** to the Smart LFD tariff engine. Tariff rules now also carry `charge_type` (demurrage vs. detention) and `day_count_type` so calculated Last Free Day values reflect the carrier's specific tariff structure.
+
+<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+  View the container resource
+</Card>
+
+---
+
+  ### Expanded CSV bulk update
+
+The container dashboard's CSV bulk update now supports more fields:
+
+- **Shipment tags and reference numbers** can be updated in the same CSV alongside container fields
+- **Tracking request custom fields** can be created and updated in bulk for tracking requests that are still pending or awaiting manifest
+
+---
+
+  ### Manual refresh feedback
+
+When you trigger a manual refresh on a shipment, its containers now display a refreshing state in the dashboard so you can tell which records are still updating.
+
+---
+
+  ### Custom fields moved to Data Management
+
+Custom fields now live under **Data Management** in the dashboard, and tags share the same look-and-feel as custom fields for a more consistent experience when configuring shipment metadata.
+
+<Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+  Custom Fields API reference
+</Card>
+
+---
+
+  ### Daily email digest pacing
+
+Daily email digests are now spaced out across the delivery window instead of being scheduled in a single burst, improving deliverability and reducing duplicate-send risk for large accounts.
+
+---
+
+  ### Bug fixes
+
+- **Rail LFD on container pickup** — Rail Last Free Day no longer fails to update once a container has been picked up
+- **APM containers on rail** — Fixed an error that could occur for APM containers on rail with no equipment moves, allowing container data to load
+- **HDMU LFD events** — HDMU Last Free Day events now include the correct location for accurate per-terminal LFD display
+- **Swire ETA fallback** — Swire shipments now fall back to the tracking sheet for ETA when the primary source is missing, and route locations are extracted more reliably
+- **SMLU schedule port calls** — Fixed a NoMethodError affecting SMLU schedule lookups so shipments load consistently
+- **POL/POD location extraction** — Improved extraction of port-of-loading and port-of-discharge locations for **SSPH**, **ZIM (ZIMU)**, **TJFH**, **TXZJ/TXSJ**, and **YMLU** shipments, reducing missing or incorrect route locations
+- **Terminal scrape error handling** — Failures during terminal scrape context resolution are now handled cleanly so they no longer pollute terminal-health metrics
+- **Steamship tracker rate limits** — Expected rate-limit errors from upstream carriers are now silenced and vessel-event extraction is instrumented for better visibility into ingestion health
+
+</Update>
+
 <Update label="May 4, 2026" description="Global vessel map, custom field search, sensitive custom fields, expanded terminal coverage, and bug fixes" tags={['API', 'Dashboard']}
   rss="May 4, 2026: Global vessel map in the dashboard, search by custom field values, sensitive custom fields, Felixstowe and DP World Vancouver scraper alternatives, destination ETAs without rail data, xlsm document support, and a wave of carrier and terminal bug fixes."
 >
