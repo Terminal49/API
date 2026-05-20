@@ -2270,6 +2270,218 @@
         }
       }
     },
+    "/tracking_requests/{tracking_request_id}/custom_fields": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "tracking_request_id",
+          "in": "path",
+          "required": true,
+          "description": "Tracking request ID"
+        }
+      ],
+      "get": {
+        "summary": "List tracking request custom fields",
+        "operationId": "get-tracking-requests-custom-fields",
+        "tags": [
+          "Tracking Requests"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/custom_field"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a tracking request custom field",
+        "operationId": "post-tracking-requests-custom-fields",
+        "tags": [
+          "Tracking Requests"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "required": [
+                          "api_slug",
+                          "value"
+                        ],
+                        "properties": {
+                          "api_slug": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "$ref": "#/components/schemas/custom_field_value"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tracking_requests/{tracking_request_id}/custom_fields/{api_slug}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "tracking_request_id",
+          "in": "path",
+          "required": true,
+          "description": "Tracking request ID"
+        },
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "api_slug",
+          "in": "path",
+          "required": true,
+          "description": "Custom field api_slug"
+        }
+      ],
+      "patch": {
+        "summary": "Update a tracking request custom field",
+        "operationId": "patch-tracking-requests-custom-fields-api-slug",
+        "tags": [
+          "Tracking Requests"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "required": [
+                          "value"
+                        ],
+                        "properties": {
+                          "value": {
+                            "$ref": "#/components/schemas/custom_field_value"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a tracking request custom field",
+        "operationId": "delete-tracking-requests-custom-fields-api-slug",
+        "tags": [
+          "Tracking Requests"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/webhooks/{id}": {
       "parameters": [
         {
@@ -13326,7 +13538,8 @@
                         "type": "string",
                         "enum": [
                           "shipment",
-                          "container"
+                          "container",
+                          "tracking_request"
                         ]
                       },
                       "id": {
@@ -13394,7 +13607,8 @@
                 "type": "string",
                 "enum": [
                   "Shipment",
-                  "Cargo"
+                  "Cargo",
+                  "TrackingRequest"
                 ]
               },
               "api_slug": {

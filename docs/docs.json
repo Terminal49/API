@@ -109,7 +109,11 @@
               "api-docs/api-reference/tracking-requests/create-a-tracking-request",
               "api-docs/api-reference/tracking-requests/get-a-single-tracking-request",
               "api-docs/api-reference/tracking-requests/edit-a-tracking-request",
-              "api-docs/api-reference/tracking-requests/auto-detect-carrier"
+              "api-docs/api-reference/tracking-requests/auto-detect-carrier",
+              "api-docs/api-reference/tracking-requests/list-tracking-request-custom-fields",
+              "api-docs/api-reference/tracking-requests/create-tracking-request-custom-field",
+              "api-docs/api-reference/tracking-requests/update-tracking-request-custom-field",
+              "api-docs/api-reference/tracking-requests/delete-tracking-request-custom-field"
             ]
           },
           {

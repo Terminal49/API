@@ -1,0 +1,36 @@
+---
+title: Create tracking request custom field
+description: "Create or update a custom field value on a tracking request in the Terminal49 API. Attach internal metadata like customer references, intake tags, or workflow flags."
+og:title: Create Tracking Request Custom Field | Terminal49 API Documentation
+og:description: Create or update a custom field value on a tracking request using the Terminal49 API. Attach internal metadata like reference codes, routing hints, or intake labels.
+openapi: post /tracking_requests/{tracking_request_id}/custom_fields
+---
+
+Creates or updates a custom field on a tracking request. If a custom field with the specified `api_slug` already exists, it will be updated.
+
+## Path parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `tracking_request_id` | Yes | The ID of the tracking request |
+
+## Request body
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `api_slug` | Yes | The slug of the custom field definition |
+| `value` | Yes | The value to set (type depends on the definition's data type) |
+
+## Authorization
+
+Requires `update` permission on the tracking request.
+
+## Response
+
+Returns `201 Created` with the custom field resource on success.
+
+## Behavior
+
+- Uses `find_or_initialize_by` internally, so it creates if missing or updates if it exists
+- Values are validated against the definition's data type
+- For enum fields, values are validated against the definition's options
