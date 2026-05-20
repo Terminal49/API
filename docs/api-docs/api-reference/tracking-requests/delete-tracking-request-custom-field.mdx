@@ -1,0 +1,24 @@
+---
+title: Delete tracking request custom field
+description: "Remove a custom field value from a tracking request in the Terminal49 API by referencing the custom field definition's api_slug for that tracking request record."
+og:title: Delete Tracking Request Custom Field | Terminal49 API Documentation
+og:description: Remove a custom field value from a specific tracking request by api_slug using the Terminal49 API. The custom field definition itself is not affected by this action.
+openapi: delete /tracking_requests/{tracking_request_id}/custom_fields/{api_slug}
+---
+
+Deletes a specific custom field from a tracking request by its `api_slug`.
+
+## Path parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `tracking_request_id` | Yes | The ID of the tracking request |
+| `api_slug` | Yes | The api_slug of the custom field definition |
+
+## Authorization
+
+Requires `update` permission on the tracking request.
+
+## Response
+
+Returns `204 No Content` on success.
