@@ -17,6 +17,23 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="May 22, 2026" description="Current status filter and column on the container dashboard" tags={['API', 'Dashboard']}
+  rss="May 22, 2026: Current status filter and Current status column on the container dashboard, plus current_status filtering support on GET /containers."
+>
+  ### Current status filter and column on the container dashboard
+
+The container dashboard now includes a **Current status** column and filter so teams can quickly segment containers by lifecycle state (for example `available`, `on_rail`, or `delivered`) and focus operational workflows by status.
+
+---
+
+  ### `current_status` filter on `GET /containers`
+
+The [List containers](/api-docs/api-reference/containers/list-containers) endpoint now documents `filter[current_status]` so you can request only containers in a specific status:
+
+`GET /v2/containers?filter[current_status]=picked_up,available`
+
+</Update>
+
 <Update label="May 11, 2026" description="link.created webhook, Bookings preview, new terminal integrations, expanded CSV bulk update, and bug fixes" tags={['API', 'Dashboard']}
   rss="May 11, 2026: link.created webhook for document-to-cargo links, Bookings preview, Port Houston and Port of Wilmington integrations, draft demurrage tariff rules for ONE/Evergreen/CMA CGM, value_timestamp on SSL LFD events, expanded CSV bulk update, per-account terminal scraper selection, and a wave of carrier and terminal bug fixes."
 >
