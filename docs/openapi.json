@@ -956,6 +956,38 @@
             "in": "query",
             "name": "include",
             "description": "Comma delimited list of relations to include"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "new",
+                  "on_ship",
+                  "available",
+                  "not_available",
+                  "grounded",
+                  "on_rail",
+                  "picked_up",
+                  "off_dock",
+                  "delivered",
+                  "dropped",
+                  "loaded",
+                  "empty_returned",
+                  "awaiting_inland_transfer"
+                ]
+              },
+              "example": [
+                "picked_up",
+                "available"
+              ]
+            },
+            "in": "query",
+            "name": "filter[current_status]",
+            "style": "form",
+            "explode": false,
+            "description": "Filter containers by current status. Send one or more values from the enum list. For multiple statuses, use a comma-separated query value, for example: `filter[current_status]=picked_up,available`."
           }
         ]
       },
