@@ -2573,9 +2573,11 @@
                               "type": "string",
                               "enum": [
                                 "container.transport.vessel_arrived",
+                                "container.transport.estimated.vessel_arrived",
                                 "container.transport.vessel_discharged",
                                 "container.transport.vessel_loaded",
                                 "container.transport.vessel_departed",
+                                "container.transport.estimated.vessel_departed",
                                 "container.transport.rail_departed",
                                 "container.transport.rail_arrived",
                                 "container.transport.rail_loaded",
@@ -2605,7 +2607,12 @@
                                 "container.transport.estimated.arrived_at_inland_destination",
                                 "container.pickup_lfd.changed",
                                 "container.pickup_lfd_line.changed",
+                                "container.pickup_lfd_terminal.changed",
+                                "container.pickup_lfd_rail.changed",
+                                "container.pickup_appointment.changed",
                                 "container.transport.available",
+                                "container.transport.not_available",
+                                "container.transport.delivered",
                                 "document.extracted",
                                 "document.extraction_failed"
                               ]
@@ -2795,9 +2802,11 @@
                               "type": "string",
                               "enum": [
                                 "container.transport.vessel_arrived",
+                                "container.transport.estimated.vessel_arrived",
                                 "container.transport.vessel_discharged",
                                 "container.transport.vessel_loaded",
                                 "container.transport.vessel_departed",
+                                "container.transport.estimated.vessel_departed",
                                 "container.transport.rail_departed",
                                 "container.transport.rail_arrived",
                                 "container.transport.rail_loaded",
@@ -2827,7 +2836,12 @@
                                 "container.transport.estimated.arrived_at_inland_destination",
                                 "container.pickup_lfd.changed",
                                 "container.pickup_lfd_line.changed",
+                                "container.pickup_lfd_terminal.changed",
+                                "container.pickup_lfd_rail.changed",
+                                "container.pickup_appointment.changed",
                                 "container.transport.available",
+                                "container.transport.not_available",
+                                "container.transport.delivered",
                                 "document.extracted",
                                 "document.extraction_failed"
                               ],
@@ -2877,9 +2891,11 @@
                         "url": "https://webhook.site/",
                         "events": [
                           "container.transport.vessel_arrived",
+                          "container.transport.estimated.vessel_arrived",
                           "container.transport.vessel_discharged",
                           "container.transport.vessel_loaded",
                           "container.transport.vessel_departed",
+                          "container.transport.estimated.vessel_departed",
                           "container.transport.rail_departed",
                           "container.transport.rail_arrived",
                           "container.transport.rail_loaded",
@@ -2909,7 +2925,12 @@
                           "container.transport.estimated.arrived_at_inland_destination",
                           "container.pickup_lfd.changed",
                           "container.pickup_lfd_line.changed",
-                          "container.transport.available"
+                          "container.pickup_lfd_terminal.changed",
+                          "container.pickup_lfd_rail.changed",
+                          "container.pickup_appointment.changed",
+                          "container.transport.available",
+                          "container.transport.not_available",
+                          "container.transport.delivered"
                         ],
                         "active": true
                       },
@@ -2963,6 +2984,105 @@
             }
           }
         }
+      },
+      "parameters": []
+    },
+    "/webhooks/events": {
+      "get": {
+        "summary": "List webhook events",
+        "tags": [
+          "Webhooks"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "webhook_event_category"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "events": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "name": {
+                                      "type": "string",
+                                      "example": "tracking_request.succeeded"
+                                    },
+                                    "description": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "name",
+                                    "description"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "events"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "attributes"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "Event categories": {
+                    "value": {
+                      "data": [
+                        {
+                          "id": "tracking-request-events",
+                          "type": "webhook_event_category",
+                          "attributes": {
+                            "name": "Tracking Request Events",
+                            "events": [
+                              {
+                                "name": "tracking_request.succeeded",
+                                "description": "Shipment created and linked to the tracking request."
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-webhooks-events",
+        "description": "Returns webhook event categories and event names available to the authenticated account. Events may be filtered by account features."
       },
       "parameters": []
     },
@@ -3795,9 +3915,11 @@
               "type": "string",
               "enum": [
                 "container.transport.vessel_arrived",
+                "container.transport.estimated.vessel_arrived",
                 "container.transport.vessel_discharged",
                 "container.transport.vessel_loaded",
                 "container.transport.vessel_departed",
+                "container.transport.estimated.vessel_departed",
                 "container.transport.rail_departed",
                 "container.transport.rail_arrived",
                 "container.transport.rail_loaded",
@@ -3827,7 +3949,12 @@
                 "container.transport.estimated.arrived_at_inland_destination",
                 "container.pickup_lfd.changed",
                 "container.pickup_lfd_line.changed",
+                "container.pickup_lfd_terminal.changed",
+                "container.pickup_lfd_rail.changed",
+                "container.pickup_appointment.changed",
                 "container.transport.available",
+                "container.transport.not_available",
+                "container.transport.delivered",
                 "document.extracted",
                 "document.extraction_failed"
               ],
@@ -11888,9 +12015,11 @@
                   "type": "string",
                   "enum": [
                     "container.transport.vessel_arrived",
+                    "container.transport.estimated.vessel_arrived",
                     "container.transport.vessel_discharged",
                     "container.transport.vessel_loaded",
                     "container.transport.vessel_departed",
+                    "container.transport.estimated.vessel_departed",
                     "container.transport.rail_departed",
                     "container.transport.rail_arrived",
                     "container.transport.rail_loaded",
@@ -11920,7 +12049,12 @@
                     "container.transport.estimated.arrived_at_inland_destination",
                     "container.pickup_lfd.changed",
                     "container.pickup_lfd_line.changed",
+                    "container.pickup_lfd_terminal.changed",
+                    "container.pickup_lfd_rail.changed",
+                    "container.pickup_appointment.changed",
                     "container.transport.available",
+                    "container.transport.not_available",
+                    "container.transport.delivered",
                     "document.extracted",
                     "document.extraction_failed"
                   ]
@@ -12081,9 +12215,11 @@
                 "type": "string",
                 "enum": [
                   "container.transport.vessel_arrived",
+                  "container.transport.estimated.vessel_arrived",
                   "container.transport.vessel_discharged",
                   "container.transport.vessel_loaded",
                   "container.transport.vessel_departed",
+                  "container.transport.estimated.vessel_departed",
                   "container.transport.rail_departed",
                   "container.transport.rail_arrived",
                   "container.transport.rail_loaded",
@@ -12105,7 +12241,12 @@
                   "container.transport.estimated.arrived_at_inland_destination",
                   "container.pickup_lfd.changed",
                   "container.pickup_lfd_line.changed",
+                  "container.pickup_lfd_terminal.changed",
+                  "container.pickup_lfd_rail.changed",
+                  "container.pickup_appointment.changed",
                   "container.transport.available",
+                  "container.transport.not_available",
+                  "container.transport.delivered",
                   "document.extracted",
                   "document.extraction_failed"
                 ]
@@ -12431,9 +12572,11 @@
                 "type": "string",
                 "enum": [
                   "container.transport.vessel_arrived",
+                  "container.transport.estimated.vessel_arrived",
                   "container.transport.vessel_discharged",
                   "container.transport.vessel_loaded",
                   "container.transport.vessel_departed",
+                  "container.transport.estimated.vessel_departed",
                   "container.transport.rail_departed",
                   "container.transport.rail_arrived",
                   "container.transport.rail_loaded",
@@ -12463,7 +12606,12 @@
                   "container.transport.estimated.arrived_at_inland_destination",
                   "container.pickup_lfd.changed",
                   "container.pickup_lfd_line.changed",
+                  "container.pickup_lfd_terminal.changed",
+                  "container.pickup_lfd_rail.changed",
+                  "container.pickup_appointment.changed",
                   "container.transport.available",
+                  "container.transport.not_available",
+                  "container.transport.delivered",
                   "document.extracted",
                   "document.extraction_failed"
                 ]
