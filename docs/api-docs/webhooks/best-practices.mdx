@@ -94,13 +94,22 @@ curl -s "https://api.terminal49.com/v2/webhook_notifications?filter[delivery_sta
 
 Review failed notifications regularly to identify issues with your endpoint before they cause data gaps.
 
-## Handle downtime gracefully
+## Test with the Trigger endpoint
 
-If your endpoint goes down, Terminal49 retries failed deliveries. When your endpoint recovers:
+Use the [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint to send a one-time sample webhook notification to an HTTPS URL. This is useful when you want to validate your signature verification, parsing, queueing, and event routing before subscribing a production webhook.
 
-1. Check the [Webhook Notifications API](/api-docs/api-reference/webhook-notifications/list-webhook-notifications) for any notifications with `delivery_status: failed`.
-2. Use the [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint to replay specific notifications.
-3. For longer outages, list recent shipments via the API to catch up on any missed state changes.
+```bash
+curl -s -X POST "https://api.terminal49.com/v2/webhooks/trigger" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/webhooks/terminal49",
+    "event": "tracking_request.succeeded",
+    "secret": "optional-test-secret"
+  }'
+```
+
+The Trigger endpoint sends an example payload for the event you choose. If you include `secret`, Terminal49 signs the test request with the same `X-T49-Webhook-Signature` header used by real webhook deliveries.
 
 ## Keep your webhook active
 
@@ -119,7 +128,7 @@ If your webhook has been deactivated, fix the endpoint issue and [update the web
 - [ ] Return `2xx` immediately, process asynchronously
 - [ ] Deduplicate using the notification `id`
 - [ ] Validate the source IP against the webhook IPs list
-- [ ] Monitor for failed notifications and replay as needed
+- [ ] Monitor failed notifications
 - [ ] Subscribe only to the events you need
 - [ ] Log raw payloads for debugging
 

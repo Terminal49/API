@@ -48,6 +48,10 @@ Terminal49 exposes over 30 distinct events covering the full container lifecycle
 Polling the API to check for updates is discouraged. It consumes your rate limit, adds latency, and misses the event context that webhooks provide (such as which specific field changed on a `container.updated` event). Use the [List](/api-docs/api-reference/shipments/list-shipments) and [Get](/api-docs/api-reference/shipments/get-a-shipment) endpoints for on-demand lookups, not status monitoring.
 </Warning>
 
+<Tip>
+Use the [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint to send a sample event payload to your HTTPS endpoint while you build your integration.
+</Tip>
+
 ## What you can do with webhooks
 
 Webhooks power most Terminal49 integrations. Common patterns include:
@@ -66,5 +70,8 @@ Webhooks power most Terminal49 integrations. Common patterns include:
   </Card>
   <Card title="Event catalog" icon="list" href="/api-docs/webhooks/event-catalog">
     Browse all available webhook events by category.
+  </Card>
+  <Card title="Trigger a test event" icon="bolt" href="/api-docs/api-reference/webhooks/trigger-a-webhook">
+    Send a sample webhook payload to your endpoint.
   </Card>
 </CardGroup>

@@ -17,8 +17,9 @@ Carriers frequently revise arrival estimates as vessels encounter weather, port 
 
 | Event | When it fires |
 |-------|---------------|
-| `shipment.estimated.arrival` | ETA changes for the port of discharge |
-| `container.transport.estimated.arrived_at_inland_destination` | ETA changes for the inland destination (rail moves) |
+| `shipment.estimated.arrival` | Shipment-level ETA changes for the port of discharge |
+| `container.transport.estimated.vessel_arrived` | Container-level ETA changes for vessel arrival at the port of discharge |
+| `container.transport.estimated.arrived_at_inland_destination` | Container-level ETA changes for the inland destination (rail moves) |
 
 ## What the payload includes
 
@@ -26,7 +27,8 @@ When a `shipment.estimated.arrival` event fires, the `included` array contains:
 
 - An `estimated_event` object with the new `estimated_timestamp`
 - The full `shipment` object with updated `pod_eta_at` and related fields
-- The `tracking_request` object so you can match it to your internal reference
+- The `port` object for the port of discharge
+- The `vessel` object when Terminal49 can identify the vessel
 
 ## Handle the webhook
 
@@ -41,7 +43,6 @@ app.post("/webhooks/terminal49", (req, res) => {
   }
 
   const shipment = included.find((obj) => obj.type === "shipment");
-  const trackingRequest = included.find((obj) => obj.type === "tracking_request");
   const estimatedEvent = included.find((obj) => obj.type === "estimated_event");
 
   const newEta = estimatedEvent.attributes.estimated_timestamp;
@@ -76,7 +77,11 @@ ETA events can fire multiple times per day as carriers update their schedules. F
 
 For shipments with an inland rail move, subscribe to `container.transport.estimated.arrived_at_inland_destination` as well. This event fires when the estimated arrival at the rail ramp or inland depot changes.
 
-The payload structure is the same — look for the `estimated_event` object in `included` and read the `estimated_timestamp` field.
+This is a container transport event, so the payload includes a `transport_event` object rather than an `estimated_event` object. Look for the `transport_event` in `included`, then read `attributes.timestamp` for the estimated arrival time.
+
+## Container-level vessel arrival ETAs
+
+Subscribe to `container.transport.estimated.vessel_arrived` when you need ETA changes at the container level. This event uses the same transport event payload shape as other `container.transport.*` events, with the estimated vessel arrival stored on the included `transport_event` object.
 
 ## Common patterns
 

@@ -1,6 +1,6 @@
 ---
 title: "Terminal49 Test Tracking Numbers"
-description: "Use Terminal49 test tracking numbers to simulate successful, failed, and edge-case tracking request outcomes and webhook events in your integration."
+description: "Use Terminal49 test tracking numbers to simulate successful and failed tracking request outcomes in your integration."
 keywords:
   - "Terminal49 API"
   - "integration guide"
@@ -11,24 +11,24 @@ keywords:
   - "tracking request testing"
 ---
 ## Overview
-This page includes test `shipment` numbers and other information that you can use to make sure your integration works as planned. Use it to trigger different flows in your integration and ensure they are handled accordingly.
+This page includes test tracking numbers you can use to make sure your tracking request integration works as planned.
 
 ## What are test numbers?
 
-We have created a variety of test numbers that you can use to make calls the  Tracking Request API and create fake shipments. Each number has a specific purpose and alows you to test and integrate specific flows. You can create tests against these numbers and always execpt to receive the same response. 
-This is helpful when you want to test a specific webhooks notifications (ie: `shipment.eta_changed`, `shipment.vessel_arrived` etc) and you dont have a list of live shipments and containers that are in specific leg of their journey. 
+Test numbers are deterministic request numbers for the Tracking Request API. Each number has a specific outcome, so you can test how your integration handles `tracking_request.succeeded` and `tracking_request.failed` without using a live shipment.
 
+Test numbers do not simulate every milestone, ETA, LFD, or availability event. To test your webhook handler for a specific event payload, use the [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint.
 
 ## Tracking request API 
 Shipments are created by making requests to the tracking request API. 
 When using the API , ensure that:
 - you set the test number in `request_number` attribute in the request body 
-- you set `scac` attribute as 'TEST' in the request body 
+- you set the `scac` attribute to `TEST` in the request body
 
 
 ## Test numbers
 
 Number.            | Use Case
 -------------------|---------
- TEST-TR-SUCCEEDED | test `tracking_request.succeeded` webhook 
- TEST-TR-FAILED    | test `tracking_request.failed` webhook
+ TEST-TR-SUCCEEDED | Test the `tracking_request.succeeded` outcome and webhook
+ TEST-TR-FAILED    | Test the `tracking_request.failed` outcome and webhook

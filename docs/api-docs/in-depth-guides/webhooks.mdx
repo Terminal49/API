@@ -19,6 +19,8 @@ Visit https://app.terminal49.com/developers/webhooks and click the 'Create Webho
 
 If you prefer to create webhooks programmatically then see the [webhooks post endpoint documentation](/api-docs/api-reference/webhooks/create-a-webhook).
 
+Use the [List Webhook Events](/api-docs/api-reference/webhooks/list-webhook-events) endpoint to fetch the event categories available to your account. Use the [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint to send a sample event payload to an HTTPS URL while you test your handler.
+
 
 ## Available webhook events
 
@@ -35,6 +37,7 @@ Event | Description
  `container.transport.empty_out` | Empty out at port of lading
  `container.transport.full_in` | Full in at port of lading
  `container.transport.vessel_loaded` | Vessel loaded at port of lading
+ `container.transport.estimated.vessel_departed` | Estimated vessel departure changed at port of lading
  `container.transport.vessel_departed` | Vessel departed at port of lading
  `container.transport.transshipment_arrived` | Container arrived at transshipment port
  `container.transport.transshipment_discharged` | Container discharged at transshipment port
@@ -44,27 +47,30 @@ Event | Description
  `container.transport.feeder_discharged` | Container discharged from feeder vessel or barge
  `container.transport.feeder_loaded` | Container loaded on feeder vessel or barge
  `container.transport.feeder_departed` | Container departed on feeder vessel or barge
+ `container.transport.estimated.vessel_arrived` | Estimated vessel arrival changed at port of discharge (destination port)
  `container.transport.vessel_arrived` | Container arrived on vessel at port of discharge (destination port)
  `container.transport.vessel_berthed` | Container on vessel berthed at port of discharge (destination port)
  `container.transport.vessel_discharged` | Container discharged at port of discharge
+ `container.transport.available` | Container is available at destination
+ `container.transport.not_available` | Container is no longer available at destination
  `container.transport.full_out` | Full out at port of discharge
+ `container.transport.delivered` | Container was manually marked as delivered
  `container.transport.empty_in` | Empty returned at destination
  `container.transport.rail_loaded` | Rail loaded
  `container.transport.rail_departed` | Rail departed
  `container.transport.rail_arrived` | Rail arrived
  `container.transport.rail_unloaded` | Rail unloaded
+ `container.transport.estimated.arrived_at_inland_destination` | ETA change notification (for inland destination)
+ `container.transport.arrived_at_inland_destination` | Container arrived at inland destination
  `shipment.estimated.arrival` | ETA change notification (for port of discharge)
  `container.created` | Container added to shipment. Helpful for seeing new containers on a booking or BL.
  `container.updated` | Container attribute(s) updated (see below example)
  `container.pod_terminal_changed` | Port of discharge assignment changed for container
- `container.transport.arrived_at_inland_destination` | Container arrived at inland destination
- `container.transport.estimated.arrived_at_inland_destination` | ETA change notification (for destination)
  `container.pickup_lfd.changed` | Last Free Day (LFD) changed for container
  `container.pickup_lfd_line.changed` | Shipping Line Last Free Day (LFD) changed for container
+ `container.pickup_lfd_terminal.changed` | Terminal Last Free Day (LFD) changed for container
  `container.pickup_lfd_rail.changed` | Rail Last Free Day (LFD) changed for container (Rail Plan only)
- `container.transport.available` | Container is available at destination
-
-
+ `container.pickup_appointment.changed` | Pickup appointment changed for container
 
 ## Receiving webhooks
 
@@ -74,7 +80,7 @@ The payload of every webhook is a `webhook_notification`. Each webhook notificat
 
 Your endpoint must return [HTTP 200 OK](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200), [HTTP 201](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/201), [HTTP 202](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/202), or [HTTP 204](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/204). Any other response, including a timeout, triggers retries (up to a dozen attempts).
 
-```json json_schema
+```json json_schema expandable
 {
   "type":"object",
   "properties":{
@@ -292,7 +298,7 @@ In every case, the attribute `container_updated.timestamp` tells you when Termin
 
 
 As container availability becomes known or changes at the POD Terminal, Terminal49 sends `container_updated` events with the key `available_for_pickup` in the `changeset`.
-```json
+```json expandable
 {
   "data": {
     "id": "fa1a6731-4b34-4b0c-aabc-460892055ba1",
@@ -543,7 +549,7 @@ As container availability becomes known or changes at the POD Terminal, Terminal
 The `pod_terminal` is a relationship of the container. When the pod_terminal changes the id is included. The terminal will be serialized in the included models.
 
 N.B. the `container_updated_event` also has a relationship to a `terminal` which refers to where the information came from. Currently this is always the POD terminal. In the future this may be the final destination terminal or an off-dock location.
-```json
+```json expandable
 {
   "data": {
     "id": "f6c5e340-94bf-4681-a47d-f2e8d6c90e59",
@@ -811,7 +817,7 @@ N.B. the `container_updated_event` also has a relationship to a `terminal` which
 
 ### tracking_request.succeeded
 
-```json
+```json expandable
 {
   "data": {
     "id": "a76187fc-5749-43f9-9053-cfaad9790a31",
@@ -1022,7 +1028,7 @@ N.B. the `container_updated_event` also has a relationship to a `terminal` which
 
 ### shipment.estimated.arrival
 
-```json
+```json expandable
 {
   "data": {
     "id": "b03bcf3c-252d-41f8-b86f-939b404e304b",
@@ -1183,7 +1189,7 @@ N.B. the `container_updated_event` also has a relationship to a `terminal` which
 
 ### container.transport.vessel_arrived
 
-```json
+```json expandable
 {
   "data": {
     "id": "72f8b0b5-28f5-4a12-8274-71d4d23c9ab7",

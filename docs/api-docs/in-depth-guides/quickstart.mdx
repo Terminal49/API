@@ -44,7 +44,7 @@ Note that you can also access sample code, include a cURL template, by clicking 
     "Content-Type": "application/vnd.api+json",
     "Authorization": "Token YOUR_API_KEY"
   },
-  "body": "{\r\n  \"data\": {\r\n    \"attributes\": {\r\n      \"request_type\": \"bill_of_lading\",\r\n      \"request_number\": \"\",\r\n      \"scac\": \"\"\r\n    },\r\n    \"type\": \"tracking_request\"\r\n  }\r\n}"
+  "body": "{\r\n  "data": {\r\n    "attributes": {\r\n      "request_type": "bill_of_lading",\r\n      "request_number": "",\r\n      "scac": ""\r\n    },\r\n    "type": "tracking_request"\r\n  }\r\n}"
 }
 ```
 
@@ -117,11 +117,29 @@ The real power of Terminal49's API is that it is asynchronous. You can register 
 
 To try this, first set up a URL on the open web to receive POST requests. Once configured, you receive status updates from containers and shipments as they happen, so you do not need to poll for updates.
 
-**Try it below. Click "Headers" and replace `YOUR_API_KEY` with your API key.**
+You chose the events you want to susbcribe to (e.g., vessel departed, arrived, discharged...) and these **events will automatically be sent to your webhook endpoint as soon as they happen**.
 
-Once this is done, any changes to shipments and containers you're tracking in step 2 are sent to your webhook URL as HTTP POST requests.
+You can test your endpoint before creating the actual webhook by sending a sample notification with the Trigger endpoint:
 
-View the "Code Generation" button to see sample code.
+```json http
+{
+  "method": "post",
+  "url": "https://api.terminal49.com/v2/webhooks/trigger",
+  "headers": {
+    "Content-Type": "application/json",
+    "Authorization": "Token YOUR_API_KEY"
+  },
+  "body": {
+    "url": "https://webhook.site/",
+    "event": "container.transport.vessel_arrived",
+    "secret": "optional-test-secret"
+  }
+}
+```
+
+Trigger sends an example payload for the event you choose.
+
+Once tested, create the actual webhook to receive the real notifications as they happen:
 
 ```json http
 {
@@ -131,6 +149,16 @@ View the "Code Generation" button to see sample code.
     "Content-Type": "application/vnd.api+json",
     "Authorization": "Token YOUR_API_KEY"
   },
-  "body": "{\r\n  \"data\": {\r\n    \"type\": \"webhook\",\r\n    \"attributes\": {\r\n      \"url\": \"https:\/\/webhook.site\/\",\r\n      \"active\": true,\r\n      \"events\": [\r\n        \"*\"\r\n      ]\r\n    }\r\n  }\r\n}"
+  "body": {
+    "data": {
+      "type": "webhook",
+      "attributes": {
+        "url": "https://webhook.site/",
+        "active": true,
+        "events": ["container.transport.vessel_arrived"]
+      }
+    }
+  }
 }
 ```
+Learn more [Webhooks](/api-docs/in-depth-guides/webhooks).
