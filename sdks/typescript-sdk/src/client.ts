@@ -175,16 +175,14 @@ export class Terminal49Client {
       payload: Record<string, unknown>,
       options?: CallOptions,
     ) => this.updateCustomFieldOption(definitionId, optionId, payload, options),
-    delete: (
-      definitionId: string,
-      optionId: string,
-      options?: CallOptions,
-    ) => this.deleteCustomFieldOption(definitionId, optionId, options),
+    delete: (definitionId: string, optionId: string, options?: CallOptions) =>
+      this.deleteCustomFieldOption(definitionId, optionId, options),
   };
 
   public customFields = {
     list: (options?: ListOptions) => this.listCustomFields(options),
-    get: (id: string, options?: CallOptions) => this.getCustomField(id, options),
+    get: (id: string, options?: CallOptions) =>
+      this.getCustomField(id, options),
     create: (payload: Record<string, unknown>, options?: CallOptions) =>
       this.createCustomField(payload, options),
     update: (
