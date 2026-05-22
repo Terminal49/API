@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "command": "search",
+  "data": {
+    "data": [
+      {
+        "id": "d094ee98-a9bd-4edf-a278-7f6cf73d025a",
+        "type": "search_result",
+        "attributes": {
+          "entity_type": "cargo",
+          "number": "OOLU9970918",
+          "shipment_id": "0406ec2a-736e-4312-a4b7-a2b1f6266bcd",
+          "scac": "COSU",
+          "port_of_lading_name": null,
+          "port_of_discharge_name": null,
+          "containers_count": null,
+          "tracking_stopped": null,
+          "tracking_stopped_reason": null,
+          "status": null,
+          "failed_reason": null,
+          "ref_numbers": [],
+          "created_at": "2026-02-25T15:03:44Z",
+          "updated_at": "2026-02-28T22:09:51Z"
+        }
+      }
+    ],
+    "links": {
+      "self": "https://api.terminal49.com/v2/search?query=OOLU9970918",
+      "current": "https://api.terminal49.com/v2/search?page[number]=1&query=OOLU9970918"
+    }
+  }
+}

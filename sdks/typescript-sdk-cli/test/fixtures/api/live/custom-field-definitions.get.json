@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "command": "custom-field-definitions.get",
+  "data": {
+    "data": {
+      "id": "5596c4ec-7517-4221-b62b-54800cdb8b67",
+      "type": "custom_field_definition",
+      "attributes": {
+        "entity_type": "Shipment",
+        "api_slug": "purchase_order_number",
+        "display_name": "Purchase Order Number",
+        "description": "Buyer’s order reference for procurement.",
+        "data_type": "short_text",
+        "reference_type": null,
+        "validation": null,
+        "default_format": null,
+        "default_value": null,
+        "template_id": null,
+        "created_at": "2025-10-13T23:08:04Z",
+        "updated_at": "2025-10-13T23:08:04Z"
+      },
+      "relationships": {
+        "account": {
+          "data": null
+        },
+        "fields": {
+          "data": []
+        },
+        "options": {
+          "data": []
+        }
+      }
+    },
+    "links": {
+      "self": "https://api.terminal49.com/v2/custom_field_definitions/5596c4ec-7517-4221-b62b-54800cdb8b67"
+    }
+  }
+}
