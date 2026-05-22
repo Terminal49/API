@@ -1,0 +1,168 @@
+{
+  "ok": true,
+  "command": "containers.events",
+  "data": [
+    {
+      "id": "f42dfc85-6a98-4c71-823d-4410d6577dc2",
+      "event": "container.transport.full_out",
+      "createdAt": "2026-02-26T16:25:38Z",
+      "voyageNumber": null,
+      "timestamp": "2026-02-26T14:53:00Z",
+      "dataSource": "shipping_line",
+      "invalidatedAt": null,
+      "locationLocode": "USDET",
+      "timezone": "America/Detroit",
+      "value": null,
+      "terminal": {
+        "id": "1d9b95ec-2c3d-42e0-a6b7-7378b82625e7",
+        "name": "NS - Livernois",
+        "nickname": "NS - Livernois",
+        "firmsCode": "H796"
+      }
+    },
+    {
+      "id": "d12d1930-9c23-47bb-beb8-e8d2c1258c95",
+      "event": "container.transport.vessel_discharged",
+      "createdAt": "2026-02-25T19:47:30Z",
+      "voyageNumber": "068E",
+      "timestamp": "2026-02-20T21:33:25Z",
+      "dataSource": "terminal",
+      "invalidatedAt": null,
+      "locationLocode": "USORF",
+      "timezone": "America/New_York",
+      "value": null,
+      "terminal": {
+        "id": "359c10f2-b69b-481d-b26e-d030b03fa9bf",
+        "name": "Virginia International Gateway",
+        "nickname": "Virginia (VIG)",
+        "firmsCode": "N195"
+      }
+    },
+    {
+      "id": "aa70a3b0-26d4-491c-9146-82a410959e14",
+      "event": "container.transport.available",
+      "createdAt": "2026-02-25T18:54:14Z",
+      "voyageNumber": null,
+      "timestamp": "2026-02-25T11:40:00Z",
+      "dataSource": "rail",
+      "invalidatedAt": null,
+      "locationLocode": "USDET",
+      "timezone": "America/Detroit",
+      "value": null,
+      "terminal": {
+        "id": "1d9b95ec-2c3d-42e0-a6b7-7378b82625e7",
+        "name": "NS - Livernois",
+        "nickname": "NS - Livernois",
+        "firmsCode": "H796"
+      }
+    },
+    {
+      "id": "b0054875-c11d-49d5-afed-dc0123402ed7",
+      "event": "container.pickup_lfd.changed",
+      "createdAt": "2026-02-25T18:54:07Z",
+      "voyageNumber": null,
+      "timestamp": "2026-02-25T18:54:07Z",
+      "dataSource": "rail",
+      "invalidatedAt": null,
+      "locationLocode": "USDET",
+      "timezone": "America/Detroit",
+      "value": "2026-02-26T05:00:00Z"
+    },
+    {
+      "id": "d4f02aab-6230-4c7e-92d1-f9379dc72bed",
+      "event": "container.pickup_lfd_rail.changed",
+      "createdAt": "2026-02-25T18:54:02Z",
+      "voyageNumber": null,
+      "timestamp": "2026-02-25T18:54:02Z",
+      "dataSource": "rail",
+      "invalidatedAt": null,
+      "locationLocode": "USDET",
+      "timezone": "America/Detroit",
+      "value": "2026-02-26T05:00:00Z"
+    },
+    {
+      "id": "78823f78-a5ee-47e2-aade-be5183699f12",
+      "event": "container.transport.estimated.arrived_at_inland_destination",
+      "createdAt": "2026-02-25T15:03:54Z",
+      "voyageNumber": null,
+      "timestamp": "2026-02-25T17:00:00Z",
+      "dataSource": "shipping_line",
+      "invalidatedAt": null,
+      "locationLocode": "USDET",
+      "timezone": "America/Detroit",
+      "value": null,
+      "terminal": {
+        "id": "1d9b95ec-2c3d-42e0-a6b7-7378b82625e7",
+        "name": "NS - Livernois",
+        "nickname": "NS - Livernois",
+        "firmsCode": "H796"
+      }
+    },
+    {
+      "id": "da2c4758-00ca-473e-9b6b-e6bbc2b3903d",
+      "event": "container.transport.rail_unloaded",
+      "createdAt": "2026-02-25T15:03:53Z",
+      "voyageNumber": null,
+      "timestamp": "2026-02-25T10:26:00Z",
+      "dataSource": "shipping_line",
+      "invalidatedAt": null,
+      "locationLocode": "USDET",
+      "timezone": "America/Detroit",
+      "value": null,
+      "terminal": {
+        "id": "1d9b95ec-2c3d-42e0-a6b7-7378b82625e7",
+        "name": "NS - Livernois",
+        "nickname": "NS - Livernois",
+        "firmsCode": "H796"
+      }
+    },
+    {
+      "id": "b6f3f2f0-395f-43d4-8187-a36f87cedb8b",
+      "event": "container.transport.transshipment_departed",
+      "createdAt": "2026-02-25T15:03:53Z",
+      "voyageNumber": "068E",
+      "timestamp": "2026-01-15T02:54:00Z",
+      "dataSource": "shipping_line",
+      "invalidatedAt": null,
+      "locationLocode": "CNSHG",
+      "timezone": "Asia/Shanghai",
+      "value": null
+    },
+    {
+      "id": "a1e6df65-6a6a-474d-8ce0-814692fb58d1",
+      "event": "container.transport.transshipment_arrived",
+      "createdAt": "2026-02-25T15:03:53Z",
+      "voyageNumber": "39N",
+      "timestamp": "2026-01-08T21:59:00Z",
+      "dataSource": "shipping_line",
+      "invalidatedAt": null,
+      "locationLocode": "CNSHG",
+      "timezone": "Asia/Shanghai",
+      "value": null
+    },
+    {
+      "id": "7da152d2-9f4d-406b-913f-bea2ef827c21",
+      "event": "container.transport.vessel_departed",
+      "createdAt": "2026-02-25T15:03:52Z",
+      "voyageNumber": "068E",
+      "timestamp": "2025-12-25T06:01:23Z",
+      "dataSource": "ais",
+      "invalidatedAt": null,
+      "locationLocode": "IDJKT",
+      "timezone": "Asia/Jakarta",
+      "value": null
+    },
+    {
+      "id": "f3ef41c2-b74c-416d-802a-d8301239d8b5",
+      "event": "container.transport.vessel_arrived",
+      "createdAt": "2026-02-25T15:03:52Z",
+      "voyageNumber": "068E",
+      "timestamp": "2026-02-20T17:45:11Z",
+      "dataSource": "ais",
+      "invalidatedAt": null,
+      "locationLocode": "USORF",
+      "timezone": "America/New_York",
+      "value": null
+    }
+  ]
+}

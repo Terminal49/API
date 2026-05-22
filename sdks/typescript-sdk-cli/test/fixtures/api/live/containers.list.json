@@ -1,0 +1,207 @@
+{
+  "ok": true,
+  "command": "containers.list",
+  "data": {
+    "items": [
+      {
+        "id": "d094ee98-a9bd-4edf-a278-7f6cf73d025a",
+        "number": "OOLU9970918",
+        "sealNumber": null,
+        "createdAt": "2026-02-25T15:03:44Z",
+        "refNumbers": [],
+        "podArrivedAt": "2026-02-20T17:45:11Z",
+        "podDischargedAt": "2026-02-20T21:33:25Z",
+        "finalDestinationFullOutAt": "2026-02-26T14:53:00Z",
+        "holdsAtPodTerminal": [],
+        "availableForPickup": false,
+        "deliveredAt": null,
+        "currentStatus": "picked_up",
+        "emptyOutAt": null,
+        "polFullInAt": null,
+        "polVesselLoadedAt": null,
+        "polVesselDepartedAt": "2025-12-25T06:01:23Z",
+        "equipmentType": "dry",
+        "equipmentLength": 40,
+        "equipmentHeight": "high_cube",
+        "podFullOutAt": null,
+        "emptyTerminatedAt": null,
+        "terminalCheckedAt": "2026-02-28T22:09:48Z",
+        "feesAtPodTerminal": [],
+        "pickupLfd": "2026-02-26T05:00:00Z",
+        "pickupAppointmentAt": null,
+        "podFullOutChassisNumber": null,
+        "locationAtPodTerminal": null,
+        "podLastTrackingRequestAt": "2026-02-28T22:05:43Z",
+        "shipmentLastTrackingRequestAt": "2026-02-28T19:15:21Z",
+        "railLastTrackingRequestAt": "2026-02-25T18:54:43Z",
+        "availabilityKnown": true,
+        "podTimezone": "America/New_York",
+        "finalDestinationTimezone": "America/Detroit",
+        "weightInLbs": 23272,
+        "emptyTerminatedTimezone": "America/Detroit",
+        "podRailCarrierScac": "NSRR",
+        "indRailCarrierScac": "NSRR",
+        "podRailLoadedAt": null,
+        "podRailDepartedAt": null,
+        "indEtaAt": null,
+        "indAtaAt": null,
+        "indRailUnloadedAt": "2026-02-25T10:26:00Z",
+        "indFacilityHolds": null,
+        "indFacilityFees": null,
+        "indFacilityLfdOn": "2026-02-26T05:00:00Z",
+        "importDeadlines": {
+          "pickup_lfd_terminal": null,
+          "pickup_lfd_rail": "2026-02-26T05:00:00Z",
+          "pickup_lfd_line": null
+        },
+        "sslLfd": null,
+        "equipment": {
+          "type": "dry",
+          "length": 40,
+          "height": "high_cube",
+          "weightLbs": 23272
+        },
+        "location": {
+          "currentLocation": null,
+          "availableForPickup": false,
+          "podArrivedAt": "2026-02-20T17:45:11Z",
+          "podDischargedAt": "2026-02-20T21:33:25Z"
+        },
+        "demurrage": {
+          "pickupLfd": "2026-02-26T05:00:00Z",
+          "pickupAppointmentAt": null,
+          "fees": [],
+          "holds": []
+        },
+        "terminals": {
+          "podTerminal": {
+            "id": "359c10f2-b69b-481d-b26e-d030b03fa9bf",
+            "name": "Virginia International Gateway",
+            "nickname": "Virginia (VIG)",
+            "firmsCode": "N195"
+          },
+          "destinationTerminal": null
+        },
+        "rail": {
+          "podRailCarrierScac": "NSRR",
+          "indRailCarrierScac": "NSRR",
+          "podRailLoadedAt": null,
+          "podRailDepartedAt": null,
+          "indRailUnloadedAt": "2026-02-25T10:26:00Z",
+          "indEtaAt": null,
+          "indAtaAt": null
+        },
+        "events": [],
+        "shipment": {
+          "id": "0406ec2a-736e-4312-a4b7-a2b1f6266bcd",
+          "billOfLading": "COSU6436376650",
+          "shippingLineScac": "COSU"
+        }
+      },
+      {
+        "id": "f0ccc7b1-ff45-4afe-ba1e-27d91557eb27",
+        "number": "TGBU7481618",
+        "sealNumber": null,
+        "createdAt": "2026-02-23T15:03:14Z",
+        "refNumbers": [],
+        "podArrivedAt": "2026-02-18T01:02:58Z",
+        "podDischargedAt": "2026-02-18T05:00:00Z",
+        "finalDestinationFullOutAt": null,
+        "holdsAtPodTerminal": [],
+        "availableForPickup": true,
+        "deliveredAt": null,
+        "currentStatus": "available",
+        "emptyOutAt": "2026-01-20T23:00:00Z",
+        "polFullInAt": "2026-01-21T23:00:00Z",
+        "polVesselLoadedAt": "2026-01-28T23:00:00Z",
+        "polVesselDepartedAt": "2026-01-29T23:01:13Z",
+        "equipmentType": "dry",
+        "equipmentLength": 40,
+        "equipmentHeight": "high_cube",
+        "podFullOutAt": null,
+        "emptyTerminatedAt": null,
+        "terminalCheckedAt": "2026-02-28T22:09:34Z",
+        "feesAtPodTerminal": [],
+        "pickupLfd": "2027-02-26T05:00:00Z",
+        "pickupAppointmentAt": null,
+        "podFullOutChassisNumber": null,
+        "locationAtPodTerminal": "Yard - C1009B",
+        "podLastTrackingRequestAt": "2026-02-28T22:09:33Z",
+        "shipmentLastTrackingRequestAt": "2026-02-28T19:19:58Z",
+        "railLastTrackingRequestAt": null,
+        "availabilityKnown": true,
+        "podTimezone": "America/New_York",
+        "finalDestinationTimezone": null,
+        "weightInLbs": 0,
+        "emptyTerminatedTimezone": "America/New_York",
+        "podRailCarrierScac": null,
+        "indRailCarrierScac": null,
+        "podRailLoadedAt": null,
+        "podRailDepartedAt": null,
+        "indEtaAt": null,
+        "indAtaAt": null,
+        "indRailUnloadedAt": null,
+        "indFacilityHolds": null,
+        "indFacilityFees": null,
+        "indFacilityLfdOn": null,
+        "importDeadlines": {
+          "pickup_lfd_terminal": "2027-02-26T05:00:00Z",
+          "pickup_lfd_rail": null,
+          "pickup_lfd_line": null
+        },
+        "sslLfd": null,
+        "equipment": {
+          "type": "dry",
+          "length": 40,
+          "height": "high_cube",
+          "weightLbs": 0
+        },
+        "location": {
+          "currentLocation": "Yard - C1009B",
+          "availableForPickup": true,
+          "podArrivedAt": "2026-02-18T01:02:58Z",
+          "podDischargedAt": "2026-02-18T05:00:00Z"
+        },
+        "demurrage": {
+          "pickupLfd": "2027-02-26T05:00:00Z",
+          "pickupAppointmentAt": null,
+          "fees": [],
+          "holds": []
+        },
+        "terminals": {
+          "podTerminal": {
+            "id": "b859f5c3-8515-41da-bf20-39c0a5ada887",
+            "name": "Port Newark Container Terminal",
+            "nickname": "PNCT",
+            "firmsCode": "F577"
+          },
+          "destinationTerminal": null
+        },
+        "rail": {
+          "podRailCarrierScac": null,
+          "indRailCarrierScac": null,
+          "podRailLoadedAt": null,
+          "podRailDepartedAt": null,
+          "indRailUnloadedAt": null,
+          "indEtaAt": null,
+          "indAtaAt": null
+        },
+        "events": [],
+        "shipment": {
+          "id": "b8035cb3-a9a5-45a2-8c52-d8a4df99393b",
+          "billOfLading": "MEDUK9654337",
+          "shippingLineScac": "MSCU"
+        }
+      }
+    ],
+    "links": {
+      "self": "https://api.terminal49.com/v2/containers?include=shipment%2Cpod_terminal&page[size]=2",
+      "current": "https://api.terminal49.com/v2/containers?include=shipment,pod_terminal&page[number]=1&page[size]=2",
+      "next": "https://api.terminal49.com/v2/containers?include=shipment,pod_terminal&page[number]=2&page[size]=2",
+      "last": "https://api.terminal49.com/v2/containers?include=shipment,pod_terminal&page[number]=150076&page[size]=2"
+    },
+    "meta": {
+      "total": 300151
+    }
+  }
+}

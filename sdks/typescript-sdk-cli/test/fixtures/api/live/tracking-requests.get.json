@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "command": "tracking-requests.get",
+  "data": {
+    "id": "843ef3c7-fc89-40a6-9b44-bef69c91b005",
+    "requestType": "bill_of_lading",
+    "requestNumber": "ZIMUNGB20745474",
+    "status": "created",
+    "scac": "ZIMU",
+    "refNumbers": [],
+    "shipment": null,
+    "container": null,
+    "shipmentTags": [],
+    "createdAt": "2026-02-28T15:10:36Z",
+    "updatedAt": "2026-02-28T15:11:18Z",
+    "failedReason": null,
+    "isRetrying": false,
+    "retryCount": null
+  }
+}
