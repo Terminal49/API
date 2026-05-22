@@ -87,11 +87,114 @@ function normalizeBaseUrl(input?: string): string {
 export class Terminal49Client {
   private transport: Transport;
   private jsona: Jsona;
+  private defaultFormat: ResponseFormat;
 
   public shipments: ShipmentManager;
   public containers: ContainerManager;
   public trackingRequests: TrackingRequestManager;
   public shippingLines: ShippingLineManager;
+
+  public webhooks = {
+    list: (options?: ListOptions) => this.listWebhooks(options),
+    get: (id: string, options?: CallOptions) => this.getWebhook(id, options),
+    create: (payload: Record<string, unknown>, options?: CallOptions) =>
+      this.createWebhook(payload, options),
+    update: (
+      id: string,
+      payload: Record<string, unknown>,
+      options?: CallOptions,
+    ) => this.updateWebhook(id, payload, options),
+    delete: (id: string, options?: CallOptions) =>
+      this.deleteWebhook(id, options),
+    ips: (options?: CallOptions) => this.getWebhookIps(options),
+  };
+
+  public webhookNotifications = {
+    list: (options?: ListOptions) => this.listWebhookNotifications(options),
+    get: (id: string, options?: CallOptions) =>
+      this.getWebhookNotification(id, options),
+    examples: (event?: string, options?: CallOptions) =>
+      this.getWebhookNotificationExamples(event, options),
+  };
+
+  public vessels = {
+    get: (id: string, options?: CallOptions) => this.getVessel(id, options),
+    getByImo: (imo: string, options?: CallOptions) =>
+      this.getVesselByImo(imo, options),
+    futurePositions: (id: string, options?: CallOptions) =>
+      this.getVesselFuturePositions(id, options),
+    futurePositionsWithCoords: (id: string, options?: CallOptions) =>
+      this.getVesselFuturePositionsWithCoords(id, options),
+  };
+
+  public ports = {
+    get: (id: string, options?: CallOptions) => this.getPort(id, options),
+  };
+
+  public terminals = {
+    get: (id: string, options?: CallOptions) => this.getTerminal(id, options),
+  };
+
+  public parties = {
+    list: (options?: ListOptions) => this.listParties(options),
+    get: (id: string, options?: CallOptions) => this.getParty(id, options),
+  };
+
+  public metroAreas = {
+    get: (id: string, options?: CallOptions) => this.getMetroArea(id, options),
+  };
+
+  public customFieldDefinitions = {
+    list: (options?: ListOptions) => this.listCustomFieldDefinitions(options),
+    get: (id: string, options?: CallOptions) =>
+      this.getCustomFieldDefinition(id, options),
+    create: (payload: Record<string, unknown>, options?: CallOptions) =>
+      this.createCustomFieldDefinition(payload, options),
+    update: (
+      id: string,
+      payload: Record<string, unknown>,
+      options?: CallOptions,
+    ) => this.updateCustomFieldDefinition(id, payload, options),
+    delete: (id: string, options?: CallOptions) =>
+      this.deleteCustomFieldDefinition(id, options),
+  };
+
+  public customFieldOptions = {
+    list: (definitionId: string, options?: ListOptions) =>
+      this.listCustomFieldOptions(definitionId, options),
+    get: (definitionId: string, optionId: string, options?: CallOptions) =>
+      this.getCustomFieldOption(definitionId, optionId, options),
+    create: (
+      definitionId: string,
+      payload: Record<string, unknown>,
+      options?: CallOptions,
+    ) => this.createCustomFieldOption(definitionId, payload, options),
+    update: (
+      definitionId: string,
+      optionId: string,
+      payload: Record<string, unknown>,
+      options?: CallOptions,
+    ) => this.updateCustomFieldOption(definitionId, optionId, payload, options),
+    delete: (
+      definitionId: string,
+      optionId: string,
+      options?: CallOptions,
+    ) => this.deleteCustomFieldOption(definitionId, optionId, options),
+  };
+
+  public customFields = {
+    list: (options?: ListOptions) => this.listCustomFields(options),
+    get: (id: string, options?: CallOptions) => this.getCustomField(id, options),
+    create: (payload: Record<string, unknown>, options?: CallOptions) =>
+      this.createCustomField(payload, options),
+    update: (
+      id: string,
+      payload: Record<string, unknown>,
+      options?: CallOptions,
+    ) => this.updateCustomField(id, payload, options),
+    delete: (id: string, options?: CallOptions) =>
+      this.deleteCustomField(id, options),
+  };
 
   constructor(config: Terminal49ClientConfig) {
     if (!config.apiToken) {
@@ -100,6 +203,7 @@ export class Terminal49Client {
 
     const baseUrl = normalizeBaseUrl(config.apiBaseUrl);
     const defaultFormat = config.defaultFormat ?? 'raw';
+    this.defaultFormat = defaultFormat;
 
     this.transport = new Transport({
       apiToken: config.apiToken,
@@ -331,6 +435,383 @@ export class Terminal49Client {
     return this.containers.refresh(id, options);
   }
 
+  /** List webhooks. */
+  async listWebhooks(options?: ListOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint('/webhooks', this.listQuery(options)),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch a webhook by ID. */
+  async getWebhook(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/webhooks/${encodeURIComponent(id)}`),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Create a webhook. */
+  async createWebhook(
+    payload: Record<string, unknown>,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(this.endpoint('/webhooks'), {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Update a webhook. */
+  async updateWebhook(
+    id: string,
+    payload: Record<string, unknown>,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/webhooks/${encodeURIComponent(id)}`),
+      {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Delete a webhook. */
+  async deleteWebhook(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/webhooks/${encodeURIComponent(id)}`),
+      { method: 'DELETE' },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** List webhook source IP ranges. */
+  async getWebhookIps(options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint('/webhooks/ips'),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** List webhook notifications. */
+  async listWebhookNotifications(options?: ListOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint('/webhook_notifications', this.listQuery(options)),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch a webhook notification by ID. */
+  async getWebhookNotification(
+    id: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/webhook_notifications/${encodeURIComponent(id)}`),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch example webhook notification payloads. */
+  async getWebhookNotificationExamples(
+    event?: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint('/webhook_notifications/examples', { event }),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch a vessel by ID. */
+  async getVessel(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/vessels/${encodeURIComponent(id)}`),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch a vessel by IMO number. */
+  async getVesselByImo(imo: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/vessels/${encodeURIComponent(imo)}`),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch future vessel positions. */
+  async getVesselFuturePositions(
+    id: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/vessels/${encodeURIComponent(id)}/future_positions`),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch future vessel positions with coordinates. */
+  async getVesselFuturePositionsWithCoords(
+    id: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(
+        `/vessels/${encodeURIComponent(id)}/future_positions_with_coordinates`,
+      ),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch a port by ID. */
+  async getPort(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/ports/${encodeURIComponent(id)}`),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch a terminal by ID. */
+  async getTerminal(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/terminals/${encodeURIComponent(id)}`),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** List parties. */
+  async listParties(options?: ListOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint('/parties', this.listQuery(options)),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch a party by ID. */
+  async getParty(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/parties/${encodeURIComponent(id)}`),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch a metro area by ID. */
+  async getMetroArea(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/metro_areas/${encodeURIComponent(id)}`),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** List custom field definitions. */
+  async listCustomFieldDefinitions(options?: ListOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint('/custom_field_definitions', this.listQuery(options)),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch a custom field definition by ID. */
+  async getCustomFieldDefinition(
+    id: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/custom_field_definitions/${encodeURIComponent(id)}`),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Create a custom field definition. */
+  async createCustomFieldDefinition(
+    payload: Record<string, unknown>,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint('/custom_field_definitions'),
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Update a custom field definition. */
+  async updateCustomFieldDefinition(
+    id: string,
+    payload: Record<string, unknown>,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/custom_field_definitions/${encodeURIComponent(id)}`),
+      {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Delete a custom field definition. */
+  async deleteCustomFieldDefinition(
+    id: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/custom_field_definitions/${encodeURIComponent(id)}`),
+      { method: 'DELETE' },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** List options for a custom field definition. */
+  async listCustomFieldOptions(
+    definitionId: string,
+    options?: ListOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(
+        `/custom_field_definitions/${encodeURIComponent(definitionId)}/options`,
+        this.listQuery(options),
+      ),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch a custom field option. */
+  async getCustomFieldOption(
+    definitionId: string,
+    optionId: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(
+        `/custom_field_definitions/${encodeURIComponent(definitionId)}/options/${encodeURIComponent(optionId)}`,
+      ),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Create a custom field option. */
+  async createCustomFieldOption(
+    definitionId: string,
+    payload: Record<string, unknown>,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(
+        `/custom_field_definitions/${encodeURIComponent(definitionId)}/options`,
+      ),
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Update a custom field option. */
+  async updateCustomFieldOption(
+    definitionId: string,
+    optionId: string,
+    payload: Record<string, unknown>,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(
+        `/custom_field_definitions/${encodeURIComponent(definitionId)}/options/${encodeURIComponent(optionId)}`,
+      ),
+      {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Delete a custom field option. */
+  async deleteCustomFieldOption(
+    definitionId: string,
+    optionId: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(
+        `/custom_field_definitions/${encodeURIComponent(definitionId)}/options/${encodeURIComponent(optionId)}`,
+      ),
+      { method: 'DELETE' },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** List custom field assignments. */
+  async listCustomFields(options?: ListOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint('/custom_fields', this.listQuery(options)),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Fetch a custom field assignment by ID. */
+  async getCustomField(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/custom_fields/${encodeURIComponent(id)}`),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Create a custom field assignment. */
+  async createCustomField(
+    payload: Record<string, unknown>,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint('/custom_fields'),
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Update a custom field assignment. */
+  async updateCustomField(
+    id: string,
+    payload: Record<string, unknown>,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/custom_fields/${encodeURIComponent(id)}`),
+      {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Delete a custom field assignment. */
+  async deleteCustomField(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/custom_fields/${encodeURIComponent(id)}`),
+      { method: 'DELETE' },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
   /** List tracking requests with optional filters and pagination. */
   async listTrackingRequests(
     filters: TrackingRequestListFilters = {},
@@ -362,5 +843,42 @@ export class Terminal49Client {
     options?: CallOptions,
   ): Promise<any> {
     return this.trackingRequests.update(id, attrs, options);
+  }
+
+  private endpoint(
+    path: string,
+    query?: Record<string, string | number | undefined>,
+  ): string {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query ?? {})) {
+      if (value !== undefined) params.set(key, String(value));
+    }
+    const suffix = params.toString();
+    return `${this.transport.baseUrl}${path}${suffix ? `?${suffix}` : ''}`;
+  }
+
+  private listQuery(
+    options?: ListOptions,
+  ): Record<string, string | number | undefined> {
+    return {
+      'page[number]': options?.page,
+      'page[size]': options?.pageSize,
+    };
+  }
+
+  private formatResult<TDoc, TMap>(
+    raw: TDoc,
+    format: ResponseFormat | undefined,
+    mapper?: (doc: TDoc) => TMap,
+  ): TDoc | TMap | { raw: TDoc; mapped: TMap } {
+    const effective = format || this.defaultFormat || 'raw';
+    if (effective === 'raw') return raw;
+    if (effective === 'mapped') return mapper ? mapper(raw) : (raw as any);
+    if (effective === 'both') {
+      return mapper
+        ? { raw, mapped: mapper(raw) }
+        : { raw, mapped: raw as any };
+    }
+    return raw;
   }
 }

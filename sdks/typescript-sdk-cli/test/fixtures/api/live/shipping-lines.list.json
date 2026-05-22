@@ -1,0 +1,234 @@
+{
+  "ok": true,
+  "command": "shipping-lines.list",
+  "data": [
+    {
+      "scac": "ACLU",
+      "name": "Atlantic Container Line",
+      "shortName": "ACL",
+      "bolPrefix": "ACLU"
+    },
+    {
+      "scac": "ANNU",
+      "name": "Australia National Line",
+      "shortName": "ANL",
+      "bolPrefix": "ANLC"
+    },
+    {
+      "scac": "APLU",
+      "name": "American President Lines",
+      "shortName": "APL",
+      "bolPrefix": "APLU"
+    },
+    {
+      "scac": "ARKU",
+      "name": "Arkas Container Transport",
+      "shortName": "Arkas",
+      "bolPrefix": "ARKU"
+    },
+    {
+      "scac": "CHVW",
+      "name": "Swire Shipping",
+      "shortName": "CHVW",
+      "bolPrefix": "CHVW"
+    },
+    {
+      "scac": "CLAM",
+      "name": "Crowley",
+      "shortName": "Crowley",
+      "bolPrefix": "CLAM"
+    },
+    {
+      "scac": "CMDU",
+      "name": "CMA CGM",
+      "shortName": "CMA CGM",
+      "bolPrefix": "CMDU"
+    },
+    {
+      "scac": "COSU",
+      "name": "COSCO",
+      "shortName": "COSCO",
+      "bolPrefix": "CCMJ"
+    },
+    {
+      "scac": "CULU",
+      "name": "China United Lines",
+      "shortName": "CULines",
+      "bolPrefix": "CULV"
+    },
+    {
+      "scac": "EGLV",
+      "name": "Evergreen",
+      "shortName": "Evergreen",
+      "bolPrefix": "EISU"
+    },
+    {
+      "scac": "GOSU",
+      "name": "Gold Star Line",
+      "shortName": "GSL",
+      "bolPrefix": "GOSU"
+    },
+    {
+      "scac": "HDMU",
+      "name": "Hyundai Merchant Marine",
+      "shortName": "Hyundai",
+      "bolPrefix": "HDMU"
+    },
+    {
+      "scac": "HDUJ",
+      "name": "HEDE SHipping",
+      "shortName": "HEDE",
+      "bolPrefix": "HDUJ"
+    },
+    {
+      "scac": "HLCU",
+      "name": "Hapag-Lloyd",
+      "shortName": "Hapag-Lloyd",
+      "bolPrefix": "HLCU"
+    },
+    {
+      "scac": "IILU",
+      "name": "Independent Container Line",
+      "shortName": "ICL",
+      "bolPrefix": "IILU"
+    },
+    {
+      "scac": "MAEU",
+      "name": "Maersk",
+      "shortName": "Maersk",
+      "bolPrefix": "MAEU"
+    },
+    {
+      "scac": "MATS",
+      "name": "Matson Navigation Company",
+      "shortName": "Matson",
+      "bolPrefix": "MATS"
+    },
+    {
+      "scac": "MSCU",
+      "name": "Mediterranean Shipping Company",
+      "shortName": "MSC",
+      "bolPrefix": "MEDU"
+    },
+    {
+      "scac": "ONEY",
+      "name": "Ocean Network Express",
+      "shortName": "ONE",
+      "bolPrefix": "ONEY"
+    },
+    {
+      "scac": "OOLU",
+      "name": "Orient Overseas Container Line",
+      "shortName": "OOCL",
+      "bolPrefix": "OOLU"
+    },
+    {
+      "scac": "PCIU",
+      "name": "Pacific International Lines",
+      "shortName": "PIL",
+      "bolPrefix": "PABV"
+    },
+    {
+      "scac": "SAFM",
+      "name": "Safmarine Container Line",
+      "shortName": "Safmarine Container Line",
+      "bolPrefix": "SAFM"
+    },
+    {
+      "scac": "SEAU",
+      "name": "Sealand Americas",
+      "shortName": "SeaLand Americas",
+      "bolPrefix": "SEAU"
+    },
+    {
+      "scac": "SEJJ",
+      "name": "SeaLand Europe",
+      "shortName": "SeaLand Europe",
+      "bolPrefix": "SEJJ"
+    },
+    {
+      "scac": "SMLM",
+      "name": "SM Line",
+      "shortName": "SM Line",
+      "bolPrefix": "SMLM"
+    },
+    {
+      "scac": "SMLU",
+      "name": "Seaboard Marine",
+      "shortName": "Seaboard Marine",
+      "bolPrefix": "SMLU"
+    },
+    {
+      "scac": "SQQY",
+      "name": "SeaLead",
+      "shortName": "SeaLead",
+      "bolPrefix": "SQQY"
+    },
+    {
+      "scac": "SSBF",
+      "name": "Swire",
+      "shortName": "Swire",
+      "bolPrefix": "SSBF"
+    },
+    {
+      "scac": "SSPH",
+      "name": "Seth Shipping",
+      "shortName": "Seth",
+      "bolPrefix": "SSPH"
+    },
+    {
+      "scac": "TEST",
+      "name": "T49 Test Carrier",
+      "shortName": "T49 line",
+      "bolPrefix": "TEST"
+    },
+    {
+      "scac": "TJFH",
+      "name": "Transfar",
+      "shortName": "Transfar",
+      "bolPrefix": "TJFH"
+    },
+    {
+      "scac": "TRBR",
+      "name": "Trailer Bridge",
+      "shortName": "Trailer Bridge",
+      "bolPrefix": "TRBR"
+    },
+    {
+      "scac": "TRKU",
+      "name": "Turkon Line",
+      "shortName": "Turkon",
+      "bolPrefix": "TRKU"
+    },
+    {
+      "scac": "TXZJ",
+      "name": "T.S. Lines",
+      "shortName": "TS Lines",
+      "bolPrefix": "TXZJ"
+    },
+    {
+      "scac": "WDSB",
+      "name": "World Direct Shipping",
+      "shortName": "WDS",
+      "bolPrefix": "WDSB"
+    },
+    {
+      "scac": "WHLC",
+      "name": "Wan Hai Lines",
+      "shortName": "Wan Hai Lines",
+      "bolPrefix": "WHLC"
+    },
+    {
+      "scac": "YMLU",
+      "name": "Yangming Marine Transport",
+      "shortName": "Yangming",
+      "bolPrefix": "YMLU"
+    },
+    {
+      "scac": "ZIMU",
+      "name": "Zim American Integrated Shipping Services",
+      "shortName": "Zim Line",
+      "bolPrefix": "ZIMU"
+    }
+  ]
+}

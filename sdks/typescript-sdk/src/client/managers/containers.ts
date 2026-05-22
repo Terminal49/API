@@ -96,6 +96,48 @@ export class ContainerManager extends BaseManager {
     return this.formatResult(raw, options?.format, mapRoute);
   }
 
+  async map(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/containers/{id}/map_geojson', {
+        params: { path: { id } },
+      }),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  async customFields(id: string, options?: CallOptions): Promise<any> {
+    const encodedId = encodeURIComponent(id);
+    const raw = await this.transport.executeManual(
+      `${this.transport.baseUrl}/containers/${encodedId}/custom_fields`,
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  async setCustomField(
+    id: string,
+    fieldId: string,
+    value: unknown,
+    options?: CallOptions,
+  ): Promise<any> {
+    const encodedId = encodeURIComponent(id);
+    const payload = {
+      data: {
+        type: 'custom_field',
+        id: fieldId,
+        value,
+      },
+    };
+    const raw = await this.transport.executeManual(
+      `${this.transport.baseUrl}/containers/${encodedId}/custom_fields`,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
   async rawEvents(id: string, options?: CallOptions): Promise<any> {
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/containers/{id}/raw_events', {
@@ -112,5 +154,20 @@ export class ContainerManager extends BaseManager {
       }),
     );
     return this.formatResult(raw, options?.format);
+  }
+
+  async demurrage(id: string): Promise<any> {
+    const data = await this.get(id, ['pod_terminal']);
+    const container = data.data?.attributes || {};
+    return {
+      container_id: id,
+      pickup_lfd: container.pickup_lfd,
+      pickup_appointment_at: container.pickup_appointment_at,
+      available_for_pickup: container.available_for_pickup,
+      fees_at_pod_terminal: container.fees_at_pod_terminal,
+      holds_at_pod_terminal: container.holds_at_pod_terminal,
+      pod_arrived_at: container.pod_arrived_at,
+      pod_discharged_at: container.pod_discharged_at,
+    };
   }
 }

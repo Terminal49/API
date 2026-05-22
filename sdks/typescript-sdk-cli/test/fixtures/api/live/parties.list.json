@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "command": "parties.list",
+  "data": {
+    "data": [
+      {
+        "id": "03164f9c-84d1-419e-8bc9-5a80068c2fb8",
+        "type": "party",
+        "attributes": {
+          "company_name": "Elenteny Imports"
+        }
+      },
+      {
+        "id": "0a8976cb-305f-48f4-8870-52315420f394",
+        "type": "party",
+        "attributes": {
+          "company_name": "Revolution Supply"
+        }
+      }
+    ],
+    "meta": {
+      "size": 2,
+      "total": 7,
+      "pagination": {
+        "current": 1,
+        "next": 2,
+        "last": 4,
+        "records": 7
+      }
+    },
+    "links": {
+      "self": "https://api.terminal49.com/v2/parties?page[size]=2",
+      "current": "https://api.terminal49.com/v2/parties?page[number]=1&page[size]=2",
+      "next": "https://api.terminal49.com/v2/parties?page[number]=2&page[size]=2",
+      "last": "https://api.terminal49.com/v2/parties?page[number]=4&page[size]=2"
+    }
+  }
+}
