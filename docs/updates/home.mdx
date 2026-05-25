@@ -17,6 +17,88 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="May 25, 2026" description="Tracking request custom fields API, KMTC and Termont integrations, container status in CSV export, free plan slot limits, and bug fixes" tags={['API', 'Dashboard']}
+  rss="May 25, 2026: Tracking request custom fields API, KMTC steamship tracker, Termont terminal scraper, alternative APM scraper integrations, container status in dashboard CSV export, Report Issue from container side panel, free plan tracking slot improvements, multi-period tariff history, and a wave of carrier, document linking, and dashboard bug fixes."
+>
+  ### Tracking request custom fields API
+
+You can now manage **custom field values on tracking requests** via the API, in addition to shipments and containers. Use the new endpoints to attach predefined custom fields when a tracking request is created — values flow through to the resulting shipment and containers once tracking starts.
+
+<CardGroup cols={2}>
+  <Card title="List tracking request custom fields" icon="list" href="/api-docs/api-reference/tracking-requests/list-tracking-request-custom-fields">
+    List values on a tracking request
+  </Card>
+  <Card title="Create a tracking request custom field" icon="plus" href="/api-docs/api-reference/tracking-requests/create-tracking-request-custom-field">
+    Attach a value to a tracking request
+  </Card>
+</CardGroup>
+
+---
+
+  ### KMTC steamship tracker
+
+Added a direct integration for **KMTC (KORP)** shipments. Track KMTC containers, bills of lading, and bookings using their native SCAC, with full container, event, and route data.
+
+---
+
+  ### New terminal integrations
+
+- **Termont (Montreal)** — added a WordPress-based scraper for Termont container availability, status, and rail-state data
+- **APM Terminals — alternative scrapers** — two new APM scraper integrations (`apmweb_cffi` and `apmweb_firecrawl`) are available alongside the existing APM source, so terminals can be served by whichever endpoint performs best per site
+
+---
+
+  ### Container status in CSV export
+
+The container dashboard CSV export now includes a **Current Status** column and supports filtering by current status before export, so exported files reflect exactly what you see on screen.
+
+---
+
+  ### Report Issue from the container side panel
+
+The container details side panel now includes a **Report Issue** button so you can flag a data problem directly from the container you're viewing, without leaving the dashboard.
+
+---
+
+  ### Multi-period tariff history for Smart LFD
+
+The Smart LFD tariff engine now tracks **multiple historical tariff periods** per carrier, so Last Free Day calculations on older containers use the tariff rules that were in effect at the time. Tariff rules now also carry `tariff_number` and `tariff_rule_number` for traceability back to the source document, and `synthesis_warnings` surface any issues detected when a tariff was synthesized.
+
+<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+  View the container resource
+</Card>
+
+---
+
+  ### Updates
+
+- **Document linking by custom fields** — documents can now be linked to shipments and containers using custom field values, in addition to PO numbers, BOLs, and container numbers
+- **PO number matching is more forgiving** — additional common typo patterns are now matched when linking documents via PO number
+- **Free plan tracking slot limits** — Free accounts now meter against active tracking slots with clearer in-app usage copy, and unknown-container slot handling has been tightened
+- **Inline custom field option creation** — single- and multi-select custom fields now let you create new options inline from the value picker, with several follow-up polish improvements
+- **Custom field filter-out option** — container filters now support filtering for records where a custom field is *not* set
+- **Quick link to shipment/container** — added a button to copy a direct link to a shipment or container from the dashboard
+- **EGLV Last Free Day events now include location** — EGLV LFD events now carry the inland destination location so per-terminal LFD displays correctly
+- **Arrival notice classification** — fixed an issue where some arrival notices were misclassified as sea waybills during document processing
+- **Hapag-Lloyd FIRMS code routing** — clarified FIRMS code handling on arrival notice extraction so terminal routing is more reliable
+
+---
+
+  ### Bug fixes
+
+- **TRKU future events** — TRKU events dated in the future are now classified correctly so container timelines no longer skip past upcoming events
+- **HMM mobile error pages** — HMM (HDMU) mobile responses that return an HTML error page are now handled cleanly instead of failing the tracker run
+- **MAEU tracking** — Migrated remaining MAEU traffic off the legacy tracker to MaeusynergyTracker for more reliable Maersk container data
+- **Document linking edge cases** — documents with both an explicit and implicit link no longer fail to link, child packets now inherit only direct links from their parent, and legacy `.xls` files using the `roo-xls` path are processed correctly again
+- **Container state filters** — removed the unused "loaded" and "dropped" values from the current-status filter so the dropdown only shows real states
+- **Dashboard search focus** — fixed an issue where selecting a recent search left the input out of focus, and tightened the global click listener that drives dropdowns
+- **Disabled integrations** — disabled integrations no longer appear in the credentials list
+- **Unknown account handling** — webhook and ingestion paths no longer raise when an unknown account is referenced
+- **Sentry instrumentation** — fixed a missing region on the Sentry cassette job and removed a path that could cause Sentry error reporting itself to loop
+- **Knock in-app guides** — improved rendering of the Knock guide banner and moved free-plan Knock syncing to commit-time so guides display reliably
+
+</Update>
+
 <Update label="May 11, 2026" description="link.created webhook, Bookings preview, new terminal integrations, expanded CSV bulk update, and bug fixes" tags={['API', 'Dashboard']}
   rss="May 11, 2026: link.created webhook for document-to-cargo links, Bookings preview, Port Houston and Port of Wilmington integrations, draft demurrage tariff rules for ONE/Evergreen/CMA CGM, value_timestamp on SSL LFD events, expanded CSV bulk update, per-account terminal scraper selection, and a wave of carrier and terminal bug fixes."
 >
