@@ -17,7 +17,7 @@
     "node": "24.x"
   },
   "dependencies": {
-    "mintlify": "^4.2.359",
+    "mintlify": "^4.2.585",
     "openapi-fetch": "^0.15.2",
     "openapi-typescript": "^7.13.0"
   },
@@ -28,13 +28,36 @@
   "overrides": {
     "postcss": "^8.5.14",
     "axios": "^1.16.0",
+    "brace-expansion": "5.0.6",
+    "fast-uri": "^3.1.2",
     "uuid": "^11.1.1",
     "js-yaml": "^4.1.1",
     "lodash": "^4.18.1",
+    "minimatch": {
+      "brace-expansion": "5.0.6"
+    },
+    "minimatch@10.2.5": {
+      "brace-expansion": "5.0.6"
+    },
+    "typedoc": {
+      "minimatch": {
+        "brace-expansion": "5.0.6"
+      }
+    },
+    "@terminal49/sdk": {
+      "typedoc": {
+        "minimatch": {
+          "brace-expansion": "5.0.6"
+        }
+      }
+    },
     "hono": "^4.12.16",
     "ip-address": "^10.1.1",
     "@mintlify/scraping": {
       "zod": "^3.24.0"
+    },
+    "@mintlify/previewing": {
+      "express": "4.22.2"
     },
     "chromium-bidi": {
       "zod": "3.23.8"

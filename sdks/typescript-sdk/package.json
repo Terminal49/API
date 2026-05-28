@@ -57,6 +57,21 @@
     "vitest": "^4.0.13"
   },
   "overrides": {
-    "postcss": "^8.5.14"
+    "brace-expansion": "5.0.6",
+    "minimatch": {
+      "brace-expansion": "5.0.6"
+    },
+    "minimatch@10.2.5": {
+      "brace-expansion": "5.0.6"
+    },
+    "typedoc": {
+      "minimatch": {
+        "brace-expansion": "5.0.6"
+      }
+    },
+    "picomatch": "^4.0.4",
+    "postcss": "^8.5.14",
+    "rollup": "^4.60.4",
+    "vite": "^7.3.3"
   }
 }

@@ -29,7 +29,7 @@ Before you begin, make sure you have:
   <Card title="API token" icon="key">
     A `T49_API_TOKEN` from the [dashboard](https://app.terminal49.com/developers/api-keys)
   </Card>
-  <Card title="Node.js 18+" icon="node-js">
+  <Card title="Node.js 24.x" icon="node-js">
     Required if running the MCP server locally
   </Card>
   <Card title="MCP client" icon="robot">
@@ -38,9 +38,10 @@ Before you begin, make sure you have:
 </CardGroup>
 
 **Technical Details:**
-- **MCP SDK**: `@modelcontextprotocol/sdk ^1.26.0`
-- **TypeScript SDK**: `@terminal49/sdk`
-- **Runtime**: Node.js 18+
+- **MCP SDK**: `@modelcontextprotocol/sdk ^1.29.0`
+- **TypeScript SDK**: `@terminal49/sdk 0.2.0`
+- **Sentry MCP Monitoring**: `@sentry/node ^10.55.0` (optional)
+- **Runtime**: Node.js 24.x
 
 ---
 
@@ -59,6 +60,24 @@ Claude Desktop and Cursor use the HTTP transport. For hosted production usage, u
 </Tip>
 
 {/* OAuth hosted docs are not yet published. Links will be added when the pages are available. */}
+
+---
+
+## Observability
+
+The MCP server supports optional [Sentry MCP Monitoring](https://docs.sentry.io/ai/monitoring/mcp/). Set `SENTRY_DSN` to capture MCP server connections, tool executions, resource access, prompts, performance spans, and errors in Sentry.
+
+```bash
+SENTRY_DSN=___PUBLIC_DSN___
+SENTRY_TRACES_SAMPLE_RATE=1.0
+SENTRY_MCP_RECORD_INPUTS=false
+SENTRY_MCP_RECORD_OUTPUTS=false
+SENTRY_SEND_DEFAULT_PII=false
+```
+
+<Warning>
+`SENTRY_MCP_RECORD_INPUTS` and `SENTRY_MCP_RECORD_OUTPUTS` are disabled by default because MCP payloads can include shipment identifiers, references, and customer data. Enable them only if your Sentry project is approved for that data.
+</Warning>
 
 ---
 
@@ -358,6 +377,13 @@ The `vercel.json` configures the MCP server:
 | `T49_API_BASE_URL` | No | Override API URL (default: `https://api.terminal49.com/v2`) |
 | `T49_MCP_ALLOWED_HOSTS` | No | Comma-separated host allowlist for request Host validation |
 | `T49_MCP_ALLOWED_ORIGINS` | No | Comma-separated origin allowlist for request Origin validation |
+| `SENTRY_DSN` | No | Enables Sentry MCP Monitoring |
+| `SENTRY_ENVIRONMENT` | No | Sentry environment name; defaults to `NODE_ENV` |
+| `SENTRY_RELEASE` | No | Sentry release identifier; defaults to `VERCEL_GIT_COMMIT_SHA` |
+| `SENTRY_TRACES_SAMPLE_RATE` | No | Trace sampling rate from `0` to `1`; defaults to `1.0` |
+| `SENTRY_MCP_RECORD_INPUTS` | No | Records MCP inputs in Sentry when set to `true`; defaults to `false` |
+| `SENTRY_MCP_RECORD_OUTPUTS` | No | Records MCP outputs in Sentry when set to `true`; defaults to `false` |
+| `SENTRY_SEND_DEFAULT_PII` | No | Enables Sentry default PII behavior; defaults to `false` |
 
 ---
 

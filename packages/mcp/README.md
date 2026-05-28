@@ -48,11 +48,17 @@
 - High-level `registerTool()`, `registerPrompt()`, `registerResource()` patterns
 - Type-safe Zod schemas for all tool inputs
 - Cleaner, maintainable code (71% code reduction in HTTP handler)
-- **SDK**: @modelcontextprotocol/sdk ^1.26.0
+- **MCP SDK**: @modelcontextprotocol/sdk ^1.29.0
+- **Terminal49 SDK**: @terminal49/sdk 0.2.0
 
 #### ✅ Production Transport Support
 - **HTTP (streamable)**: `POST /api/mcp` - stateless, JSON responses
 - SSE was removed from the hosted deployment path in favor of Streamable HTTP transport.
+
+#### ✅ Sentry MCP Monitoring
+- Optional instrumentation with `@sentry/node` ^10.55.0
+- Captures MCP connections, tool calls, resources, prompts, performance spans, and errors when `SENTRY_DSN` is set
+- Tool input/output recording is disabled by default; enable it only after reviewing data handling requirements
 
 #### ✅ 3 Workflow Prompts
 - `track-shipment`: Quick container tracking with optional carrier
@@ -89,7 +95,7 @@ MCP uses published `@terminal49/sdk` by default, with optional local override fo
 ## 🛠️ Local Development
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 24.x
 - Terminal49 API token ([get yours here](https://app.terminal49.com/developers/api-keys))
 
 ### Setup
@@ -288,6 +294,15 @@ npm run lint
 | `NODE_ENV` | No | `development` | Environment |
 | `LOG_LEVEL` | No | `info` | Logging level |
 | `REDACT_LOGS` | No | `true` | Redact tokens in logs |
+| `SENTRY_DSN` | No | - | Enables Sentry MCP Monitoring when set |
+| `SENTRY_ENVIRONMENT` | No | `NODE_ENV` | Sentry environment name |
+| `SENTRY_RELEASE` | No | `VERCEL_GIT_COMMIT_SHA` | Sentry release identifier |
+| `SENTRY_TRACES_SAMPLE_RATE` | No | `1.0` | Trace sampling rate from `0` to `1` |
+| `SENTRY_MCP_RECORD_INPUTS` | No | `false` | Record MCP tool/prompt inputs in Sentry |
+| `SENTRY_MCP_RECORD_OUTPUTS` | No | `false` | Record MCP tool/prompt outputs in Sentry |
+| `SENTRY_SEND_DEFAULT_PII` | No | `false` | Enables Sentry default PII behavior |
+
+> Only enable `SENTRY_MCP_RECORD_INPUTS` or `SENTRY_MCP_RECORD_OUTPUTS` after confirming that your Sentry project is approved to store shipment identifiers, references, and customer data.
 
 ---
 

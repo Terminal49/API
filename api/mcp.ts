@@ -5,11 +5,13 @@
  * Endpoint: POST /api/mcp
  */
 
+import '../packages/mcp/src/instrument.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
+import { captureMcpException } from '../packages/mcp/src/sentry.js';
 
 type RequestLike = {
   method?: string;
@@ -328,6 +330,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
     logLifecycle('mcp.request.complete', requestId, { reason: 'handled' });
   } catch (error) {
     const err = error as Error;
+    captureMcpException(error);
     logLifecycle('mcp.request.error', requestId, {
       error: err.name,
       message: err.message,

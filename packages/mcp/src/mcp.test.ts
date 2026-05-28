@@ -199,6 +199,40 @@ function _schemaHasDisplay(schema: unknown): boolean {
   }
 }
 
+function _objectSchemaHasProperty(schema: unknown, property: string): boolean {
+  const typedSchema = schema as {
+    _def?: {
+      typeName?: string;
+      type?: string;
+      shape?: unknown;
+      properties?: unknown;
+    };
+    def?: {
+      typeName?: string;
+      type?: string;
+      shape?: unknown;
+      properties?: unknown;
+    };
+  };
+  const def = typedSchema?._def ?? typedSchema?.def;
+  if (!def) {
+    return false;
+  }
+
+  const type = def.typeName ?? (def as { type?: string }).type;
+  if (type !== 'ZodObject' && type !== 'object') {
+    return false;
+  }
+
+  const shape = typeof def.shape === 'function' ? def.shape() : def.shape;
+  return Boolean(
+    (shape && typeof shape === 'object' && Object.hasOwn(shape as object, property)) ||
+      (def.properties &&
+        typeof def.properties === 'object' &&
+        Object.hasOwn(def.properties as object, property)),
+  );
+}
+
 // Minimal mock transport implementing start/close
 class MockTransport {
   start = vi.fn();
@@ -244,6 +278,24 @@ describe('MCP server wiring', () => {
     expect(resources).toContain('terminal49://docs/milestone-glossary');
     expect(resources).toContain('terminal49://docs/mcp-query-guidance');
     expect(resourceTemplates).toContain('container');
+  });
+
+  it('tools accept optional MCP-only intent telemetry', () => {
+    const server = createTerminal49McpServer('token');
+    const tools = (server as any)._registeredTools as Record<
+      string,
+      { inputSchema: unknown }
+    >;
+
+    for (const [name, tool] of Object.entries(tools)) {
+      expect(_objectSchemaHasProperty(tool.inputSchema, 'intent'), name).toBe(true);
+    }
+
+    expect(() =>
+      (tools.get_supported_shipping_lines.inputSchema as { parse: (value: unknown) => unknown }).parse({
+        intent: 'validate carrier before creating a tracking request',
+      }),
+    ).not.toThrow();
   });
 
   it('tools include _response_contract in output schemas', () => {
@@ -307,13 +359,14 @@ describe('MCP server wiring', () => {
     );
   });
 
-  it('tool error responses omit structuredContent to avoid output schema mismatches', async () => {
+  it('tool error responses are marked as errors to skip output schema validation', async () => {
     const server = createTerminal49McpServer('token');
     const searchTool = (server as any)._registeredTools.search_container;
 
     const result = await searchTool.handler({ query: '   ' });
 
     expect(result.content[0].text).toContain('Error: Search query is required');
-    expect(Object.prototype.hasOwnProperty.call(result, 'structuredContent')).toBe(false);
+    expect(result.isError).toBe(true);
+    expect(Object.hasOwn(result, 'structuredContent')).toBe(false);
   });
 });
