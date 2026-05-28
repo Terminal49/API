@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "command": "containers.rail",
+  "data": {
+    "container_id": "d094ee98-a9bd-4edf-a278-7f6cf73d025a",
+    "pod_rail_carrier_scac": "NSRR",
+    "ind_rail_carrier_scac": "NSRR",
+    "pod_rail_loaded_at": null,
+    "pod_rail_departed_at": null,
+    "ind_rail_unloaded_at": "2026-02-25T10:26:00Z",
+    "ind_eta_at": null,
+    "ind_ata_at": null,
+    "rail_events": []
+  }
+}

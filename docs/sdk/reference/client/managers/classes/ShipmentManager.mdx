@@ -1,6 +1,5 @@
 ---
-title: "ShipmentManager class reference"
-description: "Reference for ShipmentManager, the SDK resource manager used to list, fetch, and update shipments returned by the Terminal49 tracking API."
+title: "Class: ShipmentManager"
 ---
 
 # Class: ShipmentManager
@@ -31,6 +30,23 @@ description: "Reference for ShipmentManager, the SDK resource manager used to li
 [`BaseManager`](/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/sdk/reference/client/managers/classes/BaseManager#constructor)
 
 ## Methods
+
+### customFields()
+
+> **customFields**(`id`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
 
 ### get()
 
@@ -99,6 +115,25 @@ description: "Reference for ShipmentManager, the SDK resource manager used to li
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### setCustomField()
+
+> **setCustomField**(`id`, `fieldId`, `value`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `fieldId` | `string` |
+| `value` | `unknown` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns

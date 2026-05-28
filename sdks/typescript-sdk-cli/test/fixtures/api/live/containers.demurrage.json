@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "command": "containers.demurrage",
+  "data": {
+    "container_id": "d094ee98-a9bd-4edf-a278-7f6cf73d025a",
+    "pickup_lfd": "2026-02-26T05:00:00Z",
+    "pickup_appointment_at": null,
+    "available_for_pickup": false,
+    "fees_at_pod_terminal": [],
+    "holds_at_pod_terminal": [],
+    "pod_arrived_at": "2026-02-20T17:45:11Z",
+    "pod_discharged_at": "2026-02-20T21:33:25Z"
+  }
+}

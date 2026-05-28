@@ -1,6 +1,5 @@
 ---
-title: "ContainerManager class reference"
-description: "Reference for ContainerManager, the SDK resource manager used to fetch, list, and refresh containers and their transport events from the API."
+title: "Class: ContainerManager"
 ---
 
 # Class: ContainerManager
@@ -31,6 +30,39 @@ description: "Reference for ContainerManager, the SDK resource manager used to f
 [`BaseManager`](/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/sdk/reference/client/managers/classes/BaseManager#constructor)
 
 ## Methods
+
+### customFields()
+
+> **customFields**(`id`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### demurrage()
+
+> **demurrage**(`id`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
 
 ### events()
 
@@ -106,6 +138,23 @@ description: "Reference for ContainerManager, the SDK resource manager used to f
 
 ***
 
+### map()
+
+> **map**(`id`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### rawEvents()
 
 > **rawEvents**(`id`, `options?`): `Promise`\<`any`\>
@@ -149,6 +198,25 @@ description: "Reference for ContainerManager, the SDK resource manager used to f
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### setCustomField()
+
+> **setCustomField**(`id`, `fieldId`, `value`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `fieldId` | `string` |
+| `value` | `unknown` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns

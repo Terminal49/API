@@ -1,6 +1,5 @@
 ---
-title: "Terminal49Client class reference"
-description: "API reference for Terminal49Client, the main entry point for the Node.js SDK to create tracking requests and fetch shipments and containers."
+title: "Class: Terminal49Client"
 ---
 
 # Class: Terminal49Client
@@ -32,11 +31,112 @@ data from Node.js applications.
 | Property | Modifier | Type |
 | ------ | ------ | ------ |
 | <a id="property-containers"></a> `containers` | `public` | [`ContainerManager`](/sdk/reference/client/managers/classes/ContainerManager) |
+| <a id="property-customfielddefinitions"></a> `customFieldDefinitions` | `public` | `object` |
+| `customFieldDefinitions.create` | `public` | (`payload`, `options?`) => `Promise`\<`any`\> |
+| `customFieldDefinitions.delete` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| `customFieldDefinitions.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| `customFieldDefinitions.list` | `public` | (`options?`) => `Promise`\<`any`\> |
+| `customFieldDefinitions.update` | `public` | (`id`, `payload`, `options?`) => `Promise`\<`any`\> |
+| <a id="property-customfieldoptions"></a> `customFieldOptions` | `public` | `object` |
+| `customFieldOptions.create` | `public` | (`definitionId`, `payload`, `options?`) => `Promise`\<`any`\> |
+| `customFieldOptions.delete` | `public` | (`definitionId`, `optionId`, `options?`) => `Promise`\<`any`\> |
+| `customFieldOptions.get` | `public` | (`definitionId`, `optionId`, `options?`) => `Promise`\<`any`\> |
+| `customFieldOptions.list` | `public` | (`definitionId`, `options?`) => `Promise`\<`any`\> |
+| `customFieldOptions.update` | `public` | (`definitionId`, `optionId`, `payload`, `options?`) => `Promise`\<`any`\> |
+| <a id="property-customfields"></a> `customFields` | `public` | `object` |
+| `customFields.create` | `public` | (`payload`, `options?`) => `Promise`\<`any`\> |
+| `customFields.delete` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| `customFields.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| `customFields.list` | `public` | (`options?`) => `Promise`\<`any`\> |
+| `customFields.update` | `public` | (`id`, `payload`, `options?`) => `Promise`\<`any`\> |
+| <a id="property-metroareas"></a> `metroAreas` | `public` | `object` |
+| `metroAreas.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| <a id="property-parties"></a> `parties` | `public` | `object` |
+| `parties.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| `parties.list` | `public` | (`options?`) => `Promise`\<`any`\> |
+| <a id="property-ports"></a> `ports` | `public` | `object` |
+| `ports.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | <a id="property-shipments"></a> `shipments` | `public` | [`ShipmentManager`](/sdk/reference/client/managers/classes/ShipmentManager) |
 | <a id="property-shippinglines"></a> `shippingLines` | `public` | [`ShippingLineManager`](/sdk/reference/client/managers/classes/ShippingLineManager) |
+| <a id="property-terminals"></a> `terminals` | `public` | `object` |
+| `terminals.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | <a id="property-trackingrequests"></a> `trackingRequests` | `public` | [`TrackingRequestManager`](/sdk/reference/client/managers/classes/TrackingRequestManager) |
+| <a id="property-vessels"></a> `vessels` | `public` | `object` |
+| `vessels.futurePositions` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| `vessels.futurePositionsWithCoords` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| `vessels.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| `vessels.getByImo` | `public` | (`imo`, `options?`) => `Promise`\<`any`\> |
+| <a id="property-webhooknotifications"></a> `webhookNotifications` | `public` | `object` |
+| `webhookNotifications.examples` | `public` | (`event?`, `options?`) => `Promise`\<`any`\> |
+| `webhookNotifications.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| `webhookNotifications.list` | `public` | (`options?`) => `Promise`\<`any`\> |
+| <a id="property-webhooks"></a> `webhooks` | `public` | `object` |
+| `webhooks.create` | `public` | (`payload`, `options?`) => `Promise`\<`any`\> |
+| `webhooks.delete` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| `webhooks.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| `webhooks.ips` | `public` | (`options?`) => `Promise`\<`any`\> |
+| `webhooks.list` | `public` | (`options?`) => `Promise`\<`any`\> |
+| `webhooks.update` | `public` | (`id`, `payload`, `options?`) => `Promise`\<`any`\> |
 
 ## Methods
+
+### createCustomField()
+
+> **createCustomField**(`payload`, `options?`): `Promise`\<`any`\>
+
+Create a custom field assignment.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `payload` | `Record`\<`string`, `unknown`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### createCustomFieldDefinition()
+
+> **createCustomFieldDefinition**(`payload`, `options?`): `Promise`\<`any`\>
+
+Create a custom field definition.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `payload` | `Record`\<`string`, `unknown`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### createCustomFieldOption()
+
+> **createCustomFieldOption**(`definitionId`, `payload`, `options?`): `Promise`\<`any`\>
+
+Create a custom field option.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `definitionId` | `string` |
+| `payload` | `Record`\<`string`, `unknown`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
 
 ### createTrackingRequest()
 
@@ -77,6 +177,102 @@ Infer carrier/number type, then create a tracking request from the result.
 #### Returns
 
 `Promise`\<\{ `infer`: `any`; `trackingRequest`: `any`; \}\>
+
+***
+
+### createWebhook()
+
+> **createWebhook**(`payload`, `options?`): `Promise`\<`any`\>
+
+Create a webhook.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `payload` | `Record`\<`string`, `unknown`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### deleteCustomField()
+
+> **deleteCustomField**(`id`, `options?`): `Promise`\<`any`\>
+
+Delete a custom field assignment.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### deleteCustomFieldDefinition()
+
+> **deleteCustomFieldDefinition**(`id`, `options?`): `Promise`\<`any`\>
+
+Delete a custom field definition.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### deleteCustomFieldOption()
+
+> **deleteCustomFieldOption**(`definitionId`, `optionId`, `options?`): `Promise`\<`any`\>
+
+Delete a custom field option.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `definitionId` | `string` |
+| `optionId` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### deleteWebhook()
+
+> **deleteWebhook**(`id`, `options?`): `Promise`\<`any`\>
+
+Delete a webhook.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
 
 ***
 
@@ -187,6 +383,64 @@ Fetch normalized transport events for a container.
 
 ***
 
+### getCustomField()
+
+> **getCustomField**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch a custom field assignment by ID.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getCustomFieldDefinition()
+
+> **getCustomFieldDefinition**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch a custom field definition by ID.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getCustomFieldOption()
+
+> **getCustomFieldOption**(`definitionId`, `optionId`, `options?`): `Promise`\<`any`\>
+
+Fetch a custom field option.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `definitionId` | `string` |
+| `optionId` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### getDemurrage()
 
 > **getDemurrage**(`containerId`): `Promise`\<`any`\>
@@ -198,6 +452,63 @@ Return a demurrage-focused subset of container fields.
 | Parameter | Type |
 | ------ | ------ |
 | `containerId` | `string` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getMetroArea()
+
+> **getMetroArea**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch a metro area by ID.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getParty()
+
+> **getParty**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch a party by ID.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getPort()
+
+> **getPort**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch a port by ID.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -243,6 +554,25 @@ Fetch a shipment by ID, optionally including related containers.
 
 ***
 
+### getTerminal()
+
+> **getTerminal**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch a terminal by ID.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### getTrackingRequest()
 
 > **getTrackingRequest**(`id`, `options?`): `Promise`\<`any`\>
@@ -255,6 +585,157 @@ Fetch a tracking request by ID.
 | ------ | ------ |
 | `id` | `string` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getVessel()
+
+> **getVessel**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch a vessel by ID.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getVesselByImo()
+
+> **getVesselByImo**(`imo`, `options?`): `Promise`\<`any`\>
+
+Fetch a vessel by IMO number.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `imo` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getVesselFuturePositions()
+
+> **getVesselFuturePositions**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch future vessel positions.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getVesselFuturePositionsWithCoords()
+
+> **getVesselFuturePositionsWithCoords**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch future vessel positions with coordinates.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getWebhook()
+
+> **getWebhook**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch a webhook by ID.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getWebhookIps()
+
+> **getWebhookIps**(`options?`): `Promise`\<`any`\>
+
+List webhook source IP ranges.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getWebhookNotification()
+
+> **getWebhookNotification**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch a webhook notification by ID.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### getWebhookNotificationExamples()
+
+> **getWebhookNotificationExamples**(`event?`, `options?`): `Promise`\<`any`\>
+
+Fetch example webhook notification payloads.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `event?` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -296,6 +777,79 @@ List containers with optional filters and pagination.
 | `filters.port?` | `string` |
 | `filters.status?` | `string` |
 | `filters.updatedAfter?` | `string` |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### listCustomFieldDefinitions()
+
+> **listCustomFieldDefinitions**(`options?`): `Promise`\<`any`\>
+
+List custom field definitions.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### listCustomFieldOptions()
+
+> **listCustomFieldOptions**(`definitionId`, `options?`): `Promise`\<`any`\>
+
+List options for a custom field definition.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `definitionId` | `string` |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### listCustomFields()
+
+> **listCustomFields**(`options?`): `Promise`\<`any`\>
+
+List custom field assignments.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### listParties()
+
+> **listParties**(`options?`): `Promise`\<`any`\>
+
+List parties.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
@@ -378,6 +932,42 @@ Alias for [listTrackingRequests](#listtrackingrequests).
 | Parameter | Type |
 | ------ | ------ |
 | `filters` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### listWebhookNotifications()
+
+> **listWebhookNotifications**(`options?`): `Promise`\<`any`\>
+
+List webhook notifications.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### listWebhooks()
+
+> **listWebhooks**(`options?`): `Promise`\<`any`\>
+
+List webhooks.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
@@ -483,6 +1073,67 @@ Convenience helper for creating a tracking request from a container or booking n
 
 ***
 
+### updateCustomField()
+
+> **updateCustomField**(`id`, `payload`, `options?`): `Promise`\<`any`\>
+
+Update a custom field assignment.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `payload` | `Record`\<`string`, `unknown`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### updateCustomFieldDefinition()
+
+> **updateCustomFieldDefinition**(`id`, `payload`, `options?`): `Promise`\<`any`\>
+
+Update a custom field definition.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `payload` | `Record`\<`string`, `unknown`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### updateCustomFieldOption()
+
+> **updateCustomFieldOption**(`definitionId`, `optionId`, `payload`, `options?`): `Promise`\<`any`\>
+
+Update a custom field option.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `definitionId` | `string` |
+| `optionId` | `string` |
+| `payload` | `Record`\<`string`, `unknown`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### updateShipment()
 
 > **updateShipment**(`id`, `attrs`, `options?`): `Promise`\<`any`\>
@@ -515,6 +1166,26 @@ Update tracking request attributes.
 | ------ | ------ |
 | `id` | `string` |
 | `attrs` | `Record`\<`string`, `any`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### updateWebhook()
+
+> **updateWebhook**(`id`, `payload`, `options?`): `Promise`\<`any`\>
+
+Update a webhook.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `payload` | `Record`\<`string`, `unknown`\> |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns

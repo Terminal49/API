@@ -143,4 +143,37 @@ export class ShipmentManager extends BaseManager {
     );
     return this.formatResult(raw, options?.format, mapShipment);
   }
+
+  async customFields(id: string, options?: CallOptions): Promise<any> {
+    const encodedId = encodeURIComponent(id);
+    const raw = await this.transport.executeManual(
+      `${this.transport.baseUrl}/shipments/${encodedId}/custom_fields`,
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  async setCustomField(
+    id: string,
+    fieldId: string,
+    value: unknown,
+    options?: CallOptions,
+  ): Promise<any> {
+    const encodedId = encodeURIComponent(id);
+    const payload = {
+      data: {
+        type: 'custom_field',
+        id: fieldId,
+        value,
+      },
+    };
+    const raw = await this.transport.executeManual(
+      `${this.transport.baseUrl}/shipments/${encodedId}/custom_fields`,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+    return this.formatResult(raw, options?.format);
+  }
 }

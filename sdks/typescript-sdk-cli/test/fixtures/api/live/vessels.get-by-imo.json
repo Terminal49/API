@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "command": "vessels.get-by-imo",
+  "data": {
+    "data": {
+      "id": "29243ca0-f50c-4027-b2e9-0b190c5a968a",
+      "type": "vessel",
+      "attributes": {
+        "name": "SEASPAN SAIGON",
+        "imo": "9301809",
+        "mmsi": "563281100",
+        "latitude": 36.543893333,
+        "longitude": -75.035903333,
+        "nautical_speed_knots": 13,
+        "navigational_heading_degrees": 270,
+        "position_timestamp": "2026-02-28T22:01:24Z"
+      }
+    },
+    "links": {
+      "self": "https://api.terminal49.com/v2/vessels/9301809"
+    }
+  }
+}
