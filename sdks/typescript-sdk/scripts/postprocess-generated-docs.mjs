@@ -7,6 +7,7 @@
  *  3. Cleans up module page titles (e.g. "client" → "Client Module").
  */
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -14,6 +15,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const outputDir = path.resolve(__dirname, '../../../docs/sdk/reference');
 const routePrefix = '/sdk/reference';
+const frontmatterCachePath = path.join(
+  os.tmpdir(),
+  'terminal49-sdk-docs-frontmatter-cache.json',
+);
 
 /** Human-readable overrides for module index page titles. */
 const MODULE_TITLE_OVERRIDES = {
@@ -21,6 +26,10 @@ const MODULE_TITLE_OVERRIDES = {
   models: 'Models',
   options: 'Options',
 };
+
+const frontmatterByPath = fs.existsSync(frontmatterCachePath)
+  ? JSON.parse(fs.readFileSync(frontmatterCachePath, 'utf8'))
+  : {};
 
 function listMdxFiles(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -64,7 +73,20 @@ function rewriteMdxLinks(content, filePath) {
   });
 }
 
+function stripFrontmatter(content) {
+  return content.replace(/^---\n[\s\S]*?\n---\n+/, '');
+}
+
 function ensureFrontmatter(content, filePath) {
+  const relativePath = path
+    .relative(outputDir, filePath)
+    .split(path.sep)
+    .join(path.posix.sep);
+  const cachedFrontmatter = frontmatterByPath[relativePath];
+  if (cachedFrontmatter) {
+    return `---\n${cachedFrontmatter}\n---\n\n${stripFrontmatter(content)}`;
+  }
+
   if (content.startsWith('---\n')) return content;
   const title = frontmatterTitle(content, filePath);
   return `---\ntitle: ${JSON.stringify(title)}\n---\n\n${content}`;
@@ -76,3 +98,5 @@ for (const filePath of listMdxFiles(outputDir)) {
   const withFrontmatter = ensureFrontmatter(withLinks, filePath);
   fs.writeFileSync(filePath, withFrontmatter);
 }
+
+fs.rmSync(frontmatterCachePath, { force: true });

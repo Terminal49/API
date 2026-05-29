@@ -7,12 +7,12 @@ on:
 
 jobs:
   generate-postman-collection:
-    runs-on: ubuntu-latest
+    runs-on: ${{ (startsWith(vars.CI_RUNNER_SMALL, 'blacksmith-') && vars.CI_RUNNER_SMALL) || 'blacksmith-2vcpu-ubuntu-2404' }}
     permissions:
       contents: write # Needed for committing back to the repo
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: useblacksmith/checkout@v1
         with:
           fetch-depth: 0 # Full history for proper diffing
 
@@ -49,4 +49,3 @@ jobs:
         run: |
           echo "Pushing updated collection to ${{ github.ref_name }}..."
           git push origin HEAD:${{ github.ref_name }}
-          
