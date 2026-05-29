@@ -113,7 +113,9 @@ Pre-built workflows for common tasks:
 The MCP package consumes published `@terminal49/sdk` by default.
 
 **Stack:**
-- [Model Context Protocol SDK](https://modelcontextprotocol.io) v1.22.0
+- [Model Context Protocol SDK](https://modelcontextprotocol.io) v1.29.0
+- Terminal49 TypeScript SDK v0.2.0
+- [Sentry MCP Monitoring](https://docs.sentry.io/ai/monitoring/mcp/) via `@sentry/node` v10.55.0 when `SENTRY_DSN` is configured
 - TypeScript
 - Vercel Serverless Functions
 - Terminal49 JSON:API
@@ -123,7 +125,7 @@ The MCP package consumes published `@terminal49/sdk` by default.
 ## 🔧 Development
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 24.x
 - Terminal49 API token
 
 ### Local Setup
@@ -191,6 +193,9 @@ vercel deploy --prod
 **Environment Variables:**
 - `T49_API_TOKEN` - Your Terminal49 API token (required)
 - `T49_API_BASE_URL` - Optional (defaults to https://api.terminal49.com)
+- `SENTRY_DSN` - Optional; enables Sentry MCP Monitoring
+- `SENTRY_TRACES_SAMPLE_RATE` - Optional trace sample rate (`1.0` by default)
+- `SENTRY_MCP_RECORD_INPUTS` / `SENTRY_MCP_RECORD_OUTPUTS` - Optional; disabled by default to avoid storing shipment/customer payloads in Sentry
 
 ### Claude Desktop (Local)
 

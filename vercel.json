@@ -10,11 +10,32 @@
   },
   "rewrites": [
     {
+      "source": "/mcp",
+      "destination": "/api/mcp"
+    },
+    {
       "source": "/",
       "destination": "/api/mcp"
     }
   ],
   "headers": [
+    {
+      "source": "/mcp",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, MCP-Protocol-Version, Mcp-Session-Id"
+        }
+      ]
+    },
     {
       "source": "/",
       "headers": [
@@ -28,7 +49,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
+          "value": "Content-Type, Authorization, MCP-Protocol-Version, Mcp-Session-Id"
         }
       ]
     }

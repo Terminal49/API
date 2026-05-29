@@ -96,6 +96,16 @@ The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP end
 
 ---
 
+## Monitoring
+
+Self-hosted deployments can enable [Sentry MCP Monitoring](https://docs.sentry.io/ai/monitoring/mcp/) by setting `SENTRY_DSN`. This captures MCP tool calls, resource reads, prompt usage, performance spans, and errors in Sentry.
+
+<Warning>
+Input and output recording is disabled by default. Leave `SENTRY_MCP_RECORD_INPUTS=false` and `SENTRY_MCP_RECORD_OUTPUTS=false` unless your Sentry project is approved to store shipment identifiers, references, and customer data.
+</Warning>
+
+---
+
 ## Tools reference
 
 ### `search_container`

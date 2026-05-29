@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 const mcpDir = path.resolve(__dirname, '..');
 const repoDir = path.resolve(mcpDir, '../..');
 const sdkDir = path.resolve(repoDir, 'sdks/typescript-sdk');
-const sdkSemver = '^0.1.0';
+const sdkSemver = '0.2.0';
 
 function run(command, cwd = mcpDir) {
   console.log(`$ ${command}`);

@@ -20,6 +20,7 @@ import { executeListTrackingRequests } from './tools/list-tracking-requests.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
 import { queryGuidanceResource, readQueryGuidanceResource } from './resources/query-guidance.js';
+import { captureMcpException, flushMcpEvents, instrumentMcpServer } from './sentry.js';
 
 type ToolContent = { type: 'text'; text: string };
 
@@ -155,6 +156,14 @@ const responseContractSchema = z.object({
   suggested_tools: z.array(z.string()),
   display: responseDisplaySchema.optional(),
 });
+
+const toolIntentSchema = z
+  .string()
+  .max(200)
+  .optional()
+  .describe(
+    'Brief reason the agent is calling this tool. This is MCP-only telemetry for Sentry and is not forwarded to the Terminal49 API.',
+  );
 
 function normalizeContract(contract: ResponseContract): ResponseContract {
   return {
@@ -574,7 +583,7 @@ export function buildListContract(
 function wrapToolWithContract<TArgs>(
   handler: (args: TArgs) => Promise<unknown>,
   buildContract?: (result: unknown, args: TArgs) => ResponseContract,
-): (args: TArgs) => Promise<{ content: ToolContent[]; structuredContent?: any }> {
+): (args: TArgs) => Promise<{ content: ToolContent[]; structuredContent?: any; isError?: boolean }> {
   return async (args: TArgs) => {
     try {
       const result = await handler(args);
@@ -588,8 +597,11 @@ function wrapToolWithContract<TArgs>(
       };
     } catch (error) {
       const err = error as Error;
+      captureMcpException(error);
+      await flushMcpEvents();
       return {
         content: [{ type: 'text', text: `Error: ${err.message}` }],
+        isError: true,
       };
     }
   };
@@ -598,10 +610,12 @@ function wrapToolWithContract<TArgs>(
 export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string): McpServer {
   const client = new Terminal49Client({ apiToken, apiBaseUrl, defaultFormat: "mapped" });
 
-  const server = new McpServer({
-    name: 'terminal49-mcp',
-    version: '1.0.0',
-  });
+  const server = instrumentMcpServer(
+    new McpServer({
+      name: 'terminal49-mcp',
+      version: '1.0.0',
+    }),
+  );
 
   // ==================== TOOLS ====================
 
@@ -617,6 +631,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         'Examples: CAIU2885402, MAEU123456789, or any reference number.',
       inputSchema: {
         query: z.string().min(1).describe('Search query - can be a container number, booking number, BL number, or reference number'),
+        intent: toolIntentSchema,
       },
       outputSchema: {
         containers: z.array(z.object({
@@ -663,6 +678,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         bookingNumber: z.string().optional().describe('Deprecated alias for number (booking/BL)'),
         scac: z.string().optional().describe('Optional SCAC code of the shipping line (e.g., MAEU for Maersk)'),
         refNumbers: z.array(z.string()).optional().describe('Optional reference numbers for matching'),
+        intent: toolIntentSchema,
       },
       outputSchema: {
         error: z.string().optional(),
@@ -706,6 +722,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
             '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
             '• transport_events: Full event history, rail tracking (heavy 50-100 events, use for journey/timeline questions)'
           ),
+        intent: toolIntentSchema,
       },
       outputSchema: z
         .object({
@@ -731,6 +748,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
       inputSchema: {
         id: z.string().uuid().describe('The Terminal49 shipment ID (UUID format)'),
         include_containers: z.boolean().optional().default(true).describe('Include list of containers in this shipment. Default: true'),
+        intent: toolIntentSchema,
       },
       outputSchema: z
         .object({
@@ -757,6 +775,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         'More efficient than get_container with transport_events when you only need event data.',
       inputSchema: {
         id: z.string().uuid().describe('The Terminal49 container ID (UUID format)'),
+        intent: toolIntentSchema,
       },
       outputSchema: z
         .object({
@@ -781,6 +800,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         'Use this when user asks which carriers are supported or to validate a carrier name.',
       inputSchema: {
         search: z.string().optional().describe('Optional: Filter by carrier name or SCAC code'),
+        intent: toolIntentSchema,
       },
       outputSchema: {
         total_lines: z.number(),
@@ -819,6 +839,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
         'Use for questions about routing, transshipments, or detailed vessel itinerary.',
       inputSchema: {
         id: z.string().uuid().describe('The Terminal49 container ID (UUID format)'),
+        intent: toolIntentSchema,
       },
       // Keep a single permissive schema because this tool can return either
       // route fields or feature-gating fields depending on account capability.
@@ -903,6 +924,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
           .describe('Include containers relationship in response. Default: true.'),
         page: z.number().int().positive().optional().describe('Page number (1-based)'),
         page_size: z.number().int().positive().optional().describe('Page size'),
+        intent: toolIntentSchema,
       },
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
@@ -936,6 +958,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
           .describe('Comma-separated include list (e.g., shipment,pod_terminal)'),
         page: z.number().int().positive().optional().describe('Page number (1-based)'),
         page_size: z.number().int().positive().optional().describe('Page size'),
+        intent: toolIntentSchema,
       },
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
@@ -969,6 +992,7 @@ export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string)
           .describe('Filter by request type (mapped to filter[request_type])'),
         page: z.number().int().positive().optional().describe('Page number (1-based)'),
         page_size: z.number().int().positive().optional().describe('Page size'),
+        intent: toolIntentSchema,
       },
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),

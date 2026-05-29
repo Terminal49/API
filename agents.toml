@@ -1,0 +1,14 @@
+version = 1
+agents = ["claude", "codex", "cursor"]
+
+[trust]
+github_orgs = ["getsentry", "greptileai"]
+
+
+[[skills]]
+name = "dotagents"
+source = "getsentry/dotagents"
+
+[[skills]]
+name = "*"
+source = "greptileai/skills"
