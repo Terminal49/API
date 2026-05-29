@@ -8,10 +8,10 @@ on:
 
 jobs:
   deploy-postman-collection:
-    runs-on: ubuntu-latest
+    runs-on: ${{ (startsWith(vars.CI_RUNNER_SMALL, 'blacksmith-') && vars.CI_RUNNER_SMALL) || 'blacksmith-2vcpu-ubuntu-2404' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: useblacksmith/checkout@v1
 
       - name: Install jq (for Postman API call)
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -52,4 +52,4 @@ jobs:
           else
             echo "❌ Error: Failed to update Postman collection via API."
             exit 1
-          fi 
+          fi

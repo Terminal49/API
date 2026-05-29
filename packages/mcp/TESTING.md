@@ -303,10 +303,10 @@ on: [push, pull_request]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: useblacksmith/checkout@v1
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
 

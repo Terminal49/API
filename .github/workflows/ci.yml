@@ -8,7 +8,7 @@ on:
 
 jobs:
   sdk:
-    runs-on: ubuntu-latest
+    runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
     strategy:
       fail-fast: false
       matrix:
@@ -17,7 +17,7 @@ jobs:
       run:
         working-directory: sdks/typescript-sdk
     steps:
-      - uses: actions/checkout@v4
+      - uses: useblacksmith/checkout@v1
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -42,9 +42,9 @@ jobs:
         run: npm run lint
 
   mcp:
-    runs-on: ubuntu-latest
+    runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: useblacksmith/checkout@v1
       - uses: actions/setup-node@v4
         with:
           node-version: 24
