@@ -1,0 +1,186 @@
+{
+  "client/classes/AuthenticationError.mdx": {
+    "title": "AuthenticationError class reference",
+    "description": "Reference for AuthenticationError, thrown by the Terminal49 SDK when the API token is missing or invalid and the request returns HTTP 401."
+  },
+  "client/classes/AuthorizationError.mdx": {
+    "title": "AuthorizationError class reference",
+    "description": "Reference for AuthorizationError, thrown by the Terminal49 SDK when the API token lacks permission for a request and the response is HTTP 403."
+  },
+  "client/classes/FeatureNotEnabledError.mdx": {
+    "title": "FeatureNotEnabledError class reference",
+    "description": "Reference for FeatureNotEnabledError, thrown by the Terminal49 SDK when the requested feature requires a plan upgrade and returns HTTP 403."
+  },
+  "client/classes/NotFoundError.mdx": {
+    "title": "NotFoundError class reference",
+    "description": "Reference for NotFoundError, thrown by the Terminal49 SDK when the requested resource does not exist and the API response is HTTP 404."
+  },
+  "client/classes/RateLimitError.mdx": {
+    "title": "RateLimitError class reference",
+    "description": "Reference for RateLimitError, thrown by the Terminal49 SDK after exhausting automatic retries when the API rate limit returns HTTP 429."
+  },
+  "client/classes/Terminal49Client.mdx": {
+    "title": "Terminal49Client class reference",
+    "description": "API reference for Terminal49Client, the main entry point for the Node.js SDK to create tracking requests and fetch shipments and containers."
+  },
+  "client/classes/Terminal49Error.mdx": {
+    "title": "Terminal49Error base class reference",
+    "description": "Reference for Terminal49Error, the base class extended by every typed error the Terminal49 TypeScript SDK throws for API failures."
+  },
+  "client/classes/UpstreamError.mdx": {
+    "title": "UpstreamError class reference",
+    "description": "Reference for UpstreamError, thrown by the Terminal49 SDK when a carrier or terminal upstream API is unavailable and returns an HTTP 5xx status."
+  },
+  "client/classes/ValidationError.mdx": {
+    "title": "ValidationError class reference",
+    "description": "Reference for ValidationError, thrown by the Terminal49 SDK when the request payload fails server-side validation with HTTP 400 or 422."
+  },
+  "client/index.mdx": {
+    "title": "Client module reference",
+    "description": "API reference for the Terminal49 SDK client module: Terminal49Client, configuration interface, and the typed error classes thrown by the SDK."
+  },
+  "client/interceptors/classes/AuthInterceptor.mdx": {
+    "title": "AuthInterceptor class reference",
+    "description": "Reference for AuthInterceptor, the SDK request interceptor that attaches the bearer token authorization header to every outbound API request."
+  },
+  "client/interceptors/classes/ErrorMappingInterceptor.mdx": {
+    "title": "ErrorMappingInterceptor class reference",
+    "description": "Reference for ErrorMappingInterceptor, the SDK interceptor that converts API error responses into typed Terminal49Error subclasses on rejection."
+  },
+  "client/interceptors/classes/RetryInterceptor.mdx": {
+    "title": "RetryInterceptor class reference",
+    "description": "Reference for RetryInterceptor, the SDK interceptor that retries failed requests with exponential backoff on rate limit and transient errors."
+  },
+  "client/interceptors/index.mdx": {
+    "title": "Client interceptors reference",
+    "description": "Reference for SDK interceptors that wrap HTTP requests: authentication header injection, automatic retries, and error response mapping."
+  },
+  "client/interceptors/type-aliases/Interceptor.mdx": {
+    "title": "Interceptor type alias reference",
+    "description": "Reference for the Interceptor type alias used by the Terminal49 SDK to compose request and response middleware around HTTP transport calls."
+  },
+  "client/interfaces/Terminal49ClientConfig.mdx": {
+    "title": "Terminal49ClientConfig interface reference",
+    "description": "Reference for Terminal49ClientConfig, the configuration object accepted by Terminal49Client, including API token, base URL, and retry settings."
+  },
+  "client/managers/classes/BaseManager.mdx": {
+    "title": "BaseManager class reference",
+    "description": "Reference for BaseManager, the shared parent class for SDK resource managers that handles transport, response mapping, and default options."
+  },
+  "client/managers/classes/ContainerManager.mdx": {
+    "title": "ContainerManager class reference",
+    "description": "Reference for ContainerManager, the SDK resource manager used to fetch, list, and refresh containers and their transport events from the API."
+  },
+  "client/managers/classes/ShipmentManager.mdx": {
+    "title": "ShipmentManager class reference",
+    "description": "Reference for ShipmentManager, the SDK resource manager used to list, fetch, and update shipments returned by the Terminal49 tracking API."
+  },
+  "client/managers/classes/ShippingLineManager.mdx": {
+    "title": "ShippingLineManager class reference",
+    "description": "Reference for ShippingLineManager, the SDK resource manager used to list and fetch supported ocean carriers and their SCAC codes from the API."
+  },
+  "client/managers/classes/TrackingRequestManager.mdx": {
+    "title": "TrackingRequestManager class reference",
+    "description": "Reference for TrackingRequestManager, the SDK manager used to create, list, and inspect tracking requests for bills of lading and containers."
+  },
+  "client/managers/index.mdx": {
+    "title": "Client managers reference",
+    "description": "Reference for SDK resource managers that group methods for shipments, containers, tracking requests, shipping lines, and shared base behavior."
+  },
+  "client/managers/interfaces/CreateTrackingRequestFromInferOptions.mdx": {
+    "title": "CreateTrackingRequestFromInferOptions reference",
+    "description": "Reference for the options interface used to create a tracking request with auto-detected carrier inference from a bill of lading or booking number."
+  },
+  "client/managers/interfaces/TrackingRequestListFilters.mdx": {
+    "title": "TrackingRequestListFilters interface reference",
+    "description": "Reference for TrackingRequestListFilters, the options used to filter tracking request list results by status, carrier SCAC, request number, and more."
+  },
+  "client/managers/type-aliases/TrackingRequestType.mdx": {
+    "title": "TrackingRequestType type alias reference",
+    "description": "Reference for TrackingRequestType, the literal union identifying tracking request types such as bill of lading, booking number, and container number."
+  },
+  "client/transport/classes/Transport.mdx": {
+    "title": "Transport class reference",
+    "description": "Reference for the Transport class, the low-level HTTP layer used by the Terminal49 SDK to dispatch requests through interceptors and the API client."
+  },
+  "client/transport/index.mdx": {
+    "title": "Client transport layer reference",
+    "description": "Reference for the SDK transport layer: the Transport class, ApiClient type alias, and TransportConfig used for low-level HTTP requests."
+  },
+  "client/transport/interfaces/TransportConfig.mdx": {
+    "title": "TransportConfig interface reference",
+    "description": "Reference for TransportConfig, the configuration interface for the SDK transport layer, including base URL, default timeout, and interceptors."
+  },
+  "client/transport/type-aliases/ApiClient.mdx": {
+    "title": "ApiClient type alias reference",
+    "description": "Reference for the ApiClient type alias, the minimal HTTP client contract the SDK transport accepts so you can plug in axios, fetch, or a custom client."
+  },
+  "index.mdx": {
+    "title": "TypeScript SDK API reference",
+    "description": "Complete API reference for the Terminal49 TypeScript SDK, covering the client, managers, interceptors, transport layer, and type definitions."
+  },
+  "types/models/index.mdx": {
+    "title": "SDK model types reference",
+    "description": "Reference for simplified SDK model interfaces: Container, Shipment, Route, ShippingLine, TrackingRequest, PaginatedResult, and PaginationLinks."
+  },
+  "types/models/interfaces/Container.mdx": {
+    "title": "Container model interface reference",
+    "description": "Reference for the Container interface, the simplified container model returned by mapped SDK responses, including demurrage, equipment, and location."
+  },
+  "types/models/interfaces/PaginatedResult.mdx": {
+    "title": "PaginatedResult generic interface reference",
+    "description": "Reference for the PaginatedResult generic interface returned by SDK list methods, wrapping records together with pagination links and metadata."
+  },
+  "types/models/interfaces/PaginationLinks.mdx": {
+    "title": "PaginationLinks interface reference",
+    "description": "Reference for the PaginationLinks interface returned alongside SDK list responses, containing next, previous, first, and last page navigation URLs."
+  },
+  "types/models/interfaces/Route.mdx": {
+    "title": "Route model interface reference",
+    "description": "Reference for the Route interface, the simplified container route model returned by mapped SDK responses with origin, destination, and milestones."
+  },
+  "types/models/interfaces/Shipment.mdx": {
+    "title": "Shipment model interface reference",
+    "description": "Reference for the Shipment interface, the simplified shipment model returned by mapped SDK responses for bill of lading and booking-level tracking."
+  },
+  "types/models/interfaces/ShippingLine.mdx": {
+    "title": "ShippingLine model interface reference",
+    "description": "Reference for the ShippingLine interface, the simplified ocean carrier model returned by the SDK that includes name, SCAC code, and supported features."
+  },
+  "types/models/interfaces/TrackingRequest.mdx": {
+    "title": "TrackingRequest model interface reference",
+    "description": "Reference for the TrackingRequest interface returned by the SDK, including request type, identifier, status, failure reason, and related shipment links."
+  },
+  "types/options/index.mdx": {
+    "title": "SDK call and list options reference",
+    "description": "Reference for SDK request option types: CallOptions, ListOptions, include parameter aliases, and response format selection for typed responses."
+  },
+  "types/options/interfaces/CallOptions.mdx": {
+    "title": "CallOptions interface reference",
+    "description": "Reference for CallOptions, the per-call options accepted by single-resource SDK methods such as get and refresh, including includes and response format."
+  },
+  "types/options/interfaces/ListOptions.mdx": {
+    "title": "ListOptions interface reference",
+    "description": "Reference for ListOptions, the per-call options accepted by SDK list methods, including pagination cursors, filters, includes, and response format."
+  },
+  "types/options/type-aliases/ContainerInclude.mdx": {
+    "title": "ContainerInclude type alias reference",
+    "description": "Reference for ContainerInclude, the union of related resource names that can be requested via the include parameter on container SDK methods."
+  },
+  "types/options/type-aliases/IncludeParam.mdx": {
+    "title": "IncludeParam generic type alias reference",
+    "description": "Reference for IncludeParam, the generic type alias that lets SDK methods accept either an array of include names or a comma-separated include string."
+  },
+  "types/options/type-aliases/ResponseFormat.mdx": {
+    "title": "ResponseFormat type alias reference",
+    "description": "Reference for ResponseFormat, the literal union that selects between raw JSON:API and mapped simplified response shapes for Terminal49 SDK methods."
+  },
+  "types/options/type-aliases/ShipmentInclude.mdx": {
+    "title": "ShipmentInclude type alias reference",
+    "description": "Reference for ShipmentInclude, the union of related resource names that can be requested via the include parameter on shipment SDK methods."
+  },
+  "types/options/type-aliases/TrackingRequestInclude.mdx": {
+    "title": "TrackingRequestInclude type alias reference",
+    "description": "Reference for TrackingRequestInclude, the union of related resources you can request via the include parameter on tracking request SDK methods."
+  }
+}

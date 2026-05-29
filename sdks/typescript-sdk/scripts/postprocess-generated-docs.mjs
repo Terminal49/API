@@ -5,6 +5,9 @@
  *  1. Rewrites relative `.mdx` links to absolute Mintlify routes.
  *  2. Prepends YAML frontmatter with a `title` (required by docs/AGENTS.md).
  *  3. Cleans up module page titles (e.g. "client" → "Client Module").
+ *  4. Applies hand-authored SEO title/description overrides from
+ *     `seo-overrides.json` so regeneration stays reproducible (CI enforces
+ *     `git diff --exit-code` on the generated output).
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -14,6 +17,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const outputDir = path.resolve(__dirname, '../../../docs/sdk/reference');
 const routePrefix = '/sdk/reference';
+
+/**
+ * SEO frontmatter overrides keyed by route-relative `.mdx` path.
+ * TypeDoc cannot emit these, so they live in a sidecar file that ships with
+ * the generator; edit `seo-overrides.json` rather than the generated MDX.
+ */
+const seoOverridesPath = path.resolve(__dirname, '../seo-overrides.json');
+const SEO_OVERRIDES = fs.existsSync(seoOverridesPath)
+  ? JSON.parse(fs.readFileSync(seoOverridesPath, 'utf8'))
+  : {};
 
 /** Human-readable overrides for module index page titles. */
 const MODULE_TITLE_OVERRIDES = {
@@ -66,8 +79,12 @@ function rewriteMdxLinks(content, filePath) {
 
 function ensureFrontmatter(content, filePath) {
   if (content.startsWith('---\n')) return content;
-  const title = frontmatterTitle(content, filePath);
-  return `---\ntitle: ${JSON.stringify(title)}\n---\n\n${content}`;
+  const relKey = path.relative(outputDir, filePath).split(path.sep).join(path.posix.sep);
+  const override = SEO_OVERRIDES[relKey];
+  const title = override?.title ?? frontmatterTitle(content, filePath);
+  const lines = [`title: ${JSON.stringify(title)}`];
+  if (override?.description) lines.push(`description: ${JSON.stringify(override.description)}`);
+  return `---\n${lines.join('\n')}\n---\n\n${content}`;
 }
 
 for (const filePath of listMdxFiles(outputDir)) {
