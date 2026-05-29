@@ -10,6 +10,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import * as Sentry from '@sentry/node';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
 import { captureMcpException } from '../packages/mcp/src/sentry.js';
 
@@ -31,7 +32,10 @@ type ResponseLike = {
 function setCorsHeaders(res: ResponseLike): void {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, MCP-Protocol-Version, Mcp-Session-Id',
+  );
 }
 
 function getHeaderValue(value: string | string[] | undefined): string | undefined {
@@ -212,6 +216,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
   let server: McpServer | undefined;
   let transport: StreamableHTTPServerTransport | undefined;
   let cleanupPromise: Promise<void> | null = null;
+  let shouldFlushSentry = false;
 
   const runCleanup = (reason: string): Promise<void> => {
     if (cleanupPromise) {
@@ -331,6 +336,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
   } catch (error) {
     const err = error as Error;
     captureMcpException(error);
+    shouldFlushSentry = true;
     logLifecycle('mcp.request.error', requestId, {
       error: err.name,
       message: err.message,
@@ -349,5 +355,8 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
     }
   } finally {
     await runCleanup('finally');
+    if (shouldFlushSentry) {
+      await Sentry.flush(2000).catch(() => undefined);
+    }
   }
 }
