@@ -294,6 +294,7 @@ npm run lint
 | `NODE_ENV` | No | `development` | Environment |
 | `LOG_LEVEL` | No | `info` | Logging level |
 | `REDACT_LOGS` | No | `true` | Redact tokens in logs |
+| `SENTRY_ENABLED` | No | `true` | Enables or disables Sentry when a DSN is configured |
 | `SENTRY_DSN` | No | - | Enables Sentry MCP Monitoring when set |
 | `SENTRY_ENVIRONMENT` | No | `NODE_ENV` | Sentry environment name |
 | `SENTRY_RELEASE` | No | `VERCEL_GIT_COMMIT_SHA` | Sentry release identifier |
