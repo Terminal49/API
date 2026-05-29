@@ -355,7 +355,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
     }
   } finally {
     await runCleanup('finally');
-    if (shouldFlushSentry) {
+    if (shouldFlushSentry || Sentry.isInitialized()) {
       await Sentry.flush(2000).catch(() => undefined);
     }
   }

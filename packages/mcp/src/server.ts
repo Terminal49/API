@@ -20,7 +20,7 @@ import { executeListTrackingRequests } from './tools/list-tracking-requests.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
 import { queryGuidanceResource, readQueryGuidanceResource } from './resources/query-guidance.js';
-import { instrumentMcpServer } from './sentry.js';
+import { captureMcpException, flushMcpEvents, instrumentMcpServer } from './sentry.js';
 
 type ToolContent = { type: 'text'; text: string };
 
@@ -597,6 +597,8 @@ function wrapToolWithContract<TArgs>(
       };
     } catch (error) {
       const err = error as Error;
+      captureMcpException(error);
+      await flushMcpEvents();
       return {
         content: [{ type: 'text', text: `Error: ${err.message}` }],
         isError: true,

@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { buildListContract, createTerminal49McpServer } from './server.js';
 
+vi.mock('@sentry/node', () => ({
+  captureException: vi.fn(),
+  flush: vi.fn().mockResolvedValue(true),
+  isInitialized: vi.fn(() => false),
+  wrapMcpServerWithSentry: vi.fn((server) => server),
+}));
+
 function _hasResponseContract(schema: unknown): boolean {
   const typedSchema = schema as {
     _def?: {
@@ -368,5 +375,19 @@ describe('MCP server wiring', () => {
     expect(result.content[0].text).toContain('Error: Search query is required');
     expect(result.isError).toBe(true);
     expect(Object.hasOwn(result, 'structuredContent')).toBe(false);
+  });
+
+  it('captures handled tool errors when Sentry is initialized', async () => {
+    const Sentry = await import('@sentry/node');
+    vi.mocked(Sentry.isInitialized).mockReturnValue(true);
+
+    const server = createTerminal49McpServer('token');
+    const searchTool = (server as any)._registeredTools.search_container;
+
+    const result = await searchTool.handler({ query: '   ' });
+
+    expect(result.isError).toBe(true);
+    expect(Sentry.captureException).toHaveBeenCalledWith(expect.any(Error));
+    expect(Sentry.flush).toHaveBeenCalledWith(2000);
   });
 });

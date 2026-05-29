@@ -86,3 +86,11 @@ export function captureMcpException(error: unknown): void {
     Sentry.captureException(error);
   }
 }
+
+export async function flushMcpEvents(timeoutMs = 2000): Promise<void> {
+  if (!Sentry.isInitialized()) {
+    return;
+  }
+
+  await Sentry.flush(timeoutMs).catch(() => undefined);
+}
