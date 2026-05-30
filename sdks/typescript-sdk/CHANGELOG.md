@@ -5,6 +5,13 @@ All notable changes to `@terminal49/sdk` are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0](https://github.com/Terminal49/API/compare/sdk-v-v0.2.0...sdk-v-v0.3.0) (2026-05-29)
+
+
+### Features
+
+* update MCP SDK and monitoring ([#227](https://github.com/Terminal49/API/issues/227)) ([4be5b33](https://github.com/Terminal49/API/commit/4be5b335c8f86cd955ea1f9a384d68d9826d6294))
+
 ## [0.2.0](https://github.com/Terminal49/API/compare/sdk-v-v0.1.0...sdk-v-v0.2.0) (2026-05-07)
 
 

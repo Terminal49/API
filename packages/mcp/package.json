@@ -23,7 +23,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@sentry/node": "^10.55.0",
-    "@terminal49/sdk": "0.2.0",
+    "@terminal49/sdk": "0.3.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
