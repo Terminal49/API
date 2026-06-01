@@ -18,13 +18,13 @@ Terminal49 posts status updates to a webhook that you register.
 
 A webhook is a callback URL that receives HTTP POST requests from the Terminal49 API whenever tracking data changes.
 
-The HTTP Post request from Terminal49 has a JSON payload which you can parse to extract the relevant information.
+The HTTP POST request from Terminal49 has a JSON payload which you can parse to extract the relevant information.
 
 ## How do I use a webhook with Terminal49?
 
-First, you need to register a webhook. You can register as many webhooks as you like. Webhooks are associated with your account. All updates relating to that account are sent to the Webhook associated with it.
+First, you need to register a webhook. You can register as many webhooks as you like. Webhooks are associated with your account. All updates relating to that account are sent to the webhook associated with it.
 
-You can setup a new webhook by visiting https://app.terminal49.com/developers/webhooks and clicking the 'Create Webhook Endpoint' button.
+You can set up a new webhook by visiting https://app.terminal49.com/developers/webhooks and clicking the 'Create Webhook Endpoint' button.
 
 ![Webhook Editing Screen](https://raw.githubusercontent.com/Terminal49/t49-api-documentation/master/assets/images/new_webhook.png  "Webhook Editing Screen")
 
@@ -33,15 +33,15 @@ You can setup a new webhook by visiting https://app.terminal49.com/developers/we
 
 The API uses HTTP Bearer Token authentication.
 
-This means you send your API Key as your token in every request.
+This means you send your API key as your token in every request.
 
 Webhooks are associated with API tokens, which is how Terminal49 identifies which account to send shipment updates to.
 
 ## Anatomy of a webhook notification
 
-Here's what you'll see in a Webhook Notification, which arrives as a POST request to your designated URL.
+Here's what you'll see in a webhook notification, which arrives as a POST request to your designated URL.
 
-For more information, refer to the Webhook In Depth guide.
+For more information, refer to the webhook in-depth guide.
 
 For clarity, some fields have been replaced with ellipses (...) and key areas are bolded.
 
@@ -140,7 +140,7 @@ This is the first question you need to answer so your code can handle the webhoo
 
 The type of update can be found in ["data"]["attributes"].
 
-The most common Webhook notifications are status updates on tracking requests, like **tracking_request.succeeded** and updates on ETAs, shipment milestone, and  terminal availability.
+The most common webhook notifications are status updates on tracking requests, like **tracking_request.succeeded** and updates on ETAs, shipment milestones, and terminal availability.
 
 You can find what type of event you have received by looking at the "attributes", "event".
 
@@ -309,7 +309,7 @@ function isTrackingRequest(item){
 
 ## Try it out and see more sample code
 
-Update your API key below, and register a simple Webhook.
+Update your API key below, and register a simple webhook.
 
 View the "Code Generation" button to see sample code.
 
