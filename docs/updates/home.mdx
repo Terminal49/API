@@ -17,6 +17,67 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="June 1, 2026" description="Global vessel map general availability, Wayfair document extraction, contract product additions, and a wave of carrier and dashboard bug fixes" tags={['API', 'Dashboard']}
+  rss="June 1, 2026: Global vessel map generally available, new Wayfair arrival notice and delivery order extraction, Lite and integration service fee contract products, BL submissions without containers, HDMU mobile LFD location inference, pending tracking request slot counting, and bug fixes for ZIM ETA promotion, SSL overview overwrites, transport event locations, document linking bridges, and dashboard filter search."
+>
+  ### Global vessel map is now generally available
+
+The **global vessel map** is now enabled for all accounts in the Terminal49 dashboard. Live vessel positions, voyage details, and the shipments on board are available without a feature flag, with realtime updates and analytics tracking built in.
+
+---
+
+  ### Wayfair document extraction improvements
+
+Released new versioned extraction schemas for three Wayfair document types — **arrival notice**, **carrier delivery order**, and **cargo control document**. Highlights:
+
+- Arrival notice now captures **place of delivery** (name, address, phone, available date, last free day, FIRMS code, and sublocation)
+- FIRMS code routing distinguishes rail-ramp destinations from the port of discharge, with both fields populated when both codes appear
+- **Hapag-Lloyd Canada** "Advice Note / Avis d'Expédition" documents are now correctly classified as arrival notices (previously misclassified as sea waybills)
+- Tighter `I` vs `1` disambiguation across carriers
+
+<Card title="Document processing guide" icon="file" href="/api-docs/in-depth-guides/document-processing-workflows">
+  How document linking works
+</Card>
+
+---
+
+  ### BL submissions without containers
+
+You can now submit **bill of lading shipments before container numbers are known**. Tracking requests for BL submissions accept shipments with no containers, so you can initiate tracking earlier in your workflow and have containers attach as they're released by the carrier.
+
+---
+
+  ### New contract products
+
+Added two new contract products available through your account team:
+
+- **Lite** — a lower-tier subscription for smaller-volume customers
+- **Integration service fee** — a separate line item for one-time integration work
+
+Contact your account team for pricing and availability.
+
+---
+
+  ### Updates
+
+- **Pending tracking requests count as one slot** — Pending tracking requests are now counted against a single tracking slot rather than per-container, giving free and metered plans more headroom while requests are awaiting manifest
+- **HDMU mobile LFD locations** — Last Free Day events from the HDMU mobile tracker now infer the correct terminal location, fixing missing per-terminal LFD displays for Hyundai (HDMU) containers
+- **SSL overview no longer overwrites terminal data** — Shipping line overview responses no longer overwrite terminal-sourced fields on containers, so terminal availability, holds, and fees stay authoritative when both sources are present
+- **Empty-In can override terminal status** — A reported empty-in event now correctly overrides a stale terminal status, so containers returned empty are reflected promptly in the dashboard and API
+- **Transport event location fallbacks removed** — Removed legacy fallbacks that could fill in incorrect locations on transport events. Event locations now reflect the source data directly, with no implicit substitutions
+
+---
+
+  ### Bug fixes
+
+- **ZIM destination ETA no longer auto-promotes to ATA** — Fixed an issue where ZIM destination ETAs could be promoted to an actual arrival time prematurely, causing inland arrival dates to flip without a real event
+- **Document linking via bridge shipments** — Documents no longer create an intermediate link when more than one shipment is involved in a reference bridge, reducing incorrect cross-shipment links
+- **Dashboard custom field date filters** — Fixed an error where the *not present* operator failed on date and datetime custom field filters, and resolved a related stale sort issue
+- **Harbor filter search** — Restored search inside the dashboard's chip-style filter dropdowns after the underlying picker upgrade
+- **Trawler `no_event_history` with containers** — Allowed the `no_event_history` tracker state to coexist with container records, preventing dropped updates for shipments whose carriers temporarily return no event history
+
+</Update>
+
 <Update label="May 25, 2026" description="Tracking request custom fields API, KMTC and Termont integrations, container status in CSV export, free plan slot limits, and bug fixes" tags={['API', 'Dashboard']}
   rss="May 25, 2026: Tracking request custom fields API, KMTC steamship tracker, Termont terminal scraper, alternative APM scraper integrations, container status in dashboard CSV export, Report Issue from container side panel, free plan tracking slot improvements, multi-period tariff history, and a wave of carrier, document linking, and dashboard bug fixes."
 >
