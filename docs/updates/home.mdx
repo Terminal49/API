@@ -17,6 +17,61 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="June 8, 2026" description="Pickup & Delivery dashboard, bulk party assignment, event-driven calculated LFD, refreshed ONE/CMA CGM/Evergreen tariffs, and a wave of carrier and dashboard bug fixes" tags={['API', 'Dashboard']}
+  rss="June 8, 2026: New Pickup & Delivery dashboard, bulk party (role) assignment via CSV, event-driven calculated demurrage LFD, refreshed ONE/CMA CGM/Evergreen tariff rules, updated Wayfair arrival notice extraction, event-sourced manual milestone edits, shipment number and delivery appointment sorting, and bug fixes for CMDU port events, YMLU POD selection, NSRR ETAs, WMC unavailable status, and tracking slot limits."
+>
+  ### Pickup & Delivery Dashboard
+
+A new **Pickup & Delivery** workspace is available in the Terminal49 dashboard, organizing containers by their pickup-and-delivery phase. View phase-grouped tables, edit pickup and delivery event datetimes inline, and sort by delivery appointment to focus on what needs to move next.
+
+---
+
+  ### Bulk party (role) assignment
+
+Shipment and container party roles can now be assigned and updated **in bulk** from the dashboard, including via CSV upload alongside other shipment and container fields. Bulk-assign consignee, shipper, notify party, and other roles across many records in a single import.
+
+---
+
+  ### Event-driven calculated demurrage LFD
+
+The Smart LFD calculation engine now runs **event-by-event** rather than on a periodic backfill. When a tariff input changes — a new arrival event, a hold release, or a tariff update — the calculated Last Free Day refreshes immediately and emits a transport event with `t49_calculation` as its source.
+
+<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+  View the container resource
+</Card>
+
+---
+
+  ### Refreshed ONE, CMA CGM, and Evergreen tariffs
+
+Re-synthesized the demurrage tariff rule datasets for **ONE (ONEY)**, **CMA CGM (CMDU)**, and **Evergreen (EGLV)** with new effective-date periods and pipeline improvements. Calculated LFD values for these carriers now reflect their latest published tariffs.
+
+---
+
+  ### Updates
+
+- **`t49_calculation` source on the shipment timeline** — events created by the Smart LFD calculation engine now surface a `t49_calculation` source tag in the dashboard event timeline, so you can tell at a glance which LFD updates came from a tariff calculation
+- **Manual milestone edits flow through the event pipeline** — user-submitted empty-in, full-out, and delivery-appointment events are now created as proper transport events. They update container attributes, fire `container.transport_event` webhooks, and appear consistently in the timeline like carrier-sourced events
+- **Updated Wayfair arrival notice extraction** — published a new versioned extraction schema for Wayfair arrival notices with refreshed gold datasets and classifier prompts, improving field-level accuracy on Wayfair documents
+- **Sort container dashboard by shipment number** — added Shipment Number as a sortable column on the container dashboard
+- **Sort container dashboard by delivery appointment** — added delivery appointment as a sortable field on the containers API and dashboard
+- **PAYG billing clarification** — the billing settings page now clearly explains how active free containers are counted on Pay-As-You-Go plans
+- **Bookings removed from the left nav** — the Bookings preview entry has been removed from the dashboard navigation while the workspace continues to evolve
+
+---
+
+  ### Bug fixes
+
+- **Tracking slot limit no longer blocks paying customers** — Fixed an issue where the active tracking slot limit could incorrectly block paying accounts from creating additional tracking requests. The limit and its warning now apply only to free plans
+- **CMDU ambiguous port events** — Rejected ambiguous CMDU port events that could otherwise be attributed to the wrong leg, and excluded pre-POD events from the destination-port heuristic so inland destinations are inferred more accurately
+- **YMLU POD selection** — Fixed port-of-discharge selection for YMLU shipments where only container-level data was available, so the correct POD is chosen
+- **NSRR top-level ETA** — Fixed parsing of Norfolk Southern's top-level ETA so rail ETAs populate when the carrier returns them at the response root
+- **WMC unavailable terminal status** — Where's My Container responses that report a container as unavailable are now handled cleanly instead of failing the terminal scrape
+- **Removed sort custom field columns are forgotten** — Deleting a custom field used as the active sort no longer leaves the dashboard stuck on an unknown sort column
+- **Map route Pylon widget** — Fixed the Pylon help bubble showing on the global vessel map; it now hides and re-shows correctly when navigating in and out of the map
+
+</Update>
+
 <Update label="June 1, 2026" description="Global vessel map general availability, Wayfair document extraction, contract product additions, and a wave of carrier and dashboard bug fixes" tags={['API', 'Dashboard']}
   rss="June 1, 2026: Global vessel map generally available, new Wayfair arrival notice and delivery order extraction, Lite and integration service fee contract products, BL submissions without containers, HDMU mobile LFD location inference, pending tracking request slot counting, and bug fixes for ZIM ETA promotion, SSL overview overwrites, transport event locations, document linking bridges, and dashboard filter search."
 >
