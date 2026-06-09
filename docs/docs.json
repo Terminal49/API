@@ -526,8 +526,9 @@
   },
   "integrations": {
     "posthog": {
-      "apiKey": "phc_l2adbBndDdciWoPv3AkNV2UtUUxeo6iotxQfX6EQ2fL",
-      "apiHost": "https://api-posthog-worker.t49.workers.dev"
+      "apiKey": "phc_rBNVF6dUk5HU5m3pX9yZZWoehXoqZTCeKXFXCEoJzEyq",
+      "apiHost": "https://f.terminal49.com",
+      "sessionRecording": false
     }
   }
 }
