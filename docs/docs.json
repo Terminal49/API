@@ -529,6 +529,9 @@
       "apiKey": "phc_rBNVF6dUk5HU5m3pX9yZZWoehXoqZTCeKXFXCEoJzEyq",
       "apiHost": "https://f.terminal49.com",
       "sessionRecording": false
+    },
+    "gtm": {
+      "tagId": "GTM-K8CDPJJG"
     }
   }
 }
