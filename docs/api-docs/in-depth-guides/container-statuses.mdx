@@ -1,6 +1,6 @@
 ---
 title: "Terminal49 Container Statuses"
-description: "Understand every Terminal49 container status value, from empty-out to empty-return, so your integration can interpret each shipment lifecycle stage."
+description: "Understand every Terminal49 container status value, from on-ship to empty-returned, so your integration can interpret each shipment lifecycle stage."
 keywords:
   - "Terminal49 API"
   - "container tracking API"
@@ -13,84 +13,114 @@ keywords:
 ---
 The `current_status` attribute on container objects provides a high-level view of where a container is in its journey. This guide explains the different status values and their meanings.
 
-## Available status values
+The API returns the raw backend value (for example `grounded`). The Terminal49 dashboard often displays a friendlier label for the same value (for example **At Terminal**), so each status below lists both. Integrations should always key off the backend `current_status` value, not the dashboard label.
 
-The `current_status` field can have one of the following values:
+## Quick reference
+
+| `current_status` (API) | Dashboard label | Meaning |
+| --- | --- | --- |
+| `new` | No Status | Tracking started, no status milestone yet |
+| `on_ship` | On Ship | On the vessel |
+| `grounded` | At Terminal | Discharged at the terminal |
+| `available` | Available | Available for pickup |
+| `not_available` | Not available | At the terminal but held / not released |
+| `awaiting_inland_transfer` | Awaiting Inland Transfer | Discharged at POD, awaiting the inland rail leg |
+| `on_rail` | On Rail | On a rail car to the inland destination |
+| `off_dock` | Available at Shippers | Moved to an off-dock / shipper's-own yard |
+| `picked_up` | Picked up | Picked up by a trucker |
+| `delivered` | Delivered | Delivered (manually marked) |
+| `empty_returned` | Empty Returned | Returned empty; tracking ends |
+
+## Status values
 
 ### new
-**Default state** - The container is tracked but Terminal49 doesn't yet have enough information to determine its actual status. This is the initial state when tracking begins.
+**Dashboard label: "No Status"**
+
+**Default state** — The container is being tracked but no status milestone has been received yet. This is the initial state when tracking begins, typically before the container has been loaded onto a vessel at the port of lading.
 
 ### on_ship
-**In transit by vessel** - The container is on a ship at any point prior to arrival at the Port of Discharge (POD). This status can apply at multiple stages:
-- During the ocean voyage from origin to destination
-- Before vessel departure from the Port of Lading
-- Any time the container is loaded on a vessel
+**Dashboard label: "On Ship"**
+
+**In transit by vessel** — The container is on a vessel. In the lifecycle this status first appears when the container is loaded or the vessel departs the port of lading, and it persists through the ocean voyage until the container is discharged at the Port of Discharge (POD).
+
+Triggered by the *vessel loaded* or *vessel departed* milestone (and kept by subsequent on-vessel milestones such as *vessel arrived*, *vessel berthed*, and transshipment events).
+
+### grounded
+**Dashboard label: "At Terminal"**
+
+**At the terminal** — The container has been discharged and is physically at the terminal, but its availability for pickup has not yet been confirmed (the terminal isn't yet providing availability data).
+
+- For containers **without** an inland destination: discharged at the POD terminal. Triggered by the *vessel discharged* milestone.
+- For containers **with** an inland destination: unloaded from the rail car at the inland terminal. Triggered by the *rail unloaded* milestone.
 
 ### available
-**Ready for pickup** - The container has arrived at the POD or inland destination and is confirmed available for pickup. You can proceed with arranging pickup when you see this status. For a definitive readiness check that combines `available_for_pickup` with hold data, see [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
+**Dashboard label: "Available"**
+
+**Ready for pickup** — The container has arrived at the POD or inland destination and is confirmed available for pickup, with no clearance issues preventing it from leaving the facility. Triggered by the *available* milestone (or terminal availability data). For a definitive readiness check that combines `available_for_pickup` with hold data, see [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
 
 ### not_available
-**Arrived but not ready** - The container is at the POD or inland destination but is not yet available for pickup. This could be due to:
-- Customs holds
+**Dashboard label: "Not available"**
+
+**At the terminal but not ready** — The container is at the POD or inland destination but has not been cleared to leave. This could be due to:
 - Terminal holds
+- Customs holds
+- Line holds
 - Documentation requirements
 - Other restrictions
 
-See [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees) for details on specific hold types and how to determine when the container is released.
-
-### grounded
-**Availability unknown** - The container is physically at the POD, but Terminal49 doesn't currently know whether it's available for pickup or not. This typically means the terminal isn't providing real-time availability data.
+While a hold is in place, the terminal will not release the container for pickup until it is cleared, and the LFD countdown continues (which can result in demurrage fees). Triggered by the *not available* milestone from the terminal. See [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees) for details on specific hold types and how to determine when the container is released.
 
 ### awaiting_inland_transfer
-**Moving inland** - The container is either:
-- Still at the POD waiting to be loaded onto rail for an inland move
-- In transit between the POD and a rail terminal
-- At a rail terminal but not yet loaded onto a rail car
+**Dashboard label: "Awaiting Inland Transfer"**
 
-This status is specific to shipments with inland rail movements.
+**Awaiting the inland leg** — The container has been discharged at the POD but still has an inland destination, so it is waiting to be loaded onto rail for the inland move. Triggered by the *vessel discharged* milestone when the shipment has an inland destination distinct from the POD. This status is specific to shipments with inland rail movements.
 
 ### on_rail
-**In transit by rail** - The container has been loaded onto a rail car and is being transported to its inland destination.
+**Dashboard label: "On Rail"**
 
-### picked_up
-**Out for delivery** - The container has been picked up from the terminal or facility for delivery. 
+**In transit by rail** — The container has been loaded onto a rail car and is being transported toward its inland destination after being discharged from the POD. Triggered by the *rail departed* or *rail loaded* milestone.
 
 ### off_dock
-**At alternative facility** - The container has been moved to a different terminal or off-dock storage facility for pickup. You may need to go to this alternative location rather than the original POD terminal.
+**Dashboard label: "Available at Shippers"**
+
+**At an off-dock facility** — The terminal reported that the container has moved off the main terminal to an off-dock or shipper's-own yard, where it's available for pickup. When this happens, Terminal49 attempts to identify the off-dock facility and re-point tracking to it, so this status can also appear briefly during that transition before status is pulled from the new facility. This value comes from terminal data (not the steamship line) and is uncommon.
+
+### picked_up
+**Dashboard label: "Picked up"**
+
+**Out for delivery** — The container has been picked up by a trucker from the POD or inland destination and is on its way to the warehouse. Triggered by the *full out* milestone.
 
 ### delivered
-**Delivery confirmed** - This status is only shown when delivery has been [manually marked as delivered](https://help.terminal49.com/articles/4713318249-how-to-mark-containers-as-delivered) through the Terminal49 dashboard.
+**Dashboard label: "Delivered"**
+
+**Delivery confirmed** — The container has been delivered to the warehouse. This status is only set when delivery is [manually marked as delivered](https://help.terminal49.com/articles/4713318249-how-to-mark-containers-as-delivered) through the Terminal49 dashboard, because delivery date/time data is only available to the customer (Terminal49 does not have access to it).
 
 ### empty_returned
-**Container returned empty** - The container has been emptied and returned to the shipping line or designated return location.
+**Dashboard label: "Empty Returned"**
 
-### dropped
-**Not currently used** - This status value is defined but not actively used in the system.
-
-### loaded
-**Not currently used** - This status value is defined but not actively used in the system.
+**Container returned empty** — The container has been emptied and returned to the shipping line or designated return location, completing its journey. Terminal49 stops tracking the container at this point. Triggered by the *empty returned* or *empty in* milestone.
 
 ## Important considerations
 
 ### Status accuracy
-The logic to derive container statuses is complex and involves processing data from multiple sources including:
+The logic to derive container statuses is complex and involves processing data from multiple sources, including:
 - Shipping line updates
 - Terminal systems
 - Rail carrier feeds
 - Manual updates
 
-**There can sometimes be errors in the reported `current_status`**. When making critical business decisions:
-- Cross-referencing with transport events
+**There can sometimes be errors in the reported `current_status`.** When making critical, time-sensitive business decisions, consider:
+- Cross-referencing with the container's transport events
 - Contacting the terminal directly for time-sensitive pickups
 
 ### Status transitions
 Containers don't always follow a linear path through these statuses. For example:
 - A container may go from `on_ship` directly to `available` if terminal data arrives quickly
-- A container might alternate between `available` and `not_available` if holds are placed and removed
-- The status may remain as `new` for some time if data from the shipping line is delayed
+- A container might alternate between `available` and `not_available` as holds are placed and removed
+- The status may remain `new` for some time if data from the shipping line is delayed
 
 ### API usage
-To get the current status of a container, you can read the container's `current_status` attribute in your API responses:
+To get the current status of a container, read the container's `current_status` attribute in your API responses:
 
 ```bash
 GET /v2/containers/{id}
