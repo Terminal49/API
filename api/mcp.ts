@@ -48,19 +48,125 @@ function getHeaderValue(value: string | string[] | undefined): string | undefine
 
 function extractAuthorizationToken(
   authorizationHeader: string | undefined,
-): { token?: string; source?: 'authorization' } {
+): { scheme?: 'Bearer' | 'Token'; token?: string; source?: 'authorization' } {
   if (authorizationHeader?.trim()) {
     const trimmed = authorizationHeader.trim();
     const authMatch = trimmed.match(/^(bearer|token)\s+(.+)$/i);
     if (authMatch?.[2]) {
       const token = authMatch[2].trim();
       if (token.length > 0) {
-        return { token, source: 'authorization' };
+        const scheme = authMatch[1].toLowerCase() === 'bearer' ? 'Bearer' : 'Token';
+        return { scheme, token, source: 'authorization' };
       }
     }
   }
 
   return {};
+}
+
+type ResolvedTerminal49Auth = {
+  apiToken: string;
+  accountId?: string;
+  authSource: 'authorization' | 'environment' | 'workos_mcp';
+};
+
+type McpConnectionResolutionResponse = {
+  data?: {
+    attributes?: {
+      access_token?: string;
+      account_id?: string;
+    };
+  };
+  error?: string;
+};
+
+function mcpResourceUrl(): string | undefined {
+  return process.env.T49_MCP_RESOURCE_URL?.trim() || process.env.WORKOS_MCP_RESOURCE?.trim();
+}
+
+function oauthProtectedResourceMetadataUrl(): string | undefined {
+  const configured = process.env.T49_MCP_RESOURCE_METADATA_URL?.trim();
+  if (configured) {
+    return configured;
+  }
+
+  const resource = mcpResourceUrl();
+  if (!resource) {
+    return undefined;
+  }
+
+  try {
+    const url = new URL(resource);
+    return `${url.origin}/.well-known/oauth-protected-resource`;
+  } catch {
+    return `${resource.replace(/\/+$/, '')}/.well-known/oauth-protected-resource`;
+  }
+}
+
+function wwwAuthenticateHeader(): string {
+  const metadataUrl = oauthProtectedResourceMetadataUrl();
+  const parts = [
+    'Bearer error="unauthorized"',
+    'error_description="Authorization needed"',
+  ];
+
+  if (metadataUrl) {
+    parts.push(`resource_metadata="${metadataUrl}"`);
+  }
+
+  return parts.join(', ');
+}
+
+function setUnauthorizedChallenge(res: ResponseLike): void {
+  res.setHeader('WWW-Authenticate', wwwAuthenticateHeader());
+}
+
+function authKitMcpEnabled(): boolean {
+  return process.env.T49_MCP_AUTHKIT_ENABLED === 'true';
+}
+
+function resolveEndpointUrl(): string {
+  const apiBaseUrl = process.env.T49_API_BASE_URL?.trim() || 'https://api.terminal49.com/v2';
+  return `${apiBaseUrl.replace(/\/+$/, '')}/auth/mcp/connections/resolve`;
+}
+
+async function resolveWorkosMcpToken(
+  token: string,
+  requestId: string,
+): Promise<{ apiToken: string; accountId: string }> {
+  const resolveSecret = process.env.T49_MCP_RESOLVE_SECRET?.trim();
+  if (!resolveSecret) {
+    throw new Error('T49_MCP_RESOLVE_SECRET must be set when AuthKit MCP auth is enabled.');
+  }
+
+  const response = await fetch(resolveEndpointUrl(), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-T49-MCP-Resolve-Secret': resolveSecret,
+      'X-Request-Id': requestId,
+    },
+    body: JSON.stringify({ access_token: token }),
+  });
+
+  let payload: McpConnectionResolutionResponse = {};
+  try {
+    payload = (await response.json()) as McpConnectionResolutionResponse;
+  } catch {
+    payload = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(payload.error || `Terminal49 MCP connection resolve failed with ${response.status}`);
+  }
+
+  const accessToken = payload.data?.attributes?.access_token;
+  const accountId = payload.data?.attributes?.account_id;
+  if (!accessToken || !accountId) {
+    throw new Error('Terminal49 MCP connection resolve response is missing access_token or account_id.');
+  }
+
+  return { apiToken: `Bearer ${accessToken}`, accountId };
 }
 
 function isMatchingClientSecret(providedToken: string, expectedSecret: string): boolean {
@@ -269,6 +375,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
 
     if (!callerToken) {
       setCorsHeaders(res);
+      setUnauthorizedChallenge(res);
       res.status(401).json({
         error: 'Unauthorized',
         message:
@@ -280,10 +387,31 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
 
     const configuredApiToken = process.env.T49_API_TOKEN?.trim();
     const configuredClientSecret = process.env.T49_MCP_CLIENT_SECRET?.trim();
-    let apiToken = callerToken;
-    let authSource: 'authorization' | 'environment' = resolvedAuth.source ?? 'authorization';
+    let resolvedTerminal49Auth: ResolvedTerminal49Auth = {
+      apiToken: callerToken,
+      authSource: resolvedAuth.source ?? 'authorization',
+    };
 
-    if (configuredApiToken) {
+    if (authKitMcpEnabled() && resolvedAuth.scheme === 'Bearer') {
+      try {
+        const resolved = await resolveWorkosMcpToken(callerToken, requestId);
+        resolvedTerminal49Auth = {
+          apiToken: resolved.apiToken,
+          accountId: resolved.accountId,
+          authSource: 'workos_mcp',
+        };
+      } catch (error) {
+        const err = error as Error;
+        setCorsHeaders(res);
+        setUnauthorizedChallenge(res);
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: err.message,
+        });
+        logLifecycle('mcp.request.complete', requestId, { reason: 'mcp_connection_resolve_failed' });
+        return;
+      }
+    } else if (configuredApiToken) {
       if (!configuredClientSecret) {
         setCorsHeaders(res);
         res.status(500).json({
@@ -296,6 +424,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
 
       if (!isMatchingClientSecret(callerToken, configuredClientSecret)) {
         setCorsHeaders(res);
+        setUnauthorizedChallenge(res);
         res.status(401).json({
           error: 'Unauthorized',
           message: 'Invalid client credentials.',
@@ -304,18 +433,24 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
         return;
       }
 
-      apiToken = configuredApiToken;
-      authSource = 'environment';
+      resolvedTerminal49Auth = {
+        apiToken: configuredApiToken,
+        authSource: 'environment',
+      };
     }
 
     logLifecycle('mcp.request.auth', requestId, {
-      auth_source: authSource,
+      auth_source: resolvedTerminal49Auth.authSource,
     });
 
     setCorsHeaders(res);
 
     // Create MCP server and per-request transport.
-    server = createTerminal49McpServer(apiToken, process.env.T49_API_BASE_URL);
+    server = createTerminal49McpServer(
+      resolvedTerminal49Auth.apiToken,
+      process.env.T49_API_BASE_URL,
+      resolvedTerminal49Auth.accountId,
+    );
     transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined, // Stateless mode
       enableJsonResponse: true, // Return JSON instead of SSE

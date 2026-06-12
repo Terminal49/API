@@ -4,13 +4,19 @@ import { extractErrorMessage, toTerminal49Error } from './errors.js';
 export type Interceptor = Middleware;
 
 export class AuthInterceptor {
-  constructor(private apiToken: string) {}
+  constructor(
+    private apiToken: string,
+    private accountId?: string,
+  ) {}
 
   onRequest({ request }: Pick<MiddlewareCallbackParams, 'id' | 'request'>) {
-    const authHeader = this.apiToken.startsWith('Token ')
+    const authHeader = this.apiToken.startsWith('Token ') || this.apiToken.startsWith('Bearer ')
       ? this.apiToken
       : `Token ${this.apiToken}`;
     request.headers.set('Authorization', authHeader);
+    if (this.accountId) {
+      request.headers.set('x-account-id', this.accountId);
+    }
     request.headers.set('Accept', 'application/json');
     if (request.body && !request.headers.has('Content-Type')) {
       request.headers.set('Content-Type', 'application/json');

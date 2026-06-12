@@ -4,20 +4,24 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockState = vi.hoisted(() => ({
   servers: [] as any[],
   transports: [] as any[],
-  serverCreateArgs: [] as Array<{ apiToken: string; apiBaseUrl: string | undefined }>,
+  serverCreateArgs: [] as Array<{
+    apiToken: string;
+    apiBaseUrl: string | undefined;
+    accountId: string | undefined;
+  }>,
   handleRequestImpl: undefined as
     | ((req: unknown, res: unknown, body: unknown) => Promise<void>)
     | undefined,
 }));
 
 vi.mock('../src/server.js', () => ({
-  createTerminal49McpServer: vi.fn((apiToken: string, apiBaseUrl?: string) => {
+  createTerminal49McpServer: vi.fn((apiToken: string, apiBaseUrl?: string, accountId?: string) => {
     const server = {
       connect: vi.fn().mockResolvedValue(undefined),
       close: vi.fn().mockResolvedValue(undefined),
     };
 
-    mockState.serverCreateArgs.push({ apiToken, apiBaseUrl });
+    mockState.serverCreateArgs.push({ apiToken, apiBaseUrl, accountId });
     mockState.servers.push(server);
     return server;
   }),
@@ -87,12 +91,16 @@ describe('api/mcp handler lifecycle', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
     mockState.servers.length = 0;
     mockState.transports.length = 0;
     mockState.serverCreateArgs.length = 0;
     mockState.handleRequestImpl = undefined;
     delete process.env.T49_API_TOKEN;
     delete process.env.T49_MCP_CLIENT_SECRET;
+    delete process.env.T49_MCP_AUTHKIT_ENABLED;
+    delete process.env.T49_MCP_RESOLVE_SECRET;
+    delete process.env.T49_MCP_RESOURCE_URL;
     delete process.env.T49_API_BASE_URL;
     delete process.env.T49_MCP_ALLOWED_HOSTS;
     delete process.env.T49_MCP_ALLOWED_ORIGINS;
@@ -227,6 +235,81 @@ describe('api/mcp handler lifecycle', () => {
     await handler(req as any, res as any);
 
     expect(mockState.serverCreateArgs[0]?.apiToken).toBe('env-token-value');
+  });
+
+  it('resolves WorkOS MCP bearer tokens into Terminal49 bearer account context', async () => {
+    process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
+    process.env.T49_MCP_RESOLVE_SECRET = 'resolve-secret';
+    process.env.T49_API_BASE_URL = 'https://api.test/v2';
+    process.env.T49_MCP_RESOURCE_URL = 'https://mcp.test/mcp';
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          data: {
+            attributes: {
+              access_token: 'terminal49-local-jwt',
+              account_id: 'account-123',
+            },
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Bearer workos-mcp-token',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.test/v2/auth/mcp/connections/resolve',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          'X-T49-MCP-Resolve-Secret': 'resolve-secret',
+        }),
+        body: JSON.stringify({ access_token: 'workos-mcp-token' }),
+      }),
+    );
+    expect(mockState.serverCreateArgs[0]).toMatchObject({
+      apiToken: 'Bearer terminal49-local-jwt',
+      apiBaseUrl: 'https://api.test/v2',
+      accountId: 'account-123',
+    });
+  });
+
+  it('returns a metadata challenge when WorkOS MCP resolve fails', async () => {
+    process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
+    process.env.T49_MCP_RESOLVE_SECRET = 'resolve-secret';
+    process.env.T49_MCP_RESOURCE_URL = 'https://mcp.test/mcp';
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ error: 'not connected' }), { status: 401 })),
+    );
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Bearer workos-mcp-token',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.headers['WWW-Authenticate']).toContain(
+      'resource_metadata="https://mcp.test/.well-known/oauth-protected-resource"',
+    );
+    expect(mockState.servers).toHaveLength(0);
   });
 
   it('returns 401 when Authorization token does not match T49_MCP_CLIENT_SECRET', async () => {
