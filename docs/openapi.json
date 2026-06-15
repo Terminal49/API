@@ -10680,36 +10680,43 @@
               "pol_etd_at": {
                 "type": "string",
                 "format": "date-time",
+                "description": "Estimated Time of Departure from the Port of Lading, as reported by the shipping line. Carrier dependent; may be null.",
                 "nullable": true
               },
               "pol_atd_at": {
                 "type": "string",
                 "format": "date-time",
+                "description": "Actual Time of Departure from the Port of Lading. Populated after the vessel has departed the origin port.",
                 "nullable": true
               },
               "pod_eta_at": {
                 "type": "string",
                 "format": "date-time",
+                "description": "Estimated Time of Arrival at the Port of Discharge.",
                 "nullable": true
               },
               "pod_original_eta_at": {
                 "type": "string",
                 "format": "date-time",
+                "description": "Initial Estimated Time of Arrival at the Port of Discharge, as first reported by the shipping line.",
                 "nullable": true
               },
               "pod_ata_at": {
                 "type": "string",
                 "format": "date-time",
+                "description": "Actual Time of Arrival at the Port of Discharge.",
                 "nullable": true
               },
               "destination_eta_at": {
                 "type": "string",
                 "format": "date-time",
+                "description": "Estimated Time of Arrival at the shipment's destination, as reported by the shipping line. For inland (rail) moves, see also the container-level `ind_eta_at`, which is reported by the rail carrier. Corresponding timezone is `destination_timezone`.",
                 "nullable": true
               },
               "destination_ata_at": {
                 "type": "string",
                 "format": "date-time",
+                "description": "Actual Time of Arrival at the shipment's destination, as reported by the shipping line. For inland (rail) moves, see also the container-level `ind_ata_at`, which is reported by the rail carrier. Corresponding timezone is `destination_timezone`.",
                 "nullable": true
               },
               "pol_timezone": {
@@ -11178,16 +11185,19 @@
               "ind_eta_at": {
                 "type": "string",
                 "format": "date-time",
+                "description": "Estimated Time of Arrival at the inland destination, as reported by the rail carrier. For the shipping-line view at the shipment's destination, see `destination_eta_at` on the shipment. Corresponding timezone is `final_destination_timezone`.",
                 "nullable": true
               },
               "ind_ata_at": {
                 "type": "string",
                 "format": "date-time",
+                "description": "Actual Time of Arrival at the inland destination, as reported by the rail carrier. For the shipping-line view at the shipment's destination, see `destination_ata_at` on the shipment. Corresponding timezone is `final_destination_timezone`.",
                 "nullable": true
               },
               "ind_rail_unloaded_at": {
                 "type": "string",
                 "format": "date-time",
+                "description": "Time when the container is unloaded from rail at the inland destination.",
                 "nullable": true
               },
               "ind_facility_lfd_on": {
@@ -11210,13 +11220,13 @@
                   "pickup_lfd_rail": {
                     "type": "string",
                     "format": "date-time",
-                    "description": "The last free day for pickup before demmurage accrues. Corresponding timezone is final_destination_timezone.",
+                    "description": "The last free day for pickup at the inland destination, as reported by the rail carrier. Corresponding timezone is final_destination_timezone. Subscribe to `container.pickup_lfd_rail.changed` to be notified of updates.",
                     "nullable": true
                   },
                   "pickup_lfd_line": {
                     "type": "string",
                     "format": "date-time",
-                    "description": "The last free day as reported by the line. Corresponding timezone is final_destination_timezone or pod_timezone.",
+                    "description": "The last free day as reported by the shipping line (carrier dependent). Corresponding timezone is final_destination_timezone or pod_timezone. Preferred source for the coalesced top-level `pickup_lfd` field.",
                     "nullable": true
                   }
                 },

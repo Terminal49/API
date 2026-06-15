@@ -134,20 +134,39 @@ Integrate these notifications by subscribing to the webhooks and handling the in
 
 #### Rail container attributes
 
-The following are new attributes that are specific to rail container tracking.
+The following attributes are specific to rail container tracking and live on the [container object](/api-docs/api-reference/containers/get-a-container).
 
 - **pod_rail_loaded_at**: Time when the container is loaded onto a railcar at the POD.
 - **pod_rail_departed_at**: Time when the container departs from the POD.
-- **ind_eta_at**: Estimated Time of Arrival at the inland destination.
-- **ind_ata_at**: Actual Time of Arrival at the inland destination.
+- **ind_eta_at**: Estimated Time of Arrival at the inland destination, sourced from the rail carrier.
+- **ind_ata_at**: Actual Time of Arrival at the inland destination, sourced from the rail carrier.
 - **ind_rail_unloaded_at**: Time when the container is unloaded from rail at the inland destination.
-- **ind_facility_lfd_on**: Last Free Day for demurrage charges at the inland destination terminal.
+- **ind_facility_lfd_on**: **Deprecated.** Last Free Day for demurrage charges at the inland destination terminal. Use `import_deadlines.pickup_lfd_rail` instead (timezone: `final_destination_timezone`).
 - **pod_rail_carrier_scac**: SCAC code of the rail carrier that picks up the container from the POD (this could be different than the rail carrier that delivers to the inland destination).
 - **ind_rail_carrier_scac**: SCAC code of the rail carrier that delivers the container to the inland destination.
 
-{/* TODO: Look at the other container attributes that could be fed via rail but are currently shipping-line-only.  Such as :current_issues, :pickup_appointment_at, :availability_known, :available_for_pickup  */}
+##### Inland destination ETA/ATA: rail carrier vs. shipping line
 
-These attributes can be found on [container objects](/api-docs/api-reference/containers/get-a-container).
+For an inland (rail) move, two pairs of arrival fields exist and can differ:
+
+| Field | Lives on | Source | Notes |
+|---|---|---|---|
+| `ind_eta_at` / `ind_ata_at` | container | Rail carrier | Estimated and actual arrival at the inland destination, reported directly by the rail carrier. |
+| `destination_eta_at` / `destination_ata_at` | shipment | Shipping line (SSL) | Estimated and actual arrival at the shipment's destination as reported by the ocean carrier. For inland moves, this is the SSL's view of the inland destination. |
+
+Use `ind_*` when you want the rail carrier's view (typically more granular and updated more frequently for inland legs). Use `destination_*` when you want the SSL-reported view on the shipment. The corresponding timezone for `ind_*` fields is `final_destination_timezone` (on the container); for `destination_*` fields it is `destination_timezone` (on the shipment).
+
+##### Rail Last Free Day (LFD)
+
+The container's top-level `pickup_lfd` attribute is a coalesced value derived from the `import_deadlines` object, in this order of preference:
+
+1. `import_deadlines.pickup_lfd_line` — LFD as reported by the shipping line (preferred).
+2. `import_deadlines.pickup_lfd_terminal` — LFD from the POD terminal (timezone: `pod_timezone`).
+3. `import_deadlines.pickup_lfd_rail` — LFD from the rail carrier at the inland destination (timezone: `final_destination_timezone`).
+
+For rail moves, subscribe to the `container.pickup_lfd_rail.changed` webhook to be notified when the rail carrier updates the inland LFD. The legacy `ind_facility_lfd_on` field is deprecated — read `import_deadlines.pickup_lfd_rail` instead.
+
+{/* TODO: Look at the other container attributes that could be fed via rail but are currently shipping-line-only.  Such as :current_issues, :pickup_appointment_at, :availability_known, :available_for_pickup  */}
 
 ## Integration methods
 
