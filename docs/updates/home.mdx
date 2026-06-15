@@ -17,6 +17,57 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="June 15, 2026" description="WorkOS hosted signup, OOCL direct scraper, calculated LFD in Pickup & Delivery, party assignment polish, and a wave of document, carrier, and dashboard bug fixes" tags={['API', 'Dashboard']}
+  rss="June 15, 2026: WorkOS hosted signup onboarding, new OOCL direct-to-track-page scraper, calculated LFD in the Pickup & Delivery dashboard, bulk party import on the Network page, Wayfair arrival notice and HBL extraction improvements, party assignment defaults and sorting, Custom Fields reorganization on Shipment Details, and bug fixes for LFD past pickup, YMLU transshipments, NSRR blocked responses, container event ordering, and Stripe period timestamps."
+>
+  ### WorkOS hosted signup onboarding
+
+New accounts can now sign up through the **WorkOS hosted authentication flow**. The end-to-end onboarding handles email verification, recovery from unknown sign-ins, and concurrent same-email signup races automatically. Existing sign-in continues to work unchanged.
+
+---
+
+  ### OOCL direct-to-track-page scraper
+
+Added a new **`oolu_direct`** OOCL integration that navigates straight to the tracking host, skipping the OOCL home page and its Cloudflare Turnstile challenge. The result is fewer scrape failures and faster, more reliable container, bill of lading, and booking lookups for OOCL (OOLU) shipments.
+
+---
+
+  ### Calculated LFD in the Pickup & Delivery dashboard
+
+The **Pickup & Delivery** workspace now surfaces the Smart LFD **calculated Last Free Day** alongside reported LFDs, so containers without a carrier- or terminal-reported LFD still show a tariff-based date to plan against.
+
+<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+  View the container resource
+</Card>
+
+---
+
+  ### Bulk add parties from the Network page
+
+The Network page now supports **bulk party imports**, so you can add many consignees, shippers, notify parties, and other roles to your network in a single upload instead of one at a time.
+
+---
+
+  ### Updates
+
+- **Wayfair arrival notice extraction** — new versioned schema with Maersk Canada CCN carrier-code extraction, PO reference truncation, freight payment terms derived from the marks block, and tighter classification so CMA CGM pre-arrival notices and multi-page Hapag-Lloyd Canada documents are no longer misclassified
+- **Wayfair house bill of lading consistency** — draft and final Wayfair HBLs for the same shipment now produce consistent `hs_codes` values, and a new `consignee.fax` field is captured
+- **Party assignment defaults and sorting** — party pickers default to the previously assigned party, parties are sorted for easier selection, and the role color palette has been toned down
+- **Custom Fields on Shipment Details** — custom shipment and container fields have been reorganized on the shipment details page for a cleaner layout and clearer separation between scopes
+- **Editable cells on Pickup & Delivery** — inline editing on the Pickup & Delivery phase tables has been polished, with a production-safe edit hook so save and validation behave consistently
+
+---
+
+  ### Bug fixes
+
+- **LFD no longer shown past POD pickup** — Last Free Day values are now suppressed once a container has been picked up from the port of discharge, so the dashboard and API stop surfacing irrelevant deadlines
+- **YMLU transshipment events** — Fixed remaining issues with YMLU transshipment events so port-of-discharge and transshipment legs are reported correctly
+- **NSRR blocked HTML responses** — Norfolk Southern responses that return a block page are now handled cleanly instead of failing the tracker run, with retries handled upstream
+- **Container event ordering** — Improved event ordering in container status updates, so derived statuses follow the true chronology of vessel, terminal, and rail events
+- **Stripe 35-day period cap** — Fixed a Stripe timestamp issue that could cap subscription period dates at 35 days, restoring accurate end-of-period timing on PAYG accounts
+
+</Update>
+
 <Update label="June 8, 2026" description="Pickup & Delivery dashboard, bulk party assignment, event-driven calculated LFD, refreshed ONE/CMA CGM/Evergreen tariffs, and a wave of carrier and dashboard bug fixes" tags={['API', 'Dashboard']}
   rss="June 8, 2026: New Pickup & Delivery dashboard, bulk party (role) assignment via CSV, event-driven calculated demurrage LFD, refreshed ONE/CMA CGM/Evergreen tariff rules, updated Wayfair arrival notice extraction, event-sourced manual milestone edits, shipment number and delivery appointment sorting, and bug fixes for CMDU port events, YMLU POD selection, NSRR ETAs, WMC unavailable status, and tracking slot limits."
 >
