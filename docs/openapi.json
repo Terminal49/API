@@ -2713,7 +2713,7 @@
                             "events": [
                               "tracking_request.succeeded"
                             ],
-                            "secret": "672bd7b58b54645934a830d8fa",
+                            "secret": "WEBHOOK_SECRET_PLACEHOLDER",
                             "headers": [
                               {
                                 "name": "x-secret-sauce",
@@ -2968,7 +2968,7 @@
                           "events": [
                             "tracking_request.succeeded"
                           ],
-                          "secret": "C193J3QOXMFH",
+                          "secret": "WEBHOOK_SECRET_PLACEHOLDER",
                           "created_at": "2020-06-05T19:06:13Z"
                         }
                       }

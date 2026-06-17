@@ -62,6 +62,8 @@
     "@mintlify/previewing": {
       "express": "4.22.2"
     },
+    "express-rate-limit": "^8.5.2",
+    "rollup": "^4.60.4",
     "chromium-bidi": {
       "zod": "3.23.8"
     }
