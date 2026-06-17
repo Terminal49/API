@@ -29,9 +29,9 @@
   "devDependencies": {
     "@biomejs/biome": "^2.3.15",
     "@types/node": "^24.10.13",
-    "tsx": "^4.20.6",
+    "tsx": "^4.22.4",
     "typescript": "^5.6.3",
-    "vitest": "^4.0.13"
+    "vitest": "^4.1.9"
   },
   "overrides": {
     "@hono/node-server": "^1.19.14",
@@ -39,13 +39,21 @@
     "express-rate-limit": "^8.5.2",
     "fast-uri": "^3.1.2",
     "postcss": "^8.5.14",
-    "hono": "^4.12.16",
+    "hono": "^4.12.25",
     "ip-address": "^10.1.1",
     "path-to-regexp": "^8.4.2",
     "picomatch": "^4.0.4",
     "qs": "^6.15.2",
     "rollup": "^4.60.4",
-    "vite": "^7.3.3"
+    "vite": "^8.0.16",
+    "js-yaml": "^4.2.0",
+    "markdown-it": "^14.2.0",
+    "esbuild": "0.28.1",
+    "vitest": "^4.1.9",
+    "@vitest/coverage-v8": "^4.1.9",
+    "@opentelemetry/core": "^2.8.0",
+    "@opentelemetry/resources": "^2.8.0",
+    "@opentelemetry/sdk-trace-base": "^2.8.0"
   },
   "engines": {
     "node": "24.x"
