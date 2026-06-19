@@ -77,7 +77,7 @@ npm run type-check
 # Tests
 npm test
 
-# Lint (Biome)
+# Lint (oxlint + oxfmt)
 npm run lint
 
 # Build

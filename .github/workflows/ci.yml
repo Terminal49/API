@@ -38,7 +38,7 @@ jobs:
           test -z "$(git status --porcelain -- docs/sdk/reference)"
       - name: Test SDK
         run: npm test -- --run
-      - name: Lint SDK (Biome)
+      - name: Lint SDK (oxlint + oxfmt)
         run: npm run lint
 
   mcp:
@@ -58,5 +58,5 @@ jobs:
         run: npm run build --workspace @terminal49/mcp
       - name: Test MCP
         run: npm run test --workspace @terminal49/mcp -- --run --coverage
-      - name: Lint MCP (Biome)
+      - name: Lint MCP (oxlint + oxfmt)
         run: npm run lint --workspace @terminal49/mcp
