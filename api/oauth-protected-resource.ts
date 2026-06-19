@@ -11,15 +11,25 @@ type ResponseLike = {
   end(): void;
 } & ServerResponse;
 
+const DEFAULT_MCP_RESOURCE_URL = 'https://mcp.terminal49.com';
+
 function resourceUrl(req: RequestLike): string {
-  const configured = process.env.T49_MCP_RESOURCE_URL?.trim() || process.env.WORKOS_MCP_RESOURCE?.trim();
+  const configured = process.env.WORKOS_MCP_RESOURCE?.trim() || process.env.T49_MCP_RESOURCE_URL?.trim();
   if (configured) {
     return configured.replace(/\/+$/, '');
   }
 
   const host = req.headers.host;
+  if (!host) {
+    return DEFAULT_MCP_RESOURCE_URL;
+  }
+
   const protocol = host?.startsWith('localhost') || host?.startsWith('127.0.0.1') ? 'http' : 'https';
-  return `${protocol}://${host}/mcp`;
+  if (protocol === 'http') {
+    return `${protocol}://${host}`;
+  }
+
+  return DEFAULT_MCP_RESOURCE_URL;
 }
 
 export default function handler(req: RequestLike, res: ResponseLike): void {

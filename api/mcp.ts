@@ -70,7 +70,7 @@ type ResolvedTerminal49Auth = {
   authSource: 'authorization' | 'environment' | 'workos_mcp';
 };
 
-type McpConnectionResolutionResponse = {
+type ConnectedClientResolutionResponse = {
   data?: {
     attributes?: {
       access_token?: string;
@@ -80,20 +80,21 @@ type McpConnectionResolutionResponse = {
   error?: string;
 };
 
-function mcpResourceUrl(): string | undefined {
-  return process.env.T49_MCP_RESOURCE_URL?.trim() || process.env.WORKOS_MCP_RESOURCE?.trim();
+const DEFAULT_MCP_RESOURCE_URL = 'https://mcp.terminal49.com';
+
+function mcpResourceUrl(): string {
+  return process.env.WORKOS_MCP_RESOURCE?.trim() ||
+    process.env.T49_MCP_RESOURCE_URL?.trim() ||
+    DEFAULT_MCP_RESOURCE_URL;
 }
 
-function oauthProtectedResourceMetadataUrl(): string | undefined {
+function oauthProtectedResourceMetadataUrl(): string {
   const configured = process.env.T49_MCP_RESOURCE_METADATA_URL?.trim();
   if (configured) {
     return configured;
   }
 
   const resource = mcpResourceUrl();
-  if (!resource) {
-    return undefined;
-  }
 
   try {
     const url = new URL(resource);
@@ -106,13 +107,12 @@ function oauthProtectedResourceMetadataUrl(): string | undefined {
 function wwwAuthenticateHeader(): string {
   const metadataUrl = oauthProtectedResourceMetadataUrl();
   const parts = [
-    'Bearer error="unauthorized"',
+    'Bearer realm="mcp"',
+    'error="unauthorized"',
     'error_description="Authorization needed"',
   ];
 
-  if (metadataUrl) {
-    parts.push(`resource_metadata="${metadataUrl}"`);
-  }
+  parts.push(`resource_metadata="${metadataUrl}"`);
 
   return parts.join(', ');
 }
@@ -127,43 +127,46 @@ function authKitMcpEnabled(): boolean {
 
 function resolveEndpointUrl(): string {
   const apiBaseUrl = process.env.T49_API_BASE_URL?.trim() || 'https://api.terminal49.com/v2';
-  return `${apiBaseUrl.replace(/\/+$/, '')}/auth/mcp/connections/resolve`;
+  return `${apiBaseUrl.replace(/\/+$/, '')}/connected-clients/resolve`;
 }
 
-async function resolveWorkosMcpToken(
+async function resolveConnectedClientToken(
   token: string,
   requestId: string,
 ): Promise<{ apiToken: string; accountId: string }> {
-  const resolveSecret = process.env.T49_MCP_RESOLVE_SECRET?.trim();
+  const resolveSecret = process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET?.trim() ||
+    process.env.T49_MCP_RESOLVE_SECRET?.trim();
   if (!resolveSecret) {
-    throw new Error('T49_MCP_RESOLVE_SECRET must be set when AuthKit MCP auth is enabled.');
+    throw new Error(
+      'T49_CONNECTED_CLIENTS_RESOLVE_SECRET must be set when AuthKit MCP auth is enabled.',
+    );
   }
 
   const response = await fetch(resolveEndpointUrl(), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-T49-MCP-Resolve-Secret': resolveSecret,
+      'X-T49-Connected-Clients-Resolve-Secret': resolveSecret,
       'X-Request-Id': requestId,
     },
     body: JSON.stringify({ access_token: token }),
   });
 
-  let payload: McpConnectionResolutionResponse = {};
+  let payload: ConnectedClientResolutionResponse = {};
   try {
-    payload = (await response.json()) as McpConnectionResolutionResponse;
+    payload = (await response.json()) as ConnectedClientResolutionResponse;
   } catch {
     payload = {};
   }
 
   if (!response.ok) {
-    throw new Error(payload.error || `Terminal49 MCP connection resolve failed with ${response.status}`);
+    throw new Error(payload.error || `Terminal49 connected client resolve failed with ${response.status}`);
   }
 
   const accessToken = payload.data?.attributes?.access_token;
   const accountId = payload.data?.attributes?.account_id;
   if (!accessToken || !accountId) {
-    throw new Error('Terminal49 MCP connection resolve response is missing access_token or account_id.');
+    throw new Error('Terminal49 connected client resolve response is missing access_token or account_id.');
   }
 
   return { apiToken: `Bearer ${accessToken}`, accountId };
@@ -394,7 +397,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
 
     if (authKitMcpEnabled() && resolvedAuth.scheme === 'Bearer') {
       try {
-        const resolved = await resolveWorkosMcpToken(callerToken, requestId);
+        const resolved = await resolveConnectedClientToken(callerToken, requestId);
         resolvedTerminal49Auth = {
           apiToken: resolved.apiToken,
           accountId: resolved.accountId,
@@ -408,7 +411,10 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
           error: 'Unauthorized',
           message: err.message,
         });
-        logLifecycle('mcp.request.complete', requestId, { reason: 'mcp_connection_resolve_failed' });
+        logLifecycle('mcp.request.complete', requestId, {
+          reason: 'connected_client_resolve_failed',
+          message: err.message,
+        });
         return;
       }
     } else if (configuredApiToken) {

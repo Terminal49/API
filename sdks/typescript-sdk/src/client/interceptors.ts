@@ -10,9 +10,10 @@ export class AuthInterceptor {
   ) {}
 
   onRequest({ request }: Pick<MiddlewareCallbackParams, 'id' | 'request'>) {
-    const authHeader = this.apiToken.startsWith('Token ') || this.apiToken.startsWith('Bearer ')
-      ? this.apiToken
-      : `Token ${this.apiToken}`;
+    const authHeader =
+      this.apiToken.startsWith('Token ') || this.apiToken.startsWith('Bearer ')
+        ? this.apiToken
+        : `Token ${this.apiToken}`;
     request.headers.set('Authorization', authHeader);
     if (this.accountId) {
       request.headers.set('x-account-id', this.accountId);

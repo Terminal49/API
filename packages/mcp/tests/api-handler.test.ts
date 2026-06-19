@@ -99,8 +99,10 @@ describe('api/mcp handler lifecycle', () => {
     delete process.env.T49_API_TOKEN;
     delete process.env.T49_MCP_CLIENT_SECRET;
     delete process.env.T49_MCP_AUTHKIT_ENABLED;
+    delete process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET;
     delete process.env.T49_MCP_RESOLVE_SECRET;
     delete process.env.T49_MCP_RESOURCE_URL;
+    delete process.env.WORKOS_MCP_RESOURCE;
     delete process.env.T49_API_BASE_URL;
     delete process.env.T49_MCP_ALLOWED_HOSTS;
     delete process.env.T49_MCP_ALLOWED_ORIGINS;
@@ -239,9 +241,9 @@ describe('api/mcp handler lifecycle', () => {
 
   it('resolves WorkOS MCP bearer tokens into Terminal49 bearer account context', async () => {
     process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
-    process.env.T49_MCP_RESOLVE_SECRET = 'resolve-secret';
+    process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
     process.env.T49_API_BASE_URL = 'https://api.test/v2';
-    process.env.T49_MCP_RESOURCE_URL = 'https://mcp.test/mcp';
+    process.env.WORKOS_MCP_RESOURCE = 'https://mcp.test';
     const fetchMock = vi.fn(async () =>
       new Response(
         JSON.stringify({
@@ -269,11 +271,11 @@ describe('api/mcp handler lifecycle', () => {
     await handler(req as any, res as any);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.test/v2/auth/mcp/connections/resolve',
+      'https://api.test/v2/connected-clients/resolve',
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({
-          'X-T49-MCP-Resolve-Secret': 'resolve-secret',
+          'X-T49-Connected-Clients-Resolve-Secret': 'resolve-secret',
         }),
         body: JSON.stringify({ access_token: 'workos-mcp-token' }),
       }),
@@ -287,8 +289,8 @@ describe('api/mcp handler lifecycle', () => {
 
   it('returns a metadata challenge when WorkOS MCP resolve fails', async () => {
     process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
-    process.env.T49_MCP_RESOLVE_SECRET = 'resolve-secret';
-    process.env.T49_MCP_RESOURCE_URL = 'https://mcp.test/mcp';
+    process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
+    process.env.WORKOS_MCP_RESOURCE = 'https://mcp.test';
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(JSON.stringify({ error: 'not connected' }), { status: 401 })),
@@ -306,6 +308,7 @@ describe('api/mcp handler lifecycle', () => {
     await handler(req as any, res as any);
 
     expect(res.statusCode).toBe(401);
+    expect(res.headers['WWW-Authenticate']).toContain('Bearer realm="mcp"');
     expect(res.headers['WWW-Authenticate']).toContain(
       'resource_metadata="https://mcp.test/.well-known/oauth-protected-resource"',
     );
