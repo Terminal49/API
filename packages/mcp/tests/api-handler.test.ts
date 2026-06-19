@@ -315,6 +315,49 @@ describe('api/mcp handler lifecycle', () => {
     expect(mockState.servers).toHaveLength(0);
   });
 
+  it('returns 502 (not 401) when the WorkOS resolve endpoint is unavailable', async () => {
+    process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
+    process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
+    process.env.WORKOS_MCP_RESOURCE = 'https://mcp.test';
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ error: 'upstream down' }), { status: 503 })),
+    );
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: { host: 'localhost', authorization: 'Bearer workos-mcp-token' },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    // A resolver outage must not be reported as an invalid token, or clients
+    // discard a valid token and loop through re-auth instead of retrying.
+    expect(res.statusCode).toBe(502);
+    expect(res.headers['WWW-Authenticate']).toBeUndefined();
+    expect(mockState.servers).toHaveLength(0);
+  });
+
+  it('returns 500 when AuthKit is enabled but the resolve secret is missing', async () => {
+    process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
+    // No T49_CONNECTED_CLIENTS_RESOLVE_SECRET set — a server misconfiguration.
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: { host: 'localhost', authorization: 'Bearer workos-mcp-token' },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(500);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mockState.servers).toHaveLength(0);
+  });
+
   it('returns 401 when Authorization token does not match T49_MCP_CLIENT_SECRET', async () => {
     process.env.T49_API_TOKEN = 'env-token-value';
     process.env.T49_MCP_CLIENT_SECRET = 'expected-client-secret';

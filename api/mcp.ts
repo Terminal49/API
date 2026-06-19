@@ -115,6 +115,18 @@ function resolveEndpointUrl(): string {
   return `${apiBaseUrl.replace(/\/+$/, '')}/connected-clients/resolve`;
 }
 
+type ResolveFailureKind = 'config' | 'invalid_token' | 'upstream';
+
+class ConnectedClientResolveError extends Error {
+  readonly kind: ResolveFailureKind;
+
+  constructor(message: string, kind: ResolveFailureKind) {
+    super(message);
+    this.name = 'ConnectedClientResolveError';
+    this.kind = kind;
+  }
+}
+
 async function resolveConnectedClientToken(
   token: string,
   requestId: string,
@@ -122,20 +134,29 @@ async function resolveConnectedClientToken(
   const resolveSecret = process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET?.trim() ||
     process.env.T49_MCP_RESOLVE_SECRET?.trim();
   if (!resolveSecret) {
-    throw new Error(
+    throw new ConnectedClientResolveError(
       'T49_CONNECTED_CLIENTS_RESOLVE_SECRET must be set when AuthKit MCP auth is enabled.',
+      'config',
     );
   }
 
-  const response = await fetch(resolveEndpointUrl(), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-T49-Connected-Clients-Resolve-Secret': resolveSecret,
-      'X-Request-Id': requestId,
-    },
-    body: JSON.stringify({ access_token: token }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(resolveEndpointUrl(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-T49-Connected-Clients-Resolve-Secret': resolveSecret,
+        'X-Request-Id': requestId,
+      },
+      body: JSON.stringify({ access_token: token }),
+    });
+  } catch (error) {
+    throw new ConnectedClientResolveError(
+      `Terminal49 connected client resolve request failed: ${(error as Error).message}`,
+      'upstream',
+    );
+  }
 
   let payload: ConnectedClientResolutionResponse = {};
   try {
@@ -145,13 +166,25 @@ async function resolveConnectedClientToken(
   }
 
   if (!response.ok) {
-    throw new Error(payload.error || `Terminal49 connected client resolve failed with ${response.status}`);
+    // Only a token the resolver actively rejects (401/403) is a client auth
+    // failure. A 5xx / 429 / network error means the resolver is unavailable —
+    // surface that as retryable so clients don't discard a valid token and loop
+    // through re-authentication during a Terminal49 outage.
+    const kind: ResolveFailureKind =
+      response.status === 401 || response.status === 403 ? 'invalid_token' : 'upstream';
+    throw new ConnectedClientResolveError(
+      payload.error || `Terminal49 connected client resolve failed with ${response.status}`,
+      kind,
+    );
   }
 
   const accessToken = payload.data?.attributes?.access_token;
   const accountId = payload.data?.attributes?.account_id;
   if (!accessToken || !accountId) {
-    throw new Error('Terminal49 connected client resolve response is missing access_token or account_id.');
+    throw new ConnectedClientResolveError(
+      'Terminal49 connected client resolve response is missing access_token or account_id.',
+      'upstream',
+    );
   }
 
   return { apiToken: `Bearer ${accessToken}`, accountId };
@@ -390,18 +423,35 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
         };
       } catch (error) {
         const err = error as Error;
+        const kind: ResolveFailureKind =
+          err instanceof ConnectedClientResolveError ? err.kind : 'upstream';
         setCorsHeaders(res);
-        setUnauthorizedChallenge(res, req, 'invalid_token');
-        // Return a generic challenge to the client; keep the detailed reason in
-        // the server log (correlated by request_id) to avoid leaking internals.
-        res.status(401).json({
-          error: 'Unauthorized',
-          message: 'Invalid or expired token.',
-        });
+        // Keep the detailed reason in the server log (correlated by request_id);
+        // return a generic, category-appropriate response so internals never leak.
         logLifecycle('mcp.request.complete', requestId, {
           reason: 'connected_client_resolve_failed',
+          kind,
           message: err.message,
         });
+        if (kind === 'invalid_token') {
+          setUnauthorizedChallenge(res, req, 'invalid_token');
+          res.status(401).json({
+            error: 'Unauthorized',
+            message: 'Invalid or expired token.',
+          });
+        } else if (kind === 'config') {
+          res.status(500).json({
+            error: 'Server misconfiguration',
+            message: 'Authorization is not configured correctly.',
+          });
+        } else {
+          // Upstream/transient: do NOT send a 401 challenge — that tells clients
+          // their token is bad and triggers re-auth loops. 502 invites a retry.
+          res.status(502).json({
+            error: 'Bad Gateway',
+            message: 'Authorization service is temporarily unavailable. Please retry.',
+          });
+        }
         return;
       }
     } else if (configuredApiToken) {
