@@ -332,7 +332,8 @@ describe('api/mcp handler lifecycle', () => {
     expect(res.headers['WWW-Authenticate']).not.toContain('resource_metadata');
   });
 
-  it('includes resource_metadata in the 401 challenge when WorkOS is configured', async () => {
+  it('includes resource_metadata when AuthKit is enabled and WorkOS is configured', async () => {
+    process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
     process.env.WORKOS_AUTHORIZATION_SERVER_URL = 'https://auth.workos.test';
     process.env.WORKOS_MCP_RESOURCE = 'https://mcp.test';
     const { default: handler } = await import('../../../api/mcp.ts');
@@ -345,6 +346,21 @@ describe('api/mcp handler lifecycle', () => {
     expect(res.headers['WWW-Authenticate']).toContain(
       'resource_metadata="https://mcp.test/.well-known/oauth-protected-resource"',
     );
+  });
+
+  it('omits resource_metadata when WorkOS is configured but AuthKit is disabled', async () => {
+    // WORKOS_* is set, but the Bearer resolver path is off — advertising OAuth
+    // would make a client complete the flow then loop with an unresolved token.
+    process.env.WORKOS_AUTHORIZATION_SERVER_URL = 'https://auth.workos.test';
+    process.env.WORKOS_MCP_RESOURCE = 'https://mcp.test';
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({ headers: { host: 'localhost' } });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.headers['WWW-Authenticate']).not.toContain('resource_metadata');
   });
 
   it('returns 502 (not 401) when the WorkOS resolve endpoint is unavailable', async () => {

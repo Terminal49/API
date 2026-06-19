@@ -99,11 +99,12 @@ function wwwAuthenticateHeader(req: RequestLike, reason: UnauthorizedReason): st
     parts.push('error_description="The access token is invalid or expired"');
   }
 
-  // Only advertise OAuth discovery when the authorization server is configured.
-  // In Token / client-secret deployments WorkOS is unset and the PRM endpoint
-  // 500s — pointing an OAuth-aware client at resource_metadata would break its
-  // discovery instead of surfacing the API-key auth failure normally.
-  if (oauthConfigured()) {
+  // Only advertise OAuth discovery when the WorkOS resolver path is actually
+  // active: AuthKit enabled AND the authorization server configured. If AuthKit
+  // is off, a Bearer token isn't resolved (it's treated as a passthrough key), so
+  // an OAuth-aware client would complete the WorkOS flow and then loop with a
+  // token the handler won't honor. The PRM endpoint also 500s without WORKOS_*.
+  if (authKitMcpEnabled() && oauthConfigured()) {
     parts.push(`resource_metadata="${protectedResourceMetadataUrl(req)}"`);
   }
 
@@ -425,6 +426,11 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
       authSource: resolvedAuth.source ?? 'authorization',
     };
 
+    // Intentional: when AuthKit is enabled, `Bearer` is reserved for WorkOS OAuth
+    // access tokens (resolved below). API keys authenticate with the `Token`
+    // scheme (passthrough), which is what the docs instruct. Existing Bearer
+    // API-key clients must migrate to `Token` before AuthKit is enabled — see
+    // packages/mcp/WORKOS_MCP_SETUP.md (rollout note).
     if (authKitMcpEnabled() && resolvedAuth.scheme === 'Bearer') {
       try {
         const resolved = await resolveConnectedClientToken(callerToken, requestId);
