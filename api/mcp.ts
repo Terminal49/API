@@ -83,6 +83,12 @@ type ConnectedClientResolutionResponse = {
 
 type UnauthorizedReason = 'missing_credentials' | 'invalid_token';
 
+function oauthConfigured(): boolean {
+  return Boolean(
+    process.env.WORKOS_AUTHORIZATION_SERVER_URL?.trim() || process.env.WORKOS_ISSUER?.trim(),
+  );
+}
+
 function wwwAuthenticateHeader(req: RequestLike, reason: UnauthorizedReason): string {
   const parts = ['Bearer realm="mcp"'];
 
@@ -93,7 +99,13 @@ function wwwAuthenticateHeader(req: RequestLike, reason: UnauthorizedReason): st
     parts.push('error_description="The access token is invalid or expired"');
   }
 
-  parts.push(`resource_metadata="${protectedResourceMetadataUrl(req)}"`);
+  // Only advertise OAuth discovery when the authorization server is configured.
+  // In Token / client-secret deployments WorkOS is unset and the PRM endpoint
+  // 500s — pointing an OAuth-aware client at resource_metadata would break its
+  // discovery instead of surfacing the API-key auth failure normally.
+  if (oauthConfigured()) {
+    parts.push(`resource_metadata="${protectedResourceMetadataUrl(req)}"`);
+  }
 
   return parts.join(', ');
 }

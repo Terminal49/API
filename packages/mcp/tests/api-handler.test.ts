@@ -103,6 +103,8 @@ describe('api/mcp handler lifecycle', () => {
     delete process.env.T49_MCP_RESOLVE_SECRET;
     delete process.env.T49_MCP_RESOURCE_URL;
     delete process.env.WORKOS_MCP_RESOURCE;
+    delete process.env.WORKOS_AUTHORIZATION_SERVER_URL;
+    delete process.env.WORKOS_ISSUER;
     delete process.env.T49_API_BASE_URL;
     delete process.env.T49_MCP_ALLOWED_HOSTS;
     delete process.env.T49_MCP_ALLOWED_ORIGINS;
@@ -291,6 +293,7 @@ describe('api/mcp handler lifecycle', () => {
     process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
     process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
     process.env.WORKOS_MCP_RESOURCE = 'https://mcp.test';
+    process.env.WORKOS_AUTHORIZATION_SERVER_URL = 'https://auth.workos.test';
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(JSON.stringify({ error: 'not connected' }), { status: 401 })),
@@ -313,6 +316,35 @@ describe('api/mcp handler lifecycle', () => {
       'resource_metadata="https://mcp.test/.well-known/oauth-protected-resource"',
     );
     expect(mockState.servers).toHaveLength(0);
+  });
+
+  it('omits resource_metadata from the 401 challenge when WorkOS is not configured', async () => {
+    // Token / client-secret deployment: no WORKOS_* env. Advertising OAuth
+    // discovery would send clients to a PRM endpoint that 500s.
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({ headers: { host: 'localhost' } });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.headers['WWW-Authenticate']).toContain('Bearer realm="mcp"');
+    expect(res.headers['WWW-Authenticate']).not.toContain('resource_metadata');
+  });
+
+  it('includes resource_metadata in the 401 challenge when WorkOS is configured', async () => {
+    process.env.WORKOS_AUTHORIZATION_SERVER_URL = 'https://auth.workos.test';
+    process.env.WORKOS_MCP_RESOURCE = 'https://mcp.test';
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({ headers: { host: 'localhost' } });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.headers['WWW-Authenticate']).toContain(
+      'resource_metadata="https://mcp.test/.well-known/oauth-protected-resource"',
+    );
   });
 
   it('returns 502 (not 401) when the WorkOS resolve endpoint is unavailable', async () => {
