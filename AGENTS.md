@@ -74,6 +74,7 @@ For detailed docs writing standards, voice, and terminology, see [WRITING_GUIDE.
 - The gateway is an OAuth 2.1 **Resource Server**; **WorkOS** is the Authorization Server. Follow the MCP authorization spec (RFC 9728 / 8414 / 8707 / 6750).
 - Token validation is delegated to the Terminal49 backend (`/connected-clients/resolve`); the backend must enforce the token audience. The gateway must not weaken the `WWW-Authenticate` challenge, the PRM document, or the resource resolver without checking the spec.
 - Config is via env (`WORKOS_*`, `T49_MCP_*`). Never log tokens; return generic auth errors to clients and keep detail in server logs.
+- The canonical connector URL and OAuth resource identifier is the **root origin** `https://mcp.terminal49.com` (pin `WORKOS_MCP_RESOURCE`); don't use the `/mcp` path in client config. Production/client setup (WorkOS dashboard, env vars, ChatGPT + Claude specifics) is in [packages/mcp/WORKOS_MCP_SETUP.md](packages/mcp/WORKOS_MCP_SETUP.md).
 
 ---
 

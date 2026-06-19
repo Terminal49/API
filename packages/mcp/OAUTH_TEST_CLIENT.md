@@ -10,6 +10,9 @@ Open `http://localhost:8787`, click `Authorize`, complete the WorkOS flow, then 
 
 ## WorkOS prerequisites
 
+> For the full production setup (dashboard checklist, env vars, smoke tests, and
+> per-client notes for ChatGPT and Claude), see [WORKOS_MCP_SETUP.md](./WORKOS_MCP_SETUP.md).
+
 In the WorkOS environment used by `WORKOS_AUTHORIZATION_SERVER_URL`:
 
 - Enable MCP Auth with Client ID Metadata Document (CIMD). Keep Dynamic Client Registration (DCR) enabled for clients that do not yet support CIMD.
