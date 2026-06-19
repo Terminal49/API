@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { resolveMcpResource } from '../packages/mcp/src/resource.js';
 
 type RequestLike = {
   method?: string;
@@ -10,27 +11,6 @@ type ResponseLike = {
   setHeader(name: string, value: string): void;
   end(): void;
 } & ServerResponse;
-
-const DEFAULT_MCP_RESOURCE_URL = 'https://mcp.terminal49.com';
-
-function resourceUrl(req: RequestLike): string {
-  const configured = process.env.WORKOS_MCP_RESOURCE?.trim() || process.env.T49_MCP_RESOURCE_URL?.trim();
-  if (configured) {
-    return configured.replace(/\/+$/, '');
-  }
-
-  const host = req.headers.host;
-  if (!host) {
-    return DEFAULT_MCP_RESOURCE_URL;
-  }
-
-  const protocol = host?.startsWith('localhost') || host?.startsWith('127.0.0.1') ? 'http' : 'https';
-  if (protocol === 'http') {
-    return `${protocol}://${host}`;
-  }
-
-  return DEFAULT_MCP_RESOURCE_URL;
-}
 
 export default function handler(req: RequestLike, res: ResponseLike): void {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -55,9 +35,19 @@ export default function handler(req: RequestLike, res: ResponseLike): void {
     return;
   }
 
+  // RFC 9728 recommends advertising supported scopes. Driven by env so the
+  // value stays in sync with what the WorkOS authorization server actually
+  // issues; omitted entirely when unset to avoid advertising scopes the AS
+  // would reject.
+  const scopesSupported = (process.env.T49_MCP_SCOPES_SUPPORTED ?? '')
+    .split(',')
+    .map((scope) => scope.trim())
+    .filter((scope) => scope.length > 0);
+
   res.status(200).json({
-    resource: resourceUrl(req),
+    resource: resolveMcpResource(req),
     authorization_servers: [authorizationServer.replace(/\/+$/, '')],
     bearer_methods_supported: ['header'],
+    ...(scopesSupported.length > 0 ? { scopes_supported: scopesSupported } : {}),
   });
 }

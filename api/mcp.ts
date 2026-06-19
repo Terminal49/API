@@ -13,6 +13,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as Sentry from '@sentry/node';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
 import { captureMcpException } from '../packages/mcp/src/sentry.js';
+import { protectedResourceMetadataUrl } from '../packages/mcp/src/resource.js';
 
 type RequestLike = {
   method?: string;
@@ -80,45 +81,29 @@ type ConnectedClientResolutionResponse = {
   error?: string;
 };
 
-const DEFAULT_MCP_RESOURCE_URL = 'https://mcp.terminal49.com';
+type UnauthorizedReason = 'missing_credentials' | 'invalid_token';
 
-function mcpResourceUrl(): string {
-  return process.env.WORKOS_MCP_RESOURCE?.trim() ||
-    process.env.T49_MCP_RESOURCE_URL?.trim() ||
-    DEFAULT_MCP_RESOURCE_URL;
-}
+function wwwAuthenticateHeader(req: RequestLike, reason: UnauthorizedReason): string {
+  const parts = ['Bearer realm="mcp"'];
 
-function oauthProtectedResourceMetadataUrl(): string {
-  const configured = process.env.T49_MCP_RESOURCE_METADATA_URL?.trim();
-  if (configured) {
-    return configured;
+  // RFC 6750 §3.1: include an error code only when a token was actually
+  // presented and rejected; omit it when the client sent no credentials.
+  if (reason === 'invalid_token') {
+    parts.push('error="invalid_token"');
+    parts.push('error_description="The access token is invalid or expired"');
   }
 
-  const resource = mcpResourceUrl();
-
-  try {
-    const url = new URL(resource);
-    return `${url.origin}/.well-known/oauth-protected-resource`;
-  } catch {
-    return `${resource.replace(/\/+$/, '')}/.well-known/oauth-protected-resource`;
-  }
-}
-
-function wwwAuthenticateHeader(): string {
-  const metadataUrl = oauthProtectedResourceMetadataUrl();
-  const parts = [
-    'Bearer realm="mcp"',
-    'error="unauthorized"',
-    'error_description="Authorization needed"',
-  ];
-
-  parts.push(`resource_metadata="${metadataUrl}"`);
+  parts.push(`resource_metadata="${protectedResourceMetadataUrl(req)}"`);
 
   return parts.join(', ');
 }
 
-function setUnauthorizedChallenge(res: ResponseLike): void {
-  res.setHeader('WWW-Authenticate', wwwAuthenticateHeader());
+function setUnauthorizedChallenge(
+  res: ResponseLike,
+  req: RequestLike,
+  reason: UnauthorizedReason,
+): void {
+  res.setHeader('WWW-Authenticate', wwwAuthenticateHeader(req, reason));
 }
 
 function authKitMcpEnabled(): boolean {
@@ -378,7 +363,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
 
     if (!callerToken) {
       setCorsHeaders(res);
-      setUnauthorizedChallenge(res);
+      setUnauthorizedChallenge(res, req, 'missing_credentials');
       res.status(401).json({
         error: 'Unauthorized',
         message:
@@ -406,10 +391,12 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
       } catch (error) {
         const err = error as Error;
         setCorsHeaders(res);
-        setUnauthorizedChallenge(res);
+        setUnauthorizedChallenge(res, req, 'invalid_token');
+        // Return a generic challenge to the client; keep the detailed reason in
+        // the server log (correlated by request_id) to avoid leaking internals.
         res.status(401).json({
           error: 'Unauthorized',
-          message: err.message,
+          message: 'Invalid or expired token.',
         });
         logLifecycle('mcp.request.complete', requestId, {
           reason: 'connected_client_resolve_failed',
@@ -430,7 +417,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
 
       if (!isMatchingClientSecret(callerToken, configuredClientSecret)) {
         setCorsHeaders(res);
-        setUnauthorizedChallenge(res);
+        setUnauthorizedChallenge(res, req, 'invalid_token');
         res.status(401).json({
           error: 'Unauthorized',
           message: 'Invalid client credentials.',
