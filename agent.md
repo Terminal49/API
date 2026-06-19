@@ -1,9 +1,11 @@
 # Documentation agent instructions
 
-These instructions guide automated changes for the Terminal49 docs in this repository.
+These instructions guide automated changes for the Terminal49 **docs** in this repository.
+
+> This repo also hosts deployed code — the MCP server + OAuth gateway (`api/`, `packages/mcp/`) and the TypeScript SDK (`sdks/typescript-sdk/`). For that code, its structure, and build/test/lint commands, see [AGENTS.md](AGENTS.md). This guide covers docs content only.
 
 ## Scope
-- Primary docs live in `docs/` (MDX pages, `docs/docs.json`, and `docs/openapi.json`).
+- This guide applies to **docs** in `docs/` (MDX pages, `docs/docs.json`, and `docs/openapi.json`).
 - Do not edit generated files unless explicitly asked (e.g., `Terminal49-API.postman_collection.json`).
 
 ## Audience focus
