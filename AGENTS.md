@@ -66,6 +66,7 @@ For detailed docs writing standards, voice, and terminology, see [WRITING_GUIDE.
 - Typecheck / build: `npm run build --workspace @terminal49/mcp` · `--workspace @terminal49/sdk` (tsc). `api/` is typechecked by the root config: `npx tsc --noEmit -p tsconfig.json`.
 - **Lint/format: oxlint + oxfmt** (migrated off Biome). `npm run lint --workspace <pkg>`; auto-format with `npm run format --workspace <pkg>` (oxfmt). Config: `.oxlintrc.json` + `.oxfmtrc.json` per package. The SDK lint also runs `oxfmt --check`; MCP is lint-only.
 - CI (`.github/workflows/ci.yml`) runs build + test + lint for both packages.
+- Running the MCP server locally + testing tool calls with Claude Desktop (stdio and gateway paths): [packages/mcp/LOCAL_DEV.md](packages/mcp/LOCAL_DEV.md). Gateway env template: `.env.local.example`.
 
 ---
 
