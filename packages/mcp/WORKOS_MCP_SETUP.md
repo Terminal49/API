@@ -72,8 +72,10 @@ curl -s -X POST "$ISSUER/oauth2/register" \
 # PRM: resource + authorization_servers
 curl -s https://mcp.terminal49.com/.well-known/oauth-protected-resource | jq
 
-# 401 challenge points at the PRM
-curl -si https://mcp.terminal49.com/mcp | grep -i www-authenticate
+# 401 challenge points at the PRM (must be POST — a GET to /mcp returns 405)
+curl -si -X POST https://mcp.terminal49.com/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | grep -i www-authenticate
 
 # After an OAuth flow, decode the access token and confirm:
 #   aud == https://mcp.terminal49.com

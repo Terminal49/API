@@ -27,9 +27,12 @@ const settings = {
   ),
   callbackPath: stringEnv('MCP_OAUTH_CALLBACK_PATH', DEFAULT_CALLBACK_PATH),
   resourceUrl: trimTrailingSlash(stringEnv('MCP_OAUTH_RESOURCE_URL', DEFAULT_RESOURCE_URL)),
+  // Resource (audience) stays the bare origin; the MCP calls go to the /mcp
+  // route. Defaulting the endpoint to the origin would POST to `/`, which works
+  // only via the root rewrite — be explicit so the test client targets /mcp.
   mcpEndpointUrl: trimTrailingSlash(stringEnv(
     'MCP_OAUTH_MCP_ENDPOINT_URL',
-    stringEnv('MCP_OAUTH_RESOURCE_URL', DEFAULT_RESOURCE_URL),
+    `${trimTrailingSlash(stringEnv('MCP_OAUTH_RESOURCE_URL', DEFAULT_RESOURCE_URL))}/mcp`,
   )),
   protectedResourceMetadataUrl: optionalEnv('MCP_OAUTH_PROTECTED_RESOURCE_METADATA_URL'),
   authorizationServerUrl: optionalEnv('MCP_OAUTH_AUTHORIZATION_SERVER_URL'),
