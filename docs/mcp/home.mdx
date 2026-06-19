@@ -79,7 +79,7 @@ For the full walkthrough (including local stdio dev, deployment, and SDK example
 
 | Transport | Endpoint | Best For |
 |-----------|----------|----------|
-| HTTP (streamable) | `POST https://mcp.terminal49.com` (root; `/mcp` and `/api/mcp` also work) | Serverless, short-lived requests |
+| HTTP (streamable) | `POST https://mcp.terminal49.com` | Serverless, short-lived requests |
 
 **Authentication**:
 - API token only (OAuth not required for this release)
@@ -88,7 +88,7 @@ For the full walkthrough (including local stdio dev, deployment, and SDK example
 - Or set `T49_API_TOKEN` environment variable when self-hosting
 
 <Tip>
-Connector URL: `https://mcp.terminal49.com`. The server also responds at `/mcp` and `/api/mcp`, but use the **root URL** — it is the canonical OAuth resource identifier, so OAuth clients (ChatGPT, Claude connectors) bind to the correct token audience.
+Connector URL: `https://mcp.terminal49.com`. It is the canonical OAuth resource identifier, so OAuth clients (ChatGPT, Claude connectors) bind to the correct token audience.
 </Tip>
 
 {/* OAuth hosted docs are not yet published. Links will be added when the pages are available. */}
