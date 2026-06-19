@@ -2,6 +2,7 @@ import { EventEmitter } from 'node:events';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import protectedResourceHandler from '../../../api/oauth-protected-resource.ts';
+import authorizationServerHandler from '../../../api/oauth-authorization-server.ts';
 
 /**
  * Mirrors the MockResponse used in api-handler.test.ts so these tests exercise
@@ -170,5 +171,66 @@ describe('api/oauth-protected-resource (RFC 9728 PRM)', () => {
     expect(res.statusCode).toBe(405);
     expect(payloadOf(res).error).toBe('Method not allowed');
     expect(res.headers['Access-Control-Allow-Origin']).toBe('*');
+  });
+});
+
+describe('api/oauth-authorization-server (RFC 8414 metadata redirect)', () => {
+  beforeEach(clearOauthEnv);
+  afterEach(clearOauthEnv);
+
+  it('302-redirects to the WorkOS issuer metadata (not a verbatim proxy)', () => {
+    process.env.WORKOS_AUTHORIZATION_SERVER_URL = 'https://auth.workos.test/';
+    const res = new MockResponse();
+
+    authorizationServerHandler(createRequest('GET') as never, res as never);
+
+    expect(res.statusCode).toBe(302);
+    // Trailing slash normalized; client fetches from the issuer's own origin so
+    // the metadata `issuer` matches the fetch origin (RFC 8414 section 3.3).
+    expect(res.headers.Location).toBe(
+      'https://auth.workos.test/.well-known/oauth-authorization-server',
+    );
+    expect(res.endCalled).toBe(true);
+    expect(res.jsonCalled).toBe(false);
+  });
+
+  it('falls back to WORKOS_ISSUER for the redirect target', () => {
+    process.env.WORKOS_ISSUER = 'https://issuer.workos.test';
+    const res = new MockResponse();
+
+    authorizationServerHandler(createRequest('GET') as never, res as never);
+
+    expect(res.statusCode).toBe(302);
+    expect(res.headers.Location).toBe(
+      'https://issuer.workos.test/.well-known/oauth-authorization-server',
+    );
+  });
+
+  it('returns 500 when no authorization server is configured', () => {
+    const res = new MockResponse();
+
+    authorizationServerHandler(createRequest('GET') as never, res as never);
+
+    expect(res.statusCode).toBe(500);
+    expect(payloadOf(res).error).toContain('WORKOS_AUTHORIZATION_SERVER_URL');
+  });
+
+  it('answers CORS preflight with 200 and does not redirect', () => {
+    const res = new MockResponse();
+
+    authorizationServerHandler(createRequest('OPTIONS') as never, res as never);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.headers.Location).toBeUndefined();
+  });
+
+  it('rejects non-GET methods with 405', () => {
+    process.env.WORKOS_AUTHORIZATION_SERVER_URL = 'https://auth.workos.test';
+    const res = new MockResponse();
+
+    authorizationServerHandler(createRequest('POST') as never, res as never);
+
+    expect(res.statusCode).toBe(405);
+    expect(res.headers.Location).toBeUndefined();
   });
 });
