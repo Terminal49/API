@@ -34,7 +34,7 @@ Use the Terminal49 MCP server to let Claude or Cursor answer questions with live
         "terminal49": {
           "url": "https://mcp.terminal49.com/mcp",
           "headers": {
-            "Authorization": "Bearer <T49_API_TOKEN>"
+            "Authorization": "Token <T49_API_TOKEN>"
           }
         }
       }
@@ -49,7 +49,7 @@ Use the Terminal49 MCP server to let Claude or Cursor answer questions with live
           "terminal49": {
             "url": "https://mcp.terminal49.com/mcp",
             "headers": {
-              "Authorization": "Bearer <T49_API_TOKEN>"
+              "Authorization": "Token <T49_API_TOKEN>"
             }
           }
         }
@@ -83,7 +83,8 @@ For the full walkthrough (including local stdio dev, deployment, and SDK example
 
 **Authentication**:
 - API token only (OAuth not required for this release)
-- Header: `Authorization: Bearer <T49_API_TOKEN>` or `Authorization: Token <T49_API_TOKEN>`
+- Header: `Authorization: Token <T49_API_TOKEN>`. Use the `Token` scheme for API keys.
+- The `Bearer` scheme is reserved for WorkOS OAuth access tokens. Once OAuth is enabled, `Bearer` accepts only WorkOS tokens, so authenticate API keys with `Token`.
 - Or set `T49_API_TOKEN` environment variable when self-hosting
 
 <Tip>
