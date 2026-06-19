@@ -1,7 +1,8 @@
 # Local Development & Testing with Claude
 
-Two ways to test the Terminal49 MCP server locally with Claude Desktop. Pick by
-what you want to exercise.
+Three ways to test the Terminal49 MCP server locally with Claude Desktop. Pick by
+what you want to exercise: **Path 1** the tools (stdio), **Path 2** the gateway +
+passthrough auth, **Path 3** the real WorkOS OAuth (MCP auth).
 
 > Claude Desktop **cannot reach `http://localhost` over an HTTP connector** — its
 > remote connectors route through Anthropic's backend (`160.79.104.0/21`), which
@@ -90,15 +91,66 @@ This path tests gateway routing + auth + the tools, end to end, against local t4
 
 ---
 
-## Full WorkOS OAuth (not needed for tool testing)
+## Path 3 — WorkOS OAuth (the real MCP auth)
 
-The WorkOS Bearer/OAuth path (`T49_MCP_AUTHKIT_ENABLED=true`) can't be fully
-reproduced on plain `localhost`: WorkOS must reach your gateway over HTTPS and the
-OAuth `resource` must be an HTTPS URL registered as a Resource Indicator. To test
-it, expose the gateway via a tunnel and use the registered HTTPS URL as the
-resource — see [WORKOS_MCP_SETUP.md](./WORKOS_MCP_SETUP.md) and
-[OAUTH_TEST_CLIENT.md](./OAUTH_TEST_CLIENT.md). Tool calls themselves never need
-this; use Path 1 or 2.
+Drives the production auth path: the client runs the OAuth flow against WorkOS,
+gets a Bearer access token, and the gateway exchanges it at
+`/connected-clients/resolve` for the t49 API token + account id. No API key.
+
+**Prerequisites**
+- Local **t49** running with the `/connected-clients/resolve` endpoint (PR #2321),
+  validating the token audience and sharing `T49_CONNECTED_CLIENTS_RESOLVE_SECRET`.
+- A **WorkOS dev environment** with DCR enabled and a Resource Indicator
+  registered (see [WORKOS_MCP_SETUP.md](./WORKOS_MCP_SETUP.md)). The indicator must
+  equal the gateway's advertised `resource`.
+
+**Why a tunnel.** WorkOS Resource Indicators are HTTPS, the PRM `resource_metadata`
+URL must be fetchable by the client, and a native Claude Desktop connector
+(Anthropic's backend) can't reach localhost. So expose the local gateway over
+HTTPS:
+
+```sh
+cloudflared tunnel --url http://localhost:4000   # → https://<sub>.trycloudflare.com
+# or: ngrok http 4000   (use a reserved domain for a URL that survives restarts)
+```
+
+Register that HTTPS URL in WorkOS as the Resource Indicator.
+
+**Gateway env** (`.env.local`, then `vercel dev --listen 4000`):
+
+```sh
+T49_MCP_AUTHKIT_ENABLED=true
+WORKOS_AUTHORIZATION_SERVER_URL=https://<your-tenant>.authkit.app
+WORKOS_MCP_RESOURCE=https://<tunnel>          # == the registered Resource Indicator
+T49_CONNECTED_CLIENTS_RESOLVE_SECRET=<matches local t49>
+T49_API_BASE_URL=http://localhost:3000/v2     # local t49
+```
+
+**Drive the OAuth flow — three options:**
+
+1. **Claude Desktop native connector (most realistic).** Settings → Connectors →
+   Add custom connector → `https://<tunnel>`. Anthropic's backend runs DCR + PKCE,
+   you consent in the browser, and it connects — exactly the real ChatGPT/Claude
+   experience.
+2. **`mcp-remote` (local OAuth client, best for debugging).** No `--header` — it
+   *does* the OAuth instead of forwarding a key:
+   ```jsonc
+   { "command": "npx", "args": ["-y", "mcp-remote", "https://<tunnel>/mcp"] }
+   ```
+   It discovers the PRM, registers via DCR, opens a browser, stores the token, and
+   calls the gateway — you watch the whole flow on your machine.
+3. **Bundled test client (inspect the token).**
+   ```sh
+   MCP_OAUTH_RESOURCE_URL=https://<tunnel> \
+   MCP_OAUTH_MCP_ENDPOINT_URL=https://<tunnel>/mcp \
+   node packages/mcp/scripts/oauth-test-client.mjs
+   ```
+
+If `resolve` rejects the token, decode it: the `aud` claim must equal
+`WORKOS_MCP_RESOURCE` == the WorkOS Resource Indicator == what the client sent as
+`resource`. That three-way match is the whole game.
+
+> Doing tool work, not auth? Use Path 1 or 2 — they don't need any of this.
 
 ---
 
