@@ -142,6 +142,26 @@ describe('Terminal49Client', () => {
     );
   });
 
+  it('preserves bearer auth and sends account header when configured', async () => {
+    const { fetchImpl, calls } = createMockFetch({
+      '/containers/abc?include=shipment,pod_terminal': () =>
+        jsonResponse({ data: { id: 'abc', attributes: {} } }),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'Bearer local-jwt',
+      accountId: 'account-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.getContainer('abc');
+
+    const headers = new Headers(calls[0].init?.headers);
+    expect(headers.get('Authorization')).toBe('Bearer local-jwt');
+    expect(headers.get('x-account-id')).toBe('account-123');
+  });
+
   it('sets include params on shipment and lists shipping lines with search', async () => {
     const { fetchImpl, calls } = createMockFetch({
       '/shipments/ship-1?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal':

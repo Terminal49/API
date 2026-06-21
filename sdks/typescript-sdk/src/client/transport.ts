@@ -13,6 +13,7 @@ import {
 
 export interface TransportConfig {
   apiToken: string;
+  accountId?: string;
   baseUrl: string;
   maxRetries?: number;
   fetchImpl?: typeof fetch;
@@ -22,6 +23,7 @@ export type ApiClient = ReturnType<typeof createClient<paths>>;
 
 export class Transport {
   private apiToken: string;
+  private accountId?: string;
   public baseUrl: string;
   private maxRetries: number;
   private fetchImpl: typeof fetch;
@@ -29,6 +31,7 @@ export class Transport {
 
   constructor(config: TransportConfig) {
     this.apiToken = config.apiToken;
+    this.accountId = config.accountId;
     this.baseUrl = config.baseUrl;
     this.maxRetries = config.maxRetries ?? 2;
     this.fetchImpl = config.fetchImpl ?? fetch;
@@ -38,7 +41,7 @@ export class Transport {
       fetch: this.fetchImpl,
     });
 
-    this.client.use(new AuthInterceptor(this.apiToken));
+    this.client.use(new AuthInterceptor(this.apiToken, this.accountId));
     this.client.use(new ErrorMappingInterceptor());
     this.client.use(new RetryInterceptor(this.maxRetries, this.fetchImpl));
   }
@@ -62,7 +65,7 @@ export class Transport {
     // or we could construct a Request and run it through the middleware manually.
     // For search(), which is the only user, we'll just run it directly.
     const req = new Request(input, init);
-    const auth = new AuthInterceptor(this.apiToken);
+    const auth = new AuthInterceptor(this.apiToken, this.accountId);
     const retry = new RetryInterceptor(this.maxRetries, this.fetchImpl);
     const errorMap = new ErrorMappingInterceptor();
 

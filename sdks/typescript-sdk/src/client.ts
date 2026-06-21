@@ -50,8 +50,10 @@ export {
 
 /** Configuration for {@link Terminal49Client}. */
 export interface Terminal49ClientConfig {
-  /** Terminal49 API token. Pass either the raw token or a value prefixed with `Token `. */
+  /** Terminal49 API token. Pass either the raw token or a value prefixed with `Token ` or `Bearer `. */
   apiToken: string;
+  /** Account id to send as `x-account-id` for user-scoped bearer tokens. */
+  accountId?: string;
   /** API base URL. Defaults to `https://api.terminal49.com/v2`. */
   apiBaseUrl?: string;
   /** Number of retry attempts for rate-limit and server errors. Defaults to `2`. */
@@ -103,6 +105,7 @@ export class Terminal49Client {
 
     this.transport = new Transport({
       apiToken: config.apiToken,
+      accountId: config.accountId,
       baseUrl,
       maxRetries: config.maxRetries,
       fetchImpl: config.fetchImpl,

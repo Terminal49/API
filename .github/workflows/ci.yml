@@ -38,7 +38,10 @@ jobs:
           test -z "$(git status --porcelain -- docs/sdk/reference)"
       - name: Test SDK
         run: npm test -- --run
-      - name: Lint SDK (Biome)
+      # oxlint/oxfmt require Node 20+; lint is static so it only needs one
+      # modern runtime. Build/test still cover the full matrix for consumers.
+      - name: Lint SDK (oxlint + oxfmt)
+        if: matrix.node-version == 24
         run: npm run lint
 
   mcp:
@@ -58,5 +61,5 @@ jobs:
         run: npm run build --workspace @terminal49/mcp
       - name: Test MCP
         run: npm run test --workspace @terminal49/mcp -- --run --coverage
-      - name: Lint MCP (Biome)
+      - name: Lint MCP (oxlint + oxfmt)
         run: npm run lint --workspace @terminal49/mcp

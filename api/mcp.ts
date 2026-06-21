@@ -13,6 +13,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as Sentry from '@sentry/node';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
 import { captureMcpException } from '../packages/mcp/src/sentry.js';
+import { protectedResourceMetadataUrl } from '../packages/mcp/src/resource.js';
 
 type RequestLike = {
   method?: string;
@@ -48,19 +49,158 @@ function getHeaderValue(value: string | string[] | undefined): string | undefine
 
 function extractAuthorizationToken(
   authorizationHeader: string | undefined,
-): { token?: string; source?: 'authorization' } {
+): { scheme?: 'Bearer' | 'Token'; token?: string; source?: 'authorization' } {
   if (authorizationHeader?.trim()) {
     const trimmed = authorizationHeader.trim();
     const authMatch = trimmed.match(/^(bearer|token)\s+(.+)$/i);
     if (authMatch?.[2]) {
       const token = authMatch[2].trim();
       if (token.length > 0) {
-        return { token, source: 'authorization' };
+        const scheme = authMatch[1].toLowerCase() === 'bearer' ? 'Bearer' : 'Token';
+        return { scheme, token, source: 'authorization' };
       }
     }
   }
 
   return {};
+}
+
+type ResolvedTerminal49Auth = {
+  apiToken: string;
+  accountId?: string;
+  authSource: 'authorization' | 'environment' | 'workos_mcp';
+};
+
+type ConnectedClientResolutionResponse = {
+  data?: {
+    attributes?: {
+      access_token?: string;
+      account_id?: string;
+    };
+  };
+  error?: string;
+};
+
+type UnauthorizedReason = 'missing_credentials' | 'invalid_token';
+
+function oauthConfigured(): boolean {
+  return Boolean(
+    process.env.WORKOS_AUTHORIZATION_SERVER_URL?.trim() || process.env.WORKOS_ISSUER?.trim(),
+  );
+}
+
+function wwwAuthenticateHeader(req: RequestLike, reason: UnauthorizedReason): string {
+  const parts = ['Bearer realm="mcp"'];
+
+  // RFC 6750 §3.1: include an error code only when a token was actually
+  // presented and rejected; omit it when the client sent no credentials.
+  if (reason === 'invalid_token') {
+    parts.push('error="invalid_token"');
+    parts.push('error_description="The access token is invalid or expired"');
+  }
+
+  // Only advertise OAuth discovery when the WorkOS resolver path is actually
+  // active: AuthKit enabled AND the authorization server configured. If AuthKit
+  // is off, a Bearer token isn't resolved (it's treated as a passthrough key), so
+  // an OAuth-aware client would complete the WorkOS flow and then loop with a
+  // token the handler won't honor. The PRM endpoint also 500s without WORKOS_*.
+  if (authKitMcpEnabled() && oauthConfigured()) {
+    parts.push(`resource_metadata="${protectedResourceMetadataUrl(req)}"`);
+  }
+
+  return parts.join(', ');
+}
+
+function setUnauthorizedChallenge(
+  res: ResponseLike,
+  req: RequestLike,
+  reason: UnauthorizedReason,
+): void {
+  res.setHeader('WWW-Authenticate', wwwAuthenticateHeader(req, reason));
+}
+
+function authKitMcpEnabled(): boolean {
+  return process.env.T49_MCP_AUTHKIT_ENABLED === 'true';
+}
+
+function resolveEndpointUrl(): string {
+  const apiBaseUrl = process.env.T49_API_BASE_URL?.trim() || 'https://api.terminal49.com/v2';
+  return `${apiBaseUrl.replace(/\/+$/, '')}/connected-clients/resolve`;
+}
+
+type ResolveFailureKind = 'config' | 'invalid_token' | 'upstream';
+
+class ConnectedClientResolveError extends Error {
+  readonly kind: ResolveFailureKind;
+
+  constructor(message: string, kind: ResolveFailureKind) {
+    super(message);
+    this.name = 'ConnectedClientResolveError';
+    this.kind = kind;
+  }
+}
+
+async function resolveConnectedClientToken(
+  token: string,
+  requestId: string,
+): Promise<{ apiToken: string; accountId: string }> {
+  const resolveSecret = process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET?.trim() ||
+    process.env.T49_MCP_RESOLVE_SECRET?.trim();
+  if (!resolveSecret) {
+    throw new ConnectedClientResolveError(
+      'T49_CONNECTED_CLIENTS_RESOLVE_SECRET must be set when AuthKit MCP auth is enabled.',
+      'config',
+    );
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(resolveEndpointUrl(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-T49-Connected-Clients-Resolve-Secret': resolveSecret,
+        'X-Request-Id': requestId,
+      },
+      body: JSON.stringify({ access_token: token }),
+    });
+  } catch (error) {
+    throw new ConnectedClientResolveError(
+      `Terminal49 connected client resolve request failed: ${(error as Error).message}`,
+      'upstream',
+    );
+  }
+
+  let payload: ConnectedClientResolutionResponse = {};
+  try {
+    payload = (await response.json()) as ConnectedClientResolutionResponse;
+  } catch {
+    payload = {};
+  }
+
+  if (!response.ok) {
+    // Only a token the resolver actively rejects (401/403) is a client auth
+    // failure. A 5xx / 429 / network error means the resolver is unavailable —
+    // surface that as retryable so clients don't discard a valid token and loop
+    // through re-authentication during a Terminal49 outage.
+    const kind: ResolveFailureKind =
+      response.status === 401 || response.status === 403 ? 'invalid_token' : 'upstream';
+    throw new ConnectedClientResolveError(
+      payload.error || `Terminal49 connected client resolve failed with ${response.status}`,
+      kind,
+    );
+  }
+
+  const accessToken = payload.data?.attributes?.access_token;
+  const accountId = payload.data?.attributes?.account_id;
+  if (!accessToken || !accountId) {
+    throw new ConnectedClientResolveError(
+      'Terminal49 connected client resolve response is missing access_token or account_id.',
+      'upstream',
+    );
+  }
+
+  return { apiToken: `Bearer ${accessToken}`, accountId };
 }
 
 function isMatchingClientSecret(providedToken: string, expectedSecret: string): boolean {
@@ -269,6 +409,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
 
     if (!callerToken) {
       setCorsHeaders(res);
+      setUnauthorizedChallenge(res, req, 'missing_credentials');
       res.status(401).json({
         error: 'Unauthorized',
         message:
@@ -280,10 +421,58 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
 
     const configuredApiToken = process.env.T49_API_TOKEN?.trim();
     const configuredClientSecret = process.env.T49_MCP_CLIENT_SECRET?.trim();
-    let apiToken = callerToken;
-    let authSource: 'authorization' | 'environment' = resolvedAuth.source ?? 'authorization';
+    let resolvedTerminal49Auth: ResolvedTerminal49Auth = {
+      apiToken: callerToken,
+      authSource: resolvedAuth.source ?? 'authorization',
+    };
 
-    if (configuredApiToken) {
+    // Intentional: when AuthKit is enabled, `Bearer` is reserved for WorkOS OAuth
+    // access tokens (resolved below). API keys authenticate with the `Token`
+    // scheme (passthrough), which is what the docs instruct. Existing Bearer
+    // API-key clients must migrate to `Token` before AuthKit is enabled — see
+    // packages/mcp/WORKOS_MCP_SETUP.md (rollout note).
+    if (authKitMcpEnabled() && resolvedAuth.scheme === 'Bearer') {
+      try {
+        const resolved = await resolveConnectedClientToken(callerToken, requestId);
+        resolvedTerminal49Auth = {
+          apiToken: resolved.apiToken,
+          accountId: resolved.accountId,
+          authSource: 'workos_mcp',
+        };
+      } catch (error) {
+        const err = error as Error;
+        const kind: ResolveFailureKind =
+          err instanceof ConnectedClientResolveError ? err.kind : 'upstream';
+        setCorsHeaders(res);
+        // Keep the detailed reason in the server log (correlated by request_id);
+        // return a generic, category-appropriate response so internals never leak.
+        logLifecycle('mcp.request.complete', requestId, {
+          reason: 'connected_client_resolve_failed',
+          kind,
+          message: err.message,
+        });
+        if (kind === 'invalid_token') {
+          setUnauthorizedChallenge(res, req, 'invalid_token');
+          res.status(401).json({
+            error: 'Unauthorized',
+            message: 'Invalid or expired token.',
+          });
+        } else if (kind === 'config') {
+          res.status(500).json({
+            error: 'Server misconfiguration',
+            message: 'Authorization is not configured correctly.',
+          });
+        } else {
+          // Upstream/transient: do NOT send a 401 challenge — that tells clients
+          // their token is bad and triggers re-auth loops. 502 invites a retry.
+          res.status(502).json({
+            error: 'Bad Gateway',
+            message: 'Authorization service is temporarily unavailable. Please retry.',
+          });
+        }
+        return;
+      }
+    } else if (configuredApiToken) {
       if (!configuredClientSecret) {
         setCorsHeaders(res);
         res.status(500).json({
@@ -296,6 +485,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
 
       if (!isMatchingClientSecret(callerToken, configuredClientSecret)) {
         setCorsHeaders(res);
+        setUnauthorizedChallenge(res, req, 'invalid_token');
         res.status(401).json({
           error: 'Unauthorized',
           message: 'Invalid client credentials.',
@@ -304,18 +494,24 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
         return;
       }
 
-      apiToken = configuredApiToken;
-      authSource = 'environment';
+      resolvedTerminal49Auth = {
+        apiToken: configuredApiToken,
+        authSource: 'environment',
+      };
     }
 
     logLifecycle('mcp.request.auth', requestId, {
-      auth_source: authSource,
+      auth_source: resolvedTerminal49Auth.authSource,
     });
 
     setCorsHeaders(res);
 
     // Create MCP server and per-request transport.
-    server = createTerminal49McpServer(apiToken, process.env.T49_API_BASE_URL);
+    server = createTerminal49McpServer(
+      resolvedTerminal49Auth.apiToken,
+      process.env.T49_API_BASE_URL,
+      resolvedTerminal49Auth.accountId,
+    );
     transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined, // Stateless mode
       enableJsonResponse: true, // Return JSON instead of SSE

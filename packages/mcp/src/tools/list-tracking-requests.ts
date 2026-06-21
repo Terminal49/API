@@ -31,7 +31,7 @@ export async function executeListTrackingRequests(
 
   try {
     const filters = {
-      ...(args.filters || {}),
+      ...args.filters,
       ...(args.status ? { 'filter[status]': args.status } : {}),
       ...(args.request_type ? { 'filter[request_type]': args.request_type } : {}),
     };

@@ -8,7 +8,9 @@
     "build": "tsc",
     "test": "vitest",
     "test:coverage": "vitest --run --coverage",
-    "lint": "biome lint src",
+    "lint": "oxlint src",
+    "format": "oxfmt --write src",
+    "format:check": "oxfmt --check src",
     "type-check": "tsc --noEmit",
     "mcp:stdio": "tsx src/index.ts",
     "sdk:setup": "node ./scripts/sdk-setup.mjs"
@@ -27,8 +29,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.15",
     "@types/node": "^24.10.13",
+    "oxfmt": "^0.55.0",
+    "oxlint": "^1.70.0",
     "tsx": "^4.20.6",
     "typescript": "^5.6.3",
     "vitest": "^4.0.13"

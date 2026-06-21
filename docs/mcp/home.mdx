@@ -32,9 +32,9 @@ Use the Terminal49 MCP server to let Claude or Cursor answer questions with live
     {
       "mcpServers": {
         "terminal49": {
-          "url": "https://mcp.terminal49.com/mcp",
+          "url": "https://mcp.terminal49.com",
           "headers": {
-            "Authorization": "Bearer <T49_API_TOKEN>"
+            "Authorization": "Token <T49_API_TOKEN>"
           }
         }
       }
@@ -47,9 +47,9 @@ Use the Terminal49 MCP server to let Claude or Cursor answer questions with live
       "mcp": {
         "servers": {
           "terminal49": {
-            "url": "https://mcp.terminal49.com/mcp",
+            "url": "https://mcp.terminal49.com",
             "headers": {
-              "Authorization": "Bearer <T49_API_TOKEN>"
+              "Authorization": "Token <T49_API_TOKEN>"
             }
           }
         }
@@ -79,15 +79,16 @@ For the full walkthrough (including local stdio dev, deployment, and SDK example
 
 | Transport | Endpoint | Best For |
 |-----------|----------|----------|
-| HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Serverless, short-lived requests |
+| HTTP (streamable) | `POST https://mcp.terminal49.com` | Serverless, short-lived requests |
 
 **Authentication**:
 - API token only (OAuth not required for this release)
-- Header: `Authorization: Bearer <T49_API_TOKEN>` or `Authorization: Token <T49_API_TOKEN>`
+- Header: `Authorization: Token <T49_API_TOKEN>`. Use the `Token` scheme for API keys.
+- The `Bearer` scheme is reserved for WorkOS OAuth access tokens. Once OAuth is enabled, `Bearer` accepts only WorkOS tokens, so authenticate API keys with `Token`.
 - Or set `T49_API_TOKEN` environment variable when self-hosting
 
 <Tip>
-Claude Desktop and Cursor use the HTTP transport at `https://mcp.terminal49.com/mcp`.
+Connector URL: `https://mcp.terminal49.com`. It is the canonical OAuth resource identifier, so OAuth clients (ChatGPT, Claude connectors) bind to the correct token audience.
 </Tip>
 
 {/* OAuth hosted docs are not yet published. Links will be added when the pages are available. */}

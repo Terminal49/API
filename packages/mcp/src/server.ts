@@ -607,8 +607,12 @@ function wrapToolWithContract<TArgs>(
   };
 }
 
-export function createTerminal49McpServer(apiToken: string, apiBaseUrl?: string): McpServer {
-  const client = new Terminal49Client({ apiToken, apiBaseUrl, defaultFormat: "mapped" });
+export function createTerminal49McpServer(
+  apiToken: string,
+  apiBaseUrl?: string,
+  accountId?: string,
+): McpServer {
+  const client = new Terminal49Client({ apiToken, apiBaseUrl, accountId, defaultFormat: "mapped" });
 
   const server = instrumentMcpServer(
     new McpServer({
