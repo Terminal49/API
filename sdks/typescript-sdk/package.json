@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "jsona": "^1.12.1",
-    "openapi-fetch": "^0.15.2"
+    "openapi-fetch": "^0.17.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.13",
