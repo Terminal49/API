@@ -1,61 +1,35 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
+# Dependabot configuration — see
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Policy: SECURITY UPDATES ONLY. Routine version bumps are disabled
+# (open-pull-requests-limit: 0), so Dependabot does not open PRs just to chase
+# new minor/patch releases. It still opens PRs that resolve a security advisory
+# — grouped into one PR per ecosystem (the repo "Grouped security updates"
+# setting + the security-updates groups below).
+#
+# One npm entry at the root covers all workspaces (packages/*, sdks/*); the
+# previous per-directory entries are consolidated to avoid duplicate PR streams.
+version: 2
 
-  version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+    groups:
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
-  updates:
-    - package-ecosystem: "npm"
-      directory: "/"
-      schedule:
-        interval: "weekly"
-      groups:
-        npm-minor-patch:
-          update-types:
-            - "minor"
-            - "patch"
-      ignore:
-        # @modelcontextprotocol/sdk 1.29 only type-checks against zod 4.3.x;
-        # zod 4.4 breaks the MCP server build. Hold zod on 4.3 until the SDK
-        # declares 4.4 support. See packages/mcp/package.json (~4.3.6 pin).
-        - dependency-name: "zod"
-          update-types:
-            - "version-update:semver-minor"
-            - "version-update:semver-major"
-
-    - package-ecosystem: "npm"
-      directory: "/packages/mcp"
-      schedule:
-        interval: "weekly"
-      groups:
-        mcp-minor-patch:
-          update-types:
-            - "minor"
-            - "patch"
-      ignore:
-        # zod 4.4 breaks the @modelcontextprotocol/sdk 1.29 type check (see above).
-        - dependency-name: "zod"
-          update-types:
-            - "version-update:semver-minor"
-            - "version-update:semver-major"
-
-    - package-ecosystem: "npm"
-      directory: "/sdks/typescript-sdk"
-      schedule:
-        interval: "weekly"
-      groups:
-        sdk-minor-patch:
-          update-types:
-            - "minor"
-            - "patch"
-
-    - package-ecosystem: "github-actions"
-      directory: "/"
-      schedule:
-        interval: "weekly"
-      groups:
-        actions-minor-patch:
-          update-types:
-            - "minor"
-            - "patch"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+    groups:
+      actions-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
