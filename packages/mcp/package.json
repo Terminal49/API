@@ -24,7 +24,7 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@sentry/node": "^10.55.0",
+    "@sentry/node": "^10.59.0",
     "@terminal49/sdk": "0.3.0",
     "zod": "~4.3.6"
   },
@@ -32,9 +32,9 @@
     "@types/node": "^24.10.13",
     "oxfmt": "^0.55.0",
     "oxlint": "^1.70.0",
-    "tsx": "^4.20.6",
+    "tsx": "^4.22.4",
     "typescript": "^5.6.3",
-    "vitest": "^4.0.13"
+    "vitest": "^4.1.9"
   },
   "overrides": {
     "@hono/node-server": "^1.19.14",
