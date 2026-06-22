@@ -15,6 +15,14 @@
           update-types:
             - "minor"
             - "patch"
+      ignore:
+        # @modelcontextprotocol/sdk 1.29 only type-checks against zod 4.3.x;
+        # zod 4.4 breaks the MCP server build. Hold zod on 4.3 until the SDK
+        # declares 4.4 support. See packages/mcp/package.json (~4.3.6 pin).
+        - dependency-name: "zod"
+          update-types:
+            - "version-update:semver-minor"
+            - "version-update:semver-major"
 
     - package-ecosystem: "npm"
       directory: "/packages/mcp"
@@ -25,6 +33,12 @@
           update-types:
             - "minor"
             - "patch"
+      ignore:
+        # zod 4.4 breaks the @modelcontextprotocol/sdk 1.29 type check (see above).
+        - dependency-name: "zod"
+          update-types:
+            - "version-update:semver-minor"
+            - "version-update:semver-major"
 
     - package-ecosystem: "npm"
       directory: "/sdks/typescript-sdk"
