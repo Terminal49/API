@@ -47,7 +47,7 @@
     "openapi-fetch": "^0.15.2"
   },
   "devDependencies": {
-    "@types/node": "^24.10.13",
+    "@types/node": "^26.0.0",
     "@vitest/coverage-v8": "^4.0.18",
     "oxfmt": "^0.55.0",
     "oxlint": "^1.70.0",
