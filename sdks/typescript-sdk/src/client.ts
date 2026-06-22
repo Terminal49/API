@@ -157,6 +157,7 @@ export class Terminal49Client {
     containerNumber?: string;
     bookingNumber?: string;
     scac?: string;
+    autoDetectVoccScac?: boolean;
     refNumbers?: string[];
   }): Promise<any> {
     const requestType: TrackingRequestType = params.containerNumber
@@ -174,15 +175,17 @@ export class Terminal49Client {
       requestType,
       requestNumber,
       scac: params.scac,
+      autoDetectVoccScac: params.autoDetectVoccScac,
       refNumbers: params.refNumbers,
     });
   }
 
-  /** Create a tracking request with an explicit number type and carrier SCAC. */
+  /** Create a tracking request with an explicit number type and carrier SCAC, or ask the API to auto-detect the carrier SCAC. */
   async createTrackingRequest(params: {
     requestType: TrackingRequestType;
     requestNumber: string;
     scac?: string;
+    autoDetectVoccScac?: boolean;
     refNumbers?: string[];
     shipmentTags?: string[];
   }): Promise<any> {

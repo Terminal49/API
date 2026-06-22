@@ -309,6 +309,64 @@ describe('Terminal49Client request building', () => {
     expect(calls[1].url.searchParams.get('include')).toBe('shipment,container');
   });
 
+  it('sends explicit scac when creating tracking request', async () => {
+    let captured: any = null;
+    const { fetchImpl } = createMockFetch({
+      '/tracking_requests': (init) => {
+        captured = JSON.parse(String(init?.body));
+        return jsonResponse({ data: { id: 'tr-1' } }, 201);
+      },
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.createTrackingRequest({
+      requestType: 'bill_of_lading',
+      requestNumber: 'MEDUFR030802',
+      scac: 'MSCU',
+    });
+
+    expect(captured.data.attributes).toMatchObject({
+      request_type: 'bill_of_lading',
+      request_number: 'MEDUFR030802',
+      scac: 'MSCU',
+    });
+    expect(captured.data.attributes.auto_detect_vocc_scac).toBeUndefined();
+  });
+
+  it('sends auto_detect_vocc_scac without blank scac when requested', async () => {
+    let captured: any = null;
+    const { fetchImpl } = createMockFetch({
+      '/tracking_requests': (init) => {
+        captured = JSON.parse(String(init?.body));
+        return jsonResponse({ data: { id: 'tr-2' } }, 201);
+      },
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.createTrackingRequest({
+      requestType: 'bill_of_lading',
+      requestNumber: 'MEDUFR030802',
+      autoDetectVoccScac: true,
+    });
+
+    expect(captured.data.attributes).toMatchObject({
+      request_type: 'bill_of_lading',
+      request_number: 'MEDUFR030802',
+      auto_detect_vocc_scac: true,
+    });
+    expect(captured.data.attributes.scac).toBeUndefined();
+  });
+
   it('sends JSON:API payload for updateTrackingRequest', async () => {
     let captured: any = null;
     const { fetchImpl } = createMockFetch({
