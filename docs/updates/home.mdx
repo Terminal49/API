@@ -17,6 +17,79 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="June 22, 2026" description="Inland Pickup & Delivery dashboard, WorkOS OAuth for the MCP server, dray carrier assignment, new MAEU and SEAU trackers, HLCU tariff rules, party experience polish, and a wave of dashboard and carrier bug fixes" tags={['API', 'Dashboard', 'MCP']}
+  rss="June 22, 2026: Inland (IND) Pickup & Delivery dashboard views, WorkOS OAuth gateway for the MCP server, dray carrier assignment on shipments and cargos, new MAEU and SEAU Trawler-based trackers, HLCU (Hapag-Lloyd) demurrage tariff rules, manual IND Full Out edits and clearable manually-set dates, parties first-time experience with bulk import from the track page, and bug fixes for CMSAMX, APMweb CFFI, stale BL container tracking, signed-out refresh-tracking, /v2/shipping_lines scoping, and rail transport event handling."
+>
+  ### Inland (IND) Pickup & Delivery dashboard
+
+The Pickup & Delivery workspace now has a dedicated **Inland (IND) destination** view alongside the existing Port of Discharge view, with a segmented control to switch between them. Each phase — pickup-needed, delivery-needed, empty-return-needed, and completed — shows inland-specific columns (IND ATA, Rail LFD, IND Full Out) and filters so the milestones, gating, and sorts all line up with the inland leg.
+
+---
+
+  ### WorkOS OAuth gateway for the MCP server
+
+The Terminal49 **MCP server** now supports OAuth via WorkOS, in addition to API tokens. OAuth-aware clients like ChatGPT and Claude connectors can connect to `https://mcp.terminal49.com` and complete the standard MCP OAuth discovery and authorization flow. API-key clients continue to work — use the `Token` scheme for API keys; `Bearer` is now reserved for WorkOS OAuth access tokens.
+
+<Card title="MCP setup guide" icon="robot" href="/mcp/home">
+  Connect your AI client to Terminal49
+</Card>
+
+---
+
+  ### Dray carrier assignment
+
+You can now assign a **dray carrier** at the shipment level. Once set, the dray carrier propagates to the shipment's cargos, so dispatchers and downstream views see the same trucker without re-entering it per container.
+
+---
+
+  ### Parties first-time experience and bulk import
+
+The Parties experience now includes a first-time guided introduction, a Parties card with stats, hover tooltips on the card header, and the ability to **create parties directly from the sidebar**. The track page now also supports **bulk party import** during tracking-request creation, so consignee, shipper, notify, and other roles flow through to the resulting shipment and containers automatically. Both account creators and admins can now manage parties without an additional feature flag.
+
+---
+
+  ### New steamship line trackers: MAEU and SEAU
+
+- **MAEU (Maersk)** — added a new Trawler-based tracker for Maersk shipments, replacing the previous integration path
+- **SEAU (Sealand)** — added a new Trawler2-based tracker for Sealand container, bill of lading, and booking lookups
+
+---
+
+  ### HLCU (Hapag-Lloyd) demurrage tariff rules
+
+Published a new **HLCU (Hapag-Lloyd)** US-import demurrage tariff rule dataset, modeling Merchant-Haulage port demurrage and inland (rail) demurrage. Calculated Last Free Day values for HLCU containers now reflect Hapag-Lloyd's published tariffs.
+
+<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+  View the container resource
+</Card>
+
+---
+
+  ### Updates
+
+- **Manually add IND Full Out** — the inland-destination view of the Pickup & Delivery dashboard now supports manually adding an IND Full Out event inline, matching the editing capability already available for POD milestones
+- **Clear manually-set dates on the Pickup Dashboard** — blank-submitting an editable date now clears it when the value was set by hand, and rejects with a clear error when the value came from a carrier or terminal. Changing a date invalidates the contradicted source event so the manual value takes precedence
+- **Stale bill of lading reset on container retries** — when a shipment's bill of lading number changes, container tracking now resets the stale BL on the next retry instead of holding onto the old reference
+- **`/v2/shipping_lines` scoped to your integrations** — the `/v2/shipping_lines` listing now only returns carriers your account has an enabled integration for, so the list reflects what you can actually track
+- **Comma-separated tag input** — the dashboard tag component now accepts multiple tags pasted or typed as a comma-separated list in addition to one-at-a-time entry
+- **Stricter rail transport event handling** — rail transport events now require a location to be accepted, and terminal-sourced rail events flow through the same pipeline as other transport events
+- **Bookings preview removed from the left nav** — the experimental Bookings entry no longer appears in the dashboard sidebar while the workspace continues to evolve
+
+---
+
+  ### Bug fixes
+
+- **Refresh Tracking only when signed in** — the Refresh Tracking action no longer appears on public track pages for signed-out users, matching what's actually available to them
+- **CMSAMX scraper restored after Contecon migration** — fixed terminal data collection at CMSA Manzanillo after Contecon's site migration, restoring container availability and hold data
+- **APMweb CFFI `no_event_history`** — fixed a NoMethodError that could occur in the APMweb CFFI agent when a shipment had no event history, so the tracker run completes cleanly
+- **Public SMLU integration disabled** — disabled the public SMLU web integration that was no longer returning reliable data
+- **Transport event source serialization** — invalidated transport events now serialize their source correctly on the API and dashboard timeline
+- **`exists` / `not_exists` filter operators** — fixed `exists` and `not_exists` filtering on relationship and reference fields, and stopped emitting raw values in CSV exports for those queries
+- **Duplicate PAYG contracts on activation** — fixed a race that could create a duplicate Pay-As-You-Go contract during account activation
+- **Cargo events reprocessing** — force-reprocessing shipment cargo events now refreshes derived state consistently after upstream fixes
+
+</Update>
+
 <Update label="June 15, 2026" description="WorkOS hosted signup, OOCL direct scraper, calculated LFD in Pickup & Delivery, party assignment polish, and a wave of document, carrier, and dashboard bug fixes" tags={['API', 'Dashboard']}
   rss="June 15, 2026: WorkOS hosted signup onboarding, new OOCL direct-to-track-page scraper, calculated LFD in the Pickup & Delivery dashboard, bulk party import on the Network page, Wayfair arrival notice and HBL extraction improvements, party assignment defaults and sorting, Custom Fields reorganization on Shipment Details, and bug fixes for LFD past pickup, YMLU transshipments, NSRR blocked responses, container event ordering, and Stripe period timestamps."
 >
