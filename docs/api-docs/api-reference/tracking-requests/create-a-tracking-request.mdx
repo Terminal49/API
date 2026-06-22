@@ -7,7 +7,9 @@ openapi: post /tracking_requests
 ---
 
 <Tip>
-  **Don't know the SCAC?** Call [Auto-Detect
+  **Don't know the SCAC?** Set `auto_detect_vocc_scac` to `true` and omit
+  `scac` to have Terminal49 infer the shipping line before creating the tracking
+  request. Use [Auto-Detect
   Carrier](/api-docs/api-reference/tracking-requests/auto-detect-carrier) first
-  to identify the shipping line from your tracking number.
+  when your workflow needs to preview or confirm carrier candidates.
 </Tip>

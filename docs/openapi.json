@@ -1230,6 +1230,15 @@
                           "title": "Unprocessable Entity",
                           "detail": "Request number can't be blank",
                           "code": "blank"
+                        },
+                        {
+                          "status": "422",
+                          "source": {
+                            "pointer": "/data/attributes/auto_detect_vocc_scac"
+                          },
+                          "title": "Unprocessable Entity",
+                          "detail": "Could not auto-detect a supported carrier SCAC for this request number",
+                          "code": "prediction_failed"
                         }
                       ]
                     }
@@ -1308,9 +1317,16 @@
                           },
                           "scac": {
                             "type": "string",
+                            "description": "The carrier SCAC to use for this tracking request. Required unless `auto_detect_vocc_scac` is `true`.",
                             "example": "MSCU",
                             "minLength": 4,
                             "maxLength": 4
+                          },
+                          "auto_detect_vocc_scac": {
+                            "type": "boolean",
+                            "description": "Set to `true` to have Terminal49 infer the carrier SCAC from `request_number` when `scac` is not supplied. If the carrier cannot be inferred confidently, the request is rejected with a 422 response. If a carrier is inferred, the created tracking request response includes the detected `scac`.",
+                            "default": false,
+                            "example": true
                           },
                           "ref_numbers": {
                             "type": "array",
@@ -1329,8 +1345,7 @@
                         },
                         "required": [
                           "request_type",
-                          "request_number",
-                          "scac"
+                          "request_number"
                         ]
                       },
                       "relationships": {
@@ -1399,6 +1414,21 @@
                       "type": "tracking_request"
                     }
                   }
+                },
+                "Example: Auto-detect carrier SCAC": {
+                  "value": {
+                    "data": {
+                      "attributes": {
+                        "request_type": "bill_of_lading",
+                        "request_number": "MEDUFR030802",
+                        "auto_detect_vocc_scac": true,
+                        "ref_numbers": [
+                          "PO12345"
+                        ]
+                      },
+                      "type": "tracking_request"
+                    }
+                  }
                 }
               }
             }
@@ -1410,7 +1440,7 @@
             "authorization": []
           }
         ],
-        "description": "To track an ocean shipment, you create a new tracking request. \nTwo attributes are required to track a shipment. A `bill of lading/booking number` and a shipping line `SCAC`. \n\nOnce a tracking request is created we will attempt to fetch the shipment details and it's related containers from the shipping line. If the attempt is successful we will create in new shipment object including any related container objects. We will send a `tracking_request.succeeded` webhook notification to your webhooks.  \n\nIf the attempt to fetch fails then we will send a `tracking_request.failed` webhook notification to your `webhooks`.  \n\nA `tracking_request.succeeded` or `tracking_request.failed` webhook notificaiton will only be sent  if you have  atleast one active webhook. <br /><br /><Info>This endpoint is limited to 100 tracking requests per minute.</Info>",
+        "description": "To track an ocean shipment, create a new tracking request. `request_type` and `request_number` are always required. Supply either a shipping line `scac` or set `auto_detect_vocc_scac` to `true` to have Terminal49 infer the SCAC from the request number before creating the tracking request.\n\nAuto-detection uses the same carrier prediction capability as the Infer Tracking Number endpoint. If Terminal49 cannot infer a supported carrier confidently, the request is rejected with a 422 response and no tracking request is created. Once a tracking request is created we will attempt to fetch the shipment details and its related containers from the shipping line. If the attempt is successful we will create a new shipment object including any related container objects. We will send a `tracking_request.succeeded` webhook notification to your webhooks.\n\nIf the attempt to fetch fails then we will send a `tracking_request.failed` webhook notification to your `webhooks`.\n\nA `tracking_request.succeeded` or `tracking_request.failed` webhook notification will only be sent if you have at least one active webhook. <br /><br /><Info>This endpoint is limited to 100 tracking requests per minute.</Info>",
         "tags": [
           "Tracking Requests"
         ],
