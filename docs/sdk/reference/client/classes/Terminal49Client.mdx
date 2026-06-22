@@ -42,13 +42,14 @@ data from Node.js applications.
 
 > **createTrackingRequest**(`params`): `Promise`\<`any`\>
 
-Create a tracking request with an explicit number type and carrier SCAC.
+Create a tracking request with an explicit number type and carrier SCAC, or ask the API to auto-detect the carrier SCAC.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `params` | \{ `refNumbers?`: `string`[]; `requestNumber`: `string`; `requestType`: [`TrackingRequestType`](/sdk/reference/client/managers/type-aliases/TrackingRequestType); `scac?`: `string`; `shipmentTags?`: `string`[]; \} |
+| `params` | \{ `autoDetectVoccScac?`: `boolean`; `refNumbers?`: `string`[]; `requestNumber`: `string`; `requestType`: [`TrackingRequestType`](/sdk/reference/client/managers/type-aliases/TrackingRequestType); `scac?`: `string`; `shipmentTags?`: `string`[]; \} |
+| `params.autoDetectVoccScac?` | `boolean` |
 | `params.refNumbers?` | `string`[] |
 | `params.requestNumber` | `string` |
 | `params.requestType` | [`TrackingRequestType`](/sdk/reference/client/managers/type-aliases/TrackingRequestType) |
@@ -471,7 +472,8 @@ Convenience helper for creating a tracking request from a container or booking n
 
 | Parameter | Type |
 | ------ | ------ |
-| `params` | \{ `bookingNumber?`: `string`; `containerNumber?`: `string`; `refNumbers?`: `string`[]; `scac?`: `string`; \} |
+| `params` | \{ `autoDetectVoccScac?`: `boolean`; `bookingNumber?`: `string`; `containerNumber?`: `string`; `refNumbers?`: `string`[]; `scac?`: `string`; \} |
+| `params.autoDetectVoccScac?` | `boolean` |
 | `params.bookingNumber?` | `string` |
 | `params.containerNumber?` | `string` |
 | `params.refNumbers?` | `string`[] |
