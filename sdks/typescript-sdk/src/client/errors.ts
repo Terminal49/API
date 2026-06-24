@@ -67,6 +67,41 @@ export class UpstreamError extends Terminal49Error {
   }
 }
 
+/**
+ * Thrown when a transport-level failure occurs before a response is received —
+ * a DNS failure, a refused/reset connection, or an otherwise failed `fetch`.
+ * Has no HTTP status because no response was produced.
+ */
+export class NetworkError extends Terminal49Error {
+  constructor(message: string, details?: unknown) {
+    super(message, undefined, details);
+    this.name = 'NetworkError';
+  }
+}
+
+/**
+ * Thrown when a request exceeds the configured request timeout and is aborted
+ * by the SDK. Has no HTTP status because no response was produced.
+ */
+export class TimeoutError extends Terminal49Error {
+  constructor(message = 'Request timed out', details?: unknown) {
+    super(message, undefined, details);
+    this.name = 'TimeoutError';
+  }
+}
+
+/**
+ * Normalize a thrown transport error (from `fetch`) into a {@link Terminal49Error}.
+ * A pre-existing `Terminal49Error` (e.g. our own {@link TimeoutError}) is passed
+ * through unchanged; everything else becomes a {@link NetworkError}.
+ */
+export function toNetworkError(error: unknown): Terminal49Error {
+  if (error instanceof Terminal49Error) return error;
+  const message =
+    error instanceof Error ? error.message : 'Network request failed';
+  return new NetworkError(`Network request failed: ${message}`, error);
+}
+
 export function extractErrorMessage(body: any): string {
   if (typeof body === 'string') {
     return body;

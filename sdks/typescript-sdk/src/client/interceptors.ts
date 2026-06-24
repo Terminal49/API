@@ -1,7 +1,21 @@
 import type { Middleware, MiddlewareCallbackParams } from 'openapi-fetch';
-import { extractErrorMessage, toTerminal49Error } from './errors.js';
+import {
+  extractErrorMessage,
+  toNetworkError,
+  toTerminal49Error,
+} from './errors.js';
+import {
+  computeBackoffDelay,
+  isRetryableNetworkError,
+  isRetryableStatus,
+  parseRetryAfterMs,
+  shouldRetryRequest,
+} from './retry-policy.js';
 
 export type Interceptor = Middleware;
+
+/** Header a caller can set to make a non-idempotent write safe to retry. */
+const IDEMPOTENCY_KEY_HEADER = 'Idempotency-Key';
 
 export class AuthInterceptor {
   constructor(
@@ -26,6 +40,17 @@ export class AuthInterceptor {
   }
 }
 
+/**
+ * Retries transient failures with backoff. Two kinds of failure are handled:
+ *
+ *  - A response with a retryable status (429 / 5xx), handled in `onResponse`.
+ *  - A thrown transport error (DNS/connection/"fetch failed"), handled in
+ *    `onError` — these never reach `onResponse` because `fetch` rejected.
+ *
+ * Retries are gated by {@link shouldRetryRequest}: idempotent methods are always
+ * eligible, but non-idempotent writes are only retried when the caller supplied
+ * an `Idempotency-Key` header. 429 backoff honors the server's `Retry-After`.
+ */
 export class RetryInterceptor {
   private replayableRequests = new Map<Request | string, Request>();
 
@@ -61,11 +86,14 @@ export class RetryInterceptor {
     try {
       while (
         replayableRequest &&
-        (currentResponse.status === 429 || currentResponse.status >= 500) &&
+        isRetryableStatus(currentResponse.status) &&
+        this.isRetryable(replayableRequest) &&
         attempt < this.maxRetries
       ) {
-        const delay = 2 ** attempt * 500;
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        const retryAfterMs = parseRetryAfterMs(
+          currentResponse.headers.get('Retry-After'),
+        );
+        await this.sleep(computeBackoffDelay(attempt, retryAfterMs));
 
         currentResponse = await this.fetchImpl(replayableRequest.clone());
         attempt++;
@@ -77,13 +105,58 @@ export class RetryInterceptor {
     }
   }
 
-  onError({
+  /**
+   * Recover from a thrown transport error by retrying eligible requests. If a
+   * retry produces a response we return it (openapi-fetch then runs the normal
+   * `onResponse` chain on it); otherwise we surface a normalized
+   * {@link NetworkError} so error mapping is consistent with the response path.
+   */
+  async onError({
     request,
+    error,
     id,
   }: Pick<MiddlewareCallbackParams, 'id' | 'request'> & {
     error: unknown;
-  }) {
-    this.replayableRequests.delete(this.requestKey(request, id));
+  }): Promise<Response | Error> {
+    const requestKey = this.requestKey(request, id);
+    const replayableRequest = this.replayableRequests.get(requestKey);
+
+    try {
+      if (
+        replayableRequest &&
+        isRetryableNetworkError(error) &&
+        this.isRetryable(replayableRequest)
+      ) {
+        let attempt = 0;
+        while (attempt < this.maxRetries) {
+          await this.sleep(computeBackoffDelay(attempt));
+          try {
+            return await this.fetchImpl(replayableRequest.clone());
+          } catch (retryError) {
+            attempt++;
+            if (attempt >= this.maxRetries) {
+              return toNetworkError(retryError);
+            }
+          }
+        }
+      }
+
+      return toNetworkError(error);
+    } finally {
+      this.replayableRequests.delete(requestKey);
+    }
+  }
+
+  private isRetryable(request: Request): boolean {
+    return shouldRetryRequest({
+      method: request.method,
+      hasIdempotencyKey: request.headers.has(IDEMPOTENCY_KEY_HEADER),
+    });
+  }
+
+  private sleep(ms: number): Promise<void> {
+    if (ms <= 0) return Promise.resolve();
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private requestKey(request: Request, id?: string) {
