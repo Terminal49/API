@@ -539,12 +539,14 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
     });
     if (!res.headersSent) {
       setCorsHeaders(res);
+      // The real error is logged above (correlated by request_id). Never echo
+      // err.message to the client — it can carry upstream URLs, tokens, or
+      // stack detail.
       res.status(500).json({
         jsonrpc: '2.0',
         error: {
           code: -32603,
           message: 'Internal server error',
-          data: err.message,
         },
         id: null,
       });

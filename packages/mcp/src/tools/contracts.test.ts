@@ -9,6 +9,7 @@ import { executeListShipments } from './list-shipments.js';
 import { executeListTrackingRequests } from './list-tracking-requests.js';
 import { executeSearchContainer } from './search-container.js';
 import { executeTrackContainer } from './track-container.js';
+import { buildListContract } from '../server.js';
 
 function asClient(client: unknown): Terminal49Client {
   return client as Terminal49Client;
@@ -107,9 +108,8 @@ async function executeSupportedShippingLines(
   client: Terminal49Client,
 ) {
   vi.resetModules();
-  const { executeGetSupportedShippingLines } = await import(
-    './get-supported-shipping-lines.js'
-  );
+  const { executeGetSupportedShippingLines } =
+    await import('./get-supported-shipping-lines.js');
 
   return executeGetSupportedShippingLines(args, client);
 }
@@ -142,7 +142,10 @@ describe('MCP tool contracts', () => {
       }),
     });
 
-    const result = await executeSearchContainer({ query: 'CAIU1234567' }, client);
+    const result = await executeSearchContainer(
+      { query: 'CAIU1234567' },
+      client,
+    );
 
     expect(result.total_results).toBe(2);
     expect(result.containers[0]).toMatchObject({
@@ -150,7 +153,10 @@ describe('MCP tool contracts', () => {
       container_number: 'CAIU1234567',
       shipping_line: 'MAEU',
     });
-    expect(result.shipments[0]).toMatchObject({ id: 'sr-2', shipping_line: 'MSCU' });
+    expect(result.shipments[0]).toMatchObject({
+      id: 'sr-2',
+      shipping_line: 'MSCU',
+    });
   });
 
   it('search_container prioritizes full_out over discharged/arrived status', async () => {
@@ -172,7 +178,10 @@ describe('MCP tool contracts', () => {
       }),
     });
 
-    const result = await executeSearchContainer({ query: 'TIIU1234567' }, client);
+    const result = await executeSearchContainer(
+      { query: 'TIIU1234567' },
+      client,
+    );
 
     expect(result.containers[0]).toMatchObject({
       id: 'container-legacy-1',
@@ -208,11 +217,9 @@ describe('MCP tool contracts', () => {
       numberType: undefined,
       refNumbers: undefined,
     });
-    expect(getContainer).toHaveBeenCalledWith(
-      'container-1',
-      ['shipment'],
-      { format: 'both' },
-    );
+    expect(getContainer).toHaveBeenCalledWith('container-1', ['shipment'], {
+      format: 'both',
+    });
     expect(result.tracking_request_created).toBe(true);
     expect(result.infer_result).toEqual({ inferred_type: 'container' });
     expect(result.container_number).toBe('CAIU1234567');
@@ -243,10 +250,15 @@ describe('MCP tool contracts', () => {
       containers: { get: getContainer },
     });
 
-    const result = await executeTrackContainer({ number: 'SELU4039824' }, client);
+    const result = await executeTrackContainer(
+      { number: 'SELU4039824' },
+      client,
+    );
 
     expect(createFromInfer).not.toHaveBeenCalled();
-    expect(getContainer).toHaveBeenCalledWith('container-42', ['shipment'], { format: 'both' });
+    expect(getContainer).toHaveBeenCalledWith('container-42', ['shipment'], {
+      format: 'both',
+    });
     expect(result.tracking_request_created).toBe(false);
     expect(result.container_number).toBe('CAIU1234567');
     expect(result.infer_result).toMatchObject({
@@ -258,7 +270,9 @@ describe('MCP tool contracts', () => {
   it('track_container falls back to direct create when infer endpoint validation fails', async () => {
     const createFromInfer = vi
       .fn()
-      .mockRejectedValue(new Error('Unprocessable Entity (/data/attributes/number)'));
+      .mockRejectedValue(
+        new Error('Unprocessable Entity (/data/attributes/number)'),
+      );
     const createTrackingRequest = vi.fn().mockResolvedValue({
       included: [{ id: 'container-77', type: 'container' }],
     });
@@ -339,15 +353,19 @@ describe('MCP tool contracts', () => {
       },
     });
 
-    const result = await executeGetContainer({ id: 'container-discharged' }, client);
+    const result = await executeGetContainer(
+      { id: 'container-discharged' },
+      client,
+    );
 
     expect(result.status).toBe('discharged');
   });
 
   it('get_shipment_details returns shipment summary and container list', async () => {
-    const shipmentsGet = vi
-      .fn()
-      .mockResolvedValue({ raw: buildShipmentRaw(), mapped: { id: 'shipment-1' } });
+    const shipmentsGet = vi.fn().mockResolvedValue({
+      raw: buildShipmentRaw(),
+      mapped: { id: 'shipment-1' },
+    });
     const client = asClient({ shipments: { get: shipmentsGet } });
 
     const result = await executeGetShipmentDetails(
@@ -536,33 +554,46 @@ describe('MCP tool contracts', () => {
       shippingLines: { list: shippingList },
     });
 
-    const result = await executeSupportedShippingLines({ search: 'mae' }, client);
+    const result = await executeSupportedShippingLines(
+      { search: 'mae' },
+      client,
+    );
 
     expect(shippingList).toHaveBeenCalledWith(undefined, { format: 'mapped' });
     expect(result.total_lines).toBe(1);
-    expect(result.shipping_lines[0]).toMatchObject({ scac: 'MAEU', name: 'Maersk' });
+    expect(result.shipping_lines[0]).toMatchObject({
+      scac: 'MAEU',
+      name: 'Maersk',
+    });
   });
 
   it('get_supported_shipping_lines fails when shipping_lines API call fails', async () => {
-    const shippingList = vi.fn().mockRejectedValue(new Error('downstream failure'));
+    const shippingList = vi
+      .fn()
+      .mockRejectedValue(new Error('downstream failure'));
 
     const client = asClient({
       shippingLines: { list: shippingList },
     });
 
-    await expect(executeSupportedShippingLines({ search: 'mae' }, client)).rejects.toThrow('downstream failure');
+    await expect(
+      executeSupportedShippingLines({ search: 'mae' }, client),
+    ).rejects.toThrow('downstream failure');
   });
 
   it('get_supported_shipping_lines does not reuse module cache across different clients', async () => {
     vi.resetModules();
-    const { executeGetSupportedShippingLines } = await import('./get-supported-shipping-lines.js');
+    const { executeGetSupportedShippingLines } =
+      await import('./get-supported-shipping-lines.js');
 
-    const listForClientA = vi.fn().mockResolvedValue([
-      { scac: 'MSCU', name: 'MSC', shortName: 'MSC' },
-    ]);
-    const listForClientB = vi.fn().mockResolvedValue([
-      { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
-    ]);
+    const listForClientA = vi
+      .fn()
+      .mockResolvedValue([{ scac: 'MSCU', name: 'MSC', shortName: 'MSC' }]);
+    const listForClientB = vi
+      .fn()
+      .mockResolvedValue([
+        { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
+      ]);
 
     const clientA = asClient({ shippingLines: { list: listForClientA } });
     const clientB = asClient({ shippingLines: { list: listForClientB } });
@@ -621,7 +652,10 @@ describe('MCP tool contracts', () => {
       },
     });
 
-    const result = await executeGetContainerRoute({ id: 'container-1' }, client);
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
 
     expect(result.route_id).toBe('route-1');
     expect(result.total_legs).toBe(1);
@@ -631,11 +665,16 @@ describe('MCP tool contracts', () => {
   it('get_container_route returns feature-not-enabled contract instead of throwing', async () => {
     const client = asClient({
       containers: {
-        route: vi.fn().mockRejectedValue(new FeatureNotEnabledError('feature not enabled')),
+        route: vi
+          .fn()
+          .mockRejectedValue(new FeatureNotEnabledError('feature not enabled')),
       },
     });
 
-    const result = await executeGetContainerRoute({ id: 'container-1' }, client);
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
 
     expect(result).toMatchObject({
       error: 'FeatureNotEnabled',
@@ -768,5 +807,176 @@ describe('MCP tool contracts', () => {
       { format: 'mapped', page: undefined, pageSize: undefined },
     );
     expect(result.items).toHaveLength(1);
+  });
+
+  it('buildListContract does not claim filter-match for an unfiltered firehose', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }, { id: 'c2' }], meta: { total: 2 } },
+      'container',
+      { filters: {} },
+    );
+
+    expect(contract.can_answer).not.toContain('which records match filters');
+    // An unfiltered list cannot be presented as the user's filtered worklist;
+    // the agent must be told it needs a filter to answer scoped questions.
+    expect(contract.requires_more_data).toContain(
+      'a filter to scope this list (status, port, carrier, updated_after)',
+    );
+  });
+
+  it('buildListContract reports which records match when a filter was applied', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }], meta: { total: 1 } },
+      'container',
+      { filters: { status: 'available_for_pickup' } },
+    );
+
+    expect(contract.can_answer).toContain(
+      'which records match the applied filters',
+    );
+  });
+
+  it('buildListContract echoes dropped/unsupported filters from the SDK', () => {
+    const contract = buildListContract(
+      {
+        items: [{ id: 'c1' }],
+        meta: { total: 1 },
+        unsupportedFilters: ['has_hold'],
+      },
+      'container',
+      { filters: { status: 'available_for_pickup', has_hold: true } },
+    );
+
+    expect(contract.dropped_filters).toEqual(['has_hold']);
+    expect(
+      contract.requires_more_data.some((entry) => entry.includes('has_hold')),
+    ).toBe(true);
+  });
+
+  it('buildListContract does not surface an implausibly large total as the worklist size', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }, { id: 'c2' }], meta: { total: 250000 } },
+      'container',
+      { filters: {} },
+    );
+
+    expect(contract.total_is_reliable).toBe(false);
+    expect(
+      contract.requires_more_data.some((entry) => /total/i.test(entry)),
+    ).toBe(true);
+  });
+
+  it('buildListContract trusts a plausible total when a filter is applied', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }], meta: { total: 12 } },
+      'container',
+      { filters: { carrier: 'MAEU' } },
+    );
+
+    expect(contract.total_is_reliable).toBe(true);
+  });
+
+  it('buildListContract omits the heavy column_catalog from the per-call contract', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }], meta: { total: 1 } },
+      'container',
+      { filters: { status: 'available_for_pickup' } },
+    );
+
+    expect(contract.display).toBeDefined();
+    expect((contract.display as any).column_catalog).toBeUndefined();
+    // The catalog must remain discoverable via a one-time resource.
+    expect((contract.display as any).column_catalog_resource).toBe(
+      'terminal49://docs/list-display-columns',
+    );
+  });
+
+  it('get_supported_shipping_lines hides the T49 Test Carrier', async () => {
+    const shippingList = vi.fn().mockResolvedValue([
+      { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
+      { scac: 'TEST', name: 'T49 Test Carrier', shortName: 'TEST' },
+    ]);
+
+    const client = asClient({ shippingLines: { list: shippingList } });
+
+    const result = await executeSupportedShippingLines({}, client);
+
+    expect(result.shipping_lines.some((line) => line.scac === 'TEST')).toBe(
+      false,
+    );
+    expect(
+      result.shipping_lines.some((line) => line.name === 'T49 Test Carrier'),
+    ).toBe(false);
+    expect(result.total_lines).toBe(1);
+  });
+
+  it('search_container derives a real status instead of returning "unknown" blindly', async () => {
+    const client = asClient({
+      search: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: 'sr-real',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'container',
+              number: 'CAIU7777777',
+              scac: 'MAEU',
+              // No explicit status field, but availability/timestamps are present.
+              available_for_pickup: true,
+              pod_discharged_at: '2026-02-16T01:00:00Z',
+            },
+          },
+        ],
+      }),
+    });
+
+    const result = await executeSearchContainer(
+      { query: 'CAIU7777777' },
+      client,
+    );
+
+    expect(result.containers[0].status).not.toBe('unknown');
+    expect(result.containers[0].status).toBe('available_for_pickup');
+  });
+
+  it('search_container disambiguates duplicate container numbers', async () => {
+    const client = asClient({
+      search: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: 'dup-1',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'container',
+              number: 'DUPU0000001',
+              scac: 'MAEU',
+              available_for_pickup: false,
+              pod_discharged_at: '2026-02-16T01:00:00Z',
+            },
+          },
+          {
+            id: 'dup-2',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'container',
+              number: 'DUPU0000001',
+              scac: 'MSCU',
+              available_for_pickup: true,
+            },
+          },
+        ],
+      }),
+    });
+
+    const result = await executeSearchContainer(
+      { query: 'DUPU0000001' },
+      client,
+    );
+
+    // Both rows survive (distinct ids) and are flagged so the agent can disambiguate.
+    expect(result.containers).toHaveLength(2);
+    expect(result.containers.every((c) => c.duplicate_number === true)).toBe(
+      true,
+    );
   });
 });

@@ -18,6 +18,8 @@ export interface SearchResult {
     pod_terminal?: string;
     pol_terminal?: string;
     destination?: string;
+    /** True when more than one result shares this container_number. */
+    duplicate_number?: boolean;
   }>;
   shipments: Array<{
     id: string;
@@ -46,32 +48,14 @@ function toStringList(value: unknown): string[] {
     return [];
   }
 
-  return value.map((item) => toTextOrUndefined(item)).filter((item): item is string => Boolean(item));
+  return value
+    .map((item) => toTextOrUndefined(item))
+    .filter((item): item is string => Boolean(item));
 }
-
-export const searchContainerTool = {
-  name: 'search_container',
-  description:
-    'Search for containers, shipments, and tracking information by container number, ' +
-    'booking number, bill of lading, or reference number. ' +
-    'This is the fastest way to find container information. ' +
-    'Examples: CAIU2885402, MAEU123456789, or any reference number.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      query: {
-        type: 'string',
-        description:
-          'Search query - can be a container number, booking number, BL number, or reference number',
-      },
-    },
-    required: ['query'],
-  },
-};
 
 export async function executeSearchContainer(
   args: SearchContainerArgs,
-  client: Terminal49Client
+  client: Terminal49Client,
 ): Promise<SearchResult> {
   const query = args.query.trim();
   if (!query) {
@@ -79,14 +63,14 @@ export async function executeSearchContainer(
   }
 
   const startTime = Date.now();
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.start',
-        tool: 'search_container',
-        query,
-        timestamp: new Date().toISOString(),
-      })
-    );
+  console.error(
+    JSON.stringify({
+      event: 'tool.execute.start',
+      tool: 'search_container',
+      query,
+      timestamp: new Date().toISOString(),
+    }),
+  );
 
   try {
     const result = await client.search(query);
@@ -103,7 +87,7 @@ export async function executeSearchContainer(
         shipments_found: formattedResult.shipments.length,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
 
     return formattedResult;
@@ -119,7 +103,7 @@ export async function executeSearchContainer(
         message: (error as Error).message,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
 
     throw error;
@@ -135,7 +119,9 @@ function formatSearchResponse(apiResponse: any): SearchResult {
       ? apiResponse.data
       : [apiResponse.data]
     : [];
-  const included = Array.isArray(apiResponse?.included) ? apiResponse.included : [];
+  const included = Array.isArray(apiResponse?.included)
+    ? apiResponse.included
+    : [];
 
   const containers: SearchResult['containers'] = [];
   const shipments: SearchResult['shipments'] = [];
@@ -177,11 +163,36 @@ function formatSearchResponse(apiResponse: any): SearchResult {
     }
   }
 
+  flagDuplicateContainerNumbers(containers);
+
   return {
     containers,
     shipments,
     total_results: containers.length + shipments.length,
   };
+}
+
+/**
+ * Same container number can resolve to multiple records (re-tracked, multiple
+ * carriers/shipments). Flag every member of a duplicate group so the caller can
+ * disambiguate by id/SCAC/status instead of silently picking one.
+ */
+function flagDuplicateContainerNumbers(
+  containers: SearchResult['containers'],
+): void {
+  const counts = new Map<string, number>();
+  for (const container of containers) {
+    const key = container.container_number;
+    if (key && key !== 'Unknown') {
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+  }
+
+  for (const container of containers) {
+    if ((counts.get(container.container_number) ?? 0) > 1) {
+      container.duplicate_number = true;
+    }
+  }
 }
 
 /**
@@ -193,7 +204,10 @@ function formatSearchResult(searchResult: any): SearchResult['containers'][0] {
   return {
     id: String(searchResult.id),
     container_number: toText(attrs.number),
-    status: toText(attrs.status, 'unknown'),
+    // Honor an explicit status when the search API supplies one; otherwise
+    // derive a real status from availability/timestamp signals instead of
+    // labeling every result "unknown".
+    status: toTextOrUndefined(attrs.status) ?? determineContainerStatus(attrs),
     shipping_line: toText(attrs.scac || attrs.carrier_scac || attrs.carrier),
     pod_terminal: toTextOrUndefined(attrs.port_of_discharge_name),
     pol_terminal: toTextOrUndefined(attrs.port_of_lading_name),
@@ -204,7 +218,9 @@ function formatSearchResult(searchResult: any): SearchResult['containers'][0] {
 /**
  * Format search_result type shipment
  */
-function formatSearchResultShipment(searchResult: any): SearchResult['shipments'][0] {
+function formatSearchResultShipment(
+  searchResult: any,
+): SearchResult['shipments'][0] {
   const attrs = searchResult.attributes || {};
 
   return {
@@ -217,7 +233,10 @@ function formatSearchResultShipment(searchResult: any): SearchResult['shipments'
   };
 }
 
-function formatContainer(container: any, included: any[]): SearchResult['containers'][0] {
+function formatContainer(
+  container: any,
+  included: any[],
+): SearchResult['containers'][0] {
   const attrs = container.attributes || {};
   const relationships = container.relationships || {};
 
@@ -226,30 +245,37 @@ function formatContainer(container: any, included: any[]): SearchResult['contain
   const polTerminalId = relationships.pol_terminal?.data?.id;
 
   const podTerminal = included.find(
-    (item: any) => item.type === 'terminal' && item.id === podTerminalId
+    (item: any) => item.type === 'terminal' && item.id === podTerminalId,
   );
   const polTerminal = included.find(
-    (item: any) => item.type === 'terminal' && item.id === polTerminalId
+    (item: any) => item.type === 'terminal' && item.id === polTerminalId,
   );
 
   // Find related shipment for shipping line
   const shipmentId = relationships.shipment?.data?.id;
   const shipment = included.find(
-    (item: any) => item.type === 'shipment' && item.id === shipmentId
+    (item: any) => item.type === 'shipment' && item.id === shipmentId,
   );
 
   return {
     id: String(container.id),
     container_number: toText(attrs.number),
     status: determineContainerStatus(attrs),
-    shipping_line: toText(shipment?.attributes?.line_name || attrs.shipping_line_name),
+    shipping_line: toText(
+      shipment?.attributes?.line_name || attrs.shipping_line_name,
+    ),
     pod_terminal: toTextOrUndefined(podTerminal?.attributes?.name),
     pol_terminal: toTextOrUndefined(polTerminal?.attributes?.name),
-    destination: toTextOrUndefined(podTerminal?.attributes?.nickname || podTerminal?.attributes?.name),
+    destination: toTextOrUndefined(
+      podTerminal?.attributes?.nickname || podTerminal?.attributes?.name,
+    ),
   };
 }
 
-function formatShipment(shipment: any, _included: any[]): SearchResult['shipments'][0] {
+function formatShipment(
+  shipment: any,
+  _included: any[],
+): SearchResult['shipments'][0] {
   const attrs = shipment.attributes || {};
   const relationships = shipment.relationships || {};
 
