@@ -3,9 +3,11 @@ import {
   AuthenticationError,
   AuthorizationError,
   FeatureNotEnabledError,
+  NetworkError,
   NotFoundError,
   RateLimitError,
   Terminal49Error,
+  TimeoutError,
   UpstreamError,
   ValidationError,
 } from './client/errors.js';
@@ -41,9 +43,11 @@ export {
   AuthenticationError,
   AuthorizationError,
   FeatureNotEnabledError,
+  NetworkError,
   NotFoundError,
   RateLimitError,
   Terminal49Error,
+  TimeoutError,
   UpstreamError,
   ValidationError,
 };
@@ -58,6 +62,12 @@ export interface Terminal49ClientConfig {
   apiBaseUrl?: string;
   /** Number of retry attempts for rate-limit and server errors. Defaults to `2`. */
   maxRetries?: number;
+  /**
+   * Per-request timeout in milliseconds. A hung request is aborted once it
+   * elapses and rejected with a `TimeoutError`. Defaults to `30000`. Set to `0`
+   * to disable the timeout.
+   */
+  timeoutMs?: number;
   /** Optional fetch implementation, useful for tests or custom runtimes. */
   fetchImpl?: typeof fetch;
   /** Default response format for methods that support mapped responses. Defaults to `raw`. */
@@ -108,6 +118,7 @@ export class Terminal49Client {
       accountId: config.accountId,
       baseUrl,
       maxRetries: config.maxRetries,
+      timeoutMs: config.timeoutMs,
       fetchImpl: config.fetchImpl,
     });
 
