@@ -1,0 +1,65 @@
+{
+  "data": [
+    {
+      "id": "cont-pickup-1",
+      "type": "container",
+      "attributes": {
+        "number": "MSCU1234567",
+        "seal_number": "SEAL987",
+        "current_status": "available",
+        "equipment_type": "dry",
+        "equipment_length": 40,
+        "equipment_height": "high_cube",
+        "weight_in_lbs": 38000,
+        "available_for_pickup": true,
+        "location_at_pod_terminal": "Yard A-12",
+        "pod_arrived_at": "2026-06-15T03:00:00Z",
+        "pod_discharged_at": "2026-06-15T09:30:00Z",
+        "pickup_lfd": "2026-06-20T23:59:00Z",
+        "pickup_appointment_at": "2026-06-19T15:00:00Z",
+        "fees_at_pod_terminal": [],
+        "holds_at_pod_terminal": [],
+        "pod_rail_carrier_scac": "BNSF",
+        "ind_rail_carrier_scac": "UP",
+        "ind_eta_at": "2026-06-25T12:00:00Z"
+      },
+      "relationships": {
+        "shipment": { "data": { "id": "ship-pickup-1", "type": "shipment" } },
+        "pod_terminal": { "data": { "id": "term-pod-1", "type": "terminal" } },
+        "pickup_facility": {
+          "data": { "id": "term-pickup-1", "type": "terminal" }
+        },
+        "transport_events": { "data": [] },
+        "raw_events": { "data": [] }
+      }
+    }
+  ],
+  "included": [
+    {
+      "id": "ship-pickup-1",
+      "type": "shipment",
+      "attributes": {
+        "bill_of_lading_number": "MAEU123456789",
+        "shipping_line_scac": "MAEU"
+      }
+    },
+    {
+      "id": "term-pod-1",
+      "type": "terminal",
+      "attributes": {
+        "name": "APM Terminals Pier 400",
+        "nickname": "Pier 400",
+        "firms_code": "Y258"
+      }
+    },
+    {
+      "id": "term-pickup-1",
+      "type": "terminal",
+      "attributes": {
+        "name": "BNSF Logistics Park Chicago",
+        "nickname": "LPC",
+        "firms_code": "Z901"
+      }
+    }
+  ]
+}

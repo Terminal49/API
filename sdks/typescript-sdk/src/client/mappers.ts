@@ -5,7 +5,41 @@ import type {
   ShippingLine,
   TrackingRequest,
 } from '../types/models.js';
-import { JsonApiDocument } from './jsonapi.js';
+import { JsonApiDocument, omitKeys } from './jsonapi.js';
+
+/**
+ * CamelCased raw container attribute keys that already feed a curated nested
+ * field (equipment/location/demurrage/terminals/rail) or a curated top-level
+ * field. They are dropped from the raw-attribute spread so the spread cannot
+ * clobber the curated nests or emit duplicate top-level scalars for the same
+ * value.
+ */
+const CONTAINER_CURATED_ATTR_KEYS = [
+  'number',
+  'containerNumber',
+  'status',
+  'currentStatus',
+  'equipmentType',
+  'equipmentLength',
+  'equipmentHeight',
+  'weightInLbs',
+  'locationAtPodTerminal',
+  'availableForPickup',
+  'podArrivedAt',
+  'podDischargedAt',
+  'pickupLfd',
+  'pickupAppointmentAt',
+  'feesAtPodTerminal',
+  'holdsAtPodTerminal',
+  'podRailCarrierScac',
+  'indRailCarrierScac',
+  'podRailLoadedAt',
+  'podRailDepartedAt',
+  'indRailArrivedAt',
+  'indRailUnloadedAt',
+  'indEtaAt',
+  'indAtaAt',
+] as const;
 
 export function mapTransportEvents(doc: any) {
   const apiDoc = new JsonApiDocument(doc);
@@ -23,7 +57,8 @@ export function mapTransportEvents(doc: any) {
         ? {
             id: location.id,
             name: location.attributes?.name,
-            locode: location.attributes?.locode,
+            // Port/terminal resources expose `code`, not `locode`.
+            locode: location.attributes?.code ?? location.attributes?.locode,
           }
         : undefined,
       terminal: terminal
@@ -51,7 +86,9 @@ export function mapRoute(doc: any): Route {
       if (!location) return null;
 
       const attrs = location.attributes || {};
-      const port = apiDoc.getRelationship(location, 'port');
+      // A route leg's port lives under the `location` relationship
+      // (type port|terminal); there is no `port` relationship.
+      const port = apiDoc.getRelationship(location, 'location');
       const inboundVessel = apiDoc.getRelationship(location, 'inbound_vessel');
       const outboundVessel = apiDoc.getRelationship(
         location,
@@ -117,6 +154,12 @@ export function mapShippingLines(doc: any): ShippingLine[] {
         shortName: attrs.short_name || attrs.nickname || undefined,
         bolPrefix: attrs.bol_prefix || undefined,
         notes: attrs.notes || undefined,
+        alternativeScacs: Array.isArray(attrs.alternative_scacs)
+          ? attrs.alternative_scacs
+          : undefined,
+        billOfLadingTrackingSupport: attrs.bill_of_lading_tracking_support,
+        bookingNumberTrackingSupport: attrs.booking_number_tracking_support,
+        containerNumberTrackingSupport: attrs.container_number_tracking_support,
       } as ShippingLine;
     })
     .filter(Boolean) as ShippingLine[];
@@ -130,7 +173,10 @@ export function mapContainer(doc: any): Container {
 
   const shipment = apiDoc.getRelationship(data, 'shipment');
   const podTerminal = apiDoc.getRelationship(data, 'pod_terminal');
-  const destTerminal = apiDoc.getRelationship(data, 'destination_terminal');
+  // The inland/destination facility is exposed via the `pickup_facility`
+  // relationship; there is no `destination_terminal` relationship on a
+  // container resource.
+  const pickupFacility = apiDoc.getRelationship(data, 'pickup_facility');
 
   const transportEvents = apiDoc.included
     .filter((item: any) => item.type === 'transport_event')
@@ -145,7 +191,8 @@ export function mapContainer(doc: any): Container {
           ? {
               id: location.id,
               name: location.attributes?.name,
-              locode: location.attributes?.locode,
+              // Port/terminal resources expose `code`, not `locode`.
+              locode: location.attributes?.code ?? location.attributes?.locode,
             }
           : undefined,
         terminal: terminal
@@ -161,9 +208,10 @@ export function mapContainer(doc: any): Container {
 
   return {
     id: data?.id,
-    ...attrCamel,
+    ...omitKeys(attrCamel, CONTAINER_CURATED_ATTR_KEYS),
     number: attrs.number || attrs.container_number,
-    status: attrs.status,
+    status: attrs.current_status ?? attrs.status,
+    currentStatus: attrs.current_status,
     equipment: {
       type: attrs.equipment_type,
       length: attrs.equipment_length,
@@ -191,12 +239,14 @@ export function mapContainer(doc: any): Container {
             firmsCode: podTerminal.attributes?.firms_code,
           }
         : null,
-      destinationTerminal: destTerminal
+      // The container's inland/final pickup facility (real `pickup_facility`
+      // relationship) is surfaced here as the destination terminal.
+      destinationTerminal: pickupFacility
         ? {
-            id: destTerminal.id,
-            name: destTerminal.attributes?.name,
-            nickname: destTerminal.attributes?.nickname,
-            firmsCode: destTerminal.attributes?.firms_code,
+            id: pickupFacility.id,
+            name: pickupFacility.attributes?.name,
+            nickname: pickupFacility.attributes?.nickname,
+            firmsCode: pickupFacility.attributes?.firms_code,
           }
         : null,
     },
@@ -280,7 +330,8 @@ export function mapShipment(doc: any): Shipment {
   shipment.ports = {
     portOfLading: pol
       ? {
-          locode: pol.attributes?.locode,
+          // Port resources expose `code` (e.g. KRPUS), not `locode`.
+          locode: pol.attributes?.code ?? pol.attributes?.locode,
           name: pol.attributes?.name,
           code: pol.attributes?.code,
           countryCode: pol.attributes?.country_code,
@@ -291,7 +342,7 @@ export function mapShipment(doc: any): Shipment {
       : null,
     portOfDischarge: pod
       ? {
-          locode: pod.attributes?.locode,
+          locode: pod.attributes?.code ?? pod.attributes?.locode,
           name: pod.attributes?.name,
           code: pod.attributes?.code,
           countryCode: pod.attributes?.country_code,
