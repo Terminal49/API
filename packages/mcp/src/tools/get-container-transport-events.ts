@@ -3,7 +3,7 @@
  * Retrieves transport event timeline for a container
  */
 
-import { Terminal49Client } from '@terminal49/sdk';
+import { NotFoundError, Terminal49Client } from '@terminal49/sdk';
 
 export interface GetContainerTransportEventsArgs {
   id: string;
@@ -49,61 +49,106 @@ export async function executeGetContainerTransportEvents(
   try {
     const result = await client.containers.events(args.id, { format: 'raw' });
     const raw = (result as any)?.raw ?? result;
-    const mapped = (result as any)?.mapped;
-    const duration = Date.now() - startTime;
 
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.complete',
-        tool: 'get_container_transport_events',
-        container_id: args.id,
-        event_count: raw?.data?.length || (Array.isArray(mapped) ? mapped.length : 0) || 0,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      })
-    );
+    logComplete(args.id, eventCount(raw), startTime, 'transport_events_subresource');
 
-    const summary = formatTransportEventsResponse(raw);
-    return mapped ? { mapped, summary } : summary;
+    return formatTransportEventsResponse(raw, { source: 'transport_events_subresource' });
   } catch (error) {
-    const duration = Date.now() - startTime;
-    const message = (error as Error).message;
+    if (!isNotFound(error)) {
+      logError(args.id, error, startTime);
+      throw error;
+    }
 
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.error',
-        tool: 'get_container_transport_events',
-        container_id: args.id,
-        error: (error as Error).name,
-        message,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      })
-    );
-
-    return {
-      total_events: 0,
-      event_categories: {
-        vessel_events: 0,
-        rail_events: 0,
-        truck_events: 0,
-        terminal_events: 0,
-        other_events: 0,
-      },
-      timeline: [],
-      milestones: {},
-      _metadata: {
-        presentation_guidance:
-          'No transport events were returned for this container. Use get_container for current status and retry later.',
-        error: message,
-        remediation:
-          'Confirm the container ID exists and has event data, then retry get_container_transport_events.',
-      },
-    };
+    // The dedicated /containers/{id}/transport_events sub-resource can 404 even
+    // when the container exists and has events (it is not enabled/populated for
+    // every container). Fall back to the container's include path before
+    // concluding there is nothing to show — never present a success-shaped empty
+    // timeline that secretly carries a "Not Found" error.
+    return fallbackToContainerInclude(args.id, client, startTime);
   }
 }
 
-function formatTransportEventsResponse(apiResponse: any): any {
+async function fallbackToContainerInclude(
+  id: string,
+  client: Terminal49Client,
+  startTime: number
+): Promise<any> {
+  let raw: any;
+  try {
+    const fallbackResult = await client.containers.get(id, ['transport_events'], {
+      format: 'raw',
+    });
+    raw = (fallbackResult as any)?.raw ?? fallbackResult;
+  } catch (fallbackError) {
+    // A genuinely-missing container surfaces as a real tool error, distinct
+    // from an empty-but-valid timeline.
+    logError(id, fallbackError, startTime);
+    throw fallbackError;
+  }
+
+  const events = extractIncludedTransportEvents(raw);
+
+  logComplete(id, events.length, startTime, 'container_include_fallback');
+
+  return formatTransportEventsResponse(
+    { data: events, included: raw?.included || [] },
+    { source: 'container_include_fallback', containerFound: true }
+  );
+}
+
+function eventCount(raw: any): number {
+  if (Array.isArray(raw)) return raw.length;
+  if (Array.isArray(raw?.data)) return raw.data.length;
+  return 0;
+}
+
+function isNotFound(error: unknown): boolean {
+  return (
+    error instanceof NotFoundError ||
+    (error as any)?.status === 404 ||
+    (error as any)?.name === 'NotFoundError'
+  );
+}
+
+function logComplete(id: string, count: number, startTime: number, source: string): void {
+  console.error(
+    JSON.stringify({
+      event: 'tool.execute.complete',
+      tool: 'get_container_transport_events',
+      container_id: id,
+      event_count: count,
+      source,
+      duration_ms: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    })
+  );
+}
+
+function logError(id: string, error: unknown, startTime: number): void {
+  console.error(
+    JSON.stringify({
+      event: 'tool.execute.error',
+      tool: 'get_container_transport_events',
+      container_id: id,
+      error: (error as Error).name,
+      message: (error as Error).message,
+      duration_ms: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    })
+  );
+}
+
+function extractIncludedTransportEvents(raw: any): any[] {
+  const included = Array.isArray(raw?.included) ? raw.included : [];
+  return included.filter((item: any) => item?.type === 'transport_event');
+}
+
+interface FormatOptions {
+  source: 'transport_events_subresource' | 'container_include_fallback';
+  containerFound?: boolean;
+}
+
+function formatTransportEventsResponse(apiResponse: any, options: FormatOptions): any {
   const events = Array.isArray(apiResponse)
     ? apiResponse
     : Array.isArray(apiResponse?.data)
@@ -128,38 +173,66 @@ function formatTransportEventsResponse(apiResponse: any): any {
     const eventType = normalizeText(attrs.event);
     const timestamp = normalizeTimestamp(attrs.timestamp);
 
-    // Find location info from included data
-    const locationId = relationships.location?.data?.id;
-    const location = included.find((item: any) => item.id === locationId);
-
     return {
       event: eventType,
       timestamp,
       timezone: normalizeText(attrs.timezone),
       voyage_number: normalizeText(attrs.voyage_number),
-      location: location
-        ? {
-            name: normalizeText(location.attributes?.name),
-            code:
-              normalizeText(location.attributes?.code) || normalizeText(location.attributes?.locode),
-            type: normalizeText(location.type),
-          }
-        : null,
+      location: resolveLocation(attrs, relationships, included),
     };
   });
+
+  const metadata: Record<string, unknown> = {
+    source: options.source,
+    presentation_guidance:
+      events.length > 0
+        ? 'Present events chronologically as a journey timeline. ' +
+          'Highlight key milestones: vessel loaded, departed, arrived, discharged, delivery. ' +
+          'For rail containers, emphasize rail movements.'
+        : 'This container exists but has no transport events yet. ' +
+          'Report an empty timeline (not an error) and use get_container for current status.',
+  };
+
+  if (options.containerFound !== undefined) {
+    metadata.container_found = options.containerFound;
+  }
 
   return {
     total_events: events.length,
     event_categories: categorized,
     timeline: formattedEvents,
     milestones: extractKeyMilestones(sortedEvents),
-    _metadata: {
-      presentation_guidance:
-        'Present events chronologically as a journey timeline. ' +
-        'Highlight key milestones: vessel loaded, departed, arrived, discharged, delivery. ' +
-        'For rail containers, emphasize rail movements.',
-    },
+    _metadata: metadata,
   };
+}
+
+function resolveLocation(attrs: any, relationships: any, included: any[]): any {
+  // Dedicated sub-resource: location is a related resource in `included`.
+  const locationId = relationships.location?.data?.id;
+  const includedLocation = locationId
+    ? included.find((item: any) => item.id === locationId)
+    : undefined;
+  if (includedLocation) {
+    return {
+      name: normalizeText(includedLocation.attributes?.name),
+      code:
+        normalizeText(includedLocation.attributes?.code) ||
+        normalizeText(includedLocation.attributes?.locode),
+      type: normalizeText(includedLocation.type),
+    };
+  }
+
+  // Container-include fallback: events embed location on their own attributes.
+  const embeddedName = normalizeText(attrs.location_name);
+  if (embeddedName) {
+    return {
+      name: embeddedName,
+      code: normalizeText(attrs.location_locode) || normalizeText(attrs.port_locode),
+      type: undefined,
+    };
+  }
+
+  return null;
 }
 
 function categorizeEvents(events: any[]): any {
