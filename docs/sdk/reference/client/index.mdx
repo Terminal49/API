@@ -12,10 +12,12 @@ description: "Reference index for the Terminal49 TypeScript SDK client module, l
 | [AuthenticationError](/sdk/reference/client/classes/AuthenticationError) | Thrown when the API token is invalid or missing (HTTP 401). |
 | [AuthorizationError](/sdk/reference/client/classes/AuthorizationError) | Thrown when the API token is valid but lacks permission for the request (HTTP 403). |
 | [FeatureNotEnabledError](/sdk/reference/client/classes/FeatureNotEnabledError) | Thrown when the requested feature requires a plan upgrade (HTTP 403). |
+| [NetworkError](/sdk/reference/client/classes/NetworkError) | Thrown when a transport-level failure occurs before a response is received — a DNS failure, a refused/reset connection, or an otherwise failed `fetch`. Has no HTTP status because no response was produced. |
 | [NotFoundError](/sdk/reference/client/classes/NotFoundError) | Thrown when the requested resource does not exist (HTTP 404). |
 | [RateLimitError](/sdk/reference/client/classes/RateLimitError) | Thrown when the API rate limit has been exceeded (HTTP 429). The SDK retries automatically. |
 | [Terminal49Client](/sdk/reference/client/classes/Terminal49Client) | Server-side TypeScript client for the Terminal49 JSON:API. |
 | [Terminal49Error](/sdk/reference/client/classes/Terminal49Error) | Base error for all Terminal49 API errors. Subclassed by status-specific errors. |
+| [TimeoutError](/sdk/reference/client/classes/TimeoutError) | Thrown when a request exceeds the configured request timeout and is aborted by the SDK. Has no HTTP status because no response was produced. |
 | [UpstreamError](/sdk/reference/client/classes/UpstreamError) | Thrown when the carrier or terminal upstream API is unavailable (HTTP 5xx). |
 | [ValidationError](/sdk/reference/client/classes/ValidationError) | Thrown when the request payload fails server-side validation (HTTP 400/422). |
 
