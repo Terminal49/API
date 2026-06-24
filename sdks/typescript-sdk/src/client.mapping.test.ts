@@ -141,11 +141,18 @@ describe('Terminal49Client mapping helpers', () => {
         : null;
       if (!routeLocation) return;
 
-      const portId = routeLocation?.relationships?.port?.data?.id;
-      const port = portId ? findIncluded(fixture, 'port', portId) : null;
+      // The port for a route leg lives under the `location` relationship of a
+      // route_location (type port|terminal), NOT a `port` relationship.
+      const locationId = routeLocation?.relationships?.location?.data?.id;
+      const port = locationId
+        ? findIncluded(fixture, 'port', locationId)
+        : null;
       if (port) {
+        // Regression guard: the leg must resolve its port, not be null.
+        expect(result.locations[0]?.port).toBeTruthy();
         expectIfDefined(result.locations[0]?.port?.code, port.attributes?.code);
         expectIfDefined(result.locations[0]?.port?.name, port.attributes?.name);
+        expectIfDefined(result.locations[0]?.port?.city, port.attributes?.city);
         expectIfDefined(
           result.locations[0]?.port?.countryCode,
           port.attributes?.country_code,
@@ -613,5 +620,216 @@ describe('Terminal49Client mapping helpers', () => {
 
     expect(containers.items).toEqual([]);
     expect(shipments.items).toEqual([]);
+  });
+
+  it('resolves every route leg port from the `location` relationship', async () => {
+    const fixture = loadFixture('containers.route');
+    const { fetchImpl } = createMockFetch({
+      '/containers/cont-1/route?include=port,vessel,route_location': () =>
+        jsonResponse(fixture),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    const result = (await client.getContainerRoute('cont-1', {
+      format: 'mapped',
+    })) as any;
+
+    expect(result.totalLegs).toBe(2);
+    expect(result.locations.length).toBe(2);
+
+    // Each leg must carry a non-null port resolved via `location`.
+    expect(result.locations[0]?.port?.code).toBe('CNSHA');
+    expect(result.locations[0]?.port?.name).toBe('Shanghai');
+    expect(result.locations[0]?.port?.city).toBe('Shanghai');
+    expect(result.locations[0]?.port?.countryCode).toBe('CN');
+
+    expect(result.locations[1]?.port?.code).toBe('USLAX');
+    expect(result.locations[1]?.port?.name).toBe('Los Angeles');
+    expect(result.locations[1]?.port?.countryCode).toBe('US');
+
+    // Outbound leg + vessel resolution sanity.
+    expect(result.locations[0]?.outbound?.carrierScac).toBe('MAEU');
+    expect(result.locations[0]?.outbound?.vessel?.name).toBe(
+      'MAERSK EDINBURGH',
+    );
+    expect(result.locations[1]?.inbound?.vessel?.imo).toBe('9456769');
+  });
+
+  it('maps port `code` into the shipment locode fields', async () => {
+    const fixture = loadFixture('shipments.get.include');
+    const shipmentId = fixture?.data?.id || 'ship-1';
+    const { fetchImpl } = createMockFetch({
+      [`/shipments/${shipmentId}?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal`]:
+        () => jsonResponse(fixture),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    const result = (await client.getShipment(shipmentId, true, {
+      format: 'mapped',
+    })) as any;
+
+    const relationships = fixture?.data?.relationships || {};
+    const polRef = relationships.port_of_lading?.data;
+    const pol = polRef ? findIncluded(fixture, polRef.type, polRef.id) : null;
+
+    if (pol?.attributes?.code) {
+      // Port resources expose `code` (e.g. KRPUS), never `locode`.
+      expect(pol.attributes.locode).toBeUndefined();
+      expect(result.ports?.portOfLading?.locode).toBe(pol.attributes.code);
+      expect(result.ports?.portOfLading?.code).toBe(pol.attributes.code);
+    }
+
+    const podRef = relationships.port_of_discharge?.data;
+    const pod = podRef ? findIncluded(fixture, podRef.type, podRef.id) : null;
+    if (pod?.attributes?.code) {
+      expect(result.ports?.portOfDischarge?.locode).toBe(pod.attributes.code);
+      expect(result.ports?.portOfDischarge?.code).toBe(pod.attributes.code);
+    }
+  });
+
+  it('maps container current_status and pickup_facility from real paths', async () => {
+    const fixture = loadFixture('containers.get.pickup');
+    const { fetchImpl } = createMockFetch({
+      '/containers?include=shipment,pod_terminal,pickup_facility': () =>
+        jsonResponse(fixture),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    const list = (await client.listContainers(
+      { include: 'shipment,pod_terminal,pickup_facility' },
+      { format: 'mapped' },
+    )) as any;
+    const result = list.items[0];
+
+    const item = fixture.data[0];
+    const attrs = item.attributes;
+
+    // status must come from current_status (there is no `status` attribute).
+    expect(attrs.status).toBeUndefined();
+    expect(result.status).toBe(attrs.current_status);
+    expect(result.currentStatus).toBe(attrs.current_status);
+
+    // pod terminal resolves as before.
+    expect(result.terminals?.podTerminal?.name).toBe('APM Terminals Pier 400');
+    expect(result.terminals?.podTerminal?.firmsCode).toBe('Y258');
+
+    // pickup_facility (the real inland/destination facility relationship) must
+    // be surfaced; the legacy non-existent `destination_terminal` relationship
+    // never resolves anything.
+    const pickupRef = item.relationships.pickup_facility?.data;
+    const pickup = findIncluded(fixture, 'terminal', pickupRef?.id);
+    expect(pickup).toBeTruthy();
+    expect(result.terminals?.destinationTerminal?.name).toBe(
+      pickup.attributes.name,
+    );
+    expect(result.terminals?.destinationTerminal?.firmsCode).toBe(
+      pickup.attributes.firms_code,
+    );
+
+    expect(result.equipment?.type).toBe(attrs.equipment_type);
+    expect(result.location?.availableForPickup).toBe(
+      attrs.available_for_pickup,
+    );
+    expect(result.demurrage?.pickupLfd).toBe(attrs.pickup_lfd);
+  });
+
+  it('does not let the raw-attr spread clobber curated nested fields', async () => {
+    const fixture = loadFixture('containers.get.pickup');
+    const { fetchImpl } = createMockFetch({
+      '/containers?include=shipment,pod_terminal,pickup_facility': () =>
+        jsonResponse(fixture),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    const list = (await client.listContainers(
+      { include: 'shipment,pod_terminal,pickup_facility' },
+      { format: 'mapped' },
+    )) as any;
+    const result = list.items[0];
+
+    // Curated nests must remain structured objects, never overwritten by the
+    // flat camelCased raw attributes (e.g. an `equipment*` scalar must not
+    // replace the curated `equipment` object).
+    expect(typeof result.equipment).toBe('object');
+    expect(result.equipment).not.toBeNull();
+    expect(typeof result.location).toBe('object');
+    expect(typeof result.demurrage).toBe('object');
+    expect(typeof result.rail).toBe('object');
+    expect(typeof result.terminals).toBe('object');
+
+    // The flattened raw scalars that feed curated nests should not also appear
+    // as top-level duplicate keys.
+    expect(result).not.toHaveProperty('equipmentType');
+    expect(result).not.toHaveProperty('equipmentLength');
+    expect(result).not.toHaveProperty('availableForPickup');
+    expect(result).not.toHaveProperty('podArrivedAt');
+    expect(result).not.toHaveProperty('pickupLfd');
+    expect(result).not.toHaveProperty('podRailCarrierScac');
+  });
+
+  it('restores shipping-line alternative_scacs and tracking-support flags', async () => {
+    const fixture = loadFixture('shipping-lines.list');
+    const { fetchImpl } = createMockFetch({
+      '/shipping_lines': () => jsonResponse(fixture),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    const result = (await client.listShippingLines(undefined, {
+      format: 'mapped',
+    })) as any[];
+
+    const sourceWithAlt = (fixture?.data || []).find(
+      (item: any) =>
+        Array.isArray(item?.attributes?.alternative_scacs) &&
+        item.attributes.alternative_scacs.length > 0,
+    );
+    expect(sourceWithAlt).toBeTruthy();
+    const mappedAlt = result.find(
+      (line) => line.scac === sourceWithAlt.attributes.scac,
+    );
+    expect(mappedAlt?.alternativeScacs).toEqual(
+      sourceWithAlt.attributes.alternative_scacs,
+    );
+
+    const sourceWithFlag = (fixture?.data || []).find(
+      (item: any) =>
+        item?.attributes?.container_number_tracking_support === false,
+    );
+    expect(sourceWithFlag).toBeTruthy();
+    const mappedFlag = result.find(
+      (line) => line.scac === sourceWithFlag.attributes.scac,
+    );
+    expect(mappedFlag?.containerNumberTrackingSupport).toBe(false);
+    expect(mappedFlag?.billOfLadingTrackingSupport).toBe(
+      sourceWithFlag.attributes.bill_of_lading_tracking_support,
+    );
+    expect(mappedFlag?.bookingNumberTrackingSupport).toBe(
+      sourceWithFlag.attributes.booking_number_tracking_support,
+    );
   });
 });
