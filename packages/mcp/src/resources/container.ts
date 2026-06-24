@@ -42,7 +42,12 @@ export async function readContainerResource(
   const rawResult = (result as any)?.raw ?? result;
   const container = rawResult?.data?.attributes || {};
 
-  const summary = generateSummary(containerId, container);
+  // line_tracking_stopped_* lives on the SHIPMENT (per the generated OpenAPI
+  // types), not the container — resolve the sideloaded shipment from the
+  // JSON:API included[] so we can read it. Absent shipment → not-stopped.
+  const shipment = resolveSideloadedShipment(rawResult);
+
+  const summary = generateSummary(containerId, container, shipment);
 
   return {
     uri: normalized,
@@ -63,7 +68,21 @@ function normalizeUri(uri: string): string {
   return uri;
 }
 
-function generateSummary(id: string, container: any): string {
+/**
+ * Resolve the sideloaded shipment for this container from the JSON:API
+ * `included[]` (relationships.shipment.data.id -> matching included resource).
+ * Returns undefined when the shipment wasn't included in the response.
+ */
+function resolveSideloadedShipment(rawResult: any): any {
+  const shipmentId = rawResult?.data?.relationships?.shipment?.data?.id;
+  if (!shipmentId) return undefined;
+  const included = rawResult?.included || [];
+  return included.find(
+    (item: any) => item.id === shipmentId && item.type === 'shipment',
+  );
+}
+
+function generateSummary(id: string, container: any, shipment?: any): string {
   // Headline status comes from the API current_status (shared resolver), ending
   // the divergence between this resource and the get_container tool.
   const { status } = resolveContainerStatus(container);
@@ -74,13 +93,16 @@ function generateSummary(id: string, container: any): string {
   const label = container.number || container.container_number || 'Unknown';
   const equipment = formatEquipment(container);
 
+  // line_tracking_stopped_* lives on the SHIPMENT, not the container, so read it
+  // from the sideloaded shipment's attributes (absent shipment → not-stopped).
+  const shipmentAttrs = shipment?.attributes;
   const demurrage = evaluateDemurrageUrgency({
     fees_at_pod_terminal: container.fees_at_pod_terminal,
     pickup_lfd: container.pickup_lfd ?? null,
     terminal_checked_at: container.terminal_checked_at ?? null,
     tracking_stopped: Boolean(
-      container.line_tracking_stopped_at ||
-      container.line_tracking_stopped_reason,
+      shipmentAttrs?.line_tracking_stopped_at ||
+      shipmentAttrs?.line_tracking_stopped_reason,
     ),
   });
 

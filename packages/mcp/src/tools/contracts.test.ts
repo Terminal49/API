@@ -476,6 +476,101 @@ describe('MCP tool contracts', () => {
     expect(result.demurrage.urgency_suppressed).toBe(true);
   });
 
+  it('get_container suppresses demurrage urgency when the sideloaded shipment has tracking stopped', async () => {
+    const rawContainer = buildContainerRaw('container-tracking-stopped');
+    // Fresh terminal data + a near-future LFD would normally yield an active
+    // urgency; only the shipment-level tracking-stopped flag should suppress it.
+    (rawContainer.data.attributes as any).terminal_checked_at =
+      new Date().toISOString();
+    (rawContainer.data.attributes as any).pickup_lfd = new Date(
+      Date.now() + 2 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const shipmentInclude = rawContainer.included.find(
+      (item: any) => item.type === 'shipment',
+    ) as any;
+    shipmentInclude.attributes.line_tracking_stopped_at =
+      '2026-01-01T00:00:00Z';
+    shipmentInclude.attributes.line_tracking_stopped_reason =
+      'all_containers_terminated';
+
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({
+          raw: rawContainer,
+          mapped: { id: 'container-tracking-stopped' },
+        }),
+      },
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-tracking-stopped' },
+      client,
+    );
+
+    expect(result.demurrage.urgency).toBe('unknown');
+    expect(result.demurrage.urgency_suppressed).toBe(true);
+    expect(result.demurrage.urgency_reason).toContain('tracking is stopped');
+  });
+
+  it('get_container does NOT suppress urgency when the shipment has no tracking-stopped flag', async () => {
+    const rawContainer = buildContainerRaw('container-tracking-active');
+    // Same fresh-data + near-future-LFD setup, but the shipment carries no
+    // line_tracking_stopped_* — urgency must remain active (not suppressed).
+    (rawContainer.data.attributes as any).terminal_checked_at =
+      new Date().toISOString();
+    (rawContainer.data.attributes as any).pickup_lfd = new Date(
+      Date.now() + 2 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({
+          raw: rawContainer,
+          mapped: { id: 'container-tracking-active' },
+        }),
+      },
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-tracking-active' },
+      client,
+    );
+
+    expect(result.demurrage.urgency_suppressed).toBe(false);
+    expect(result.demurrage.urgency).toBe('imminent');
+  });
+
+  it('get_container does not crash when the shipment is not sideloaded (tracking treated as active)', async () => {
+    const rawContainer = buildContainerRaw('container-no-shipment');
+    (rawContainer.data.attributes as any).terminal_checked_at =
+      new Date().toISOString();
+    (rawContainer.data.attributes as any).pickup_lfd = new Date(
+      Date.now() + 2 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    // Drop the sideloaded shipment entirely.
+    rawContainer.included = rawContainer.included.filter(
+      (item: any) => item.type !== 'shipment',
+    );
+
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({
+          raw: rawContainer,
+          mapped: { id: 'container-no-shipment' },
+        }),
+      },
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-no-shipment' },
+      client,
+    );
+
+    expect(result.shipment).toBeNull();
+    expect(result.demurrage.urgency_suppressed).toBe(false);
+    expect(result.demurrage.urgency).toBe('imminent');
+  });
+
   it('get_container surfaces pod_timezone and per-channel LFDs and drops phantom updated_at', async () => {
     const client = asClient({
       containers: {
@@ -500,12 +595,10 @@ describe('MCP tool contracts', () => {
   });
 
   it('get_shipment_details returns shipment summary and container list', async () => {
-    const shipmentsGet = vi
-      .fn()
-      .mockResolvedValue({
-        raw: buildShipmentRaw(),
-        mapped: { id: 'shipment-1' },
-      });
+    const shipmentsGet = vi.fn().mockResolvedValue({
+      raw: buildShipmentRaw(),
+      mapped: { id: 'shipment-1' },
+    });
     const client = asClient({ shipments: { get: shipmentsGet } });
 
     const result = await executeGetShipmentDetails(

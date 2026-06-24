@@ -218,7 +218,10 @@ function formatContainerResponse(
     fees_at_pod_terminal: container.fees_at_pod_terminal,
     pickup_lfd: container.pickup_lfd ?? null,
     terminal_checked_at: container.terminal_checked_at ?? null,
-    tracking_stopped: isTrackingStopped(container),
+    // line_tracking_stopped_* lives on the SHIPMENT, not the container, so we
+    // read it from the sideloaded shipment. When the shipment isn't included we
+    // fall back to "not stopped" rather than crash.
+    tracking_stopped: isTrackingStopped(shipment),
   });
   // Surface the LFD countdown in terminal-local days so "N days until LFD" never
   // lands on the wrong calendar day near a UTC midnight boundary.
@@ -329,11 +332,18 @@ function normalizeEquipmentLength(value: unknown): number | null {
 /**
  * Whether line tracking has stopped/closed for the container's shipment, which
  * makes terminal availability/LFD signals untrustworthy for urgency.
+ *
+ * `line_tracking_stopped_at` / `line_tracking_stopped_reason` live on the
+ * SHIPMENT schema (per the generated OpenAPI types), not on the container, so
+ * we read them from the sideloaded shipment resource (JSON:API `included[]`).
+ * When the shipment wasn't included in this call, `shipment` is undefined and
+ * we treat tracking as not-stopped rather than crashing.
  */
-function isTrackingStopped(container: any): boolean {
+function isTrackingStopped(shipment: any): boolean {
+  const attrs = shipment?.attributes;
+  if (!attrs) return false;
   return Boolean(
-    container.line_tracking_stopped_at ||
-    container.line_tracking_stopped_reason,
+    attrs.line_tracking_stopped_at || attrs.line_tracking_stopped_reason,
   );
 }
 
