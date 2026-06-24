@@ -5,23 +5,6 @@
 
 import { Terminal49Client } from '@terminal49/sdk';
 
-export const getSupportedShippingLinesTool = {
-  name: 'get_supported_shipping_lines',
-  description:
-    'Get list of shipping lines (carriers) supported by Terminal49 for container tracking. ' +
-    'Returns SCAC codes, names, nicknames, and BOL prefixes from the Terminal49 shipping_lines API. ' +
-    'Use this when validating whether a carrier is supported or mapping SCAC codes.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      search: {
-        type: 'string',
-        description: 'Optional: Filter by carrier name, nickname, or SCAC code',
-      },
-    },
-  },
-};
-
 interface SupportedLinesResponse {
   total_lines: number;
   shipping_lines: ShippingLineRecord[];
@@ -36,9 +19,21 @@ export interface ShippingLineRecord {
   notes?: string;
 }
 
+// Internal carrier used only for Terminal49 QA/sandbox flows. It must never
+// surface to MCP clients as a real, trackable shipping line.
+const HIDDEN_CARRIER_SCACS = new Set(['TEST']);
+const HIDDEN_CARRIER_NAMES = new Set(['t49 test carrier']);
+
+function isHiddenCarrier(line: ShippingLineRecord): boolean {
+  return (
+    HIDDEN_CARRIER_SCACS.has(line.scac.trim().toUpperCase()) ||
+    HIDDEN_CARRIER_NAMES.has(line.name.trim().toLowerCase())
+  );
+}
+
 export async function executeGetSupportedShippingLines(
   args: { search?: string },
-  client: Terminal49Client
+  client: Terminal49Client,
 ): Promise<SupportedLinesResponse> {
   const search = args.search?.trim().toLowerCase();
   const lines = await loadShippingLines(client);
@@ -47,7 +42,7 @@ export async function executeGetSupportedShippingLines(
     ? lines.filter((line) =>
         [line.scac, line.name, line.short_name]
           .filter(Boolean)
-          .some((value) => value!.toLowerCase().includes(search))
+          .some((value) => value!.toLowerCase().includes(search)),
       )
     : lines;
 
@@ -62,19 +57,31 @@ export async function executeGetSupportedShippingLines(
   };
 }
 
-async function loadShippingLines(client: Terminal49Client): Promise<ShippingLineRecord[]> {
-  const response = await client.shippingLines.list(undefined, { format: 'mapped' });
+async function loadShippingLines(
+  client: Terminal49Client,
+): Promise<ShippingLineRecord[]> {
+  const response = await client.shippingLines.list(undefined, {
+    format: 'mapped',
+  });
   const data = Array.isArray(response) ? response : [];
 
-  const mapped = data.map((item: any): Partial<ShippingLineRecord> => ({
-    scac: item.scac,
-    name: item.name,
-    short_name: item.shortName,
-    bol_prefix: item.bolPrefix,
-    notes: item.notes,
-  }));
+  const mapped = data.map(
+    (item: any): Partial<ShippingLineRecord> => ({
+      scac: item.scac,
+      name: item.name,
+      short_name: item.shortName,
+      bol_prefix: item.bolPrefix,
+      notes: item.notes,
+    }),
+  );
 
   return mapped
-    .filter((item): item is ShippingLineRecord => item != null && Boolean(item.scac) && Boolean(item.name))
-    .sort((a: ShippingLineRecord, b: ShippingLineRecord) => a.name.localeCompare(b.name));
+    .filter(
+      (item): item is ShippingLineRecord =>
+        item != null && Boolean(item.scac) && Boolean(item.name),
+    )
+    .filter((item) => !isHiddenCarrier(item))
+    .sort((a: ShippingLineRecord, b: ShippingLineRecord) =>
+      a.name.localeCompare(b.name),
+    );
 }

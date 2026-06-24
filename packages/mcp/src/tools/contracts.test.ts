@@ -9,6 +9,7 @@ import { executeListShipments } from './list-shipments.js';
 import { executeListTrackingRequests } from './list-tracking-requests.js';
 import { executeSearchContainer } from './search-container.js';
 import { executeTrackContainer } from './track-container.js';
+import { buildListContract } from '../server.js';
 
 function asClient(client: unknown): Terminal49Client {
   return client as Terminal49Client;
@@ -1042,5 +1043,176 @@ describe('MCP tool contracts', () => {
       { format: 'mapped', page: undefined, pageSize: undefined },
     );
     expect(result.items).toHaveLength(1);
+  });
+
+  it('buildListContract does not claim filter-match for an unfiltered firehose', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }, { id: 'c2' }], meta: { total: 2 } },
+      'container',
+      { filters: {} },
+    );
+
+    expect(contract.can_answer).not.toContain('which records match filters');
+    // An unfiltered list cannot be presented as the user's filtered worklist;
+    // the agent must be told it needs a filter to answer scoped questions.
+    expect(contract.requires_more_data).toContain(
+      'a filter to scope this list (status, port, carrier, updated_after)',
+    );
+  });
+
+  it('buildListContract reports which records match when a filter was applied', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }], meta: { total: 1 } },
+      'container',
+      { filters: { status: 'available_for_pickup' } },
+    );
+
+    expect(contract.can_answer).toContain(
+      'which records match the applied filters',
+    );
+  });
+
+  it('buildListContract echoes dropped/unsupported filters from the SDK', () => {
+    const contract = buildListContract(
+      {
+        items: [{ id: 'c1' }],
+        meta: { total: 1 },
+        unsupportedFilters: ['has_hold'],
+      },
+      'container',
+      { filters: { status: 'available_for_pickup', has_hold: true } },
+    );
+
+    expect(contract.dropped_filters).toEqual(['has_hold']);
+    expect(
+      contract.requires_more_data.some((entry) => entry.includes('has_hold')),
+    ).toBe(true);
+  });
+
+  it('buildListContract does not surface an implausibly large total as the worklist size', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }, { id: 'c2' }], meta: { total: 250000 } },
+      'container',
+      { filters: {} },
+    );
+
+    expect(contract.total_is_reliable).toBe(false);
+    expect(
+      contract.requires_more_data.some((entry) => /total/i.test(entry)),
+    ).toBe(true);
+  });
+
+  it('buildListContract trusts a plausible total when a filter is applied', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }], meta: { total: 12 } },
+      'container',
+      { filters: { carrier: 'MAEU' } },
+    );
+
+    expect(contract.total_is_reliable).toBe(true);
+  });
+
+  it('buildListContract omits the heavy column_catalog from the per-call contract', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }], meta: { total: 1 } },
+      'container',
+      { filters: { status: 'available_for_pickup' } },
+    );
+
+    expect(contract.display).toBeDefined();
+    expect((contract.display as any).column_catalog).toBeUndefined();
+    // The catalog must remain discoverable via a one-time resource.
+    expect((contract.display as any).column_catalog_resource).toBe(
+      'terminal49://docs/list-display-columns',
+    );
+  });
+
+  it('get_supported_shipping_lines hides the T49 Test Carrier', async () => {
+    const shippingList = vi.fn().mockResolvedValue([
+      { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
+      { scac: 'TEST', name: 'T49 Test Carrier', shortName: 'TEST' },
+    ]);
+
+    const client = asClient({ shippingLines: { list: shippingList } });
+
+    const result = await executeSupportedShippingLines({}, client);
+
+    expect(result.shipping_lines.some((line) => line.scac === 'TEST')).toBe(
+      false,
+    );
+    expect(
+      result.shipping_lines.some((line) => line.name === 'T49 Test Carrier'),
+    ).toBe(false);
+    expect(result.total_lines).toBe(1);
+  });
+
+  it('search_container derives a real status instead of returning "unknown" blindly', async () => {
+    const client = asClient({
+      search: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: 'sr-real',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'container',
+              number: 'CAIU7777777',
+              scac: 'MAEU',
+              // No explicit status field, but availability/timestamps are present.
+              available_for_pickup: true,
+              pod_discharged_at: '2026-02-16T01:00:00Z',
+            },
+          },
+        ],
+      }),
+    });
+
+    const result = await executeSearchContainer(
+      { query: 'CAIU7777777' },
+      client,
+    );
+
+    expect(result.containers[0].status).not.toBe('unknown');
+    expect(result.containers[0].status).toBe('available_for_pickup');
+  });
+
+  it('search_container disambiguates duplicate container numbers', async () => {
+    const client = asClient({
+      search: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: 'dup-1',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'container',
+              number: 'DUPU0000001',
+              scac: 'MAEU',
+              available_for_pickup: false,
+              pod_discharged_at: '2026-02-16T01:00:00Z',
+            },
+          },
+          {
+            id: 'dup-2',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'container',
+              number: 'DUPU0000001',
+              scac: 'MSCU',
+              available_for_pickup: true,
+            },
+          },
+        ],
+      }),
+    });
+
+    const result = await executeSearchContainer(
+      { query: 'DUPU0000001' },
+      client,
+    );
+
+    // Both rows survive (distinct ids) and are flagged so the agent can disambiguate.
+    expect(result.containers).toHaveLength(2);
+    expect(result.containers.every((c) => c.duplicate_number === true)).toBe(
+      true,
+    );
   });
 });

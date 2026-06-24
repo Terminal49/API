@@ -341,10 +341,11 @@ describe('MCP server wiring', () => {
     expect(prompts).toContain('check-demurrage');
     expect(prompts).toContain('analyze-delays');
 
-    expect(resources).toHaveLength(2);
+    expect(resources).toHaveLength(3);
     expect(resourceTemplates).toHaveLength(1);
     expect(resources).toContain('terminal49://docs/milestone-glossary');
     expect(resources).toContain('terminal49://docs/mcp-query-guidance');
+    expect(resources).toContain('terminal49://docs/list-display-columns');
     expect(resourceTemplates).toContain('container');
   });
 
@@ -443,7 +444,10 @@ describe('MCP server wiring', () => {
 
     const result = await searchTool.handler({ query: '   ' });
 
-    expect(result.content[0].text).toContain('Error: Search query is required');
+    // DEV-10663: tool errors return a generic, non-leaking message; the raw
+    // internal error ("Search query is required") must not reach the client.
+    expect(result.content[0].text).not.toContain('Search query is required');
+    expect(result.content[0].text).toContain('could not be completed');
     expect(result.isError).toBe(true);
     expect(Object.hasOwn(result, 'structuredContent')).toBe(false);
   });
