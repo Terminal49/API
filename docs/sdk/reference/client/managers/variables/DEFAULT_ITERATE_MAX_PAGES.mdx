@@ -1,0 +1,13 @@
+---
+title: "Variable: DEFAULT\\_ITERATE\\_MAX\\_PAGES"
+---
+
+# Variable: DEFAULT\_ITERATE\_MAX\_PAGES
+
+> `const` **DEFAULT\_ITERATE\_MAX\_PAGES**: `1000` = `1000`
+
+Hard safety caps for BaseManager.createIterator. They exist so a no-op
+or mistakenly broad filter cannot silently walk the entire dataset (and make
+thousands of requests). They are deliberately large enough not to interfere
+with realistic pagination, and can be raised per call via
+`maxPages` / `maxRows` when a caller genuinely needs more.
