@@ -4,6 +4,9 @@
  */
 
 import { Terminal49Client } from '@terminal49/sdk';
+import { resolveContainerStatus } from '../lib/container-status.js';
+import { evaluateDemurrageUrgency } from '../lib/demurrage.js';
+import { formatInZone } from '../lib/temporal.js';
 
 const URI_PATTERN = /^(?:t49:|terminal49:\/\/)container\/([a-f0-9-]{36})$/i;
 
@@ -22,7 +25,7 @@ export function matchesContainerUri(uri: string): boolean {
 
 export async function readContainerResource(
   uri: string,
-  client: Terminal49Client
+  client: Terminal49Client,
 ): Promise<{ uri: string; mimeType: string; text: string }> {
   const normalized = normalizeUri(uri);
   const match = normalized.match(URI_PATTERN);
@@ -61,41 +64,95 @@ function normalizeUri(uri: string): string {
 }
 
 function generateSummary(id: string, container: any): string {
-  const status = determineStatus(container);
-  const railSection = container.pod_rail_carrier_scac ? generateRailSection(container) : '';
+  // Headline status comes from the API current_status (shared resolver), ending
+  // the divergence between this resource and the get_container tool.
+  const { status } = resolveContainerStatus(container);
+  const podTimezone: string | null = container.pod_timezone ?? null;
+  const railSection = container.pod_rail_carrier_scac
+    ? generateRailSection(container, podTimezone)
+    : '';
   const label = container.number || container.container_number || 'Unknown';
   const equipment = formatEquipment(container);
+
+  const demurrage = evaluateDemurrageUrgency({
+    fees_at_pod_terminal: container.fees_at_pod_terminal,
+    pickup_lfd: container.pickup_lfd ?? null,
+    terminal_checked_at: container.terminal_checked_at ?? null,
+    tracking_stopped: Boolean(
+      container.line_tracking_stopped_at ||
+      container.line_tracking_stopped_reason,
+    ),
+  });
+
+  const importDeadlines = container.import_deadlines || {};
 
   return `# Container ${label}
 
 **ID:** \`${id}\`
 **Status:** ${status}
 **Equipment:** ${equipment}
+${podTimezone ? `**Terminal Timezone:** ${podTimezone}` : ''}
 
 ## Location & Availability
 
-- **Available for Pickup:** ${container.available_for_pickup ? 'Yes' : 'No'}
+- **Available for Pickup:** ${formatAvailability(container)}
 - **Current Location:** ${container.location_at_pod_terminal || 'Unknown'}
-- **POD Arrived:** ${formatTimestamp(container.pod_arrived_at)}
-- **POD Discharged:** ${formatTimestamp(container.pod_discharged_at)}
+- **POD Arrived:** ${formatInZone(container.pod_arrived_at, podTimezone)}
+- **POD Discharged:** ${formatInZone(container.pod_discharged_at, podTimezone)}
 
 ## Demurrage & Fees
 
-- **Last Free Day (LFD):** ${formatDate(container.pickup_lfd)}
-- **Pickup Appointment:** ${formatTimestamp(container.pickup_appointment_at)}
-- **Fees:** ${container.fees_at_pod_terminal?.length || 'None'}
-- **Holds:** ${container.holds_at_pod_terminal?.length || 'None'}
+- **Last Free Day (LFD):** ${formatInZone(container.pickup_lfd, podTimezone)}
+- **LFD (Terminal):** ${formatInZone(importDeadlines.pickup_lfd_terminal, podTimezone)}
+- **LFD (Rail):** ${formatInZone(importDeadlines.pickup_lfd_rail, container.final_destination_timezone ?? podTimezone)}
+- **LFD (Line):** ${formatInZone(importDeadlines.pickup_lfd_line, podTimezone)}
+- **Pickup Appointment:** ${formatInZone(container.pickup_appointment_at, podTimezone)}
+- **Fees:** ${formatFees(demurrage)}
+- **Holds:** ${formatHolds(container)}
+${demurrage.urgency_suppressed ? `- **LFD Urgency:** Unavailable (${demurrage.suppression_reason})` : ''}
 
-${railSection}
+${railSection}`;
+}
 
----
-*Last Updated: ${formatTimestamp(container.updated_at)}*
-`;
+function formatAvailability(container: any): string {
+  if (container.available_for_pickup === true) return 'Yes';
+  if (container.available_for_pickup === false) return 'No';
+  return 'Unknown';
+}
+
+function formatFees(
+  demurrage: ReturnType<typeof evaluateDemurrageUrgency>,
+): string {
+  if (demurrage.fees == null) return 'Not reported';
+  if (demurrage.fees.length === 0) return 'None';
+  if (demurrage.total_amount != null) {
+    const currency = demurrage.currency_code
+      ? ` ${demurrage.currency_code}`
+      : '';
+    return `${demurrage.fees.length} (total ${demurrage.total_amount}${currency})`;
+  }
+  return `${demurrage.fees.length}`;
+}
+
+function formatHolds(container: any): string {
+  const holds = container.holds_at_pod_terminal;
+  if (holds == null) return 'Not reported';
+  if (!Array.isArray(holds) || holds.length === 0) return 'None';
+  return `${holds.length}`;
 }
 
 function formatEquipment(container: any): string {
-  const equipmentLength = container.equipment_length;
-  const equipmentType = container.equipment_type;
+  // equipment_length is the numeric enum 10|20|40|45; guard the 0/empty sentinel.
+  const rawLength = container.equipment_length;
+  const equipmentLength =
+    typeof rawLength === 'number' && rawLength > 0
+      ? rawLength
+      : typeof rawLength === 'string' &&
+          rawLength.trim() !== '' &&
+          Number(rawLength) > 0
+        ? Number(rawLength)
+        : null;
+  const equipmentType = container.equipment_type || null;
 
   if (equipmentLength && equipmentType) {
     return `${equipmentLength}' ${equipmentType}`;
@@ -112,57 +169,16 @@ function formatEquipment(container: any): string {
   return 'Unknown';
 }
 
-function generateRailSection(container: any): string {
-  return `
-## Rail Information
+function generateRailSection(
+  container: any,
+  podTimezone: string | null,
+): string {
+  const railTimezone = container.final_destination_timezone ?? podTimezone;
+  return `## Rail Information
 
 - **Rail Carrier:** ${container.pod_rail_carrier_scac}
-- **Rail Loaded:** ${formatTimestamp(container.pod_rail_loaded_at)}
-- **Destination ETA:** ${formatTimestamp(container.ind_eta_at)}
-- **Destination ATA:** ${formatTimestamp(container.ind_ata_at)}
+- **Rail Loaded:** ${formatInZone(container.pod_rail_loaded_at, podTimezone)}
+- **Destination ETA:** ${formatInZone(container.ind_eta_at, railTimezone)}
+- **Destination ATA:** ${formatInZone(container.ind_ata_at, railTimezone)}
 `;
-}
-
-function determineStatus(container: any): string {
-  if (container.available_for_pickup) {
-    return 'Available for Pickup';
-  } else if (container.pod_discharged_at) {
-    return 'Discharged at POD';
-  } else if (container.pod_arrived_at) {
-    return 'Arrived at POD';
-  }
-  return 'In Transit';
-}
-
-function formatTimestamp(ts: string | null): string {
-  if (!ts) return 'N/A';
-
-  const date = new Date(ts);
-  if (Number.isNaN(date.getTime())) {
-    return ts;
-  }
-
-  return date.toLocaleString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short',
-  });
-}
-
-function formatDate(date: string | null): string {
-  if (!date) return 'N/A';
-
-  const parsedDate = new Date(date);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return date;
-  }
-
-  return parsedDate.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
 }

@@ -1,36 +1,72 @@
 /**
  * get_container tool
- * Retrieves detailed container information by Terminal49 ID
+ * Retrieves detailed container information by Terminal49 ID.
+ *
+ * The Zod input schema lives in server.ts (single source of truth); this file
+ * only owns the execution + curation logic.
  */
 
 import { Terminal49Client } from '@terminal49/sdk';
+import {
+  type ContainerStatusResult,
+  resolveContainerStatus,
+} from '../lib/container-status.js';
+import {
+  type DemurrageEvaluation,
+  evaluateDemurrageUrgency,
+} from '../lib/demurrage.js';
+import { dayDeltaInZone, formatInZone } from '../lib/temporal.js';
+
+export type ContainerInclude = 'shipment' | 'pod_terminal' | 'transport_events';
+
+/** The default sideloads. `include` augments — never replaces — these. */
+const DEFAULT_INCLUDES: ContainerInclude[] = ['shipment', 'pod_terminal'];
 
 export interface GetContainerArgs {
   id: string;
-  include?: ('shipment' | 'pod_terminal' | 'transport_events')[];
+  include?: ContainerInclude[];
 }
 
 export interface ContainerStatus {
   id: string;
   container_number: string;
-  status: 'in_transit' | 'arrived' | 'discharged' | 'available_for_pickup' | 'at_terminal' | 'on_rail' | 'delivered';
+  /** Authoritative headline status from the API `current_status`. */
+  status: string;
+  status_source: ContainerStatusResult['status_source'];
   equipment: {
-    type: string;
-    length: string;
-    height: string;
-    weight_lbs: number;
+    type: string | null;
+    length: number | null;
+    height: string | null;
+    weight_lbs: number | null;
   };
   location: {
     current_location: string | null;
-    available_for_pickup: boolean;
+    available_for_pickup: boolean | null;
+    availability_known: boolean | null;
     pod_arrived_at: string | null;
+    pod_arrived_at_local: string;
     pod_discharged_at: string | null;
+    pod_discharged_at_local: string;
+    pod_timezone: string | null;
   };
   demurrage: {
     pickup_lfd: string | null;
+    pickup_lfd_local: string;
+    /** Per-channel LFDs from import_deadlines (terminal/rail/line). */
+    last_free_days: {
+      terminal: string | null;
+      rail: string | null;
+      line: string | null;
+    };
     pickup_appointment_at: string | null;
-    fees_at_pod_terminal: any[] | null;
-    holds_at_pod_terminal: any[] | null;
+    fees_at_pod_terminal: DemurrageEvaluation['fees'];
+    fees_total_amount: number | null;
+    fees_currency_code: string | null;
+    holds_at_pod_terminal: unknown[] | null;
+    urgency: DemurrageEvaluation['urgency'];
+    urgency_suppressed: boolean;
+    urgency_reason: string | null;
+    days_until_lfd: number | null;
   };
   rail: {
     pod_rail_carrier: string | null;
@@ -52,19 +88,22 @@ export interface ContainerStatus {
     name: string;
     firms_code: string;
   } | null;
-  events?: {
-    count: number;
-    latest_event?: {
-      event: string;
-      timestamp: string;
-      location?: string;
-    };
-    rail_events_count?: number;
-  } | string;
-  updated_at: string;
+  events?:
+    | {
+        count: number;
+        latest_event?: {
+          event: string;
+          timestamp: string;
+          location?: string;
+        };
+        rail_events_count?: number;
+      }
+    | string;
   created_at: string;
   _metadata: {
     container_state: string;
+    status_is_authoritative: boolean;
+    derived_lifecycle: string;
     includes_loaded: string[];
     can_answer: string[];
     needs_more_data_for: string[];
@@ -77,45 +116,20 @@ export interface ContainerStatus {
   };
 }
 
-export const getContainerTool = {
-  name: 'get_container',
-  description:
-    'Get container information with flexible data loading. ' +
-    'Returns core container data (status, location, equipment, dates) plus optional related data. ' +
-    'Choose includes based on user question and container state. ' +
-    'Response includes metadata hints to guide follow-up queries.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      id: {
-        type: 'string',
-        description: 'The Terminal49 container ID (UUID format)',
-      },
-      include: {
-        type: 'array',
-        items: {
-          type: 'string',
-          enum: ['shipment', 'pod_terminal', 'transport_events'],
-        },
-        description:
-          "Optional related data to include. Default: ['shipment'] covers most use cases.\n\n" +
-          "• 'shipment': Routing, BOL, line, ref numbers (lightweight, always useful)\n" +
-          "• 'pod_terminal': Terminal name, location, availability (lightweight, needed for demurrage questions)\n" +
-          "• 'transport_events': Full event history, rail tracking (heavy 50-100 events, use for journey/timeline questions)\n\n" +
-          "When to include:\n" +
-          "- shipment: Always useful for context (minimal cost)\n" +
-          "- pod_terminal: For availability, demurrage, holds, fees, pickup questions\n" +
-          "- transport_events: For journey timeline, 'what happened', rail tracking, milestone analysis",
-        default: ['shipment'],
-      },
-    },
-    required: ['id'],
-  },
-};
+/** Merge requested includes onto the defaults, de-duplicated, order-stable. */
+export function resolveIncludes(
+  requested: ContainerInclude[] | undefined,
+): ContainerInclude[] {
+  const merged: ContainerInclude[] = [...DEFAULT_INCLUDES];
+  for (const inc of requested ?? []) {
+    if (!merged.includes(inc)) merged.push(inc);
+  }
+  return merged;
+}
 
 export async function executeGetContainer(
   args: GetContainerArgs,
-  client: Terminal49Client
+  client: Terminal49Client,
 ): Promise<ContainerStatus> {
   if (!args.id || args.id.trim() === '') {
     throw new Error('Container ID is required');
@@ -128,33 +142,31 @@ export async function executeGetContainer(
       tool: 'get_container',
       container_id: args.id,
       timestamp: new Date().toISOString(),
-    })
+    }),
   );
 
   try {
-    const includes = args.include || ['shipment'];
-    const result = await client.containers.get(args.id, includes, { format: 'both' });
+    const includes = resolveIncludes(args.include);
+    const result = await client.containers.get(args.id, includes, {
+      format: 'raw',
+    });
     const raw = (result as any)?.raw ?? result;
-    const mapped = (result as any)?.mapped;
 
     const duration = Date.now() - startTime;
-
     console.error(
       JSON.stringify({
         event: 'tool.execute.complete',
         tool: 'get_container',
         container_id: args.id,
-        includes: includes,
+        includes,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
 
-    const summary = formatContainerResponse(raw, includes);
-    return { ...summary, _mapped: mapped } as any;
+    return formatContainerResponse(raw, includes);
   } catch (error) {
     const duration = Date.now() - startTime;
-
     console.error(
       JSON.stringify({
         event: 'tool.execute.error',
@@ -164,72 +176,121 @@ export async function executeGetContainer(
         message: (error as Error).message,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
-
     throw error;
   }
 }
 
-function formatContainerResponse(apiResponse: any, includes: string[]): ContainerStatus {
+function formatContainerResponse(
+  apiResponse: any,
+  includes: string[],
+): ContainerStatus {
   const container = apiResponse.data?.attributes || {};
   const relationships = apiResponse.data?.relationships || {};
   const included = apiResponse.included || [];
 
-  // Determine container lifecycle state
-  const containerState = determineContainerState(container);
+  const statusResult = resolveContainerStatus(container);
 
   // Extract shipment info
   const shipmentId = relationships.shipment?.data?.id;
   const shipment = included.find(
-    (item: any) => item.id === shipmentId && item.type === 'shipment'
+    (item: any) => item.id === shipmentId && item.type === 'shipment',
   );
 
   // Extract terminal info
   const terminalId = relationships.pod_terminal?.data?.id;
   const podTerminal = included.find(
-    (item: any) => item.id === terminalId && item.type === 'terminal'
+    (item: any) => item.id === terminalId && item.type === 'terminal',
   );
 
   // Extract transport events
-  const transportEvents = included.filter((item: any) => item.type === 'transport_event');
+  const transportEvents = included.filter(
+    (item: any) => item.type === 'transport_event',
+  );
 
-  // Format events data based on whether it was included
   const eventsData = includes.includes('transport_events')
     ? formatEventsData(transportEvents)
     : `Call get_container with include=['transport_events'] to fetch ${transportEvents.length || '~50-100'} event records`;
 
-  // Generate LLM steering metadata
-  const metadata = generateMetadata(container, containerState, includes);
+  const podTimezone: string | null = container.pod_timezone ?? null;
+  const rawDemurrage = evaluateDemurrageUrgency({
+    fees_at_pod_terminal: container.fees_at_pod_terminal,
+    pickup_lfd: container.pickup_lfd ?? null,
+    terminal_checked_at: container.terminal_checked_at ?? null,
+    tracking_stopped: isTrackingStopped(container),
+  });
+  // Surface the LFD countdown in terminal-local days so "N days until LFD" never
+  // lands on the wrong calendar day near a UTC midnight boundary.
+  const localDaysUntilLfd = dayDeltaInZone(container.pickup_lfd, podTimezone);
+  const demurrage: DemurrageEvaluation = {
+    ...rawDemurrage,
+    days_until_lfd: localDaysUntilLfd ?? rawDemurrage.days_until_lfd,
+  };
+
+  const importDeadlines = container.import_deadlines || {};
+
+  const metadata = generateMetadata(
+    container,
+    statusResult,
+    demurrage,
+    podTimezone,
+    includes,
+  );
 
   return {
     id: apiResponse.data?.id,
     container_number: container.number,
-    status: containerState,
+    status: statusResult.status,
+    status_source: statusResult.status_source,
     equipment: {
-      type: container.equipment_type,
-      length: container.equipment_length,
-      height: container.equipment_height,
-      weight_lbs: container.weight_in_lbs,
+      type: container.equipment_type ?? null,
+      // equipment_length is a numeric enum (10|20|40|45). Guard the 0/empty
+      // sentinel so we never emit a meaningless "".
+      length: normalizeEquipmentLength(container.equipment_length),
+      height: container.equipment_height ?? null,
+      weight_lbs:
+        typeof container.weight_in_lbs === 'number'
+          ? container.weight_in_lbs
+          : null,
     },
     location: {
-      current_location: container.location_at_pod_terminal,
-      available_for_pickup: container.available_for_pickup,
-      pod_arrived_at: container.pod_arrived_at,
-      pod_discharged_at: container.pod_discharged_at,
+      current_location: container.location_at_pod_terminal ?? null,
+      available_for_pickup: container.available_for_pickup ?? null,
+      availability_known: container.availability_known ?? null,
+      pod_arrived_at: container.pod_arrived_at ?? null,
+      pod_arrived_at_local: formatInZone(container.pod_arrived_at, podTimezone),
+      pod_discharged_at: container.pod_discharged_at ?? null,
+      pod_discharged_at_local: formatInZone(
+        container.pod_discharged_at,
+        podTimezone,
+      ),
+      pod_timezone: podTimezone,
     },
     demurrage: {
       pickup_lfd: container.pickup_lfd ?? null,
+      pickup_lfd_local: formatInZone(container.pickup_lfd, podTimezone),
+      last_free_days: {
+        terminal: importDeadlines.pickup_lfd_terminal ?? null,
+        rail: importDeadlines.pickup_lfd_rail ?? null,
+        line: importDeadlines.pickup_lfd_line ?? null,
+      },
       pickup_appointment_at: container.pickup_appointment_at ?? null,
-      // Preserve nulls so clients don’t mistake “unavailable” for “empty”.
-      fees_at_pod_terminal: container.fees_at_pod_terminal ?? null,
+      // Preserve nulls so clients don't mistake "unavailable" for "empty".
+      fees_at_pod_terminal: demurrage.fees,
+      fees_total_amount: demurrage.total_amount,
+      fees_currency_code: demurrage.currency_code,
       holds_at_pod_terminal: container.holds_at_pod_terminal ?? null,
+      urgency: demurrage.urgency,
+      urgency_suppressed: demurrage.urgency_suppressed,
+      urgency_reason: demurrage.suppression_reason,
+      days_until_lfd: demurrage.days_until_lfd,
     },
     rail: {
-      pod_rail_carrier: container.pod_rail_carrier_scac,
-      pod_rail_loaded_at: container.pod_rail_loaded_at,
-      destination_eta: container.ind_eta_at,
-      destination_ata: container.ind_ata_at,
+      pod_rail_carrier: container.pod_rail_carrier_scac ?? null,
+      pod_rail_loaded_at: container.pod_rail_loaded_at ?? null,
+      destination_eta: container.ind_eta_at ?? null,
+      destination_ata: container.ind_ata_at ?? null,
     },
     shipment: shipment
       ? {
@@ -250,43 +311,47 @@ function formatContainerResponse(apiResponse: any, includes: string[]): Containe
         }
       : null,
     events: eventsData,
-    updated_at: container.updated_at,
     created_at: container.created_at,
     _metadata: metadata,
   };
 }
 
-/**
- * Determine container lifecycle state for intelligent data loading
- */
-function determineContainerState(
-  container: any
-): 'in_transit' | 'arrived' | 'discharged' | 'available_for_pickup' | 'at_terminal' | 'on_rail' | 'delivered' {
-  if (!container.pod_arrived_at) return 'in_transit';
-  if (!container.pod_discharged_at) return 'arrived';
-  if (container.pod_rail_loaded_at && !container.final_destination_full_out_at) return 'on_rail';
-  if (container.final_destination_full_out_at || container.pod_full_out_at) return 'delivered';
-  if (container.available_for_pickup === true) return 'available_for_pickup';
-  if (container.available_for_pickup === false) return 'discharged';
-  return 'at_terminal';
+/** equipment_length is the numeric enum 10|20|40|45; everything else is null. */
+function normalizeEquipmentLength(value: unknown): number | null {
+  if (typeof value === 'number' && value > 0) return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return null;
 }
 
 /**
- * Format transport events data when included
+ * Whether line tracking has stopped/closed for the container's shipment, which
+ * makes terminal availability/LFD signals untrustworthy for urgency.
  */
+function isTrackingStopped(container: any): boolean {
+  return Boolean(
+    container.line_tracking_stopped_at ||
+    container.line_tracking_stopped_reason,
+  );
+}
+
 function formatEventsData(events: any[]): any {
   if (!events || events.length === 0) {
     return { count: 0 };
   }
 
   const railEvents = events.filter(
-    (e: any) => e.attributes?.event?.startsWith('rail.') || e.attributes?.event?.includes('rail')
+    (e: any) =>
+      e.attributes?.event?.startsWith('rail.') ||
+      e.attributes?.event?.includes('rail'),
   );
 
-  // Get most recent event
   const sortedEvents = [...events].sort(
     (a: any, b: any) =>
-      new Date(b.attributes?.timestamp || 0).getTime() - new Date(a.attributes?.timestamp || 0).getTime()
+      new Date(b.attributes?.timestamp || 0).getTime() -
+      new Date(a.attributes?.timestamp || 0).getTime(),
   );
 
   const latestEvent = sortedEvents[0]?.attributes;
@@ -305,40 +370,74 @@ function formatEventsData(events: any[]): any {
 }
 
 /**
- * Generate metadata hints to steer LLM decision-making
+ * Generate metadata hints to steer LLM decision-making. The derived lifecycle
+ * is exposed here as non-authoritative steering metadata only — the headline
+ * `status` above is the source of truth.
  */
-function generateMetadata(container: any, state: string, includes: string[]): any {
-  const canAnswer: string[] = ['container status', 'equipment details', 'basic timeline'];
+function generateMetadata(
+  container: any,
+  statusResult: ContainerStatusResult,
+  demurrage: DemurrageEvaluation,
+  podTimezone: string | null,
+  includes: string[],
+): ContainerStatus['_metadata'] {
+  const lifecycle = statusResult.derived_lifecycle;
+  const canAnswer: string[] = [
+    'container status',
+    'equipment details',
+    'basic timeline',
+  ];
   const needsMoreDataFor: string[] = [];
 
-  // What can we answer based on what's loaded?
   if (includes.includes('shipment')) {
-    canAnswer.push('routing information', 'shipping line details', 'reference numbers');
+    canAnswer.push(
+      'routing information',
+      'shipping line details',
+      'reference numbers',
+    );
   }
 
   if (includes.includes('pod_terminal')) {
-    canAnswer.push('availability status', 'demurrage/LFD', 'holds and fees', 'terminal location');
+    canAnswer.push(
+      'availability status',
+      'demurrage/LFD',
+      'holds and fees',
+      'terminal location',
+    );
   }
 
   if (includes.includes('transport_events')) {
-    canAnswer.push('full journey timeline', 'milestone analysis', 'rail tracking details', 'event history');
+    canAnswer.push(
+      'full journey timeline',
+      'milestone analysis',
+      'rail tracking details',
+      'event history',
+    );
   } else {
     needsMoreDataFor.push(
       "journey timeline → include: ['transport_events']",
       "milestone analysis → include: ['transport_events']",
-      "rail movement details → include: ['transport_events']"
+      "rail movement details → include: ['transport_events']",
     );
   }
 
-  // Generate contextual suggestions based on state
-  const suggestions = generateSuggestions(container, state, includes);
-
-  // Generate lifecycle-specific guidance
-  const relevantFields = getRelevantFieldsForState(state, container);
-  const presentationGuidance = getPresentationGuidance(state, container);
+  const suggestions = generateSuggestions(
+    container,
+    lifecycle,
+    demurrage,
+    includes,
+  );
+  const relevantFields = getRelevantFieldsForState(lifecycle, container);
+  const presentationGuidance = getPresentationGuidance(
+    lifecycle,
+    container,
+    demurrage,
+  );
 
   return {
-    container_state: state,
+    container_state: lifecycle,
+    status_is_authoritative: statusResult.status_source === 'current_status',
+    derived_lifecycle: lifecycle,
     includes_loaded: includes,
     can_answer: canAnswer,
     needs_more_data_for: needsMoreDataFor,
@@ -348,72 +447,77 @@ function generateMetadata(container: any, state: string, includes: string[]): an
   };
 }
 
-/**
- * Generate contextual suggestions for LLM based on container state
- */
-function generateSuggestions(container: any, state: string, includes: string[]): any {
+function generateSuggestions(
+  container: any,
+  state: string,
+  demurrage: DemurrageEvaluation,
+  includes: string[],
+): { message?: string; recommended_follow_up?: string | null } {
   let message: string | undefined;
   let recommendedFollowUp: string | null = null;
 
-  // State-specific suggestions
   switch (state) {
     case 'in_transit':
-      message = 'Container is still in transit. User may ask about vessel ETA or shipping route.';
+      message =
+        'Container is still in transit. User may ask about vessel ETA or shipping route.';
       break;
 
     case 'arrived':
-      message = 'Container has arrived but not yet discharged. User may ask about discharge timing.';
+      message =
+        'Container has arrived but not yet discharged. User may ask about discharge timing.';
       break;
 
     case 'at_terminal':
     case 'available_for_pickup':
-      if (Array.isArray(container.holds_at_pod_terminal) && container.holds_at_pod_terminal.length > 0) {
-        const holdTypes = container.holds_at_pod_terminal.map((h: any) => h.name).join(', ');
+      if (
+        Array.isArray(container.holds_at_pod_terminal) &&
+        container.holds_at_pod_terminal.length > 0
+      ) {
+        const holdTypes = container.holds_at_pod_terminal
+          .map((h: any) => h.name)
+          .join(', ');
         message = `Container has holds: ${holdTypes}. User may ask about hold details or clearance timeline.`;
-      } else if (container.holds_at_pod_terminal == null && includes.includes('pod_terminal')) {
+      } else if (
+        container.holds_at_pod_terminal == null &&
+        includes.includes('pod_terminal')
+      ) {
         message =
           'Hold/fee/LFD data is not available for this container/terminal via the API response. ' +
           'User may need to check terminal portal or customs/broker docs.';
-      } else if (container.pickup_lfd) {
-        const lfdDate = new Date(container.pickup_lfd);
-        const now = new Date();
-        const daysUntilLFD = Math.ceil((lfdDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-        if (daysUntilLFD < 0) {
-          message = `Container is ${Math.abs(daysUntilLFD)} days past LFD. User may ask about demurrage charges.`;
-        } else if (daysUntilLFD <= 3) {
-          message = `LFD is in ${daysUntilLFD} days. Urgent pickup needed to avoid demurrage.`;
+      } else if (demurrage.urgency_suppressed) {
+        message = `LFD urgency is unavailable: ${demurrage.suppression_reason}. Do not assert demurrage urgency from this data alone.`;
+      } else if (demurrage.days_until_lfd !== null) {
+        const days = demurrage.days_until_lfd;
+        if (demurrage.urgency === 'overdue') {
+          message = `Container is ${Math.abs(days)} days past LFD. User may ask about demurrage charges.`;
+        } else if (demurrage.urgency === 'imminent') {
+          message = `LFD is in ${days} days. Urgent pickup needed to avoid demurrage.`;
         } else {
-          message = `Container available for pickup. LFD is in ${daysUntilLFD} days.`;
+          message = `Container available for pickup. LFD is in ${days} days.`;
         }
       }
       break;
 
     case 'on_rail':
-      message = 'Container is on rail transport. User may ask about rail carrier, destination ETA, or inland movement.';
+      message =
+        'Container is on rail transport. User may ask about rail carrier, destination ETA, or inland movement.';
       if (!includes.includes('transport_events')) {
         recommendedFollowUp = 'transport_events';
       }
       break;
 
     case 'delivered':
-      message = 'Container has been delivered. User may ask about delivery details or empty return.';
+      message =
+        'Container has been delivered. User may ask about delivery details or empty return.';
       if (!includes.includes('transport_events')) {
         recommendedFollowUp = 'transport_events';
       }
       break;
   }
 
-  return {
-    message,
-    recommended_follow_up: recommendedFollowUp,
-  };
+  return { message, recommended_follow_up: recommendedFollowUp };
 }
 
-/**
- * Get relevant fields/attributes for current lifecycle state
- * Helps LLM know what to focus on in the response
- */
 function getRelevantFieldsForState(state: string, container: any): string[] {
   switch (state) {
     case 'in_transit':
@@ -435,12 +539,14 @@ function getRelevantFieldsForState(state: string, container: any): string[] {
     case 'available_for_pickup': {
       const fields = [
         'location.available_for_pickup - Ready to pick up?',
-        'demurrage.pickup_lfd - Last Free Day (avoid demurrage)',
+        'demurrage.last_free_days - Per-channel LFDs (terminal/rail/line)',
         'demurrage.holds_at_pod_terminal - Blocks pickup if present',
         'location.current_location - Where in terminal yard',
       ];
       if (container.fees_at_pod_terminal?.length > 0) {
-        fields.push('demurrage.fees_at_pod_terminal - Storage/handling charges');
+        fields.push(
+          'demurrage.fees_at_pod_terminal - Storage/handling charges',
+        );
       }
       if (container.pickup_appointment_at) {
         fields.push('demurrage.pickup_appointment_at - Scheduled pickup time');
@@ -469,11 +575,11 @@ function getRelevantFieldsForState(state: string, container: any): string[] {
   }
 }
 
-/**
- * Get presentation guidance for formatting output based on state
- * Tells LLM how to prioritize and structure the response
- */
-function getPresentationGuidance(state: string, container: any): string {
+function getPresentationGuidance(
+  state: string,
+  container: any,
+  demurrage: DemurrageEvaluation,
+): string {
   switch (state) {
     case 'in_transit':
       return 'Focus on ETA and vessel information. User wants to know WHEN it will arrive and WHERE it is now.';
@@ -482,30 +588,39 @@ function getPresentationGuidance(state: string, container: any): string {
       return 'Explain vessel arrived but container not yet discharged. User wants to know WHEN discharge will happen.';
 
     case 'at_terminal':
-    case 'available_for_pickup':
-      // Check for urgent situations
+    case 'available_for_pickup': {
       if (container.holds_at_pod_terminal?.length > 0) {
-        const holdTypes = container.holds_at_pod_terminal.map((h: any) => h.name).join(', ');
+        const holdTypes = container.holds_at_pod_terminal
+          .map((h: any) => h.name)
+          .join(', ');
         return `URGENT: Lead with holds (${holdTypes}) - they BLOCK pickup. Explain what each hold means and how to clear. Then mention LFD and location.`;
       }
 
-      const lfdDate = container.pickup_lfd ? new Date(container.pickup_lfd) : null;
-      const now = new Date();
-
-      if (lfdDate && lfdDate < now) {
-        const daysOverdue = Math.ceil((now.getTime() - lfdDate.getTime()) / (1000 * 60 * 60 * 24));
-        return `URGENT: Container is ${daysOverdue} days past LFD. Demurrage is accruing daily (~$75-150/day typical). Emphasize urgency of pickup.`;
+      if (demurrage.urgency_suppressed) {
+        return `Availability/LFD data is not reliable here (${demurrage.suppression_reason}). State availability cautiously and do NOT assert demurrage urgency. Suggest verifying with the terminal directly.`;
       }
 
-      if (lfdDate) {
-        const daysRemaining = Math.ceil((lfdDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        if (daysRemaining <= 2) {
-          return `URGENT: Only ${daysRemaining} days until LFD. Pickup needed ASAP to avoid demurrage charges.`;
-        }
-        return `Lead with availability status. Mention LFD date and days remaining (${daysRemaining}). Include location if user picking up.`;
+      if (
+        demurrage.urgency === 'overdue' &&
+        demurrage.days_until_lfd !== null
+      ) {
+        const fees = describeFees(demurrage);
+        return `Container is ${Math.abs(demurrage.days_until_lfd)} days past LFD.${fees} Emphasize that pickup is overdue; report only the fees the API returned (do not estimate a daily rate).`;
       }
 
-      return 'State availability clearly. Mention location in terminal. Note any fees.';
+      if (
+        demurrage.urgency === 'imminent' &&
+        demurrage.days_until_lfd !== null
+      ) {
+        return `Only ${demurrage.days_until_lfd} days until LFD. Pickup needed soon to avoid demurrage charges.`;
+      }
+
+      if (demurrage.days_until_lfd !== null) {
+        return `Lead with availability status. Mention LFD date and days remaining (${demurrage.days_until_lfd}). Include location if user picking up.`;
+      }
+
+      return 'State availability clearly. Mention location in terminal. Note any fees the API returned.';
+    }
 
     case 'on_rail':
       return 'Explain rail journey: Departed [port] on [date] via [carrier], heading to [city]. ETA: [date]. Emphasize destination and timing.';
@@ -516,4 +631,10 @@ function getPresentationGuidance(state: string, container: any): string {
     default:
       return 'Present information clearly based on container lifecycle stage. Prioritize actionable details.';
   }
+}
+
+function describeFees(demurrage: DemurrageEvaluation): string {
+  if (demurrage.total_amount == null) return '';
+  const currency = demurrage.currency_code ? ` ${demurrage.currency_code}` : '';
+  return ` Reported fees total ${demurrage.total_amount}${currency}.`;
 }
