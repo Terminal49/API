@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Clean, minimal light theme */
+  --kumo-bg-base: #ffffff;
+  --kumo-bg-elevated: #ffffff;
+  --kumo-bg-recessed: #f8fafc;
+
+  --kumo-text-default: #0f172a;
+  --kumo-text-secondary: #475569;
+  --kumo-text-muted: #94a3b8;
+  --kumo-text-link: #2563eb;
+
+  --kumo-border-line: #e2e8f0;
+  --kumo-border-focus: #3b82f6;
+
+  --kumo-accent: #2563eb;
+  --kumo-accent-hover: #1d4ed8;
+}
+
+/* Dark theme - activated via data-theme="dark" on html element */
+[data-theme="dark"] {
+  --kumo-bg-base: #0f172a;
+  --kumo-bg-elevated: #1e293b;
+  --kumo-bg-recessed: #0f172a;
+
+  --kumo-text-default: #f1f5f9;
+  --kumo-text-secondary: #cbd5e1;
+  --kumo-text-muted: #64748b;
+  --kumo-text-link: #60a5fa;
+
+  --kumo-border-line: #334155;
+  --kumo-border-focus: #3b82f6;
+
+  --kumo-accent: #3b82f6;
+  --kumo-accent-hover: #60a5fa;
+}
+
+body {
+  background: var(--kumo-bg-base);
+  color: var(--kumo-text-default);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tighter typography */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.025em;
+}
+
+/* Custom scrollbar - minimal */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--kumo-border-line);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--kumo-text-muted);
+}
+
+/* Code panel scrollbar */
+.code-panel::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.code-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.code-panel::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 3px;
+}
+
+.code-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
