@@ -1,0 +1,108 @@
+{
+  "data": {
+    "id": "route-1",
+    "type": "route",
+    "attributes": {
+      "created_at": "2026-06-01T10:00:00Z",
+      "updated_at": "2026-06-10T12:30:00Z"
+    },
+    "relationships": {
+      "route_locations": {
+        "data": [
+          { "id": "rl-1", "type": "route_location" },
+          { "id": "rl-2", "type": "route_location" }
+        ]
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "rl-1",
+      "type": "route_location",
+      "attributes": {
+        "id": "rl-1",
+        "inbound_scac": null,
+        "inbound_mode": null,
+        "inbound_eta_at": null,
+        "inbound_ata_at": null,
+        "inbound_voyage_number": null,
+        "outbound_scac": "MAEU",
+        "outbound_mode": "vessel",
+        "outbound_etd_at": "2026-06-02T08:00:00Z",
+        "outbound_atd_at": "2026-06-02T09:15:00Z",
+        "outbound_voyage_number": "123W",
+        "created_at": "2026-06-01T10:00:00Z",
+        "updated_at": "2026-06-10T12:30:00Z"
+      },
+      "relationships": {
+        "route": { "data": { "id": "route-1", "type": "route" } },
+        "location": { "data": { "id": "port-cnsha", "type": "port" } },
+        "inbound_vessel": { "data": null },
+        "outbound_vessel": { "data": { "id": "vessel-1", "type": "vessel" } }
+      }
+    },
+    {
+      "id": "rl-2",
+      "type": "route_location",
+      "attributes": {
+        "id": "rl-2",
+        "inbound_scac": "MAEU",
+        "inbound_mode": "vessel",
+        "inbound_eta_at": "2026-06-20T14:00:00Z",
+        "inbound_ata_at": null,
+        "inbound_voyage_number": "123W",
+        "outbound_scac": null,
+        "outbound_mode": null,
+        "outbound_etd_at": null,
+        "outbound_atd_at": null,
+        "outbound_voyage_number": null,
+        "created_at": "2026-06-01T10:00:00Z",
+        "updated_at": "2026-06-10T12:30:00Z"
+      },
+      "relationships": {
+        "route": { "data": { "id": "route-1", "type": "route" } },
+        "location": { "data": { "id": "port-uslax", "type": "port" } },
+        "inbound_vessel": { "data": { "id": "vessel-1", "type": "vessel" } },
+        "outbound_vessel": { "data": null }
+      }
+    },
+    {
+      "id": "port-cnsha",
+      "type": "port",
+      "attributes": {
+        "id": "port-cnsha",
+        "name": "Shanghai",
+        "code": "CNSHA",
+        "state_abbr": "SH",
+        "city": "Shanghai",
+        "country_code": "CN",
+        "latitude": "31.22222",
+        "longitude": "121.45806",
+        "time_zone": "Asia/Shanghai"
+      }
+    },
+    {
+      "id": "port-uslax",
+      "type": "port",
+      "attributes": {
+        "id": "port-uslax",
+        "name": "Los Angeles",
+        "code": "USLAX",
+        "state_abbr": "CA",
+        "city": "Los Angeles",
+        "country_code": "US",
+        "latitude": "33.74537",
+        "longitude": "-118.27370",
+        "time_zone": "America/Los_Angeles"
+      }
+    },
+    {
+      "id": "vessel-1",
+      "type": "vessel",
+      "attributes": {
+        "name": "MAERSK EDINBURGH",
+        "imo": "9456769"
+      }
+    }
+  ]
+}

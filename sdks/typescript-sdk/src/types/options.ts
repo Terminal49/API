@@ -30,6 +30,9 @@ export type ShipmentInclude =
 export type ContainerInclude =
   | 'shipment'
   | 'pod_terminal'
+  // The inland/final-destination facility is exposed via `pickup_facility`;
+  // containers have no `destination_terminal` relationship (that one is on
+  // shipments). The container mapper resolves `destinationTerminal` from this.
   | 'pickup_facility'
   | 'transport_events';
 

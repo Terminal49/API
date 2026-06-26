@@ -146,7 +146,11 @@ export class Terminal49Client {
   /** Fetch a container by ID with optional included relationships. */
   async getContainer(
     id: string,
-    include: IncludeParam<ContainerInclude> = ['shipment', 'pod_terminal'],
+    include: IncludeParam<ContainerInclude> = [
+      'shipment',
+      'pod_terminal',
+      'pickup_facility',
+    ],
     options?: CallOptions,
   ): Promise<any> {
     return this.containers.get(id, include, options);
