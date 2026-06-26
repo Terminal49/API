@@ -13,6 +13,16 @@ export interface ListOptions extends CallOptions {
   page?: number;
   /** Number of records per page. */
   pageSize?: number;
+  /**
+   * Maximum number of pages `iterate()` will fetch before stopping. Defaults to
+   * the manager's safety cap; raise it to walk past the default bound.
+   */
+  maxPages?: number;
+  /**
+   * Maximum number of rows `iterate()` will yield before stopping. Defaults to
+   * the manager's safety cap; raise it to walk past the default bound.
+   */
+  maxRows?: number;
 }
 
 export type IncludeParam<TInclude extends string> =

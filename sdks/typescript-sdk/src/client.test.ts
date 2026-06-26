@@ -3,6 +3,7 @@ import {
   FeatureNotEnabledError,
   NotFoundError,
   Terminal49Client,
+  UpstreamError,
   ValidationError,
 } from './client.js';
 import { createMockFetch, jsonResponse } from './test/mock-fetch.js';
@@ -42,8 +43,11 @@ describe('Terminal49Client', () => {
     }
   });
 
-  it('retries body requests after the original request is consumed', async () => {
-    vi.useFakeTimers();
+  it('does NOT retry a write (POST) on a 5xx so the body is sent once', async () => {
+    // Retries are gated to idempotent methods. A POST (createTrackingRequest)
+    // with no Idempotency-Key must not be replayed, otherwise a transient 5xx
+    // could create duplicate tracking requests. The body is therefore sent
+    // exactly once and the UpstreamError is surfaced.
     let attempt = 0;
     const requestBodies: string[] = [];
     const fetchImpl = async (
@@ -53,52 +57,33 @@ describe('Terminal49Client', () => {
       const request =
         input instanceof Request ? input : new Request(input, init);
       const url = new URL(request.url);
-      const body = await request.text();
-      requestBodies.push(body);
+      requestBodies.push(await request.text());
 
       if (url.pathname !== '/v2/tracking_requests') {
         throw new Error(`Unexpected request to ${url.pathname}`);
       }
 
       attempt += 1;
-      if (attempt === 1) {
-        return jsonResponse({ errors: [{ detail: 'server error' }] }, 500);
-      }
-
-      return jsonResponse({ data: { id: 'tr-1' } });
+      return jsonResponse({ errors: [{ detail: 'server error' }] }, 500);
     };
 
     const client = new Terminal49Client({
       apiToken: 'token-123',
       apiBaseUrl: baseUrl,
       fetchImpl,
-      maxRetries: 1,
+      maxRetries: 3,
     } as any);
 
-    try {
-      const resultPromise = client.createTrackingRequest({
+    await expect(
+      client.createTrackingRequest({
         requestType: 'container',
         requestNumber: 'MSCU1234567',
         scac: 'MSCU',
-      });
-      await vi.advanceTimersByTimeAsync(500);
-      const result = await resultPromise;
+      }),
+    ).rejects.toBeInstanceOf(UpstreamError);
 
-      expect(result.data.id).toBe('tr-1');
-      expect(requestBodies).toHaveLength(2);
-      expect(JSON.parse(requestBodies[1])).toEqual({
-        data: {
-          type: 'tracking_request',
-          attributes: {
-            request_type: 'container',
-            request_number: 'MSCU1234567',
-            scac: 'MSCU',
-          },
-        },
-      });
-    } finally {
-      vi.useRealTimers();
-    }
+    expect(attempt).toBe(1);
+    expect(requestBodies).toHaveLength(1);
   });
 
   it('maps 404 responses to NotFoundError', async () => {

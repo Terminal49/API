@@ -5,6 +5,16 @@ description: "RetryInterceptor class in the Terminal49 TypeScript SDK, automatic
 
 # Class: RetryInterceptor
 
+Retries transient failures with backoff. Two kinds of failure are handled:
+
+ - A response with a retryable status (429 / 5xx), handled in `onResponse`.
+ - A thrown transport error (DNS/connection/"fetch failed"), handled in
+   `onError` — these never reach `onResponse` because `fetch` rejected.
+
+Retries are gated by shouldRetryRequest: idempotent methods are always
+eligible, but non-idempotent writes are only retried when the caller supplied
+an `Idempotency-Key` header. 429 backoff honors the server's `Retry-After`.
+
 ## Constructors
 
 ### Constructor
@@ -26,7 +36,12 @@ description: "RetryInterceptor class in the Terminal49 TypeScript SDK, automatic
 
 ### onError()
 
-> **onError**(`__namedParameters`): `void`
+> **onError**(`__namedParameters`): `Promise`\<`Error` \| `Response`\>
+
+Recover from a thrown transport error by retrying eligible requests. If a
+retry produces a response we return it (openapi-fetch then runs the normal
+`onResponse` chain on it); otherwise we surface a normalized
+NetworkError so error mapping is consistent with the response path.
 
 #### Parameters
 
@@ -36,7 +51,7 @@ description: "RetryInterceptor class in the Terminal49 TypeScript SDK, automatic
 
 #### Returns
 
-`void`
+`Promise`\<`Error` \| `Response`\>
 
 ***
 
