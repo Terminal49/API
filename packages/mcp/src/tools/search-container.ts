@@ -291,17 +291,47 @@ function formatShipment(
   };
 }
 
+/**
+ * Derive a coarse container status from lifecycle signals.
+ *
+ * NOTE: these fields (`available_for_pickup`, `pod_*_at`, `pol_loaded_at`)
+ * originate on the full container resource. The lightweight `/search` payload
+ * is not guaranteed to carry them, and their exact presence/shape there is
+ * unverified — so this stays deliberately defensive: it never throws on a
+ * missing or oddly-typed `attrs`, treats only meaningful signals as set, and
+ * falls back to `'unknown'` rather than guessing. When an explicit
+ * `attrs.status` is present the caller prefers it over this derivation.
+ */
 function determineContainerStatus(attrs: any): string {
-  if (attrs.available_for_pickup) {
+  if (!attrs || typeof attrs !== 'object') {
+    return 'unknown';
+  }
+  if (isTruthySignal(attrs.available_for_pickup)) {
     return 'available_for_pickup';
-  } else if (attrs.pod_full_out_at) {
+  } else if (isTruthySignal(attrs.pod_full_out_at)) {
     return 'full_out';
-  } else if (attrs.pod_discharged_at) {
+  } else if (isTruthySignal(attrs.pod_discharged_at)) {
     return 'discharged';
-  } else if (attrs.pod_arrived_at) {
+  } else if (isTruthySignal(attrs.pod_arrived_at)) {
     return 'arrived';
-  } else if (attrs.pol_loaded_at) {
+  } else if (isTruthySignal(attrs.pol_loaded_at)) {
     return 'in_transit';
   }
   return 'unknown';
+}
+
+/**
+ * A lifecycle signal is "set" only when it carries real information. Guards
+ * against the API serializing absent timestamps as `null`/empty string and
+ * against a boolean-ish flag arriving as the string `'false'`.
+ */
+function isTruthySignal(value: unknown): boolean {
+  if (value === undefined || value === null || value === false) {
+    return false;
+  }
+  if (typeof value === 'string') {
+    const text = value.trim().toLowerCase();
+    return text.length > 0 && text !== 'false';
+  }
+  return Boolean(value);
 }

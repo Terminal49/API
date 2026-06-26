@@ -708,7 +708,20 @@ export type ListRequestContext = {
 };
 
 function isProvided(value: unknown): boolean {
-  return value !== undefined && value !== null && value !== '';
+  if (value === undefined || value === null || value === '') {
+    return false;
+  }
+  // An empty array or empty plain object scopes nothing — e.g. the raw
+  // `filters` pass-through arg serialized as `{ filters: {} }`. Treating it as
+  // "provided" would mark an unfiltered firehose as the user's scoped worklist
+  // (and falsely trust meta.total), which is the dishonesty this contract avoids.
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+  if (typeof value === 'object') {
+    return Object.keys(value as Record<string, unknown>).length > 0;
+  }
+  return true;
 }
 
 /** Filter keys the caller supplied that actually scope the list. */
@@ -812,9 +825,11 @@ export function buildListContract(
   }
 
   const presentationGuidance = [
-    count <= 1
-      ? 'For a single result, provide a concise row summary. For multiple rows, render a markdown table.'
-      : 'Render a markdown table using the response_contract display hints. Avoid dumping full nested records.',
+    count === 0
+      ? 'No rows matched; surface the empty_state guidance rather than an empty table.'
+      : count === 1
+        ? 'For a single result, provide a concise row summary. For multiple rows, render a markdown table.'
+        : 'Render a markdown table using the response_contract display hints. Avoid dumping full nested records.',
     !isFiltered
       ? "This is an unfiltered list; do not describe it as the user's filtered worklist. State that results are unscoped."
       : '',

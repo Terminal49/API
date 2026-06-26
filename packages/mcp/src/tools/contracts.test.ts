@@ -824,6 +824,37 @@ describe('MCP tool contracts', () => {
     );
   });
 
+  it('buildListContract treats an empty raw filters object as unscoped', () => {
+    // tracking_request is the only entity whose supported vocabulary includes
+    // the raw `filters` pass-through; `{ filters: {} }` must not be mistaken for
+    // an applied filter, or the firehose total would be flagged reliable.
+    const contract = buildListContract(
+      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
+      'tracking_request',
+      { filters: { filters: {} } },
+    );
+
+    expect(contract.can_answer).not.toContain(
+      'which records match the applied filters',
+    );
+    expect(contract.total_is_reliable).toBe(false);
+    expect(
+      contract.requires_more_data.some((entry) =>
+        entry.startsWith('a filter to scope this list'),
+      ),
+    ).toBe(true);
+  });
+
+  it('buildListContract presentation guidance does not claim a single result when empty', () => {
+    const contract = buildListContract(
+      { items: [], meta: { total: 0 } },
+      'container',
+    );
+
+    expect(contract.presentation_guidance).not.toContain('single result');
+    expect(contract.presentation_guidance).toContain('empty_state');
+  });
+
   it('buildListContract reports which records match when a filter was applied', () => {
     const contract = buildListContract(
       { items: [{ id: 'c1' }], meta: { total: 1 } },
