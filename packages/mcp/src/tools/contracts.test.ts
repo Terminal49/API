@@ -1,4 +1,4 @@
-import { FeatureNotEnabledError, type Terminal49Client } from '@terminal49/sdk';
+import { FeatureNotEnabledError, NotFoundError, type Terminal49Client } from '@terminal49/sdk';
 import { describe, expect, it, vi } from 'vitest';
 import { executeGetContainer } from './get-container.js';
 import { executeGetContainerRoute } from './get-container-route.js';
@@ -416,22 +416,121 @@ describe('MCP tool contracts', () => {
     );
 
     expect(events).toHaveBeenCalledWith('container-1', { format: 'raw' });
-    expect(result.summary.total_events).toBe(2);
-    expect(result.summary.timeline[0]).toMatchObject({
+    expect(result.total_events).toBe(2);
+    expect(result.timeline[0]).toMatchObject({
       event: 'container.transport.vessel_loaded',
     });
-    expect(result.summary.milestones).toMatchObject({
+    expect(result.milestones).toMatchObject({
       vessel_loaded_at: '2025-01-01T00:00:00.000Z',
       vessel_departed_at: '2025-01-02T00:00:00.000Z',
     });
+    // A 200 from the sub-resource means the container exists; surface
+    // container_found consistently with the fallback path.
+    expect(result._metadata.source).toBe('transport_events_subresource');
+    expect(result._metadata.container_found).toBe(true);
+    // No duplicate mapped payload should be surfaced.
+    expect(result.summary).toBeUndefined();
+    expect(result.mapped).toBeUndefined();
   });
 
-  it('get_container_transport_events returns empty summary when events fetch fails', async () => {
-    const client = asClient({
-      containers: {
-        events: vi.fn().mockRejectedValue(new Error('Not Found')),
+  it('get_container_transport_events falls back to the container include path when the dedicated sub-resource 404s', async () => {
+    const events = vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
+    const get = vi.fn().mockResolvedValue({
+      data: {
+        id: 'container-1',
+        type: 'container',
+        attributes: { number: 'CAIU1234567' },
+        relationships: {
+          transport_events: {
+            data: [
+              { id: 'evt-1', type: 'transport_event' },
+              { id: 'evt-2', type: 'transport_event' },
+            ],
+          },
+        },
       },
+      included: [
+        {
+          id: 'evt-1',
+          type: 'transport_event',
+          attributes: {
+            event: 'container.transport.vessel_loaded',
+            timestamp: '2025-01-01T00:00:00Z',
+            // Canonical transport_event payloads carry location_locode (and a
+            // location relationship that is NOT side-loaded on the include
+            // path), not a location_name attribute.
+            location_locode: 'CNSHA',
+          },
+        },
+        {
+          id: 'evt-2',
+          type: 'transport_event',
+          attributes: {
+            event: 'container.transport.vessel_departed',
+            timestamp: '2025-01-02T00:00:00Z',
+            location_locode: 'CNSHA',
+          },
+        },
+      ],
     });
+
+    const client = asClient({ containers: { events, get } });
+
+    const result = await executeGetContainerTransportEvents(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(events).toHaveBeenCalledWith('container-1', { format: 'raw' });
+    expect(get).toHaveBeenCalledWith('container-1', ['transport_events'], {
+      format: 'raw',
+    });
+    // Fallback returns the real events, never a false-empty timeline.
+    expect(result.total_events).toBe(2);
+    expect(result.timeline[0]).toMatchObject({
+      event: 'container.transport.vessel_loaded',
+    });
+    // The movement location must survive the fallback even though the related
+    // port resource is not side-loaded — resolve it from location_locode.
+    expect(result.timeline[0].location).toMatchObject({ code: 'CNSHA' });
+    expect(result.milestones).toMatchObject({
+      vessel_loaded_at: '2025-01-01T00:00:00.000Z',
+      vessel_departed_at: '2025-01-02T00:00:00.000Z',
+    });
+    expect(result._metadata.source).toBe('container_include_fallback');
+    // It must NOT masquerade a success-shaped empty timeline carrying an error.
+    expect(result._metadata.error).toBeUndefined();
+  });
+
+  it('get_container_transport_events surfaces a real error for a genuinely missing container', async () => {
+    const events = vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
+    const get = vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
+
+    const client = asClient({ containers: { events, get } });
+
+    await expect(
+      executeGetContainerTransportEvents({ id: 'missing-container' }, client),
+    ).rejects.toBeInstanceOf(NotFoundError);
+
+    expect(events).toHaveBeenCalledWith('missing-container', { format: 'raw' });
+    expect(get).toHaveBeenCalledWith('missing-container', ['transport_events'], {
+      format: 'raw',
+    });
+  });
+
+  it('get_container_transport_events returns an empty-but-valid timeline for a container with no events', async () => {
+    const events = vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
+    const get = vi.fn().mockResolvedValue({
+      data: {
+        id: 'container-1',
+        type: 'container',
+        attributes: { number: 'CAIU1234567' },
+        relationships: { transport_events: { data: [] } },
+      },
+      included: [],
+    });
+
+    const client = asClient({ containers: { events, get } });
 
     const result = await executeGetContainerTransportEvents(
       { id: 'container-1' },
@@ -440,9 +539,21 @@ describe('MCP tool contracts', () => {
 
     expect(result.total_events).toBe(0);
     expect(result.timeline).toEqual([]);
-    expect(result._metadata).toMatchObject({
-      error: 'Not Found',
-    });
+    // Empty-but-valid is distinct from a bad container id: no error metadata.
+    expect(result._metadata.error).toBeUndefined();
+    expect(result._metadata.container_found).toBe(true);
+  });
+
+  it('get_container_transport_events does not fall back for non-NotFound failures', async () => {
+    const events = vi.fn().mockRejectedValue(new Error('boom'));
+    const get = vi.fn();
+
+    const client = asClient({ containers: { events, get } });
+
+    await expect(
+      executeGetContainerTransportEvents({ id: 'container-1' }, client),
+    ).rejects.toThrow('boom');
+    expect(get).not.toHaveBeenCalled();
   });
 
   it('search_container handles partially missing fields safely', async () => {
