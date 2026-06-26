@@ -117,13 +117,11 @@ describe('Terminal49Client request building', () => {
     expect(params.get('filter[updated_at]')).toBeNull();
     expect(params.get('page[number]')).toBe('2');
     expect(params.get('page[size]')).toBe('50');
-    // ...and reports them back so callers know they were dropped.
-    expect(result.unsupportedFilters).toEqual([
-      'status',
-      'port',
-      'carrier',
-      'updatedAfter',
-    ]);
+    // ...and reports them back so callers know they were dropped. Sort both
+    // sides so the assertion does not couple to UNSUPPORTED_FILTER_KEYS order.
+    expect(result.unsupportedFilters?.sort()).toEqual(
+      ['status', 'port', 'carrier', 'updatedAfter'].sort(),
+    );
   });
 
   it('removes containers from include when includeContainers=false', async () => {
