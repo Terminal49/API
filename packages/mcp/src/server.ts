@@ -763,6 +763,40 @@ function droppedFilterKeys(
   return [...new Set([...fromSdk, ...derived])];
 }
 
+/**
+ * Raw API pagination keys a caller can smuggle through the `list_tracking_requests`
+ * `filters` pass-through. They are pagination, not scoping, so they must be dropped
+ * before both the SDK call and the contract's "is this filtered?" judgement.
+ */
+const RAW_PAGINATION_FILTER_KEYS = ['page[size]', 'page[number]'] as const;
+
+/**
+ * Mirror the sanitization `executeListTrackingRequests` applies before the SDK
+ * call: strip raw pagination keys from the nested `filters` bag so the contract
+ * evaluates the same scoped/unscoped picture the API actually saw. A `filters`
+ * bag left empty after stripping is treated as unprovided by `isProvided`.
+ */
+export function sanitizeTrackingRequestFilters(
+  args: Record<string, unknown> | undefined,
+): Record<string, unknown> | undefined {
+  if (!args || typeof args !== 'object') {
+    return args;
+  }
+  const rawFilters = (args as { filters?: unknown }).filters;
+  if (
+    !rawFilters ||
+    typeof rawFilters !== 'object' ||
+    Array.isArray(rawFilters)
+  ) {
+    return args;
+  }
+  const safeFilters = { ...(rawFilters as Record<string, unknown>) };
+  for (const key of RAW_PAGINATION_FILTER_KEYS) {
+    delete safeFilters[key];
+  }
+  return { ...args, filters: safeFilters };
+}
+
 export function buildListContract(
   result: any,
   entityTypeHint?: ListEntityType,
@@ -1402,7 +1436,13 @@ export function createTerminal49McpServer(
       async (args) => executeListTrackingRequests(args, client),
       (result, args) =>
         buildListContract(result as any, 'tracking_request', {
-          filters: args,
+          // `executeListTrackingRequests` strips raw pagination keys from the
+          // nested `filters` bag before the SDK call, so the contract must judge
+          // "is this scoped?" against the same sanitized view. Otherwise a
+          // `filters: { 'page[size]': '10000' }` request — which is unfiltered
+          // once those keys are dropped — would still read as a non-empty
+          // `filters` arg, falsely report applied filters, and trust meta.total.
+          filters: sanitizeTrackingRequestFilters(args),
           unsupportedFilters: (result as any)?.unsupportedFilters,
         }),
     ),

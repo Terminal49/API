@@ -9,7 +9,10 @@ import { executeListShipments } from './list-shipments.js';
 import { executeListTrackingRequests } from './list-tracking-requests.js';
 import { executeSearchContainer } from './search-container.js';
 import { executeTrackContainer } from './track-container.js';
-import { buildListContract } from '../server.js';
+import {
+  buildListContract,
+  sanitizeTrackingRequestFilters,
+} from '../server.js';
 
 function asClient(client: unknown): Terminal49Client {
   return client as Terminal49Client;
@@ -866,6 +869,51 @@ describe('MCP tool contracts', () => {
         entry.startsWith('a filter to scope this list'),
       ),
     ).toBe(true);
+  });
+
+  it('buildListContract over sanitized tracking filters treats page-only filters as unscoped', () => {
+    // executeListTrackingRequests strips raw page[size]/page[number] before the
+    // SDK call, so the contract must judge scope against the same sanitized view.
+    // A `filters: { 'page[size]': '10000' }` request is unfiltered after
+    // sanitization and must not report applied filters or a reliable total.
+    const contract = buildListContract(
+      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
+      'tracking_request',
+      {
+        filters: sanitizeTrackingRequestFilters({
+          filters: { 'page[size]': '10000', 'page[number]': '5' },
+        }),
+      },
+    );
+
+    expect(contract.can_answer).not.toContain(
+      'which records match the applied filters',
+    );
+    expect(contract.total_is_reliable).toBe(false);
+    expect(
+      contract.requires_more_data.some((entry) =>
+        entry.startsWith('a filter to scope this list'),
+      ),
+    ).toBe(true);
+  });
+
+  it('buildListContract over sanitized tracking filters keeps a real filter scoped', () => {
+    // Sanitization must not strip genuine filters: a real filter alongside a raw
+    // pagination key still counts as a scoped, trustworthy result.
+    const contract = buildListContract(
+      { items: [{ id: 't1' }], meta: { total: 5 } },
+      'tracking_request',
+      {
+        filters: sanitizeTrackingRequestFilters({
+          filters: { 'filter[status]': 'failed', 'page[size]': '10000' },
+        }),
+      },
+    );
+
+    expect(contract.can_answer).toContain(
+      'which records match the applied filters',
+    );
+    expect(contract.total_is_reliable).toBe(true);
   });
 
   it('buildListContract presentation guidance does not claim a single result when empty', () => {
