@@ -16,5 +16,7 @@ Per-call options accepted by list methods.
 | Property | Type | Description | Inherited from |
 | ------ | ------ | ------ | ------ |
 | <a id="property-format"></a> `format?` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | Override the client's default response format for this call. | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions).[`format`](/sdk/reference/types/options/interfaces/CallOptions#property-format) |
+| <a id="property-maxpages"></a> `maxPages?` | `number` | Maximum number of pages `iterate()` will fetch before stopping. Defaults to the manager's safety cap; raise it to walk past the default bound. | - |
+| <a id="property-maxrows"></a> `maxRows?` | `number` | Maximum number of rows `iterate()` will yield before stopping. Defaults to the manager's safety cap; raise it to walk past the default bound. | - |
 | <a id="property-page"></a> `page?` | `number` | 1-based page number. | - |
 | <a id="property-pagesize"></a> `pageSize?` | `number` | Number of records per page. | - |

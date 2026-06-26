@@ -51,6 +51,15 @@ describe('retry-policy', () => {
       const abort = Object.assign(new Error('aborted'), { name: 'AbortError' });
       expect(isRetryableNetworkError(abort)).toBe(false);
     });
+
+    it('does not retry a programming-bug TypeError with a non-network message', () => {
+      // Masking real bugs by retrying them maxRetries times is worse than failing fast.
+      expect(
+        isRetryableNetworkError(
+          new TypeError("Cannot read properties of undefined (reading 'x')"),
+        ),
+      ).toBe(false);
+    });
   });
 
   describe('shouldRetryRequest', () => {
@@ -93,6 +102,17 @@ describe('retry-policy', () => {
       const now = Date.parse('2026-01-01T00:00:00Z');
       const past = new Date(now - 5000).toUTCString();
       expect(parseRetryAfterMs(past, now)).toBe(0);
+    });
+
+    it('clamps an excessive delta-seconds value to the 60s cap', () => {
+      // A 24h Retry-After must not wedge the caller in a multi-hour sleep.
+      expect(parseRetryAfterMs('86400')).toBe(60_000);
+    });
+
+    it('clamps a far-future HTTP-date to the 60s cap', () => {
+      const now = Date.parse('2026-01-01T00:00:00Z');
+      const farFuture = new Date(now + 86_400_000).toUTCString();
+      expect(parseRetryAfterMs(farFuture, now)).toBe(60_000);
     });
   });
 

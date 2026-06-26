@@ -49,9 +49,9 @@ export function isRetryableNetworkError(error: unknown): boolean {
   }
 
   // undici/whatwg surface generic connection failures as a TypeError whose
-  // message is "fetch failed" (often with a `cause`).
-  if (error instanceof TypeError) return true;
-
+  // message is "fetch failed" (often with a `cause`). We require a network-ish
+  // message so a programming-bug TypeError ("Cannot read property 'x' ...") is
+  // NOT retried up to maxRetries and masked.
   const message = typeof err.message === 'string' ? err.message : '';
   return /fetch failed|network|socket hang up|terminated/i.test(message);
 }
@@ -74,9 +74,17 @@ export function shouldRetryRequest(ctx: RetryRequestContext): boolean {
 }
 
 /**
+ * Upper bound (ms) on a honored `Retry-After` value. A misbehaving or adversarial
+ * upstream returning e.g. `Retry-After: 86400` must not be able to wedge the
+ * caller in a multi-hour `sleep` (the request `timeoutMs` guards individual
+ * `fetch` calls, not the backoff sleep), so the delay is clamped to this cap.
+ */
+const MAX_RETRY_AFTER_MS = 60_000;
+
+/**
  * Parse a `Retry-After` header into milliseconds. Supports both delta-seconds
- * (`"120"`) and an HTTP-date. Returns `undefined` when absent/unparseable, and
- * never returns a negative delay.
+ * (`"120"`) and an HTTP-date. Returns `undefined` when absent/unparseable, never
+ * returns a negative delay, and clamps the result to {@link MAX_RETRY_AFTER_MS}.
  *
  * @param now - Reference time (ms since epoch) used for HTTP-date math; defaults
  *   to `Date.now()` and is injectable for deterministic tests.
@@ -90,12 +98,12 @@ export function parseRetryAfterMs(
   if (trimmed === '') return undefined;
 
   if (/^\d+$/.test(trimmed)) {
-    return Number(trimmed) * 1000;
+    return Math.min(Number(trimmed) * 1000, MAX_RETRY_AFTER_MS);
   }
 
   const dateMs = Date.parse(trimmed);
   if (Number.isNaN(dateMs)) return undefined;
-  return Math.max(0, dateMs - now);
+  return Math.min(Math.max(0, dateMs - now), MAX_RETRY_AFTER_MS);
 }
 
 /** Base unit (ms) for exponential backoff: attempt 0 -> 500ms, 1 -> 1000ms, ... */
