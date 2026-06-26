@@ -109,6 +109,10 @@ Input and output recording is disabled by default. Leave `SENTRY_MCP_RECORD_INPU
 
 ## Tools reference
 
+<Note>
+Every tool is read-only except `track_container`, which creates a tracking request. `track_container` is idempotent—re-tracking a number that's already tracked returns the existing request instead of creating a duplicate.
+</Note>
+
 ### `search_container`
 
 Find containers by container number, BL, booking, or your own reference. This is the fastest way to locate containers.
