@@ -30,7 +30,7 @@ export type ShipmentInclude =
 export type ContainerInclude =
   | 'shipment'
   | 'pod_terminal'
-  | 'destination_terminal'
+  | 'pickup_facility'
   | 'transport_events';
 
 export type TrackingRequestInclude = 'shipment' | 'container';
