@@ -677,6 +677,10 @@ describe('MCP tool contracts', () => {
       vessel_loaded_at: '2025-01-01T00:00:00.000Z',
       vessel_departed_at: '2025-01-02T00:00:00.000Z',
     });
+    // A 200 from the sub-resource means the container exists; surface
+    // container_found consistently with the fallback path.
+    expect(result._metadata.source).toBe('transport_events_subresource');
+    expect(result._metadata.container_found).toBe(true);
     // No duplicate mapped payload should be surfaced.
     expect(result.summary).toBeUndefined();
     expect(result.mapped).toBeUndefined();
@@ -705,7 +709,10 @@ describe('MCP tool contracts', () => {
           attributes: {
             event: 'container.transport.vessel_loaded',
             timestamp: '2025-01-01T00:00:00Z',
-            location_name: 'Shanghai',
+            // Canonical transport_event payloads carry location_locode (and a
+            // location relationship that is NOT side-loaded on the include
+            // path), not a location_name attribute.
+            location_locode: 'CNSHA',
           },
         },
         {
@@ -714,7 +721,7 @@ describe('MCP tool contracts', () => {
           attributes: {
             event: 'container.transport.vessel_departed',
             timestamp: '2025-01-02T00:00:00Z',
-            location_name: 'Shanghai',
+            location_locode: 'CNSHA',
           },
         },
       ],
@@ -736,6 +743,9 @@ describe('MCP tool contracts', () => {
     expect(result.timeline[0]).toMatchObject({
       event: 'container.transport.vessel_loaded',
     });
+    // The movement location must survive the fallback even though the related
+    // port resource is not side-loaded — resolve it from location_locode.
+    expect(result.timeline[0].location).toMatchObject({ code: 'CNSHA' });
     expect(result.milestones).toMatchObject({
       vessel_loaded_at: '2025-01-01T00:00:00.000Z',
       vessel_departed_at: '2025-01-02T00:00:00.000Z',

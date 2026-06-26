@@ -52,7 +52,14 @@ export async function executeGetContainerTransportEvents(
 
     logComplete(args.id, eventCount(raw), startTime, 'transport_events_subresource');
 
-    return formatTransportEventsResponse(raw, { source: 'transport_events_subresource' });
+    // A 200 from the dedicated sub-resource means the container exists, even
+    // when it carries zero events. Surface `container_found` consistently with
+    // the fallback path so an empty-but-valid primary timeline is never
+    // mistaken for a missing container.
+    return formatTransportEventsResponse(raw, {
+      source: 'transport_events_subresource',
+      containerFound: true,
+    });
   } catch (error) {
     if (!isNotFound(error)) {
       logError(args.id, error, startTime);
@@ -64,6 +71,7 @@ export async function executeGetContainerTransportEvents(
     // every container). Fall back to the container's include path before
     // concluding there is nothing to show — never present a success-shaped empty
     // timeline that secretly carries a "Not Found" error.
+    logFallback(args.id, error);
     return fallbackToContainerInclude(args.id, client, startTime);
   }
 }
@@ -119,6 +127,23 @@ function logComplete(id: string, count: number, startTime: number, source: strin
       event_count: count,
       source,
       duration_ms: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    })
+  );
+}
+
+function logFallback(id: string, error: unknown): void {
+  // The primary 404 is expected (the sub-resource is not enabled for every
+  // container), so it is not surfaced as an error — but operators
+  // investigating fallback traffic need a signal to correlate against.
+  console.error(
+    JSON.stringify({
+      event: 'tool.execute.fallback',
+      tool: 'get_container_transport_events',
+      container_id: id,
+      reason: 'transport_events_subresource_not_found',
+      error: (error as Error).name,
+      message: (error as Error).message,
       timestamp: new Date().toISOString(),
     })
   );
@@ -222,12 +247,17 @@ function resolveLocation(attrs: any, relationships: any, included: any[]): any {
     };
   }
 
-  // Container-include fallback: events embed location on their own attributes.
+  // Container-include fallback: the related port/metro_area resource is not
+  // side-loaded, so resolve from the event's own attributes. Canonical
+  // transport_event payloads carry `location_locode` (and usually no
+  // `location_name`), so surface a location whenever either is present rather
+  // than dropping the movement location entirely.
   const embeddedName = normalizeText(attrs.location_name);
-  if (embeddedName) {
+  const embeddedCode = normalizeText(attrs.location_locode) || normalizeText(attrs.port_locode);
+  if (embeddedName || embeddedCode) {
     return {
       name: embeddedName,
-      code: normalizeText(attrs.location_locode) || normalizeText(attrs.port_locode),
+      code: embeddedCode,
       type: undefined,
     };
   }
