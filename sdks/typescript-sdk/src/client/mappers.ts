@@ -144,7 +144,7 @@ export function mapRoute(doc: any): Route {
 export function mapShippingLines(doc: any): ShippingLine[] {
   const data = Array.isArray(doc?.data) ? doc.data : [];
   return data
-    .map((item: any) => {
+    .map((item: any): ShippingLine | null => {
       const attrs = item?.attributes || {};
       const scac = attrs.scac || item?.scac;
       if (!scac) return null;
@@ -160,9 +160,9 @@ export function mapShippingLines(doc: any): ShippingLine[] {
         billOfLadingTrackingSupport: attrs.bill_of_lading_tracking_support,
         bookingNumberTrackingSupport: attrs.booking_number_tracking_support,
         containerNumberTrackingSupport: attrs.container_number_tracking_support,
-      } as ShippingLine;
+      };
     })
-    .filter(Boolean) as ShippingLine[];
+    .filter((line: ShippingLine | null): line is ShippingLine => line !== null);
 }
 
 export function mapContainer(doc: any): Container {

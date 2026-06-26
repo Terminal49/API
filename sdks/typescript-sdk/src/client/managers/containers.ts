@@ -12,7 +12,11 @@ import { BaseManager } from './base.js';
 export class ContainerManager extends BaseManager {
   async get(
     id: string,
-    include: IncludeParam<ContainerInclude> = ['shipment', 'pod_terminal'],
+    include: IncludeParam<ContainerInclude> = [
+      'shipment',
+      'pod_terminal',
+      'pickup_facility',
+    ],
     options?: CallOptions,
   ): Promise<any> {
     const includeParam = normalizeInclude(include);
@@ -40,6 +44,7 @@ export class ContainerManager extends BaseManager {
     const includeParam = normalizeIncludeWithDefault(filters.include, [
       'shipment',
       'pod_terminal',
+      'pickup_facility',
     ]);
     const params: Record<string, string> = {};
     if (includeParam) params.include = includeParam;

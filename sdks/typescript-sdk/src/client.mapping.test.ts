@@ -498,7 +498,8 @@ describe('Terminal49Client mapping helpers', () => {
   it('maps container list items from base fixture', async () => {
     const fixture = loadFixture('containers.list');
     const { fetchImpl } = createMockFetch({
-      '/containers?include=shipment,pod_terminal': () => jsonResponse(fixture),
+      '/containers?include=shipment,pod_terminal,pickup_facility': () =>
+        jsonResponse(fixture),
     });
 
     const client = new Terminal49Client({
@@ -597,7 +598,7 @@ describe('Terminal49Client mapping helpers', () => {
 
   it('returns empty lists when container or shipment list data is not an array', async () => {
     const { fetchImpl } = createMockFetch({
-      '/containers?include=shipment,pod_terminal': () =>
+      '/containers?include=shipment,pod_terminal,pickup_facility': () =>
         jsonResponse({ data: {} }),
       '/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal':
         () => jsonResponse({ data: {} }),
