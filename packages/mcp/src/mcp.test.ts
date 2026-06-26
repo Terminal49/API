@@ -481,7 +481,7 @@ describe('MCP server wiring', () => {
     expect(instructions.length).toBeGreaterThan(400);
   });
 
-  it('wires carrier SCAC completion on the track-shipment prompt', async () => {
+  it('registers the completions capability so carrier SCAC completion is reachable', async () => {
     shippingLinesList.mockResolvedValue([
       { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
       {
@@ -492,20 +492,38 @@ describe('MCP server wiring', () => {
     ]);
 
     const server = createTerminal49McpServer('token');
-    const prompt = (server as any)._registeredPrompts['track-shipment'];
 
-    // The SDK stores the prompt args as a Zod object; pull the completable
-    // `carrier` field and run its completer the same way the SDK would.
-    const carrierField = getArgShape(prompt.argsSchema).carrier;
-    const completer = getCompleter(carrierField as any);
-    expect(completer).toBeTypeOf('function');
+    // PRIMARY (registered-path) assertion. This is the actual HIGH-finding
+    // fix: `completable` must wrap the INNER string with `.optional()` applied
+    // AFTER, because the SDK unwraps ZodOptional before checking isCompletable
+    // when deciding whether to advertise `completions` and register a
+    // completion handler. With the previous OUTER-optional wiring the symbol
+    // sat on the ZodOptional, the SDK's unwrap missed it, and the capability
+    // was NEVER advertised — so these two assertions FAIL against the pre-fix
+    // wiring and PASS only once Fix 1 is applied.
+    const capabilities = (server as any).server.getCapabilities();
+    expect(capabilities.completions).toBeDefined();
+    expect((server as any)._completionHandlerInitialized).toBe(true);
+
+    // SECONDARY (unit) assertion on the completion VALUES. We resolve the
+    // completer exactly the way the SDK's prompt registration does — unwrap
+    // the ZodOptional and read isCompletable/getCompleter off the inner
+    // string — then exercise it. (The SDK's prompt-completion *handler* checks
+    // isCompletable on the un-unwrapped optional field, so values are surfaced
+    // here via the same inner-string the registration keys off, rather than
+    // through handlePromptCompletion.)
+    const prompt = (server as any)._registeredPrompts['track-shipment'];
+    const carrierField = getArgShape(prompt.argsSchema).carrier as {
+      _def?: { innerType?: unknown };
+    };
+    // Symbol lives on the inner string, not the outer ZodOptional.
+    expect(getCompleter(carrierField as any)).toBeUndefined();
+    const innerCompleter = getCompleter(carrierField._def?.innerType as any);
+    expect(innerCompleter).toBeTypeOf('function');
 
     // "m" matches Maersk (MAEU) and Mediterranean (MSCU); "ma" matches only Maersk.
-    const broad = await completer!('m', undefined);
-    expect(broad).toEqual(['MAEU', 'MSCU']);
-
-    const narrow = await completer!('ma', undefined);
-    expect(narrow).toEqual(['MAEU']);
+    expect(await innerCompleter!('m', undefined)).toEqual(['MAEU', 'MSCU']);
+    expect(await innerCompleter!('ma', undefined)).toEqual(['MAEU']);
 
     // The completer reused the live supported-lines lookup, filtered by input.
     expect(shippingLinesList).toHaveBeenCalled();
@@ -516,9 +534,12 @@ describe('MCP server wiring', () => {
 
     const server = createTerminal49McpServer('token');
     const prompt = (server as any)._registeredPrompts['track-shipment'];
-    const completer = getCompleter(
-      getArgShape(prompt.argsSchema).carrier as any,
-    );
+    // Resolve the completer off the inner string (the ZodOptional wraps it),
+    // matching how the SDK keys completion off the unwrapped inner schema.
+    const carrierField = getArgShape(prompt.argsSchema).carrier as {
+      _def?: { innerType?: unknown };
+    };
+    const completer = getCompleter(carrierField._def?.innerType as any);
 
     await expect(completer!('ma', undefined)).resolves.toEqual([]);
   });

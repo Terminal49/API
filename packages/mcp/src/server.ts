@@ -3,10 +3,7 @@
  * Implementation using @modelcontextprotocol/sdk with McpServer API
  */
 
-import {
-  McpServer,
-  ResourceTemplate,
-} from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { completable } from '@modelcontextprotocol/sdk/server/completable.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
@@ -17,24 +14,14 @@ import { executeSearchContainer } from './tools/search-container.js';
 import { executeGetShipmentDetails } from './tools/get-shipment-details.js';
 import { executeGetContainerTransportEvents } from './tools/get-container-transport-events.js';
 import { executeGetSupportedShippingLines } from './tools/get-supported-shipping-lines.js';
-import {
-  executeGetContainerRoute,
-  type FeatureNotEnabledResult,
-} from './tools/get-container-route.js';
+import { executeGetContainerRoute, type FeatureNotEnabledResult } from './tools/get-container-route.js';
 import { executeListShipments } from './tools/list-shipments.js';
 import { executeListContainers } from './tools/list-containers.js';
 import { executeListTrackingRequests } from './tools/list-tracking-requests.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
-import {
-  queryGuidanceResource,
-  readQueryGuidanceResource,
-} from './resources/query-guidance.js';
-import {
-  captureMcpException,
-  flushMcpEvents,
-  instrumentMcpServer,
-} from './sentry.js';
+import { queryGuidanceResource, readQueryGuidanceResource } from './resources/query-guidance.js';
+import { captureMcpException, flushMcpEvents, instrumentMcpServer } from './sentry.js';
 
 /**
  * MCP content-block annotations (per spec). `audience` lets a client decide who
@@ -146,9 +133,7 @@ function buildContentPayload(result: unknown): ToolContent[] {
 
   if (hasMetadataError(result)) {
     const metadata = (result as any)._metadata;
-    const remediation = metadata.remediation
-      ? `\n\nRemediation: ${metadata.remediation}`
-      : '';
+    const remediation = metadata.remediation ? `\n\nRemediation: ${metadata.remediation}` : '';
     return [
       {
         type: 'text',
@@ -168,20 +153,16 @@ function formatAsText(result: unknown): string {
   }
 }
 
-function isFeatureNotEnabledResult(
-  result: unknown,
-): result is FeatureNotEnabledResult {
+function isFeatureNotEnabledResult(result: unknown): result is FeatureNotEnabledResult {
   return Boolean(
     result &&
-    typeof result === 'object' &&
-    (result as any).error === 'FeatureNotEnabled' &&
-    typeof (result as any).message === 'string',
+      typeof result === 'object' &&
+      (result as any).error === 'FeatureNotEnabled' &&
+      typeof (result as any).message === 'string'
   );
 }
 
-function hasMetadataError(
-  result: unknown,
-): result is { _metadata: { error: string } } {
+function hasMetadataError(result: unknown): result is { _metadata: { error: string } } {
   const metadata = (result as any)?._metadata;
   return Boolean(metadata && typeof metadata.error === 'string');
 }
@@ -263,14 +244,9 @@ function attachResponseContract(
   };
 }
 
-function buildSearchContract(
-  result: any,
-  args: { query: string },
-): ResponseContract {
-  const hasContainers =
-    result.total_results > 0 && (result.containers?.length ?? 0) > 0;
-  const hasShipments =
-    result.total_results > 0 && (result.shipments?.length ?? 0) > 0;
+function buildSearchContract(result: any, args: { query: string }): ResponseContract {
+  const hasContainers = result.total_results > 0 && (result.containers?.length ?? 0) > 0;
+  const hasShipments = result.total_results > 0 && (result.shipments?.length ?? 0) > 0;
 
   return {
     purpose: `Resolve identifier ${args.query} into concrete container and shipment IDs.`,
@@ -279,30 +255,20 @@ function buildSearchContract(
       'carrier/scac hints for discovered items',
       'what additional lookup step is needed',
     ],
-    requires_more_data:
-      hasContainers || hasShipments
-        ? []
-        : ['A valid/refined identifier (container/BL/reference)'],
+    requires_more_data: hasContainers || hasShipments ? [] : ['A valid/refined identifier (container/BL/reference)'],
     relevant_fields: ['containers', 'shipments', 'total_results'],
     presentation_guidance:
       hasContainers || hasShipments
         ? 'Group matches by container and shipment. Ask for clarification only when multiple entities are strong candidates.'
         : 'Ask for a clearer identifier and verify format before calling another tool.',
     suggested_follow_ups: ['get_container', 'get_shipment_details'],
-    suggested_tools:
-      hasContainers || hasShipments
-        ? ['get_container', 'get_shipment_details']
-        : ['search_container'],
+    suggested_tools: hasContainers || hasShipments ? ['get_container', 'get_shipment_details'] : ['search_container'],
   };
 }
 
-function buildTrackContract(
-  result: any,
-  args: { number: string },
-): ResponseContract {
+function buildTrackContract(result: any, args: { number: string }): ResponseContract {
   const hasTrackedContainer = Boolean((result as any)?.id);
-  const isPending =
-    Boolean((result as any)?.tracking_request_created) && !hasTrackedContainer;
+  const isPending = Boolean((result as any)?.tracking_request_created) && !hasTrackedContainer;
   const state = (result as any)?._metadata?.container_state || 'unknown';
   return {
     purpose: `Track ${args.number} and return the linked container view when possible.`,
@@ -311,42 +277,27 @@ function buildTrackContract(
       'basic container status and metadata',
       'where to pull next (if container details are delayed)',
     ],
-    requires_more_data: isPending
-      ? ['container UUID (once linking finishes)']
-      : [],
-    relevant_fields: [
-      'tracking_request_created',
-      'container_state',
-      'id',
-      'status',
-    ],
-    presentation_guidance: isPending
-      ? 'Tracking request was created but container linking is not immediate. Mention this and provide next-check guidance.'
-      : `Use container state "${state}" to answer readiness, holds, and pickup timing.`,
-    suggested_follow_ups: isPending
-      ? ['list_tracking_requests', 'get_container']
-      : ['get_container_transport_events'],
+    requires_more_data: isPending ? ['container UUID (once linking finishes)'] : [],
+    relevant_fields: ['tracking_request_created', 'container_state', 'id', 'status'],
+    presentation_guidance:
+      isPending
+        ? 'Tracking request was created but container linking is not immediate. Mention this and provide next-check guidance.'
+        : `Use container state "${state}" to answer readiness, holds, and pickup timing.`,
+    suggested_follow_ups:
+      isPending
+        ? ['list_tracking_requests', 'get_container']
+        : ['get_container_transport_events'],
     suggested_tools: ['get_container', 'get_container_transport_events'],
   };
 }
 
-function buildTransportEventsContract(
-  result: any,
-  _args: { id: string },
-): ResponseContract {
+function buildTransportEventsContract(result: any, _args: { id: string }): ResponseContract {
   const totalEvents = result.total_events ?? result.timeline?.length ?? 0;
   return {
-    purpose:
-      'Summarize what happened and forecast next likely milestone for the container.',
-    can_answer: [
-      'journey timeline',
-      'major milestones',
-      'rail/transshipment context',
-    ],
+    purpose: 'Summarize what happened and forecast next likely milestone for the container.',
+    can_answer: ['journey timeline', 'major milestones', 'rail/transshipment context'],
     requires_more_data:
-      totalEvents > 0
-        ? []
-        : ['recent container events becoming available from carrier feed'],
+      totalEvents > 0 ? [] : ['recent container events becoming available from carrier feed'],
     relevant_fields: ['timeline', 'event_categories', 'milestones'],
     presentation_guidance:
       totalEvents > 0
@@ -359,27 +310,17 @@ function buildTransportEventsContract(
 
 function buildShippingLineContract(result: any): ResponseContract {
   return {
-    purpose:
-      'Help user identify a supported SCAC before creating a track request.',
-    can_answer: [
-      'SCAC lookup',
-      'carrier aliases and names',
-      'supported carrier search',
-    ],
-    requires_more_data:
-      result.total_lines > 0 ? [] : ['additional query context'],
+    purpose: 'Help user identify a supported SCAC before creating a track request.',
+    can_answer: ['SCAC lookup', 'carrier aliases and names', 'supported carrier search'],
+    requires_more_data: result.total_lines > 0 ? [] : ['additional query context'],
     relevant_fields: ['shipping_lines', 'total_lines'],
-    presentation_guidance:
-      'Sort carriers alphabetically and show both SCAC and company names.',
+    presentation_guidance: 'Sort carriers alphabetically and show both SCAC and company names.',
     suggested_follow_ups: ['track_container'],
     suggested_tools: ['track_container'],
   };
 }
 
-function buildRouteContract(
-  result: any,
-  _args: { id: string },
-): ResponseContract {
+function buildRouteContract(result: any, _args: { id: string }): ResponseContract {
   const available = Array.isArray(result.route_locations);
   return {
     purpose: 'Communicate container routing and vessel itinerary.',
@@ -388,9 +329,7 @@ function buildRouteContract(
       'leg-by-leg ETD/ETA',
       'carrier and vessel coverage',
     ],
-    requires_more_data: available
-      ? []
-      : ['event timeline via get_container_transport_events'],
+    requires_more_data: available ? [] : ['event timeline via get_container_transport_events'],
     relevant_fields: ['route_locations', 'total_legs', 'alternative'],
     presentation_guidance: available
       ? 'Show origin → transshipments → destination. Emphasize missing legs and ETA changes.'
@@ -403,45 +342,22 @@ function buildRouteContract(
 function buildContainerContract(): ResponseContract {
   return {
     purpose: 'Provide current container snapshot and readiness context.',
-    can_answer: [
-      'status',
-      'location',
-      'pickup readiness',
-      'rail and shipment context',
-    ],
+    can_answer: ['status', 'location', 'pickup readiness', 'rail and shipment context'],
     requires_more_data: ['holds, fees, and timeline by demand'],
-    relevant_fields: [
-      'id',
-      'container_number',
-      'status',
-      'pod_terminal',
-      'demurrage',
-    ],
+    relevant_fields: ['id', 'container_number', 'status', 'pod_terminal', 'demurrage'],
     presentation_guidance:
       'Summarize state first, then call out LFD, holds, and fees if present. If terminal availability is unclear, suggest transport events.',
-    suggested_follow_ups: [
-      'get_container_transport_events',
-      'get_container_route',
-    ],
+    suggested_follow_ups: ['get_container_transport_events', 'get_container_route'],
     suggested_tools: ['get_container_transport_events', 'get_container_route'],
   };
 }
 
 function buildShipmentContract(): ResponseContract {
   return {
-    purpose:
-      'Explain shipment-level routing, container counts, and references.',
+    purpose: 'Explain shipment-level routing, container counts, and references.',
     can_answer: ['shipment identifiers', 'routing summary', 'container list'],
-    requires_more_data: [
-      'container-level ETA confidence when only one terminal is visible',
-    ],
-    relevant_fields: [
-      'id',
-      'bill_of_lading',
-      'status',
-      'containers',
-      'routing',
-    ],
+    requires_more_data: ['container-level ETA confidence when only one terminal is visible'],
+    relevant_fields: ['id', 'bill_of_lading', 'status', 'containers', 'routing'],
     presentation_guidance:
       'Group by shipment summary then container health signals (pickup ETA, pickup_lfd, holds).',
     suggested_follow_ups: ['get_container', 'list_containers'],
@@ -450,39 +366,23 @@ function buildShipmentContract(): ResponseContract {
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object'
-    ? (value as Record<string, unknown>)
-    : {};
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
 }
 
 type ListEntityType = 'container' | 'shipment' | 'tracking_request' | 'unknown';
 
 function detectListEntityType(result: any): ListEntityType {
-  const firstItem = Array.isArray(result?.items)
-    ? asRecord(result.items[0])
-    : {};
+  const firstItem = Array.isArray(result?.items) ? asRecord(result.items[0]) : {};
 
-  if (
-    'requestType' in firstItem ||
-    'request_type' in firstItem ||
-    'requestNumber' in firstItem
-  ) {
+  if ('requestType' in firstItem || 'request_type' in firstItem || 'requestNumber' in firstItem) {
     return 'tracking_request';
   }
 
-  if (
-    'billOfLading' in firstItem ||
-    'bill_of_lading' in firstItem ||
-    'podVesselName' in firstItem
-  ) {
+  if ('billOfLading' in firstItem || 'bill_of_lading' in firstItem || 'podVesselName' in firstItem) {
     return 'shipment';
   }
 
-  if (
-    'number' in firstItem ||
-    'container_number' in firstItem ||
-    'podDischargedAt' in firstItem
-  ) {
+  if ('number' in firstItem || 'container_number' in firstItem || 'podDischargedAt' in firstItem) {
     return 'container';
   }
 
@@ -513,11 +413,7 @@ function buildContainerListDisplay(): ResponseDisplay {
       { key: 'podFullOutAt', label: 'Picked Up', path: 'podFullOutAt' },
       { key: 'availableForPickup', label: 'Ready', path: 'availableForPickup' },
       { key: 'pickupLfd', label: 'LFD', path: 'pickupLfd' },
-      {
-        key: 'pickupAppointmentAt',
-        label: 'Pickup Appt',
-        path: 'pickupAppointmentAt',
-      },
+      { key: 'pickupAppointmentAt', label: 'Pickup Appt', path: 'pickupAppointmentAt' },
       {
         key: 'holdsCount',
         label: 'Holds',
@@ -525,11 +421,7 @@ function buildContainerListDisplay(): ResponseDisplay {
         compute: 'length',
         description: 'Count of active holds at POD terminal',
       },
-      {
-        key: 'holdsAtPodTerminal',
-        label: 'Hold Details',
-        path: 'holdsAtPodTerminal',
-      },
+      { key: 'holdsAtPodTerminal', label: 'Hold Details', path: 'holdsAtPodTerminal' },
       {
         key: 'feesCount',
         label: 'Fees',
@@ -537,42 +429,18 @@ function buildContainerListDisplay(): ResponseDisplay {
         compute: 'length',
         description: 'Count of fee items at POD terminal',
       },
-      {
-        key: 'locationAtPodTerminal',
-        label: 'Terminal Location',
-        path: 'locationAtPodTerminal',
-      },
-      {
-        key: 'terminals.podTerminal.name',
-        label: 'POD Terminal',
-        path: 'terminals.podTerminal.name',
-      },
-      {
-        key: 'shipment.billOfLading',
-        label: 'BL',
-        path: 'shipment.billOfLading',
-      },
-      {
-        key: 'shipment.shippingLineScac',
-        label: 'SCAC',
-        path: 'shipment.shippingLineScac',
-      },
-      {
-        key: 'podRailCarrierScac',
-        label: 'Rail Carrier',
-        path: 'podRailCarrierScac',
-      },
+      { key: 'locationAtPodTerminal', label: 'Terminal Location', path: 'locationAtPodTerminal' },
+      { key: 'terminals.podTerminal.name', label: 'POD Terminal', path: 'terminals.podTerminal.name' },
+      { key: 'shipment.billOfLading', label: 'BL', path: 'shipment.billOfLading' },
+      { key: 'shipment.shippingLineScac', label: 'SCAC', path: 'shipment.shippingLineScac' },
+      { key: 'podRailCarrierScac', label: 'Rail Carrier', path: 'podRailCarrierScac' },
       { key: 'indEtaAt', label: 'Inland ETA', path: 'indEtaAt' },
       { key: 'indAtaAt', label: 'Inland ATA', path: 'indAtaAt' },
     ],
     column_sets: [
       {
         intent: 'discharged_not_picked_up',
-        when_user_asks: [
-          'discharged but not picked up',
-          'not picked up',
-          'still at terminal',
-        ],
+        when_user_asks: ['discharged but not picked up', 'not picked up', 'still at terminal'],
         columns: [
           'number',
           'currentStatus',
@@ -599,12 +467,7 @@ function buildContainerListDisplay(): ResponseDisplay {
       },
       {
         intent: 'holds_and_blocks',
-        when_user_asks: [
-          'holds',
-          'blocked',
-          'customs hold',
-          'why not available',
-        ],
+        when_user_asks: ['holds', 'blocked', 'customs hold', 'why not available'],
         columns: [
           'number',
           'currentStatus',
@@ -659,20 +522,12 @@ function buildShipmentListDisplay(): ResponseDisplay {
       { key: 'podAtaAt', label: 'POD ATA', path: 'podAtaAt' },
       { key: 'destinationName', label: 'Destination', path: 'destinationName' },
       { key: 'destinationEtaAt', label: 'Dest ETA', path: 'destinationEtaAt' },
-      {
-        key: 'lineTrackingLastSucceededAt',
-        label: 'Last Update',
-        path: 'lineTrackingLastSucceededAt',
-      },
+      { key: 'lineTrackingLastSucceededAt', label: 'Last Update', path: 'lineTrackingLastSucceededAt' },
     ],
     column_sets: [
       {
         intent: 'vessel_arrivals',
-        when_user_asks: [
-          'when is vessel arriving',
-          'vessel arrival',
-          'eta by vessel',
-        ],
+        when_user_asks: ['when is vessel arriving', 'vessel arrival', 'eta by vessel'],
         columns: [
           'podVesselName',
           'podVoyageNumber',
@@ -731,30 +586,12 @@ function buildTrackingRequestListDisplay(): ResponseDisplay {
       {
         intent: 'failed_requests',
         when_user_asks: ['failed tracking', 'why failed', 'tracking errors'],
-        columns: [
-          'requestNumber',
-          'requestType',
-          'status',
-          'scac',
-          'failedReason',
-          'updatedAt',
-        ],
+        columns: ['requestNumber', 'requestType', 'status', 'scac', 'failedReason', 'updatedAt'],
       },
       {
         intent: 'tracking_activity',
-        when_user_asks: [
-          'recent tracking activity',
-          'latest requests',
-          'tracking queue',
-        ],
-        columns: [
-          'requestNumber',
-          'requestType',
-          'status',
-          'scac',
-          'createdAt',
-          'updatedAt',
-        ],
+        when_user_asks: ['recent tracking activity', 'latest requests', 'tracking queue'],
+        columns: ['requestNumber', 'requestType', 'status', 'scac', 'createdAt', 'updatedAt'],
       },
     ],
     selection_strategy:
@@ -775,27 +612,22 @@ export function buildListContract(
     entityType === 'container'
       ? buildContainerListDisplay()
       : entityType === 'shipment'
-        ? buildShipmentListDisplay()
-        : entityType === 'tracking_request'
-          ? buildTrackingRequestListDisplay()
-          : undefined;
+      ? buildShipmentListDisplay()
+      : entityType === 'tracking_request'
+      ? buildTrackingRequestListDisplay()
+      : undefined;
 
   return {
     purpose: 'Surface aggregate operational worklist results.',
     can_answer: ['which records match filters', 'count and paging state'],
-    requires_more_data:
-      count === 0 ? ['alternative filters or tighter date ranges'] : [],
+    requires_more_data: count === 0 ? ['alternative filters or tighter date ranges'] : [],
     relevant_fields: ['items', 'links', 'meta', 'count'],
     presentation_guidance:
       count <= 1
         ? 'For a single result, provide a concise row summary. For multiple rows, render a markdown table.'
         : 'Render a markdown table using the response_contract display hints. Avoid dumping full nested records.',
     suggested_follow_ups: ['list_containers', 'list_tracking_requests'],
-    suggested_tools: [
-      'list_containers',
-      'list_tracking_requests',
-      'get_container',
-    ],
+    suggested_tools: ['list_containers', 'list_tracking_requests', 'get_container'],
     display,
   };
 }
@@ -863,9 +695,7 @@ function buildListResourceLinks(
   if (entityType !== 'container') {
     return [];
   }
-  const items = Array.isArray((result as any)?.items)
-    ? (result as any).items
-    : [];
+  const items = Array.isArray((result as any)?.items) ? (result as any).items : [];
   const links: ResourceLinkContent[] = [];
   for (const item of items) {
     const link = buildContainerResourceLink(asRecord(item));
@@ -880,11 +710,7 @@ function wrapToolWithContract<TArgs>(
   handler: (args: TArgs) => Promise<unknown>,
   buildContract?: (result: unknown, args: TArgs) => ResponseContract,
   buildResourceLinks?: (result: unknown, args: TArgs) => ResourceLinkContent[],
-): (args: TArgs) => Promise<{
-  content: ToolContent[];
-  structuredContent?: any;
-  isError?: boolean;
-}> {
+): (args: TArgs) => Promise<{ content: ToolContent[]; structuredContent?: any; isError?: boolean }> {
   return async (args: TArgs) => {
     try {
       const result = await handler(args);
@@ -937,10 +763,7 @@ function createCarrierScacCompleter(
   return async (value: string | undefined): Promise<string[]> => {
     try {
       const search = typeof value === 'string' ? value.trim() : '';
-      const { shipping_lines } = await executeGetSupportedShippingLines(
-        { search },
-        client,
-      );
+      const { shipping_lines } = await executeGetSupportedShippingLines({ search }, client);
       return shipping_lines.slice(0, 100).map((line) => line.scac);
     } catch {
       return [];
@@ -953,12 +776,7 @@ export function createTerminal49McpServer(
   apiBaseUrl?: string,
   accountId?: string,
 ): McpServer {
-  const client = new Terminal49Client({
-    apiToken,
-    apiBaseUrl,
-    accountId,
-    defaultFormat: 'mapped',
-  });
+  const client = new Terminal49Client({ apiToken, apiBaseUrl, accountId, defaultFormat: "mapped" });
 
   const completeCarrierScac = createCarrierScacCompleter(client);
 
@@ -987,34 +805,25 @@ export function createTerminal49McpServer(
         'This is the fastest way to find container information. ' +
         'Examples: CAIU2885402, MAEU123456789, or any reference number.',
       inputSchema: {
-        query: z
-          .string()
-          .min(1)
-          .describe(
-            'Search query - can be a container number, booking number, BL number, or reference number',
-          ),
+        query: z.string().min(1).describe('Search query - can be a container number, booking number, BL number, or reference number'),
         intent: toolIntentSchema,
       },
       outputSchema: {
-        containers: z.array(
-          z.object({
-            id: z.string(),
-            container_number: z.string(),
-            status: z.string(),
-            shipping_line: z.string(),
-            pod_terminal: z.string().optional(),
-            pol_terminal: z.string().optional(),
-            destination: z.string().optional(),
-          }),
-        ),
-        shipments: z.array(
-          z.object({
-            id: z.string(),
-            ref_numbers: z.array(z.string()),
-            shipping_line: z.string(),
-            container_count: z.number(),
-          }),
-        ),
+        containers: z.array(z.object({
+          id: z.string(),
+          container_number: z.string(),
+          status: z.string(),
+          shipping_line: z.string(),
+          pod_terminal: z.string().optional(),
+          pol_terminal: z.string().optional(),
+          destination: z.string().optional(),
+        })),
+        shipments: z.array(z.object({
+          id: z.string(),
+          ref_numbers: z.array(z.string()),
+          shipping_line: z.string(),
+          container_count: z.number(),
+        })),
         total_results: z.number(),
         _response_contract: responseContractSchema,
       },
@@ -1022,7 +831,7 @@ export function createTerminal49McpServer(
     wrapToolWithContract(
       async ({ query }) => executeSearchContainer({ query }, client),
       (result, args) => buildSearchContract(result as any, args),
-    ),
+    )
   );
 
   // Tool 2: Track Container
@@ -1035,34 +844,15 @@ export function createTerminal49McpServer(
         'Uses inference to choose the carrier/type when possible, creates a tracking request, ' +
         'and returns detailed container information.',
       inputSchema: {
-        number: z
-          .string()
-          .optional()
-          .describe('Container, bill of lading, or booking number to track'),
+        number: z.string().optional().describe('Container, bill of lading, or booking number to track'),
         numberType: z
           .string()
           .optional()
-          .describe(
-            'Optional override: container | bill_of_lading | booking_number',
-          ),
-        containerNumber: z
-          .string()
-          .optional()
-          .describe('Deprecated alias for number (container)'),
-        bookingNumber: z
-          .string()
-          .optional()
-          .describe('Deprecated alias for number (booking/BL)'),
-        scac: z
-          .string()
-          .optional()
-          .describe(
-            'Optional SCAC code of the shipping line (e.g., MAEU for Maersk)',
-          ),
-        refNumbers: z
-          .array(z.string())
-          .optional()
-          .describe('Optional reference numbers for matching'),
+          .describe('Optional override: container | bill_of_lading | booking_number'),
+        containerNumber: z.string().optional().describe('Deprecated alias for number (container)'),
+        bookingNumber: z.string().optional().describe('Deprecated alias for number (booking/BL)'),
+        scac: z.string().optional().describe('Optional SCAC code of the shipping line (e.g., MAEU for Maersk)'),
+        refNumbers: z.array(z.string()).optional().describe('Optional reference numbers for matching'),
         intent: toolIntentSchema,
       },
       outputSchema: {
@@ -1077,31 +867,13 @@ export function createTerminal49McpServer(
       },
     },
     wrapToolWithContract(
-      async ({
-        number,
-        numberType,
-        containerNumber,
-        scac,
-        bookingNumber,
-        refNumbers,
-      }) =>
+      async ({ number, numberType, containerNumber, scac, bookingNumber, refNumbers }) =>
         executeTrackContainer(
-          {
-            number,
-            numberType,
-            containerNumber,
-            scac,
-            bookingNumber,
-            refNumbers,
-          },
+          { number, numberType, containerNumber, scac, bookingNumber, refNumbers },
           client,
         ),
-      (result, args) =>
-        buildTrackContract(result as any, {
-          number:
-            args.number || args.containerNumber || args.bookingNumber || '',
-        }),
-    ),
+      (result, args) => buildTrackContract(result as any, { number: args.number || args.containerNumber || args.bookingNumber || '' })
+    )
   );
 
   // Tool 3: Get Container
@@ -1114,19 +886,16 @@ export function createTerminal49McpServer(
         'plus optional related data. Choose includes based on user question and container state. ' +
         'Response includes metadata hints to guide follow-up queries.',
       inputSchema: {
-        id: z
-          .string()
-          .uuid()
-          .describe('The Terminal49 container ID (UUID format)'),
+        id: z.string().uuid().describe('The Terminal49 container ID (UUID format)'),
         include: z
           .array(z.enum(['shipment', 'pod_terminal', 'transport_events']))
           .optional()
           .default(['shipment'])
           .describe(
-            "Optional related data to include. Default: ['shipment'] covers most use cases. " +
-              '• shipment: Routing, BOL, line, ref numbers (lightweight, always useful) ' +
-              '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
-              '• transport_events: Full event history, rail tracking (heavy 50-100 events, use for journey/timeline questions)',
+            'Optional related data to include. Default: [\'shipment\'] covers most use cases. ' +
+            '• shipment: Routing, BOL, line, ref numbers (lightweight, always useful) ' +
+            '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
+            '• transport_events: Full event history, rail tracking (heavy 50-100 events, use for journey/timeline questions)'
           ),
         intent: toolIntentSchema,
       },
@@ -1139,7 +908,7 @@ export function createTerminal49McpServer(
     wrapToolWithContract(
       async ({ id, include }) => executeGetContainer({ id, include }, client),
       () => buildContainerContract(),
-    ),
+    )
   );
 
   // Tool 4: Get Shipment Details
@@ -1152,17 +921,8 @@ export function createTerminal49McpServer(
         'Use this when user asks about a shipment (vs a specific container). ' +
         'Returns: Bill of Lading, shipping line, port details, vessel info, ETAs, container list.',
       inputSchema: {
-        id: z
-          .string()
-          .uuid()
-          .describe('The Terminal49 shipment ID (UUID format)'),
-        include_containers: z
-          .boolean()
-          .optional()
-          .default(true)
-          .describe(
-            'Include list of containers in this shipment. Default: true',
-          ),
+        id: z.string().uuid().describe('The Terminal49 shipment ID (UUID format)'),
+        include_containers: z.boolean().optional().default(true).describe('Include list of containers in this shipment. Default: true'),
         intent: toolIntentSchema,
       },
       outputSchema: z
@@ -1170,12 +930,12 @@ export function createTerminal49McpServer(
           _response_contract: responseContractSchema,
         })
         .passthrough(),
-    },
+      },
     wrapToolWithContract(
       async ({ id, include_containers }) =>
         executeGetShipmentDetails({ id, include_containers }, client),
       () => buildShipmentContract(),
-    ),
+    )
   );
 
   // Tool 5: Get Container Transport Events
@@ -1189,10 +949,7 @@ export function createTerminal49McpServer(
         'Use this for questions about journey history, "what happened", timeline analysis, rail tracking. ' +
         'More efficient than get_container with transport_events when you only need event data.',
       inputSchema: {
-        id: z
-          .string()
-          .uuid()
-          .describe('The Terminal49 container ID (UUID format)'),
+        id: z.string().uuid().describe('The Terminal49 container ID (UUID format)'),
         intent: toolIntentSchema,
       },
       outputSchema: z
@@ -1204,7 +961,7 @@ export function createTerminal49McpServer(
     wrapToolWithContract(
       async ({ id }) => executeGetContainerTransportEvents({ id }, client),
       (result, args) => buildTransportEventsContract(result as any, args),
-    ),
+    )
   );
 
   // Tool 6: Get Supported Shipping Lines
@@ -1217,10 +974,7 @@ export function createTerminal49McpServer(
         'Returns SCAC codes, full names, and common abbreviations. ' +
         'Use this when user asks which carriers are supported or to validate a carrier name.',
       inputSchema: {
-        search: z
-          .string()
-          .optional()
-          .describe('Optional: Filter by carrier name or SCAC code'),
+        search: z.string().optional().describe('Optional: Filter by carrier name or SCAC code'),
         intent: toolIntentSchema,
       },
       outputSchema: {
@@ -1232,7 +986,7 @@ export function createTerminal49McpServer(
             short_name: z.string().optional(),
             bol_prefix: z.string().optional(),
             notes: z.string().optional(),
-          }),
+          })
         ),
         _metadata: z.object({
           presentation_guidance: z.string(),
@@ -1243,10 +997,9 @@ export function createTerminal49McpServer(
       },
     },
     wrapToolWithContract(
-      async ({ search }) =>
-        executeGetSupportedShippingLines({ search }, client),
+      async ({ search }) => executeGetSupportedShippingLines({ search }, client),
       (result) => buildShippingLineContract(result as any),
-    ),
+    )
   );
 
   // Tool 7: Get Container Route
@@ -1260,10 +1013,7 @@ export function createTerminal49McpServer(
         'NOTE: This is a paid feature and may not be available for all accounts. ' +
         'Use for questions about routing, transshipments, or detailed vessel itinerary.',
       inputSchema: {
-        id: z
-          .string()
-          .uuid()
-          .describe('The Terminal49 container ID (UUID format)'),
+        id: z.string().uuid().describe('The Terminal49 container ID (UUID format)'),
         intent: toolIntentSchema,
       },
       // Keep a single permissive schema because this tool can return either
@@ -1306,7 +1056,7 @@ export function createTerminal49McpServer(
                   })
                   .nullable(),
               }),
-            }),
+            })
           )
           .optional(),
         created_at: z.string().nullable().optional(),
@@ -1327,7 +1077,7 @@ export function createTerminal49McpServer(
     wrapToolWithContract(
       async ({ id }) => executeGetContainerRoute({ id }, client),
       (result, args) => buildRouteContract(result as any, args),
-    ),
+    )
   );
 
   // Tool 8: List Shipments
@@ -1342,22 +1092,12 @@ export function createTerminal49McpServer(
         status: z.string().optional().describe('Filter by shipment status'),
         port: z.string().optional().describe('Filter by POD port LOCODE'),
         carrier: z.string().optional().describe('Filter by shipping line SCAC'),
-        updated_after: z
-          .string()
-          .optional()
-          .describe('Filter by updated_at (ISO8601) >= value'),
+        updated_after: z.string().optional().describe('Filter by updated_at (ISO8601) >= value'),
         include_containers: z
           .boolean()
           .optional()
-          .describe(
-            'Include containers relationship in response. Default: true.',
-          ),
-        page: z
-          .number()
-          .int()
-          .positive()
-          .optional()
-          .describe('Page number (1-based)'),
+          .describe('Include containers relationship in response. Default: true.'),
+        page: z.number().int().positive().optional().describe('Page number (1-based)'),
         page_size: z.number().int().positive().optional().describe('Page size'),
         intent: toolIntentSchema,
       },
@@ -1371,7 +1111,7 @@ export function createTerminal49McpServer(
     wrapToolWithContract(
       async (args) => executeListShipments(args, client),
       (result) => buildListContract(result as any, 'shipment'),
-    ),
+    )
   );
 
   // Tool 9: List Containers
@@ -1386,22 +1126,12 @@ export function createTerminal49McpServer(
         status: z.string().optional().describe('Filter by container status'),
         port: z.string().optional().describe('Filter by POD port LOCODE'),
         carrier: z.string().optional().describe('Filter by shipping line SCAC'),
-        updated_after: z
-          .string()
-          .optional()
-          .describe('Filter by updated_at (ISO8601) >= value'),
+        updated_after: z.string().optional().describe('Filter by updated_at (ISO8601) >= value'),
         include: z
           .string()
           .optional()
-          .describe(
-            'Comma-separated include list (e.g., shipment,pod_terminal)',
-          ),
-        page: z
-          .number()
-          .int()
-          .positive()
-          .optional()
-          .describe('Page number (1-based)'),
+          .describe('Comma-separated include list (e.g., shipment,pod_terminal)'),
+        page: z.number().int().positive().optional().describe('Page number (1-based)'),
         page_size: z.number().int().positive().optional().describe('Page size'),
         intent: toolIntentSchema,
       },
@@ -1419,7 +1149,7 @@ export function createTerminal49McpServer(
       // registered terminal49://container/{id} resource, so the client can
       // resolve full details on demand instead of paying for them up front.
       (result) => buildListResourceLinks(result, 'container'),
-    ),
+    )
   );
 
   // Tool 10: List Tracking Requests
@@ -1435,20 +1165,11 @@ export function createTerminal49McpServer(
           .record(z.string(), z.string())
           .optional()
           .describe('Raw query filters (e.g., filter[status]=succeeded)'),
-        status: z
-          .string()
-          .optional()
-          .describe('Filter by request status (mapped to filter[status])'),
-        request_type: z
-          .string()
+        status: z.string().optional().describe('Filter by request status (mapped to filter[status])'),
+        request_type: z.string()
           .optional()
           .describe('Filter by request type (mapped to filter[request_type])'),
-        page: z
-          .number()
-          .int()
-          .positive()
-          .optional()
-          .describe('Page number (1-based)'),
+        page: z.number().int().positive().optional().describe('Page number (1-based)'),
         page_size: z.number().int().positive().optional().describe('Page size'),
         intent: toolIntentSchema,
       },
@@ -1462,7 +1183,7 @@ export function createTerminal49McpServer(
     wrapToolWithContract(
       async (args) => executeListTrackingRequests(args, client),
       (result) => buildListContract(result as any, 'tracking_request'),
-    ),
+    )
   );
 
   // ==================== PROMPTS ====================
@@ -1472,20 +1193,17 @@ export function createTerminal49McpServer(
     'track-shipment',
     {
       title: 'Track Container Shipment',
-      description:
-        'Quick container tracking workflow with carrier autocomplete',
+      description: 'Quick container tracking workflow with carrier autocomplete',
       argsSchema: {
-        container_number: z
-          .string()
-          .describe('Container number (e.g., CAIU1234567)'),
+        container_number: z.string().describe('Container number (e.g., CAIU1234567)'),
         // Autocompletes from the live supported-carrier list (SCAC codes).
+        // `completable` must wrap the INNER string so the MCP SDK (which
+        // unwraps ZodOptional before checking isCompletable) advertises the
+        // `completions` capability; `.optional()` is applied AFTER.
         carrier: completable(
-          z
-            .string()
-            .optional()
-            .describe('Shipping line SCAC code (e.g., MAEU for Maersk)'),
+          z.string().describe('Shipping line SCAC code (e.g., MAEU for Maersk)'),
           completeCarrierScac,
-        ),
+        ).optional(),
       },
     },
     async ({ container_number, carrier }) => ({
@@ -1500,7 +1218,7 @@ export function createTerminal49McpServer(
           },
         },
       ],
-    }),
+    })
   );
 
   // Prompt 2: Check Demurrage
@@ -1528,7 +1246,7 @@ export function createTerminal49McpServer(
           },
         },
       ],
-    }),
+    })
   );
 
   // Prompt 3: Analyze Delays
@@ -1556,7 +1274,7 @@ export function createTerminal49McpServer(
           },
         },
       ],
-    }),
+    })
   );
 
   // ==================== RESOURCES ====================
@@ -1574,7 +1292,7 @@ export function createTerminal49McpServer(
       return {
         contents: [resource],
       };
-    },
+    }
   );
 
   // Resource 2: Milestone Glossary (static resource)
@@ -1591,7 +1309,7 @@ export function createTerminal49McpServer(
       return {
         contents: [resource],
       };
-    },
+    }
   );
 
   // Resource 3: Query Guidance (internal LLM tool routing hints)
@@ -1614,7 +1332,7 @@ export function createTerminal49McpServer(
           },
         ],
       };
-    },
+    }
   );
 
   return server;
@@ -1631,9 +1349,7 @@ export async function runStdioServer() {
     console.error('Please set your Terminal49 API token:');
     console.error('  export T49_API_TOKEN=your_token_here');
     console.error('');
-    console.error(
-      'Get your API token at: https://app.terminal49.com/developers/api-keys',
-    );
+    console.error('Get your API token at: https://app.terminal49.com/developers/api-keys');
     process.exit(1);
   }
 
