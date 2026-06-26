@@ -95,7 +95,16 @@ export class RetryInterceptor {
         );
         await this.sleep(computeBackoffDelay(attempt, retryAfterMs));
 
-        currentResponse = await this.fetchImpl(replayableRequest.clone());
+        try {
+          currentResponse = await this.fetchImpl(replayableRequest.clone());
+        } catch (error) {
+          // openapi-fetch does NOT route a throw from `onResponse` back through
+          // `onError`, so a network failure during a response-triggered retry
+          // would otherwise surface as a raw TypeError. Normalize it to a
+          // NetworkError so the caller sees the same error shape as the
+          // initial-fetch path.
+          throw toNetworkError(error);
+        }
         attempt++;
       }
 
@@ -121,30 +130,32 @@ export class RetryInterceptor {
     const requestKey = this.requestKey(request, id);
     const replayableRequest = this.replayableRequests.get(requestKey);
 
-    try {
-      if (
-        replayableRequest &&
-        isRetryableNetworkError(error) &&
-        this.isRetryable(replayableRequest)
-      ) {
-        let attempt = 0;
-        while (attempt < this.maxRetries) {
-          await this.sleep(computeBackoffDelay(attempt));
-          try {
-            return await this.fetchImpl(replayableRequest.clone());
-          } catch (retryError) {
-            attempt++;
-            if (attempt >= this.maxRetries) {
-              return toNetworkError(retryError);
-            }
+    if (
+      replayableRequest &&
+      isRetryableNetworkError(error) &&
+      this.isRetryable(replayableRequest)
+    ) {
+      let attempt = 0;
+      while (attempt < this.maxRetries) {
+        await this.sleep(computeBackoffDelay(attempt));
+        try {
+          // A recovered Response is handed back to openapi-fetch, which then
+          // runs `onResponse` for this same request id. Keep the replay entry
+          // so that path can still retry a subsequent 429/5xx — `onResponse`
+          // deletes it once the response chain finishes.
+          return await this.fetchImpl(replayableRequest.clone());
+        } catch (retryError) {
+          attempt++;
+          if (attempt >= this.maxRetries) {
+            this.replayableRequests.delete(requestKey);
+            return toNetworkError(retryError);
           }
         }
       }
-
-      return toNetworkError(error);
-    } finally {
-      this.replayableRequests.delete(requestKey);
     }
+
+    this.replayableRequests.delete(requestKey);
+    return toNetworkError(error);
   }
 
   private isRetryable(request: Request): boolean {
