@@ -633,6 +633,7 @@ export function createTerminal49McpServer(
         'booking number, bill of lading, or reference number. ' +
         'This is the fastest way to find container information. ' +
         'Examples: CAIU2885402, MAEU123456789, or any reference number.',
+      annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
         query: z.string().min(1).describe('Search query - can be a container number, booking number, BL number, or reference number'),
         intent: toolIntentSchema,
@@ -672,6 +673,7 @@ export function createTerminal49McpServer(
         'Track a container, bill of lading, or booking number. ' +
         'Uses inference to choose the carrier/type when possible, creates a tracking request, ' +
         'and returns detailed container information.',
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
       inputSchema: {
         number: z.string().optional().describe('Container, bill of lading, or booking number to track'),
         numberType: z
@@ -714,6 +716,7 @@ export function createTerminal49McpServer(
         'Get container information with flexible data loading. Returns core container data (status, location, equipment, dates) ' +
         'plus optional related data. Choose includes based on user question and container state. ' +
         'Response includes metadata hints to guide follow-up queries.',
+      annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
         id: z.string().uuid().describe('The Terminal49 container ID (UUID format)'),
         include: z
@@ -749,6 +752,7 @@ export function createTerminal49McpServer(
         'Get detailed shipment information including routing, BOL, containers, and port details. ' +
         'Use this when user asks about a shipment (vs a specific container). ' +
         'Returns: Bill of Lading, shipping line, port details, vessel info, ETAs, container list.',
+      annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
         id: z.string().uuid().describe('The Terminal49 shipment ID (UUID format)'),
         include_containers: z.boolean().optional().default(true).describe('Include list of containers in this shipment. Default: true'),
@@ -777,6 +781,7 @@ export function createTerminal49McpServer(
         '(vessel loaded, departed, arrived, discharged, rail movements, delivery). ' +
         'Use this for questions about journey history, "what happened", timeline analysis, rail tracking. ' +
         'More efficient than get_container with transport_events when you only need event data.',
+      annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
         id: z.string().uuid().describe('The Terminal49 container ID (UUID format)'),
         intent: toolIntentSchema,
@@ -802,6 +807,7 @@ export function createTerminal49McpServer(
         'Get list of shipping lines (carriers) supported by Terminal49 for container tracking. ' +
         'Returns SCAC codes, full names, and common abbreviations. ' +
         'Use this when user asks which carriers are supported or to validate a carrier name.',
+      annotations: { readOnlyHint: true, openWorldHint: false },
       inputSchema: {
         search: z.string().optional().describe('Optional: Filter by carrier name or SCAC code'),
         intent: toolIntentSchema,
@@ -841,6 +847,7 @@ export function createTerminal49McpServer(
         'Shows complete multi-leg journey (origin → transshipment ports → destination). ' +
         'NOTE: This is a paid feature and may not be available for all accounts. ' +
         'Use for questions about routing, transshipments, or detailed vessel itinerary.',
+      annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
         id: z.string().uuid().describe('The Terminal49 container ID (UUID format)'),
         intent: toolIntentSchema,
@@ -917,6 +924,7 @@ export function createTerminal49McpServer(
       description:
         'List shipments with optional filters and pagination. ' +
         'Use for queries like "show recent shipments" or "shipments for a carrier".',
+      annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
         status: z.string().optional().describe('Filter by shipment status'),
         port: z.string().optional().describe('Filter by POD port LOCODE'),
@@ -951,6 +959,7 @@ export function createTerminal49McpServer(
       description:
         'List containers with optional filters and pagination. ' +
         'Use for queries like "containers at port" or "latest updates".',
+      annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
         status: z.string().optional().describe('Filter by container status'),
         port: z.string().optional().describe('Filter by POD port LOCODE'),
@@ -985,6 +994,7 @@ export function createTerminal49McpServer(
       description:
         'List tracking requests with optional filters and pagination. ' +
         'Useful for monitoring recent tracking activity.',
+      annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
         filters: z
           .record(z.string(), z.string())
