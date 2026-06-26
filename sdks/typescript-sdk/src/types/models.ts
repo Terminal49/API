@@ -5,6 +5,14 @@ export interface ShippingLine {
   shortName?: string;
   bolPrefix?: string;
   notes?: string;
+  /** Additional SCACs the carrier tracks under. */
+  alternativeScacs?: string[];
+  /** Whether the carrier supports tracking by bill of lading number. */
+  billOfLadingTrackingSupport?: boolean;
+  /** Whether the carrier supports tracking by booking number. */
+  bookingNumberTrackingSupport?: boolean;
+  /** Whether the carrier supports tracking by container number. */
+  containerNumberTrackingSupport?: boolean;
 }
 
 /** Pagination links returned by Terminal49 list endpoints. */
@@ -29,6 +37,8 @@ export interface Container {
   id: string;
   number?: string;
   status?: string;
+  /** Raw `current_status` from the API (also surfaced via `status`). */
+  currentStatus?: string;
   equipment?: {
     type?: string;
     length?: number;
