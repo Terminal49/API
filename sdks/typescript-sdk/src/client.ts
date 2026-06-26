@@ -149,6 +149,9 @@ export class Terminal49Client {
   /** Search across shipments and containers by number, reference, or keyword. */
   async search(query: string): Promise<any> {
     const params = new URLSearchParams({ query });
+    // `/search` is not present in the generated OpenAPI types, so it cannot be
+    // routed through the typed `client.GET(...)`. `executeManual` runs it through
+    // the same Auth -> Retry -> ErrorMapping -> timeout pipeline as the typed client.
     return this.transport.executeManual(
       `${this.transport.baseUrl}/search?${params.toString()}`,
     );

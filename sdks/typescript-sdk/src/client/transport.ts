@@ -119,11 +119,19 @@ export class Transport {
       }
     }
 
-    res = await retry.onResponse({
-      request: retryableReq,
-      response: res,
-      id: retryContext.id,
-    });
+    try {
+      res = await retry.onResponse({
+        request: retryableReq,
+        response: res,
+        id: retryContext.id,
+      });
+    } catch (error) {
+      // A retry kicked off inside onResponse (after an initial 5xx) can itself
+      // throw a fetch error; normalize it like the initial-fetch path so the
+      // caller always sees a NetworkError rather than a raw TypeError.
+      // (toNetworkError passes an already-normalized Terminal49Error through.)
+      throw toNetworkError(error);
+    }
     await errorMap.onResponse({
       request: retryableReq,
       response: res,
