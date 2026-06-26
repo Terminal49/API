@@ -30,8 +30,16 @@ export async function executeListTrackingRequests(
   );
 
   try {
+    // Pagination is owned exclusively by the capped `page`/`page_size` schema.
+    // The raw `filters` pass-through is copied verbatim into the SDK query, so a
+    // caller could otherwise smuggle `page[size]`/`page[number]` through it and
+    // bypass the MAX_LIST_PAGE_SIZE clamp. Drop those keys here.
+    const safeFilters = { ...args.filters };
+    delete safeFilters['page[size]'];
+    delete safeFilters['page[number]'];
+
     const filters = {
-      ...args.filters,
+      ...safeFilters,
       ...(args.status ? { 'filter[status]': args.status } : {}),
       ...(args.request_type ? { 'filter[request_type]': args.request_type } : {}),
     };

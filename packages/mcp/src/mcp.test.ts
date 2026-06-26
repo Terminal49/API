@@ -46,14 +46,19 @@ function _hasResponseContract(schema: unknown): boolean {
         (shape &&
           typeof shape === 'object' &&
           Object.hasOwn(shape as object, '_response_contract')) ||
-          (def.properties &&
-            typeof def.properties === 'object' &&
-            Object.hasOwn(def.properties as object, '_response_contract')),
+        (def.properties &&
+          typeof def.properties === 'object' &&
+          Object.hasOwn(def.properties as object, '_response_contract')),
       );
     }
     case 'ZodUnion':
     case 'union':
-      return Array.isArray(def.options) && (def.options as unknown[]).some((option) => _hasResponseContract(option));
+      return (
+        Array.isArray(def.options) &&
+        (def.options as unknown[]).some((option) =>
+          _hasResponseContract(option),
+        )
+      );
     case 'ZodOptional':
     case 'ZodNullable':
     case 'ZodDefault':
@@ -104,7 +109,10 @@ function _hasDisplayHintsInResponseContract(schema: unknown): boolean {
     case 'ZodObject':
     case 'object': {
       const shape = typeof def.shape === 'function' ? def.shape() : def.shape;
-      const shapeRecord = shape && typeof shape === 'object' ? (shape as Record<string, unknown>) : null;
+      const shapeRecord =
+        shape && typeof shape === 'object'
+          ? (shape as Record<string, unknown>)
+          : null;
       if (shapeRecord && Object.hasOwn(shapeRecord, '_response_contract')) {
         return _schemaHasDisplay(shapeRecord._response_contract);
       }
@@ -123,7 +131,9 @@ function _hasDisplayHintsInResponseContract(schema: unknown): boolean {
     case 'union':
       return (
         Array.isArray(def.options) &&
-        (def.options as unknown[]).some((option) => _hasDisplayHintsInResponseContract(option))
+        (def.options as unknown[]).some((option) =>
+          _hasDisplayHintsInResponseContract(option),
+        )
       );
     case 'ZodOptional':
     case 'ZodNullable':
@@ -133,12 +143,16 @@ function _hasDisplayHintsInResponseContract(schema: unknown): boolean {
     case 'nullable':
     case 'default':
     case 'catch':
-      return _hasDisplayHintsInResponseContract((def as { innerType?: unknown }).innerType);
+      return _hasDisplayHintsInResponseContract(
+        (def as { innerType?: unknown }).innerType,
+      );
     case 'ZodEffects':
     case 'ZodTransform':
     case 'effects':
     case 'transform':
-      return _hasDisplayHintsInResponseContract((def as { schema?: unknown }).schema);
+      return _hasDisplayHintsInResponseContract(
+        (def as { schema?: unknown }).schema,
+      );
     default:
       return false;
   }
@@ -174,19 +188,26 @@ function _schemaHasDisplay(schema: unknown): boolean {
     case 'ZodObject':
     case 'object': {
       const shape = typeof def.shape === 'function' ? def.shape() : def.shape;
-      if (shape && typeof shape === 'object' && Object.hasOwn(shape as object, 'display')) {
+      if (
+        shape &&
+        typeof shape === 'object' &&
+        Object.hasOwn(shape as object, 'display')
+      ) {
         return true;
       }
 
       return Boolean(
         def.properties &&
-          typeof def.properties === 'object' &&
-          Object.hasOwn(def.properties as object, 'display'),
+        typeof def.properties === 'object' &&
+        Object.hasOwn(def.properties as object, 'display'),
       );
     }
     case 'ZodUnion':
     case 'union':
-      return Array.isArray(def.options) && (def.options as unknown[]).some((option) => _schemaHasDisplay(option));
+      return (
+        Array.isArray(def.options) &&
+        (def.options as unknown[]).some((option) => _schemaHasDisplay(option))
+      );
     case 'ZodOptional':
     case 'ZodNullable':
     case 'ZodDefault':
@@ -233,10 +254,12 @@ function _objectSchemaHasProperty(schema: unknown, property: string): boolean {
 
   const shape = typeof def.shape === 'function' ? def.shape() : def.shape;
   return Boolean(
-    (shape && typeof shape === 'object' && Object.hasOwn(shape as object, property)) ||
-      (def.properties &&
-        typeof def.properties === 'object' &&
-        Object.hasOwn(def.properties as object, property)),
+    (shape &&
+      typeof shape === 'object' &&
+      Object.hasOwn(shape as object, property)) ||
+    (def.properties &&
+      typeof def.properties === 'object' &&
+      Object.hasOwn(def.properties as object, property)),
   );
 }
 
@@ -260,7 +283,9 @@ describe('MCP server wiring', () => {
     const server = createTerminal49McpServer('token');
     const tools = Object.keys((server as any)._registeredTools || {});
     const resources = Object.keys((server as any)._registeredResources || {});
-    const resourceTemplates = Object.keys((server as any)._registeredResourceTemplates || {});
+    const resourceTemplates = Object.keys(
+      (server as any)._registeredResourceTemplates || {},
+    );
     const prompts = Object.keys((server as any)._registeredPrompts || {});
 
     expect(tools).toHaveLength(10);
@@ -280,10 +305,11 @@ describe('MCP server wiring', () => {
     expect(prompts).toContain('check-demurrage');
     expect(prompts).toContain('analyze-delays');
 
-    expect(resources).toHaveLength(2);
+    expect(resources).toHaveLength(3);
     expect(resourceTemplates).toHaveLength(1);
     expect(resources).toContain('terminal49://docs/milestone-glossary');
     expect(resources).toContain('terminal49://docs/mcp-query-guidance');
+    expect(resources).toContain('terminal49://docs/list-display-columns');
     expect(resourceTemplates).toContain('container');
   });
 
@@ -295,11 +321,17 @@ describe('MCP server wiring', () => {
     >;
 
     for (const [name, tool] of Object.entries(tools)) {
-      expect(_objectSchemaHasProperty(tool.inputSchema, 'intent'), name).toBe(true);
+      expect(_objectSchemaHasProperty(tool.inputSchema, 'intent'), name).toBe(
+        true,
+      );
     }
 
     expect(() =>
-      (tools.get_supported_shipping_lines.inputSchema as { parse: (value: unknown) => unknown }).parse({
+      (
+        tools.get_supported_shipping_lines.inputSchema as {
+          parse: (value: unknown) => unknown;
+        }
+      ).parse({
         intent: 'validate carrier before creating a tracking request',
       }),
     ).not.toThrow();
@@ -339,7 +371,11 @@ describe('MCP server wiring', () => {
       { outputSchema: { def: { shape: Record<string, unknown> } } }
     >;
 
-    const listTools = ['list_shipments', 'list_containers', 'list_tracking_requests'];
+    const listTools = [
+      'list_shipments',
+      'list_containers',
+      'list_tracking_requests',
+    ];
 
     for (const name of listTools) {
       const outputSchema = tools[name]?.outputSchema;
@@ -372,7 +408,10 @@ describe('MCP server wiring', () => {
 
     const result = await searchTool.handler({ query: '   ' });
 
-    expect(result.content[0].text).toContain('Error: Search query is required');
+    // DEV-10663: tool errors return a generic, non-leaking message; the raw
+    // internal error ("Search query is required") must not reach the client.
+    expect(result.content[0].text).not.toContain('Search query is required');
+    expect(result.content[0].text).toContain('could not be completed');
     expect(result.isError).toBe(true);
     expect(Object.hasOwn(result, 'structuredContent')).toBe(false);
   });
