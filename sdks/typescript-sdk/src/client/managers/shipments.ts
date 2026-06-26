@@ -54,6 +54,13 @@ export class ShipmentManager extends BaseManager {
     return this.formatResult(raw, options?.format, mapShipment);
   }
 
+  /**
+   * List shipments. Filters the v2 API does not support (`status`, `port`,
+   * `carrier`, `updatedAfter`) are omitted from the request and reported back via
+   * `unsupportedFilters`. That field is only surfaced when `options.format` is
+   * `'mapped'` or `'both'`; the default `'raw'` format returns the verbatim API
+   * response and does not carry it.
+   */
   async list(
     filters: {
       status?: string;
