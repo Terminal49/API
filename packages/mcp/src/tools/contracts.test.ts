@@ -809,6 +809,29 @@ describe('MCP tool contracts', () => {
     expect(result.items).toHaveLength(1);
   });
 
+  it('list_tracking_requests strips raw page[size]/page[number] from filters so the cap cannot be bypassed', async () => {
+    const list = vi.fn().mockResolvedValue({ items: [{ id: 'tr-3' }] });
+    const client = asClient({
+      trackingRequests: { list },
+    });
+
+    await executeListTrackingRequests(
+      {
+        filters: {
+          'filter[status]': 'failed',
+          'page[size]': '10000',
+          'page[number]': '5',
+        },
+      },
+      client,
+    );
+
+    expect(list).toHaveBeenCalledWith(
+      { 'filter[status]': 'failed' },
+      { format: 'mapped', page: undefined, pageSize: undefined },
+    );
+  });
+
   it('buildListContract does not claim filter-match for an unfiltered firehose', () => {
     const contract = buildListContract(
       { items: [{ id: 'c1' }, { id: 'c2' }], meta: { total: 2 } },
