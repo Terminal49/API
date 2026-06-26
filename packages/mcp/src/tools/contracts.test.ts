@@ -21,16 +21,25 @@ function buildContainerRaw(containerId = 'container-1') {
       type: 'container',
       attributes: {
         number: 'CAIU1234567',
-        equipment_type: '40HC',
-        equipment_length: '40',
+        equipment_type: 'dry',
+        equipment_length: 40,
         equipment_height: 'high_cube',
         weight_in_lbs: 12000,
         location_at_pod_terminal: 'APM',
         available_for_pickup: true,
+        current_status: 'available',
         pod_arrived_at: '2025-01-01T00:00:00Z',
         pod_discharged_at: '2025-01-02T00:00:00Z',
         pickup_lfd: '2099-01-10',
-        updated_at: '2025-01-05T00:00:00Z',
+        pod_timezone: 'America/Los_Angeles',
+        terminal_checked_at: '2099-01-05T00:00:00Z',
+        import_deadlines: {
+          pickup_lfd_terminal: '2099-01-10T00:00:00Z',
+          pickup_lfd_rail: null,
+          pickup_lfd_line: '2099-01-12T00:00:00Z',
+        },
+        fees_at_pod_terminal: [],
+        holds_at_pod_terminal: [],
         created_at: '2025-01-01T00:00:00Z',
       },
       relationships: {
@@ -107,9 +116,8 @@ async function executeSupportedShippingLines(
   client: Terminal49Client,
 ) {
   vi.resetModules();
-  const { executeGetSupportedShippingLines } = await import(
-    './get-supported-shipping-lines.js'
-  );
+  const { executeGetSupportedShippingLines } =
+    await import('./get-supported-shipping-lines.js');
 
   return executeGetSupportedShippingLines(args, client);
 }
@@ -142,7 +150,10 @@ describe('MCP tool contracts', () => {
       }),
     });
 
-    const result = await executeSearchContainer({ query: 'CAIU1234567' }, client);
+    const result = await executeSearchContainer(
+      { query: 'CAIU1234567' },
+      client,
+    );
 
     expect(result.total_results).toBe(2);
     expect(result.containers[0]).toMatchObject({
@@ -150,7 +161,10 @@ describe('MCP tool contracts', () => {
       container_number: 'CAIU1234567',
       shipping_line: 'MAEU',
     });
-    expect(result.shipments[0]).toMatchObject({ id: 'sr-2', shipping_line: 'MSCU' });
+    expect(result.shipments[0]).toMatchObject({
+      id: 'sr-2',
+      shipping_line: 'MSCU',
+    });
   });
 
   it('search_container prioritizes full_out over discharged/arrived status', async () => {
@@ -172,7 +186,10 @@ describe('MCP tool contracts', () => {
       }),
     });
 
-    const result = await executeSearchContainer({ query: 'TIIU1234567' }, client);
+    const result = await executeSearchContainer(
+      { query: 'TIIU1234567' },
+      client,
+    );
 
     expect(result.containers[0]).toMatchObject({
       id: 'container-legacy-1',
@@ -208,10 +225,12 @@ describe('MCP tool contracts', () => {
       numberType: undefined,
       refNumbers: undefined,
     });
+    // get_container now augments the default includes and returns the curated
+    // (raw-sourced) summary only — no _mapped bloat.
     expect(getContainer).toHaveBeenCalledWith(
       'container-1',
-      ['shipment'],
-      { format: 'both' },
+      ['shipment', 'pod_terminal'],
+      { format: 'raw' },
     );
     expect(result.tracking_request_created).toBe(true);
     expect(result.infer_result).toEqual({ inferred_type: 'container' });
@@ -243,10 +262,17 @@ describe('MCP tool contracts', () => {
       containers: { get: getContainer },
     });
 
-    const result = await executeTrackContainer({ number: 'SELU4039824' }, client);
+    const result = await executeTrackContainer(
+      { number: 'SELU4039824' },
+      client,
+    );
 
     expect(createFromInfer).not.toHaveBeenCalled();
-    expect(getContainer).toHaveBeenCalledWith('container-42', ['shipment'], { format: 'both' });
+    expect(getContainer).toHaveBeenCalledWith(
+      'container-42',
+      ['shipment', 'pod_terminal'],
+      { format: 'raw' },
+    );
     expect(result.tracking_request_created).toBe(false);
     expect(result.container_number).toBe('CAIU1234567');
     expect(result.infer_result).toMatchObject({
@@ -258,7 +284,9 @@ describe('MCP tool contracts', () => {
   it('track_container falls back to direct create when infer endpoint validation fails', async () => {
     const createFromInfer = vi
       .fn()
-      .mockRejectedValue(new Error('Unprocessable Entity (/data/attributes/number)'));
+      .mockRejectedValue(
+        new Error('Unprocessable Entity (/data/attributes/number)'),
+      );
     const createTrackingRequest = vi.fn().mockResolvedValue({
       included: [{ id: 'container-77', type: 'container' }],
     });
@@ -321,12 +349,39 @@ describe('MCP tool contracts', () => {
     ]);
   });
 
-  it('get_container classifies discharged containers when not available for pickup', async () => {
+  it('get_container surfaces the API current_status as the authoritative headline', async () => {
+    const rawContainer = buildContainerRaw('container-status');
+    rawContainer.data.attributes.current_status = 'grounded';
+    rawContainer.data.attributes.available_for_pickup = false;
+
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({
+          raw: rawContainer,
+          mapped: { id: 'container-status' },
+        }),
+      },
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-status' },
+      client,
+    );
+
+    // Headline status is the API value verbatim, not a re-derived label.
+    expect(result.status).toBe('grounded');
+    expect(result.status_source).toBe('current_status');
+    expect(result._metadata.status_is_authoritative).toBe(true);
+  });
+
+  it('get_container derives a discharged lifecycle only as steering metadata when API status is absent', async () => {
     const rawContainer = buildContainerRaw('container-discharged');
+    delete (rawContainer.data.attributes as any).current_status;
     rawContainer.data.attributes.available_for_pickup = false;
     rawContainer.data.attributes.pod_arrived_at = '2026-02-10T00:00:00Z';
     rawContainer.data.attributes.pod_discharged_at = '2026-02-11T00:00:00Z';
     (rawContainer.data.attributes as any).pod_full_out_at = null;
+    (rawContainer.data.attributes as any).delivered_at = null;
     (rawContainer.data.attributes as any).final_destination_full_out_at = null;
     (rawContainer.data.attributes as any).pod_rail_loaded_at = null;
 
@@ -339,15 +394,211 @@ describe('MCP tool contracts', () => {
       },
     });
 
-    const result = await executeGetContainer({ id: 'container-discharged' }, client);
+    const result = await executeGetContainer(
+      { id: 'container-discharged' },
+      client,
+    );
 
     expect(result.status).toBe('discharged');
+    expect(result.status_source).toBe('derived');
+    expect(result._metadata.derived_lifecycle).toBe('discharged');
+  });
+
+  it('get_container augments the default includes instead of replacing them', async () => {
+    const get = vi.fn().mockResolvedValue({
+      raw: buildContainerRaw('container-augment'),
+      mapped: { id: 'container-augment' },
+    });
+    const client = asClient({ containers: { get } });
+
+    const result = await executeGetContainer(
+      { id: 'container-augment', include: ['transport_events'] },
+      client,
+    );
+
+    // shipment + pod_terminal must survive even when only transport_events is requested.
+    expect(get).toHaveBeenCalledWith(
+      'container-augment',
+      ['shipment', 'pod_terminal', 'transport_events'],
+      { format: 'raw' },
+    );
+    expect(result._metadata.includes_loaded).toEqual([
+      'shipment',
+      'pod_terminal',
+      'transport_events',
+    ]);
+  });
+
+  it('get_container returns real fees + currency and never fabricates a daily rate', async () => {
+    const rawContainer = buildContainerRaw('container-fees');
+    (rawContainer.data.attributes as any).fees_at_pod_terminal = [
+      { type: 'demurrage', amount: 240, currency_code: 'USD' },
+    ];
+
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({
+          raw: rawContainer,
+          mapped: { id: 'container-fees' },
+        }),
+      },
+    });
+
+    const result = await executeGetContainer({ id: 'container-fees' }, client);
+
+    expect(result.demurrage.fees_at_pod_terminal).toEqual([
+      { type: 'demurrage', amount: 240, currency_code: 'USD' },
+    ]);
+    expect(result.demurrage.fees_total_amount).toBe(240);
+    expect(result.demurrage.fees_currency_code).toBe('USD');
+    expect(JSON.stringify(result.demurrage)).not.toMatch(/\/day/);
+    expect(JSON.stringify(result)).not.toMatch(/75-150/);
+  });
+
+  it('get_container suppresses demurrage urgency when terminal data is stale', async () => {
+    const rawContainer = buildContainerRaw('container-stale');
+    (rawContainer.data.attributes as any).pickup_lfd = '2020-01-01';
+    (rawContainer.data.attributes as any).terminal_checked_at =
+      '2019-01-01T00:00:00Z';
+
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({
+          raw: rawContainer,
+          mapped: { id: 'container-stale' },
+        }),
+      },
+    });
+
+    const result = await executeGetContainer({ id: 'container-stale' }, client);
+
+    expect(result.demurrage.urgency).toBe('unknown');
+    expect(result.demurrage.urgency_suppressed).toBe(true);
+  });
+
+  it('get_container suppresses demurrage urgency when the sideloaded shipment has tracking stopped', async () => {
+    const rawContainer = buildContainerRaw('container-tracking-stopped');
+    // Fresh terminal data + a near-future LFD would normally yield an active
+    // urgency; only the shipment-level tracking-stopped flag should suppress it.
+    (rawContainer.data.attributes as any).terminal_checked_at =
+      new Date().toISOString();
+    (rawContainer.data.attributes as any).pickup_lfd = new Date(
+      Date.now() + 2 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const shipmentInclude = rawContainer.included.find(
+      (item: any) => item.type === 'shipment',
+    ) as any;
+    shipmentInclude.attributes.line_tracking_stopped_at =
+      '2026-01-01T00:00:00Z';
+    shipmentInclude.attributes.line_tracking_stopped_reason =
+      'all_containers_terminated';
+
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({
+          raw: rawContainer,
+          mapped: { id: 'container-tracking-stopped' },
+        }),
+      },
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-tracking-stopped' },
+      client,
+    );
+
+    expect(result.demurrage.urgency).toBe('unknown');
+    expect(result.demurrage.urgency_suppressed).toBe(true);
+    expect(result.demurrage.urgency_reason).toContain('tracking is stopped');
+  });
+
+  it('get_container does NOT suppress urgency when the shipment has no tracking-stopped flag', async () => {
+    const rawContainer = buildContainerRaw('container-tracking-active');
+    // Same fresh-data + near-future-LFD setup, but the shipment carries no
+    // line_tracking_stopped_* — urgency must remain active (not suppressed).
+    (rawContainer.data.attributes as any).terminal_checked_at =
+      new Date().toISOString();
+    (rawContainer.data.attributes as any).pickup_lfd = new Date(
+      Date.now() + 2 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({
+          raw: rawContainer,
+          mapped: { id: 'container-tracking-active' },
+        }),
+      },
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-tracking-active' },
+      client,
+    );
+
+    expect(result.demurrage.urgency_suppressed).toBe(false);
+    expect(result.demurrage.urgency).toBe('imminent');
+  });
+
+  it('get_container does not crash when the shipment is not sideloaded (tracking treated as active)', async () => {
+    const rawContainer = buildContainerRaw('container-no-shipment');
+    (rawContainer.data.attributes as any).terminal_checked_at =
+      new Date().toISOString();
+    (rawContainer.data.attributes as any).pickup_lfd = new Date(
+      Date.now() + 2 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    // Drop the sideloaded shipment entirely.
+    rawContainer.included = rawContainer.included.filter(
+      (item: any) => item.type !== 'shipment',
+    );
+
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({
+          raw: rawContainer,
+          mapped: { id: 'container-no-shipment' },
+        }),
+      },
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-no-shipment' },
+      client,
+    );
+
+    expect(result.shipment).toBeNull();
+    expect(result.demurrage.urgency_suppressed).toBe(false);
+    expect(result.demurrage.urgency).toBe('imminent');
+  });
+
+  it('get_container surfaces pod_timezone and per-channel LFDs and drops phantom updated_at', async () => {
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({
+          raw: buildContainerRaw('container-tz'),
+          mapped: { id: 'container-tz' },
+        }),
+      },
+    });
+
+    const result = await executeGetContainer({ id: 'container-tz' }, client);
+
+    expect(result.location.pod_timezone).toBe('America/Los_Angeles');
+    expect(result.demurrage.last_free_days).toEqual({
+      terminal: '2099-01-10T00:00:00Z',
+      rail: null,
+      line: '2099-01-12T00:00:00Z',
+    });
+    expect(result.equipment.length).toBe(40);
+    expect((result as any).updated_at).toBeUndefined();
+    expect((result as any)._mapped).toBeUndefined();
   });
 
   it('get_shipment_details returns shipment summary and container list', async () => {
-    const shipmentsGet = vi
-      .fn()
-      .mockResolvedValue({ raw: buildShipmentRaw(), mapped: { id: 'shipment-1' } });
+    const shipmentsGet = vi.fn().mockResolvedValue({
+      raw: buildShipmentRaw(),
+      mapped: { id: 'shipment-1' },
+    });
     const client = asClient({ shipments: { get: shipmentsGet } });
 
     const result = await executeGetShipmentDetails(
@@ -355,8 +606,9 @@ describe('MCP tool contracts', () => {
       client,
     );
 
+    // Curated summary only: no _mapped bloat, so we request raw (not both).
     expect(shipmentsGet).toHaveBeenCalledWith('shipment-1', true, {
-      format: 'both',
+      format: 'raw',
     });
     expect(result).toMatchObject({
       id: 'shipment-1',
@@ -364,6 +616,7 @@ describe('MCP tool contracts', () => {
       shipping_line: { scac: 'MAEU', name: 'Maersk' },
       containers: { count: 1 },
     });
+    expect(result._mapped).toBeUndefined();
   });
 
   it('get_container_transport_events returns timeline and milestone summary', async () => {
@@ -536,33 +789,46 @@ describe('MCP tool contracts', () => {
       shippingLines: { list: shippingList },
     });
 
-    const result = await executeSupportedShippingLines({ search: 'mae' }, client);
+    const result = await executeSupportedShippingLines(
+      { search: 'mae' },
+      client,
+    );
 
     expect(shippingList).toHaveBeenCalledWith(undefined, { format: 'mapped' });
     expect(result.total_lines).toBe(1);
-    expect(result.shipping_lines[0]).toMatchObject({ scac: 'MAEU', name: 'Maersk' });
+    expect(result.shipping_lines[0]).toMatchObject({
+      scac: 'MAEU',
+      name: 'Maersk',
+    });
   });
 
   it('get_supported_shipping_lines fails when shipping_lines API call fails', async () => {
-    const shippingList = vi.fn().mockRejectedValue(new Error('downstream failure'));
+    const shippingList = vi
+      .fn()
+      .mockRejectedValue(new Error('downstream failure'));
 
     const client = asClient({
       shippingLines: { list: shippingList },
     });
 
-    await expect(executeSupportedShippingLines({ search: 'mae' }, client)).rejects.toThrow('downstream failure');
+    await expect(
+      executeSupportedShippingLines({ search: 'mae' }, client),
+    ).rejects.toThrow('downstream failure');
   });
 
   it('get_supported_shipping_lines does not reuse module cache across different clients', async () => {
     vi.resetModules();
-    const { executeGetSupportedShippingLines } = await import('./get-supported-shipping-lines.js');
+    const { executeGetSupportedShippingLines } =
+      await import('./get-supported-shipping-lines.js');
 
-    const listForClientA = vi.fn().mockResolvedValue([
-      { scac: 'MSCU', name: 'MSC', shortName: 'MSC' },
-    ]);
-    const listForClientB = vi.fn().mockResolvedValue([
-      { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
-    ]);
+    const listForClientA = vi
+      .fn()
+      .mockResolvedValue([{ scac: 'MSCU', name: 'MSC', shortName: 'MSC' }]);
+    const listForClientB = vi
+      .fn()
+      .mockResolvedValue([
+        { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
+      ]);
 
     const clientA = asClient({ shippingLines: { list: listForClientA } });
     const clientB = asClient({ shippingLines: { list: listForClientB } });
@@ -621,7 +887,10 @@ describe('MCP tool contracts', () => {
       },
     });
 
-    const result = await executeGetContainerRoute({ id: 'container-1' }, client);
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
 
     expect(result.route_id).toBe('route-1');
     expect(result.total_legs).toBe(1);
@@ -631,11 +900,16 @@ describe('MCP tool contracts', () => {
   it('get_container_route returns feature-not-enabled contract instead of throwing', async () => {
     const client = asClient({
       containers: {
-        route: vi.fn().mockRejectedValue(new FeatureNotEnabledError('feature not enabled')),
+        route: vi
+          .fn()
+          .mockRejectedValue(new FeatureNotEnabledError('feature not enabled')),
       },
     });
 
-    const result = await executeGetContainerRoute({ id: 'container-1' }, client);
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
 
     expect(result).toMatchObject({
       error: 'FeatureNotEnabled',
