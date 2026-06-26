@@ -67,6 +67,74 @@ describe('Terminal49Client transport resilience', () => {
     }
   });
 
+  it('normalizes a network error thrown by a response-triggered retry', async () => {
+    // First response is a retryable 5xx; the retry fetch then throws a raw
+    // network error. openapi-fetch does not route an onResponse throw back
+    // through onError, so without normalization the caller would see a bare
+    // TypeError instead of a Terminal49Error.
+    vi.useFakeTimers();
+    try {
+      let attempt = 0;
+      const fetchImpl = vi.fn(async () => {
+        attempt += 1;
+        if (attempt === 1) {
+          return jsonResponse({ errors: [{ detail: 'server error' }] }, 503);
+        }
+        throw new TypeError('fetch failed');
+      });
+
+      const client = new Terminal49Client({
+        apiToken: 'token-123',
+        apiBaseUrl: baseUrl,
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+        maxRetries: 1,
+      });
+
+      const resultPromise = client.getContainerRoute('abc');
+      const assertion =
+        expect(resultPromise).rejects.toBeInstanceOf(Terminal49Error);
+      await vi.advanceTimersByTimeAsync(500);
+      await assertion;
+      expect(attempt).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('still retries a 5xx after recovering from an initial network error', async () => {
+    // A transient sequence of network failure -> 500 -> success must succeed:
+    // recovering from the thrown error in onError must not discard the replay
+    // state that onResponse needs to retry the subsequent 500.
+    vi.useFakeTimers();
+    try {
+      let attempt = 0;
+      const fetchImpl = vi.fn(async () => {
+        attempt += 1;
+        if (attempt === 1) throw new TypeError('fetch failed');
+        if (attempt === 2) {
+          return jsonResponse({ errors: [{ detail: 'server error' }] }, 500);
+        }
+        return jsonResponse({ data: { id: 'route-1' } });
+      });
+
+      const client = new Terminal49Client({
+        apiToken: 'token-123',
+        apiBaseUrl: baseUrl,
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+        maxRetries: 2,
+      });
+
+      const resultPromise = client.getContainerRoute('abc');
+      await vi.advanceTimersByTimeAsync(2000);
+      const result = await resultPromise;
+
+      expect(result.data.id).toBe('route-1');
+      expect(attempt).toBe(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('waits for the Retry-After header before retrying a 429', async () => {
     vi.useFakeTimers();
     try {
@@ -187,10 +255,11 @@ describe('Terminal49Client transport resilience', () => {
     });
 
     const items = [];
-    for await (const shipment of client.shipments.iterate({}, {
-      pageSize: 1,
-      maxPages: 3,
-    } as { pageSize?: number; maxPages?: number })) {
+    // `maxPages` is type-reachable via ListOptions, so no cast is needed.
+    for await (const shipment of client.shipments.iterate(
+      {},
+      { pageSize: 1, maxPages: 3 },
+    )) {
       items.push(shipment);
     }
 
