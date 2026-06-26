@@ -58,7 +58,7 @@ description: "ShipmentManager class in the Terminal49 TypeScript SDK, used to li
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\>; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} \| `undefined` |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\>; `includeContainers?`: `boolean`; `number?`: `string`; `port?`: `string`; `status?`: `string`; `trackingStopped?`: `boolean`; `updatedAfter?`: `string`; \} \| `undefined` |
 | `options?` | `Omit`\<[`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
 
 #### Returns
@@ -73,16 +73,18 @@ description: "ShipmentManager class in the Terminal49 TypeScript SDK, used to li
 
 #### Parameters
 
-| Parameter | Type |
-| ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\>; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
-| `filters.carrier?` | `string` |
-| `filters.include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\> |
-| `filters.includeContainers?` | `boolean` |
-| `filters.port?` | `string` |
-| `filters.status?` | `string` |
-| `filters.updatedAfter?` | `string` |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\>; `includeContainers?`: `boolean`; `number?`: `string`; `port?`: `string`; `status?`: `string`; `trackingStopped?`: `boolean`; `updatedAfter?`: `string`; \} | - |
+| `filters.carrier?` | `string` | - |
+| `filters.include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\> | - |
+| `filters.includeContainers?` | `boolean` | - |
+| `filters.number?` | `string` | Search shipments by the original tracking `request_number`. |
+| `filters.port?` | `string` | - |
+| `filters.status?` | `string` | - |
+| `filters.trackingStopped?` | `boolean` | Filter shipments by whether they are still tracking. Maps to the supported `filter[tracking_stopped]`. |
+| `filters.updatedAfter?` | `string` | - |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) | - |
 
 #### Returns
 

@@ -1,41 +1,22 @@
 /**
  * get_shipment_details tool
- * Retrieves detailed shipment information by Terminal49 shipment ID
+ * Retrieves detailed shipment information by Terminal49 shipment ID.
+ *
+ * The Zod input schema lives in server.ts (single source of truth); this file
+ * only owns the execution + curation logic.
  */
 
 import { Terminal49Client } from '@terminal49/sdk';
+import { dayDeltaInZone } from '../lib/temporal.js';
 
 export interface GetShipmentArgs {
   id: string;
   include_containers?: boolean;
 }
 
-export const getShipmentDetailsTool = {
-  name: 'get_shipment_details',
-  description:
-    'Get detailed shipment information including routing, BOL, containers, and port details. ' +
-    'Use this when user asks about a shipment (vs a specific container). ' +
-    'Returns: Bill of Lading, shipping line, port details, vessel info, ETAs, container list.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      id: {
-        type: 'string',
-        description: 'The Terminal49 shipment ID (UUID format)',
-      },
-      include_containers: {
-        type: 'boolean',
-        description: 'Include list of containers in this shipment. Default: true',
-        default: true,
-      },
-    },
-    required: ['id'],
-  },
-};
-
 export async function executeGetShipmentDetails(
   args: GetShipmentArgs,
-  client: Terminal49Client
+  client: Terminal49Client,
 ): Promise<any> {
   if (!args.id || args.id.trim() === '') {
     throw new Error('Shipment ID is required');
@@ -48,14 +29,15 @@ export async function executeGetShipmentDetails(
       tool: 'get_shipment_details',
       shipment_id: args.id,
       timestamp: new Date().toISOString(),
-    })
+    }),
   );
 
   try {
     const includeContainers = args.include_containers !== false;
-    const result = await client.shipments.get(args.id, includeContainers, { format: 'both' });
+    const result = await client.shipments.get(args.id, includeContainers, {
+      format: 'raw',
+    });
     const raw = (result as any)?.raw ?? result;
-    const mapped = (result as any)?.mapped;
     const duration = Date.now() - startTime;
 
     console.error(
@@ -65,11 +47,10 @@ export async function executeGetShipmentDetails(
         shipment_id: args.id,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
 
-    const summary = formatShipmentResponse(raw, includeContainers);
-    return { ...summary, _mapped: mapped } as any;
+    return formatShipmentResponse(raw, includeContainers);
   } catch (error) {
     const duration = Date.now() - startTime;
 
@@ -82,14 +63,17 @@ export async function executeGetShipmentDetails(
         message: (error as Error).message,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
 
     throw error;
   }
 }
 
-function formatShipmentResponse(apiResponse: any, includeContainers: boolean): any {
+function formatShipmentResponse(
+  apiResponse: any,
+  includeContainers: boolean,
+): any {
   const shipment = apiResponse.data?.attributes || {};
   const relationships = apiResponse.data?.relationships || {};
   const included = apiResponse.included || [];
@@ -105,22 +89,26 @@ function formatShipmentResponse(apiResponse: any, includeContainers: boolean): a
   // Extract port/terminal info
   const portOfLading = included.find(
     (item: any) =>
-      item.id === relationships.port_of_lading?.data?.id && item.type === 'port'
+      item.id === relationships.port_of_lading?.data?.id &&
+      item.type === 'port',
   );
 
   const portOfDischarge = included.find(
     (item: any) =>
-      item.id === relationships.port_of_discharge?.data?.id && item.type === 'port'
+      item.id === relationships.port_of_discharge?.data?.id &&
+      item.type === 'port',
   );
 
   const podTerminal = included.find(
     (item: any) =>
-      item.id === relationships.pod_terminal?.data?.id && item.type === 'terminal'
+      item.id === relationships.pod_terminal?.data?.id &&
+      item.type === 'terminal',
   );
 
   const destinationTerminal = included.find(
     (item: any) =>
-      item.id === relationships.destination_terminal?.data?.id && item.type === 'terminal'
+      item.id === relationships.destination_terminal?.data?.id &&
+      item.type === 'terminal',
   );
 
   // Note: shipping_line is available directly from shipment attributes
@@ -140,25 +128,33 @@ function formatShipmentResponse(apiResponse: any, includeContainers: boolean): a
     tags: shipment.tags || [],
     routing: {
       port_of_lading: {
-        locode: shipment.port_of_lading_locode || portOfLading?.attributes?.locode,
+        locode:
+          shipment.port_of_lading_locode || portOfLading?.attributes?.locode,
         name: shipment.port_of_lading_name || portOfLading?.attributes?.name,
-        port_details: portOfLading ? {
-          id: portOfLading.id,
-          code: portOfLading.attributes?.code,
-          country_code: portOfLading.attributes?.country_code,
-        } : null,
+        port_details: portOfLading
+          ? {
+              id: portOfLading.id,
+              code: portOfLading.attributes?.code,
+              country_code: portOfLading.attributes?.country_code,
+            }
+          : null,
         etd: shipment.pol_etd_at,
         atd: shipment.pol_atd_at,
         timezone: shipment.pol_timezone,
       },
       port_of_discharge: {
-        locode: shipment.port_of_discharge_locode || portOfDischarge?.attributes?.locode,
-        name: shipment.port_of_discharge_name || portOfDischarge?.attributes?.name,
-        port_details: portOfDischarge ? {
-          id: portOfDischarge.id,
-          code: portOfDischarge.attributes?.code,
-          country_code: portOfDischarge.attributes?.country_code,
-        } : null,
+        locode:
+          shipment.port_of_discharge_locode ||
+          portOfDischarge?.attributes?.locode,
+        name:
+          shipment.port_of_discharge_name || portOfDischarge?.attributes?.name,
+        port_details: portOfDischarge
+          ? {
+              id: portOfDischarge.id,
+              code: portOfDischarge.attributes?.code,
+              country_code: portOfDischarge.attributes?.country_code,
+            }
+          : null,
         terminal: podTerminal
           ? {
               id: podTerminal.id,
@@ -176,12 +172,14 @@ function formatShipmentResponse(apiResponse: any, includeContainers: boolean): a
         ? {
             locode: shipment.destination_locode,
             name: shipment.destination_name,
-            terminal: destinationTerminal ? {
-              id: destinationTerminal.id,
-              name: destinationTerminal.attributes?.name,
-              nickname: destinationTerminal.attributes?.nickname,
-              firms_code: destinationTerminal.attributes?.firms_code,
-            } : null,
+            terminal: destinationTerminal
+              ? {
+                  id: destinationTerminal.id,
+                  name: destinationTerminal.attributes?.name,
+                  nickname: destinationTerminal.attributes?.nickname,
+                  firms_code: destinationTerminal.attributes?.firms_code,
+                }
+              : null,
             eta: shipment.destination_eta_at,
             ata: shipment.destination_ata_at,
             timezone: shipment.destination_timezone,
@@ -204,7 +202,9 @@ function formatShipmentResponse(apiResponse: any, includeContainers: boolean): a
     created_at: shipment.created_at,
     _metadata: {
       shipment_status: status,
-      includes_loaded: includeContainers ? ['containers', 'ports', 'terminals'] : ['ports', 'terminals'],
+      includes_loaded: includeContainers
+        ? ['containers', 'ports', 'terminals']
+        : ['ports', 'terminals'],
       presentation_guidance: getShipmentPresentationGuidance(status, shipment),
     },
   };
@@ -220,7 +220,7 @@ function extractContainers(relationships: any, included: any[]): any {
   const containers = containerRefs
     .map((ref: any) => {
       const container = included.find(
-        (item: any) => item.id === ref.id && item.type === 'container'
+        (item: any) => item.id === ref.id && item.type === 'container',
       );
       if (!container) return null;
 
@@ -252,7 +252,10 @@ function determineShipmentStatus(shipment: any): string {
   return 'pending';
 }
 
-function getShipmentPresentationGuidance(status: string, shipment: any): string {
+function getShipmentPresentationGuidance(
+  status: string,
+  shipment: any,
+): string {
   switch (status) {
     case 'pending':
       return 'Shipment is being prepared. Focus on expected departure date and origin details.';
@@ -261,11 +264,15 @@ function getShipmentPresentationGuidance(status: string, shipment: any): string 
       return 'Vessel has not yet departed. Emphasize ETD and vessel details.';
 
     case 'in_transit': {
-      const eta = shipment.pod_eta_at ? new Date(shipment.pod_eta_at) : null;
-      const now = new Date();
-      if (eta) {
-        const daysToArrival = Math.ceil((eta.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        return `Shipment is in transit. ETA in ${daysToArrival} days. Focus on vessel name, route, and arrival timing.`;
+      // Compute the day delta in the destination terminal's local time so the
+      // "ETA in N days" count never lands on the wrong calendar day (the classic
+      // UTC off-by-one near midnight).
+      const daysToArrival = dayDeltaInZone(
+        shipment.pod_eta_at,
+        shipment.pod_timezone,
+      );
+      if (daysToArrival !== null) {
+        return `Shipment is in transit. ETA in ${daysToArrival} days (destination-local). Focus on vessel name, route, and arrival timing.`;
       }
       return 'Shipment is in transit. Focus on vessel and expected arrival.';
     }

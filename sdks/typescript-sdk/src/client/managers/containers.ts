@@ -6,8 +6,18 @@ import type {
   ListOptions,
 } from '../../types/options.js';
 import { mapContainerList, mapRoute, mapTransportEvents } from '../mappers.js';
-import { normalizeInclude, normalizeIncludeWithDefault } from '../query.js';
+import {
+  applyTypedPagination,
+  buildContainerListQuery,
+  normalizeInclude,
+} from '../query.js';
 import { BaseManager } from './base.js';
+
+const DEFAULT_CONTAINER_INCLUDES = [
+  'shipment',
+  'pod_terminal',
+  'pickup_facility',
+] as const satisfies readonly ContainerInclude[];
 
 export class ContainerManager extends BaseManager {
   async get(
@@ -41,29 +51,21 @@ export class ContainerManager extends BaseManager {
     } = {},
     options?: ListOptions,
   ): Promise<any> {
-    const includeParam = normalizeIncludeWithDefault(filters.include, [
-      'shipment',
-      'pod_terminal',
-      'pickup_facility',
-    ]);
-    const params: Record<string, string> = {};
-    if (includeParam) params.include = includeParam;
-    if (filters.status) params['filter[status]'] = filters.status;
-    if (filters.port) params['filter[pod_locode]'] = filters.port;
-    if (filters.carrier) params['filter[line_scac]'] = filters.carrier;
-    if (filters.updatedAfter)
-      params['filter[updated_at]'] = filters.updatedAfter;
-
-    this.applyPagination(params, options);
+    const { query, unsupportedFilters } = buildContainerListQuery(
+      filters,
+      DEFAULT_CONTAINER_INCLUDES,
+    );
+    applyTypedPagination(query, options);
 
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/containers', {
-        params: { query: params as any },
+        params: { query },
       }),
     );
-    return this.formatResult(raw, options?.format, (doc) =>
-      this.mapListResult(doc, mapContainerList),
-    );
+    return this.formatResult(raw, options?.format, (doc) => ({
+      ...this.mapListResult(doc, mapContainerList),
+      unsupportedFilters,
+    }));
   }
 
   iterate(

@@ -6,7 +6,11 @@ import type {
   ShipmentInclude,
 } from '../../types/options.js';
 import { mapShipment, mapShipmentList } from '../mappers.js';
-import { normalizeInclude, normalizeIncludeWithDefault } from '../query.js';
+import {
+  applyTypedPagination,
+  buildShipmentListQuery,
+  normalizeIncludeWithDefault,
+} from '../query.js';
 import { BaseManager } from './base.js';
 
 const DEFAULT_SHIPMENT_INCLUDES = [
@@ -56,36 +60,34 @@ export class ShipmentManager extends BaseManager {
       port?: string;
       carrier?: string;
       updatedAfter?: string;
+      /** Filter shipments by whether they are still tracking. Maps to the supported `filter[tracking_stopped]`. */
+      trackingStopped?: boolean;
+      /** Search shipments by the original tracking `request_number`. */
+      number?: string;
       includeContainers?: boolean;
       include?: IncludeParam<ShipmentInclude>;
     } = {},
     options?: ListOptions,
   ): Promise<any> {
-    const params: Record<string, string> = {};
-    const includesStr = normalizeInclude(
-      filters.include ??
-        (filters.includeContainers === false
-          ? SHIPMENT_INCLUDES_WITHOUT_CONTAINERS
-          : DEFAULT_SHIPMENT_INCLUDES),
+    const defaultInclude =
+      filters.includeContainers === false
+        ? SHIPMENT_INCLUDES_WITHOUT_CONTAINERS
+        : DEFAULT_SHIPMENT_INCLUDES;
+    const { query, unsupportedFilters } = buildShipmentListQuery(
+      filters,
+      defaultInclude,
     );
-    if (includesStr) params.include = includesStr;
-
-    if (filters.status) params['filter[status]'] = filters.status;
-    if (filters.port) params['filter[pod_locode]'] = filters.port;
-    if (filters.carrier) params['filter[line_scac]'] = filters.carrier;
-    if (filters.updatedAfter)
-      params['filter[updated_at]'] = filters.updatedAfter;
-
-    this.applyPagination(params, options);
+    applyTypedPagination(query, options);
 
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/shipments', {
-        params: { query: params as any },
+        params: { query },
       }),
     );
-    return this.formatResult(raw, options?.format, (doc) =>
-      this.mapListResult(doc, mapShipmentList),
-    );
+    return this.formatResult(raw, options?.format, (doc) => ({
+      ...this.mapListResult(doc, mapShipmentList),
+      unsupportedFilters,
+    }));
   }
 
   iterate(

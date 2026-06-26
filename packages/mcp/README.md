@@ -23,24 +23,39 @@
 | **`track_container`** | Create tracking request and get container data | SCAC autocomplete ✨ |
 | **`get_container`** | Get detailed container info with flexible data loading | Progressive loading |
 | **`get_shipment_details`** | Get shipment routing, BOL, containers, ports | Full shipment context |
-| **`get_container_transport_events`** | Get event timeline with ResourceLinks | 50-70% context reduction ✨ |
+| **`get_container_transport_events`** | Get full event timeline for a container | Milestone history |
 | **`get_supported_shipping_lines`** | List 40+ major carriers with SCAC codes | Filterable by name/code |
 | **`get_container_route`** | Get multi-leg routing with vessels and ETAs | Premium feature |
 | **`list_shipments`** | List shipments with filters and pagination | Fleet-level visibility |
-| **`list_containers`** | List containers with filters and pagination | Operational snapshots |
+| **`list_containers`** | List containers with filters and pagination | Returns ResourceLinks ✨ |
 | **`list_tracking_requests`** | List tracking requests and statuses | Audit and monitoring |
 
 ### 🎯 Prompts (3 Workflows)
 
 | Prompt | Description | Use Case |
 |--------|-------------|----------|
-| **`track-shipment`** | Track container with optional carrier | Quick tracking start |
+| **`track-shipment`** | Track container with optional carrier | Quick tracking start (SCAC autocomplete ✨) |
 | **`check-demurrage`** | Analyze demurrage/detention risk | LFD calculations |
 | **`analyze-delays`** | Identify delays and root causes | Timeline analysis |
 
+The `track-shipment` prompt's `carrier` argument supports **MCP completions** (`completion/complete`): suggestions are sourced live from `get_supported_shipping_lines`, filtered by what the user has typed, and returned as SCAC codes.
+
 ### 📚 Resources
 - ✅ **`terminal49://docs/milestone-glossary`** - Complete milestone reference guide
-- ✅ **`terminal49://container/{id}`** - Dynamic container data access
+- ✅ **`terminal49://docs/mcp-query-guidance`** - Internal tool-routing hints
+- ✅ **`terminal49://container/{id}`** - Dynamic container data access (also the target of `list_containers` ResourceLinks)
+
+### 🧭 Server Instructions
+
+The server advertises MCP `instructions` (a server-level operating guide) at initialize time: it explains the ocean container/shipment tracking domain, key vocabulary (SCAC, BOL/booking, POL/POD, LFD, demurrage, holds), the read tools vs the single write tool (`track_container`), and the canonical tool-chaining order.
+
+### 🔗 ResourceLinks (context reduction)
+
+`list_containers` returns MCP `resource_link` content blocks — one per container row — that point at the registered `terminal49://container/{id}` resource. Clients can render the compact list and resolve full per-container detail on demand via `resources/read`, instead of paying for every container's full payload up front.
+
+### 🙈 Content Audience Annotations
+
+Tool results separate the human-readable answer from agent-steering metadata. The steering block (presentation guidance + suggested follow-up tools, derived from the `_response_contract`) is tagged with `annotations: { audience: ['assistant'] }` so spec-aware clients can hide it from end users, while the answer block stays user-visible.
 
 ### ✨ Current Features (v1.0.0 - Phase 1 & 2.1 Complete)
 
@@ -65,9 +80,15 @@
 - `check-demurrage`: Demurrage/detention risk analysis
 - `analyze-delays`: Journey delay identification and root cause
 
-#### 🚧 Coming Soon (Phase 2.2)
-- **SCAC code completions**: Autocomplete carrier codes as you type
-- **Resource Links**: Return event summaries + links for large datasets
+#### ✅ MCP Spec Adherence
+- **Server instructions**: server-level operating guide advertised at initialize
+- **SCAC code completions**: `completion/complete` on the `track-shipment` prompt's `carrier` arg, sourced from `get_supported_shipping_lines`
+- **ResourceLinks**: `list_containers` rows link to the `terminal49://container/{id}` resource
+- **Content audience annotations**: steering metadata tagged `audience: ['assistant']`
+
+#### 🚧 Deferred (future RFC — needs a stateful transport)
+- Resource subscriptions, progress notifications, server logging, elicitation, and sampling all require a stateful (non-stateless-HTTP) transport and are out of scope here.
+- Shipment ResourceLinks await a dedicated `terminal49://shipment/{id}` resource template (only the container template is currently registered).
 
 ---
 
