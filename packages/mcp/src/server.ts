@@ -673,7 +673,7 @@ export function createTerminal49McpServer(
         'Track a container, bill of lading, or booking number. ' +
         'Uses inference to choose the carrier/type when possible, creates a tracking request, ' +
         'and returns detailed container information.',
-      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
       inputSchema: {
         number: z.string().optional().describe('Container, bill of lading, or booking number to track'),
         numberType: z
