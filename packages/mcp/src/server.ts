@@ -4,6 +4,7 @@
  */
 
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { completable } from '@modelcontextprotocol/sdk/server/completable.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
@@ -22,7 +23,58 @@ import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js
 import { queryGuidanceResource, readQueryGuidanceResource } from './resources/query-guidance.js';
 import { captureMcpException, flushMcpEvents, instrumentMcpServer } from './sentry.js';
 
-type ToolContent = { type: 'text'; text: string };
+/**
+ * MCP content-block annotations (per spec). `audience` lets a client decide who
+ * a block is for: end "user", the "assistant" (model), or both. We tag
+ * agent-steering payload (the response contract / metadata that exists only to
+ * guide the model) as assistant-only so clients can hide it from end users,
+ * while the human-readable answer stays unannotated (visible to everyone).
+ */
+type ContentAnnotations = {
+  audience?: Array<'user' | 'assistant'>;
+  priority?: number;
+};
+
+type TextContent = {
+  type: 'text';
+  text: string;
+  annotations?: ContentAnnotations;
+};
+
+type ResourceLinkContent = {
+  type: 'resource_link';
+  uri: string;
+  name: string;
+  description?: string;
+  mimeType?: string;
+  annotations?: ContentAnnotations;
+};
+
+type ToolContent = TextContent | ResourceLinkContent;
+
+/**
+ * Annotation marking a content block as steering-only (assistant/model
+ * audience). Clients that respect audience annotations can hide these blocks
+ * from end users, since they carry tool-routing hints rather than answers.
+ */
+const ASSISTANT_ONLY_ANNOTATION: ContentAnnotations = {
+  audience: ['assistant'],
+};
+
+/**
+ * Server-level instructions (MCP `ServerOptions.instructions`). This is a
+ * concise operating guide handed to the LLM at initialize time so it
+ * understands the ocean-tracking domain and how to chain the tools.
+ */
+export const TERMINAL49_SERVER_INSTRUCTIONS = `Terminal49 tracks ocean containers and shipments live from carriers and terminals. Data is real-time from ocean carriers (by SCAC, e.g. MAEU = Maersk) and US/Canada terminals, so values change between calls.
+
+Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered).
+
+Tools are read-only EXCEPT track_container, the single write tool: it creates a tracking request to begin monitoring a number. Everything else only reads.
+
+Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.
+
+Tool results carry a _response_contract with presentation and follow-up hints; treat it as steering for you, not content to show the user.`;
 
 type ResponseDisplayColumn = {
   key: string;
@@ -580,19 +632,107 @@ export function buildListContract(
   };
 }
 
+/**
+ * Builds an assistant-only steering content block from a response contract.
+ *
+ * This surfaces the agent-steering hints (presentation guidance, suggested
+ * follow-up tools) as a discrete content block annotated `audience:
+ * ['assistant']`, so spec-aware clients can hide it from end users while still
+ * delivering it to the model. The user-facing answer block (built by
+ * buildContentPayload) is left unannotated and remains visible to everyone.
+ */
+function buildSteeringContent(contract: ResponseContract): TextContent {
+  const steering = {
+    _agent_steering: true,
+    purpose: contract.purpose,
+    presentation_guidance: contract.presentation_guidance,
+    suggested_follow_ups: contract.suggested_follow_ups,
+    suggested_tools: contract.suggested_tools,
+  };
+  return {
+    type: 'text',
+    text: formatAsText(steering),
+    annotations: ASSISTANT_ONLY_ANNOTATION,
+  };
+}
+
+/**
+ * The container resource template registered below. Resource-link content
+ * blocks reference these URIs so large list payloads can be replaced by compact
+ * links the client can resolve on demand (resources/read), reducing context.
+ */
+const CONTAINER_RESOURCE_URI_PREFIX = 'terminal49://container/';
+
+function buildContainerResourceLink(
+  item: Record<string, unknown>,
+): ResourceLinkContent | undefined {
+  const id = typeof item.id === 'string' ? item.id : undefined;
+  if (!id) {
+    return undefined;
+  }
+  const number = typeof item.number === 'string' ? item.number : undefined;
+  return {
+    type: 'resource_link',
+    uri: `${CONTAINER_RESOURCE_URI_PREFIX}${id}`,
+    name: number ? `Container ${number}` : `Container ${id}`,
+    description:
+      'Compact container summary (status, milestones, holds, LFD) resolvable via resources/read.',
+    mimeType: 'text/markdown',
+    annotations: { audience: ['user', 'assistant'] },
+  };
+}
+
+/**
+ * Builds resource_link blocks for a list result, pointing each row at its
+ * registered resource URI. Currently scoped to the container resource template,
+ * which is the registered, resolvable surface (see DEFERRED note in PR/README
+ * for shipment links, which need a shipment resource template first).
+ */
+function buildListResourceLinks(
+  result: unknown,
+  entityType: ListEntityType,
+): ResourceLinkContent[] {
+  if (entityType !== 'container') {
+    return [];
+  }
+  const items = Array.isArray((result as any)?.items) ? (result as any).items : [];
+  const links: ResourceLinkContent[] = [];
+  for (const item of items) {
+    const link = buildContainerResourceLink(asRecord(item));
+    if (link) {
+      links.push(link);
+    }
+  }
+  return links;
+}
+
 function wrapToolWithContract<TArgs>(
   handler: (args: TArgs) => Promise<unknown>,
   buildContract?: (result: unknown, args: TArgs) => ResponseContract,
+  buildResourceLinks?: (result: unknown, args: TArgs) => ResourceLinkContent[],
 ): (args: TArgs) => Promise<{ content: ToolContent[]; structuredContent?: any; isError?: boolean }> {
   return async (args: TArgs) => {
     try {
       const result = await handler(args);
-      const structuredContent = buildContract
-        ? attachResponseContract(result, buildContract(result, args))
+      const contract = buildContract ? buildContract(result, args) : undefined;
+      const structuredContent = contract
+        ? attachResponseContract(result, contract)
         : result;
 
+      const content: ToolContent[] = buildContentPayload(result);
+
+      if (buildResourceLinks) {
+        content.push(...buildResourceLinks(result, args));
+      }
+
+      // Steering metadata is appended as an assistant-only block so clients can
+      // hide it from end users; the answer block above stays user-visible.
+      if (contract) {
+        content.push(buildSteeringContent(contract));
+      }
+
       return {
-        content: buildContentPayload(result),
+        content,
         structuredContent,
       };
     } catch (error) {
@@ -607,6 +747,30 @@ function wrapToolWithContract<TArgs>(
   };
 }
 
+/**
+ * Builds a completion callback for a carrier/SCAC prompt argument. It reuses
+ * the live get_supported_shipping_lines data, filters by the partial value the
+ * user has typed (matching SCAC, name, or short name), and returns SCAC codes
+ * as completion candidates (most clients send the SCAC to track_container).
+ *
+ * The MCP completion spec caps suggestions at 100; we trim to a usable slice.
+ * Any error (e.g. live API hiccup) degrades gracefully to no suggestions rather
+ * than failing the completion request.
+ */
+function createCarrierScacCompleter(
+  client: Terminal49Client,
+): (value: string | undefined) => Promise<string[]> {
+  return async (value: string | undefined): Promise<string[]> => {
+    try {
+      const search = typeof value === 'string' ? value.trim() : '';
+      const { shipping_lines } = await executeGetSupportedShippingLines({ search }, client);
+      return shipping_lines.slice(0, 100).map((line) => line.scac);
+    } catch {
+      return [];
+    }
+  };
+}
+
 export function createTerminal49McpServer(
   apiToken: string,
   apiBaseUrl?: string,
@@ -614,11 +778,18 @@ export function createTerminal49McpServer(
 ): McpServer {
   const client = new Terminal49Client({ apiToken, apiBaseUrl, accountId, defaultFormat: "mapped" });
 
+  const completeCarrierScac = createCarrierScacCompleter(client);
+
   const server = instrumentMcpServer(
-    new McpServer({
-      name: 'terminal49-mcp',
-      version: '1.0.0',
-    }),
+    new McpServer(
+      {
+        name: 'terminal49-mcp',
+        version: '1.0.0',
+      },
+      {
+        instructions: TERMINAL49_SERVER_INSTRUCTIONS,
+      },
+    ),
   );
 
   // ==================== TOOLS ====================
@@ -983,6 +1154,10 @@ export function createTerminal49McpServer(
     wrapToolWithContract(
       async (args) => executeListContainers(args, client),
       (result) => buildListContract(result as any, 'container'),
+      // ResourceLinks: each container row becomes a compact link to the
+      // registered terminal49://container/{id} resource, so the client can
+      // resolve full details on demand instead of paying for them up front.
+      (result) => buildListResourceLinks(result, 'container'),
     )
   );
 
@@ -1031,7 +1206,14 @@ export function createTerminal49McpServer(
       description: 'Quick container tracking workflow with carrier autocomplete',
       argsSchema: {
         container_number: z.string().describe('Container number (e.g., CAIU1234567)'),
-        carrier: z.string().optional().describe('Shipping line SCAC code (e.g., MAEU for Maersk)'),
+        // Autocompletes from the live supported-carrier list (SCAC codes).
+        // `completable` must wrap the INNER string so the MCP SDK (which
+        // unwraps ZodOptional before checking isCompletable) advertises the
+        // `completions` capability; `.optional()` is applied AFTER.
+        carrier: completable(
+          z.string().describe('Shipping line SCAC code (e.g., MAEU for Maersk)'),
+          completeCarrierScac,
+        ).optional(),
       },
     },
     async ({ container_number, carrier }) => ({
