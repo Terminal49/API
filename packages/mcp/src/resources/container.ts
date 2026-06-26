@@ -130,10 +130,7 @@ ${podTimezone ? `**Terminal Timezone:** ${podTimezone}` : ''}
 - **LFD (Line):** ${formatInZone(importDeadlines.pickup_lfd_line, podTimezone)}
 - **Pickup Appointment:** ${formatInZone(container.pickup_appointment_at, podTimezone)}
 - **Fees:** ${formatFees(demurrage)}
-- **Holds:** ${formatHolds(container)}
-${demurrage.urgency_suppressed ? `- **LFD Urgency:** Unavailable (${demurrage.suppression_reason})` : ''}
-
-${railSection}`;
+- **Holds:** ${formatHolds(container)}${demurrage.urgency_suppressed ? `\n- **LFD Urgency:** Unavailable (${demurrage.suppression_reason})` : ''}${railSection ? `\n\n${railSection}` : ''}`;
 }
 
 function formatAvailability(container: any): string {

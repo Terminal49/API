@@ -110,6 +110,37 @@ describe('evaluateDemurrageUrgency', () => {
     expect(result.urgency_suppressed).toBe(false);
   });
 
+  it('classifies urgency from the supplied terminal-local day count', () => {
+    // pickup_lfd would round to 4 UTC days (none), but the terminal-local
+    // count is 3 -> urgency must follow the local count and read "imminent".
+    const result = evaluateDemurrageUrgency(
+      {
+        pickup_lfd: '2026-02-13T12:00:00Z',
+        terminal_checked_at: '2026-02-09T00:00:00Z',
+        days_until_lfd: 3,
+      },
+      NOW,
+    );
+
+    expect(result.days_until_lfd).toBe(3);
+    expect(result.urgency).toBe('imminent');
+    expect(result.urgency_suppressed).toBe(false);
+  });
+
+  it('treats an explicit null day count as "no LFD" (urgency unknown)', () => {
+    const result = evaluateDemurrageUrgency(
+      {
+        pickup_lfd: '2026-02-12T00:00:00Z',
+        terminal_checked_at: '2026-02-09T00:00:00Z',
+        days_until_lfd: null,
+      },
+      NOW,
+    );
+
+    expect(result.days_until_lfd).toBeNull();
+    expect(result.urgency).toBe('unknown');
+  });
+
   it('preserves null fees as null rather than coercing to an empty array', () => {
     const result = evaluateDemurrageUrgency(
       {

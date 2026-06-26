@@ -22,7 +22,7 @@ export type DemurrageUrgency = 'overdue' | 'imminent' | 'none' | 'unknown';
 export interface DemurrageEvaluation {
   /** Real terminal fees, preserved as-is (null means "not reported", not "$0"). */
   fees: TerminalFee[] | null;
-  /** Sum of fee amounts when fees are present, otherwise null. */
+  /** Sum of fee amounts when fees carry amounts; null when absent/unknown. */
   total_amount: number | null;
   /** Currency of the fees when consistent/known, otherwise null. */
   currency_code: string | null;
@@ -39,6 +39,14 @@ interface DemurrageAttrs {
   pickup_lfd?: string | null;
   terminal_checked_at?: string | null;
   tracking_stopped?: boolean | null;
+  /**
+   * Whole days until LFD measured in the terminal's local calendar (see
+   * `dayDeltaInZone`). When provided, both `days_until_lfd` and the `urgency`
+   * classification are derived from this single value so the displayed count
+   * and the urgency band can never disagree at a threshold boundary. When
+   * omitted we fall back to a raw UTC millisecond delta from `pickup_lfd`.
+   */
+  days_until_lfd?: number | null;
 }
 
 /** Terminal data older than this is treated as too stale to drive urgency. */
@@ -107,11 +115,19 @@ export function evaluateDemurrageUrgency(
 ): DemurrageEvaluation {
   const { fees, total, currency } = summarizeFees(attrs.fees_at_pod_terminal);
 
-  const lfd = attrs.pickup_lfd ? new Date(attrs.pickup_lfd) : null;
-  const lfdValid = lfd !== null && !Number.isNaN(lfd.getTime());
-  const daysUntilLfd = lfdValid
-    ? Math.round((lfd!.getTime() - now.getTime()) / MS_PER_DAY)
-    : null;
+  // Prefer the caller-supplied terminal-local day count; only fall back to a
+  // raw UTC delta when it is absent, so the urgency band below is classified
+  // from the same number we ultimately display as `days_until_lfd`.
+  let daysUntilLfd: number | null;
+  if (attrs.days_until_lfd !== undefined) {
+    daysUntilLfd = attrs.days_until_lfd;
+  } else {
+    const lfd = attrs.pickup_lfd ? new Date(attrs.pickup_lfd) : null;
+    const lfdValid = lfd !== null && !Number.isNaN(lfd.getTime());
+    daysUntilLfd = lfdValid
+      ? Math.round((lfd!.getTime() - now.getTime()) / MS_PER_DAY)
+      : null;
+  }
 
   // Reasons to distrust the LFD/availability signal entirely.
   if (attrs.tracking_stopped) {

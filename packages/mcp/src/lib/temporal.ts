@@ -9,6 +9,20 @@
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
+/** Matches a bare calendar date with no time component, e.g. "2099-01-10". */
+const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * True for a value that is a calendar date with no time/zone, e.g. a date-only
+ * `pickup_lfd` like "2099-01-10". `new Date("2099-01-10")` parses such a value
+ * as UTC midnight, which then renders/deltas one day early in west-of-UTC
+ * terminal zones. We special-case these so a date-only value is treated as that
+ * literal calendar day in the terminal timezone, with no UTC midnight shift.
+ */
+function isDateOnly(ts: string): boolean {
+  return DATE_ONLY_RE.test(ts);
+}
+
 function parseTimestamp(ts: string | null | undefined): Date | null {
   if (!ts) return null;
   const date = new Date(ts);
@@ -26,6 +40,10 @@ export function formatInZone(
   timezone: string | null | undefined,
 ): string {
   if (ts === null || ts === undefined || ts === '') return 'N/A';
+  // A date-only value (e.g. "2099-01-10") is a calendar day, not an instant.
+  // Render it verbatim rather than shifting it into a UTC-midnight time that
+  // would print as the previous day in west-of-UTC terminal zones.
+  if (isDateOnly(ts)) return ts;
   const date = parseTimestamp(ts);
   if (!date) return ts;
 
@@ -61,6 +79,9 @@ export function localCalendarDate(
   ts: string | null | undefined,
   timezone: string | null | undefined,
 ): string | null {
+  // A date-only value already *is* the local calendar date; do not push it
+  // through UTC midnight (which would slip it back a day west of UTC).
+  if (ts && isDateOnly(ts)) return ts;
   const date = parseTimestamp(ts);
   if (!date) return null;
   return calendarDateForDate(date, timezone);
@@ -98,10 +119,17 @@ export function dayDeltaInZone(
   timezone: string | null | undefined,
   now: Date = new Date(),
 ): number | null {
-  const target = parseTimestamp(ts);
-  if (!target) return null;
+  // A date-only target is already the local calendar day. Using it verbatim
+  // (instead of UTC midnight) keeps the count correct in west-of-UTC zones.
+  let targetDay: string | null;
+  if (ts && isDateOnly(ts)) {
+    targetDay = ts;
+  } else {
+    const target = parseTimestamp(ts);
+    if (!target) return null;
+    targetDay = calendarDateForDate(target, timezone);
+  }
 
-  const targetDay = calendarDateForDate(target, timezone);
   const nowDay = calendarDateForDate(now, timezone);
 
   // Compare the local calendar dates as UTC midnights so DST shifts inside the

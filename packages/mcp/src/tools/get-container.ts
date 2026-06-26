@@ -214,7 +214,13 @@ function formatContainerResponse(
     : `Call get_container with include=['transport_events'] to fetch ${transportEvents.length || '~50-100'} event records`;
 
   const podTimezone: string | null = container.pod_timezone ?? null;
-  const rawDemurrage = evaluateDemurrageUrgency({
+  // Compute the LFD countdown in terminal-local days so "N days until LFD" never
+  // lands on the wrong calendar day near a UTC midnight boundary, then feed that
+  // same count into the urgency classifier — otherwise `urgency` (raw UTC delta)
+  // and the displayed `days_until_lfd` (terminal-local) could disagree at a
+  // threshold (e.g. 3 vs 4 days).
+  const localDaysUntilLfd = dayDeltaInZone(container.pickup_lfd, podTimezone);
+  const demurrage: DemurrageEvaluation = evaluateDemurrageUrgency({
     fees_at_pod_terminal: container.fees_at_pod_terminal,
     pickup_lfd: container.pickup_lfd ?? null,
     terminal_checked_at: container.terminal_checked_at ?? null,
@@ -222,14 +228,8 @@ function formatContainerResponse(
     // read it from the sideloaded shipment. When the shipment isn't included we
     // fall back to "not stopped" rather than crash.
     tracking_stopped: isTrackingStopped(shipment),
+    days_until_lfd: localDaysUntilLfd,
   });
-  // Surface the LFD countdown in terminal-local days so "N days until LFD" never
-  // lands on the wrong calendar day near a UTC midnight boundary.
-  const localDaysUntilLfd = dayDeltaInZone(container.pickup_lfd, podTimezone);
-  const demurrage: DemurrageEvaluation = {
-    ...rawDemurrage,
-    days_until_lfd: localDaysUntilLfd ?? rawDemurrage.days_until_lfd,
-  };
 
   const importDeadlines = container.import_deadlines || {};
 

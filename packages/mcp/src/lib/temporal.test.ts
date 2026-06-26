@@ -24,6 +24,14 @@ describe('formatInZone', () => {
     const text = formatInZone('2026-02-11T02:00:00Z', null);
     expect(text).toContain('2026');
   });
+
+  it('renders a date-only value verbatim without a west-of-UTC day shift', () => {
+    // "2099-01-10" parsed as UTC midnight would print as 01/09 in Los Angeles;
+    // a date-only LFD must stay on its own calendar day.
+    expect(formatInZone('2099-01-10', 'America/Los_Angeles')).toBe(
+      '2099-01-10',
+    );
+  });
 });
 
 describe('localCalendarDate', () => {
@@ -31,6 +39,12 @@ describe('localCalendarDate', () => {
     // 02:00Z on the 11th is still the 10th in New York.
     expect(localCalendarDate('2026-02-11T02:00:00Z', 'America/New_York')).toBe(
       '2026-02-10',
+    );
+  });
+
+  it('returns a date-only value unchanged regardless of timezone', () => {
+    expect(localCalendarDate('2099-01-10', 'America/Los_Angeles')).toBe(
+      '2099-01-10',
     );
   });
 });
@@ -69,5 +83,18 @@ describe('dayDeltaInZone', () => {
   it('returns null for null or unparseable timestamps', () => {
     expect(dayDeltaInZone(null, 'America/New_York', new Date())).toBeNull();
     expect(dayDeltaInZone('nope', 'America/New_York', new Date())).toBeNull();
+  });
+
+  it('treats a date-only LFD as its literal calendar day, not UTC midnight', () => {
+    // A date-only LFD of 2099-01-10 is exactly 1 day after the 2099-01-09
+    // local day in Los Angeles. Parsing it as UTC midnight would land it on
+    // 2099-01-09 LA and yield 0 — the off-by-one this guards against.
+    const delta = dayDeltaInZone(
+      '2099-01-10',
+      'America/Los_Angeles',
+      // 2099-01-09 18:00Z -> 2099-01-09 10:00 LA.
+      new Date('2099-01-09T18:00:00Z'),
+    );
+    expect(delta).toBe(1);
   });
 });
