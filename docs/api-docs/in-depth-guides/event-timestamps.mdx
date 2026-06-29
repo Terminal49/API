@@ -40,5 +40,17 @@ then the local time of the `pod_arrived_at` timestamp would be `2022-12-22T07:00
 
 
 
+## When `location` and `location_locode` are null
+
+On transport events, both `location_locode` (and any related `location` object) are nullable. They may be `null` when:
+
+- The event is **estimated** (`estimated: true`) and the carrier does not publish a location for the prediction.
+- The carrier or data provider omits the location field on a given event — this varies by carrier and event type.
+- Terminal49 could not normalize the source location to a known UNLOCODE.
+
+This is expected behavior, not a delivery error. The location is not back-filled later for the same event — if a subsequent actual event (for example, `container.transport.vessel_arrived` replacing `container.transport.estimated.vessel_arrived`) includes a location, it will be delivered as a new event. Treat `location_locode == null` as "location unknown" rather than waiting for an update on the original event.
+
+When `location_locode` is null, `timezone` is typically null as well; see [When the corresponding timezone is null](#when-the-corresponding-timezone-is-null) for how timestamps are stored in that case.
+
 ## System timestamps
 Timestamps representing changes within the Terminal49 system (e.g. `created_at`, `updated_at`, `terminal_checked_at`) are stored and represented in UTC and do not have a time zone.

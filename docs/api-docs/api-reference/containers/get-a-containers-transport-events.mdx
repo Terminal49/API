@@ -5,3 +5,7 @@ og:title: Retrieve Transport Events | Terminal49 API Documentation
 og:description: Fetch detailed transport event data for containers, providing real-time updates on shipment status through Terminal49's API.
 openapi: get /containers/{id}/transport_events
 ---
+
+This endpoint returns the container's full normalized transport event history — vessel, rail, transshipment, terminal/gate, delivery, and document events — across the entire journey. It does not support filtering by event type, data source, or timestamp via query parameters. To narrow results to a subset (for example, terminal-only events such as `full_in`, `full_out`, `empty_out`, `empty_in`, `vessel_discharged`, `vessel_arrived`, or `vessel_berthed`), fetch the full list and filter client-side on `attributes.event` or `attributes.data_source`.
+
+Some events may have a `null` `location_locode` and `timezone` — most commonly on estimated events. See [Event Timestamps](/api-docs/in-depth-guides/event-timestamps) for details on how to interpret those timestamps.
