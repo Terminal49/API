@@ -17,6 +17,65 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="June 29, 2026" description="Customizable dashboard view cards, party filters and columns on the container dashboard, datetime display preferences, OOCL API tracker, CMA CGM (CMDU) website scraper, Calculated LFD feedback in the Smart LFD panel, and a wave of carrier, terminal, and dashboard fixes" tags={['API', 'Dashboard', 'MCP']}
+  rss="June 29, 2026: Customize dashboard view cards, party filters and columns on the container dashboard, per-user datetime format preference, new OOCL API tracker path, CMA CGM (CMDU) website scraper (cmduweb), Calculated LFD feedback widget on the Smart LFD panel, account managers can change user roles, CMA PBD events mapped to feeder departed, UPRR rail LFD off-by-one fix, and fixes for CMSAMX, SEAU async scrapes, MCP account resolution, Tideworks A295/L239 reliability, OOLU Cloudflare handling, and dray-carrier display."
+>
+  ### Customize dashboard view cards
+
+You can now **reorder and choose which view cards** appear on your dashboard home. Drag to rearrange, hide cards you don't use, and the layout persists per user — so each teammate can tune the dashboard to the views they work from.
+
+---
+
+  ### Party filters and columns on the container dashboard
+
+The container dashboard now supports **filtering and grouping by parties and party roles** (consignee, shipper, notify party, dray carrier, and more). Party roles are also available as columns and in CSV exports, so you can slice the dashboard by who owns each leg and export the same view downstream.
+
+---
+
+  ### Datetime column format preference
+
+Date and datetime columns now respect a **per-user display format preference**. Pick the format that matches how your team reads dates and Terminal49 will use it consistently across dashboard tables.
+
+---
+
+  ### Calculated LFD feedback in the Smart LFD panel
+
+The Smart LFD detail panel now includes a **feedback widget** for calculated (tariff-based) Last Free Days. Tell us whether the calculated LFD looks right, supply a corrected date when it doesn't, and add a reason (custom contract, free days extended, other). Feedback flows into our tariff validation pipeline so calculated LFDs keep improving carrier by carrier.
+
+<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+  View the container resource
+</Card>
+
+---
+
+  ### New carrier integrations
+
+- **OOCL (OOLU) API tracker** — added a new direct API path for OOCL container, bill of lading, and booking lookups, improving reliability over the public site scrape
+- **CMA CGM (CMDU) `cmduweb` scraper** — added a new tnt-api-based scraper integration for CMA CGM as an alternative data source
+
+---
+
+  ### Updates
+
+- **Account managers can change user roles** — accounts with the user-manager role can now change other users' roles directly, without escalating to an admin
+- **CMA PBD events mapped to feeder departed** — CMA CGM "Port Boundary Departure" events now map to a feeder-departed transport event, so feeder legs show up in the timeline with the right phase
+- **MCP connected client account resolution** — MCP requests now resolve to your primary account, and the audience matcher accepts a trailing slash on the resource URL, so OAuth-aware MCP clients connect more reliably
+- **WorkOS MCP tokens without `client_id`** — MCP access tokens issued by WorkOS no longer require a `client_id` claim, broadening compatibility with OAuth-aware MCP clients
+
+---
+
+  ### Bug fixes
+
+- **UPRR rail Last Free Day off-by-one** — Union Pacific rail LFDs no longer display a day early. Bare-date LFDs from UPRR are now anchored mid-day so the calendar date is stable across US timezones, and existing midnight-UTC values have been backfilled
+- **CMSAMX (Contecon Manzanillo) restored** — switched CMSAMX container scraping to the Contecon ISCS backend after the public site went down, restoring container status, holds, and availability at Manzanillo
+- **SEAU (Sealand) async refreshes** — fixed an issue where scheduled refreshes for Sealand shipments returned an invalid-integration error. SEAU shipments now refresh on schedule the same way new SEAU tracking requests do
+- **Dray carrier no longer shown after removal** — clearing a dray carrier from a shipment or cargo now updates the party display immediately instead of leaving the removed carrier visible
+- **A295 (Boston/MCT) and L239 (POMTOC) reliability** — isolated the Tideworks `.io` terminals to a dedicated proxy pool and refreshed A295 credentials, restoring terminal data collection after a sustained block
+- **OOLU Cloudflare handling reverted** — rolled back a change to OOLU's Cloudflare challenge handling that caused regressions; OOLU continues to track via the established path while the new API tracker rolls out
+- **WorkOS auth flow hardening** — tightened the WorkOS-backed sign-in flow against edge cases in token validation and session recovery
+
+</Update>
+
 <Update label="June 22, 2026" description="Inland Pickup & Delivery dashboard, WorkOS OAuth for the MCP server, dray carrier assignment, new MAEU and SEAU trackers, HLCU tariff rules, party experience polish, and a wave of dashboard and carrier bug fixes" tags={['API', 'Dashboard', 'MCP']}
   rss="June 22, 2026: Inland (IND) Pickup & Delivery dashboard views, WorkOS OAuth gateway for the MCP server, dray carrier assignment on shipments and cargos, new MAEU and SEAU Trawler-based trackers, HLCU (Hapag-Lloyd) demurrage tariff rules, manual IND Full Out edits and clearable manually-set dates, parties first-time experience with bulk import from the track page, and bug fixes for CMSAMX, APMweb CFFI, stale BL container tracking, signed-out refresh-tracking, /v2/shipping_lines scoping, and rail transport event handling."
 >
