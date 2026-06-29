@@ -52,7 +52,7 @@ Terminal49 also provides a set of attributes [on the container model](/api-docs/
 
 ### Rail-specific transport events
 
-There are several core Transport Events that occur on most rail journeys.  Some rail carriers do not share all events, but in general these are the key events for a container.
+Several core transport events occur on most rail journeys. Some rail carriers do not share all events, but in general these are the key events for a container.
 
 ```mermaid
 graph LR
@@ -104,7 +104,7 @@ graph LR
 
 ### Webhook notifications
 
-Terminal49 provides webhook notifications to keep you updated on key Transport Events in a container's rail journey. These notifications allow you to integrate near real-time tracking data directly into your applications.
+Terminal49 provides webhook notifications to keep you updated on key transport events in a container's rail journey. These notifications let you integrate near real-time tracking data directly into your applications.
 
 Here's a list of the rail-specific events which support webhook notifications:
 
@@ -117,7 +117,7 @@ Here's a list of the rail-specific events which support webhook notifications:
 | Rail Unloaded  | `container.transport.rail_unloaded` | The container is unloaded from a railcar. | <a href="https://www.terminal49.com/docs/api-docs/useful-info/webhook-events-examples#container-transport-rail-unloaded" target="_blank">Example</a> |
 | Rail LFD Changed | `container.pickup_lfd_rail.changed` | The Rail Last Free Day (LFD) for the container has changed. |  |
 
-There's also a set of events that are triggered when the status of the container at the destination rail terminal changes.  For containers without rail, they would have been triggered at the ocean terminal.
+An additional set of events triggers when the container's status changes at the destination rail terminal. For containers without rail, these events fire at the ocean terminal instead.
 
 | Transport Event | Webhook Notification | Description | Example |
 |----------------|----------------------|-------------|---------|
@@ -181,6 +181,6 @@ Terminal49 provides a robust API that allows you to programmatically access rail
 
 ### B. Integration via DataSync
 
-Terminal49's DataSync service automatically syncs up-to-date tracking data with your system.  The rail data will be in the same tables alongside the ocean terminal and carrier data.
+Terminal49's DataSync service automatically syncs up-to-date tracking data with your system. The rail data lives in the same tables alongside the ocean terminal and carrier data.
 
 [Learn more about DataSync](/datasync/overview)
