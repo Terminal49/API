@@ -16,12 +16,17 @@ import { BaseManager } from './base.js';
 const DEFAULT_CONTAINER_INCLUDES = [
   'shipment',
   'pod_terminal',
+  'pickup_facility',
 ] as const satisfies readonly ContainerInclude[];
 
 export class ContainerManager extends BaseManager {
   async get(
     id: string,
-    include: IncludeParam<ContainerInclude> = ['shipment', 'pod_terminal'],
+    include: IncludeParam<ContainerInclude> = [
+      'shipment',
+      'pod_terminal',
+      'pickup_facility',
+    ],
     options?: CallOptions,
   ): Promise<any> {
     const includeParam = normalizeInclude(include);

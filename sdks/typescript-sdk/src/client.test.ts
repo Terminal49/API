@@ -88,7 +88,7 @@ describe('Terminal49Client', () => {
 
   it('maps 404 responses to NotFoundError', async () => {
     const { fetchImpl } = createMockFetch({
-      '/containers/missing?include=shipment,pod_terminal': () =>
+      '/containers/missing?include=shipment,pod_terminal,pickup_facility': () =>
         jsonResponse({ errors: [{ detail: 'not found' }] }, 404),
     });
 
@@ -105,7 +105,7 @@ describe('Terminal49Client', () => {
 
   it('adds auth header and include params when fetching container', async () => {
     const { fetchImpl, calls } = createMockFetch({
-      '/containers/abc?include=shipment,pod_terminal': () =>
+      '/containers/abc?include=shipment,pod_terminal,pickup_facility': () =>
         jsonResponse({ data: { id: 'abc', attributes: {} } }),
     });
 
@@ -123,13 +123,13 @@ describe('Terminal49Client', () => {
     const headers = new Headers(calls[0].init?.headers);
     expect(headers.get('Authorization')).toBe('Token token-123');
     expect(calls[0].url.searchParams.get('include')).toBe(
-      'shipment,pod_terminal',
+      'shipment,pod_terminal,pickup_facility',
     );
   });
 
   it('preserves bearer auth and sends account header when configured', async () => {
     const { fetchImpl, calls } = createMockFetch({
-      '/containers/abc?include=shipment,pod_terminal': () =>
+      '/containers/abc?include=shipment,pod_terminal,pickup_facility': () =>
         jsonResponse({ data: { id: 'abc', attributes: {} } }),
     });
 
@@ -336,7 +336,8 @@ describe('Terminal49Client', () => {
     };
 
     const { fetchImpl } = createMockFetch({
-      '/containers?include=shipment,pod_terminal': () => jsonResponse(doc),
+      '/containers?include=shipment,pod_terminal,pickup_facility': () =>
+        jsonResponse(doc),
     });
 
     const client = new Terminal49Client({

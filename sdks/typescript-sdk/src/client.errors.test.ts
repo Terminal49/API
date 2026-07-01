@@ -53,7 +53,7 @@ describe('Terminal49Client error handling', () => {
 
   it('maps 401 to AuthenticationError', async () => {
     const { fetchImpl } = createMockFetch({
-      '/containers/abc?include=shipment,pod_terminal': () =>
+      '/containers/abc?include=shipment,pod_terminal,pickup_facility': () =>
         jsonResponse({ errors: [{ detail: 'invalid token' }] }, 401),
     });
 
@@ -69,7 +69,7 @@ describe('Terminal49Client error handling', () => {
 
   it('maps 403 with feature message to FeatureNotEnabledError', async () => {
     const { fetchImpl } = createMockFetch({
-      '/containers/abc?include=shipment,pod_terminal': () =>
+      '/containers/abc?include=shipment,pod_terminal,pickup_facility': () =>
         jsonResponse({ errors: [{ detail: 'Feature not enabled' }] }, 403),
     });
 
@@ -85,7 +85,7 @@ describe('Terminal49Client error handling', () => {
 
   it('maps 403 without feature message to AuthorizationError', async () => {
     const { fetchImpl } = createMockFetch({
-      '/containers/abc?include=shipment,pod_terminal': () =>
+      '/containers/abc?include=shipment,pod_terminal,pickup_facility': () =>
         jsonResponse({ errors: [{ detail: 'Access forbidden' }] }, 403),
     });
 
@@ -101,7 +101,7 @@ describe('Terminal49Client error handling', () => {
 
   it('maps 404 to NotFoundError', async () => {
     const { fetchImpl } = createMockFetch({
-      '/containers/abc?include=shipment,pod_terminal': () =>
+      '/containers/abc?include=shipment,pod_terminal,pickup_facility': () =>
         jsonResponse({ errors: [{ detail: 'missing' }] }, 404),
     });
 
@@ -117,7 +117,7 @@ describe('Terminal49Client error handling', () => {
 
   it('maps 429 to RateLimitError', async () => {
     const { fetchImpl } = createMockFetch({
-      '/containers/abc?include=shipment,pod_terminal': () =>
+      '/containers/abc?include=shipment,pod_terminal,pickup_facility': () =>
         jsonResponse({ errors: [{ detail: 'too many requests' }] }, 429),
     });
 
@@ -133,7 +133,7 @@ describe('Terminal49Client error handling', () => {
 
   it('maps 5xx to UpstreamError', async () => {
     const { fetchImpl } = createMockFetch({
-      '/containers/abc?include=shipment,pod_terminal': () =>
+      '/containers/abc?include=shipment,pod_terminal,pickup_facility': () =>
         jsonResponse({ errors: [{ detail: 'server down' }] }, 503),
     });
 
@@ -149,7 +149,7 @@ describe('Terminal49Client error handling', () => {
 
   it('maps unexpected status to Terminal49Error with status in message', async () => {
     const { fetchImpl } = createMockFetch({
-      '/containers/abc?include=shipment,pod_terminal': () =>
+      '/containers/abc?include=shipment,pod_terminal,pickup_facility': () =>
         jsonResponse({ errors: [{ detail: 'teapot' }] }, 418),
     });
 

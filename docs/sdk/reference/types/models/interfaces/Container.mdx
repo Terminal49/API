@@ -13,27 +13,28 @@ Simplified container model returned by mapped SDK responses.
 
 ## Properties
 
-| Property | Type |
-| ------ | ------ |
-| <a id="property-demurrage"></a> `demurrage?` | `object` |
-| `demurrage.fees?` | `any`[] |
-| `demurrage.holds?` | `any`[] |
-| `demurrage.pickupAppointmentAt?` | `string` \| `null` |
-| `demurrage.pickupLfd?` | `string` \| `null` |
-| <a id="property-equipment"></a> `equipment?` | `object` |
-| `equipment.height?` | `number` |
-| `equipment.length?` | `number` |
-| `equipment.type?` | `string` |
-| `equipment.weightLbs?` | `number` |
-| <a id="property-id"></a> `id` | `string` |
-| <a id="property-location"></a> `location?` | `object` |
-| `location.availableForPickup?` | `boolean` |
-| `location.currentLocation?` | `string` |
-| `location.podArrivedAt?` | `string` \| `null` |
-| `location.podDischargedAt?` | `string` \| `null` |
-| <a id="property-number"></a> `number?` | `string` |
-| <a id="property-shipment"></a> `shipment?` | [`Shipment`](/sdk/reference/types/models/interfaces/Shipment) \| `null` |
-| <a id="property-status"></a> `status?` | `string` |
-| <a id="property-terminals"></a> `terminals?` | `object` |
-| `terminals.destinationTerminal?` | \{ `firmsCode?`: `string`; `id?`: `string`; `name?`: `string`; `nickname?`: `string`; \} \| `null` |
-| `terminals.podTerminal?` | \{ `firmsCode?`: `string`; `id?`: `string`; `name?`: `string`; `nickname?`: `string`; \} \| `null` |
+| Property | Type | Description |
+| ------ | ------ | ------ |
+| <a id="property-currentstatus"></a> `currentStatus?` | `string` | Raw `current_status` from the API (also surfaced via `status`). |
+| <a id="property-demurrage"></a> `demurrage?` | `object` | - |
+| `demurrage.fees?` | `any`[] | - |
+| `demurrage.holds?` | `any`[] | - |
+| `demurrage.pickupAppointmentAt?` | `string` \| `null` | - |
+| `demurrage.pickupLfd?` | `string` \| `null` | - |
+| <a id="property-equipment"></a> `equipment?` | `object` | - |
+| `equipment.height?` | `number` | - |
+| `equipment.length?` | `number` | - |
+| `equipment.type?` | `string` | - |
+| `equipment.weightLbs?` | `number` | - |
+| <a id="property-id"></a> `id` | `string` | - |
+| <a id="property-location"></a> `location?` | `object` | - |
+| `location.availableForPickup?` | `boolean` | - |
+| `location.currentLocation?` | `string` | - |
+| `location.podArrivedAt?` | `string` \| `null` | - |
+| `location.podDischargedAt?` | `string` \| `null` | - |
+| <a id="property-number"></a> `number?` | `string` | - |
+| <a id="property-shipment"></a> `shipment?` | [`Shipment`](/sdk/reference/types/models/interfaces/Shipment) \| `null` | - |
+| <a id="property-status"></a> `status?` | `string` | - |
+| <a id="property-terminals"></a> `terminals?` | `object` | - |
+| `terminals.destinationTerminal?` | \{ `firmsCode?`: `string`; `id?`: `string`; `name?`: `string`; `nickname?`: `string`; \} \| `null` | - |
+| `terminals.podTerminal?` | \{ `firmsCode?`: `string`; `id?`: `string`; `name?`: `string`; `nickname?`: `string`; \} \| `null` | - |

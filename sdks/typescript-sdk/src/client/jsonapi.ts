@@ -47,3 +47,21 @@ export class JsonApiDocument {
     return camelCase ? JsonApiDocument.toCamelCase(attrs) : attrs;
   }
 }
+
+/**
+ * Returns a shallow copy of `obj` with the given keys removed. Used by the
+ * mappers to keep the raw camelCased attribute spread from clobbering curated
+ * nested fields (and from emitting duplicate top-level scalars for the same
+ * underlying value).
+ */
+export function omitKeys<T extends Record<string, any>>(
+  obj: T,
+  keys: readonly string[],
+): Record<string, any> {
+  const omit = new Set(keys);
+  const result: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj || {})) {
+    if (!omit.has(key)) result[key] = value;
+  }
+  return result;
+}
