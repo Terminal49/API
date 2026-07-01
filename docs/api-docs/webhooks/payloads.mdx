@@ -11,7 +11,7 @@ keywords:
 ---
 Every Terminal49 webhook delivery is a JSON:API document with a `webhook_notification` primary resource and related records in `included`.
 
-Use this page as the payload reference. Use [Payload Examples](/docs/api-docs/useful-info/webhook-events-examples) when you need complete sample JSON.
+Use this page as the payload reference. Use [Payload Examples](/api-docs/useful-info/webhook-events-examples) when you need complete sample JSON.
 
 ## Notification envelope
 
@@ -67,7 +67,7 @@ Use this page as the payload reference. Use [Payload Examples](/docs/api-docs/us
 | `container.updated` | `container_updated_event` | Includes a `changeset` describing changed container attributes. |
 | `container.created` | `container_created_event` | Includes the new container and related shipment. |
 | `container.pickup_lfd.*` | `container_updated_event` | Includes the changed Last Free Day field for terminal, line, or rail LFD. |
-| `document.*` | document-related event resource | Available for accounts using document processing. See [Document Processing Workflows](/docs/api-docs/in-depth-guides/document-processing-workflows). |
+| `document.*` | document-related event resource | Available for accounts using document processing. See [Document Processing Workflows](/api-docs/in-depth-guides/document-processing-workflows). |
 
 ## Included resources
 
@@ -113,7 +113,7 @@ Common changed fields include:
 
 ## Related
 
-- [Event Catalog](/docs/api-docs/webhooks/event-catalog) - canonical event names
-- [Payload Examples](/docs/api-docs/useful-info/webhook-events-examples) - complete sample JSON
-- [Set Up Webhooks](/docs/api-docs/in-depth-guides/webhooks) - create and secure webhook endpoints
-- [Webhook Notifications API](/docs/api-docs/api-reference/webhook-notifications/list-webhook-notifications) - inspect notification delivery status
+- [Event Catalog](/api-docs/webhooks/event-catalog) - canonical event names
+- [Payload Examples](/api-docs/useful-info/webhook-events-examples) - complete sample JSON
+- [Set Up Webhooks](/api-docs/in-depth-guides/webhooks) - create and secure webhook endpoints
+- [Webhook Notifications API](/api-docs/api-reference/webhook-notifications/list-webhook-notifications) - inspect notification delivery status

@@ -60,7 +60,7 @@ Both fields live on the container's `attributes` object in the V2 API:
 - `holds_at_pod_terminal` — active holds blocking or flagging pickup
 - `fees_at_pod_terminal` — fees assessed at the terminal
 
-[`GET /v2/containers/{id}`](/docs/api-docs/api-reference/containers/get-a-container)
+[`GET /v2/containers/{id}`](/api-docs/api-reference/containers/get-a-container)
 
 ```json
 {
@@ -325,7 +325,7 @@ In this example, the container has two active holds (`customs` and `freight`) an
 
 Subscribe to the `container.updated` webhook to run your release-readiness check in real time whenever holds or fees change. The `changeset` on the `container_updated_event` shows the old value and new value side by side — old first, new second.
 
-For full details on setting up webhooks, see [Webhooks](/docs/api-docs/in-depth-guides/webhooks).
+For full details on setting up webhooks, see [Webhooks](/api-docs/in-depth-guides/webhooks).
 
 <Tabs>
   <Tab title="Hold placed" icon="circle-plus">
@@ -485,7 +485,7 @@ const totalAmount = lineItems.reduce((acc, f) => acc + f.amount, 0);
   <Card title="Container statuses" icon="signal-bars" href="/api-docs/in-depth-guides/container-statuses">
     How `available_for_pickup` and `current_status` are derived
   </Card>
-  <Card title="Webhooks" icon="webhook" href="/docs/api-docs/in-depth-guides/webhooks">
+  <Card title="Webhooks" icon="webhook" href="/api-docs/in-depth-guides/webhooks">
     Subscribe to `container.updated` events
   </Card>
   <Card title="Event timestamps" icon="clock" href="/api-docs/in-depth-guides/event-timestamps">

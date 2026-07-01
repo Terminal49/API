@@ -71,7 +71,7 @@ function isReadyForPickup(container) {
 }
 ```
 
-For a deeper explanation of holds, fees, and the `available_for_pickup` field, see [Container Holds, Fees, and Release Readiness](/docs/api-docs/in-depth-guides/holds-and-fees).
+For a deeper explanation of holds, fees, and the `available_for_pickup` field, see [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
 
 <Tip>
 Subscribe to both `container.transport.available` and `container.updated` events. The `available` event fires when the terminal first marks the container as released, but subsequent hold changes arrive as `container.updated` events.
@@ -86,6 +86,6 @@ Subscribe to both `container.transport.available` and `container.updated` events
 
 ## Related
 
-- [Container Holds, Fees, and Release Readiness](/docs/api-docs/in-depth-guides/holds-and-fees) — full guide to hold and fee fields
-- [Event catalog](/docs/api-docs/webhooks/event-catalog) — all available events
-- [Payload examples](/docs/api-docs/useful-info/webhook-events-examples) — complete JSON payloads
+- [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees) — full guide to hold and fee fields
+- [Event catalog](/api-docs/webhooks/event-catalog) — all available events
+- [Payload examples](/api-docs/useful-info/webhook-events-examples) — complete JSON payloads

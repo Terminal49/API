@@ -6582,7 +6582,7 @@
         "tags": [
           "Containers"
         ],
-        "description": "Schedules the container to be refreshed immediately from all relevant sources.<br /><br />To be alerted of updates you should subscribe to the [relevant webhooks](/docs/api-docs/in-depth-guides/webhooks).<Info> This endpoint is limited to 10 requests per minute.</Info><Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
+        "description": "Schedules the container to be refreshed immediately from all relevant sources.<br /><br />To be alerted of updates you should subscribe to the [relevant webhooks](/api-docs/in-depth-guides/webhooks).<Info> This endpoint is limited to 10 requests per minute.</Info><Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
         "responses": {
           "200": {
             "description": "OK",
@@ -11234,7 +11234,7 @@
               },
               "current_status": {
                 "type": "string",
-                "description": "The current status of the container in its journey. [Read guide to learn more.](/docs/api-docs/in-depth-guides/container-statuses)",
+                "description": "The current status of the container in its journey. [Read guide to learn more.](/api-docs/in-depth-guides/container-statuses)",
                 "enum": [
                   "new",
                   "on_ship",

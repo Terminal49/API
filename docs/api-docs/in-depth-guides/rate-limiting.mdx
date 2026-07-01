@@ -59,7 +59,7 @@ The most effective way to avoid rate limits is to use **webhooks** for real-time
 - Configure webhooks to receive push notifications when shipment data changes
 - Eliminates the need for frequent polling
 - Provides instant updates without consuming your rate limit
-- See the [Webhooks](/docs/api-docs/in-depth-guides/webhooks) section for setup instructions
+- See the [Webhooks](/api-docs/in-depth-guides/webhooks) section for setup instructions
 
 ### 2. Implement exponential backoff
 
@@ -73,7 +73,7 @@ If you receive a `429` response:
 ### 3. Batch your requests
 
 - Use list endpoints with filtering instead of multiple individual requests
-- Leverage the [`include` parameter](/docs/api-docs/in-depth-guides/including-resources) to fetch related resources in a single request
+- Leverage the [`include` parameter](/api-docs/in-depth-guides/including-resources) to fetch related resources in a single request
 - Cache responses when appropriate to reduce redundant calls
 
 ### 4. Monitor your usage

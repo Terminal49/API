@@ -55,7 +55,7 @@ curl -X POST "https://api.terminal49.com/v2/webhooks" \
   }'
 ```
 
-Subscribe only to the events your integration handles. Use the [Event Catalog](/docs/api-docs/webhooks/event-catalog) for the canonical event list.
+Subscribe only to the events your integration handles. Use the [Event Catalog](/api-docs/webhooks/event-catalog) for the canonical event list.
 
 ## Store the webhook secret
 
@@ -124,7 +124,7 @@ func validSignature(rawBody []byte, signature string, secret string) bool {
 
 ## Allowlist Terminal49 webhook IPs
 
-Fetch the current source IP list from the [List Webhook IPs](/docs/api-docs/api-reference/webhooks/list-webhook-ips) endpoint and allowlist those addresses in your firewall or application.
+Fetch the current source IP list from the [List Webhook IPs](/api-docs/api-reference/webhooks/list-webhook-ips) endpoint and allowlist those addresses in your firewall or application.
 
 Cache the list and refresh it periodically. Do not rely on a hard-coded list in application code.
 
@@ -168,7 +168,7 @@ async function processWebhook(payload) {
 
 ## Monitor failed notifications
 
-Use the [Webhook Notifications API](/docs/api-docs/api-reference/webhook-notifications/list-webhook-notifications) to review failed deliveries:
+Use the [Webhook Notifications API](/api-docs/api-reference/webhook-notifications/list-webhook-notifications) to review failed deliveries:
 
 ```bash
 curl -s "https://api.terminal49.com/v2/webhook_notifications?filter[delivery_status]=failed" \
@@ -176,12 +176,12 @@ curl -s "https://api.terminal49.com/v2/webhook_notifications?filter[delivery_sta
   -H "Content-Type: application/vnd.api+json"
 ```
 
-Use [Trigger a Webhook](/docs/api-docs/api-reference/webhooks/trigger-a-webhook) to replay notifications after you fix the consumer.
+Use [Trigger a Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) to replay notifications after you fix the consumer.
 
 ## Related
 
-- [Why Webhooks](/docs/api-docs/webhooks/overview) - conceptual overview
-- [Event Catalog](/docs/api-docs/webhooks/event-catalog) - canonical event names
-- [Webhook Payloads](/docs/api-docs/webhooks/payloads) - payload envelope and included resources
-- [Webhook Best Practices](/docs/api-docs/webhooks/best-practices) - reliability checklist
-- [Create a Webhook API Reference](/docs/api-docs/api-reference/webhooks/create-a-webhook) - request and response fields
+- [Why Webhooks](/api-docs/webhooks/overview) - conceptual overview
+- [Event Catalog](/api-docs/webhooks/event-catalog) - canonical event names
+- [Webhook Payloads](/api-docs/webhooks/payloads) - payload envelope and included resources
+- [Webhook Best Practices](/api-docs/webhooks/best-practices) - reliability checklist
+- [Create a Webhook API Reference](/api-docs/api-reference/webhooks/create-a-webhook) - request and response fields

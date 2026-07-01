@@ -7,7 +7,7 @@ openapi: get /vessels/{id}/future_positions
 ---
 
 <Note>
-  This is a paid Routing Data endpoint. See [Entitlements and Paid Features](/docs/api-docs/useful-info/entitlements) for access requirements and non-entitled responses.
+  This is a paid Routing Data endpoint. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements) for access requirements and non-entitled responses.
 </Note>
 
 ## Required query parameters
@@ -21,7 +21,7 @@ This endpoint requires both port IDs for the vessel leg you want to forecast:
 
 ## How to find the port IDs
 
-If you are starting from a tracked container, call [`GET /v2/containers/{id}/map_geojson`](/docs/api-docs/api-reference/containers/get-container-map-geojson) and inspect the `port` features. Each port feature includes:
+If you are starting from a tracked container, call [`GET /v2/containers/{id}/map_geojson`](/api-docs/api-reference/containers/get-container-map-geojson) and inspect the `port` features. Each port feature includes:
 
 - `properties.location_id` - the port UUID to pass as `port_id` or `previous_port_id`
 - `properties.ports_sequence` - the route order
