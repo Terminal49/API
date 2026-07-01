@@ -79,12 +79,15 @@ export default function NewTrackingRequestPage() {
         throw new Error(data.error || 'Failed to infer tracking number');
       }
 
-      setInferResult(data);
+      // The infer endpoint returns a JSON:API document
+      // (data.attributes.*), not flat fields.
+      const attributes = data?.data?.attributes ?? {};
+      setInferResult(attributes);
 
       // Check if we need carrier selection
-      const shippingLine = data.shipping_line || data.shippingLine;
-      const decision = shippingLine?.decision || data.decision;
-      const selected = shippingLine?.selected || data.selected;
+      const shippingLine = attributes.shipping_line || attributes.shippingLine;
+      const decision = shippingLine?.decision || attributes.decision;
+      const selected = shippingLine?.selected || attributes.selected;
 
       if (decision === 'auto_select' && selected?.scac) {
         setSelectedScac(selected.scac);
@@ -381,9 +384,9 @@ const request = await client.trackingRequests.create({
                         View Shipment →
                       </Button>
                     )}
-                    {createResult.trackingRequest?.id && (
+                    {createResult.trackingRequest?.data?.id && (
                       <Button
-                        href={`/tracking-requests/${createResult.trackingRequest.id}`}
+                        href={`/tracking-requests/${createResult.trackingRequest.data.id}`}
                         variant="secondary"
                       >
                         View Request
