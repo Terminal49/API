@@ -67,7 +67,7 @@ export function registerConfigCommand(program: Command): void {
     .action(
       withErrorHandling(
         'config.list',
-        async (command: Command) => {
+        async (_options: unknown, command: Command) => {
           const global = command.optsWithGlobals();
           const formatter = createFormatter({
             json: global.json,
@@ -85,7 +85,7 @@ export function registerConfigCommand(program: Command): void {
     .action(
       withErrorHandling(
         'config.clear',
-        async (command: Command) => {
+        async (_options: unknown, command: Command) => {
           const global = command.optsWithGlobals();
           const formatter = createFormatter({
             json: global.json,
@@ -103,7 +103,7 @@ export function registerConfigCommand(program: Command): void {
     .action(
       withErrorHandling(
         'config.auth-status',
-        async (command: Command) => {
+        async (_options: unknown, command: Command) => {
           const global = command.optsWithGlobals();
           const formatter = createFormatter({
             json: global.json,
@@ -131,7 +131,7 @@ export function registerConfigCommand(program: Command): void {
     .action(
       withErrorHandling(
         'config.client-check',
-        async (command: Command) => {
+        async (_options: unknown, command: Command) => {
           const global = command.optsWithGlobals();
           const formatter = createFormatter({
             json: global.json,

@@ -164,7 +164,7 @@ export class ContainerManager extends BaseManager {
   }
 
   async demurrage(id: string): Promise<any> {
-    const data = await this.get(id, ['pod_terminal']);
+    const data = await this.get(id, ['pod_terminal'], { format: 'raw' });
     const container = data.data?.attributes || {};
     return {
       container_id: id,
