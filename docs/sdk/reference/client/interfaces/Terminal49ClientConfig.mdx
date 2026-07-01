@@ -17,3 +17,4 @@ Configuration for [Terminal49Client](/sdk/reference/client/classes/Terminal49Cli
 | <a id="property-defaultformat"></a> `defaultFormat?` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | Default response format for methods that support mapped responses. Defaults to `raw`. |
 | <a id="property-fetchimpl"></a> `fetchImpl?` | (`input`, `init?`) => `Promise`\<`Response`\> | Optional fetch implementation, useful for tests or custom runtimes. |
 | <a id="property-maxretries"></a> `maxRetries?` | `number` | Number of retry attempts for rate-limit and server errors. Defaults to `2`. |
+| <a id="property-timeoutms"></a> `timeoutMs?` | `number` | Per-request timeout in milliseconds. A hung request is aborted once it elapses and rejected with a `TimeoutError`. Defaults to `30000`. Set to `0` to disable the timeout. |

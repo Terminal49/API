@@ -56,6 +56,12 @@ description: "Transport class in the Terminal49 TypeScript SDK, the low-level HT
 
 > **executeManual**\<`T`\>(`input`, `init?`): `Promise`\<`T`\>
 
+Run a request that has no entry in the generated OpenAPI types (currently
+only `search()`) through the same Auth -> Retry -> ErrorMapping pipeline the
+typed client uses, including the timeout-wrapped fetch. Successful bodies are
+read with readSuccessBody so a non-JSON success body is surfaced
+rather than silently collapsed to `undefined`.
+
 #### Type Parameters
 
 | Type Parameter | Default type |
