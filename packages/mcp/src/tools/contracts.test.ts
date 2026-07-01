@@ -1152,6 +1152,48 @@ describe('MCP tool contracts', () => {
     expect(contract.total_is_reliable).toBe(true);
   });
 
+  it('buildListContract does not treat request_type as a scoping filter', () => {
+    // GET /tracking_requests has no filter[request_type] in the OpenAPI source
+    // of truth, so a bare request_type arg cannot actually scope the list even
+    // though executeListTrackingRequests forwards it; it must be reported as
+    // dropped, not as an applied filter over a reliable total.
+    const contract = buildListContract(
+      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
+      'tracking_request',
+      { filters: { request_type: 'manual' } },
+    );
+
+    expect(contract.can_answer).not.toContain(
+      'which records match the applied filters',
+    );
+    expect(contract.total_is_reliable).toBe(false);
+    expect(
+      contract.requires_more_data.some((entry) =>
+        entry.includes('unsupported filter(s) were ignored: request_type'),
+      ),
+    ).toBe(true);
+  });
+
+  it('buildListContract does not treat a raw filters bag of only non-filter knobs as scoped', () => {
+    // `include` is a legitimate raw query knob but not a `filter[...]` key, so
+    // `{ filters: { include: 'tracked_object' } }` must not read as scoped.
+    const contract = buildListContract(
+      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
+      'tracking_request',
+      { filters: { filters: { include: 'tracked_object' } } },
+    );
+
+    expect(contract.can_answer).not.toContain(
+      'which records match the applied filters',
+    );
+    expect(contract.total_is_reliable).toBe(false);
+    expect(
+      contract.requires_more_data.some((entry) =>
+        entry.startsWith('a filter to scope this list'),
+      ),
+    ).toBe(true);
+  });
+
   it('buildListContract presentation guidance does not claim a single result when empty', () => {
     const contract = buildListContract(
       { items: [], meta: { total: 0 } },

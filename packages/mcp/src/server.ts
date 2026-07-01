@@ -142,6 +142,13 @@ export const LIST_DISPLAY_COLUMNS_URI = listDisplayColumnsResource.uri;
  * reported back to the agent as a dropped filter so it never claims a false
  * worklist. `page`, `page_size`, `include`, `include_containers` and `intent`
  * are transport/shape knobs, not scoping filters, and are ignored here.
+ *
+ * `request_type` is intentionally excluded for `tracking_request`: the
+ * `GET /tracking_requests` OpenAPI source of truth does not define
+ * `filter[request_type]`, so a caller-supplied `request_type` cannot actually
+ * scope the list even though `executeListTrackingRequests` forwards it. It
+ * falls through to `droppedFilterKeys` instead, so the contract reports it as
+ * ignored rather than claiming it applied.
  */
 const SUPPORTED_LIST_FILTERS_BY_ENTITY: Record<
   ListEntityType,
@@ -149,9 +156,45 @@ const SUPPORTED_LIST_FILTERS_BY_ENTITY: Record<
 > = {
   container: ['status', 'port', 'carrier', 'updated_after'],
   shipment: ['status', 'port', 'carrier', 'updated_after'],
-  tracking_request: ['status', 'request_type', 'filters'],
+  tracking_request: ['status', 'filters'],
   unknown: ['status', 'port', 'carrier', 'updated_after'],
 };
+
+/**
+ * Real `GET /tracking_requests` API filter keys (per the OpenAPI source of
+ * truth), as they appear inside the raw `filters` pass-through bag. Only these
+ * actually scope the list; other raw keys like `include` are legitimate
+ * request knobs but must not be mistaken for a scoping filter.
+ */
+const REAL_TRACKING_REQUEST_FILTER_KEYS = new Set([
+  'filter[request_number]',
+  'filter[status]',
+  'filter[scac]',
+  'filter[created_at][start]',
+  'filter[created_at][end]',
+  'filter[updated_at][start]',
+  'filter[updated_at][end]',
+]);
+
+/**
+ * Whether the raw `filters` pass-through bag contains at least one key that
+ * actually scopes the `list_tracking_requests` result. A bag containing only
+ * non-filter knobs (e.g. `{ include: 'tracked_object' }`) must not be mistaken
+ * for an applied filter, or an unscoped account list could be presented as
+ * filtered.
+ */
+function hasRealTrackingRequestFilterKey(rawFilters: unknown): boolean {
+  if (
+    !rawFilters ||
+    typeof rawFilters !== 'object' ||
+    Array.isArray(rawFilters)
+  ) {
+    return false;
+  }
+  return Object.keys(rawFilters as Record<string, unknown>).some((key) =>
+    REAL_TRACKING_REQUEST_FILTER_KEYS.has(key),
+  );
+}
 
 /** Non-filter knobs that must never be treated as scoping filters. */
 const NON_FILTER_LIST_ARGS = new Set([
@@ -783,7 +826,15 @@ function appliedFilterKeys(
   }
 
   const supported = SUPPORTED_LIST_FILTERS_BY_ENTITY[entityType];
-  return supported.filter((key) => isProvided(filters[key]));
+  return supported.filter((key) => {
+    if (key === 'filters') {
+      // The raw pass-through bag can carry non-filter knobs like `include`
+      // alongside (or instead of) real `filter[...]` keys; only the latter
+      // actually scope the list.
+      return hasRealTrackingRequestFilterKey(filters[key]);
+    }
+    return isProvided(filters[key]);
+  });
 }
 
 /**
