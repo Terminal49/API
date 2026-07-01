@@ -19,7 +19,9 @@ const CONFIG_VERSION = 1;
 
 function getConfigDirectory(): string {
   const explicitXdg = process.env.XDG_CONFIG_HOME;
-  if (explicitXdg && explicitXdg.trim() !== '') return explicitXdg;
+  if (explicitXdg && explicitXdg.trim() !== '') {
+    return path.join(explicitXdg, 'terminal49');
+  }
 
   if (process.platform === 'win32') {
     const localAppData = process.env.LOCALAPPDATA || process.env.APPDATA;

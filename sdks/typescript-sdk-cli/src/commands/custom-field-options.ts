@@ -71,6 +71,7 @@ export function registerCustomFieldOptionsCommand(program: Command): void {
         async (
           definitionId: string,
           optionId: string,
+          _options: unknown,
           command: Command,
         ) => {
           const global = command.optsWithGlobals();
