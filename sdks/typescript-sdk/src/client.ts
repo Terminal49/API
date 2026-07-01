@@ -137,6 +137,10 @@ export class Terminal49Client {
 
   /** Search across shipments and containers by number, reference, or keyword. */
   async search(query: string): Promise<any> {
+    if (!query || query.trim() === '') {
+      throw new ValidationError('query is required (/query)');
+    }
+
     const params = new URLSearchParams({ query });
     return this.transport.executeManual(
       `${this.transport.baseUrl}/search?${params.toString()}`,
