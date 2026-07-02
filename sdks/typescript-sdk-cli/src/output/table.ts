@@ -9,14 +9,12 @@
 import Table from 'cli-table3';
 
 interface ColumnDef {
-  key: string;
+  key: string | string[];
   title: string;
 }
 
-type Resource = 'shipments' | 'containers' | 'tracking-requests' | 'search' | 'shipping-lines' | 'unknown';
-
-const resourceColumns: Record<Resource, ColumnDef[]> = {
-  shipments: [
+const commandColumns: Record<string, ColumnDef[]> = {
+  'shipments.list': [
     { key: 'id', title: 'ID' },
     { key: 'billOfLading', title: 'BOL' },
     { key: 'shippingLineScac', title: 'SCAC' },
@@ -24,7 +22,7 @@ const resourceColumns: Record<Resource, ColumnDef[]> = {
     { key: 'customerName', title: 'Customer' },
     { key: 'tracking.lineTrackingStoppedReason', title: 'Tracking' },
   ],
-  containers: [
+  'containers.list': [
     { key: 'id', title: 'ID' },
     { key: 'number', title: 'Number' },
     { key: 'status', title: 'Status' },
@@ -33,7 +31,59 @@ const resourceColumns: Record<Resource, ColumnDef[]> = {
     { key: 'location.currentLocation', title: 'Location' },
     { key: 'terminals.podTerminal.name', title: 'POD Terminal' },
   ],
-  'tracking-requests': [
+  'containers.events': [
+    { key: ['timestamp', 'attributes.timestamp'], title: 'Timestamp' },
+    { key: ['event', 'attributes.event'], title: 'Event' },
+    {
+      key: [
+        'location.name',
+        'location.locode',
+        'attributes.locationLocode',
+        'attributes.location_locode',
+      ],
+      title: 'Location',
+    },
+    { key: ['terminal.name', 'terminal.nickname'], title: 'Terminal' },
+  ],
+  'containers.raw-events': [
+    { key: ['timestamp', 'attributes.timestamp'], title: 'Timestamp' },
+    { key: ['event', 'attributes.event'], title: 'Event' },
+    { key: ['dataSource', 'attributes.data_source'], title: 'Source' },
+    { key: ['value', 'attributes.value'], title: 'Value' },
+  ],
+  'containers.route': [
+    { key: ['port.name', 'port.code', 'location.name'], title: 'Port' },
+    { key: ['inbound.mode', 'attributes.inbound_mode'], title: 'Inbound' },
+    { key: ['inbound.eta', 'attributes.inbound_eta_at'], title: 'Inbound ETA' },
+    { key: ['inbound.ata', 'attributes.inbound_ata_at'], title: 'Inbound ATA' },
+    { key: ['outbound.mode', 'attributes.outbound_mode'], title: 'Outbound' },
+    {
+      key: ['outbound.etd', 'attributes.outbound_etd_at'],
+      title: 'Outbound ETD',
+    },
+    {
+      key: ['outbound.atd', 'attributes.outbound_atd_at'],
+      title: 'Outbound ATD',
+    },
+  ],
+  'containers.demurrage': [
+    { key: 'container_id', title: 'Container ID' },
+    { key: 'pickup_lfd', title: 'Pickup LFD' },
+    { key: 'pickup_appointment_at', title: 'Appointment' },
+    { key: 'available_for_pickup', title: 'Available' },
+    { key: 'pod_arrived_at', title: 'POD Arrived' },
+    { key: 'pod_discharged_at', title: 'POD Discharged' },
+  ],
+  'containers.rail': [
+    { key: 'container_id', title: 'Container ID' },
+    { key: 'pod_rail_carrier_scac', title: 'POD Rail' },
+    { key: 'ind_rail_carrier_scac', title: 'IND Rail' },
+    { key: 'pod_rail_loaded_at', title: 'POD Loaded' },
+    { key: 'pod_rail_departed_at', title: 'POD Departed' },
+    { key: 'ind_rail_arrived_at', title: 'IND Arrived' },
+    { key: 'ind_rail_unloaded_at', title: 'IND Unloaded' },
+  ],
+  'tracking-requests.list': [
     { key: 'id', title: 'ID' },
     { key: 'requestType', title: 'Type' },
     { key: 'requestNumber', title: 'Number' },
@@ -48,13 +98,14 @@ const resourceColumns: Record<Resource, ColumnDef[]> = {
     { key: 'details', title: 'Details' },
     { key: 'score', title: 'Score' },
   ],
-  'shipping-lines': [
+  'shipping-lines.list': [
     { key: 'scac', title: 'SCAC' },
     { key: 'name', title: 'Name' },
     { key: 'shortName', title: 'Short Name' },
   ],
-  unknown: [{ key: 'id', title: 'ID' }],
 };
+
+const fallbackColumns: ColumnDef[] = [{ key: 'id', title: 'ID' }];
 
 const unknownColumnCandidates: ColumnDef[] = [
   { key: 'id', title: 'ID' },
@@ -86,6 +137,18 @@ function valueAtPath(row: Record<string, unknown>, path: string): unknown {
   }, row);
 }
 
+function valueForColumn(
+  row: Record<string, unknown>,
+  column: ColumnDef,
+): unknown {
+  const keys = Array.isArray(column.key) ? column.key : [column.key];
+  for (const key of keys) {
+    const value = valueAtPath(row, key);
+    if (hasRenderableValue(value)) return value;
+  }
+  return undefined;
+}
+
 function findValueDeep(input: unknown, key: string, depth = 6): unknown {
   if (depth < 0 || input === null || input === undefined) return undefined;
   if (Array.isArray(input)) {
@@ -105,7 +168,11 @@ function findValueDeep(input: unknown, key: string, depth = 6): unknown {
   return undefined;
 }
 
-function findNumeric(input: unknown, key: string, depth = 2): number | undefined {
+function findNumeric(
+  input: unknown,
+  key: string,
+  depth = 2,
+): number | undefined {
   const value = findValueDeep(input, key, depth);
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string') {
@@ -148,7 +215,11 @@ function findNumericByKeyPattern(
 
 function normalizeResultType(input: string): string {
   const normalized = input.trim().toLowerCase();
-  if (!normalized || normalized === 'search_result' || normalized === 'search-result') {
+  if (
+    !normalized ||
+    normalized === 'search_result' ||
+    normalized === 'search-result'
+  ) {
     return '';
   }
   if (normalized.includes('shipment')) return 'shipment';
@@ -159,7 +230,10 @@ function normalizeResultType(input: string): string {
   return normalized.replace(/\s+/g, '_');
 }
 
-function deriveResultType(flattened: Record<string, unknown>, match: string): string {
+function deriveResultType(
+  flattened: Record<string, unknown>,
+  match: string,
+): string {
   const typeCandidate = pickFirstDefined([
     valueAtPath(flattened, 'attributes.entity_type'),
     valueAtPath(flattened, 'attributes.entityType'),
@@ -194,7 +268,10 @@ function deriveResultType(flattened: Record<string, unknown>, match: string): st
   return 'unknown';
 }
 
-function deriveResultId(flattened: Record<string, unknown>, resultType: string): string {
+function deriveResultId(
+  flattened: Record<string, unknown>,
+  resultType: string,
+): string {
   const wrapperId = pickFirstDefined([
     valueAtPath(flattened, 'id'),
     valueAtPath(flattened, '_id'),
@@ -240,9 +317,10 @@ function deriveDetails(flattened: Record<string, unknown>): string {
     findValueDeep(flattened, 'lineScac'),
     findValueDeep(flattened, 'scac'),
   ]);
-  const containers = findNumeric(flattened, 'containerCount', 6)
-    ?? findNumeric(flattened, 'containersCount', 6)
-    ?? findNumericByKeyPattern(flattened, /container(s)?_?count/i, 6);
+  const containers =
+    findNumeric(flattened, 'containerCount', 6) ??
+    findNumeric(flattened, 'containersCount', 6) ??
+    findNumericByKeyPattern(flattened, /container(s)?_?count/i, 6);
 
   const origin = pickFirstDefined([
     valueAtPath(flattened, 'origin'),
@@ -272,7 +350,9 @@ function deriveDetails(flattened: Record<string, unknown>): string {
   const parts: string[] = [];
   if (scac) parts.push(`SCAC ${scac}`);
   if (containers !== undefined) {
-    parts.push(`${containers} ${containers === 1 ? 'container' : 'containers'}`);
+    parts.push(
+      `${containers} ${containers === 1 ? 'container' : 'containers'}`,
+    );
   }
   if (origin && destination) {
     parts.push(`${origin} -> ${destination}`);
@@ -280,11 +360,13 @@ function deriveDetails(flattened: Record<string, unknown>): string {
   return parts.join(' | ');
 }
 
-function unwrapSearchRow(row: Record<string, unknown>): Record<string, unknown> {
+function unwrapSearchRow(
+  row: Record<string, unknown>,
+): Record<string, unknown> {
   const source = valueAtPath(row, '_source');
   if (source && typeof source === 'object' && !Array.isArray(source)) {
     return {
-      ...source as Record<string, unknown>,
+      ...(source as Record<string, unknown>),
       ...row,
       id: row.id ?? row._id ?? (source as Record<string, unknown>).id,
       _id: row._id,
@@ -295,7 +377,7 @@ function unwrapSearchRow(row: Record<string, unknown>): Record<string, unknown> 
   const fields = valueAtPath(row, 'fields');
   if (fields && typeof fields === 'object' && !Array.isArray(fields)) {
     return {
-      ...fields as Record<string, unknown>,
+      ...(fields as Record<string, unknown>),
       ...row,
       id: row.id ?? row._id ?? (fields as Record<string, unknown>).id,
       _id: row._id,
@@ -304,7 +386,9 @@ function unwrapSearchRow(row: Record<string, unknown>): Record<string, unknown> 
   return row;
 }
 
-function flattenSearchMetadata(row: Record<string, unknown>): Record<string, unknown> {
+function flattenSearchMetadata(
+  row: Record<string, unknown>,
+): Record<string, unknown> {
   const sourceLike = unwrapSearchRow(row);
   const result: Record<string, unknown> = { ...sourceLike };
   const metaType = valueAtPath(row, '_index');
@@ -315,7 +399,8 @@ function flattenSearchMetadata(row: Record<string, unknown>): Record<string, unk
 function formatCell(value: unknown): string {
   if (value === undefined || value === null) return '';
   if (typeof value === 'string') return value;
-  if (typeof value === 'boolean' || typeof value === 'number') return String(value);
+  if (typeof value === 'boolean' || typeof value === 'number')
+    return String(value);
   if (Array.isArray(value)) return value.join(', ');
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
@@ -333,13 +418,18 @@ function normalizeRows(data: unknown): Record<string, unknown>[] {
   }
   if (hitsValue && typeof hitsValue === 'object' && !Array.isArray(hitsValue)) {
     const nestedHits = (hitsValue as Record<string, unknown>).hits;
-    if (Array.isArray(nestedHits)) return nestedHits as Record<string, unknown>[];
+    if (Array.isArray(nestedHits))
+      return nestedHits as Record<string, unknown>[];
   }
   if (Array.isArray((data as { data?: unknown }).data)) {
     return (data as { data?: unknown }).data as Record<string, unknown>[];
   }
   const singleData = (data as { data?: unknown }).data;
-  if (singleData && typeof singleData === 'object' && !Array.isArray(singleData)) {
+  if (
+    singleData &&
+    typeof singleData === 'object' &&
+    !Array.isArray(singleData)
+  ) {
     return [singleData as Record<string, unknown>];
   }
   return [data as Record<string, unknown>];
@@ -349,14 +439,17 @@ function hasRenderableValue(value: unknown): boolean {
   if (value === undefined || value === null) return false;
   if (typeof value === 'string') return value.trim() !== '';
   if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === 'object') return Object.keys(value as Record<string, unknown>).length > 0;
+  if (typeof value === 'object')
+    return Object.keys(value as Record<string, unknown>).length > 0;
   return true;
 }
 
 function inferUnknownColumns(rows: Record<string, unknown>[]): ColumnDef[] {
   const selected: ColumnDef[] = [];
   for (const candidate of unknownColumnCandidates) {
-    if (rows.some((row) => hasRenderableValue(valueAtPath(row, candidate.key)))) {
+    if (
+      rows.some((row) => hasRenderableValue(valueForColumn(row, candidate)))
+    ) {
       selected.push(candidate);
     }
     if (selected.length >= 6) break;
@@ -370,7 +463,7 @@ function inferUnknownColumns(rows: Record<string, unknown>[]): ColumnDef[] {
   if (firstKeys.length > 0) {
     return firstKeys.map((key) => ({ key, title: key }));
   }
-  return resourceColumns.unknown;
+  return fallbackColumns;
 }
 
 function pickFirstDefined(values: unknown[]): string {
@@ -381,7 +474,9 @@ function pickFirstDefined(values: unknown[]): string {
   return '';
 }
 
-function enrichSearchRow(row: Record<string, unknown>): Record<string, unknown> {
+function enrichSearchRow(
+  row: Record<string, unknown>,
+): Record<string, unknown> {
   const flattened = flattenSearchMetadata(row);
 
   const reference = pickFirstDefined([
@@ -455,7 +550,8 @@ function enrichSearchRow(row: Record<string, unknown>): Record<string, unknown> 
     findValueDeep(flattened, 'lifecycle'),
   ]);
 
-  const score = findNumeric(flattened, 'score', 6) ??
+  const score =
+    findNumeric(flattened, 'score', 6) ??
     findNumeric(flattened, '_score', 6) ??
     findNumeric(flattened, 'relevanceScore', 6) ??
     findNumeric(flattened, 'searchScore', 6) ??
@@ -481,26 +577,124 @@ function enrichSearchRow(row: Record<string, unknown>): Record<string, unknown> 
   return enriched;
 }
 
-function resolveResource(command: string): Resource {
-  if (command.includes('container')) return 'containers';
-  if (command.includes('shipment')) return 'shipments';
-  if (command.includes('tracking-request') || command.includes('track')) return 'tracking-requests';
-  if (command.includes('shipping-line')) return 'shipping-lines';
-  if (command.includes('search')) return 'search';
-  return 'unknown';
+function rowsForCommand(
+  command: string,
+  data: unknown,
+): Record<string, unknown>[] {
+  const record =
+    data && typeof data === 'object' && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : undefined;
+
+  if (Array.isArray(record?.mapped)) {
+    return record.mapped as Record<string, unknown>[];
+  }
+
+  if (command === 'containers.route') {
+    const mapped = record?.mapped;
+    if (mapped && typeof mapped === 'object' && !Array.isArray(mapped)) {
+      const locations = (mapped as Record<string, unknown>).locations;
+      if (Array.isArray(locations))
+        return locations as Record<string, unknown>[];
+    }
+    if (Array.isArray(record?.locations)) {
+      return record.locations as Record<string, unknown>[];
+    }
+  }
+
+  return normalizeRows(data);
+}
+
+function isSearchCommand(command: string): boolean {
+  return command === 'search' || command.startsWith('search.');
+}
+
+function isDetailCommand(command: string): boolean {
+  return command.endsWith('.get') || command.endsWith('.get-by-imo');
+}
+
+function unwrapDetailObject(
+  data: unknown,
+): Record<string, unknown> | undefined {
+  if (!data || typeof data !== 'object' || Array.isArray(data))
+    return undefined;
+
+  const record = data as Record<string, unknown>;
+  const jsonApiData = record.data;
+  if (
+    jsonApiData &&
+    typeof jsonApiData === 'object' &&
+    !Array.isArray(jsonApiData)
+  ) {
+    const resource = jsonApiData as Record<string, unknown>;
+    const attributes = resource.attributes;
+    return {
+      id: resource.id,
+      type: resource.type,
+      ...(attributes &&
+      typeof attributes === 'object' &&
+      !Array.isArray(attributes)
+        ? (attributes as Record<string, unknown>)
+        : {}),
+    };
+  }
+
+  return record;
+}
+
+function flattenDetailRows(
+  value: Record<string, unknown>,
+  prefix = '',
+  depth = 2,
+): Array<[string, unknown]> {
+  const rows: Array<[string, unknown]> = [];
+  for (const [key, item] of Object.entries(value)) {
+    const label = prefix ? `${prefix}.${key}` : key;
+    if (depth > 0 && item && typeof item === 'object' && !Array.isArray(item)) {
+      rows.push(
+        ...flattenDetailRows(item as Record<string, unknown>, label, depth - 1),
+      );
+    } else if (hasRenderableValue(item)) {
+      rows.push([label, item]);
+    }
+  }
+  return rows;
+}
+
+function renderDetail(data: unknown): string | undefined {
+  const detail = unwrapDetailObject(data);
+  if (!detail) return undefined;
+
+  const rows = flattenDetailRows(detail);
+  if (rows.length === 0) return 'No rows.\n';
+
+  const table = new Table({
+    style: { head: [], border: [] },
+    wordWrap: true,
+  });
+
+  rows.forEach(([key, value]) => {
+    table.push([key, formatCell(value)]);
+  });
+
+  return `${table.toString()}\n`;
 }
 
 export function renderTable(command: string, data: unknown): string {
-  const rows = normalizeRows(data);
-  const resource = resolveResource(command);
-  const baseCols = resourceColumns[resource] || resourceColumns.unknown;
-  const commandIsSearch = command.includes('search');
+  if (isDetailCommand(command)) {
+    const detail = renderDetail(data);
+    if (detail) return detail;
+  }
+
+  const rows = rowsForCommand(command, data);
+  const baseCols = commandColumns[command];
+  const commandIsSearch = isSearchCommand(command);
   if (rows.length === 0) {
     return 'No rows.\n';
   }
 
   const renderedRows = commandIsSearch ? rows.map(enrichSearchRow) : rows;
-  const cols = resource === 'unknown' ? inferUnknownColumns(renderedRows) : baseCols;
+  const cols = baseCols ?? inferUnknownColumns(renderedRows);
 
   const table = new Table({
     head: cols.map((c) => c.title),
@@ -509,7 +703,7 @@ export function renderTable(command: string, data: unknown): string {
   });
 
   renderedRows.forEach((row) => {
-    table.push(cols.map((column) => formatCell(valueAtPath(row, column.key))));
+    table.push(cols.map((column) => formatCell(valueForColumn(row, column))));
   });
 
   return `${table.toString()}\n`;

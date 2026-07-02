@@ -39,4 +39,23 @@ describe('projectFields', () => {
       { id: 'b', nested: { keep: 'y' } },
     ]);
   });
+
+  it('projects list envelopes with items rows', () => {
+    const input = {
+      items: [
+        { id: 'a', value: 1, nested: { keep: 'x', drop: 'n' } },
+        { id: 'b', value: 2, nested: { keep: 'y', drop: 'n' } },
+      ],
+      meta: { page: 1 },
+    };
+
+    const out = projectFields(input, 'id,nested.keep');
+    expect(out).toEqual({
+      items: [
+        { id: 'a', nested: { keep: 'x' } },
+        { id: 'b', nested: { keep: 'y' } },
+      ],
+      meta: { page: 1 },
+    });
+  });
 });

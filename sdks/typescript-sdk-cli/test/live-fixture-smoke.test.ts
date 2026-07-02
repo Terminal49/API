@@ -25,7 +25,7 @@ describe('live fixture smoke', () => {
     expect(output).toContain('Match');
     expect(output).toContain('Result Type');
     expect(output).toContain('Details');
-    expect(output).toContain('HLCUIT1251213429');
+    expect(output).toContain('TEST1000005');
     expect(output).toContain('shipment');
     expect(output).toContain('SCAC HLCU');
   });
@@ -56,14 +56,16 @@ describe('live fixture smoke', () => {
 
     const terminalId = payload?.data?.data?.id;
     const output = renderTable('terminals.get', payload.data);
-    expect(output).toContain('ID');
-    expect(output).toContain('Type');
+    expect(output).toContain('id');
+    expect(output).toContain('type');
     expect(output).toContain(String(terminalId));
   });
 
   it('captures upstream and validation error envelope fixtures', () => {
     const upstream = readFixture<any>('custom-fields.list.error.json');
-    const validation = readFixture<any>('webhook-notifications.examples.error.json');
+    const validation = readFixture<any>(
+      'webhook-notifications.examples.error.json',
+    );
 
     expect(upstream.ok).toBe(false);
     expect(upstream.error.code).toBe('UPSTREAM_ERROR');

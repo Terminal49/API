@@ -59,6 +59,9 @@ export function createErrorEnvelope(
   };
 }
 
-export function serializeEnvelope<T>(envelope: CliSuccessEnvelope<T> | CliErrorEnvelope, compact = false): string {
+export function serializeEnvelope<T>(
+  envelope: CliSuccessEnvelope<T> | CliErrorEnvelope,
+  compact = false,
+): string {
   return compact ? JSON.stringify(envelope) : JSON.stringify(envelope, null, 2);
 }

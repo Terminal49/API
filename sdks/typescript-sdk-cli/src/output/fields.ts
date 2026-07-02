@@ -16,43 +16,73 @@ function normalizePathList(fields?: string): string[] {
     .filter(Boolean);
 }
 
-function getValue(input: unknown, path: string): unknown {
-  const parts = path.split('.');
-  return parts.reduce<unknown>((current, part) => {
-    if (current === null || current === undefined) return undefined;
-    if (typeof current !== 'object' || Array.isArray(current)) {
-      return undefined;
-    }
-    return (current as Record<string, unknown>)[part];
-  }, input);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function setValue(target: Record<string, unknown>, path: string, value: unknown) {
-  const parts = path.split('.');
-  let cursor: Record<string, unknown> = target;
-  parts.forEach((part, idx) => {
-    if (idx === parts.length - 1) {
-      cursor[part] = value;
-      return;
+function projectPath(value: unknown, parts: string[]): unknown {
+  if (parts.length === 0) return value;
+  if (value === null || value === undefined) return undefined;
+
+  if (Array.isArray(value)) {
+    const projected = value
+      .map((item) => {
+        const projectedItem = projectPath(item, parts);
+        return projectedItem === undefined && isRecord(item)
+          ? {}
+          : projectedItem;
+      })
+      .filter((item) => item !== undefined);
+    return projected.length > 0 || value.length === 0 ? projected : undefined;
+  }
+
+  if (!isRecord(value)) return undefined;
+
+  const [head, ...tail] = parts;
+  const projected = projectPath(value[head], tail);
+  if (projected === undefined) return undefined;
+  return { [head]: projected };
+}
+
+function mergeProjection(
+  target: Record<string, unknown>,
+  source: unknown,
+): void {
+  if (!isRecord(source)) return;
+
+  for (const [key, value] of Object.entries(source)) {
+    const current = target[key];
+    if (Array.isArray(current) && Array.isArray(value)) {
+      target[key] = mergeArrays(current, value);
+    } else if (isRecord(current) && isRecord(value)) {
+      mergeProjection(current, value);
+    } else {
+      target[key] = value;
     }
-    if (
-      typeof cursor[part] !== 'object' ||
-      cursor[part] === null ||
-      Array.isArray(cursor[part])
-    ) {
-      cursor[part] = {};
+  }
+}
+
+function mergeArrays(current: unknown[], next: unknown[]): unknown[] {
+  const length = Math.max(current.length, next.length);
+  return Array.from({ length }, (_, index) => {
+    const left = current[index];
+    const right = next[index];
+    if (isRecord(left) && isRecord(right)) {
+      const merged = { ...left };
+      mergeProjection(merged, right);
+      return merged;
     }
-    cursor = cursor[part] as Record<string, unknown>;
+    return right === undefined ? left : right;
   });
 }
 
-function projectObject(value: Record<string, unknown>, fields: string[]): Record<string, unknown> {
+function projectObject(
+  value: Record<string, unknown>,
+  fields: string[],
+): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   fields.forEach((path) => {
-    const projected = getValue(value, path);
-    if (projected !== undefined) {
-      setValue(result, path, projected);
-    }
+    mergeProjection(result, projectPath(value, path.split('.')));
   });
   return result;
 }
@@ -62,10 +92,20 @@ export function projectFields<T>(value: T, fields?: string): T {
   if (fieldList.length === 0) return value;
 
   if (Array.isArray(value)) {
-    return value.map((row) => projectObject(row as Record<string, unknown>, fieldList)) as T;
+    return value.map((row) =>
+      isRecord(row) ? projectObject(row, fieldList) : row,
+    ) as T;
   }
-  if (value && typeof value === 'object') {
-    return projectObject(value as Record<string, unknown>, fieldList) as T;
+  if (isRecord(value)) {
+    if (Array.isArray(value.items)) {
+      return {
+        ...value,
+        items: value.items.map((row) =>
+          isRecord(row) ? projectObject(row, fieldList) : row,
+        ),
+      } as T;
+    }
+    return projectObject(value, fieldList) as T;
   }
   return value;
 }

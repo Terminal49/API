@@ -4,34 +4,32 @@
  * Global search across shipments, containers, and tracking requests.
  */
 
-import { Command } from 'commander';
-import { createClient } from '../client-factory.js';
-import { createFormatter } from '../output/formatter.js';
-import { withErrorHandling } from '../errors.js';
+import type { Terminal49Client } from '@terminal49/sdk';
+import type { Command } from 'commander';
+import { action } from './action.js';
+
+async function formatSearchResult(
+  client: Terminal49Client,
+  query: string,
+  format: 'raw' | 'mapped' | 'both' | undefined,
+): Promise<unknown> {
+  const raw = await client.search(query);
+  if (format === 'both') return { raw, mapped: client.deserialize(raw) };
+  if (format === 'raw') return raw;
+  return client.deserialize(raw);
+}
 
 export function registerSearchCommand(program: Command): void {
-  const cmd = program.command('search').description('Search terminal49 resources');
+  const cmd = program
+    .command('search')
+    .description('Search terminal49 resources');
 
   cmd
     .argument('<query>')
     .description('Search query')
     .action(
-      withErrorHandling('search', async (query: string, _options: unknown, command: Command) => {
-        const global = command.optsWithGlobals();
-        const formatter = createFormatter({
-          json: global.json,
-          table: global.table,
-          compact: global.compact,
-          fields: global.fields,
-        });
-        const client = await createClient({
-          token: global.token,
-          baseUrl: global.baseUrl,
-          format: global.format as 'raw' | 'mapped' | 'both',
-          maxRetries: global.maxRetries,
-        });
-        const result = await client.search(query);
-        formatter.output('search', result);
-      }),
+      action('search', async ({ client, globals }, query: string) =>
+        formatSearchResult(client, query, globals.format),
+      ),
     );
 }

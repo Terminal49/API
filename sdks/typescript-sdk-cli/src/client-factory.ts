@@ -11,31 +11,51 @@
 
 import {
   AuthenticationError,
-  Terminal49Client,
   type ResponseFormat,
+  Terminal49Client,
 } from '@terminal49/sdk';
-import { loadConfig } from './config.js';
+import { type CliConfig, loadConfig } from './config.js';
 
 export interface CliGlobalOptions {
   token?: string;
   baseUrl?: string;
   format?: 'raw' | 'mapped' | 'both';
   maxRetries?: number;
+  accountId?: string;
+  timeoutMs?: number;
+}
+
+let configPromise: Promise<CliConfig> | undefined;
+
+function configOnce(): Promise<CliConfig> {
+  configPromise ??= loadConfig();
+  return configPromise;
 }
 
 export async function createClient(
   opts: CliGlobalOptions = {},
 ): Promise<Terminal49Client> {
-  const cfg = await loadConfig();
-  const token = opts.token?.trim() || process.env.T49_API_TOKEN || cfg.token;
+  const cfg = await configOnce();
+  const format = opts.format ?? cfg.defaultFormat ?? 'mapped';
+  const token = opts.token ?? process.env.T49_API_TOKEN ?? cfg.token;
+  const baseUrl = opts.baseUrl ?? process.env.T49_API_BASE_URL ?? cfg.baseUrl;
+  const maxRetries = opts.maxRetries ?? cfg.maxRetries;
+  const accountId =
+    opts.accountId ?? process.env.T49_ACCOUNT_ID ?? cfg.accountId;
+  const timeoutMs = opts.timeoutMs ?? cfg.timeoutMs;
+
   if (!token || token.trim() === '') {
-    throw new AuthenticationError('Missing authentication token. Set --token, T49_API_TOKEN, or config token.');
+    throw new AuthenticationError(
+      'Missing authentication token. Set --token, T49_API_TOKEN, or config token.',
+    );
   }
 
   return new Terminal49Client({
     apiToken: token,
-    apiBaseUrl: opts.baseUrl?.trim() || cfg.baseUrl,
-    maxRetries: opts.maxRetries ?? cfg.maxRetries,
-    defaultFormat: (opts.format as ResponseFormat) ?? cfg.defaultFormat ?? 'raw',
+    apiBaseUrl: baseUrl,
+    maxRetries,
+    accountId,
+    timeoutMs,
+    defaultFormat: format as ResponseFormat,
   });
 }
