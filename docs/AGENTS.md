@@ -17,6 +17,8 @@ These instructions guide automated changes for the Terminal49 docs in this repos
 - Useful Info: explanation/FAQ content that supports decisions and integrations.
 - API Reference: reference-only endpoint lookups, no narrative.
 
+For substantive documentation writing, use the repo-local skill at `../skills/terminal49-docs-writing/SKILL.md`. It includes content-type-specific guides for tutorials, how-to guides, reference pages, concepts, webhook/event docs, SDK/MCP docs, DataSync/coverage docs, changelog/update posts, and navigation.
+
 ## Voice and terminology
 - Sound like a domain expert but stay friendly and easy to understand.
 - Use active voice and second person ("you").

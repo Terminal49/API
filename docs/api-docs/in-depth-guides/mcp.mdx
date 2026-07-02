@@ -10,8 +10,6 @@ keywords:
   - "Cursor"
   - "MCP config"
 ---
-# MCP server quickstart
-
 This guide covers everything you need to connect Claude or Cursor to Terminal49's container tracking data via MCP.
 
 <Note>
@@ -26,8 +24,8 @@ Before you begin, make sure you have:
   <Card title="Terminal49 account" icon="user">
     A Terminal49 account with API access
   </Card>
-  <Card title="API token" icon="key">
-    A `T49_API_TOKEN` from the [dashboard](https://app.terminal49.com/developers/api-keys)
+  <Card title="API key" icon="key">
+    An API key from the [developer portal](https://app.terminal49.com/developers/api-keys)
   </Card>
   <Card title="Node.js 24.x" icon="node-js">
     Required if running the MCP server locally
@@ -39,7 +37,7 @@ Before you begin, make sure you have:
 
 **Technical Details:**
 - **MCP SDK**: `@modelcontextprotocol/sdk ^1.29.0`
-- **TypeScript SDK**: `@terminal49/sdk 0.2.0`
+- **TypeScript SDK**: `@terminal49/sdk 0.3.0`
 - **Sentry MCP Monitoring**: `@sentry/node ^10.55.0` (optional)
 - **Runtime**: Node.js 24.x
 
@@ -49,14 +47,15 @@ Before you begin, make sure you have:
 
 | Transport | Endpoint | Best For |
 |-----------|----------|----------|
-| HTTP (streamable) | `POST /api/mcp` or `POST /mcp` | Serverless, short-lived requests |
+| HTTP (streamable) | `POST https://mcp.terminal49.com` | Serverless, short-lived requests |
 
-**Authentication**: API token only (OAuth not required for this release).  
-Pass `Authorization: Bearer <T49_API_TOKEN>` or `Authorization: Token <T49_API_TOKEN>`.  
-Server falls back to `T49_API_TOKEN` environment variable.
+**Authentication**: API key only (OAuth not required for this release).
+Pass `Authorization: Token YOUR_API_KEY`. Use the `Token` scheme for API keys. The `Bearer` scheme is reserved for WorkOS OAuth access tokens — it currently accepts API keys for backward compatibility, but once OAuth is enabled, `Bearer` accepts only WorkOS tokens.
+
+The hosted endpoint always requires the `Authorization` header. Only the [local stdio server](#local-stdio-development) reads the `T49_API_TOKEN` environment variable instead of a header.
 
 <Tip>
-Claude Desktop and Cursor use the HTTP transport. For hosted production usage, use Streamable HTTP at `/mcp`.
+Claude Desktop and Cursor use the HTTP transport. For hosted production usage, connect to `https://mcp.terminal49.com` — the root origin is the canonical connector URL.
 </Tip>
 
 {/* OAuth hosted docs are not yet published. Links will be added when the pages are available. */}
@@ -93,9 +92,9 @@ SENTRY_SEND_DEFAULT_PII=false
     {
       "mcpServers": {
         "terminal49": {
-          "url": "https://mcp.terminal49.com/mcp",
+          "url": "https://mcp.terminal49.com",
           "headers": {
-            "Authorization": "Bearer <T49_API_TOKEN>"
+            "Authorization": "Token YOUR_API_KEY"
           }
         }
       }
@@ -109,9 +108,9 @@ SENTRY_SEND_DEFAULT_PII=false
     {
       "mcpServers": {
         "terminal49": {
-          "url": "https://mcp.terminal49.com/mcp",
+          "url": "https://mcp.terminal49.com",
           "headers": {
-            "Authorization": "Bearer <T49_API_TOKEN>"
+            "Authorization": "Token YOUR_API_KEY"
           }
         }
       }
@@ -125,9 +124,9 @@ SENTRY_SEND_DEFAULT_PII=false
     {
       "mcpServers": {
         "terminal49": {
-          "url": "https://mcp.terminal49.com/mcp",
+          "url": "https://mcp.terminal49.com",
           "headers": {
-            "Authorization": "Bearer <T49_API_TOKEN>"
+            "Authorization": "Token YOUR_API_KEY"
           }
         }
       }
@@ -145,9 +144,9 @@ Add to your Cursor settings:
   "mcp": {
     "servers": {
       "terminal49": {
-        "url": "https://mcp.terminal49.com/mcp",
+        "url": "https://mcp.terminal49.com",
         "headers": {
-          "Authorization": "Bearer <T49_API_TOKEN>"
+          "Authorization": "Token YOUR_API_KEY"
         }
       }
     }
@@ -166,7 +165,7 @@ For local development without a hosted server:
       "command": "node",
       "args": ["/path/to/API/packages/mcp/dist/index.js"],
       "env": {
-        "T49_API_TOKEN": "your_token_here"
+        "T49_API_TOKEN": "YOUR_API_KEY"
       }
     }
   }
@@ -229,8 +228,8 @@ Need test container numbers? See [Test Numbers](/api-docs/useful-info/test-numbe
 
 | Symptom | Likely Cause | How to Fix |
 |---------|--------------|------------|
-| "Cannot connect to MCP server" | Wrong URL or config path | Confirm URL is `https://mcp.terminal49.com/mcp` and config file path matches your OS |
-| `401 Unauthorized` | Missing or invalid token | Create a new API token in [dashboard](https://app.terminal49.com/developers/api-keys); ensure `Authorization: Bearer <token>` header is set |
+| "Cannot connect to MCP server" | Wrong URL or config path | Confirm URL is `https://mcp.terminal49.com` and config file path matches your OS |
+| `401 Unauthorized` | Missing or invalid API key | Create a new API key in the [developer portal](https://app.terminal49.com/developers/api-keys); ensure the `Authorization: Token YOUR_API_KEY` header is set |
 | `429 Too Many Requests` | Rate limit exceeded | See [Rate Limiting](/api-docs/in-depth-guides/rate-limiting); use webhooks instead of polling |
 | Tools list is empty | Config not loaded | Restart Claude/Cursor; check MCP inspector for errors |
 | "Tool not found" | Typo in tool name | Use exact names: `search_container`, `get_container`, etc. |
@@ -242,7 +241,7 @@ If using the hosted server, check your Terminal49 dashboard for API logs.
 If running locally:
 ```bash
 cd packages/mcp
-T49_API_TOKEN=your_token npm run mcp:stdio 2>&1 | head -20
+T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio 2>&1 | head -20
 ```
 </Accordion>
 
@@ -355,16 +354,18 @@ const shipments = await client.shipments.list({
 
 ### Vercel (production)
 
-The `vercel.json` configures the MCP server:
+The `vercel.json` configures the MCP server (excerpt):
 
 ```json
 {
-  "buildCommand": "cd packages/mcp && npm ci && npm run build",
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp",
   "functions": {
-    "api/mcp.ts": { "maxDuration": 30, "memory": 1024 }
+    "api/mcp.ts": { "maxDuration": 30 }
   },
   "rewrites": [
-    { "source": "/mcp", "destination": "/api/mcp" }
+    { "source": "/mcp", "destination": "/api/mcp" },
+    { "source": "/", "destination": "/api/mcp" }
   ]
 }
 ```
@@ -373,7 +374,7 @@ The `vercel.json` configures the MCP server:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `T49_API_TOKEN` | Yes | Terminal49 API token |
+| `T49_API_TOKEN` | For local stdio | Terminal49 API key. The hosted HTTP endpoint authenticates callers via the `Authorization` header instead |
 | `T49_API_BASE_URL` | No | Override API URL (default: `https://api.terminal49.com/v2`) |
 | `T49_MCP_ALLOWED_HOSTS` | No | Comma-separated host allowlist for request Host validation |
 | `T49_MCP_ALLOWED_ORIGINS` | No | Comma-separated origin allowlist for request Origin validation |
@@ -396,14 +397,14 @@ npm install
 npm run build
 
 # Test tools/list
-echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | T49_API_TOKEN=your_token npm run mcp:stdio
+echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio
 
 # Test search_container
-echo '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"search_container","arguments":{"query":"CAIU1234567"}},"id":2}' | T49_API_TOKEN=your_token npm run mcp:stdio
+echo '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"search_container","arguments":{"query":"CAIU1234567"}},"id":2}' | T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio
 
 # Test the hosted endpoint
-curl -X POST https://mcp.terminal49.com/mcp \
-  -H "Authorization: Bearer $T49_API_TOKEN" \
+curl -X POST https://mcp.terminal49.com \
+  -H "Authorization: Token $T49_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
 ```

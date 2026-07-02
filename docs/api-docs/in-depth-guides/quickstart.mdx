@@ -19,12 +19,12 @@ You need four things to get started.
 1. **A Bill of Lading (BOL) number.** This is issued by your carrier. BOL numbers are found on your [bill of lading](https://en.wikipedia.org/wiki/Bill_of_lading) document. Ideally, this will be a shipment that is currently on the water or in terminal, but this is not necessary.
 2. **The SCAC of the carrier that issued your bill of lading.** The Standard Carrier Alpha Code of your carrier is used to identify carriers in computer systems and in shipping documents. You can learn more about these [here](https://en.wikipedia.org/wiki/Standard_Carrier_Alpha_Code).
 3. **A Terminal49 Account.** If you don't have one yet, [sign up here.](https://app.terminal49.com/register)
-4. **An API key.** Sign in to your Terminal49 account and go to your [developer portal page](https://app.terminal49.com/developers) to get your API key.
+4. **An API key.** Sign in to your Terminal49 account and go to your [developer portal page](https://app.terminal49.com/developers/api-keys) to get your API key.
 
 <Tip>
-  Not sure which SCAC to use? The [Auto-Detect
-  Carrier](/api-docs/in-depth-guides/auto-detect-carrier) API can identify it
-  from your tracking number.
+  Not sure which SCAC to use? The [Infer Tracking
+  Number](/api-docs/in-depth-guides/auto-detect-carrier) endpoint (Auto-Detect
+  Carrier) can identify it from your tracking number.
 </Tip>
 
 ## Track a shipment
@@ -34,7 +34,7 @@ Use the request example below as a starting point, or copy the same values into 
 1. Replace `YOUR_API_KEY` in the `Authorization` header with your API key.
 2. Replace `request_number` and `scac` with your shipment details. The request number must be a shipping line booking number, master bill of lading number, or container number. The SCAC must be a shipping line SCAC. See [API Data Sources](/api-docs/useful-info/api-data-sources-availability) for coverage details.
 
-```json http
+```json POST /tracking_requests
 {
   "method": "post",
   "url": "https://api.terminal49.com/v2/tracking_requests",
@@ -59,17 +59,19 @@ Use the request example below as a starting point, or copy the same values into 
 
 If you have not set up a webhook to receive status updates from the Terminal49 API, you need to poll manually to check whether the tracking request succeeded or failed.
 
-> ### Tracking request troubleshooting
->
-> The most common issue is entering the wrong number.
->
-> Check that you are entering a Bill of Lading number, booking number, or container number — not an internal reference from your company or freight forwarder. Verify the number by going to the carrier's website and tracking the shipment with it. If that works and the SCAC is supported by Terminal49, you should be able to track it through the API.
->
-> Email support@terminal49.com if you have persistent issues.
+<Note>
+  **Tracking request troubleshooting**
+
+  The most common issue is entering the wrong number.
+
+  Check that you are entering a Bill of Lading number, booking number, or container number — not an internal reference from your company or freight forwarder. Verify the number by going to the carrier's website and tracking the shipment with it. If that works and the SCAC is supported by Terminal49, you should be able to track it through the API.
+
+  Email support@terminal49.com if you have persistent issues.
+</Note>
 
 Use this request to list your recent tracking requests. Replace `YOUR_API_KEY` in the `Authorization` header with your API key.
 
-```json http
+```json GET /tracking_requests
 {
   "method": "get",
   "url": "https://api.terminal49.com/v2/tracking_requests",
@@ -90,7 +92,7 @@ Sometimes it may take a while for the tracking request to show up, but usually n
 
 If you had trouble adding your first shipment, try adding a few more.
 
-```json http
+```json GET /shipments
 {
   "method": "get",
   "url": "https://api.terminal49.com/v2/shipments",
@@ -107,7 +109,7 @@ You can also list out all of your containers, if you'd like to track at that lev
 
 Use this request to list tracked containers. Replace `YOUR_API_KEY` in the `Authorization` header with your API key.
 
-```json http
+```json GET /containers
 {
   "method": "get",
   "url": "https://api.terminal49.com/v2/containers",
@@ -128,7 +130,7 @@ Choose the events you want to subscribe to (for example vessel departed, arrived
 
 You can test your endpoint before creating the actual webhook by sending a sample notification with the Trigger endpoint:
 
-```json http
+```json POST /webhooks/trigger
 {
   "method": "post",
   "url": "https://api.terminal49.com/v2/webhooks/trigger",
@@ -148,7 +150,7 @@ Trigger sends an example payload for the event you choose.
 
 Once tested, create the actual webhook to receive the real notifications as they happen:
 
-```json http
+```json POST /webhooks
 {
   "method": "post",
   "url": "https://api.terminal49.com/v2/webhooks",
@@ -168,4 +170,5 @@ Once tested, create the actual webhook to receive the real notifications as they
   }
 }
 ```
+
 Learn more about [Webhooks](/api-docs/in-depth-guides/webhooks).

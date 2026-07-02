@@ -16,8 +16,8 @@ The SDK throws typed errors you can catch and handle based on the error type.
 
 | Error | Cause |
 |-------|-------|
-| `AuthenticationError` | Invalid or missing API token |
-| `AuthorizationError` | Valid token but insufficient permissions |
+| `AuthenticationError` | Invalid or missing API key |
+| `AuthorizationError` | Valid API key but insufficient permissions |
 | `NotFoundError` | Resource doesn't exist or isn't accessible |
 | `ValidationError` | Invalid request parameters |
 | `RateLimitError` | Too many requests |
@@ -43,7 +43,7 @@ try {
   await client.containers.get('container-uuid');
 } catch (error) {
   if (error instanceof AuthenticationError) {
-    console.error('Invalid API token');
+    console.error('Invalid API key');
   } else if (error instanceof NotFoundError) {
     console.error('Container not found');
   } else if (error instanceof RateLimitError) {

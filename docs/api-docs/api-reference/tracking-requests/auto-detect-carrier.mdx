@@ -1,9 +1,9 @@
 ---
 title: Infer Tracking Number (Beta)
-description: "Use the Terminal49 Infer API to predict the carrier SCAC and number type from a bill of lading, booking, or container number with confidence scores."
+description: "Use the Terminal49 Infer Tracking Number endpoint to predict the carrier SCAC and number type from a bill of lading, booking, or container number with confidence scores."
 sidebarTitle: Infer Tracking Number 🆕
 og:title: Infer Tracking Number | Terminal49 API Documentation
-og:description: Use the Terminal49 Infer API to predict the carrier SCAC code and tracking number type from a bill of lading, booking, or container number.
+og:description: Use the Terminal49 Infer Tracking Number endpoint to predict the carrier SCAC code and tracking number type from a bill of lading, booking, or container number.
 openapi: post /tracking_requests/infer_number
 ---
 
@@ -30,11 +30,11 @@ Provide a tracking number (container, bill of lading, or booking). The endpoint 
 ## How to use the result
 
 <Warning>
-  This endpoint is rate limited to 200 requests per minute per API key.
+  This endpoint has its own rate-limit bucket: 200 requests per minute per API key.
 </Warning>
 
 <Card
-  title="Auto-Detect Carrier Guide"
+  title="Infer Tracking Number Guide"
   icon="book"
   href="/api-docs/in-depth-guides/auto-detect-carrier"
 >

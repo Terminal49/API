@@ -56,12 +56,13 @@ curl https://api.terminal49.com/v2/shipments \
 
 | Detail | Value |
 | --- | --- |
-| Limit | 100 requests per minute |
-| Scope | Per API key |
+| Default limit | 100 requests per minute |
+| Scope | Per API key/account |
 | Window | Rolling 60 seconds |
 | Over-limit response | `429 Too Many Requests` |
+| Retry header | `Retry-After` in seconds |
 
-See the [rate limiting guide](/api-docs/in-depth-guides/rate-limiting) for retry strategies and best practices.
+Some endpoints have their own rate-limit bucket. For example, Infer Tracking Number allows 200 requests per minute, Create Tracking Request allows 100 requests per minute, and Refresh Container allows 10 requests per minute. See the [rate limiting guide](/api-docs/in-depth-guides/rate-limiting) for endpoint-specific limits, retry semantics, and best practices.
 
 <Tip>
   Use [webhooks](/api-docs/in-depth-guides/webhooks) instead of polling to receive real-time updates. This keeps you well within rate limits and gives you faster data.

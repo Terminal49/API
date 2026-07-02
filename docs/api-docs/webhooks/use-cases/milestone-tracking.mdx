@@ -75,7 +75,7 @@ For containers with transshipments, feeder vessels, or inland rail moves, additi
 Each transport event webhook includes a `transport_event` object in the `included` array with the event type, timestamp, and location:
 
 ```javascript
-app.post("/webhooks/terminal49", (req, res) => {
+app.post("/webhooks/terminal49", async (req, res) => {
   const { data, included } = req.body;
   const event = data.attributes.event;
 

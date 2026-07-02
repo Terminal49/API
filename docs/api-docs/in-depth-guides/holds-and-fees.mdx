@@ -13,7 +13,7 @@ keywords:
 ---
 After a container is discharged at the Port of Discharge (POD), the terminal and government agencies may place holds or assess fees before the container can be picked up. For shipments with inland rail moves, holds and fees can also apply at the inland destination. Your integration needs to monitor these fields to determine when a container is actually released and ready for pickup.
 
-Terminal49 normalizes hold and fee data across 150+ terminal sources into two structured arrays on the container object: `holds_at_pod_terminal` and `fees_at_pod_terminal`. This guide shows you how to use them.
+Terminal49 normalizes hold and fee data from supported terminal sources into two structured arrays on the container object: `holds_at_pod_terminal` and `fees_at_pod_terminal`. This guide shows you how to use them.
 
 <Info>
 The field names reference `pod_terminal` for historical reasons, but these fields report hold and fee data regardless of whether the container is at a port terminal or an inland rail destination. The same readiness logic applies in both scenarios.

@@ -18,8 +18,10 @@ Last Free Day (LFD) is the deadline to pick up a container before demurrage char
 
 | Event | When it fires |
 |-------|---------------|
-| `container.pickup_lfd.changed` | The terminal's Last Free Day changed |
+| `container.pickup_lfd.changed` | The coalesced `pickup_lfd` field changed. It combines the line and terminal LFDs, preferring the shipping line LFD when available |
 | `container.pickup_lfd_line.changed` | The shipping line's Last Free Day changed |
+| `container.pickup_lfd_terminal.changed` | The destination terminal's Last Free Day changed |
+| `container.pickup_lfd_rail.changed` | The rail terminal's Last Free Day changed for an inland rail move ([Rail Plan](/api-docs/useful-info/entitlements) only) |
 | `container.transport.available` | The container is available for pickup at the destination |
 | `container.updated` | Container attributes changed (may include holds or availability updates) |
 
@@ -28,7 +30,7 @@ Last Free Day (LFD) is the deadline to pick up a container before demurrage char
 When a `container.pickup_lfd.changed` event fires, the `included` array contains the full container object with the updated `pickup_lfd` field:
 
 ```javascript
-app.post("/webhooks/terminal49", (req, res) => {
+app.post("/webhooks/terminal49", async (req, res) => {
   const { data, included } = req.body;
   const event = data.attributes.event;
 
@@ -45,10 +47,14 @@ app.post("/webhooks/terminal49", (req, res) => {
     );
 
     if (daysUntilLfd <= 2) {
-      await alertDispatch({
-        priority: "urgent",
-        message: `Container ${containerNumber} (${bolNumber}) — LFD is ${newLfd}, ${daysUntilLfd} days away`,
-      });
+      try {
+        await alertDispatch({
+          priority: "urgent",
+          message: `Container ${containerNumber} (${bolNumber}) — LFD is ${newLfd}, ${daysUntilLfd} days away`,
+        });
+      } catch (err) {
+        console.error("Failed to dispatch LFD alert", err);
+      }
     }
   }
 
@@ -80,7 +86,7 @@ Subscribe to both `container.transport.available` and `container.updated` events
 
 - **Demurrage prevention** — alert when LFD is within 48 hours and the container has not been dispatched
 - **Automated dispatch** — trigger a drayage order as soon as the container clears holds
-- **LFD comparison** — track both terminal and shipping line LFDs; the earlier date is the one that matters
+- **LFD comparison** — track terminal, rail terminal, and shipping line LFDs when applicable; the earlier date is the one that matters
 - **Hold monitoring** — watch for `container.updated` events where `holds_at_pod_terminal` changes
 
 ## Related
