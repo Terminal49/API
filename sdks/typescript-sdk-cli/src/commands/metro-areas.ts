@@ -2,10 +2,8 @@
  * t49 metro-areas <action>
  */
 
-import { Command } from 'commander';
-import { createClient } from '../client-factory.js';
-import { createFormatter } from '../output/formatter.js';
-import { withErrorHandling } from '../errors.js';
+import type { Command } from 'commander';
+import { action } from './action.js';
 
 export function registerMetroAreasCommand(program: Command): void {
   const cmd = program
@@ -17,22 +15,8 @@ export function registerMetroAreasCommand(program: Command): void {
     .command('get <id>')
     .description('Get a metro area')
     .action(
-      withErrorHandling('metro-areas.get', async (id: string, _options: unknown, command: Command) => {
-        const global = command.optsWithGlobals();
-        const formatter = createFormatter({
-          json: global.json,
-          table: global.table,
-          compact: global.compact,
-          fields: global.fields,
-        });
-        const client = await createClient({
-          token: global.token,
-          baseUrl: global.baseUrl,
-          format: global.format as 'raw' | 'mapped' | 'both',
-          maxRetries: global.maxRetries,
-        });
-        const result = await client.metroAreas.get(id);
-        formatter.output('metro-areas.get', result);
-      }),
+      action('metro-areas.get', async ({ client, globals }, id: string) =>
+        client.metroAreas.get(id, { format: globals.format }),
+      ),
     );
 }

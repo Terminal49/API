@@ -6,25 +6,26 @@
  */
 
 import { createRequire } from 'node:module';
-import { Command, InvalidArgumentError } from 'commander';
-import { registerContainersCommand } from './commands/containers.js';
-import { registerConfigCommand } from './commands/config.js';
+import { Command, InvalidArgumentError, Option } from 'commander';
 import { registerCommandsCommand } from './commands/commands.js';
+import { registerConfigCommand } from './commands/config.js';
+import { registerContainersCommand } from './commands/containers.js';
 import { registerCustomFieldDefinitionsCommand } from './commands/custom-field-definitions.js';
 import { registerCustomFieldOptionsCommand } from './commands/custom-field-options.js';
 import { registerCustomFieldsCommand } from './commands/custom-fields.js';
-import { registerSearchCommand } from './commands/search.js';
-import { registerShippingLinesCommand } from './commands/shipping-lines.js';
-import { registerShipmentsCommand } from './commands/shipments.js';
 import { registerMetroAreasCommand } from './commands/metro-areas.js';
 import { registerPartiesCommand } from './commands/parties.js';
 import { registerPortsCommand } from './commands/ports.js';
+import { registerSearchCommand } from './commands/search.js';
+import { registerShipmentsCommand } from './commands/shipments.js';
+import { registerShippingLinesCommand } from './commands/shipping-lines.js';
 import { registerTerminalsCommand } from './commands/terminals.js';
 import { registerTrackCommand } from './commands/track.js';
 import { registerTrackingRequestsCommand } from './commands/tracking-requests.js';
 import { registerVesselsCommand } from './commands/vessels.js';
-import { registerWebhooksCommand } from './commands/webhooks.js';
 import { registerWebhookNotificationsCommand } from './commands/webhook-notifications.js';
+import { registerWebhooksCommand } from './commands/webhooks.js';
+import { positiveInt } from './util/input.js';
 
 function loadPackageVersion(): string {
   const require = createRequire(import.meta.url);
@@ -54,44 +55,65 @@ export function createProgram(): Command {
     .option('--table', 'Force table output (mutually exclusive with --json)')
     .option('--compact', 'Minified JSON (reduces LLM token usage)')
     .option('--fields <fields>', 'Comma-separated field projection')
+    .addOption(
+      new Option('--format <format>', 'Response format').choices([
+        'raw',
+        'mapped',
+        'both',
+      ]),
+    )
     .option('--token <token>', 'API token (overrides env/config)')
     .option('--base-url <url>', 'API base URL override')
-    .option('--format <format>', 'Response format: raw | mapped | both', 'mapped')
-    .option('--max-retries <attempts>', 'Retry attempts for 429/5xx responses', (value) =>
-      Number.parseInt(value, 10),
+    .option('--account-id <id>', 'Account id for user-scoped bearer tokens')
+    .option(
+      '--timeout <ms>',
+      'Request timeout in milliseconds',
+      positiveInt('--timeout'),
     )
-    .option('-q, --quiet', 'Suppress non-data output')
-    .option('-v, --verbose', 'Verbose diagnostics to stderr')
-    .option('--no-color', 'Disable color output');
+    .option(
+      '--max-retries <n>',
+      'Retry attempts for 429/5xx responses',
+      positiveInt('--max-retries'),
+    );
 
   program.hook('preAction', (_command: Command, actionCommand: Command) => {
     const global = actionCommand.optsWithGlobals();
 
     // Enforce mutual exclusion of --json and --table
     if (global.json && global.table) {
-      throw new InvalidArgumentError('--json and --table are mutually exclusive');
+      throw new InvalidArgumentError(
+        '--json and --table are mutually exclusive',
+      );
     }
-
   });
 
-  registerContainersCommand(program);
-  registerShipmentsCommand(program);
-  registerTrackingRequestsCommand(program);
-  registerTrackCommand(program);
-  registerShippingLinesCommand(program);
-  registerSearchCommand(program);
-  registerConfigCommand(program);
-  registerCommandsCommand(program);
-  registerWebhooksCommand(program);
-  registerWebhookNotificationsCommand(program);
-  registerVesselsCommand(program);
-  registerPortsCommand(program);
-  registerTerminalsCommand(program);
-  registerPartiesCommand(program);
-  registerMetroAreasCommand(program);
-  registerCustomFieldsCommand(program);
-  registerCustomFieldDefinitionsCommand(program);
-  registerCustomFieldOptionsCommand(program);
+  const registrars = [
+    registerContainersCommand,
+    registerShipmentsCommand,
+    registerTrackingRequestsCommand,
+    registerTrackCommand,
+    registerShippingLinesCommand,
+    registerSearchCommand,
+    registerConfigCommand,
+    registerCommandsCommand,
+    registerWebhooksCommand,
+    registerWebhookNotificationsCommand,
+    registerVesselsCommand,
+    registerPortsCommand,
+    registerTerminalsCommand,
+    registerPartiesCommand,
+    registerMetroAreasCommand,
+    registerCustomFieldsCommand,
+    registerCustomFieldDefinitionsCommand,
+    registerCustomFieldOptionsCommand,
+  ];
+
+  // biome-ignore lint/complexity/noForEach: The design contract requires registrar iteration with forEach.
+  registrars.forEach((register) => register(program));
+
+  program
+    .showHelpAfterError('(run --help for usage)')
+    .showSuggestionAfterError();
 
   return program;
 }

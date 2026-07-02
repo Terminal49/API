@@ -10,49 +10,41 @@
  *   1 - General error
  *   2 - Usage / argument error
  *   3 - Authentication error
- *   4 - Authorization / feature error
+ *   4 - Rate limited
  *   5 - Not found
  *   6 - Validation error
- *   7 - Rate limited
+ *   7 - Reserved
  *   8 - Upstream / server error
  *   9 - Network / connection error
  */
 
-import { Command } from 'commander';
 import {
-  AuthenticationError,
-  AuthorizationError,
-  FeatureNotEnabledError,
-  NotFoundError,
+  AuthenticationError as AuthError,
+  NetworkError,
   RateLimitError,
   Terminal49Error,
-  UpstreamError,
   ValidationError,
 } from '@terminal49/sdk';
-import { createFormatter } from './output/formatter.js';
+import { Command, CommanderError, InvalidArgumentError } from 'commander';
+import { isOutputTTY } from './util/tty.js';
 
-export type CliExitCode =
-  | 0
-  | 1
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7
-  | 8
-  | 9;
+export type CliExitCode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export interface ErrorContext {
   command: Command | null;
 }
 
-function getCommandContext(args: any[]): ErrorContext {
-  const command = args.find((candidate) => candidate instanceof Command) as Command | null;
+function getCommandContext(args: unknown[]): ErrorContext {
+  const command = args.find(
+    (candidate) => candidate instanceof Command,
+  ) as Command | null;
   return { command };
 }
 
-function resolveContext(context: ErrorContext): { json: boolean; compact: boolean } {
+function resolveContext(context: ErrorContext): {
+  json: boolean;
+  compact: boolean;
+} {
   const opts = context.command?.optsWithGlobals?.() ?? {};
   return {
     json: Boolean((opts as { json?: boolean }).json),
@@ -60,30 +52,41 @@ function resolveContext(context: ErrorContext): { json: boolean; compact: boolea
   };
 }
 
-function getExitCode(error: unknown): CliExitCode {
-  if (error instanceof ValidationError) return 6;
-  if (error instanceof AuthenticationError) return 3;
-  if (error instanceof FeatureNotEnabledError) return 4;
-  if (error instanceof AuthorizationError) return 4;
-  if (error instanceof NotFoundError) return 5;
-  if (error instanceof RateLimitError) return 7;
-  if (error instanceof UpstreamError) return 8;
-  if (error instanceof Terminal49Error) return 1;
-  if (error instanceof Error) {
-    if (/(network|ENOTFOUND|fetch)/i.test(error.message)) return 9;
-  }
+export function getExitCode(error: unknown): CliExitCode {
+  if (error instanceof InvalidArgumentError || error instanceof CommanderError)
+    return 2;
+  if (error instanceof NetworkError) return 9;
+  if (
+    error instanceof AuthError ||
+    getStatus(error) === 401 ||
+    getStatus(error) === 403
+  )
+    return 3;
+  if (error instanceof RateLimitError || getStatus(error) === 429) return 4;
+  if (error instanceof ValidationError || getStatus(error) === 422) return 6;
+  if (error instanceof Terminal49Error) return getHttpExitCode(error.status);
   return 1;
 }
 
-function getErrorCode(error: unknown): string {
-  if (error instanceof ValidationError) return 'VALIDATION_ERROR';
-  if (error instanceof AuthenticationError) return 'AUTH_ERROR';
-  if (error instanceof FeatureNotEnabledError) return 'FEATURE_DISABLED';
-  if (error instanceof AuthorizationError) return 'FORBIDDEN';
-  if (error instanceof NotFoundError) return 'NOT_FOUND';
-  if (error instanceof RateLimitError) return 'RATE_LIMITED';
-  if (error instanceof UpstreamError) return 'UPSTREAM_ERROR';
-  if (error instanceof Terminal49Error) return error.name;
+export function getErrorCode(error: unknown): string {
+  if (error instanceof InvalidArgumentError || error instanceof CommanderError)
+    return 'USAGE_ERROR';
+  if (error instanceof NetworkError) return 'NETWORK_ERROR';
+  if (
+    error instanceof AuthError ||
+    getStatus(error) === 401 ||
+    getStatus(error) === 403
+  )
+    return 'AUTH_ERROR';
+  if (error instanceof RateLimitError || getStatus(error) === 429)
+    return 'RATE_LIMITED';
+  if (error instanceof ValidationError || getStatus(error) === 422)
+    return 'VALIDATION_ERROR';
+  if (error instanceof Terminal49Error) {
+    if (error.status === 404) return 'NOT_FOUND';
+    if (error.status && error.status >= 500) return 'UPSTREAM_ERROR';
+    return toUpperSnake(error.name || 'TERMINAL49_ERROR');
+  }
   return 'INTERNAL_ERROR';
 }
 
@@ -92,28 +95,88 @@ function getErrorMessage(error: unknown): string {
   return 'Unknown error';
 }
 
-export function withErrorHandling<TArgs extends any[]>(
+function getStatus(error: unknown): number | undefined {
+  return typeof error === 'object' && error !== null && 'status' in error
+    ? (error as { status?: number }).status
+    : undefined;
+}
+
+function getHttpExitCode(status: number | undefined): CliExitCode {
+  if (status === 400 || status === 422) return 6;
+  if (status === 401 || status === 403) return 3;
+  if (status === 404) return 5;
+  if (status === 429) return 4;
+  if (status && status >= 500) return 8;
+  return 1;
+}
+
+function toUpperSnake(input: string): string {
+  return input
+    .replace(/Error$/, '')
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .toUpperCase();
+}
+
+function getRetryAfterMs(error: unknown): number | undefined {
+  if (typeof error !== 'object' || error === null) return undefined;
+  const value = (error as { retryAfterMs?: unknown }).retryAfterMs;
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : undefined;
+}
+
+export function printError(
+  error: unknown,
+  context: ErrorContext = { command: null },
+): void {
+  const { json, compact } = resolveContext(context);
+  const code = getErrorCode(error);
+  const payload = {
+    ok: false as const,
+    error: {
+      code,
+      message: getErrorMessage(error),
+      details: error instanceof Terminal49Error ? error.details : undefined,
+      retryable: code === 'RATE_LIMITED' ? true : undefined,
+      retryAfterMs:
+        code === 'RATE_LIMITED' ? getRetryAfterMs(error) : undefined,
+    },
+  };
+
+  if (json || !isOutputTTY('stderr')) {
+    process.stderr.write(
+      `${compact ? JSON.stringify(payload) : JSON.stringify(payload, null, 2)}\n`,
+    );
+    return;
+  }
+
+  process.stderr.write(`${payload.error.code}: ${payload.error.message}\n`);
+}
+
+export function withErrorHandling<TArgs extends unknown[]>(
+  action: (...args: TArgs) => Promise<unknown>,
+): (...args: TArgs) => Promise<void>;
+export function withErrorHandling<TArgs extends unknown[]>(
   commandName: string,
   action: (...args: TArgs) => Promise<unknown>,
+): (...args: TArgs) => Promise<void>;
+export function withErrorHandling<TArgs extends unknown[]>(
+  commandNameOrAction: string | ((...args: TArgs) => Promise<unknown>),
+  maybeAction?: (...args: TArgs) => Promise<unknown>,
 ) {
+  const action =
+    typeof commandNameOrAction === 'function'
+      ? commandNameOrAction
+      : maybeAction;
+
   return async (...args: TArgs): Promise<void> => {
     try {
-      await action(...args);
+      await action?.(...args);
       return;
     } catch (error) {
       const { command } = getCommandContext(args);
-      const { json, compact } = resolveContext({ command });
       const exitCode = getExitCode(error);
-      const formatter = createFormatter({
-        json,
-        compact,
-      });
-      formatter.outputError(commandName, {
-        code: getErrorCode(error),
-        message: getErrorMessage(error),
-        status: (error as { status?: number }).status,
-        details: error instanceof Terminal49Error ? error.details : undefined,
-      });
+      printError(error, { command });
       process.exit(exitCode);
     }
   };

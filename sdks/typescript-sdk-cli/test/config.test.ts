@@ -24,7 +24,11 @@ describe('config persistence', () => {
   it('writes and reads typed config values', async () => {
     const cfgPath = getConfigPath();
     await resetConfig();
-    await writeConfig({ token: 'token-1', maxRetries: 2, defaultFormat: 'mapped' });
+    await writeConfig({
+      token: 'token-1',
+      maxRetries: 2,
+      defaultFormat: 'mapped',
+    });
 
     const loaded = await loadConfig();
     expect(loaded.token).toBe('token-1');

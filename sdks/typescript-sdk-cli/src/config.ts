@@ -1,18 +1,16 @@
-import { constants } from 'node:fs';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-export type CliOutputMode = 'json' | 'table';
 export type CliResponseFormat = 'raw' | 'mapped' | 'both';
 export interface CliConfig {
   version: number;
   token?: string;
   baseUrl?: string;
   defaultFormat?: CliResponseFormat;
-  defaultOutput?: CliOutputMode;
   maxRetries?: number;
-  color?: boolean;
+  accountId?: string;
+  timeoutMs?: number;
 }
 
 const CONFIG_VERSION = 1;
@@ -43,17 +41,21 @@ function sanitizeConfig(raw: Record<string, unknown>): CliConfig {
   if (typeof raw.baseUrl === 'string' && raw.baseUrl.trim() !== '') {
     output.baseUrl = raw.baseUrl.trim();
   }
-  if (raw.defaultFormat === 'raw' || raw.defaultFormat === 'mapped' || raw.defaultFormat === 'both') {
+  if (
+    raw.defaultFormat === 'raw' ||
+    raw.defaultFormat === 'mapped' ||
+    raw.defaultFormat === 'both'
+  ) {
     output.defaultFormat = raw.defaultFormat;
-  }
-  if (raw.defaultOutput === 'json' || raw.defaultOutput === 'table') {
-    output.defaultOutput = raw.defaultOutput;
   }
   if (typeof raw.maxRetries === 'number' && Number.isFinite(raw.maxRetries)) {
     output.maxRetries = Math.max(0, Math.floor(raw.maxRetries));
   }
-  if (typeof raw.color === 'boolean') {
-    output.color = raw.color;
+  if (typeof raw.accountId === 'string' && raw.accountId.trim() !== '') {
+    output.accountId = raw.accountId.trim();
+  }
+  if (typeof raw.timeoutMs === 'number' && Number.isFinite(raw.timeoutMs)) {
+    output.timeoutMs = Math.max(0, Math.floor(raw.timeoutMs));
   }
   return output;
 }
@@ -68,21 +70,38 @@ export function getConfigPath(): string {
 
 export async function loadConfig(): Promise<CliConfig> {
   const configPath = defaultConfigPath();
+  let content: string;
+
   try {
-    const content = await fs.readFile(configPath, 'utf8');
-    const parsed = JSON.parse(content);
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      return sanitizeConfig(parsed as Record<string, unknown>);
-    }
+    content = await fs.readFile(configPath, 'utf8');
   } catch (error) {
-    if (typeof error === 'object' && (error as NodeJS.ErrnoException).code === 'ENOENT') {
+    if (
+      typeof error === 'object' &&
+      (error as NodeJS.ErrnoException).code === 'ENOENT'
+    ) {
       return { version: CONFIG_VERSION };
     }
+    throw new Error(
+      `config file at ${configPath} is corrupt/unreadable: ${formatConfigError(error)}`,
+    );
   }
-  return { version: CONFIG_VERSION };
+
+  try {
+    const parsed = JSON.parse(content);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new Error('expected a JSON object');
+    }
+    return sanitizeConfig(parsed as Record<string, unknown>);
+  } catch (error) {
+    throw new Error(
+      `config file at ${configPath} is corrupt/unreadable: ${formatConfigError(error)}`,
+    );
+  }
 }
 
-export async function writeConfig(input: Partial<CliConfig>): Promise<CliConfig> {
+export async function writeConfig(
+  input: Partial<CliConfig>,
+): Promise<CliConfig> {
   const merged = sanitizeConfig({
     ...((await loadConfig()) as unknown as Record<string, unknown>),
     ...(input as unknown as Record<string, unknown>),
@@ -103,52 +122,21 @@ export async function writeConfig(input: Partial<CliConfig>): Promise<CliConfig>
   return merged;
 }
 
-export async function readConfigValue<K extends keyof CliConfig>(
-  key: K,
-): Promise<CliConfig[K] | undefined> {
-  const cfg = await loadConfig();
-  return cfg[key];
-}
-
-export async function deleteConfigValue<K extends keyof CliConfig>(key: K): Promise<CliConfig> {
-  const cfg = await loadConfig();
-  const next = { ...cfg };
-  if (key in next) {
-    delete (next as Record<string, unknown>)[key];
-  }
-  return writeConfig(next);
-}
-
 export async function resetConfig(): Promise<void> {
   const configPath = defaultConfigPath();
   try {
     await fs.unlink(configPath);
   } catch (error) {
-    if (typeof error !== 'object' || (error as NodeJS.ErrnoException).code !== 'ENOENT') {
+    if (
+      typeof error !== 'object' ||
+      (error as NodeJS.ErrnoException).code !== 'ENOENT'
+    ) {
       throw error;
     }
   }
 }
 
-export async function secureUnlinkConfig(pathToDelete = defaultConfigPath()): Promise<void> {
-  try {
-    await fs.unlink(pathToDelete);
-  } catch (error) {
-    if (typeof error === 'object' && (error as NodeJS.ErrnoException).code !== 'ENOENT') {
-      throw error;
-    }
-  }
-}
-
-export async function ensureConfigAccessConfigPermissions(): Promise<{
-  configured: boolean;
-  readable: boolean;
-}> {
-  const configPath = defaultConfigPath();
-  try {
-    await fs.access(configPath, constants.R_OK | constants.W_OK);
-    return { configured: true, readable: true };
-  } catch {
-    return { configured: false, readable: false };
-  }
+function formatConfigError(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message;
+  return String(error);
 }

@@ -2,10 +2,8 @@
  * t49 ports <action>
  */
 
-import { Command } from 'commander';
-import { createClient } from '../client-factory.js';
-import { createFormatter } from '../output/formatter.js';
-import { withErrorHandling } from '../errors.js';
+import type { Command } from 'commander';
+import { action } from './action.js';
 
 export function registerPortsCommand(program: Command): void {
   const cmd = program
@@ -17,22 +15,8 @@ export function registerPortsCommand(program: Command): void {
     .command('get <id>')
     .description('Get a port')
     .action(
-      withErrorHandling('ports.get', async (id: string, _options: unknown, command: Command) => {
-        const global = command.optsWithGlobals();
-        const formatter = createFormatter({
-          json: global.json,
-          table: global.table,
-          compact: global.compact,
-          fields: global.fields,
-        });
-        const client = await createClient({
-          token: global.token,
-          baseUrl: global.baseUrl,
-          format: global.format as 'raw' | 'mapped' | 'both',
-          maxRetries: global.maxRetries,
-        });
-        const result = await client.ports.get(id);
-        formatter.output('ports.get', result);
-      }),
+      action('ports.get', async ({ client, globals }, id: string) =>
+        client.ports.get(id, { format: globals.format }),
+      ),
     );
 }

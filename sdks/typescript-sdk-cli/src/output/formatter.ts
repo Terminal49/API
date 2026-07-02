@@ -9,7 +9,11 @@
  */
 
 import { isOutputTTY } from '../util/tty.js';
-import { createErrorEnvelope, createSuccessEnvelope, serializeEnvelope } from './json.js';
+import {
+  createErrorEnvelope,
+  createSuccessEnvelope,
+  serializeEnvelope,
+} from './json.js';
 import { projectFields } from './fields.js';
 import { renderTable } from './table.js';
 
@@ -20,7 +24,6 @@ export interface FormatterOptions {
   fields?: string;
   raw?: boolean;
   format?: 'raw' | 'mapped' | 'both';
-  noColor?: boolean;
 }
 
 export interface Formatter {
@@ -29,12 +32,15 @@ export interface Formatter {
     data: T,
     meta?: { pagination?: unknown; meta?: unknown },
   ): void;
-  outputError(command: string, error: {
-    code: string;
-    message: string;
-    status?: number;
-    details?: unknown;
-  }): void;
+  outputError(
+    command: string,
+    error: {
+      code: string;
+      message: string;
+      status?: number;
+      details?: unknown;
+    },
+  ): void;
 }
 
 export function createFormatter(opts: FormatterOptions = {}): Formatter {
@@ -45,7 +51,11 @@ export function createFormatter(opts: FormatterOptions = {}): Formatter {
   };
 
   return {
-    output<T>(command: string, data: T, meta?: { pagination?: unknown; meta?: unknown }) {
+    output<T>(
+      command: string,
+      data: T,
+      meta?: { pagination?: unknown; meta?: unknown },
+    ) {
       const payload = projectFields(data, opts.fields);
       if (isJson()) {
         const envelope = createSuccessEnvelope(
@@ -54,7 +64,9 @@ export function createFormatter(opts: FormatterOptions = {}): Formatter {
           meta?.pagination,
           meta?.meta,
         );
-        process.stdout.write(`${serializeEnvelope(envelope, Boolean(opts.compact))}\n`);
+        process.stdout.write(
+          `${serializeEnvelope(envelope, Boolean(opts.compact))}\n`,
+        );
         return;
       }
 

@@ -4,192 +4,221 @@
  * Subcommands: get, list, update, stop-tracking, resume-tracking
  */
 
-import { Command } from 'commander';
-import { createClient } from '../client-factory.js';
-import { createFormatter } from '../output/formatter.js';
-import { withErrorHandling } from '../errors.js';
+import type { Command } from 'commander';
+import { parseJsonObjectPayload, parseJsonValue } from '../util/input.js';
+import { action, addListOptions, listAction } from './action.js';
+
+type ShipmentListOptions = {
+  include?: string;
+  includeContainers?: boolean;
+  number?: string;
+  page?: number;
+  pageSize?: number;
+  trackingStopped?: boolean;
+};
+
+type ShipmentGetOptions = {
+  include?: string;
+  includeContainers?: boolean;
+};
 
 type UpdateOptions = {
-  payload?: string;
+  payload?: Record<string, unknown>;
   attr?: string[];
 };
 
-function parsePayload(payload: string | undefined, attrs?: string[]): Record<string, unknown> {
-  const base = payload ? safeParseJson(payload) : {};
-  const additional = parseAttrs(attrs);
-  return { ...base, ...additional };
+type SetCustomFieldOptions = {
+  value: unknown;
+};
+
+type PaginationEnvelope = {
+  pagination?: {
+    links?: unknown;
+    meta?: unknown;
+  };
+};
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
 }
 
-function safeParseJson(payload: string): Record<string, unknown> {
-  try {
-    const parsed = JSON.parse(payload);
-    return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {};
-  } catch {
-    throw new Error('Invalid JSON in --payload');
+function localOptions<T>(command: Command): T {
+  return command.opts() as T;
+}
+
+function paginationFrom(result: unknown): PaginationEnvelope | undefined {
+  const record = asRecord(result);
+  const mapped = asRecord(record?.mapped);
+  const raw = asRecord(record?.raw);
+  const links = record?.links ?? mapped?.links ?? raw?.links;
+  const meta = record?.meta ?? mapped?.meta ?? raw?.meta;
+  if (links === undefined && meta === undefined) return undefined;
+  return { pagination: { links, meta } };
+}
+
+function warnUnsupportedFilters(result: unknown): void {
+  const record = asRecord(result);
+  const mapped = asRecord(record?.mapped);
+  const unsupportedFilters =
+    record?.unsupportedFilters ?? mapped?.unsupportedFilters;
+  if (!Array.isArray(unsupportedFilters) || unsupportedFilters.length === 0)
+    return;
+  process.stderr.write(
+    `Warning: unsupported filters ignored by SDK: ${unsupportedFilters.join(', ')}\n`,
+  );
+}
+
+function listDataFrom(result: unknown): unknown {
+  const record = asRecord(result);
+  if (record?.raw || record?.mapped) {
+    const raw = asRecord(record.raw);
+    const mapped = asRecord(record.mapped);
+    return {
+      raw: raw?.data ?? record.raw,
+      mapped: mapped?.items ?? record.mapped,
+    };
   }
+
+  if (Array.isArray(record?.items)) return record.items;
+  if (record && 'data' in record) return record.data;
+  return result;
 }
 
 function parseAttrs(attrs?: string[]): Record<string, string> {
   if (!attrs || attrs.length === 0) return {};
   const out: Record<string, string> = {};
-  attrs.forEach((pair) => {
+  for (const pair of attrs) {
     const [rawKey, rawValue] = pair.split('=', 2);
-    if (!rawKey || rawValue === undefined) return;
+    if (!rawKey || rawValue === undefined) continue;
     out[rawKey.trim()] = rawValue;
-  });
+  }
   return out;
 }
 
-type SetCustomFieldOptions = {
-  value?: string;
-};
-
-function parseCustomFieldValue(value: string | undefined): unknown {
-  if (value === undefined) {
-    throw new Error('Missing --value for set-custom-field');
-  }
-  try {
-    return JSON.parse(value);
-  } catch {
-    return value;
-  }
+function updateAttributes(options: UpdateOptions): Record<string, unknown> {
+  return {
+    ...options.payload,
+    ...parseAttrs(options.attr),
+  };
 }
 
 export function registerShipmentsCommand(program: Command): void {
-  const cmd = program.command('shipments').description('Shipment lookup and operations');
+  const cmd = program
+    .command('shipments')
+    .description('Shipment lookup and operations');
 
-  cmd
+  const getCommand = cmd
     .command('get <id>')
     .description('Fetch a shipment by id')
-    .option('--no-include-containers', 'Exclude containers in response')
-    .action(
-      withErrorHandling('shipments.get', async (id: string, options: { includeContainers?: boolean }, command: Command) => {
-        const global = command.optsWithGlobals();
-        const formatter = createFormatter({
-          json: global.json,
-          table: global.table,
-          compact: global.compact,
-          fields: global.fields,
-        });
-        const client = await createClient({
-          token: global.token,
-          baseUrl: global.baseUrl,
-          format: global.format as 'raw' | 'mapped' | 'both',
-          maxRetries: global.maxRetries,
-        });
-        const result = await client.shipments.get(id, options.includeContainers ?? true);
-        formatter.output('shipments.get', result);
-      }),
-    );
+    .option('--include <resources>', 'Comma-separated include list')
+    .option('--no-include-containers', 'Exclude containers in response');
+  getCommand.action(
+    action('shipments.get', async ({ client, globals }, id: string) => {
+      const options = localOptions<ShipmentGetOptions>(getCommand);
+      return client.shipments.get(id, options.includeContainers ?? true, {
+        include: options.include,
+        format: globals.format,
+      });
+    }),
+  );
 
-  cmd
-    .command('list')
-    .description('List shipments')
-    .option('--status <status>', 'Filter by status')
-    .option('--port <locode>', 'Filter by pod locode')
-    .option('--carrier <scac>', 'Filter by shipping line')
-    .option('--updated-after <iso>', 'Filter by updated_at')
-    .option('--no-include-containers', 'Exclude container fields for each shipment')
-    .option('--page <number>', 'Page number', (value) => Number.parseInt(value, 10))
-    .option('--page-size <number>', 'Page size', (value) => Number.parseInt(value, 10))
-    .action(
-      withErrorHandling(
-        'shipments.list',
-        async (
-          options: {
-            status?: string;
-            port?: string;
-            carrier?: string;
-            updatedAfter?: string;
-            includeContainers?: boolean;
-            page?: number;
-            pageSize?: number;
-          },
-          command: Command,
-        ) => {
-          const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            table: global.table,
-            compact: global.compact,
-            fields: global.fields,
-          });
-          const client = await createClient({
-            token: global.token,
-            baseUrl: global.baseUrl,
-            format: global.format as 'raw' | 'mapped' | 'both',
-            maxRetries: global.maxRetries,
-          });
-          const result = await client.shipments.list(
-            {
-              status: options.status,
-              port: options.port,
-              carrier: options.carrier,
-              updatedAfter: options.updatedAfter,
-              includeContainers: options.includeContainers ?? true,
-            },
-            {
-              page: options.page,
-              pageSize: options.pageSize,
-              format: global.format as 'raw' | 'mapped' | 'both',
-            },
-          );
-          formatter.output('shipments.list', result);
-        },
+  const listCommand = addListOptions(
+    cmd
+      .command('list')
+      .description('List shipments')
+      .option('--number <number>', 'Filter by original tracking request number')
+      .option(
+        '--tracking-stopped',
+        'Only include shipments with tracking stopped',
+      )
+      .option(
+        '--no-tracking-stopped',
+        'Only include shipments still being tracked',
+      )
+      .option(
+        '--include <resources>',
+        'Comma-separated include list for each shipment',
+      )
+      .option(
+        '--no-include-containers',
+        'Exclude container fields for each shipment',
       ),
-    );
+  );
+  listCommand.action(
+    listAction(
+      'shipments.list',
+      async ({ client, globals }) => {
+        const options = localOptions<ShipmentListOptions>(listCommand);
+        const result = await client.shipments.list(
+          {
+            include: options.include,
+            includeContainers: options.includeContainers ?? true,
+            number: options.number,
+            trackingStopped: options.trackingStopped,
+          },
+          {
+            page: options.page,
+            pageSize: options.pageSize,
+            format: globals.format,
+          },
+        );
+        warnUnsupportedFilters(result);
+        return {
+          data: listDataFrom(result),
+          meta: paginationFrom(result),
+        };
+      },
+      ({ client, globals }) => {
+        const options = localOptions<ShipmentListOptions>(listCommand);
+        return client.shipments.iterate(
+          {
+            include: options.include,
+            includeContainers: options.includeContainers ?? true,
+            number: options.number,
+            trackingStopped: options.trackingStopped,
+          },
+          {
+            pageSize: options.pageSize,
+            maxPages: globals.maxPages,
+            maxRows: globals.maxRows,
+          },
+        );
+      },
+    ),
+  );
 
-  cmd
+  const updateCommand = cmd
     .command('update <id>')
     .description('Update shipment attributes')
-    .option('--payload <json>', 'JSON payload for update body')
-    .option('--attr <key=value...>', 'Individual attributes to set', (value: string, previous: string[] = []) => [...previous, value])
-    .action(
-      withErrorHandling(
-        'shipments.update',
-        async (id: string, options: UpdateOptions, command: Command) => {
-          const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            table: global.table,
-            compact: global.compact,
-            fields: global.fields,
-          });
-          const client = await createClient({
-            token: global.token,
-            baseUrl: global.baseUrl,
-            format: global.format as 'raw' | 'mapped' | 'both',
-            maxRetries: global.maxRetries,
-          });
-          const attrs = parsePayload(options.payload, options.attr);
-          const result = await client.shipments.update(id, attrs);
-          formatter.output('shipments.update', result);
-        },
-      ),
+    .option(
+      '--payload <json>',
+      'JSON payload for update body',
+      parseJsonObjectPayload,
+    )
+    .option(
+      '--attr <key=value...>',
+      'Individual attributes to set',
+      (value: string, previous: string[] = []) => [...previous, value],
     );
+  updateCommand.action(
+    action('shipments.update', async ({ client, globals }, id: string) => {
+      const options = localOptions<UpdateOptions>(updateCommand);
+      return client.shipments.update(id, updateAttributes(options), {
+        format: globals.format,
+      });
+    }),
+  );
 
   cmd
     .command('stop-tracking <id>')
     .description('Stop tracking a shipment')
     .action(
-      withErrorHandling(
+      action(
         'shipments.stop-tracking',
-        async (id: string, _options: unknown, command: Command) => {
-          const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            table: global.table,
-            compact: global.compact,
-            fields: global.fields,
-          });
-          const client = await createClient({
-            token: global.token,
-            baseUrl: global.baseUrl,
-            maxRetries: global.maxRetries,
-          });
-          const result = await client.shipments.stopTracking(id);
-          formatter.output('shipments.stop-tracking', result);
-        },
+        async ({ client, globals }, id: string) =>
+          client.shipments.stopTracking(id, { format: globals.format }),
       ),
     );
 
@@ -197,24 +226,10 @@ export function registerShipmentsCommand(program: Command): void {
     .command('resume-tracking <id>')
     .description('Resume shipment tracking')
     .action(
-      withErrorHandling(
+      action(
         'shipments.resume-tracking',
-        async (id: string, _options: unknown, command: Command) => {
-          const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            table: global.table,
-            compact: global.compact,
-            fields: global.fields,
-          });
-          const client = await createClient({
-            token: global.token,
-            baseUrl: global.baseUrl,
-            maxRetries: global.maxRetries,
-          });
-          const result = await client.shipments.resumeTracking(id);
-          formatter.output('shipments.resume-tracking', result);
-        },
+        async ({ client, globals }, id: string) =>
+          client.shipments.resumeTracking(id, { format: globals.format }),
       ),
     );
 
@@ -222,58 +237,32 @@ export function registerShipmentsCommand(program: Command): void {
     .command('custom-fields <id>')
     .description('Get custom fields for a shipment')
     .action(
-      withErrorHandling(
+      action(
         'shipments.custom-fields',
-        async (id: string, _options: unknown, command: Command) => {
-          const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            table: global.table,
-            compact: global.compact,
-            fields: global.fields,
-          });
-          const client = await createClient({
-            token: global.token,
-            baseUrl: global.baseUrl,
-            format: global.format as 'raw' | 'mapped' | 'both',
-            maxRetries: global.maxRetries,
-          });
-          const result = await client.shipments.customFields(id);
-          formatter.output('shipments.custom-fields', result);
-        },
+        async ({ client, globals }, id: string) =>
+          client.shipments.customFields(id, { format: globals.format }),
       ),
     );
 
-  cmd
+  const setCustomFieldCommand = cmd
     .command('set-custom-field <id> <field-id>')
     .description('Set a shipment custom field value')
-    .requiredOption('--value <value>', 'Custom field value. Use JSON for objects/arrays/numbers/booleans')
-    .action(
-      withErrorHandling(
-        'shipments.set-custom-field',
-        async (
-          id: string,
-          fieldId: string,
-          options: SetCustomFieldOptions,
-          command: Command,
-        ) => {
-          const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            table: global.table,
-            compact: global.compact,
-            fields: global.fields,
-          });
-          const client = await createClient({
-            token: global.token,
-            baseUrl: global.baseUrl,
-            format: global.format as 'raw' | 'mapped' | 'both',
-            maxRetries: global.maxRetries,
-          });
-          const value = parseCustomFieldValue(options.value);
-          const result = await client.shipments.setCustomField(id, fieldId, value);
-          formatter.output('shipments.set-custom-field', result);
-        },
-      ),
+    .requiredOption(
+      '--value <json>',
+      'Custom field JSON value',
+      parseJsonValue,
     );
+  setCustomFieldCommand.action(
+    action(
+      'shipments.set-custom-field',
+      async ({ client, globals }, id: string, fieldId: string) => {
+        const options = localOptions<SetCustomFieldOptions>(
+          setCustomFieldCommand,
+        );
+        return client.shipments.setCustomField(id, fieldId, options.value, {
+          format: globals.format,
+        });
+      },
+    ),
+  );
 }
