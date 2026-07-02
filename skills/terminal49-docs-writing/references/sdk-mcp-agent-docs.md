@@ -24,6 +24,7 @@ Rules:
 
 MCP docs should be tool-setup focused and client-neutral:
 
+- Use the root origin `https://mcp.terminal49.com` as the connector/server URL in all client configuration — never the `/mcp` path.
 - Include macOS, Windows, and Linux config paths when documenting local client setup.
 - Include a generic "any MCP client" section with server URL and auth shape.
 - Use canonical auth language unless a protocol-specific compatibility note is required.

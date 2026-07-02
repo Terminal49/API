@@ -21,17 +21,11 @@ This guide defines how we write and maintain Terminal49 docs. Follow it for new 
 - Update `docs/docs.json` navigation when you add or move pages.
 
 ## Choose the right doc type
-Use the closest doc type before drafting:
-- **Tutorials**: a guided first success. Start Here should get a new user tracking quickly and explain that Terminal49 is a comprehensive container tracking API for enterprise use cases.
-- **How-to guides**: solve a specific problem with steps and prerequisites (e.g., set up webhook alerts for ETA changes).
-- **Reference**: exact, complete API behavior; avoid narrative.
-- **Concepts**: explain why something works (rate limits, lifecycle, data sources).
-
-Use Diataxis as the decision test for every page:
-- **Tutorial**: action that serves learning. Take responsibility for the reader's first success. Give a concrete outcome, small steps, and expected results. Keep explanations brief and link out.
-- **How-to guide**: action that serves work. Assume the reader already knows the domain goal and needs a reliable sequence. Focus on the task, prerequisites, decisions, and failure modes.
-- **Reference**: knowledge that serves work. Mirror the API or product surface. State facts, accepted values, limits, errors, examples, and links. Do not teach or persuade.
-- **Concept**: knowledge that serves understanding. Explain why Terminal49 behaves the way it does, what tradeoffs exist, and how related ideas fit together. Keep the scope tightly bounded.
+Use Diataxis as the decision test for every page, and pick the closest type before drafting:
+- **Tutorial**: action that serves learning — a guided first success. Take responsibility for the reader's outcome: concrete goal, small steps, expected results, brief explanations that link out. Start Here should get a new user tracking quickly and explain that Terminal49 is a comprehensive container tracking API for enterprise use cases.
+- **How-to guide**: action that serves work — solve a specific problem for a reader who already knows the goal (e.g., set up webhook alerts for ETA changes). Focus on the task, prerequisites, steps, decisions, and failure modes.
+- **Reference**: knowledge that serves work — exact, complete API behavior. Mirror the API or product surface: facts, accepted values, limits, errors, examples, and links. Avoid narrative; do not teach or persuade.
+- **Concept**: knowledge that serves understanding — explain why Terminal49 behaves the way it does (rate limits, lifecycle, data sources), what tradeoffs exist, and how related ideas fit together. Keep the scope tightly bounded.
 
 If a page mixes types, do not solve it by adding more content. Move or link the content to the right page type:
 - Move enum tables, request fields, event names, limits, and error bodies into reference pages.

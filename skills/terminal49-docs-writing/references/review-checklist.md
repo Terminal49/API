@@ -11,7 +11,7 @@ Use this before finishing any Terminal49 docs change.
 - Claims are specific and source-backed.
 - Examples use placeholders and public-safe data.
 - API examples include `Authorization: Token YOUR_API_KEY`.
-- Internal docs links use `/docs/...` in MDX content.
+- Internal docs links in MDX are root-relative without a `/docs/` prefix and match the file path under `docs/` (e.g., `/api-docs/webhooks/overview`); anchors match a real heading in the target file.
 
 ## Diataxis fit
 

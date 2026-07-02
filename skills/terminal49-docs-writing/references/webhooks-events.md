@@ -42,15 +42,16 @@ Production webhook docs should cover:
 - Constant-time signature comparison
 - Terminal49 webhook IP allowlisting via the API
 - Idempotency by `data.id`
-- Returning `2xx` only after safely accepting the event
+- Returning a success status (`200`, `201`, `202`, or `204`) only after durably accepting the event (persist or enqueue it), then processing asynchronously
 
 ## Retry content
 
 State retry behavior where relevant:
 
 - Terminal49 retries failed webhook deliveries up to 12 times.
-- Any non-2xx response or timeout can trigger retries.
+- Any response other than a success status (`200`, `201`, `202`, or `204`), or a timeout, can trigger retries.
 - Consumers must handle duplicate deliveries.
+- The Trigger Webhook endpoint sends a one-time sample/test notification; it cannot replay missed or failed notifications. For recovery, document List Webhook Notifications to find missed notifications, then re-fetch current resource state via the API.
 
 ## Payload content
 

@@ -17,8 +17,8 @@ Use this skill for substantive Terminal49 documentation work. It turns general w
    - Public docs pages: `docs/**/*.mdx`
    - Generated Postman collection: regenerate from OpenAPI; do not edit manually
 4. Use public-safe examples only. Never include real API keys, customer data, internal URLs, or proprietary information.
-5. Keep canonical auth phrasing: `Authorization: Token YOUR_API_KEY`.
-6. Keep canonical docs links under `/docs/...` when linking to published docs pages.
+5. Keep canonical auth phrasing: `Authorization: Token YOUR_API_KEY`. API keys come from the developer portal at `https://app.terminal49.com/developers/api-keys`; call them "API keys," not "API tokens."
+6. Write internal docs links as root-relative paths that match the file path under `docs/`, with no `/docs/` prefix (e.g., `/api-docs/webhooks/overview` for `docs/api-docs/webhooks/overview.mdx`). Never add a `/docs/` prefix in MDX links; anchors must match a real heading in the target file.
 
 ## Choose the right reference
 

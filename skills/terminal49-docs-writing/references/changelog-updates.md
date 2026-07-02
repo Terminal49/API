@@ -53,6 +53,6 @@ Every incident/degradation note should include:
 ## Checklist
 
 - Can readers tell if they need to act?
-- Are links canonical `/docs/...` links?
+- Are internal links root-relative without a `/docs/` prefix (e.g., `/api-docs/...`), per the navigation guide?
 - Does the update contradict current reference pages?
 - Are old alarming notices resolved or removed?

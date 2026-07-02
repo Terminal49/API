@@ -14,9 +14,9 @@ Use this guide when editing `docs/docs.json`, landing pages, cards, cross-links,
 
 ## Canonical links
 
-Published docs links should use `/docs/...` paths. Avoid bare `/api-docs/...`, `/sdk/...`, `/datasync/...`, or `/mcp/...` links in MDX content.
+Internal links in MDX content must be root-relative paths that match the file path under `docs/`: `/api-docs/...`, `/sdk/...`, `/datasync/...`, `/mcp/...`, or `/updates/...` (e.g., `/api-docs/webhooks/overview` for `docs/api-docs/webhooks/overview.mdx`). Never add a `/docs/` prefix — hosting adds it, and prefixed links break on the published site. Anchors must match a real heading in the target file.
 
-Inside `docs/docs.json`, keep page IDs without `/docs/` because Mintlify navigation expects page identifiers.
+Inside `docs/docs.json`, page IDs use the same convention: the file path under `docs/` without the extension and without any `/docs/` prefix.
 
 ## Cross-linking rules
 
