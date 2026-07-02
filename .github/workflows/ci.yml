@@ -46,6 +46,35 @@ jobs:
         if: matrix.node-version == 24
         run: npm run lint
 
+  cli:
+    runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22, 24]
+    steps:
+      - uses: useblacksmith/checkout@v1
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install workspace deps
+        run: npm ci
+      - name: Build SDK (workspace dependency)
+        run: npm run build --workspace @terminal49/sdk
+      - name: Build CLI
+        run: npm run build --workspace @terminal49/cli
+      - name: Type-check CLI
+        run: npm run type-check --workspace @terminal49/cli
+      - name: Test CLI
+        run: npm run test --workspace @terminal49/cli
+      # oxlint/oxfmt require Node 20+; lint is static so it only needs one
+      # modern runtime. Build/test still cover the full matrix for consumers.
+      - name: Lint CLI (oxlint + oxfmt)
+        if: matrix.node-version == 24
+        run: npm run lint --workspace @terminal49/cli
+
   mcp:
     runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
     steps:
