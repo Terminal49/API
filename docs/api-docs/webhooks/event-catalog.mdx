@@ -101,12 +101,12 @@ These events fire when container attributes change.
 | Event | Description |
 |-------|-------------|
 | `container.created` | A new container was added to a shipment. Common for bookings where containers are assigned after sailing. |
-| `container.updated` | One or more container attributes changed (weight, seal number, equipment type, etc.). The payload includes the updated fields. |
+| `container.updated` | Container attributes changed at the terminal — fees, holds, LFD, pickup appointment, availability, or POD terminal. The payload includes a `changeset` of the updated fields. |
 | `container.pod_terminal_changed` | The port of discharge terminal assignment changed for the container. |
-| `container.pickup_lfd.changed` | The terminal Last Free Day (LFD) changed. |
-| `container.pickup_lfd_line.changed` | The shipping line Last Free Day (LFD) changed. |
-| `container.pickup_lfd_terminal.changed` | The destination terminal Last Free Day (LFD) changed. |
-| `container.pickup_lfd_rail.changed` | The rail terminal Last Free Day (LFD) changed for an inland rail move. |
+| `container.pickup_lfd.changed` | The coalesced `pickup_lfd` attribute changed. This field combines the `import_deadlines` values, preferring the shipping line LFD when available. |
+| `container.pickup_lfd_line.changed` | The shipping line's Last Free Day (`import_deadlines.pickup_lfd_line`) changed. |
+| `container.pickup_lfd_terminal.changed` | The terminal-reported Last Free Day (`import_deadlines.pickup_lfd_terminal`) at the destination terminal changed. |
+| `container.pickup_lfd_rail.changed` | The rail-carrier-reported Last Free Day (`import_deadlines.pickup_lfd_rail`) at the inland rail destination changed. Rail Plan only — see [Entitlements](/api-docs/useful-info/entitlements). |
 | `container.pickup_appointment.changed` | The pickup appointment changed. |
 
 ## Document processing events

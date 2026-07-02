@@ -32,11 +32,17 @@ You can create a webhook from the dashboard or the API.
 
 To use the dashboard:
 
-1. Open [Developer Webhooks](https://app.terminal49.com/developers/webhooks).
-2. Click **Create Webhook Endpoint**.
-3. Enter your HTTPS endpoint URL.
-4. Choose the events you want to receive.
-5. Save the webhook.
+<Steps>
+  <Step title="Open Developer Webhooks">
+    Go to [Developer Webhooks](https://app.terminal49.com/developers/webhooks) in your Terminal49 dashboard.
+  </Step>
+  <Step title="Create the endpoint">
+    Click **Create Webhook Endpoint** and enter your HTTPS endpoint URL.
+  </Step>
+  <Step title="Choose events and save">
+    Choose the events you want to receive, then save the webhook.
+  </Step>
+</Steps>
 
 To use the API, send:
 
@@ -89,10 +95,10 @@ Common first events are:
 
 ## Return a successful response
 
-Your endpoint should return `200`, `201`, `202`, or `204` after it accepts the event.
+Your endpoint should return a success status (200, 201, 202, or 204) after it durably accepts the event — persist or enqueue the payload first, then process it asynchronously.
 
 ```javascript
-app.post("/webhooks/terminal49", express.raw({ type: "application/json" }), (req, res) => {
+app.post("/webhooks/terminal49", express.raw({ type: "*/*" }), (req, res) => {
   const payload = JSON.parse(req.body.toString("utf8"));
 
   queueWebhookForProcessing(payload);

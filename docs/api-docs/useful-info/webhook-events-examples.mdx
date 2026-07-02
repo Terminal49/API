@@ -7576,7 +7576,7 @@ A new container was added to a shipment. Common for bookings where containers ar
 
 ### container.updated
 
-One or more container attributes changed (weight, seal number, equipment type, etc.). The payload includes the updated fields.
+Container attributes changed at the terminal — fees, holds, LFD, pickup appointment, availability, or POD terminal. The payload includes a `changeset` of the updated fields.
 
 ```json expandable
 {
@@ -8217,7 +8217,7 @@ The port of discharge terminal assignment changed for the container.
 
 ### container.pickup_lfd.changed
 
-The terminal Last Free Day (LFD) changed.
+The coalesced `pickup_lfd` attribute changed. This field combines the `import_deadlines` values, preferring the shipping line LFD when available.
 
 ```json expandable
 {
@@ -8553,7 +8553,7 @@ The terminal Last Free Day (LFD) changed.
 
 ### container.pickup_lfd_terminal.changed
 
-The destination terminal Last Free Day (LFD) changed.
+The terminal-reported Last Free Day (`import_deadlines.pickup_lfd_terminal`) at the destination terminal changed.
 
 ```json expandable
 {
@@ -8607,7 +8607,7 @@ The destination terminal Last Free Day (LFD) changed.
 
 ### container.pickup_lfd_rail.changed
 
-The rail Last Free Day (LFD) changed.
+The rail-carrier-reported Last Free Day (`import_deadlines.pickup_lfd_rail`) at the inland rail destination changed. Rail Plan only — see [Entitlements](/api-docs/useful-info/entitlements).
 
 ```json expandable
 {

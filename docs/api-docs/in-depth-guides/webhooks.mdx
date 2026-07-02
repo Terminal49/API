@@ -20,7 +20,7 @@ For background on why Terminal49 recommends webhooks instead of polling, see [Wh
 
 You need:
 
-- A Terminal49 API key.
+- A Terminal49 API key from the [developer portal](https://app.terminal49.com/developers/api-keys).
 - A public HTTPS endpoint that accepts `POST` requests.
 - A list of events your integration should receive.
 - A place to store the webhook secret securely.
@@ -67,18 +67,16 @@ Terminal49 signs every webhook delivery with an HMAC SHA-256 digest of the raw r
 
 Verify the signature before parsing or trusting the JSON body.
 
-Ruby:
+<CodeGroup>
 
-```ruby
+```ruby Ruby
 def valid_signature?(raw_body, signature, secret)
   digest = OpenSSL::HMAC.hexdigest("SHA256", secret, raw_body)
   Rack::Utils.secure_compare(digest, signature.to_s)
 end
 ```
 
-Node.js:
-
-```javascript
+```javascript Node.js
 import crypto from "crypto";
 
 function validSignature(rawBody, signature, secret) {
@@ -94,9 +92,7 @@ function validSignature(rawBody, signature, secret) {
 }
 ```
 
-Python:
-
-```python
+```python Python
 import hashlib
 import hmac
 
@@ -105,9 +101,7 @@ def valid_signature(raw_body: bytes, signature: str, secret: str) -> bool:
     return hmac.compare_digest(signature or "", digest)
 ```
 
-Go:
-
-```go
+```go Go
 import (
 	"crypto/hmac"
 	"crypto/sha256"
@@ -122,6 +116,8 @@ func validSignature(rawBody []byte, signature string, secret string) bool {
 }
 ```
 
+</CodeGroup>
+
 ## Allowlist Terminal49 webhook IPs
 
 Fetch the current source IP list from the [List Webhook IPs](/api-docs/api-reference/webhooks/list-webhook-ips) endpoint and allowlist those addresses in your firewall or application.
@@ -135,7 +131,7 @@ Your endpoint should return `200`, `201`, `202`, or `204` after it safely accept
 Terminal49 retries failed deliveries up to 12 times before marking the notification as failed.
 
 ```javascript
-app.post("/webhooks/terminal49", express.raw({ type: "application/json" }), async (req, res) => {
+app.post("/webhooks/terminal49", express.raw({ type: "*/*" }), async (req, res) => {
   const signature = req.header("X-T49-Webhook-Signature");
 
   if (!validSignature(req.body, signature, process.env.T49_WEBHOOK_SECRET)) {
@@ -168,15 +164,17 @@ async function processWebhook(payload) {
 
 ## Monitor failed notifications
 
-Use the [Webhook Notifications API](/api-docs/api-reference/webhook-notifications/list-webhook-notifications) to review failed deliveries:
+Use the [Webhook Notifications API](/api-docs/api-reference/webhook-notifications/list-webhook-notifications) to review recent deliveries and spot the ones marked `delivery_status: failed`:
 
 ```bash
-curl -s "https://api.terminal49.com/v2/webhook_notifications?filter[delivery_status]=failed" \
+curl -s "https://api.terminal49.com/v2/webhook_notifications" \
   -H "Authorization: Token YOUR_API_KEY" \
   -H "Content-Type: application/vnd.api+json"
 ```
 
-Use [Trigger a Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) to replay notifications after you fix the consumer.
+Missed notifications cannot be replayed. After you fix the consumer, use [Trigger a Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) to re-test your handler with a sample payload, then re-fetch the affected shipments and containers from the REST API to backfill any missed state changes.
+
+For more help, see [How to Troubleshoot Missing Webhook Notifications](https://help.terminal49.com/en/articles/7851422-missing-webhook-notifications).
 
 ## Related
 

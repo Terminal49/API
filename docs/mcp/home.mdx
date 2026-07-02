@@ -11,15 +11,13 @@ keywords:
   - "MCP config"
   - "shipment data assistant"
 ---
-# Terminal49 MCP Server
-
 Use the Terminal49 MCP server to let Claude or Cursor answer questions with live container and shipment data—without writing custom glue code.
 
 ## TL;DR – get started in 5 minutes
 
 <Steps>
-  <Step title="Get your API token">
-    Go to the [Terminal49 dashboard](https://app.terminal49.com/developers/api-keys) → Settings → API Tokens and create a `T49_API_TOKEN`.
+  <Step title="Get your API key">
+    Create an API key in the [developer portal](https://app.terminal49.com/developers/api-keys).
   </Step>
   <Step title="Pick your MCP client">
     - **Claude Desktop** (macOS / Windows / Linux)
@@ -40,7 +38,7 @@ Use the Terminal49 MCP server to let Claude or Cursor answer questions with live
         "terminal49": {
           "url": "https://mcp.terminal49.com",
           "headers": {
-            "Authorization": "Token <T49_API_TOKEN>"
+            "Authorization": "Token YOUR_API_KEY"
           }
         }
       }
@@ -55,7 +53,7 @@ Use the Terminal49 MCP server to let Claude or Cursor answer questions with live
           "terminal49": {
             "url": "https://mcp.terminal49.com",
             "headers": {
-              "Authorization": "Token <T49_API_TOKEN>"
+              "Authorization": "Token YOUR_API_KEY"
             }
           }
         }
@@ -88,10 +86,9 @@ For the full walkthrough (including local stdio dev, deployment, and SDK example
 | HTTP (streamable) | `POST https://mcp.terminal49.com` | Serverless, short-lived requests |
 
 **Authentication**:
-- API token only (OAuth not required for this release)
-- Header: `Authorization: Token <T49_API_TOKEN>`. Use the `Token` scheme for API keys.
-- The `Bearer` scheme is reserved for WorkOS OAuth access tokens. Once OAuth is enabled, `Bearer` accepts only WorkOS tokens, so authenticate API keys with `Token`.
-- Or set `T49_API_TOKEN` environment variable when self-hosting
+- API key only (OAuth not required for this release)
+- Pass `Authorization: Token YOUR_API_KEY`. Use the `Token` scheme for API keys. The `Bearer` scheme is reserved for WorkOS OAuth access tokens — it currently accepts API keys for backward compatibility, but once OAuth is enabled, `Bearer` accepts only WorkOS tokens.
+- The hosted endpoint always requires the `Authorization` header. Only the [local stdio server](/api-docs/in-depth-guides/mcp#local-stdio-development) reads the `T49_API_TOKEN` environment variable instead of a header.
 
 <Tip>
 Connector URL: `https://mcp.terminal49.com`. It is the canonical OAuth resource identifier, so OAuth clients (ChatGPT, Claude connectors) bind to the correct token audience.
@@ -103,14 +100,16 @@ Use the same hosted Streamable HTTP endpoint in any MCP-compatible client:
 
 ```json
 {
-  "url": "https://mcp.terminal49.com/mcp",
+  "url": "https://mcp.terminal49.com",
   "headers": {
-    "Authorization": "Token <T49_API_TOKEN>"
+    "Authorization": "Token YOUR_API_KEY"
   }
 }
 ```
 
-OAuth is not available for the hosted MCP server yet. Use a Terminal49 API token until OAuth support is published.
+<Note>
+OAuth is not available for the hosted MCP server yet. Use a Terminal49 API key until OAuth support is published.
+</Note>
 
 The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP endpoints as the REST API.
 
@@ -507,7 +506,7 @@ These Terminal49 API capabilities are available via the [SDK](/api-docs/in-depth
 | `resume_tracking` | Resume tracking a shipment | Use [REST API](/api-docs/api-reference/shipments/resume-tracking-shipment) |
 | `raw_events` | Get raw EDI event data | Use [REST API](/api-docs/api-reference/containers/get-a-containers-raw-events) |
 | `refresh_container` | Force refresh container data | Use [REST API](/api-docs/api-reference/containers/refresh-container) |
-| Webhooks | Real-time event notifications | Configure via [dashboard](/api-docs/in-depth-guides/webhooks) |
+| Webhooks | Real-time event notifications | Configure via the [webhooks guide](/api-docs/in-depth-guides/webhooks) |
 
 <Info>
 Shipment/container list operations are available via MCP. Update/stop/resume tracking operations still require REST API or direct SDK usage.

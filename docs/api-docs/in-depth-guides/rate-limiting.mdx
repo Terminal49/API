@@ -19,12 +19,14 @@ The default API limit is 100 requests per minute per API key/account on a rollin
 
 ## Rate limit details
 
-| Bucket | Limit | Scope | Notes |
-| --- | --- | --- | --- |
-| Default API requests | 100 requests per minute | Per API key/account | Applies unless an endpoint documents a separate bucket |
-| Create Tracking Request | 100 tracking requests per minute | Per API key/account | `POST /v2/tracking_requests` |
-| Infer Tracking Number | 200 requests per minute | Per API key | `POST /v2/tracking_requests/infer_number` has its own bucket |
-| Refresh Container | 10 requests per minute | Per API key/account | `POST /v2/containers/{id}/refresh` |
+All limits apply per API key/account on a rolling 60-second window.
+
+| Bucket | Endpoint | Limit |
+| --- | --- | --- |
+| Default API requests | All endpoints without a dedicated bucket | 100 requests per minute |
+| Create Tracking Request | `POST /v2/tracking_requests` | 100 tracking requests per minute |
+| Infer Tracking Number | `POST /v2/tracking_requests/infer_number` | 200 requests per minute |
+| Refresh Container | `PATCH /v2/containers/{id}/refresh` | 10 requests per minute |
 
 ## Rate limit response
 
@@ -35,7 +37,7 @@ When you exceed the rate limit, the API will return:
 **Response Headers**:
 - `Retry-After`: Number of seconds to wait before making another request against the same rate-limit bucket
 
-`Retry-After` is the response header clients should rely on for 429 handling. If your HTTP client also receives `RateLimit-Limit`, `RateLimit-Remaining`, or `RateLimit-Reset` headers, treat them as informational and continue to respect `Retry-After` on 429 responses.
+`Retry-After` is the only rate-limit header the API documents. Base your 429 handling on it.
 
 **Response Body**:
 ```json
@@ -65,9 +67,9 @@ The most effective way to avoid rate limits is to use **webhooks** for real-time
 
 If you receive a `429` response:
 
-1. Check the `Retry-After` header
-2. Wait for the specified number of seconds
-3. Implement exponential backoff for subsequent failures
+1. Check the `Retry-After` header and, when present, wait at least that many seconds
+2. If `Retry-After` is missing, back off exponentially (for example 1s, 2s, 4s) and add jitter so retries don't synchronize
+3. Cap the number of retries and surface an error once the cap is reached
 4. Don't retry immediately, as this will consume your limit further
 
 ### 3. Batch your requests
@@ -93,15 +95,19 @@ If your use case requires a higher rate limit:
 
 ## Example: handling rate limits
 
-Here's an example of how to properly handle rate limit responses in Python:
+Here's an example of how to properly handle rate limit responses in Python. It honors `Retry-After` when the server provides it and falls back to exponential backoff with jitter otherwise:
 
 ```python
+import random
 import time
 import requests
 
-def make_request_with_retry(url, headers, max_retries=3):
+def make_request_with_retry(url, headers, max_retries=5):
     """
     Make an API request with automatic retry on rate limit.
+
+    Honors the Retry-After header when present; otherwise falls back
+    to exponential backoff with jitter.
 
     Args:
         url: The API endpoint URL
@@ -117,15 +123,21 @@ def make_request_with_retry(url, headers, max_retries=3):
     for attempt in range(max_retries):
         response = requests.get(url, headers=headers)
 
-        if response.status_code == 429:
-            # Get the retry-after value from header (default to 60 seconds)
-            retry_after = int(response.headers.get('Retry-After', 60))
-            print(f"Rate limited. Waiting {retry_after} seconds...")
-            time.sleep(retry_after)
-            continue
+        if response.status_code != 429:
+            # Return response for any other status code
+            return response
 
-        # Return response for any other status code
-        return response
+        retry_after = response.headers.get('Retry-After')
+        if retry_after is not None:
+            # Honor the server's instruction
+            wait_seconds = int(retry_after)
+        else:
+            # Exponential backoff with jitter: ~1s, 2s, 4s, 8s, ...
+            wait_seconds = (2 ** attempt) + random.uniform(0, 1)
+
+        print(f"Rate limited. Waiting {wait_seconds:.1f} seconds "
+              f"(attempt {attempt + 1} of {max_retries})...")
+        time.sleep(wait_seconds)
 
     raise Exception("Max retries exceeded")
 
@@ -147,4 +159,4 @@ If you're building a high-volume application:
 - **Implement request queuing**: Spread your requests evenly across the rate limit window
 - **Use pagination efficiently**: Fetch larger pages less frequently rather than small pages frequently
 - **Cache aggressively**: Store and reuse data that doesn't change frequently
-- **Monitor rate limit headers**: Use `Retry-After` for 429 backoff. If `RateLimit-*` headers are present, log them for observability rather than making your retry logic depend on them.
+- **Honor `Retry-After`**: When a `429` response includes `Retry-After`, wait at least that many seconds before retrying against the same bucket.

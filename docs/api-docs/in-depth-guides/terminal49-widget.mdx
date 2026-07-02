@@ -12,40 +12,39 @@ keywords:
   - "customer tracking page"
 ---
 
-### How do I embed the widget on my website?
+## Embed the widget on your website
 
 First, you need a publishable widget API key. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements) for access requirements.
 
-
 Once you have the key, you can embed the widget on your website. Create a dedicated page for tracking, typically at `company-website.com/track`. You can also embed the widget directly on your homepage. If you create a dedicated tracking page, add an `h1` tag above the script. Feel free to customize the `h1` contents in the script.
 
-Copy and paste the code below and insert it at the top of the page (under your navigation if you have a horizontal top navigation). Replace `REPLACE_WITH_PUBLISHABLE_KEY` with the API key you receive. You can customize the `h1` contents in the script below.
+Copy and paste the code below and insert it at the top of the page (under your navigation if you have a horizontal top navigation). Replace `REPLACE_WITH_PUBLISHABLE_KEY` with the API key you receive.
 
-To query a bill of lading, container, or reference number, simply replace `REPLACE_WITH_NUMBER_TO_QUERY` with the specific number you want to search for. If `data-number` exists, the query will be performed only once.
+To query a bill of lading, container, or reference number, replace `REPLACE_WITH_NUMBER_TO_QUERY` with the specific number you want to search for. If `data-number` exists, the query will be performed only once.
 
 ```html
-
 <h1> Tracking </h1>
 <script src="https://kit.fontawesome.com/cd34e860ca.js" crossorigin="anonymous"></script>
 <div id="terminal49-tnt-widget" data-token="REPLACE_WITH_PUBLISHABLE_KEY" data-number="REPLACE_WITH_NUMBER_TO_QUERY"></div>
 <script src="https://widget.terminal49.com/app.bundle.js"></script>
 ```
 
-
 ## Frequently asked questions
 
-### How does it work?
-
-With a few lines of code, you can embed an interactive container tracking form. Once the widget is live on your website, your customer can enter a master bill of lading, container number, or reference numbers that a shipment is tagged with. After the number has been entered, the widget will retrieve and display shipment and container details from your Terminal49 account.
-
-### Do I need Terminal49 account?
-Yes. The information fetched and displayed by the widget is based on the shipments and containers tracked within your Terminal49 account.
-
-### Can my customer track *any* shipment/container?
-No, only the shipments and containers that are tracked in your Terminal49 account.
-
-### Is there a cost to embed the widget?
-Widget access is priced separately from standard API access. See [Pricing](/api-docs/useful-info/pricing) for current public pricing pointers.
+<AccordionGroup>
+  <Accordion title="How does it work?">
+    With a few lines of code, you can embed an interactive container tracking form. Once the widget is live on your website, your customer can enter a master bill of lading, container number, or reference numbers that a shipment is tagged with. After the number has been entered, the widget will retrieve and display shipment and container details from your Terminal49 account.
+  </Accordion>
+  <Accordion title="Do I need a Terminal49 account?">
+    Yes. The information fetched and displayed by the widget is based on the shipments and containers tracked within your Terminal49 account.
+  </Accordion>
+  <Accordion title="Can my customers track any shipment or container?">
+    No. Customers can only track the shipments and containers that are tracked in your Terminal49 account.
+  </Accordion>
+  <Accordion title="Is there a cost to embed the widget?">
+    Yes. Widget access is priced separately from standard API access. Contact support@terminal49.com for widget pricing and to enable access. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements) for access requirements.
+  </Accordion>
+</AccordionGroup>
 
 
 ## Terminal49 container tracking widget one-pager
@@ -59,5 +58,4 @@ The Track & Trace Widget provides a number of advantages:
 - It can reduce customer service costs by providing customers with the information they need without having to contact customer service.
 - It can help you differentiate from other service providers.
 
-
-![terminal49-container-tracking-widget.jpg](/images/terminal49-container-tracking-widget.png)
+![Terminal49 container tracking widget one-pager](/images/terminal49-container-tracking-widget.png)

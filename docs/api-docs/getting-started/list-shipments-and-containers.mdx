@@ -22,56 +22,48 @@ After Terminal49 accepts a tracking request, it starts collecting available data
 
 Use these endpoints for on-demand lookups. For ongoing status monitoring, use webhooks instead of polling.
 
-## List all your tracked shipments
-
-If your tracking request was successful, you will now be able to list your tracked shipments.
-
-Replace `YOUR_API_KEY` with your API key.
-
-Sometimes it takes a few minutes for a new tracking request to appear as a shipment.
-
-Copy the response into a text editor so you can inspect it while continuing the tutorial.
-
-```json http
-{
-  "method": "get",
-  "url": "https://api.terminal49.com/v2/shipments",
-  "headers": {
-    "Content-Type": "application/vnd.api+json",
-    "Authorization": "Token YOUR_API_KEY"
-  }
-}
-```
-
-
-> ### Why so much JSON? (A note on JSON:API)
->The Terminal49 API is JSON:API compliant. JSON:API libraries can translate the response into a full object model compatible with an ORM, which is powerful but produces larger, more structured payloads. If you parse JSON directly, this can feel verbose. For production use, consider adopting a [JSON:API client library](https://jsonapi.org/implementations/#client-libraries) to get the most out of the format. For this tutorial, you will work with the data directly.
-
 ## Authentication
 
-The API uses a Token-prefixed API key in the `Authorization` header.
-
-Send your API key with each request in this format:
+As in the previous steps, every request sends your API key in the `Authorization` header:
 
 ```http
 Authorization: Token YOUR_API_KEY
 ```
 
-Webhooks are associated with API tokens, which is how Terminal49 identifies which account to send shipment updates to.
+If you don't have an API key yet, get one from the [developer portal](https://app.terminal49.com/developers/api-keys) as described in [Start Here](/api-docs/getting-started/start-here).
 
+## List all your tracked shipments
+
+If your tracking request was successful, you will now be able to list your tracked shipments. Replace `YOUR_API_KEY` with your API key:
+
+```bash
+curl "https://api.terminal49.com/v2/shipments" \
+  -H "Content-Type: application/vnd.api+json" \
+  -H "Authorization: Token YOUR_API_KEY"
+```
+
+Sometimes it takes a few minutes for a new tracking request to appear as a shipment.
+
+Copy the response into a text editor so you can inspect it while continuing the tutorial.
+
+<Info>
+  Responses follow the JSON:API format, which is why they are larger and more
+  structured than plain JSON. See the JSON:API note in [Track Shipments and
+  Containers](/api-docs/getting-started/tracking-shipments-and-containers#anatomy-of-a-tracking-request-response)
+  for tips on parsing it.
+</Info>
 
 ## Inspect the shipment response
 
 The `/shipments` response returns an array of `shipment` objects. Each shipment includes attributes, relationships to related records, and a `self` link.
 
-For clarity, some fields have been replaced with ellipses (...) and key areas are bolded.
+For clarity, some fields have been replaced with ellipses (`...`), and inline comments call out the key fields.
 
 The **data** attribute contains an array of objects. Each object is of type `shipment` and includes attributes such as bill of lading number and port of lading. Each shipment object also has relationships to structured data objects like ports and terminals, as well as a list of containers on the shipment.
 
 You can access these structured elements through the API. Terminal49 cleans and enhances the data from the shipping line, so you get a pre-defined object for each port, terminal, and other entity.
 
-
-```jsx
+```jsonc
 {
   "data": [
     {
@@ -122,7 +114,7 @@ You can access these structured elements through the API. Terminal49 cleans and 
         }
       },
       "links": {
-        // this is a link to this specific shipment in the API.   
+        // this is a link to this specific shipment in the API.
         "self": "/v2/shipments/7f8c52b2-c255-4252-8a82-f279061fc847"
       }
     },
@@ -136,11 +128,9 @@ You can access these structured elements through the API. Terminal49 cleans and 
 
 Below is code written in Google App Script that lists the current shipments into the current sheet of a spreadsheet. App Script is very similar to Javascript.
 
-Because Google App Script does not have native JSON API support, you need to parse the JSON directly, making this example an ideal real world application of the API.
+Because Google App Script does not have native JSON:API support, you need to parse the JSON directly, making this example an ideal real world application of the API.
 
-
-```jsx
-
+```javascript
 function listTrackedShipments(){
   // first we construct the request.
   var options = {
@@ -183,7 +173,7 @@ function extractShipmentData(shipment){
    shipment_val.push(shipment["attributes"]["shipping_line_scac"],
                       shipment["attributes"]["shipping_line_name"],
                       shipment["attributes"]["bill_of_lading_number"],
-                      shipment["attributes"]["pod_vessel_name"],  
+                      shipment["attributes"]["pod_vessel_name"],
                       shipment["attributes"]["port_of_lading_name"],
                       shipment["attributes"]["pol_etd_at"],
                       shipment["attributes"]["pol_atd_at"],
@@ -202,9 +192,9 @@ function listShipmentValues(shipment_values){
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var homesheet =   ss.getActiveSheet();
   var STARTING_ROW = 1;
-  var MAX_TRACKED = 500;  
+  var MAX_TRACKED = 500;
   try {
-    // clear the contents of the sheet first. 
+    // clear the contents of the sheet first.
     homesheet.getRange(STARTING_ROW,1,MAX_TRACKED,shipment_values[0].length).clearContent();
     // now insert all the shipment values directly into the sheet.
     homesheet.getRange(STARTING_ROW,1,shipment_values.length,shipment_values[0].length).setValues(shipment_values);
@@ -214,35 +204,31 @@ function listShipmentValues(shipment_values){
 }
 ```
 
-
 ## List all your tracked containers
 
-You can also list out all of your Containers. Container data includes terminal availability, last free day, holds, fees, and other logistical information that you might use for drayage operations at port.
+You can also list out all of your containers. Container data includes terminal availability, last free day, holds, fees, and other logistical information that you might use for drayage operations at port.
 
 <Tip>
-To learn how to use holds and fees data to determine if a container is ready for pickup, see [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
+  To learn how to use holds and fees data to determine if a container is ready
+  for pickup, see [Container Holds, Fees, and Release
+  Readiness](/api-docs/in-depth-guides/holds-and-fees).
 </Tip>
 
-**Try it below. Click "Headers" and replace `YOUR_API_KEY` with your API key.**
+Replace `YOUR_API_KEY` with your API key:
 
-**We suggest copy and pasting the response returned into a text editor so you can examine it while continuing the tutorial.**
-
-
-```json http
-{
-  "method": "get",
-  "url": "https://api.terminal49.com/v2/containers",
-  "headers": {
-    "Content-Type": "application/vnd.api+json",
-    "Authorization": "Token YOUR_API_KEY"
-  }
-}
+```bash
+curl "https://api.terminal49.com/v2/containers" \
+  -H "Content-Type: application/vnd.api+json" \
+  -H "Authorization: Token YOUR_API_KEY"
 ```
 
-## Anatomy of containers JSON response
-Now that you've got a list of containers, let's examine the response you've received.
+We suggest copying the response into a text editor so you can examine it while continuing the tutorial.
 
-```jsx
+## Anatomy of containers JSON response
+
+Now that you've got a list of containers, let's examine the response you've received. The example below is partial: it shows a single container object from the `data` array, with some fields omitted and inline comments calling out the key fields.
+
+```jsonc
 // We have an array of objects in the data returned.
   "data": [
     {
@@ -295,3 +281,11 @@ Now that you've got a list of containers, let's examine the response you've rece
     },
     ...
 ```
+
+## Next up: receive status updates
+
+You can now list your tracked shipments and containers on demand. The final step is to register a webhook so Terminal49 pushes updates to you as they happen.
+
+<Card title="Receive status updates" icon="bell" href="/api-docs/getting-started/receive-status-updates">
+  Register a webhook endpoint and handle your first notification.
+</Card>

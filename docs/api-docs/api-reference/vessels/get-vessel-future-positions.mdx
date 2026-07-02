@@ -10,14 +10,7 @@ openapi: get /vessels/{id}/future_positions
   This is a paid Routing Data endpoint. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements) for access requirements and non-entitled responses.
 </Note>
 
-## Required query parameters
-
-This endpoint requires both port IDs for the vessel leg you want to forecast:
-
-| Parameter | Required | Description |
-| --- | --- | --- |
-| `port_id` | Yes | Destination port UUID for the forecasted leg |
-| `previous_port_id` | Yes | Previous port UUID for the same vessel leg |
+This endpoint requires the destination port ID (`port_id`) and the previous port ID (`previous_port_id`) for the vessel leg you want to forecast.
 
 ## How to find the port IDs
 

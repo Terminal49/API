@@ -35,7 +35,7 @@ When a `shipment.estimated.arrival` event fires, the `included` array contains:
 Parse the incoming notification, extract the new ETA, and compare it to your stored value:
 
 ```javascript
-app.post("/webhooks/terminal49", (req, res) => {
+app.post("/webhooks/terminal49", async (req, res) => {
   const { data, included } = req.body;
 
   if (data.attributes.event !== "shipment.estimated.arrival") {

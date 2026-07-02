@@ -66,7 +66,7 @@ Use this page as the payload reference. Use [Payload Examples](/api-docs/useful-
 | `shipment.estimated.arrival` | `estimated_event` | Includes the estimate event and related shipment records. |
 | `container.updated` | `container_updated_event` | Includes a `changeset` describing changed container attributes. |
 | `container.created` | `container_created_event` | Includes the new container and related shipment. |
-| `container.pickup_lfd.*` | `container_updated_event` | Includes the changed Last Free Day field for terminal, line, or rail LFD. |
+| `container.pickup_lfd.changed` and the `pickup_lfd_line` / `pickup_lfd_terminal` / `pickup_lfd_rail` variants | `transport_event` | The transport event's `value` attribute carries the new Last Free Day. The container with updated LFD fields may also be included, as in the `container.pickup_lfd.changed` example. |
 | `document.*` | document-related event resource | Available for accounts using document processing. See [Document Processing Workflows](/api-docs/in-depth-guides/document-processing-workflows). |
 
 ## Included resources
@@ -75,15 +75,16 @@ Webhook payloads may include:
 
 | Resource type | When included |
 | --- | --- |
-| `webhook` | Included on webhook notifications. |
 | `tracking_request` | Included for tracking request lifecycle events and related shipment updates. |
 | `shipment` | Included when the event relates to a shipment or one of its containers. |
 | `container` | Included for container lifecycle, status, availability, and milestone events. |
-| `transport_event` | Included for `container.transport.*` milestone events. |
+| `transport_event` | Included for `container.transport.*` milestone events and LFD or appointment change events. |
 | `estimated_event` | Included for ETA change events. |
-| `container_updated_event` | Included for `container.updated` and LFD changes. |
+| `container_updated_event` | Included for `container.updated` events. |
 | `port` | Included when a payload references a port record. |
 | `terminal` | Included when a payload references a terminal record. |
+
+Other resource types — such as `vessel`, `rail_terminal`, and `metro_area` — can appear for specific events. The webhook endpoint that received the delivery is referenced through the `webhook` relationship on the notification, not serialized in `included`.
 
 Do not require every resource to be present. Carrier, terminal, and event data can arrive at different times.
 
@@ -110,6 +111,24 @@ Common changed fields include:
 - `pickup_appointment_at`
 - `available_for_pickup`
 - `pod_terminal`
+
+The event's `timestamp` attribute tells you when Terminal49 picked up the changes from the terminal.
+
+For `pod_terminal`, the changeset values are terminal record IDs, not names:
+
+```json
+{
+  "changeset": {
+    "pod_terminal": ["0ef5519f-3bde-4d1f-a327-f4f2d833dc7b", "08831e36-676a-4bd4-9c26-c8ab7dbfe73e"]
+  }
+}
+```
+
+Resolve the IDs through the `terminal` resources serialized in `included`.
+
+<Note>
+The `container_updated_event` also has a `terminal` relationship that indicates where the data came from. Currently this is always the POD terminal; in the future it may be the final destination terminal or an off-dock location.
+</Note>
 
 ## Related
 

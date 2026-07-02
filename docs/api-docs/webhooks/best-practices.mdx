@@ -14,19 +14,21 @@ keywords:
 
 Webhooks are the primary way to receive tracking updates from Terminal49. Follow these practices to build a consumer that handles every edge case reliably.
 
-## Respond quickly with a 2xx
+## Acknowledge quickly with a success status
 
-Terminal49 expects your endpoint to return one of these status codes: `200`, `201`, `202`, or `204`. Return the response **before** doing any heavy processing.
+Terminal49 expects your endpoint to return a success status (`200`, `201`, `202`, or `204`). Acknowledge quickly — but only after you have durably accepted the event. Persist the raw payload or push it onto a queue first, then return the response and process the event asynchronously.
 
 ```javascript
-app.post("/webhooks/terminal49", (req, res) => {
-  // Acknowledge immediately
-  res.sendStatus(200);
+app.post("/webhooks/terminal49", async (req, res) => {
+  // Durably accept the event first (persist or enqueue the raw payload)
+  await enqueueWebhook(req.body);
 
-  // Process asynchronously
-  processWebhookAsync(req.body).catch(console.error);
+  // Acknowledge; process asynchronously from the queue
+  res.sendStatus(202);
 });
 ```
+
+If you acknowledge before storing the event and your process crashes mid-handling, the notification is lost — Terminal49 sees a success response and does not retry.
 
 Any other response — including a timeout — triggers retries. If your endpoint consistently fails, Terminal49 retries up to 12 times before marking the notification as failed.
 
@@ -57,7 +59,7 @@ async function processWebhook(payload) {
 ```
 
 <Tip>
-If you use a message queue (SQS, RabbitMQ, etc.), enqueue the raw payload immediately and return `200`. Your queue consumer can handle deduplication and processing at its own pace.
+If you use a message queue (SQS, RabbitMQ, etc.), enqueue the raw payload and return a success status as soon as the enqueue succeeds. Your queue consumer can handle deduplication and processing at its own pace.
 </Tip>
 
 ## Verify the webhook source
@@ -87,12 +89,12 @@ Cache the IP list and refresh it periodically (e.g., daily). The list rarely cha
 Use the [Webhook Notifications API](/api-docs/api-reference/webhook-notifications/list-webhook-notifications) to check delivery status and catch any notifications your endpoint may have missed:
 
 ```bash
-curl -s "https://api.terminal49.com/v2/webhook_notifications?filter[delivery_status]=failed" \
+curl -s "https://api.terminal49.com/v2/webhook_notifications" \
   -H "Authorization: Token YOUR_API_KEY" \
   -H "Content-Type: application/vnd.api+json"
 ```
 
-Review failed notifications regularly to identify issues with your endpoint before they cause data gaps.
+Each notification's `delivery_status` attribute reports the delivery state (`pending`, `succeeded`, or `failed`). Page through recent notifications and review the ones marked `failed` regularly to identify issues with your endpoint before they cause data gaps.
 
 ## Test with the Trigger endpoint
 
@@ -115,8 +117,8 @@ The Trigger endpoint sends an example payload for the event you choose. If you i
 
 If your endpoint goes down, Terminal49 retries failed deliveries. When your endpoint recovers:
 
-1. Check the [Webhook Notifications API](/api-docs/api-reference/webhook-notifications/list-webhook-notifications) for any notifications with `delivery_status: failed`.
-2. Use the [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint to replay specific notifications.
+1. Use the [Webhook Notifications API](/api-docs/api-reference/webhook-notifications/list-webhook-notifications) to list recent notifications and identify the ones with `delivery_status: failed`.
+2. Re-fetch the current state of the affected shipments and containers from the REST API. Webhook notifications cannot be replayed — the [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint only sends a one-time sample payload for testing.
 3. For longer outages, list recent shipments via the API to catch up on any missed state changes.
 
 ## Keep your webhook active
@@ -133,7 +135,7 @@ If your webhook has been deactivated, fix the endpoint issue and [update the web
 
 ## Summary checklist
 
-- [ ] Return `2xx` immediately, process asynchronously
+- [ ] Return a success status (`200`, `201`, `202`, or `204`) after durably accepting the event, then process asynchronously
 - [ ] Deduplicate using the notification `id`
 - [ ] Validate the source IP against the webhook IPs list
 - [ ] Monitor failed notifications

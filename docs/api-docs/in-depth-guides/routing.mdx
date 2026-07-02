@@ -55,7 +55,7 @@ To retrieve the map data for a container, make a simple GET request to the endpo
 ```shell Request
 curl --request GET \
   --url https://api.terminal49.com/v2/containers/{id}/map_geojson \
-  --header "Authorization: Token YOUR_API_TOKEN"
+  --header "Authorization: Token YOUR_API_KEY"
 ```
 
 The response is a standard GeoJSON FeatureCollection that can be directly used with most mapping libraries (Leaflet, Mapbox GL, Google Maps, etc.).
@@ -422,7 +422,10 @@ This feature represents the predicted path from the vessel's current position to
 | `next_port_id` | string | ID of the next port the vessel is heading to |
 | `point_count` | integer | Number of coordinate points in the LineString |
 </Accordion>
-**Note:** This feature is only present when there is a `current_vessel` feature. The LineString starts from the vessel's current position (which matches the `current_vessel` feature coordinates) and extends to the next port.
+
+<Note>
+This feature is only present when there is a `current_vessel` feature. The LineString starts from the vessel's current position (which matches the `current_vessel` feature coordinates) and extends to the next port.
+</Note>
 
 ## Building your map
 
@@ -446,7 +449,7 @@ To visualize a container's journey using the GeoJSON response on your own map (s
     // Fetch the GeoJSON data
     fetch('https://api.terminal49.com/v2/containers/{id}/map_geojson', {
       headers: {
-        'Authorization': 'Token YOUR_API_TOKEN'
+        'Authorization': 'Token YOUR_API_KEY'
       }
     })
     .then(response => response.json())
@@ -536,27 +539,30 @@ If you decide to create your own map:
 
 ## Frequently asked questions
 
-**Q: How up-to-date is the vessel position data?**
-A: Vessel location data is updated every 15 minutes, although that does not guarantee there will be a new position every 15 minutes due to factors like whether the vessel is transmitting or within range of a satellite or base station.
-
-**Q: How accurate are the future predictions?**
-A: Predicted future positions are based on algorithms and historical data. Their accuracy can vary based on many factors such as temporary deviations, weather conditions, seasonality, or how frequently the shipping lane is used.
-
-**Q: What if a vessel deviates from the predicted path?**
-A: Predicted paths are estimates. The historical path (once available as a `past_vessel_locations` feature) will show the actual route taken. Regularly refreshing data for active shipments is key to getting the most accurate information.
-
-**Q: Why don't I see a `current_vessel` feature for my container?**
-A: The `current_vessel` feature is only present when:
-  - The container is currently on a vessel at sea
-  - The vessel has departed from a port (`outbound_atd_at` is present)
-  - The next port hasn't been reached yet (`inbound_ata_at` is not present)
-  - A valid vessel location can be retrieved
-
-**Q: Can I get map data for multiple containers at once?**
-A: Currently, the endpoint returns data for a single container. You'll need to make separate API calls for each container you want to display on your map.
-
-**Q: What coordinate system is used?**
-A: All coordinates follow the GeoJSON standard: `[longitude, latitude]` in WGS84 (EPSG:4326) format.
-
-**Q: Are the LineString coordinates simplified?**
-A: The endpoint applies simplification to reduce the number of points in LineStrings for better performance. The simplification tolerance can vary, but the paths remain accurate for visualization purposes.
+<AccordionGroup>
+  <Accordion title="How up-to-date is the vessel position data?">
+    Vessel location data is updated every 15 minutes, although that does not guarantee there will be a new position every 15 minutes due to factors like whether the vessel is transmitting or within range of a satellite or base station.
+  </Accordion>
+  <Accordion title="How accurate are the future predictions?">
+    Predicted future positions are based on algorithms and historical data. Their accuracy can vary based on many factors such as temporary deviations, weather conditions, seasonality, or how frequently the shipping lane is used.
+  </Accordion>
+  <Accordion title="What if a vessel deviates from the predicted path?">
+    Predicted paths are estimates. The historical path (once available as a `past_vessel_locations` feature) will show the actual route taken. Regularly refreshing data for active shipments is key to getting the most accurate information.
+  </Accordion>
+  <Accordion title="Why don't I see a current_vessel feature for my container?">
+    The `current_vessel` feature is only present when:
+    - The container is currently on a vessel at sea
+    - The vessel has departed from a port (`outbound_atd_at` is present)
+    - The next port hasn't been reached yet (`inbound_ata_at` is not present)
+    - A valid vessel location can be retrieved
+  </Accordion>
+  <Accordion title="Can I get map data for multiple containers at once?">
+    Currently, the endpoint returns data for a single container. You'll need to make separate API calls for each container you want to display on your map.
+  </Accordion>
+  <Accordion title="What coordinate system is used?">
+    All coordinates follow the GeoJSON standard: `[longitude, latitude]` in WGS84 (EPSG:4326) format.
+  </Accordion>
+  <Accordion title="Are the LineString coordinates simplified?">
+    The endpoint applies simplification to reduce the number of points in LineStrings for better performance. The simplification tolerance can vary, but the paths remain accurate for visualization purposes.
+  </Accordion>
+</AccordionGroup>

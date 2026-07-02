@@ -24,13 +24,13 @@ sequenceDiagram
     Carrier->>Terminal49: Reports status change
     Terminal49->>Terminal49: Processes and normalizes data
     Terminal49->>Your System: Sends webhook notification
-    Your System->>Terminal49: Returns 2xx response
+    Your System->>Terminal49: Returns a success status
 ```
 
 1. You [create a tracking request](/api-docs/getting-started/tracking-shipments-and-containers) with a Bill of Lading (BOL) or container number.
 2. Terminal49 monitors the carrier and destination terminal for changes.
 3. When something changes — an ETA update, a milestone event, a container hold — Terminal49 sends a `POST` request to your webhook URL with the full event payload.
-4. Your system processes the event and returns a `2xx` status code.
+4. Your system accepts the event and returns a success status (`200`, `201`, `202`, or `204`).
 
 ## Why webhooks instead of polling
 
@@ -59,7 +59,7 @@ Webhooks power most Terminal49 integrations. Common patterns include:
 - **[ETA monitoring](/api-docs/webhooks/use-cases/eta-monitoring)** — alert your team when a shipment's arrival estimate changes
 - **[LFD and availability alerts](/api-docs/webhooks/use-cases/lfd-alerts)** — trigger dispatch when a container clears holds and is ready for pickup
 - **[Milestone tracking](/api-docs/webhooks/use-cases/milestone-tracking)** — build a complete timeline of a container's journey from origin to destination
-- **Data sync** — push every update into your database, ERP, or TMS as it happens
+- **Database and TMS updates** — push every update into your database, ERP, or TMS as it happens. For managed table delivery into a data warehouse, database, or spreadsheet, see [DataSync](/datasync/home)
 - **Customer notifications** — surface tracking updates to your end customers in real time
 
 ## Secure your endpoint
@@ -69,7 +69,7 @@ Before using webhooks in production:
 - Verify the `X-T49-Webhook-Signature` HMAC signature against the raw request body.
 - Allowlist Terminal49 webhook IPs with the [List Webhook IPs](/api-docs/api-reference/webhooks/list-webhook-ips) endpoint.
 - Make handlers idempotent because retries can deliver the same notification more than once.
-- Return a 2xx response only after you have safely accepted the event.
+- Return a success status (`200`, `201`, `202`, or `204`) only after you have safely accepted the event.
 
 See [Setting up webhooks](/api-docs/in-depth-guides/webhooks) for signature examples and [Webhook Best Practices](/api-docs/webhooks/best-practices) for retry handling.
 

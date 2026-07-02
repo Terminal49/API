@@ -1,12 +1,13 @@
 ---
 title: "Entitlements and Paid Features"
-description: "Understand which Terminal49 API, map, widget, vessel, and MCP features require additional account enablement and what non-entitled callers receive."
+description: "Understand which Terminal49 API, map, widget, vessel, rail, and MCP features require additional account enablement and what non-entitled callers receive."
 keywords:
   - "Terminal49 API"
   - "paid features"
   - "entitlements"
   - "routing data"
   - "vessel positions"
+  - "Rail Plan"
   - "publishable API key"
 ---
 
@@ -21,6 +22,7 @@ Some Terminal49 features require account enablement beyond standard API access.
 | MCP `get_container_route` tool | Routing Data | Contact sales@terminal49.com | The tool returns a feature-not-enabled response; use `get_container_transport_events` for historical milestones |
 | Terminal49 Map Embed | Publishable map API key | Contact support@terminal49.com | The browser embed cannot authenticate without a valid publishable key |
 | Tracking Widget Embed | Publishable widget API key | Contact support@terminal49.com | The browser widget cannot authenticate without a valid publishable key |
+| Rail LFD data (`import_deadlines.pickup_lfd_rail` and the `container.pickup_lfd_rail.changed` webhook event) | Rail Plan | Contact sales@terminal49.com | `container.pickup_lfd_rail.changed` notifications are not delivered, and rail-carrier LFD updates are not surfaced on the container |
 
 ## Pricing
 
@@ -31,4 +33,5 @@ See [Pricing](/api-docs/useful-info/pricing) for current public pricing pointers
 - [Vessel and Container Route Data](/api-docs/in-depth-guides/routing)
 - [Terminal49 Map Embed Guide](/api-docs/in-depth-guides/terminal49-map)
 - [Tracking Widget Embed Guide](/api-docs/in-depth-guides/terminal49-widget)
+- [Rail Integration Guide](/api-docs/in-depth-guides/rail-integration-guide)
 - [MCP Server](/mcp/home)

@@ -30,22 +30,20 @@ You need:
 
 You can use any HTTP client. [Postman](https://www.postman.com/) is useful for a first pass because it can run the published OpenAPI collection with your API key.
 
-<Card icon = "caret-right" href="https://www.postman.com/terminal49-api/terminal49-api/collection/x2podso/terminal49-api-reference-public">
-**Run in Postman**
+<Card title="Run in Postman" icon="caret-right" href="https://www.postman.com/terminal49-api/terminal49-api/collection/x2podso/terminal49-api-reference-public">
+  Explore the Terminal49 API with the published Postman collection.
 </Card>
 
-***
 ## Get an API key
+
 Sign in to your Terminal49 account and go to the [developer portal](https://app.terminal49.com/developers/api-keys) to get your API key.
 
 ## Send the Authorization header
 
-The API uses a Token-prefixed API key in the `Authorization` header.
-
-If your API key is `ABC123`, send:
+The API uses a Token-prefixed API key in the `Authorization` header. Send it with every request:
 
 ```http
-Authorization: Token ABC123
+Authorization: Token YOUR_API_KEY
 ```
 
 <Tip>

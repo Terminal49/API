@@ -52,6 +52,7 @@
               "api-docs/in-depth-guides/webhooks",
               "api-docs/webhooks/event-catalog",
               "api-docs/webhooks/payloads",
+              "api-docs/useful-info/webhook-events-examples",
               {
                 "group": "Use Cases",
                 "pages": [
@@ -60,7 +61,6 @@
                   "api-docs/webhooks/use-cases/milestone-tracking"
                 ]
               },
-              "api-docs/useful-info/webhook-events-examples",
               "api-docs/webhooks/best-practices"
             ]
           },
@@ -321,8 +321,20 @@
                 "pages": [
                   "sdk/reference/client/index",
                   "sdk/reference/client/classes/Terminal49Client",
-                  "sdk/reference/client/interfaces/Terminal49ClientConfig",
+                  "sdk/reference/client/interfaces/Terminal49ClientConfig"
+                ]
+              },
+              {
+                "group": "Managers",
+                "pages": [
+                  "sdk/reference/client/managers/index",
+                  "sdk/reference/client/managers/classes/BaseManager",
+                  "sdk/reference/client/managers/classes/ContainerManager",
+                  "sdk/reference/client/managers/classes/ShipmentManager",
+                  "sdk/reference/client/managers/classes/ShippingLineManager",
+                  "sdk/reference/client/managers/classes/TrackingRequestManager",
                   "sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions",
+                  "sdk/reference/client/managers/interfaces/TrackingRequestListFilters",
                   "sdk/reference/client/managers/type-aliases/TrackingRequestType"
                 ]
               },
@@ -337,6 +349,25 @@
                   "sdk/reference/client/classes/Terminal49Error",
                   "sdk/reference/client/classes/UpstreamError",
                   "sdk/reference/client/classes/ValidationError"
+                ]
+              },
+              {
+                "group": "Interceptors",
+                "pages": [
+                  "sdk/reference/client/interceptors/index",
+                  "sdk/reference/client/interceptors/classes/AuthInterceptor",
+                  "sdk/reference/client/interceptors/classes/ErrorMappingInterceptor",
+                  "sdk/reference/client/interceptors/classes/RetryInterceptor",
+                  "sdk/reference/client/interceptors/type-aliases/Interceptor"
+                ]
+              },
+              {
+                "group": "Transport",
+                "pages": [
+                  "sdk/reference/client/transport/index",
+                  "sdk/reference/client/transport/classes/Transport",
+                  "sdk/reference/client/transport/interfaces/TransportConfig",
+                  "sdk/reference/client/transport/type-aliases/ApiClient"
                 ]
               },
               {
@@ -358,7 +389,11 @@
                   "sdk/reference/types/options/index",
                   "sdk/reference/types/options/interfaces/CallOptions",
                   "sdk/reference/types/options/interfaces/ListOptions",
-                  "sdk/reference/types/options/type-aliases/ResponseFormat"
+                  "sdk/reference/types/options/type-aliases/ContainerInclude",
+                  "sdk/reference/types/options/type-aliases/IncludeParam",
+                  "sdk/reference/types/options/type-aliases/ResponseFormat",
+                  "sdk/reference/types/options/type-aliases/ShipmentInclude",
+                  "sdk/reference/types/options/type-aliases/TrackingRequestInclude"
                 ]
               }
             ]

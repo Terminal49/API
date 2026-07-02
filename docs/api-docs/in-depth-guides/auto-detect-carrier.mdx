@@ -1,26 +1,26 @@
 ---
-title: "Identify Your Carrier with the Infer API"
-sidebarTitle: "Auto-Detect Carrier 🆕"
-description: "Use the Terminal49 Infer API to identify a carrier SCAC from a bill of lading or container number before you create a tracking request."
+title: "Identify Your Carrier with Infer Tracking Number"
+sidebarTitle: "Infer Tracking Number 🆕"
+description: "Use the Terminal49 Infer Tracking Number endpoint to identify a carrier SCAC from a bill of lading or container number before you create a tracking request."
 keywords:
   - "Terminal49 API"
   - "container tracking API"
   - "shipment visibility"
   - "developer guide"
-  - "Infer API"
+  - "Infer Tracking Number"
   - "SCAC lookup"
   - "auto detect carrier"
   - "tracking number"
 ---
 <Note>
-  **Beta Feature** — This guide covers the [Infer Number
-  API](/api-docs/api-reference/tracking-requests/auto-detect-carrier), currently
-  in beta. The API is stable for production use, but features may expand based
-  on feedback.
+  **Beta Feature** — This guide covers the [Infer Tracking
+  Number](/api-docs/api-reference/tracking-requests/auto-detect-carrier)
+  endpoint (also known as Auto-Detect Carrier), currently in beta. The API is
+  stable for production use, but features may expand based on feedback.
 </Note>
 
 Every tracking request requires two things: **your tracking number** and **the shipping line's (carrier's) SCAC code**.
-But what if you don't know the SCAC? That's where the Infer API comes in.
+But what if you don't know the SCAC? That's where Infer Tracking Number comes in.
 
 <Card title="Already using the Terminal49 Dashboard?" icon="browser" horizontal>
   You've seen this feature in action — when you enter a number, Terminal49 auto-suggests
@@ -40,11 +40,11 @@ The SCAC (Standard Carrier Alpha Code) used here is the **shipping line SCAC for
 
 <Info>
   Without the correct **shipping line SCAC (VOCC SCAC)**, your tracking request can fail even if the
-  number is valid. The Infer API predicts the shipping line SCAC + number type to
+  number is valid. Infer Tracking Number predicts the shipping line SCAC + number type to
   increase the likelihood your tracking request succeeds.
 </Info>
 
-## How the Infer API helps
+## How Infer Tracking Number helps
 
 Submit any tracking number, and the API returns:
 
@@ -434,7 +434,7 @@ curl -X POST https://api.terminal49.com/v2/tracking_requests/infer_number \
 
 <CardGroup cols={2}>
   <Card
-    title="Infer Number API Reference"
+    title="Infer Tracking Number API Reference"
     icon="code"
     href="/api-docs/api-reference/tracking-requests/auto-detect-carrier"
   >
