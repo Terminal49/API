@@ -6,8 +6,27 @@
   "bin": {
     "t49": "./dist/bin/t49.js"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Terminal49/API.git",
+    "directory": "sdks/typescript-sdk-cli"
+  },
+  "homepage": "https://github.com/Terminal49/API/tree/main/sdks/typescript-sdk-cli#readme",
+  "bugs": {
+    "url": "https://github.com/Terminal49/API/issues"
+  },
+  "author": "Terminal49",
   "scripts": {
     "build": "tsc",
     "type-check": "tsc --noEmit",
@@ -15,15 +34,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:integration": "vitest run test/integration",
-    "test:e2e": "vitest run test/e2e",
     "fixtures:capture:live": "bash scripts/capture-live-fixtures.sh",
-    "lint": "biome check src/ test/ bin/",
-    "lint:fix": "biome check --write src/ test/ bin/",
-    "prepublishOnly": "npm run build"
+    "lint": "oxlint src test bin && oxfmt --check src test bin",
+    "format": "oxfmt --write src test bin",
+    "prepublishOnly": "npm run build && npm run lint && npm run test"
   },
   "files": [
     "dist",
+    "LICENSE",
     "README.md"
   ],
   "keywords": [
@@ -36,19 +54,19 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "dependencies": {
     "@terminal49/sdk": "^0.3.0",
     "commander": "^13.0.0",
-    "chalk": "^5.4.0",
     "cli-table3": "^0.6.5"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
     "vitest": "^4.0.13",
     "@vitest/coverage-v8": "^4.0.18",
-    "@biomejs/biome": "^1.9.4",
+    "oxfmt": "^0.55.0",
+    "oxlint": "^1.70.0",
     "@types/node": "^20.19.0",
     "msw": "^2.7.0",
     "execa": "^9.5.0",
