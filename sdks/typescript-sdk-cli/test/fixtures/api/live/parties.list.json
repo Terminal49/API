@@ -4,35 +4,35 @@
   "data": {
     "data": [
       {
-        "id": "03164f9c-84d1-419e-8bc9-5a80068c2fb8",
+        "id": "aec89cee-f447-435d-88cc-172526f4d198",
         "type": "party",
         "attributes": {
-          "company_name": "Elenteny Imports"
+          "company_name": "Acme Imports LLC"
         }
       },
       {
-        "id": "0a8976cb-305f-48f4-8870-52315420f394",
+        "id": "633883aa-4857-46ae-8eaf-9e8754c8129b",
         "type": "party",
         "attributes": {
-          "company_name": "Revolution Supply"
+          "company_name": "Globex Logistics"
         }
       }
     ],
     "meta": {
       "size": 2,
-      "total": 7,
+      "total": 4,
       "pagination": {
         "current": 1,
         "next": 2,
-        "last": 4,
-        "records": 7
+        "last": 2,
+        "records": 4
       }
     },
     "links": {
       "self": "https://api.terminal49.com/v2/parties?page[size]=2",
       "current": "https://api.terminal49.com/v2/parties?page[number]=1&page[size]=2",
       "next": "https://api.terminal49.com/v2/parties?page[number]=2&page[size]=2",
-      "last": "https://api.terminal49.com/v2/parties?page[number]=4&page[size]=2"
+      "last": "https://api.terminal49.com/v2/parties?page[number]=2&page[size]=2"
     }
   }
 }

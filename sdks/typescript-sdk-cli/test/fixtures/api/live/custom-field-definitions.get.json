@@ -3,7 +3,7 @@
   "command": "custom-field-definitions.get",
   "data": {
     "data": {
-      "id": "5596c4ec-7517-4221-b62b-54800cdb8b67",
+      "id": "cb55c591-560c-403b-8de5-5c22626cb9e6",
       "type": "custom_field_definition",
       "attributes": {
         "entity_type": "Shipment",
@@ -32,7 +32,7 @@
       }
     },
     "links": {
-      "self": "https://api.terminal49.com/v2/custom_field_definitions/5596c4ec-7517-4221-b62b-54800cdb8b67"
+      "self": "https://api.terminal49.com/v2/custom_field_definitions/cb55c591-560c-403b-8de5-5c22626cb9e6"
     }
   }
 }

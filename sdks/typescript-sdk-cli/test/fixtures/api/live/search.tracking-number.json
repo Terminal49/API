@@ -4,11 +4,11 @@
   "data": {
     "data": [
       {
-        "id": "efec94ff-eb13-4625-9059-d395541524ff",
+        "id": "0897cff1-8dff-4b18-8f7b-eae22c91fac1",
         "type": "search_result",
         "attributes": {
           "entity_type": "shipment",
-          "number": "ZIMUNGB20745474",
+          "number": "ZIMUFAKE260005",
           "shipment_id": null,
           "scac": "ZIMU",
           "port_of_lading_name": "Ningbo",
@@ -25,8 +25,8 @@
       }
     ],
     "links": {
-      "self": "https://api.terminal49.com/v2/search?query=ZIMUNGB20745474",
-      "current": "https://api.terminal49.com/v2/search?page[number]=1&query=ZIMUNGB20745474"
+      "self": "https://api.terminal49.com/v2/search?query=ZIMUFAKE260005",
+      "current": "https://api.terminal49.com/v2/search?page[number]=1&query=ZIMUFAKE260005"
     }
   }
 }

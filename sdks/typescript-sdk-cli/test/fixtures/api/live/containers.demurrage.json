@@ -2,7 +2,7 @@
   "ok": true,
   "command": "containers.demurrage",
   "data": {
-    "container_id": "d094ee98-a9bd-4edf-a278-7f6cf73d025a",
+    "container_id": "4932792a-0154-4f57-83eb-11d4418b6e05",
     "pickup_lfd": "2026-02-26T05:00:00Z",
     "pickup_appointment_at": null,
     "available_for_pickup": false,

@@ -2,9 +2,9 @@
   "ok": true,
   "command": "tracking-requests.get",
   "data": {
-    "id": "843ef3c7-fc89-40a6-9b44-bef69c91b005",
+    "id": "5e1ce1dd-3139-43ac-8d6f-af003f29ea2a",
     "requestType": "bill_of_lading",
-    "requestNumber": "ZIMUNGB20745474",
+    "requestNumber": "ZIMUFAKE260005",
     "status": "created",
     "scac": "ZIMU",
     "refNumbers": [],

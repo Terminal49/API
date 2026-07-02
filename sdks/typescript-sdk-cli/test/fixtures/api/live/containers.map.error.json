@@ -1,0 +1,8 @@
+{
+  "ok": false,
+  "command": "containers.map",
+  "error": {
+    "code": "NO_OUTPUT",
+    "message": "No output captured for this live fixture."
+  }
+}

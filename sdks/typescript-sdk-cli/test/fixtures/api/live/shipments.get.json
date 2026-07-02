@@ -2,21 +2,21 @@
   "ok": true,
   "command": "shipments.get",
   "data": {
-    "id": "5fdb5605-647d-46fc-98f9-e93ccaba8bff",
-    "billOfLading": "HLCUHAM260113347",
+    "id": "73b9b22a-73e5-4e77-824b-5e644d5c3d92",
+    "billOfLading": "HLCUFAKE260003",
     "shippingLineScac": "HLCU",
-    "customerName": "Sodor Steamworks",
+    "customerName": "Acme Imports LLC",
     "containers": [
       {
-        "id": "cd085a4f-f981-4a78-9a9f-6cdf873a4931",
-        "number": "XHCU5741275"
+        "id": "3ee1c667-683d-45f9-8dfa-abe1dd35697e",
+        "number": "TEST1000003"
       }
     ],
     "createdAt": "2026-02-28T18:58:30Z",
     "refNumbers": [],
     "tags": [],
-    "billOfLadingNumber": "HLCUHAM260113347",
-    "normalizedNumber": "HLCUHAM260113347",
+    "billOfLadingNumber": "HLCUFAKE260003",
+    "normalizedNumber": "HLCUFAKE260003",
     "shippingLineName": "Hapag-Lloyd",
     "shippingLineShortName": "Hapag-Lloyd",
     "portOfLadingLocode": "DEHAM",
@@ -67,7 +67,7 @@
         "originalEta": null,
         "timezone": "America/New_York",
         "terminal": {
-          "id": "4a55655c-5ad5-4027-af0c-a154e05abcfc",
+          "id": "821391f7-3953-4a47-8f68-ded871114ba6",
           "name": "Florida International Terminal",
           "nickname": "FIT",
           "firmsCode": "N751"

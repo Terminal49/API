@@ -4,11 +4,11 @@
   "data": {
     "data": [
       {
-        "id": "aa8036ff-274b-4bef-a373-d103a2bb98ec",
+        "id": "412b50aa-fb3b-4fb0-8741-15e2256924e7",
         "type": "search_result",
         "attributes": {
           "entity_type": "shipment",
-          "number": "HLCUIT1251213429",
+          "number": "TEST1000005",
           "shipment_id": null,
           "scac": "HLCU",
           "port_of_lading_name": "Itajai",
@@ -25,8 +25,8 @@
       }
     ],
     "links": {
-      "self": "https://api.terminal49.com/v2/search?query=HLCUIT1251213429",
-      "current": "https://api.terminal49.com/v2/search?page[number]=1&query=HLCUIT1251213429"
+      "self": "https://api.terminal49.com/v2/search?query=TEST1000005",
+      "current": "https://api.terminal49.com/v2/search?page[number]=1&query=TEST1000005"
     }
   }
 }

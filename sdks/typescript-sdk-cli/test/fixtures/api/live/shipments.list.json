@@ -4,21 +4,21 @@
   "data": {
     "items": [
       {
-        "id": "5fdb5605-647d-46fc-98f9-e93ccaba8bff",
-        "billOfLading": "HLCUHAM260113347",
+        "id": "73b9b22a-73e5-4e77-824b-5e644d5c3d92",
+        "billOfLading": "HLCUFAKE260003",
         "shippingLineScac": "HLCU",
-        "customerName": "Sodor Steamworks",
+        "customerName": "Acme Imports LLC",
         "containers": [
           {
-            "id": "cd085a4f-f981-4a78-9a9f-6cdf873a4931",
-            "number": "XHCU5741275"
+            "id": "3ee1c667-683d-45f9-8dfa-abe1dd35697e",
+            "number": "TEST1000003"
           }
         ],
         "createdAt": "2026-02-28T18:58:30Z",
         "refNumbers": [],
         "tags": [],
-        "billOfLadingNumber": "HLCUHAM260113347",
-        "normalizedNumber": "HLCUHAM260113347",
+        "billOfLadingNumber": "HLCUFAKE260003",
+        "normalizedNumber": "HLCUFAKE260003",
         "shippingLineName": "Hapag-Lloyd",
         "shippingLineShortName": "Hapag-Lloyd",
         "portOfLadingLocode": "DEHAM",
@@ -69,7 +69,7 @@
             "originalEta": null,
             "timezone": "America/New_York",
             "terminal": {
-              "id": "4a55655c-5ad5-4027-af0c-a154e05abcfc",
+              "id": "821391f7-3953-4a47-8f68-ded871114ba6",
               "name": "Florida International Terminal",
               "nickname": "FIT",
               "firmsCode": "N751"
@@ -85,21 +85,21 @@
         }
       },
       {
-        "id": "c905cb3c-7f52-4bcc-bb84-a9446b8749ac",
-        "billOfLading": "HLCURTM260109546",
+        "id": "17992eb5-cf60-4eb0-84c6-dacbbba1f3f8",
+        "billOfLading": "HLCUFAKE260004",
         "shippingLineScac": "HLCU",
-        "customerName": "Sodor Steamworks",
+        "customerName": "Acme Imports LLC",
         "containers": [
           {
-            "id": "cb39a91a-a652-4afe-829a-5ace4719e043",
-            "number": "FANU1665305"
+            "id": "c1acd4c3-d0fd-467d-8e57-9b807d6e7f0e",
+            "number": "TEST1000004"
           }
         ],
         "createdAt": "2026-02-28T18:58:17Z",
         "refNumbers": [],
         "tags": [],
-        "billOfLadingNumber": "HLCURTM260109546",
-        "normalizedNumber": "HLCURTM260109546",
+        "billOfLadingNumber": "HLCUFAKE260004",
+        "normalizedNumber": "HLCUFAKE260004",
         "shippingLineName": "Hapag-Lloyd",
         "shippingLineShortName": "Hapag-Lloyd",
         "portOfLadingLocode": "NLRTM",
@@ -150,7 +150,7 @@
             "originalEta": null,
             "timezone": "America/New_York",
             "terminal": {
-              "id": "359c10f2-b69b-481d-b26e-d030b03fa9bf",
+              "id": "b52acf92-4e90-472c-8ce9-ceb56b488b0f",
               "name": "Virginia International Gateway",
               "nickname": "Virginia (VIG)",
               "firmsCode": "N195"
@@ -177,10 +177,10 @@
       "self": "https://api.terminal49.com/v2/shipments?include=containers%2Cpod_terminal%2Cport_of_lading%2Cport_of_discharge%2Cdestination%2Cdestination_terminal&page[size]=2",
       "current": "https://api.terminal49.com/v2/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=1&page[size]=2",
       "next": "https://api.terminal49.com/v2/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=2&page[size]=2",
-      "last": "https://api.terminal49.com/v2/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=87346&page[size]=2"
+      "last": "https://api.terminal49.com/v2/shipments?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal&page[number]=2&page[size]=2"
     },
     "meta": {
-      "total": 174691,
+      "total": 4,
       "size": 2
     }
   }

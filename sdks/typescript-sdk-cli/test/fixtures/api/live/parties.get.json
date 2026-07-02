@@ -3,14 +3,14 @@
   "command": "parties.get",
   "data": {
     "data": {
-      "id": "03164f9c-84d1-419e-8bc9-5a80068c2fb8",
+      "id": "aec89cee-f447-435d-88cc-172526f4d198",
       "type": "party",
       "attributes": {
-        "company_name": "Elenteny Imports"
+        "company_name": "Acme Imports LLC"
       }
     },
     "links": {
-      "self": "https://api.terminal49.com/v2/parties/03164f9c-84d1-419e-8bc9-5a80068c2fb8"
+      "self": "https://api.terminal49.com/v2/parties/aec89cee-f447-435d-88cc-172526f4d198"
     }
   }
 }

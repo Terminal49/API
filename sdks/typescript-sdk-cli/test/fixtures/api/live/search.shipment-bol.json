@@ -4,11 +4,11 @@
   "data": {
     "data": [
       {
-        "id": "5fdb5605-647d-46fc-98f9-e93ccaba8bff",
+        "id": "73b9b22a-73e5-4e77-824b-5e644d5c3d92",
         "type": "search_result",
         "attributes": {
           "entity_type": "shipment",
-          "number": "HLCUHAM260113347",
+          "number": "HLCUFAKE260003",
           "shipment_id": null,
           "scac": "HLCU",
           "port_of_lading_name": "Hamburg",
@@ -25,8 +25,8 @@
       }
     ],
     "links": {
-      "self": "https://api.terminal49.com/v2/search?query=HLCUHAM260113347",
-      "current": "https://api.terminal49.com/v2/search?page[number]=1&query=HLCUHAM260113347"
+      "self": "https://api.terminal49.com/v2/search?query=HLCUFAKE260003",
+      "current": "https://api.terminal49.com/v2/search?page[number]=1&query=HLCUFAKE260003"
     }
   }
 }
