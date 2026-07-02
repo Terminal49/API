@@ -5,6 +5,15 @@ All notable changes to `@terminal49/sdk` are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1](https://github.com/Terminal49/API/compare/sdk-v-v0.3.0...sdk-v-v0.3.1) (2026-07-02)
+
+
+### Bug Fixes
+
+* **sdk:** correct JSON:API mapper relationship/attr paths + restore shipping-line capability flags ([#275](https://github.com/Terminal49/API/issues/275)) ([c7e748a](https://github.com/Terminal49/API/commit/c7e748a900844142b520de0c46ab9077e7585bb0))
+* **sdk:** request timeout, network-error normalization, idempotent-only retries, Retry-After, bounded iterate ([#274](https://github.com/Terminal49/API/issues/274)) ([e9ac7a8](https://github.com/Terminal49/API/commit/e9ac7a81aaa90e60a4190d60d8bfd4c6a1035484))
+* **sdk:** stop sending unsupported container/shipment filter keys + clamp page size + wire mapper includes ([#278](https://github.com/Terminal49/API/issues/278)) ([a019b5d](https://github.com/Terminal49/API/commit/a019b5da41124f35b39c9ae4107bc023ebd9ea2b))
+
 ## [0.3.0](https://github.com/Terminal49/API/compare/sdk-v-v0.2.0...sdk-v-v0.3.0) (2026-05-29)
 
 
