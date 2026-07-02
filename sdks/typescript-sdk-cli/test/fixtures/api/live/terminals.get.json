@@ -3,10 +3,10 @@
   "command": "terminals.get",
   "data": {
     "data": {
-      "id": "359c10f2-b69b-481d-b26e-d030b03fa9bf",
+      "id": "b52acf92-4e90-472c-8ce9-ceb56b488b0f",
       "type": "terminal",
       "attributes": {
-        "id": "359c10f2-b69b-481d-b26e-d030b03fa9bf",
+        "id": "b52acf92-4e90-472c-8ce9-ceb56b488b0f",
         "nickname": "Virginia (VIG)",
         "name": "Virginia International Gateway",
         "firms_code": "N195",
@@ -40,14 +40,14 @@
       "relationships": {
         "port": {
           "data": {
-            "id": "c4554ebb-5476-4b5e-b79f-1e873f7b86fa",
+            "id": "f89f13ad-e247-4a93-8fb8-4a1e94a06b5f",
             "type": "port"
           }
         }
       }
     },
     "links": {
-      "self": "https://api.terminal49.com/v2/terminals/359c10f2-b69b-481d-b26e-d030b03fa9bf"
+      "self": "https://api.terminal49.com/v2/terminals/b52acf92-4e90-472c-8ce9-ceb56b488b0f"
     }
   }
 }

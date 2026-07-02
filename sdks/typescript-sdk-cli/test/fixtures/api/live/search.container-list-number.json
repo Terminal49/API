@@ -4,12 +4,12 @@
   "data": {
     "data": [
       {
-        "id": "d094ee98-a9bd-4edf-a278-7f6cf73d025a",
+        "id": "4932792a-0154-4f57-83eb-11d4418b6e05",
         "type": "search_result",
         "attributes": {
           "entity_type": "cargo",
-          "number": "OOLU9970918",
-          "shipment_id": "0406ec2a-736e-4312-a4b7-a2b1f6266bcd",
+          "number": "TEST1000001",
+          "shipment_id": "fcc11d12-b8e6-49a8-8b1a-fc1f7e485b31",
           "scac": "COSU",
           "port_of_lading_name": null,
           "port_of_discharge_name": null,
@@ -25,8 +25,8 @@
       }
     ],
     "links": {
-      "self": "https://api.terminal49.com/v2/search?query=OOLU9970918",
-      "current": "https://api.terminal49.com/v2/search?page[number]=1&query=OOLU9970918"
+      "self": "https://api.terminal49.com/v2/search?query=TEST1000001",
+      "current": "https://api.terminal49.com/v2/search?page[number]=1&query=TEST1000001"
     }
   }
 }

@@ -4,7 +4,7 @@
   "data": {
     "data": [
       {
-        "id": "5596c4ec-7517-4221-b62b-54800cdb8b67",
+        "id": "cb55c591-560c-403b-8de5-5c22626cb9e6",
         "type": "custom_field_definition",
         "attributes": {
           "entity_type": "Shipment",
@@ -33,7 +33,7 @@
         }
       },
       {
-        "id": "bfb5b95a-be0c-4dbb-9587-1211a6f2653f",
+        "id": "e58a653f-8e51-4d8b-8ee3-4f280abd6bb8",
         "type": "custom_field_definition",
         "attributes": {
           "entity_type": "Shipment",
@@ -62,7 +62,7 @@
         }
       },
       {
-        "id": "963013ae-bf31-46be-8422-96574f30875a",
+        "id": "3a9a29ea-5910-409d-8304-d2594d94f5b7",
         "type": "custom_field_definition",
         "attributes": {
           "entity_type": "Shipment",
@@ -91,7 +91,7 @@
         }
       },
       {
-        "id": "41c7cc1e-94a4-4042-b4f0-96b2663fe75f",
+        "id": "ce5a39f8-2ecc-4ae3-85c8-7cc02b65d79a",
         "type": "custom_field_definition",
         "attributes": {
           "entity_type": "Shipment",
@@ -120,7 +120,7 @@
         }
       },
       {
-        "id": "4dbd6dff-4d3d-4c0e-abd4-269fce83e104",
+        "id": "ea34e613-dd31-4477-8a11-f15e29953e58",
         "type": "custom_field_definition",
         "attributes": {
           "entity_type": "Shipment",
@@ -149,7 +149,7 @@
         }
       },
       {
-        "id": "73367453-ad1c-44c0-9222-86551c13a0ae",
+        "id": "394a7066-e632-4f57-8ddb-c604a1715b0d",
         "type": "custom_field_definition",
         "attributes": {
           "entity_type": "Shipment",
@@ -175,39 +175,39 @@
           "options": {
             "data": [
               {
-                "id": "31bc2380-11fa-46b8-bfbd-fc12051d94b9",
+                "id": "65d51bba-fada-40f0-8052-4efcaf5a9aee",
                 "type": "custom_field_option"
               },
               {
-                "id": "9f588dd4-d407-4bce-a5fe-2bc6285027ca",
+                "id": "5b31d7b5-cf91-40de-859a-e1a268acef10",
                 "type": "custom_field_option"
               },
               {
-                "id": "361b5f47-2f6e-4c2b-af3c-5896b5f76f9a",
+                "id": "08eafef1-272d-432c-87c1-14aeb0aa3bba",
                 "type": "custom_field_option"
               },
               {
-                "id": "07744cf0-e089-42c1-9b5d-9d444d3279dd",
+                "id": "bd994ff3-7b29-4f8c-8d28-72e6f862ecaa",
                 "type": "custom_field_option"
               },
               {
-                "id": "75d98c81-f6f1-4a34-aa26-d14c79e997c9",
+                "id": "a66d3f45-bb16-4c95-80cf-9d4cffdb2ac4",
                 "type": "custom_field_option"
               },
               {
-                "id": "9b9498de-8e47-410d-8e5f-9343d59360dd",
+                "id": "7e096cf8-6a19-4bb9-8e69-de80710e3c0f",
                 "type": "custom_field_option"
               },
               {
-                "id": "76a24813-15f0-4b53-bc21-764ac17f82c2",
+                "id": "c2be859b-51a0-4de1-8e80-a329f2159f26",
                 "type": "custom_field_option"
               },
               {
-                "id": "d63d0e4c-882c-4f8a-8ca5-d901e5a3709b",
+                "id": "1e17fcab-ed04-47a1-83d3-ed0679b33cc6",
                 "type": "custom_field_option"
               },
               {
-                "id": "e1e221ae-d14a-44ed-b536-8d83817d2d8d",
+                "id": "0ea7bd8c-0799-4df0-8464-d6cff9e4c716",
                 "type": "custom_field_option"
               }
             ]
@@ -215,7 +215,7 @@
         }
       },
       {
-        "id": "b13eb575-e7da-4f19-a07b-e55508f9d517",
+        "id": "1bd48b12-9a56-4588-8e82-9d0822f80670",
         "type": "custom_field_definition",
         "attributes": {
           "entity_type": "Shipment",
@@ -244,7 +244,7 @@
         }
       },
       {
-        "id": "6528299d-86ac-48e5-b260-079f286c0561",
+        "id": "3f785691-ea3b-4ba3-8fbf-cc684e63b545",
         "type": "custom_field_definition",
         "attributes": {
           "entity_type": "Cargo",
@@ -273,7 +273,7 @@
         }
       },
       {
-        "id": "624392bc-9318-4f44-adb6-e7592ea71cff",
+        "id": "59b1506f-2c7d-41f9-8e38-a0ce852dfc89",
         "type": "custom_field_definition",
         "attributes": {
           "entity_type": "Shipment",
@@ -306,7 +306,7 @@
       "self": "https://api.terminal49.com/v2/custom_field_definitions?page%5Bsize%5D=2",
       "current": "https://api.terminal49.com/v2/custom_field_definitions?page[number]=1&page[size]=2",
       "next": "https://api.terminal49.com/v2/custom_field_definitions?page[number]=2&page[size]=2",
-      "last": "https://api.terminal49.com/v2/custom_field_definitions?page[number]=5&page[size]=2"
+      "last": "https://api.terminal49.com/v2/custom_field_definitions?page[number]=2&page[size]=2"
     }
   }
 }

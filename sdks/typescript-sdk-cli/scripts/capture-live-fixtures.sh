@@ -13,6 +13,9 @@ TABLE_FIXTURES="$CLI_DIR/test/fixtures/table/live"
 
 mkdir -p "$API_FIXTURES" "$TABLE_FIXTURES"
 
+# Live captures may contain customer/account identifiers. Sanitize every
+# generated fixture before committing it to the public repository.
+
 run_json() {
   local out="$1"
   shift
@@ -35,7 +38,6 @@ run_json "shipments.list.json" shipments list --page-size 2
 run_json "containers.list.json" containers list --page-size 2
 run_json "tracking-requests.list.json" tracking-requests list --page-size 2
 run_json "shipping-lines.list.json" shipping-lines list --search HLCU
-run_json "search.container-number.json" search HLCUIT1251213429
 
 shipment_id="$(read_id "$API_FIXTURES/shipments.list.json" "data.items.0.id")"
 container_id="$(read_id "$API_FIXTURES/containers.list.json" "data.items.0.id")"
@@ -46,6 +48,7 @@ tracking_number="$(read_id "$API_FIXTURES/tracking-requests.list.json" "data.ite
 terminal_id="$(read_id "$API_FIXTURES/containers.list.json" "data.items.0.terminals.podTerminal.id")"
 vessel_imo="$(read_id "$API_FIXTURES/shipments.list.json" "data.items.0.vesselAtPod.imo")"
 port_code="$(read_id "$API_FIXTURES/shipments.list.json" "data.items.0.ports.portOfLading.code")"
+search_number="${T49_FIXTURE_SEARCH_NUMBER:-$container_number}"
 
 run_json "shipments.get.json" shipments get "$shipment_id"
 run_json "containers.get.json" containers get "$container_id"
@@ -54,6 +57,7 @@ run_json "containers.events.json" containers events "$container_id"
 run_json "containers.raw-events.json" containers raw-events "$container_id"
 run_json "containers.demurrage.json" containers demurrage "$container_id"
 run_json "containers.rail.json" containers rail "$container_id"
+run_json "search.container-number.json" search "$search_number"
 run_json "search.shipment-bol.json" search "$shipment_bol"
 run_json "search.container-list-number.json" search "$container_number"
 run_json "search.tracking-number.json" search "$tracking_number"
@@ -85,7 +89,7 @@ run_table "shipments.list.txt" shipments list --page-size 2
 run_table "containers.list.txt" containers list --page-size 2
 run_table "tracking-requests.list.txt" tracking-requests list --page-size 2
 run_table "shipping-lines.list.txt" shipping-lines list --search HLCU
-run_table "search.container-number.txt" search HLCUIT1251213429
+run_table "search.container-number.txt" search "$search_number"
 run_table "custom-field-definitions.list.txt" custom-field-definitions list --page-size 2
 run_table "parties.list.txt" parties list --page-size 2
 if [[ -n "$terminal_id" ]]; then
@@ -93,3 +97,4 @@ if [[ -n "$terminal_id" ]]; then
 fi
 
 echo "Live fixtures captured in $API_FIXTURES and $TABLE_FIXTURES"
+echo "Sanitize captured fixtures before committing them."
