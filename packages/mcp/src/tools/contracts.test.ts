@@ -1,4 +1,4 @@
-import { FeatureNotEnabledError, type Terminal49Client } from '@terminal49/sdk';
+import { FeatureNotEnabledError, NotFoundError, type Terminal49Client } from '@terminal49/sdk';
 import { describe, expect, it, vi } from 'vitest';
 import { executeGetContainer } from './get-container.js';
 import { executeGetContainerRoute } from './get-container-route.js';
@@ -9,6 +9,10 @@ import { executeListShipments } from './list-shipments.js';
 import { executeListTrackingRequests } from './list-tracking-requests.js';
 import { executeSearchContainer } from './search-container.js';
 import { executeTrackContainer } from './track-container.js';
+import {
+  buildListContract,
+  sanitizeTrackingRequestFilters,
+} from '../server.js';
 
 function asClient(client: unknown): Terminal49Client {
   return client as Terminal49Client;
@@ -669,22 +673,121 @@ describe('MCP tool contracts', () => {
     );
 
     expect(events).toHaveBeenCalledWith('container-1', { format: 'raw' });
-    expect(result.summary.total_events).toBe(2);
-    expect(result.summary.timeline[0]).toMatchObject({
+    expect(result.total_events).toBe(2);
+    expect(result.timeline[0]).toMatchObject({
       event: 'container.transport.vessel_loaded',
     });
-    expect(result.summary.milestones).toMatchObject({
+    expect(result.milestones).toMatchObject({
       vessel_loaded_at: '2025-01-01T00:00:00.000Z',
       vessel_departed_at: '2025-01-02T00:00:00.000Z',
     });
+    // A 200 from the sub-resource means the container exists; surface
+    // container_found consistently with the fallback path.
+    expect(result._metadata.source).toBe('transport_events_subresource');
+    expect(result._metadata.container_found).toBe(true);
+    // No duplicate mapped payload should be surfaced.
+    expect(result.summary).toBeUndefined();
+    expect(result.mapped).toBeUndefined();
   });
 
-  it('get_container_transport_events returns empty summary when events fetch fails', async () => {
-    const client = asClient({
-      containers: {
-        events: vi.fn().mockRejectedValue(new Error('Not Found')),
+  it('get_container_transport_events falls back to the container include path when the dedicated sub-resource 404s', async () => {
+    const events = vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
+    const get = vi.fn().mockResolvedValue({
+      data: {
+        id: 'container-1',
+        type: 'container',
+        attributes: { number: 'CAIU1234567' },
+        relationships: {
+          transport_events: {
+            data: [
+              { id: 'evt-1', type: 'transport_event' },
+              { id: 'evt-2', type: 'transport_event' },
+            ],
+          },
+        },
       },
+      included: [
+        {
+          id: 'evt-1',
+          type: 'transport_event',
+          attributes: {
+            event: 'container.transport.vessel_loaded',
+            timestamp: '2025-01-01T00:00:00Z',
+            // Canonical transport_event payloads carry location_locode (and a
+            // location relationship that is NOT side-loaded on the include
+            // path), not a location_name attribute.
+            location_locode: 'CNSHA',
+          },
+        },
+        {
+          id: 'evt-2',
+          type: 'transport_event',
+          attributes: {
+            event: 'container.transport.vessel_departed',
+            timestamp: '2025-01-02T00:00:00Z',
+            location_locode: 'CNSHA',
+          },
+        },
+      ],
     });
+
+    const client = asClient({ containers: { events, get } });
+
+    const result = await executeGetContainerTransportEvents(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(events).toHaveBeenCalledWith('container-1', { format: 'raw' });
+    expect(get).toHaveBeenCalledWith('container-1', ['transport_events'], {
+      format: 'raw',
+    });
+    // Fallback returns the real events, never a false-empty timeline.
+    expect(result.total_events).toBe(2);
+    expect(result.timeline[0]).toMatchObject({
+      event: 'container.transport.vessel_loaded',
+    });
+    // The movement location must survive the fallback even though the related
+    // port resource is not side-loaded — resolve it from location_locode.
+    expect(result.timeline[0].location).toMatchObject({ code: 'CNSHA' });
+    expect(result.milestones).toMatchObject({
+      vessel_loaded_at: '2025-01-01T00:00:00.000Z',
+      vessel_departed_at: '2025-01-02T00:00:00.000Z',
+    });
+    expect(result._metadata.source).toBe('container_include_fallback');
+    // It must NOT masquerade a success-shaped empty timeline carrying an error.
+    expect(result._metadata.error).toBeUndefined();
+  });
+
+  it('get_container_transport_events surfaces a real error for a genuinely missing container', async () => {
+    const events = vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
+    const get = vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
+
+    const client = asClient({ containers: { events, get } });
+
+    await expect(
+      executeGetContainerTransportEvents({ id: 'missing-container' }, client),
+    ).rejects.toBeInstanceOf(NotFoundError);
+
+    expect(events).toHaveBeenCalledWith('missing-container', { format: 'raw' });
+    expect(get).toHaveBeenCalledWith('missing-container', ['transport_events'], {
+      format: 'raw',
+    });
+  });
+
+  it('get_container_transport_events returns an empty-but-valid timeline for a container with no events', async () => {
+    const events = vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
+    const get = vi.fn().mockResolvedValue({
+      data: {
+        id: 'container-1',
+        type: 'container',
+        attributes: { number: 'CAIU1234567' },
+        relationships: { transport_events: { data: [] } },
+      },
+      included: [],
+    });
+
+    const client = asClient({ containers: { events, get } });
 
     const result = await executeGetContainerTransportEvents(
       { id: 'container-1' },
@@ -693,9 +796,21 @@ describe('MCP tool contracts', () => {
 
     expect(result.total_events).toBe(0);
     expect(result.timeline).toEqual([]);
-    expect(result._metadata).toMatchObject({
-      error: 'Not Found',
-    });
+    // Empty-but-valid is distinct from a bad container id: no error metadata.
+    expect(result._metadata.error).toBeUndefined();
+    expect(result._metadata.container_found).toBe(true);
+  });
+
+  it('get_container_transport_events does not fall back for non-NotFound failures', async () => {
+    const events = vi.fn().mockRejectedValue(new Error('boom'));
+    const get = vi.fn();
+
+    const client = asClient({ containers: { events, get } });
+
+    await expect(
+      executeGetContainerTransportEvents({ id: 'container-1' }, client),
+    ).rejects.toThrow('boom');
+    expect(get).not.toHaveBeenCalled();
   });
 
   it('search_container handles partially missing fields safely', async () => {
@@ -1042,5 +1157,317 @@ describe('MCP tool contracts', () => {
       { format: 'mapped', page: undefined, pageSize: undefined },
     );
     expect(result.items).toHaveLength(1);
+  });
+
+  it('list_tracking_requests strips raw page[size]/page[number] from filters so the cap cannot be bypassed', async () => {
+    const list = vi.fn().mockResolvedValue({ items: [{ id: 'tr-3' }] });
+    const client = asClient({
+      trackingRequests: { list },
+    });
+
+    await executeListTrackingRequests(
+      {
+        filters: {
+          'filter[status]': 'failed',
+          'page[size]': '10000',
+          'page[number]': '5',
+        },
+      },
+      client,
+    );
+
+    expect(list).toHaveBeenCalledWith(
+      { 'filter[status]': 'failed' },
+      { format: 'mapped', page: undefined, pageSize: undefined },
+    );
+  });
+
+  it('buildListContract does not claim filter-match for an unfiltered firehose', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }, { id: 'c2' }], meta: { total: 2 } },
+      'container',
+      { filters: {} },
+    );
+
+    expect(contract.can_answer).not.toContain('which records match filters');
+    // An unfiltered list cannot be presented as the user's filtered worklist;
+    // the agent must be told it needs a filter to answer scoped questions.
+    expect(contract.requires_more_data).toContain(
+      'a filter to scope this list (status, port, carrier, updated_after)',
+    );
+  });
+
+  it('buildListContract treats an empty raw filters object as unscoped', () => {
+    // tracking_request is the only entity whose supported vocabulary includes
+    // the raw `filters` pass-through; `{ filters: {} }` must not be mistaken for
+    // an applied filter, or the firehose total would be flagged reliable.
+    const contract = buildListContract(
+      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
+      'tracking_request',
+      { filters: { filters: {} } },
+    );
+
+    expect(contract.can_answer).not.toContain(
+      'which records match the applied filters',
+    );
+    expect(contract.total_is_reliable).toBe(false);
+    expect(
+      contract.requires_more_data.some((entry) =>
+        entry.startsWith('a filter to scope this list'),
+      ),
+    ).toBe(true);
+  });
+
+  it('buildListContract over sanitized tracking filters treats page-only filters as unscoped', () => {
+    // executeListTrackingRequests strips raw page[size]/page[number] before the
+    // SDK call, so the contract must judge scope against the same sanitized view.
+    // A `filters: { 'page[size]': '10000' }` request is unfiltered after
+    // sanitization and must not report applied filters or a reliable total.
+    const contract = buildListContract(
+      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
+      'tracking_request',
+      {
+        filters: sanitizeTrackingRequestFilters({
+          filters: { 'page[size]': '10000', 'page[number]': '5' },
+        }),
+      },
+    );
+
+    expect(contract.can_answer).not.toContain(
+      'which records match the applied filters',
+    );
+    expect(contract.total_is_reliable).toBe(false);
+    expect(
+      contract.requires_more_data.some((entry) =>
+        entry.startsWith('a filter to scope this list'),
+      ),
+    ).toBe(true);
+  });
+
+  it('buildListContract over sanitized tracking filters keeps a real filter scoped', () => {
+    // Sanitization must not strip genuine filters: a real filter alongside a raw
+    // pagination key still counts as a scoped, trustworthy result.
+    const contract = buildListContract(
+      { items: [{ id: 't1' }], meta: { total: 5 } },
+      'tracking_request',
+      {
+        filters: sanitizeTrackingRequestFilters({
+          filters: { 'filter[status]': 'failed', 'page[size]': '10000' },
+        }),
+      },
+    );
+
+    expect(contract.can_answer).toContain(
+      'which records match the applied filters',
+    );
+    expect(contract.total_is_reliable).toBe(true);
+  });
+
+  it('buildListContract does not treat request_type as a scoping filter', () => {
+    // GET /tracking_requests has no filter[request_type] in the OpenAPI source
+    // of truth, so a bare request_type arg cannot actually scope the list even
+    // though executeListTrackingRequests forwards it; it must be reported as
+    // dropped, not as an applied filter over a reliable total.
+    const contract = buildListContract(
+      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
+      'tracking_request',
+      { filters: { request_type: 'manual' } },
+    );
+
+    expect(contract.can_answer).not.toContain(
+      'which records match the applied filters',
+    );
+    expect(contract.total_is_reliable).toBe(false);
+    expect(
+      contract.requires_more_data.some((entry) =>
+        entry.includes('unsupported filter(s) were ignored: request_type'),
+      ),
+    ).toBe(true);
+  });
+
+  it('buildListContract does not treat a raw filters bag of only non-filter knobs as scoped', () => {
+    // `include` is a legitimate raw query knob but not a `filter[...]` key, so
+    // `{ filters: { include: 'tracked_object' } }` must not read as scoped.
+    const contract = buildListContract(
+      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
+      'tracking_request',
+      { filters: { filters: { include: 'tracked_object' } } },
+    );
+
+    expect(contract.can_answer).not.toContain(
+      'which records match the applied filters',
+    );
+    expect(contract.total_is_reliable).toBe(false);
+    expect(
+      contract.requires_more_data.some((entry) =>
+        entry.startsWith('a filter to scope this list'),
+      ),
+    ).toBe(true);
+  });
+
+  it('buildListContract presentation guidance does not claim a single result when empty', () => {
+    const contract = buildListContract(
+      { items: [], meta: { total: 0 } },
+      'container',
+    );
+
+    expect(contract.presentation_guidance).not.toContain('single result');
+    expect(contract.presentation_guidance).toContain('empty_state');
+  });
+
+  it('buildListContract reports which records match when a filter was applied', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }], meta: { total: 1 } },
+      'container',
+      { filters: { status: 'available_for_pickup' } },
+    );
+
+    expect(contract.can_answer).toContain(
+      'which records match the applied filters',
+    );
+  });
+
+  it('buildListContract echoes dropped/unsupported filters from the SDK', () => {
+    const contract = buildListContract(
+      {
+        items: [{ id: 'c1' }],
+        meta: { total: 1 },
+        unsupportedFilters: ['has_hold'],
+      },
+      'container',
+      { filters: { status: 'available_for_pickup', has_hold: true } },
+    );
+
+    expect(contract.dropped_filters).toEqual(['has_hold']);
+    expect(
+      contract.requires_more_data.some((entry) => entry.includes('has_hold')),
+    ).toBe(true);
+  });
+
+  it('buildListContract does not surface an implausibly large total as the worklist size', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }, { id: 'c2' }], meta: { total: 250000 } },
+      'container',
+      { filters: {} },
+    );
+
+    expect(contract.total_is_reliable).toBe(false);
+    expect(
+      contract.requires_more_data.some((entry) => /total/i.test(entry)),
+    ).toBe(true);
+  });
+
+  it('buildListContract trusts a plausible total when a filter is applied', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }], meta: { total: 12 } },
+      'container',
+      { filters: { carrier: 'MAEU' } },
+    );
+
+    expect(contract.total_is_reliable).toBe(true);
+  });
+
+  it('buildListContract omits the heavy column_catalog from the per-call contract', () => {
+    const contract = buildListContract(
+      { items: [{ id: 'c1' }], meta: { total: 1 } },
+      'container',
+      { filters: { status: 'available_for_pickup' } },
+    );
+
+    expect(contract.display).toBeDefined();
+    expect((contract.display as any).column_catalog).toBeUndefined();
+    // The catalog must remain discoverable via a one-time resource.
+    expect((contract.display as any).column_catalog_resource).toBe(
+      'terminal49://docs/list-display-columns',
+    );
+  });
+
+  it('get_supported_shipping_lines hides the T49 Test Carrier', async () => {
+    const shippingList = vi.fn().mockResolvedValue([
+      { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
+      { scac: 'TEST', name: 'T49 Test Carrier', shortName: 'TEST' },
+    ]);
+
+    const client = asClient({ shippingLines: { list: shippingList } });
+
+    const result = await executeSupportedShippingLines({}, client);
+
+    expect(result.shipping_lines.some((line) => line.scac === 'TEST')).toBe(
+      false,
+    );
+    expect(
+      result.shipping_lines.some((line) => line.name === 'T49 Test Carrier'),
+    ).toBe(false);
+    expect(result.total_lines).toBe(1);
+  });
+
+  it('search_container derives a real status instead of returning "unknown" blindly', async () => {
+    const client = asClient({
+      search: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: 'sr-real',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'container',
+              number: 'CAIU7777777',
+              scac: 'MAEU',
+              // No explicit status field, but availability/timestamps are present.
+              available_for_pickup: true,
+              pod_discharged_at: '2026-02-16T01:00:00Z',
+            },
+          },
+        ],
+      }),
+    });
+
+    const result = await executeSearchContainer(
+      { query: 'CAIU7777777' },
+      client,
+    );
+
+    expect(result.containers[0].status).not.toBe('unknown');
+    expect(result.containers[0].status).toBe('available_for_pickup');
+  });
+
+  it('search_container disambiguates duplicate container numbers', async () => {
+    const client = asClient({
+      search: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: 'dup-1',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'container',
+              number: 'DUPU0000001',
+              scac: 'MAEU',
+              available_for_pickup: false,
+              pod_discharged_at: '2026-02-16T01:00:00Z',
+            },
+          },
+          {
+            id: 'dup-2',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'container',
+              number: 'DUPU0000001',
+              scac: 'MSCU',
+              available_for_pickup: true,
+            },
+          },
+        ],
+      }),
+    });
+
+    const result = await executeSearchContainer(
+      { query: 'DUPU0000001' },
+      client,
+    );
+
+    // Both rows survive (distinct ids) and are flagged so the agent can disambiguate.
+    expect(result.containers).toHaveLength(2);
+    expect(result.containers.every((c) => c.duplicate_number === true)).toBe(
+      true,
+    );
   });
 });

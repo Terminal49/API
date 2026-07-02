@@ -10378,6 +10378,245 @@
         },
         "operationId": "get-document_schemas-id"
       }
+    },
+    "/search": {
+      "get": {
+        "summary": "Search shipments, containers, and tracking requests",
+        "tags": [
+          "Search"
+        ],
+        "operationId": "searchAll",
+        "description": "Full-text search across shipments, containers (cargos), and tracking requests within your account. Results are ranked by type (shipments first, then containers, then tracking requests) and recency. Returns up to 25 results. Duplicate tracking requests (where a shipment exists with the same BL number) are automatically filtered out.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "query",
+            "required": true,
+            "description": "Search term to match against BL numbers, container numbers, reference numbers, and other indexed fields. Supports full-text search and partial (ILIKE) matching."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Unique identifier of the matched resource"
+                          },
+                          "type": {
+                            "type": "string",
+                            "description": "Resource type",
+                            "enum": [
+                              "shipment",
+                              "cargo",
+                              "tracking_request"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "entity_type": {
+                                "type": "string",
+                                "description": "Type of the matched entity: `shipment`, `cargo`, or `tracking_request`"
+                              },
+                              "number": {
+                                "type": "string",
+                                "description": "BL number (shipments), container number (cargos), or request number (tracking requests)"
+                              },
+                              "shipment_id": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Associated shipment ID (for cargos and tracking requests only)"
+                              },
+                              "scac": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Standard Carrier Alpha Code of the shipping line"
+                              },
+                              "port_of_lading_name": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Port of lading name (shipments only)"
+                              },
+                              "port_of_discharge_name": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Port of discharge name (shipments only)"
+                              },
+                              "containers_count": {
+                                "type": "integer",
+                                "nullable": true,
+                                "description": "Number of containers on the shipment (shipments only)"
+                              },
+                              "tracking_stopped": {
+                                "type": "boolean",
+                                "nullable": true,
+                                "description": "Whether tracking has been stopped (shipments only)"
+                              },
+                              "tracking_stopped_reason": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Reason tracking was stopped (shipments only)"
+                              },
+                              "status": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Tracking request status (tracking requests only)"
+                              },
+                              "failed_reason": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Reason the tracking request failed (tracking requests only)"
+                              },
+                              "ref_numbers": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "Customer reference numbers"
+                              },
+                              "created_at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "When the resource was created"
+                              },
+                              "updated_at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "When the resource was last updated"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": "abc12345-6789-40ef-9012-3456789abcde",
+                      "type": "shipment",
+                      "attributes": {
+                        "entity_type": "shipment",
+                        "number": "MEDUA1234567",
+                        "shipment_id": null,
+                        "scac": "MSCU",
+                        "port_of_lading_name": "Shanghai",
+                        "port_of_discharge_name": "Los Angeles",
+                        "containers_count": 3,
+                        "tracking_stopped": false,
+                        "tracking_stopped_reason": null,
+                        "status": null,
+                        "failed_reason": null,
+                        "ref_numbers": [
+                          "PO-2026-001"
+                        ],
+                        "created_at": "2026-01-15T10:30:00.000Z",
+                        "updated_at": "2026-03-01T14:22:00.000Z"
+                      }
+                    },
+                    {
+                      "id": "def45678-9012-43ab-9cde-f0123456789a",
+                      "type": "cargo",
+                      "attributes": {
+                        "entity_type": "cargo",
+                        "number": "MSCU1234567",
+                        "shipment_id": "abc12345-6789-40ef-9012-3456789abcde",
+                        "scac": "MSCU",
+                        "port_of_lading_name": null,
+                        "port_of_discharge_name": null,
+                        "containers_count": null,
+                        "tracking_stopped": null,
+                        "tracking_stopped_reason": null,
+                        "status": null,
+                        "failed_reason": null,
+                        "ref_numbers": [],
+                        "created_at": "2026-01-15T10:30:00.000Z",
+                        "updated_at": "2026-03-01T14:22:00.000Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — missing required `query` parameter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "detail": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "detail": "Query parameter is required"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid API token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Missing or invalid API token",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "401",
+                          "title": "Unauthorized",
+                          "detail": "Invalid or missing API token."
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "x-tagGroups": [
@@ -10395,7 +10634,8 @@
         "Metro Areas",
         "Documents",
         "Email Submissions",
-        "Document Schemas"
+        "Document Schemas",
+        "Search"
       ]
     },
     {
@@ -14632,6 +14872,9 @@
     },
     {
       "name": "Document Schemas"
+    },
+    {
+      "name": "Search"
     }
   ],
   "security": [

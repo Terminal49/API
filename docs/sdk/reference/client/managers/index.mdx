@@ -20,6 +20,7 @@ description: "Reference for the Terminal49 TypeScript SDK managers module: conta
 | Interface | Description |
 | ------ | ------ |
 | [CreateTrackingRequestFromInferOptions](/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) | - |
+| [IterateOptions](/sdk/reference/client/managers/interfaces/IterateOptions) | Options accepted by BaseManager.createIterator. |
 | [TrackingRequestListFilters](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) | - |
 
 ## Type Aliases
@@ -27,3 +28,10 @@ description: "Reference for the Terminal49 TypeScript SDK managers module: conta
 | Type Alias | Description |
 | ------ | ------ |
 | [TrackingRequestType](/sdk/reference/client/managers/type-aliases/TrackingRequestType) | - |
+
+## Variables
+
+| Variable | Description |
+| ------ | ------ |
+| [DEFAULT\_ITERATE\_MAX\_PAGES](/sdk/reference/client/managers/variables/DEFAULT_ITERATE_MAX_PAGES) | Hard safety caps for BaseManager.createIterator. They exist so a no-op or mistakenly broad filter cannot silently walk the entire dataset (and make thousands of requests). They are deliberately large enough not to interfere with realistic pagination, and can be raised per call via `maxPages` / `maxRows` when a caller genuinely needs more. |
+| [DEFAULT\_ITERATE\_MAX\_ROWS](/sdk/reference/client/managers/variables/DEFAULT_ITERATE_MAX_ROWS) | - |

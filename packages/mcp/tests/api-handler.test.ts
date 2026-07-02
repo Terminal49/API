@@ -15,16 +15,18 @@ const mockState = vi.hoisted(() => ({
 }));
 
 vi.mock('../src/server.js', () => ({
-  createTerminal49McpServer: vi.fn((apiToken: string, apiBaseUrl?: string, accountId?: string) => {
-    const server = {
-      connect: vi.fn().mockResolvedValue(undefined),
-      close: vi.fn().mockResolvedValue(undefined),
-    };
+  createTerminal49McpServer: vi.fn(
+    (apiToken: string, apiBaseUrl?: string, accountId?: string) => {
+      const server = {
+        connect: vi.fn().mockResolvedValue(undefined),
+        close: vi.fn().mockResolvedValue(undefined),
+      };
 
-    mockState.serverCreateArgs.push({ apiToken, apiBaseUrl, accountId });
-    mockState.servers.push(server);
-    return server;
-  }),
+      mockState.serverCreateArgs.push({ apiToken, apiBaseUrl, accountId });
+      mockState.servers.push(server);
+      return server;
+    },
+  ),
 }));
 
 vi.mock('@modelcontextprotocol/sdk/server/streamableHttp.js', () => ({
@@ -33,11 +35,13 @@ vi.mock('@modelcontextprotocol/sdk/server/streamableHttp.js', () => ({
     close: ReturnType<typeof vi.fn>;
 
     constructor() {
-      this.handleRequest = vi.fn(async (req: unknown, res: unknown, body: unknown) => {
-        if (mockState.handleRequestImpl) {
-          await mockState.handleRequestImpl(req, res, body);
-        }
-      });
+      this.handleRequest = vi.fn(
+        async (req: unknown, res: unknown, body: unknown) => {
+          if (mockState.handleRequestImpl) {
+            await mockState.handleRequestImpl(req, res, body);
+          }
+        },
+      );
       this.close = vi.fn().mockResolvedValue(undefined);
 
       mockState.transports.push(this);
@@ -72,8 +76,11 @@ class MockResponse extends EventEmitter {
   }
 }
 
-function createRequest(overrides: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
-  const overrideHeaders = (overrides.headers as Record<string, string | string[] | undefined>) ?? {};
+function createRequest(
+  overrides: Partial<Record<string, unknown>> = {},
+): Record<string, unknown> {
+  const overrideHeaders =
+    (overrides.headers as Record<string, string | string[] | undefined>) ?? {};
 
   return {
     method: 'POST',
@@ -143,10 +150,12 @@ describe('api/mcp handler lifecycle', () => {
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({
-      error: { code: -32603, message: 'Internal server error', data: 'simulated failure' },
+      error: { code: -32603, message: 'Internal server error' },
       id: null,
       jsonrpc: '2.0',
     });
+    // DEV-10663: the internal error message must never leak to clients.
+    expect((res.payload as any)?.error?.data).toBeUndefined();
 
     const server = mockState.servers[0];
     const transport = mockState.transports[0];
@@ -246,18 +255,19 @@ describe('api/mcp handler lifecycle', () => {
     process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
     process.env.T49_API_BASE_URL = 'https://api.test/v2';
     process.env.WORKOS_MCP_RESOURCE = 'https://mcp.test';
-    const fetchMock = vi.fn(async () =>
-      new Response(
-        JSON.stringify({
-          data: {
-            attributes: {
-              access_token: 'terminal49-local-jwt',
-              account_id: 'account-123',
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            data: {
+              attributes: {
+                access_token: 'terminal49-local-jwt',
+                account_id: 'account-123',
+              },
             },
-          },
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } },
-      ),
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
     );
     vi.stubGlobal('fetch', fetchMock);
 
@@ -296,7 +306,12 @@ describe('api/mcp handler lifecycle', () => {
     process.env.WORKOS_AUTHORIZATION_SERVER_URL = 'https://auth.workos.test';
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(JSON.stringify({ error: 'not connected' }), { status: 401 })),
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ error: 'not connected' }), {
+            status: 401,
+          }),
+      ),
     );
 
     const { default: handler } = await import('../../../api/mcp.ts');
@@ -369,7 +384,12 @@ describe('api/mcp handler lifecycle', () => {
     process.env.WORKOS_MCP_RESOURCE = 'https://mcp.test';
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(JSON.stringify({ error: 'upstream down' }), { status: 503 })),
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ error: 'upstream down' }), {
+            status: 503,
+          }),
+      ),
     );
 
     const { default: handler } = await import('../../../api/mcp.ts');
