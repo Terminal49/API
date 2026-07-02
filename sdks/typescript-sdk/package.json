@@ -1,6 +1,6 @@
 {
   "name": "@terminal49/sdk",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Terminal49 TypeScript SDK (JSON:API, openapi-fetch)",
   "type": "module",
   "repository": {
