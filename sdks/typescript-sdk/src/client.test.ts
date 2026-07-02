@@ -467,4 +467,18 @@ describe('Terminal49Client', () => {
     const result = await client.search('ABC123');
     expect(result).toEqual({ hits: 1 });
   });
+
+  it('rejects an empty search query without a network call', async () => {
+    const { fetchImpl, calls } = createMockFetch({});
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await expect(client.search('')).rejects.toBeInstanceOf(ValidationError);
+    await expect(client.search('   ')).rejects.toBeInstanceOf(ValidationError);
+    expect(calls.length).toBe(0);
+  });
 });
