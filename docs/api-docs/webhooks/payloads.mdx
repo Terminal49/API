@@ -13,6 +13,12 @@ Every Terminal49 webhook delivery is a JSON:API document with a `webhook_notific
 
 Use this page as the payload reference. Use [Payload Examples](/api-docs/useful-info/webhook-events-examples) when you need complete sample JSON.
 
+## One notification per container
+
+Container-scoped events fire **once per container**, not once per shipment or once per vessel move. If ten containers on the same vessel are discharged, you receive ten separate `container.transport.vessel_discharged` notifications — one for each container. Each payload references a single container through its `reference_object` and (when included) the `container` resource in `included`.
+
+Use `data.id` on the notification as the idempotency key when deduplicating retries, and the container `id` or `number` to route each notification to the right record on your side.
+
 ## Notification envelope
 
 ```json
@@ -87,6 +93,32 @@ Webhook payloads may include:
 Other resource types — such as `vessel`, `rail_terminal`, and `metro_area` — can appear for specific events. The webhook endpoint that received the delivery is referenced through the `webhook` relationship on the notification, not serialized in `included`.
 
 Do not require every resource to be present. Carrier, terminal, and event data can arrive at different times.
+
+### Events with a minimal `included` array
+
+A few events ship with only the reference object in `included` (or with an empty `included` array). The `shipment` and `container` records are **not** embedded in the payload:
+
+- `container.transport.available`
+- `container.transport.not_available`
+- `container.transport.estimated.vessel_departed`
+- `container.transport.estimated.vessel_arrived`
+- `container.transport.estimated.arrived_at_inland_destination`
+- `container.pickup_appointment.changed`
+
+To resolve the container number or bill of lading number for these events, follow the `reference_object` relationship and fetch the related transport event, container, or shipment through the API — for example, [Get a container](/api-docs/api-reference/containers/get-a-container) using the container ID from the transport event's relationships, or [Get a shipment](/api-docs/api-reference/shipments/get-a-shipment) using the shipment ID.
+
+### Extracting common fields from `included`
+
+For events that do include the related records, the fields most integrations pull are consistent across events:
+
+| Field | Location in `included` |
+| --- | --- |
+| Event timestamp | Object with `type: "transport_event"` → `attributes.timestamp` |
+| Estimated timestamp (ETA events) | Object with `type: "estimated_event"` or `type: "transport_event"` → `attributes.timestamp` (or `attributes.estimated_timestamp` on legacy `estimated_event` payloads) |
+| Container number | Object with `type: "container"` → `attributes.number` |
+| Bill of lading number | Object with `type: "shipment"` → `attributes.bill_of_lading_number` |
+| Voyage number | Object with `type: "transport_event"` → `attributes.voyage_number` |
+| Location UN/LOCODE | Object with `type: "transport_event"` → `attributes.location_locode` |
 
 ## Container update changesets
 
