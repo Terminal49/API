@@ -73,6 +73,15 @@ Terminal49 will stop tracking requests for the following reasons:
 
 In addition end-users may stop tracking a shipment through the dashboard.
 
+### Stopping tracking programmatically
+
+Tracking is stopped at the **shipment level**, not on the tracking request or on an individual container. Use [Stop tracking a shipment](/api-docs/api-reference/shipments/stop-tracking-shipment) (`PATCH /shipments/{id}/stop_tracking`).
+
+- A tracking request initiates tracking and can create a shipment. Once the shipment exists, the shipment is the resource you manage.
+- There is no `DELETE` or "stop" endpoint on the `tracking_requests` resource. The tracking request `status` reflects the request outcome (`pending`, `created`, `failed`, `tracking_stopped`); the shipment is where active tracking is stopped or resumed.
+- Stopping a shipment stops tracking for **all containers on that shipment**. There is no per-container stop endpoint — this behavior is the same whether the shipment was originally tracked by bill of lading, booking, or container number.
+- To resume, use [Resume tracking a shipment](/api-docs/api-reference/shipments/resume-tracking-shipment).
+
 ## Retrieving status
 
 If you want to see the status of your tracking request you can make a [GET request](/api-docs/api-reference/tracking-requests/get-a-single-tracking-request) on what the most recent failure reason was (`failed_reason` field).
