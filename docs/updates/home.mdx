@@ -17,6 +17,80 @@ rss: true
   general product updates).
 </Info>
 
+<Update label="July 6, 2026" description="Zapier 2.0 integration rewrite, tracking request SCAC auto-detect, party filter and chips on the shipment dashboard, new Hapag-Lloyd public API tracker, new MAEU and OOLU Browser Use trackers, MSC US import demurrage tariff dataset, and a wave of HLCU, focus, and cargo fixes" tags={['API', 'Dashboard', 'Integrations']}
+  rss="July 6, 2026: Zapier 2.0 full rewrite of the Terminal49 integration, tracking request SCAC auto-detect on create, party filter and party chips on the shipment dashboard, new Hapag-Lloyd public API tracker, new MAEU and OOLU Browser Use Cloud trackers (OOLU direct path retired), MSC (MSCU) US import demurrage tariff rules for Smart LFD, HLCU tracking requests included in the booking sweep, Faraday connection failure causes surfaced, shipment details migrated to the Shipments V2 API, and fixes for HLCU groups without container numbers, HLCU 500 → awaiting manifest, Destination Port stealing focus on load, discarded cargos not being removed after update, and WorkOS auth Sentry noise."
+>
+  ### Zapier 2.0 integration
+
+The **Terminal49 Zapier integration** has been fully rewritten as version 2.0. The new version is powered by the official Terminal49 TypeScript SDK, ships **31 webhook-based triggers** (tracking requests, transport events for vessel/full/empty milestones, transshipment and feeder events, delivery and pickup events, and more), and returns a cleaner flat payload with a `_raw` object for advanced use. Version 1.0 remains available on Zapier indefinitely — 2.0 ships as a separate version so you can migrate at your own pace.
+
+<Card title="Zapier integration" icon="bolt" href="https://zapier.com/apps/terminal49/integrations">
+  Connect Terminal49 to 6,000+ apps
+</Card>
+
+---
+
+  ### Tracking request SCAC auto-detect
+
+Tracking requests can now be created **without a SCAC**. When `scac` is omitted, Terminal49 uses [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) during tracking to pick the correct carrier and number type. The auto-detect flag is preserved across resubmits, and the resolved SCAC flows through to webhooks so downstream systems always see the actual carrier.
+
+<Card title="Create a tracking request" icon="plus" href="/api-docs/api-reference/tracking-requests/create-a-tracking-request">
+  Tracking request API reference
+</Card>
+
+---
+
+  ### New Hapag-Lloyd public API tracker
+
+Added a direct **Hapag-Lloyd (HLCU) public API** tracker for container, bill of lading, and booking lookups. HLCU tracking requests are also now included in the periodic **booking sweep**, so bookings without containers are refreshed alongside the rest of your Hapag-Lloyd shipments.
+
+---
+
+  ### New MAEU and OOLU Browser Use trackers
+
+- **MAEU (Maersk) — `maeubu`** — a new Browser Use Cloud tracker for Maersk, running against a residential-fingerprinted browser for improved reliability
+- **OOLU (OOCL) — `oolubu`** — a new Browser Use Cloud tracker for OOCL that reuses the existing extraction path while auto-clearing the Cloudflare Turnstile challenge
+- **OOLU direct path retired** — the previous `oolu_direct` integration has been removed now that `oolubu` supersedes it
+
+---
+
+  ### MSC US import demurrage tariff rules
+
+Published a new **MSC (MSCU)** US-import demurrage tariff rule dataset for Smart LFD, sourced from Descartes WsHelp and refreshed on a daily filename sweep. Calculated Last Free Day values for MSC containers now reflect Mediterranean Shipping's published tariff, including CY port, rail base, and named-ramp overrides.
+
+<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+  View the container resource
+</Card>
+
+---
+
+  ### Party filter and chips on the shipment dashboard
+
+The shipment dashboard now supports **filtering by party**, and party assignments render as inline **chips** on the shipment table so you can see consignee, shipper, notify, dray carrier, and other roles at a glance without opening the shipment.
+
+---
+
+  ### Updates
+
+- **Manage account tags without an admin** — users with the right permission can now create, rename, and remove account tags directly; Terminal49 admins can also manage tags on behalf of accounts
+- **Shipment Details on the Shipments V2 API** — the shipment details page has been migrated fully to the Shipments V2 API for a leaner, more consistent data model behind the UI
+- **Faraday connection failure causes surfaced** — outbound HTTP failures from carrier and terminal integrations now expose their underlying cause (timeout, DNS, TLS, connection reset), so retry classification and dashboards reflect the real reason
+- **Server-side entitlement checks on webhooks** — webhook management and trigger endpoints now enforce entitlement checks server-side, making sure only accounts with the data-out API entitlement can operate on webhooks
+
+---
+
+  ### Bug fixes
+
+- **HLCU groups without container numbers** — Hapag-Lloyd shipment groups that returned no container numbers no longer cause the tracker run to fail
+- **HLCU 500 mapped to awaiting manifest** — Hapag-Lloyd `error.internalServer` responses (HTTP 500) are now mapped to an awaiting-manifest state instead of surfacing as a hard tracker error
+- **Destination Port no longer steals focus** — fixed a regression where the Destination Port filter auto-focused on shipments page load; the BOL/reference/container search field is now focused instead, matching standard dashboard UX
+- **Discarded cargos removed after update** — updating a shipment now removes any user cargos that were discarded in the update, instead of leaving stale cargo records behind
+- **Reduced WorkOS auth Sentry noise** — expected WorkOS sign-in denials and stale-code callbacks no longer report to Sentry, so real auth errors stand out
+- **MAEU Browser Use resource loading** — tightened resource blocking on the new MAEU Browser Use integration for faster page loads while preserving the Cloudflare clearance path
+- **Lazy-load fixes on the dashboard** — resolved two lazy-loading issues in dashboard views that could show empty state before data arrived
+
+</Update>
+
 <Update label="June 29, 2026" description="Customizable dashboard view cards, party filters and columns on the container dashboard, datetime display preferences, OOCL API tracker, CMA CGM (CMDU) website scraper, Calculated LFD feedback in the Smart LFD panel, and a wave of carrier, terminal, and dashboard fixes" tags={['API', 'Dashboard', 'MCP']}
   rss="June 29, 2026: Customize dashboard view cards, party filters and columns on the container dashboard, per-user datetime format preference, new OOCL API tracker path, CMA CGM (CMDU) website scraper (cmduweb), Calculated LFD feedback widget on the Smart LFD panel, account managers can change user roles, CMA PBD events mapped to feeder departed, UPRR rail LFD off-by-one fix, and fixes for CMSAMX, SEAU async scrapes, MCP account resolution, Tideworks A295/L239 reliability, OOLU Cloudflare handling, and dray-carrier display."
 >
