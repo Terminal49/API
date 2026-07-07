@@ -45,7 +45,6 @@ if (!cfg) {
     shipmentId?: string;
     containerId?: string;
     containerNumber?: string;
-    trackingRequestId?: string;
   } = {};
   let serverInfo: unknown;
 
@@ -62,7 +61,11 @@ if (!cfg) {
     return { result, score };
   }
 
-  const POSITIVE_THRESHOLD = 0.85;
+  // Fixture discovery is strict by default (see beforeAll): a sparse account
+  // would silently skip the detail cases. Opt out with MCP_EVAL_ALLOW_SPARSE=1.
+  const allowSparse =
+    process.env.MCP_EVAL_ALLOW_SPARSE === '1' ||
+    process.env.MCP_EVAL_ALLOW_SPARSE === 'true';
 
   // The only mutating tool (track_container) is opt-in: on an arbitrary account
   // the idempotent search-match path is not guaranteed, so a call could create a
@@ -116,20 +119,29 @@ if (!cfg) {
         const first = items.find(
           (c) => isRecord(c) && typeof c.id === 'string',
         );
-        if (isRecord(first) && typeof first.id === 'string')
+        if (isRecord(first) && typeof first.id === 'string') {
           fixtures.containerId = first.id;
+          if (typeof first.number === 'string') {
+            fixtures.containerNumber ??= first.number;
+          }
+        }
       }
 
-      const trs = await client.callTool('list_tracking_requests', {
-        page_size: 5,
-      });
-      const trItems =
-        isRecord(trs.payload) && Array.isArray(trs.payload.items)
-          ? trs.payload.items
-          : [];
-      const tr = trItems.find((t) => isRecord(t) && typeof t.id === 'string');
-      if (isRecord(tr) && typeof tr.id === 'string')
-        fixtures.trackingRequestId = tr.id;
+      // Strict by default: on an account with no discoverable data the detail
+      // tests would all skip and the suite would "pass" without exercising the
+      // tools it gates. Fail loudly instead (MCP_EVAL_ALLOW_SPARSE=1 to allow).
+      if (!allowSparse) {
+        const missing = (
+          ['shipmentId', 'containerId', 'containerNumber'] as const
+        ).filter((key) => fixtures[key] === undefined);
+        if (missing.length > 0) {
+          throw new Error(
+            `fixture discovery found no ${missing.join(', ')} on this account; ` +
+              'detail tools cannot be exercised. Use an account with tracked shipments ' +
+              'or set MCP_EVAL_ALLOW_SPARSE=1 to permit skipping those cases.',
+          );
+        }
+      }
     }, 60_000);
 
     afterAll(() => {
@@ -164,7 +176,7 @@ if (!cfg) {
       );
       expect(result.isError).toBe(false);
       expect(hasArray(result.payload, 'items')).toBe(true);
-      expect(score.score).toBeGreaterThanOrEqual(POSITIVE_THRESHOLD);
+      expect(score.contractPass).toBe(true);
     });
 
     it('list_containers returns a paginated collection', async () => {
@@ -188,7 +200,7 @@ if (!cfg) {
         },
       );
       expect(result.isError).toBe(false);
-      expect(score.score).toBeGreaterThanOrEqual(POSITIVE_THRESHOLD);
+      expect(score.contractPass).toBe(true);
     });
 
     it('list_tracking_requests returns typed requests', async () => {
@@ -214,7 +226,7 @@ if (!cfg) {
         },
       );
       expect(result.isError).toBe(false);
-      expect(score.score).toBeGreaterThanOrEqual(POSITIVE_THRESHOLD);
+      expect(score.contractPass).toBe(true);
     });
 
     it('get_supported_shipping_lines returns the carrier catalog', async () => {
@@ -253,7 +265,7 @@ if (!cfg) {
         },
       );
       expect(result.isError).toBe(false);
-      expect(score.score).toBeGreaterThanOrEqual(POSITIVE_THRESHOLD);
+      expect(score.contractPass).toBe(true);
     });
 
     // ---- detail tools (require discovered ids) ----
@@ -274,7 +286,7 @@ if (!cfg) {
       );
       expect(result.isError).toBe(false);
       expect(readString(result.payload, 'id')).toBe(id);
-      expect(score.score).toBeGreaterThanOrEqual(POSITIVE_THRESHOLD);
+      expect(score.contractPass).toBe(true);
     });
 
     it('get_shipment_details returns a shipment', async ({ skip }) => {
@@ -293,7 +305,7 @@ if (!cfg) {
       );
       expect(result.isError).toBe(false);
       expect(readString(result.payload, 'id')).toBe(id);
-      expect(score.score).toBeGreaterThanOrEqual(POSITIVE_THRESHOLD);
+      expect(score.contractPass).toBe(true);
     });
 
     it('get_container_transport_events returns a timeline', async ({
@@ -315,7 +327,7 @@ if (!cfg) {
         },
       );
       expect(result.isError).toBe(false);
-      expect(score.score).toBeGreaterThanOrEqual(POSITIVE_THRESHOLD);
+      expect(score.contractPass).toBe(true);
     });
 
     it('get_container_route returns route data or a graceful not-found', async ({
@@ -348,7 +360,7 @@ if (!cfg) {
       expect(result.http).toBe(200);
       expect(result.payload).toBeDefined();
       expect(result.steering).toBeDefined();
-      expect(score.score).toBeGreaterThanOrEqual(POSITIVE_THRESHOLD);
+      expect(score.contractPass).toBe(true);
     });
 
     // ---- search + track ----
@@ -380,7 +392,7 @@ if (!cfg) {
         },
       );
       expect(result.isError).toBe(false);
-      expect(score.score).toBeGreaterThanOrEqual(POSITIVE_THRESHOLD);
+      expect(score.contractPass).toBe(true);
     });
 
     it('track_container is idempotent for an already-tracked number (no mutation)', async ({
@@ -392,6 +404,7 @@ if (!cfg) {
         { number: fixtures.containerNumber },
         {
           requiredKeys: ['tracking_request_created'],
+          requireSteering: true,
           predicates: [
             {
               name: 'no tracking request created',
@@ -410,7 +423,7 @@ if (!cfg) {
       expect(
         isRecord(result.payload) && result.payload.tracking_request_created,
       ).toBe(false);
-      expect(score.score).toBeGreaterThanOrEqual(POSITIVE_THRESHOLD);
+      expect(score.contractPass).toBe(true);
     });
 
     // ---- error handling (negative cases) ----
@@ -460,7 +473,7 @@ if (!cfg) {
         'empty-result',
       );
       expect(result.isError).toBe(false);
-      expect(score.score).toBeGreaterThanOrEqual(POSITIVE_THRESHOLD);
+      expect(score.contractPass).toBe(true);
     });
   });
 }

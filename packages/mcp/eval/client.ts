@@ -77,17 +77,27 @@ interface JsonRpcResponse {
   error?: { code: number | undefined; message: string | undefined };
 }
 
-/** Parse the HTTP body, which is either SSE (text/event-stream) or plain JSON. */
+/** Parse the HTTP body, which is either plain JSON or SSE (text/event-stream). */
 function parseBody(text: string): unknown {
-  if (text.includes('data:')) {
-    const data = text
-      .split('\n')
-      .filter((line) => line.startsWith('data:'))
-      .map((line) => line.slice(5).trim())
-      .filter((line) => line.length > 0);
-    if (data.length > 0) return JSON.parse(data[data.length - 1]);
+  try {
+    return JSON.parse(text);
+  } catch {
+    // SSE: events are separated by blank lines, and one event may carry
+    // MULTIPLE `data:` lines whose values join with "\n" (SSE spec). The
+    // JSON-RPC response is the last data-bearing event on the stream.
+    let lastData: string | undefined;
+    for (const event of text.split(/\r?\n\r?\n/)) {
+      const dataLines = event
+        .split(/\r?\n/)
+        .filter((line) => line.startsWith('data:'))
+        .map((line) => line.slice(5).replace(/^ /, ''));
+      if (dataLines.length > 0) lastData = dataLines.join('\n');
+    }
+    if (lastData === undefined) {
+      throw new Error('response body is neither JSON nor SSE with data');
+    }
+    return JSON.parse(lastData);
   }
-  return JSON.parse(text);
 }
 
 function asJsonRpc(value: unknown): JsonRpcResponse {

@@ -15,13 +15,17 @@ export interface Check {
   name: string;
   pass: boolean;
   detail: string | undefined;
+  /** Soft checks (latency) are reported but never fail the contract. */
+  soft: boolean;
 }
 
 export interface QualityScore {
-  /** Fraction of checks passed, 0..1. */
+  /** Fraction of checks passed, 0..1 (includes soft checks). */
   score: number;
   passed: number;
   total: number;
+  /** True when every non-soft (contract) check passed. Gate CI on this. */
+  contractPass: boolean;
   checks: Check[];
 }
 
@@ -51,8 +55,13 @@ export function scoreResult(
   spec: QualitySpec,
 ): QualityScore {
   const checks: Check[] = [];
-  const add = (name: string, pass: boolean, detail?: string): void => {
-    checks.push({ name, pass, detail });
+  const add = (
+    name: string,
+    pass: boolean,
+    detail?: string,
+    soft = false,
+  ): void => {
+    checks.push({ name, pass, detail, soft });
   };
   const budget = spec.latencyBudgetMs ?? DEFAULT_LATENCY_BUDGET_MS;
 
@@ -103,10 +112,13 @@ export function scoreResult(
     add('steering suggests follow-ups', steeringHasFollowUps(result.steering));
   }
 
+  // Latency is a soft signal: recorded and scored, but a slow response is not
+  // a contract violation, so it never fails the suite on its own.
   add(
     `latency < ${budget}ms`,
     result.latencyMs <= budget,
     `${result.latencyMs}ms`,
+    true,
   );
 
   const passed = checks.filter((check) => check.pass).length;
@@ -114,6 +126,7 @@ export function scoreResult(
     score: checks.length === 0 ? 0 : passed / checks.length,
     passed,
     total: checks.length,
+    contractPass: checks.every((check) => check.soft || check.pass),
     checks,
   };
 }

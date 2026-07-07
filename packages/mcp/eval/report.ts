@@ -51,8 +51,11 @@ export function formatScorecard(rows: EvalRow[], meta: EvalReportMeta): string {
       : row.score.checks.some((c) => c.name.includes('steering'))
         ? 'NO'
         : '-';
-    const flag =
-      row.score.score >= 1 ? '' : row.score.score >= 0.8 ? ' ~' : ' ✗';
+    const flag = !row.score.contractPass
+      ? ' ✗'
+      : row.score.score >= 1
+        ? ''
+        : ' ~';
     lines.push(
       `  ${pad(row.tool, 32)}${pad(row.testCase, 16)}${pad(String(row.result.http), 6)}${pad(String(row.result.latencyMs), 7)}${pad(steer, 7)}${pct(row.score.score)} (${row.score.passed}/${row.score.total})${flag}`,
     );
@@ -89,6 +92,7 @@ export function writeReport(rows: EvalRow[], meta: EvalReportMeta): string {
     summary: {
       cases: rows.length,
       perfect: rows.filter((r) => r.score.score >= 1).length,
+      contractFailures: rows.filter((r) => !r.score.contractPass).length,
       meanScore:
         rows.length === 0
           ? 0
@@ -104,6 +108,7 @@ export function writeReport(rows: EvalRow[], meta: EvalReportMeta): string {
       bytes: row.result.bytes,
       hasSteering: row.result.steering !== undefined,
       score: row.score.score,
+      contractPass: row.score.contractPass,
       checks: row.score.checks,
       payloadKeys:
         row.result.payload &&

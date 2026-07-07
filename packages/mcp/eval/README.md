@@ -29,6 +29,7 @@ MCP_EVAL_TOKEN="<key>" npm run eval --workspace @terminal49/mcp
 | `MCP_EVAL_TOKEN` | Terminal49 API key → `Authorization: Token` | — |
 | `MCP_EVAL_ENDPOINT` | Gateway `/mcp` URL | `https://mcp.terminal49.com/mcp` |
 | `MCP_EVAL_ENABLE_WRITE` | Opt in to the mutating `track_container` case | unset (skipped) |
+| `MCP_EVAL_ALLOW_SPARSE` | Allow detail cases to skip when the account has no data | unset (strict) |
 
 > OAuth access tokens are short-lived (~5 min). For repeatable/CI runs, prefer a
 > `MCP_EVAL_TOKEN` API key — it does not expire.
@@ -37,16 +38,23 @@ Typecheck the suite without running it: `tsc --noEmit -p tsconfig.eval.json`.
 
 ## What it checks
 
-`beforeAll` discovers real ids (via `list_shipments` / `list_containers` /
-`list_tracking_requests`) and feeds them to the detail tools. Each case is scored
-by [`quality.ts`](./quality.ts):
+`beforeAll` discovers real ids (via `list_shipments` / `list_containers`) and
+feeds them to the detail tools. **Discovery is strict by default**: if the
+account yields no shipment/container fixtures, the run fails instead of letting
+the detail cases silently skip and report a hollow "pass". Set
+`MCP_EVAL_ALLOW_SPARSE=1` to permit skipping on a genuinely empty account.
+
+Each case is scored by [`quality.ts`](./quality.ts). **Contract checks** must
+all pass (`contractPass`) — a single failure fails the test:
 
 - transport `200`, correct tool-error semantics (`isError`)
 - primary payload parses as JSON and carries the required keys
 - per-tool shape predicates (e.g. `total_lines === shipping_lines.length`, id
   round-trips, `timeline` is an array)
-- latency under budget
 - an `_agent_steering` block is present and suggests follow-ups
+
+**Latency** is a *soft* check: recorded in the score and the report, but a slow
+response alone never fails the suite.
 
 Negative cases assert error behavior: an unknown id and a missing required
 argument must produce tool errors, while a gibberish search must return an empty
