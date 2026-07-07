@@ -32,6 +32,7 @@ logs/
 # Testing
 coverage/
 .nyc_output/
+eval/reports/
 
 # Vercel
 .vercel

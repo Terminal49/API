@@ -13,7 +13,9 @@
     "format:check": "oxfmt --check src",
     "type-check": "tsc --noEmit",
     "mcp:stdio": "tsx src/index.ts",
-    "sdk:setup": "node ./scripts/sdk-setup.mjs"
+    "sdk:setup": "node ./scripts/sdk-setup.mjs",
+    "eval": "vitest run --config vitest.eval.config.ts",
+    "eval:check": "tsc --noEmit -p tsconfig.eval.json"
   },
   "keywords": [
     "mcp",

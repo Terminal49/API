@@ -65,7 +65,13 @@ jobs:
         run: |
           npm run type-check --workspace @terminal49/sdk
           npm run type-check --workspace @terminal49/mcp
+      - name: Type-check MCP eval suite
+        run: npm run eval:check --workspace @terminal49/mcp
       - name: Test MCP
         run: npm run test --workspace @terminal49/mcp -- --run --coverage
+      - name: Eval MCP tools (live; skips without MCP_EVAL_TOKEN secret)
+        env:
+          MCP_EVAL_TOKEN: ${{ secrets.MCP_EVAL_TOKEN }}
+        run: npm run eval --workspace @terminal49/mcp
       - name: Lint MCP (oxlint + oxfmt)
         run: npm run lint --workspace @terminal49/mcp
