@@ -1230,15 +1230,6 @@
                           "title": "Unprocessable Entity",
                           "detail": "Request number can't be blank",
                           "code": "blank"
-                        },
-                        {
-                          "status": "422",
-                          "source": {
-                            "pointer": "/data/attributes/auto_detect_vocc_scac"
-                          },
-                          "title": "Unprocessable Entity",
-                          "detail": "Could not auto-detect a supported carrier SCAC for this request number",
-                          "code": "prediction_failed"
                         }
                       ]
                     }
@@ -1324,7 +1315,7 @@
                           },
                           "auto_detect_vocc_scac": {
                             "type": "boolean",
-                            "description": "Set to `true` to have Terminal49 infer the carrier SCAC from `request_number` when `scac` is not supplied. If the carrier cannot be inferred confidently, the request is rejected with a 422 response. If a carrier is inferred, the created tracking request response includes the detected `scac`.",
+                            "description": "Set to `true` to have Terminal49 infer the carrier SCAC from `request_number` when `scac` is not supplied. Detection is asynchronous: the tracking request is created immediately (HTTP `201`) with `status: \"pending\"` and `scac: null`. If a carrier is inferred, the request transitions to `status: \"created\"` with the detected `scac` populated. If no supported carrier can be inferred, it transitions to `status: \"failed\"` with `failed_reason: \"scac_auto_detect_failed\"` and no shipment is created. Poll the tracking request or use webhooks to observe the outcome — the create response does not include the detected `scac`.",
                             "default": false,
                             "example": true
                           },
@@ -1440,7 +1431,7 @@
             "authorization": []
           }
         ],
-        "description": "To track an ocean shipment, create a new tracking request. `request_type` and `request_number` are always required. Supply either a shipping line `scac` or set `auto_detect_vocc_scac` to `true` to have Terminal49 infer the SCAC from the request number before creating the tracking request.\n\nAuto-detection uses the same carrier prediction capability as the Infer Tracking Number endpoint. If Terminal49 cannot infer a supported carrier confidently, the request is rejected with a 422 response and no tracking request is created. Once a tracking request is created we will attempt to fetch the shipment details and its related containers from the shipping line. If the attempt is successful we will create a new shipment object including any related container objects. We will send a `tracking_request.succeeded` webhook notification to your webhooks.\n\nIf the attempt to fetch fails then we will send a `tracking_request.failed` webhook notification to your `webhooks`.\n\nA `tracking_request.succeeded` or `tracking_request.failed` webhook notification will only be sent if you have at least one active webhook. <br /><br /><Info>This endpoint is limited to 100 tracking requests per minute.</Info>",
+        "description": "To track an ocean shipment, create a new tracking request. `request_type` and `request_number` are always required. Supply either a shipping line `scac` or set `auto_detect_vocc_scac` to `true` to have Terminal49 infer the SCAC from the request number before creating the tracking request.\n\nAuto-detection uses the same carrier prediction capability as the Infer Tracking Number endpoint and runs asynchronously. The tracking request is created immediately (HTTP `201`) with `status: \"pending\"`; if no supported carrier can be inferred it transitions to `status: \"failed\"` with `failed_reason: \"scac_auto_detect_failed\"` and no shipment is created. Once a tracking request is created we will attempt to fetch the shipment details and its related containers from the shipping line. If the attempt is successful we will create a new shipment object including any related container objects. We will send a `tracking_request.succeeded` webhook notification to your webhooks.\n\nIf the attempt to fetch fails then we will send a `tracking_request.failed` webhook notification to your `webhooks`.\n\nA `tracking_request.succeeded` or `tracking_request.failed` webhook notification will only be sent if you have at least one active webhook. <br /><br /><Info>This endpoint is limited to 100 tracking requests per minute.</Info>",
         "tags": [
           "Tracking Requests"
         ],
@@ -12161,9 +12152,10 @@
                   "shipping_line_unreachable",
                   "unrecognized_response",
                   "data_unavailable",
+                  "scac_auto_detect_failed",
                   null
                 ],
-                "description": "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request",
+                "description": "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request. `scac_auto_detect_failed` means `auto_detect_vocc_scac` was set but no supported carrier SCAC could be inferred from the request number.",
                 "nullable": true
               },
               "request_type": {
