@@ -2,988 +2,1171 @@
 title: "Terminal49 API and DataSync Updates"
 sidebarTitle: "API & DataSync Updates"
 description: "Release notes and changelog for Terminal49 API and DataSync updates, covering new features, endpoint changes, schema updates, and resolved issues."
-keywords:
-  - "Terminal49 changelog"
-  - "API updates"
-  - "DataSync updates"
-  - "release notes"
-  - "API changelog"
-  - "schema updates"
-  - "bug fixes"
+keywords: ["Terminal49 changelog", "API updates", "DataSync updates", "release notes", "API changelog", "schema updates", "bug fixes"]
 rss: true
 ---
+
 <Info>
-  This page contains updates to **Terminal49 API** and **DataSync** only (not
-  general product updates).
+  This page contains updates to **Terminal49 API** and **DataSync** only (not general product updates).
 </Info>
 
-<Update label="July 6, 2026" description="Zapier 2.0 integration rewrite, tracking request SCAC auto-detect, party filter and chips on the shipment dashboard, new Hapag-Lloyd public API tracker, new MAEU and OOLU Browser Use trackers, MSC US import demurrage tariff dataset, and a wave of HLCU, focus, and cargo fixes" tags={['API', 'Dashboard', 'Integrations']}
-  rss="July 6, 2026: Zapier 2.0 full rewrite of the Terminal49 integration, tracking request SCAC auto-detect on create, party filter and party chips on the shipment dashboard, new Hapag-Lloyd public API tracker, new MAEU and OOLU Browser Use Cloud trackers (OOLU direct path retired), MSC (MSCU) US import demurrage tariff rules for Smart LFD, HLCU tracking requests included in the booking sweep, Faraday connection failure causes surfaced, shipment details migrated to the Shipments V2 API, and fixes for HLCU groups without container numbers, HLCU 500 → awaiting manifest, Destination Port stealing focus on load, discarded cargos not being removed after update, and WorkOS auth Sentry noise."
->
+<Update label="July 6, 2026" description="Zapier 2.0 integration rewrite, tracking request SCAC auto-detect, party filter and chips on the shipment dashboard, new Hapag-Lloyd public API tracker, new MAEU and OOLU Browser Use trackers, MSC US import demurrage tariff dataset, and a wave of HLCU, focus, and cargo fixes" rss="July 6, 2026: Zapier 2.0 full rewrite of the Terminal49 integration, tracking request SCAC auto-detect on create, party filter and party chips on the shipment dashboard, new Hapag-Lloyd public API tracker, new MAEU and OOLU Browser Use Cloud trackers (OOLU direct path retired), MSC (MSCU) US import demurrage tariff rules for Smart LFD, HLCU tracking requests included in the booking sweep, Faraday connection failure causes surfaced, shipment details migrated to the Shipments V2 API, and fixes for HLCU groups without container numbers, HLCU 500 → awaiting manifest, Destination Port stealing focus on load, discarded cargos not being removed after update, and WorkOS auth Sentry noise.">
   ### Zapier 2.0 integration
 
-The **Terminal49 Zapier integration** has been fully rewritten as version 2.0. The new version is powered by the official Terminal49 TypeScript SDK, ships **31 webhook-based triggers** (tracking requests, transport events for vessel/full/empty milestones, transshipment and feeder events, delivery and pickup events, and more), and returns a cleaner flat payload with a `_raw` object for advanced use. Version 1.0 remains available on Zapier indefinitely — 2.0 ships as a separate version so you can migrate at your own pace.
+  The **Terminal49 Zapier integration** has been fully rewritten as version 2.0. The new version is powered by the official Terminal49 TypeScript SDK, ships **31 webhook-based triggers** (tracking requests, transport events for vessel/full/empty milestones, transshipment and feeder events, delivery and pickup events, and more), and returns a cleaner flat payload with a `_raw` object for advanced use. Version 1.0 remains available on Zapier indefinitely — 2.0 ships as a separate version so you can migrate at your own pace.
 
-<Card title="Zapier integration" icon="bolt" href="https://zapier.com/apps/terminal49/integrations">
-  Connect Terminal49 to 6,000+ apps
-</Card>
+  <Card title="Zapier integration" icon="bolt" href="https://zapier.com/apps/terminal49/integrations">
+    Connect Terminal49 to 6,000\+ apps
+  </Card>
 
----
+  ---
 
   ### Tracking request SCAC auto-detect
 
-Tracking requests can now be created **without a SCAC**. When `scac` is omitted, Terminal49 uses [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) during tracking to pick the correct carrier and number type. The auto-detect flag is preserved across resubmits, and the resolved SCAC flows through to webhooks so downstream systems always see the actual carrier.
+  Tracking requests can now be created **without a SCAC**. When `scac` is omitted, Terminal49 uses [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) during tracking to pick the correct carrier and number type. The auto-detect flag is preserved across resubmits, and the resolved SCAC flows through to webhooks so downstream systems always see the actual carrier.
 
-<Card title="Create a tracking request" icon="plus" href="/api-docs/api-reference/tracking-requests/create-a-tracking-request">
-  Tracking request API reference
-</Card>
+  <Card title="Create a tracking request" icon="plus" href="/api-docs/api-reference/tracking-requests/create-a-tracking-request">
+    Tracking request API reference
+  </Card>
 
----
+  ---
 
   ### New Hapag-Lloyd public API tracker
 
-Added a direct **Hapag-Lloyd (HLCU) public API** tracker for container, bill of lading, and booking lookups. HLCU tracking requests are also now included in the periodic **booking sweep**, so bookings without containers are refreshed alongside the rest of your Hapag-Lloyd shipments.
+  Added a direct **Hapag-Lloyd (HLCU) public API** tracker for container, bill of lading, and booking lookups. HLCU tracking requests are also now included in the periodic **booking sweep**, so bookings without containers are refreshed alongside the rest of your Hapag-Lloyd shipments.
 
----
+  ---
 
   ### New MAEU and OOLU Browser Use trackers
 
-- **MAEU (Maersk) — `maeubu`** — a new Browser Use Cloud tracker for Maersk, running against a residential-fingerprinted browser for improved reliability
-- **OOLU (OOCL) — `oolubu`** — a new Browser Use Cloud tracker for OOCL that reuses the existing extraction path while auto-clearing the Cloudflare Turnstile challenge
-- **OOLU direct path retired** — the previous `oolu_direct` integration has been removed now that `oolubu` supersedes it
+  - **MAEU (Maersk) — `maeubu`** — a new Browser Use Cloud tracker for Maersk, running against a residential-fingerprinted browser for improved reliability
+  - **OOLU (OOCL) — `oolubu`** — a new Browser Use Cloud tracker for OOCL that reuses the existing extraction path while auto-clearing the Cloudflare Turnstile challenge
+  - **OOLU direct path retired** — the previous `oolu_direct` integration has been removed now that `oolubu` supersedes it
 
----
+  ---
 
   ### MSC US import demurrage tariff rules
 
-Published a new **MSC (MSCU)** US-import demurrage tariff rule dataset for Smart LFD, sourced from Descartes WsHelp and refreshed on a daily filename sweep. Calculated Last Free Day values for MSC containers now reflect Mediterranean Shipping's published tariff, including CY port, rail base, and named-ramp overrides.
+  Published a new **MSC (MSCU)** US-import demurrage tariff rule dataset for Smart LFD, sourced from Descartes WsHelp and refreshed on a daily filename sweep. Calculated Last Free Day values for MSC containers now reflect Mediterranean Shipping's published tariff, including CY port, rail base, and named-ramp overrides.
 
-<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
-  View the container resource
-</Card>
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
 
----
+  ---
 
   ### Party filter and chips on the shipment dashboard
 
-The shipment dashboard now supports **filtering by party**, and party assignments render as inline **chips** on the shipment table so you can see consignee, shipper, notify, dray carrier, and other roles at a glance without opening the shipment.
+  The shipment dashboard now supports **filtering by party**, and party assignments render as inline **chips** on the shipment table so you can see consignee, shipper, notify, dray carrier, and other roles at a glance without opening the shipment.
 
----
+  ---
 
   ### Updates
 
-- **Manage account tags without an admin** — users with the right permission can now create, rename, and remove account tags directly; Terminal49 admins can also manage tags on behalf of accounts
-- **Shipment Details on the Shipments V2 API** — the shipment details page has been migrated fully to the Shipments V2 API for a leaner, more consistent data model behind the UI
-- **Faraday connection failure causes surfaced** — outbound HTTP failures from carrier and terminal integrations now expose their underlying cause (timeout, DNS, TLS, connection reset), so retry classification and dashboards reflect the real reason
-- **Server-side entitlement checks on webhooks** — webhook management and trigger endpoints now enforce entitlement checks server-side, making sure only accounts with the data-out API entitlement can operate on webhooks
+  - **Manage account tags without an admin** — users with the right permission can now create, rename, and remove account tags directly; Terminal49 admins can also manage tags on behalf of accounts
+  - **Shipment Details on the Shipments V2 API** — the shipment details page has been migrated fully to the Shipments V2 API for a leaner, more consistent data model behind the UI
+  - **Faraday connection failure causes surfaced** — outbound HTTP failures from carrier and terminal integrations now expose their underlying cause (timeout, DNS, TLS, connection reset), so retry classification and dashboards reflect the real reason
+  - **Server-side entitlement checks on webhooks** — webhook management and trigger endpoints now enforce entitlement checks server-side, making sure only accounts with the data-out API entitlement can operate on webhooks
 
----
+  ---
 
   ### Bug fixes
 
-- **HLCU groups without container numbers** — Hapag-Lloyd shipment groups that returned no container numbers no longer cause the tracker run to fail
-- **HLCU 500 mapped to awaiting manifest** — Hapag-Lloyd `error.internalServer` responses (HTTP 500) are now mapped to an awaiting-manifest state instead of surfacing as a hard tracker error
-- **Destination Port no longer steals focus** — fixed a regression where the Destination Port filter auto-focused on shipments page load; the BOL/reference/container search field is now focused instead, matching standard dashboard UX
-- **Discarded cargos removed after update** — updating a shipment now removes any user cargos that were discarded in the update, instead of leaving stale cargo records behind
-- **Reduced WorkOS auth Sentry noise** — expected WorkOS sign-in denials and stale-code callbacks no longer report to Sentry, so real auth errors stand out
-- **MAEU Browser Use resource loading** — tightened resource blocking on the new MAEU Browser Use integration for faster page loads while preserving the Cloudflare clearance path
-- **Lazy-load fixes on the dashboard** — resolved two lazy-loading issues in dashboard views that could show empty state before data arrived
-
+  - **HLCU groups without container numbers** — Hapag-Lloyd shipment groups that returned no container numbers no longer cause the tracker run to fail
+  - **HLCU 500 mapped to awaiting manifest** — Hapag-Lloyd `error.internalServer` responses (HTTP 500) are now mapped to an awaiting-manifest state instead of surfacing as a hard tracker error
+  - **Destination Port no longer steals focus** — fixed a regression where the Destination Port filter auto-focused on shipments page load; the BOL/reference/container search field is now focused instead, matching standard dashboard UX
+  - **Discarded cargos removed after update** — updating a shipment now removes any user cargos that were discarded in the update, instead of leaving stale cargo records behind
+  - **Reduced WorkOS auth Sentry noise** — expected WorkOS sign-in denials and stale-code callbacks no longer report to Sentry, so real auth errors stand out
+  - **MAEU Browser Use resource loading** — tightened resource blocking on the new MAEU Browser Use integration for faster page loads while preserving the Cloudflare clearance path
+  - **Lazy-load fixes on the dashboard** — resolved two lazy-loading issues in dashboard views that could show empty state before data arrived
 </Update>
 
-<Update label="June 29, 2026" description="Customizable dashboard view cards, party filters and columns on the container dashboard, datetime display preferences, OOCL API tracker, CMA CGM (CMDU) website scraper, Calculated LFD feedback in the Smart LFD panel, and a wave of carrier, terminal, and dashboard fixes" tags={['API', 'Dashboard', 'MCP']}
-  rss="June 29, 2026: Customize dashboard view cards, party filters and columns on the container dashboard, per-user datetime format preference, new OOCL API tracker path, CMA CGM (CMDU) website scraper (cmduweb), Calculated LFD feedback widget on the Smart LFD panel, account managers can change user roles, CMA PBD events mapped to feeder departed, UPRR rail LFD off-by-one fix, and fixes for CMSAMX, SEAU async scrapes, MCP account resolution, Tideworks A295/L239 reliability, OOLU Cloudflare handling, and dray-carrier display."
->
+<Update label="July 6, 2026" description="Zapier 2.0 integration rewrite, tracking request SCAC auto-detect, party filter and chips on the shipment dashboard, new Hapag-Lloyd public API tracker, new MAEU and OOLU Browser Use trackers, MSC US import demurrage tariff dataset, and a wave of HLCU, focus, and cargo fixes" rss="July 6, 2026: Zapier 2.0 full rewrite of the Terminal49 integration, tracking request SCAC auto-detect on create, party filter and party chips on the shipment dashboard, new Hapag-Lloyd public API tracker, new MAEU and OOLU Browser Use Cloud trackers (OOLU direct path retired), MSC (MSCU) US import demurrage tariff rules for Smart LFD, HLCU tracking requests included in the booking sweep, Faraday connection failure causes surfaced, shipment details migrated to the Shipments V2 API, and fixes for HLCU groups without container numbers, HLCU 500 → awaiting manifest, Destination Port stealing focus on load, discarded cargos not being removed after update, and WorkOS auth Sentry noise.">
+  ### Zapier 2.0 integration
+
+  The **Terminal49 Zapier integration** has been fully rewritten as version 2.0. The new version is powered by the official Terminal49 TypeScript SDK, ships **31 webhook-based triggers** (tracking requests, transport events for vessel/full/empty milestones, transshipment and feeder events, delivery and pickup events, and more), and returns a cleaner flat payload with a `_raw` object for advanced use. Version 1.0 remains available on Zapier indefinitely — 2.0 ships as a separate version so you can migrate at your own pace.
+
+  <Card title="Zapier integration" icon="bolt" href="https://zapier.com/apps/terminal49/integrations">
+    Connect Terminal49 to 6,000\+ apps
+  </Card>
+
+  ---
+
+  ### Tracking request SCAC auto-detect
+
+  Tracking requests can now be created **without a SCAC**. When `scac` is omitted, Terminal49 uses [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) during tracking to pick the correct carrier and number type. The auto-detect flag is preserved across resubmits, and the resolved SCAC flows through to webhooks so downstream systems always see the actual carrier.
+
+  <Card title="Create a tracking request" icon="plus" href="/api-docs/api-reference/tracking-requests/create-a-tracking-request">
+    Tracking request API reference
+  </Card>
+
+  ---
+
+  ### New Hapag-Lloyd public API tracker
+
+  Added a direct **Hapag-Lloyd (HLCU) public API** tracker for container, bill of lading, and booking lookups. HLCU tracking requests are also now included in the periodic **booking sweep**, so bookings without containers are refreshed alongside the rest of your Hapag-Lloyd shipments.
+
+  ---
+
+  ### New MAEU and OOLU Browser Use trackers
+
+  - **MAEU (Maersk) — `maeubu`** — a new Browser Use Cloud tracker for Maersk, running against a residential-fingerprinted browser for improved reliability
+  - **OOLU (OOCL) — `oolubu`** — a new Browser Use Cloud tracker for OOCL that reuses the existing extraction path while auto-clearing the Cloudflare Turnstile challenge
+  - **OOLU direct path retired** — the previous `oolu_direct` integration has been removed now that `oolubu` supersedes it
+
+  ---
+
+  ### MSC US import demurrage tariff rules
+
+  Published a new **MSC (MSCU)** US-import demurrage tariff rule dataset for Smart LFD, sourced from Descartes WsHelp and refreshed on a daily filename sweep. Calculated Last Free Day values for MSC containers now reflect Mediterranean Shipping's published tariff, including CY port, rail base, and named-ramp overrides.
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
+
+  ---
+
+  ### Party filter and chips on the shipment dashboard
+
+  The shipment dashboard now supports **filtering by party**, and party assignments render as inline **chips** on the shipment table so you can see consignee, shipper, notify, dray carrier, and other roles at a glance without opening the shipment.
+
+  ---
+
+  ### Updates
+
+  - **Manage account tags without an admin** — users with the right permission can now create, rename, and remove account tags directly; Terminal49 admins can also manage tags on behalf of accounts
+  - **Shipment Details on the Shipments V2 API** — the shipment details page has been migrated fully to the Shipments V2 API for a leaner, more consistent data model behind the UI
+  - **Faraday connection failure causes surfaced** — outbound HTTP failures from carrier and terminal integrations now expose their underlying cause (timeout, DNS, TLS, connection reset), so retry classification and dashboards reflect the real reason
+  - **Server-side entitlement checks on webhooks** — webhook management and trigger endpoints now enforce entitlement checks server-side, making sure only accounts with the data-out API entitlement can operate on webhooks
+
+  ---
+
+  ### Bug fixes
+
+  - **HLCU groups without container numbers** — Hapag-Lloyd shipment groups that returned no container numbers no longer cause the tracker run to fail
+  - **HLCU 500 mapped to awaiting manifest** — Hapag-Lloyd `error.internalServer` responses (HTTP 500) are now mapped to an awaiting-manifest state instead of surfacing as a hard tracker error
+  - **Destination Port no longer steals focus** — fixed a regression where the Destination Port filter auto-focused on shipments page load; the BOL/reference/container search field is now focused instead, matching standard dashboard UX
+  - **Discarded cargos removed after update** — updating a shipment now removes any user cargos that were discarded in the update, instead of leaving stale cargo records behind
+  - **Reduced WorkOS auth Sentry noise** — expected WorkOS sign-in denials and stale-code callbacks no longer report to Sentry, so real auth errors stand out
+  - **MAEU Browser Use resource loading** — tightened resource blocking on the new MAEU Browser Use integration for faster page loads while preserving the Cloudflare clearance path
+  - **Lazy-load fixes on the dashboard** — resolved two lazy-loading issues in dashboard views that could show empty state before data arrived
+</Update>
+
+<Update label="June 29, 2026" description="Customizable dashboard view cards, party filters and columns on the container dashboard, datetime display preferences, OOCL API tracker, CMA CGM (CMDU) website scraper, Calculated LFD feedback in the Smart LFD panel, and a wave of carrier, terminal, and dashboard fixes" rss="June 29, 2026: Customize dashboard view cards, party filters and columns on the container dashboard, per-user datetime format preference, new OOCL API tracker path, CMA CGM (CMDU) website scraper (cmduweb), Calculated LFD feedback widget on the Smart LFD panel, account managers can change user roles, CMA PBD events mapped to feeder departed, UPRR rail LFD off-by-one fix, and fixes for CMSAMX, SEAU async scrapes, MCP account resolution, Tideworks A295/L239 reliability, OOLU Cloudflare handling, and dray-carrier display.">
   ### Customize dashboard view cards
 
-You can now **reorder and choose which view cards** appear on your dashboard home. Drag to rearrange, hide cards you don't use, and the layout persists per user — so each teammate can tune the dashboard to the views they work from.
+  You can now **reorder and choose which view cards** appear on your dashboard home. Drag to rearrange, hide cards you don't use, and the layout persists per user — so each teammate can tune the dashboard to the views they work from.
 
----
+  ---
 
   ### Party filters and columns on the container dashboard
 
-The container dashboard now supports **filtering and grouping by parties and party roles** (consignee, shipper, notify party, dray carrier, and more). Party roles are also available as columns and in CSV exports, so you can slice the dashboard by who owns each leg and export the same view downstream.
+  The container dashboard now supports **filtering and grouping by parties and party roles** (consignee, shipper, notify party, dray carrier, and more). Party roles are also available as columns and in CSV exports, so you can slice the dashboard by who owns each leg and export the same view downstream.
 
----
+  ---
 
   ### Datetime column format preference
 
-Date and datetime columns now respect a **per-user display format preference**. Pick the format that matches how your team reads dates and Terminal49 will use it consistently across dashboard tables.
+  Date and datetime columns now respect a **per-user display format preference**. Pick the format that matches how your team reads dates and Terminal49 will use it consistently across dashboard tables.
 
----
+  ---
 
   ### Calculated LFD feedback in the Smart LFD panel
 
-The Smart LFD detail panel now includes a **feedback widget** for calculated (tariff-based) Last Free Days. Tell us whether the calculated LFD looks right, supply a corrected date when it doesn't, and add a reason (custom contract, free days extended, other). Feedback flows into our tariff validation pipeline so calculated LFDs keep improving carrier by carrier.
+  The Smart LFD detail panel now includes a **feedback widget** for calculated (tariff-based) Last Free Days. Tell us whether the calculated LFD looks right, supply a corrected date when it doesn't, and add a reason (custom contract, free days extended, other). Feedback flows into our tariff validation pipeline so calculated LFDs keep improving carrier by carrier.
 
-<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
-  View the container resource
-</Card>
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
 
----
+  ---
 
   ### New carrier integrations
 
-- **OOCL (OOLU) API tracker** — added a new direct API path for OOCL container, bill of lading, and booking lookups, improving reliability over the public site scrape
-- **CMA CGM (CMDU) `cmduweb` scraper** — added a new tnt-api-based scraper integration for CMA CGM as an alternative data source
+  - **OOCL (OOLU) API tracker** — added a new direct API path for OOCL container, bill of lading, and booking lookups, improving reliability over the public site scrape
+  - **CMA CGM (CMDU) `cmduweb` scraper** — added a new tnt-api-based scraper integration for CMA CGM as an alternative data source
 
----
+  ---
 
   ### Updates
 
-- **Account managers can change user roles** — accounts with the user-manager role can now change other users' roles directly, without escalating to an admin
-- **CMA PBD events mapped to feeder departed** — CMA CGM "Port Boundary Departure" events now map to a feeder-departed transport event, so feeder legs show up in the timeline with the right phase
-- **MCP connected client account resolution** — MCP requests now resolve to your primary account, and the audience matcher accepts a trailing slash on the resource URL, so OAuth-aware MCP clients connect more reliably
-- **WorkOS MCP tokens without `client_id`** — MCP access tokens issued by WorkOS no longer require a `client_id` claim, broadening compatibility with OAuth-aware MCP clients
+  - **Account managers can change user roles** — accounts with the user-manager role can now change other users' roles directly, without escalating to an admin
+  - **CMA PBD events mapped to feeder departed** — CMA CGM "Port Boundary Departure" events now map to a feeder-departed transport event, so feeder legs show up in the timeline with the right phase
+  - **MCP connected client account resolution** — MCP requests now resolve to your primary account, and the audience matcher accepts a trailing slash on the resource URL, so OAuth-aware MCP clients connect more reliably
+  - **WorkOS MCP tokens without `client_id`** — MCP access tokens issued by WorkOS no longer require a `client_id` claim, broadening compatibility with OAuth-aware MCP clients
 
----
+  ---
 
   ### Bug fixes
 
-- **UPRR rail Last Free Day off-by-one** — Union Pacific rail LFDs no longer display a day early. Bare-date LFDs from UPRR are now anchored mid-day so the calendar date is stable across US timezones, and existing midnight-UTC values have been backfilled
-- **CMSAMX (Contecon Manzanillo) restored** — switched CMSAMX container scraping to the Contecon ISCS backend after the public site went down, restoring container status, holds, and availability at Manzanillo
-- **SEAU (Sealand) async refreshes** — fixed an issue where scheduled refreshes for Sealand shipments returned an invalid-integration error. SEAU shipments now refresh on schedule the same way new SEAU tracking requests do
-- **Dray carrier no longer shown after removal** — clearing a dray carrier from a shipment or cargo now updates the party display immediately instead of leaving the removed carrier visible
-- **A295 (Boston/MCT) and L239 (POMTOC) reliability** — isolated the Tideworks `.io` terminals to a dedicated proxy pool and refreshed A295 credentials, restoring terminal data collection after a sustained block
-- **OOLU Cloudflare handling reverted** — rolled back a change to OOLU's Cloudflare challenge handling that caused regressions; OOLU continues to track via the established path while the new API tracker rolls out
-- **WorkOS auth flow hardening** — tightened the WorkOS-backed sign-in flow against edge cases in token validation and session recovery
-
+  - **UPRR rail Last Free Day off-by-one** — Union Pacific rail LFDs no longer display a day early. Bare-date LFDs from UPRR are now anchored mid-day so the calendar date is stable across US timezones, and existing midnight-UTC values have been backfilled
+  - **CMSAMX (Contecon Manzanillo) restored** — switched CMSAMX container scraping to the Contecon ISCS backend after the public site went down, restoring container status, holds, and availability at Manzanillo
+  - **SEAU (Sealand) async refreshes** — fixed an issue where scheduled refreshes for Sealand shipments returned an invalid-integration error. SEAU shipments now refresh on schedule the same way new SEAU tracking requests do
+  - **Dray carrier no longer shown after removal** — clearing a dray carrier from a shipment or cargo now updates the party display immediately instead of leaving the removed carrier visible
+  - **A295 (Boston/MCT) and L239 (POMTOC) reliability** — isolated the Tideworks `.io` terminals to a dedicated proxy pool and refreshed A295 credentials, restoring terminal data collection after a sustained block
+  - **OOLU Cloudflare handling reverted** — rolled back a change to OOLU's Cloudflare challenge handling that caused regressions; OOLU continues to track via the established path while the new API tracker rolls out
+  - **WorkOS auth flow hardening** — tightened the WorkOS-backed sign-in flow against edge cases in token validation and session recovery
 </Update>
 
-<Update label="June 22, 2026" description="Inland Pickup & Delivery dashboard, WorkOS OAuth for the MCP server, dray carrier assignment, new MAEU and SEAU trackers, HLCU tariff rules, party experience polish, and a wave of dashboard and carrier bug fixes" tags={['API', 'Dashboard', 'MCP']}
-  rss="June 22, 2026: Inland (IND) Pickup & Delivery dashboard views, WorkOS OAuth gateway for the MCP server, dray carrier assignment on shipments and cargos, new MAEU and SEAU Trawler-based trackers, HLCU (Hapag-Lloyd) demurrage tariff rules, manual IND Full Out edits and clearable manually-set dates, parties first-time experience with bulk import from the track page, and bug fixes for CMSAMX, APMweb CFFI, stale BL container tracking, signed-out refresh-tracking, /v2/shipping_lines scoping, and rail transport event handling."
->
+<Update label="June 22, 2026" description="Inland Pickup & Delivery dashboard, WorkOS OAuth for the MCP server, dray carrier assignment, new MAEU and SEAU trackers, HLCU tariff rules, party experience polish, and a wave of dashboard and carrier bug fixes" rss="June 22, 2026: Inland (IND) Pickup & Delivery dashboard views, WorkOS OAuth gateway for the MCP server, dray carrier assignment on shipments and cargos, new MAEU and SEAU Trawler-based trackers, HLCU (Hapag-Lloyd) demurrage tariff rules, manual IND Full Out edits and clearable manually-set dates, parties first-time experience with bulk import from the track page, and bug fixes for CMSAMX, APMweb CFFI, stale BL container tracking, signed-out refresh-tracking, /v2/shipping_lines scoping, and rail transport event handling.">
   ### Inland (IND) Pickup & Delivery dashboard
 
-The Pickup & Delivery workspace now has a dedicated **Inland (IND) destination** view alongside the existing Port of Discharge view, with a segmented control to switch between them. Each phase — pickup-needed, delivery-needed, empty-return-needed, and completed — shows inland-specific columns (IND ATA, Rail LFD, IND Full Out) and filters so the milestones, gating, and sorts all line up with the inland leg.
+  The Pickup & Delivery workspace now has a dedicated **Inland (IND) destination** view alongside the existing Port of Discharge view, with a segmented control to switch between them. Each phase — pickup-needed, delivery-needed, empty-return-needed, and completed — shows inland-specific columns (IND ATA, Rail LFD, IND Full Out) and filters so the milestones, gating, and sorts all line up with the inland leg.
 
----
+  ---
 
   ### WorkOS OAuth gateway for the MCP server
 
-The Terminal49 **MCP server** now supports OAuth via WorkOS, in addition to API keys. OAuth-aware clients like ChatGPT and Claude connectors can connect to `https://mcp.terminal49.com` and complete the standard MCP OAuth discovery and authorization flow. API-key clients continue to work — use the `Token` scheme for API keys; `Bearer` is now reserved for WorkOS OAuth access tokens.
+  The Terminal49 **MCP server** now supports OAuth via WorkOS, in addition to API keys. OAuth-aware clients like ChatGPT and Claude connectors can connect to `https://mcp.terminal49.com` and complete the standard MCP OAuth discovery and authorization flow. API-key clients continue to work — use the `Token` scheme for API keys; `Bearer` is now reserved for WorkOS OAuth access tokens.
 
-<Card title="MCP setup guide" icon="robot" href="/mcp/home">
-  Connect your AI client to Terminal49
-</Card>
+  <Card title="MCP setup guide" icon="robot" href="/mcp/home">
+    Connect your AI client to Terminal49
+  </Card>
 
----
+  ---
 
   ### Dray carrier assignment
 
-You can now assign a **dray carrier** at the shipment level. Once set, the dray carrier propagates to the shipment's cargos, so dispatchers and downstream views see the same trucker without re-entering it per container.
+  You can now assign a **dray carrier** at the shipment level. Once set, the dray carrier propagates to the shipment's cargos, so dispatchers and downstream views see the same trucker without re-entering it per container.
 
----
+  ---
 
   ### Parties first-time experience and bulk import
 
-The Parties experience now includes a first-time guided introduction, a Parties card with stats, hover tooltips on the card header, and the ability to **create parties directly from the sidebar**. The track page now also supports **bulk party import** during tracking-request creation, so consignee, shipper, notify, and other roles flow through to the resulting shipment and containers automatically. Both account creators and admins can now manage parties without an additional feature flag.
+  The Parties experience now includes a first-time guided introduction, a Parties card with stats, hover tooltips on the card header, and the ability to **create parties directly from the sidebar**. The track page now also supports **bulk party import** during tracking-request creation, so consignee, shipper, notify, and other roles flow through to the resulting shipment and containers automatically. Both account creators and admins can now manage parties without an additional feature flag.
 
----
+  ---
 
   ### New steamship line trackers: MAEU and SEAU
 
-- **MAEU (Maersk)** — added a new Trawler-based tracker for Maersk shipments, replacing the previous integration path
-- **SEAU (Sealand)** — added a new Trawler2-based tracker for Sealand container, bill of lading, and booking lookups
+  - **MAEU (Maersk)** — added a new Trawler-based tracker for Maersk shipments, replacing the previous integration path
+  - **SEAU (Sealand)** — added a new Trawler2-based tracker for Sealand container, bill of lading, and booking lookups
 
----
+  ---
 
   ### HLCU (Hapag-Lloyd) demurrage tariff rules
 
-Published a new **HLCU (Hapag-Lloyd)** US-import demurrage tariff rule dataset, modeling Merchant-Haulage port demurrage and inland (rail) demurrage. Calculated Last Free Day values for HLCU containers now reflect Hapag-Lloyd's published tariffs.
+  Published a new **HLCU (Hapag-Lloyd)** US-import demurrage tariff rule dataset, modeling Merchant-Haulage port demurrage and inland (rail) demurrage. Calculated Last Free Day values for HLCU containers now reflect Hapag-Lloyd's published tariffs.
 
-<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
-  View the container resource
-</Card>
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
 
----
+  ---
 
   ### Updates
 
-- **Manually add IND Full Out** — the inland-destination view of the Pickup & Delivery dashboard now supports manually adding an IND Full Out event inline, matching the editing capability already available for POD milestones
-- **Clear manually-set dates on the Pickup Dashboard** — blank-submitting an editable date now clears it when the value was set by hand, and rejects with a clear error when the value came from a carrier or terminal. Changing a date invalidates the contradicted source event so the manual value takes precedence
-- **Stale bill of lading reset on container retries** — when a shipment's bill of lading number changes, container tracking now resets the stale BL on the next retry instead of holding onto the old reference
-- **`/v2/shipping_lines` scoped to your integrations** — the `/v2/shipping_lines` listing now only returns carriers your account has an enabled integration for, so the list reflects what you can actually track
-- **Comma-separated tag input** — the dashboard tag component now accepts multiple tags pasted or typed as a comma-separated list in addition to one-at-a-time entry
-- **Stricter rail transport event handling** — rail transport events now require a location to be accepted, and terminal-sourced rail events flow through the same pipeline as other transport events
-- **Bookings preview removed from the left nav** — the experimental Bookings entry no longer appears in the dashboard sidebar while the workspace continues to evolve
+  - **Manually add IND Full Out** — the inland-destination view of the Pickup & Delivery dashboard now supports manually adding an IND Full Out event inline, matching the editing capability already available for POD milestones
+  - **Clear manually-set dates on the Pickup Dashboard** — blank-submitting an editable date now clears it when the value was set by hand, and rejects with a clear error when the value came from a carrier or terminal. Changing a date invalidates the contradicted source event so the manual value takes precedence
+  - **Stale bill of lading reset on container retries** — when a shipment's bill of lading number changes, container tracking now resets the stale BL on the next retry instead of holding onto the old reference
+  - **`/v2/shipping_lines` scoped to your integrations** — the `/v2/shipping_lines` listing now only returns carriers your account has an enabled integration for, so the list reflects what you can actually track
+  - **Comma-separated tag input** — the dashboard tag component now accepts multiple tags pasted or typed as a comma-separated list in addition to one-at-a-time entry
+  - **Stricter rail transport event handling** — rail transport events now require a location to be accepted, and terminal-sourced rail events flow through the same pipeline as other transport events
+  - **Bookings preview removed from the left nav** — the experimental Bookings entry no longer appears in the dashboard sidebar while the workspace continues to evolve
 
----
+  ---
 
   ### Bug fixes
 
-- **Refresh Tracking only when signed in** — the Refresh Tracking action no longer appears on public track pages for signed-out users, matching what's actually available to them
-- **CMSAMX scraper restored after Contecon migration** — fixed terminal data collection at CMSA Manzanillo after Contecon's site migration, restoring container availability and hold data
-- **APMweb CFFI `no_event_history`** — fixed a NoMethodError that could occur in the APMweb CFFI agent when a shipment had no event history, so the tracker run completes cleanly
-- **Public SMLU integration disabled** — disabled the public SMLU web integration that was no longer returning reliable data
-- **Transport event source serialization** — invalidated transport events now serialize their source correctly on the API and dashboard timeline
-- **`exists` / `not_exists` filter operators** — fixed `exists` and `not_exists` filtering on relationship and reference fields, and stopped emitting raw values in CSV exports for those queries
-- **Duplicate PAYG contracts on activation** — fixed a race that could create a duplicate Pay-As-You-Go contract during account activation
-- **Cargo events reprocessing** — force-reprocessing shipment cargo events now refreshes derived state consistently after upstream fixes
-
+  - **Refresh Tracking only when signed in** — the Refresh Tracking action no longer appears on public track pages for signed-out users, matching what's actually available to them
+  - **CMSAMX scraper restored after Contecon migration** — fixed terminal data collection at CMSA Manzanillo after Contecon's site migration, restoring container availability and hold data
+  - **APMweb CFFI `no_event_history`** — fixed a NoMethodError that could occur in the APMweb CFFI agent when a shipment had no event history, so the tracker run completes cleanly
+  - **Public SMLU integration disabled** — disabled the public SMLU web integration that was no longer returning reliable data
+  - **Transport event source serialization** — invalidated transport events now serialize their source correctly on the API and dashboard timeline
+  - **`exists` / `not_exists` filter operators** — fixed `exists` and `not_exists` filtering on relationship and reference fields, and stopped emitting raw values in CSV exports for those queries
+  - **Duplicate PAYG contracts on activation** — fixed a race that could create a duplicate Pay-As-You-Go contract during account activation
+  - **Cargo events reprocessing** — force-reprocessing shipment cargo events now refreshes derived state consistently after upstream fixes
 </Update>
 
-<Update label="June 15, 2026" description="WorkOS hosted signup, OOCL direct scraper, calculated LFD in Pickup & Delivery, party assignment polish, and a wave of document, carrier, and dashboard bug fixes" tags={['API', 'Dashboard']}
-  rss="June 15, 2026: WorkOS hosted signup onboarding, new OOCL direct-to-track-page scraper, calculated LFD in the Pickup & Delivery dashboard, bulk party import on the Network page, Wayfair arrival notice and HBL extraction improvements, party assignment defaults and sorting, Custom Fields reorganization on Shipment Details, and bug fixes for LFD past pickup, YMLU transshipments, NSRR blocked responses, container event ordering, and Stripe period timestamps."
->
+<Update label="June 15, 2026" description="WorkOS hosted signup, OOCL direct scraper, calculated LFD in Pickup & Delivery, party assignment polish, and a wave of document, carrier, and dashboard bug fixes" rss="June 15, 2026: WorkOS hosted signup onboarding, new OOCL direct-to-track-page scraper, calculated LFD in the Pickup & Delivery dashboard, bulk party import on the Network page, Wayfair arrival notice and HBL extraction improvements, party assignment defaults and sorting, Custom Fields reorganization on Shipment Details, and bug fixes for LFD past pickup, YMLU transshipments, NSRR blocked responses, container event ordering, and Stripe period timestamps.">
   ### WorkOS hosted signup onboarding
 
-New accounts can now sign up through the **WorkOS hosted authentication flow**. The end-to-end onboarding handles email verification, recovery from unknown sign-ins, and concurrent same-email signup races automatically. Existing sign-in continues to work unchanged.
+  New accounts can now sign up through the **WorkOS hosted authentication flow**. The end-to-end onboarding handles email verification, recovery from unknown sign-ins, and concurrent same-email signup races automatically. Existing sign-in continues to work unchanged.
 
----
+  ---
 
   ### OOCL direct-to-track-page scraper
 
-Added a new **`oolu_direct`** OOCL integration that navigates straight to the tracking host, skipping the OOCL home page and its Cloudflare Turnstile challenge. The result is fewer scrape failures and faster, more reliable container, bill of lading, and booking lookups for OOCL (OOLU) shipments.
+  Added a new **`oolu_direct`** OOCL integration that navigates straight to the tracking host, skipping the OOCL home page and its Cloudflare Turnstile challenge. The result is fewer scrape failures and faster, more reliable container, bill of lading, and booking lookups for OOCL (OOLU) shipments.
 
----
+  ---
 
   ### Calculated LFD in the Pickup & Delivery dashboard
 
-The **Pickup & Delivery** workspace now surfaces the Smart LFD **calculated Last Free Day** alongside reported LFDs, so containers without a carrier- or terminal-reported LFD still show a tariff-based date to plan against.
+  The **Pickup & Delivery** workspace now surfaces the Smart LFD **calculated Last Free Day** alongside reported LFDs, so containers without a carrier- or terminal-reported LFD still show a tariff-based date to plan against.
 
-<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
-  View the container resource
-</Card>
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
 
----
+  ---
 
   ### Bulk add parties from the Network page
 
-The Network page now supports **bulk party imports**, so you can add many consignees, shippers, notify parties, and other roles to your network in a single upload instead of one at a time.
+  The Network page now supports **bulk party imports**, so you can add many consignees, shippers, notify parties, and other roles to your network in a single upload instead of one at a time.
 
----
+  ---
 
   ### Updates
 
-- **Wayfair arrival notice extraction** — new versioned schema with Maersk Canada CCN carrier-code extraction, PO reference truncation, freight payment terms derived from the marks block, and tighter classification so CMA CGM pre-arrival notices and multi-page Hapag-Lloyd Canada documents are no longer misclassified
-- **Wayfair house bill of lading consistency** — draft and final Wayfair HBLs for the same shipment now produce consistent `hs_codes` values, and a new `consignee.fax` field is captured
-- **Party assignment defaults and sorting** — party pickers default to the previously assigned party, parties are sorted for easier selection, and the role color palette has been toned down
-- **Custom Fields on Shipment Details** — custom shipment and container fields have been reorganized on the shipment details page for a cleaner layout and clearer separation between scopes
-- **Editable cells on Pickup & Delivery** — inline editing on the Pickup & Delivery phase tables has been polished, with a production-safe edit hook so save and validation behave consistently
+  - **Wayfair arrival notice extraction** — new versioned schema with Maersk Canada CCN carrier-code extraction, PO reference truncation, freight payment terms derived from the marks block, and tighter classification so CMA CGM pre-arrival notices and multi-page Hapag-Lloyd Canada documents are no longer misclassified
+  - **Wayfair house bill of lading consistency** — draft and final Wayfair HBLs for the same shipment now produce consistent `hs_codes` values, and a new `consignee.fax` field is captured
+  - **Party assignment defaults and sorting** — party pickers default to the previously assigned party, parties are sorted for easier selection, and the role color palette has been toned down
+  - **Custom Fields on Shipment Details** — custom shipment and container fields have been reorganized on the shipment details page for a cleaner layout and clearer separation between scopes
+  - **Editable cells on Pickup & Delivery** — inline editing on the Pickup & Delivery phase tables has been polished, with a production-safe edit hook so save and validation behave consistently
 
----
+  ---
 
   ### Bug fixes
 
-- **LFD no longer shown past POD pickup** — Last Free Day values are now suppressed once a container has been picked up from the port of discharge, so the dashboard and API stop surfacing irrelevant deadlines
-- **YMLU transshipment events** — Fixed remaining issues with YMLU transshipment events so port-of-discharge and transshipment legs are reported correctly
-- **NSRR blocked HTML responses** — Norfolk Southern responses that return a block page are now handled cleanly instead of failing the tracker run, with retries handled upstream
-- **Container event ordering** — Improved event ordering in container status updates, so derived statuses follow the true chronology of vessel, terminal, and rail events
-- **Stripe 35-day period cap** — Fixed a Stripe timestamp issue that could cap subscription period dates at 35 days, restoring accurate end-of-period timing on PAYG accounts
-
+  - **LFD no longer shown past POD pickup** — Last Free Day values are now suppressed once a container has been picked up from the port of discharge, so the dashboard and API stop surfacing irrelevant deadlines
+  - **YMLU transshipment events** — Fixed remaining issues with YMLU transshipment events so port-of-discharge and transshipment legs are reported correctly
+  - **NSRR blocked HTML responses** — Norfolk Southern responses that return a block page are now handled cleanly instead of failing the tracker run, with retries handled upstream
+  - **Container event ordering** — Improved event ordering in container status updates, so derived statuses follow the true chronology of vessel, terminal, and rail events
+  - **Stripe 35-day period cap** — Fixed a Stripe timestamp issue that could cap subscription period dates at 35 days, restoring accurate end-of-period timing on PAYG accounts
 </Update>
 
-<Update label="June 8, 2026" description="Pickup & Delivery dashboard, bulk party assignment, event-driven calculated LFD, refreshed ONE/CMA CGM/Evergreen tariffs, and a wave of carrier and dashboard bug fixes" tags={['API', 'Dashboard']}
-  rss="June 8, 2026: New Pickup & Delivery dashboard, bulk party (role) assignment via CSV, event-driven calculated demurrage LFD, refreshed ONE/CMA CGM/Evergreen tariff rules, updated Wayfair arrival notice extraction, event-sourced manual milestone edits, shipment number and delivery appointment sorting, and bug fixes for CMDU port events, YMLU POD selection, NSRR ETAs, WMC unavailable status, and tracking slot limits."
->
+<Update label="June 29, 2026" description="Customizable dashboard view cards, party filters and columns on the container dashboard, datetime display preferences, OOCL API tracker, CMA CGM (CMDU) website scraper, Calculated LFD feedback in the Smart LFD panel, and a wave of carrier, terminal, and dashboard fixes" rss="June 29, 2026: Customize dashboard view cards, party filters and columns on the container dashboard, per-user datetime format preference, new OOCL API tracker path, CMA CGM (CMDU) website scraper (cmduweb), Calculated LFD feedback widget on the Smart LFD panel, account managers can change user roles, CMA PBD events mapped to feeder departed, UPRR rail LFD off-by-one fix, and fixes for CMSAMX, SEAU async scrapes, MCP account resolution, Tideworks A295/L239 reliability, OOLU Cloudflare handling, and dray-carrier display.">
+  ### Customize dashboard view cards
+
+  You can now **reorder and choose which view cards** appear on your dashboard home. Drag to rearrange, hide cards you don't use, and the layout persists per user — so each teammate can tune the dashboard to the views they work from.
+
+  ---
+
+  ### Party filters and columns on the container dashboard
+
+  The container dashboard now supports **filtering and grouping by parties and party roles** (consignee, shipper, notify party, dray carrier, and more). Party roles are also available as columns and in CSV exports, so you can slice the dashboard by who owns each leg and export the same view downstream.
+
+  ---
+
+  ### Datetime column format preference
+
+  Date and datetime columns now respect a **per-user display format preference**. Pick the format that matches how your team reads dates and Terminal49 will use it consistently across dashboard tables.
+
+  ---
+
+  ### Calculated LFD feedback in the Smart LFD panel
+
+  The Smart LFD detail panel now includes a **feedback widget** for calculated (tariff-based) Last Free Days. Tell us whether the calculated LFD looks right, supply a corrected date when it doesn't, and add a reason (custom contract, free days extended, other). Feedback flows into our tariff validation pipeline so calculated LFDs keep improving carrier by carrier.
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
+
+  ---
+
+  ### New carrier integrations
+
+  - **OOCL (OOLU) API tracker** — added a new direct API path for OOCL container, bill of lading, and booking lookups, improving reliability over the public site scrape
+  - **CMA CGM (CMDU) `cmduweb` scraper** — added a new tnt-api-based scraper integration for CMA CGM as an alternative data source
+
+  ---
+
+  ### Updates
+
+  - **Account managers can change user roles** — accounts with the user-manager role can now change other users' roles directly, without escalating to an admin
+  - **CMA PBD events mapped to feeder departed** — CMA CGM "Port Boundary Departure" events now map to a feeder-departed transport event, so feeder legs show up in the timeline with the right phase
+  - **MCP connected client account resolution** — MCP requests now resolve to your primary account, and the audience matcher accepts a trailing slash on the resource URL, so OAuth-aware MCP clients connect more reliably
+  - **WorkOS MCP tokens without `client_id`** — MCP access tokens issued by WorkOS no longer require a `client_id` claim, broadening compatibility with OAuth-aware MCP clients
+
+  ---
+
+  ### Bug fixes
+
+  - **UPRR rail Last Free Day off-by-one** — Union Pacific rail LFDs no longer display a day early. Bare-date LFDs from UPRR are now anchored mid-day so the calendar date is stable across US timezones, and existing midnight-UTC values have been backfilled
+  - **CMSAMX (Contecon Manzanillo) restored** — switched CMSAMX container scraping to the Contecon ISCS backend after the public site went down, restoring container status, holds, and availability at Manzanillo
+  - **SEAU (Sealand) async refreshes** — fixed an issue where scheduled refreshes for Sealand shipments returned an invalid-integration error. SEAU shipments now refresh on schedule the same way new SEAU tracking requests do
+  - **Dray carrier no longer shown after removal** — clearing a dray carrier from a shipment or cargo now updates the party display immediately instead of leaving the removed carrier visible
+  - **A295 (Boston/MCT) and L239 (POMTOC) reliability** — isolated the Tideworks `.io` terminals to a dedicated proxy pool and refreshed A295 credentials, restoring terminal data collection after a sustained block
+  - **OOLU Cloudflare handling reverted** — rolled back a change to OOLU's Cloudflare challenge handling that caused regressions; OOLU continues to track via the established path while the new API tracker rolls out
+  - **WorkOS auth flow hardening** — tightened the WorkOS-backed sign-in flow against edge cases in token validation and session recovery
+</Update>
+
+<Update label="June 22, 2026" description="Inland Pickup & Delivery dashboard, WorkOS OAuth for the MCP server, dray carrier assignment, new MAEU and SEAU trackers, HLCU tariff rules, party experience polish, and a wave of dashboard and carrier bug fixes" rss="June 22, 2026: Inland (IND) Pickup & Delivery dashboard views, WorkOS OAuth gateway for the MCP server, dray carrier assignment on shipments and cargos, new MAEU and SEAU Trawler-based trackers, HLCU (Hapag-Lloyd) demurrage tariff rules, manual IND Full Out edits and clearable manually-set dates, parties first-time experience with bulk import from the track page, and bug fixes for CMSAMX, APMweb CFFI, stale BL container tracking, signed-out refresh-tracking, /v2/shipping_lines scoping, and rail transport event handling.">
+  ### Inland (IND) Pickup & Delivery dashboard
+
+  The Pickup & Delivery workspace now has a dedicated **Inland (IND) destination** view alongside the existing Port of Discharge view, with a segmented control to switch between them. Each phase — pickup-needed, delivery-needed, empty-return-needed, and completed — shows inland-specific columns (IND ATA, Rail LFD, IND Full Out) and filters so the milestones, gating, and sorts all line up with the inland leg.
+
+  ---
+
+  ### WorkOS OAuth gateway for the MCP server
+
+  The Terminal49 **MCP server** now supports OAuth via WorkOS, in addition to API keys. OAuth-aware clients like ChatGPT and Claude connectors can connect to `https://mcp.terminal49.com` and complete the standard MCP OAuth discovery and authorization flow. API-key clients continue to work — use the `Token` scheme for API keys; `Bearer` is now reserved for WorkOS OAuth access tokens.
+
+  <Card title="MCP setup guide" icon="robot" href="/mcp/home">
+    Connect your AI client to Terminal49
+  </Card>
+
+  ---
+
+  ### Dray carrier assignment
+
+  You can now assign a **dray carrier** at the shipment level. Once set, the dray carrier propagates to the shipment's cargos, so dispatchers and downstream views see the same trucker without re-entering it per container.
+
+  ---
+
+  ### Parties first-time experience and bulk import
+
+  The Parties experience now includes a first-time guided introduction, a Parties card with stats, hover tooltips on the card header, and the ability to **create parties directly from the sidebar**. The track page now also supports **bulk party import** during tracking-request creation, so consignee, shipper, notify, and other roles flow through to the resulting shipment and containers automatically. Both account creators and admins can now manage parties without an additional feature flag.
+
+  ---
+
+  ### New steamship line trackers: MAEU and SEAU
+
+  - **MAEU (Maersk)** — added a new Trawler-based tracker for Maersk shipments, replacing the previous integration path
+  - **SEAU (Sealand)** — added a new Trawler2-based tracker for Sealand container, bill of lading, and booking lookups
+
+  ---
+
+  ### HLCU (Hapag-Lloyd) demurrage tariff rules
+
+  Published a new **HLCU (Hapag-Lloyd)** US-import demurrage tariff rule dataset, modeling Merchant-Haulage port demurrage and inland (rail) demurrage. Calculated Last Free Day values for HLCU containers now reflect Hapag-Lloyd's published tariffs.
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
+
+  ---
+
+  ### Updates
+
+  - **Manually add IND Full Out** — the inland-destination view of the Pickup & Delivery dashboard now supports manually adding an IND Full Out event inline, matching the editing capability already available for POD milestones
+  - **Clear manually-set dates on the Pickup Dashboard** — blank-submitting an editable date now clears it when the value was set by hand, and rejects with a clear error when the value came from a carrier or terminal. Changing a date invalidates the contradicted source event so the manual value takes precedence
+  - **Stale bill of lading reset on container retries** — when a shipment's bill of lading number changes, container tracking now resets the stale BL on the next retry instead of holding onto the old reference
+  - **`/v2/shipping_lines` scoped to your integrations** — the `/v2/shipping_lines` listing now only returns carriers your account has an enabled integration for, so the list reflects what you can actually track
+  - **Comma-separated tag input** — the dashboard tag component now accepts multiple tags pasted or typed as a comma-separated list in addition to one-at-a-time entry
+  - **Stricter rail transport event handling** — rail transport events now require a location to be accepted, and terminal-sourced rail events flow through the same pipeline as other transport events
+  - **Bookings preview removed from the left nav** — the experimental Bookings entry no longer appears in the dashboard sidebar while the workspace continues to evolve
+
+  ---
+
+  ### Bug fixes
+
+  - **Refresh Tracking only when signed in** — the Refresh Tracking action no longer appears on public track pages for signed-out users, matching what's actually available to them
+  - **CMSAMX scraper restored after Contecon migration** — fixed terminal data collection at CMSA Manzanillo after Contecon's site migration, restoring container availability and hold data
+  - **APMweb CFFI `no_event_history`** — fixed a NoMethodError that could occur in the APMweb CFFI agent when a shipment had no event history, so the tracker run completes cleanly
+  - **Public SMLU integration disabled** — disabled the public SMLU web integration that was no longer returning reliable data
+  - **Transport event source serialization** — invalidated transport events now serialize their source correctly on the API and dashboard timeline
+  - **`exists` / `not_exists` filter operators** — fixed `exists` and `not_exists` filtering on relationship and reference fields, and stopped emitting raw values in CSV exports for those queries
+  - **Duplicate PAYG contracts on activation** — fixed a race that could create a duplicate Pay-As-You-Go contract during account activation
+  - **Cargo events reprocessing** — force-reprocessing shipment cargo events now refreshes derived state consistently after upstream fixes
+</Update>
+
+<Update label="June 15, 2026" description="WorkOS hosted signup, OOCL direct scraper, calculated LFD in Pickup & Delivery, party assignment polish, and a wave of document, carrier, and dashboard bug fixes" rss="June 15, 2026: WorkOS hosted signup onboarding, new OOCL direct-to-track-page scraper, calculated LFD in the Pickup & Delivery dashboard, bulk party import on the Network page, Wayfair arrival notice and HBL extraction improvements, party assignment defaults and sorting, Custom Fields reorganization on Shipment Details, and bug fixes for LFD past pickup, YMLU transshipments, NSRR blocked responses, container event ordering, and Stripe period timestamps.">
+  ### WorkOS hosted signup onboarding
+
+  New accounts can now sign up through the **WorkOS hosted authentication flow**. The end-to-end onboarding handles email verification, recovery from unknown sign-ins, and concurrent same-email signup races automatically. Existing sign-in continues to work unchanged.
+
+  ---
+
+  ### OOCL direct-to-track-page scraper
+
+  Added a new **`oolu_direct`** OOCL integration that navigates straight to the tracking host, skipping the OOCL home page and its Cloudflare Turnstile challenge. The result is fewer scrape failures and faster, more reliable container, bill of lading, and booking lookups for OOCL (OOLU) shipments.
+
+  ---
+
+  ### Calculated LFD in the Pickup & Delivery dashboard
+
+  The **Pickup & Delivery** workspace now surfaces the Smart LFD **calculated Last Free Day** alongside reported LFDs, so containers without a carrier- or terminal-reported LFD still show a tariff-based date to plan against.
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
+
+  ---
+
+  ### Bulk add parties from the Network page
+
+  The Network page now supports **bulk party imports**, so you can add many consignees, shippers, notify parties, and other roles to your network in a single upload instead of one at a time.
+
+  ---
+
+  ### Updates
+
+  - **Wayfair arrival notice extraction** — new versioned schema with Maersk Canada CCN carrier-code extraction, PO reference truncation, freight payment terms derived from the marks block, and tighter classification so CMA CGM pre-arrival notices and multi-page Hapag-Lloyd Canada documents are no longer misclassified
+  - **Wayfair house bill of lading consistency** — draft and final Wayfair HBLs for the same shipment now produce consistent `hs_codes` values, and a new `consignee.fax` field is captured
+  - **Party assignment defaults and sorting** — party pickers default to the previously assigned party, parties are sorted for easier selection, and the role color palette has been toned down
+  - **Custom Fields on Shipment Details** — custom shipment and container fields have been reorganized on the shipment details page for a cleaner layout and clearer separation between scopes
+  - **Editable cells on Pickup & Delivery** — inline editing on the Pickup & Delivery phase tables has been polished, with a production-safe edit hook so save and validation behave consistently
+
+  ---
+
+  ### Bug fixes
+
+  - **LFD no longer shown past POD pickup** — Last Free Day values are now suppressed once a container has been picked up from the port of discharge, so the dashboard and API stop surfacing irrelevant deadlines
+  - **YMLU transshipment events** — Fixed remaining issues with YMLU transshipment events so port-of-discharge and transshipment legs are reported correctly
+  - **NSRR blocked HTML responses** — Norfolk Southern responses that return a block page are now handled cleanly instead of failing the tracker run, with retries handled upstream
+  - **Container event ordering** — Improved event ordering in container status updates, so derived statuses follow the true chronology of vessel, terminal, and rail events
+  - **Stripe 35-day period cap** — Fixed a Stripe timestamp issue that could cap subscription period dates at 35 days, restoring accurate end-of-period timing on PAYG accounts
+</Update>
+
+<Update label="June 8, 2026" description="Pickup & Delivery dashboard, bulk party assignment, event-driven calculated LFD, refreshed ONE/CMA CGM/Evergreen tariffs, and a wave of carrier and dashboard bug fixes" rss="June 8, 2026: New Pickup & Delivery dashboard, bulk party (role) assignment via CSV, event-driven calculated demurrage LFD, refreshed ONE/CMA CGM/Evergreen tariff rules, updated Wayfair arrival notice extraction, event-sourced manual milestone edits, shipment number and delivery appointment sorting, and bug fixes for CMDU port events, YMLU POD selection, NSRR ETAs, WMC unavailable status, and tracking slot limits.">
   ### Pickup & Delivery Dashboard
 
-A new **Pickup & Delivery** workspace is available in the Terminal49 dashboard, organizing containers by their pickup-and-delivery phase. View phase-grouped tables, edit pickup and delivery event datetimes inline, and sort by delivery appointment to focus on what needs to move next.
+  A new **Pickup & Delivery** workspace is available in the Terminal49 dashboard, organizing containers by their pickup-and-delivery phase. View phase-grouped tables, edit pickup and delivery event datetimes inline, and sort by delivery appointment to focus on what needs to move next.
 
----
+  ---
 
   ### Bulk party (role) assignment
 
-Shipment and container party roles can now be assigned and updated **in bulk** from the dashboard, including via CSV upload alongside other shipment and container fields. Bulk-assign consignee, shipper, notify party, and other roles across many records in a single import.
+  Shipment and container party roles can now be assigned and updated **in bulk** from the dashboard, including via CSV upload alongside other shipment and container fields. Bulk-assign consignee, shipper, notify party, and other roles across many records in a single import.
 
----
+  ---
 
   ### Event-driven calculated demurrage LFD
 
-The Smart LFD calculation engine now runs **event-by-event** rather than on a periodic backfill. When a tariff input changes — a new arrival event, a hold release, or a tariff update — the calculated Last Free Day refreshes immediately and emits a transport event with `t49_calculation` as its source.
+  The Smart LFD calculation engine now runs **event-by-event** rather than on a periodic backfill. When a tariff input changes — a new arrival event, a hold release, or a tariff update — the calculated Last Free Day refreshes immediately and emits a transport event with `t49_calculation` as its source.
 
-<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
-  View the container resource
-</Card>
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
 
----
+  ---
 
   ### Refreshed ONE, CMA CGM, and Evergreen tariffs
 
-Re-synthesized the demurrage tariff rule datasets for **ONE (ONEY)**, **CMA CGM (CMDU)**, and **Evergreen (EGLV)** with new effective-date periods and pipeline improvements. Calculated LFD values for these carriers now reflect their latest published tariffs.
+  Re-synthesized the demurrage tariff rule datasets for **ONE (ONEY)**, **CMA CGM (CMDU)**, and **Evergreen (EGLV)** with new effective-date periods and pipeline improvements. Calculated LFD values for these carriers now reflect their latest published tariffs.
 
----
+  ---
 
   ### Updates
 
-- **`t49_calculation` source on the shipment timeline** — events created by the Smart LFD calculation engine now surface a `t49_calculation` source tag in the dashboard event timeline, so you can tell at a glance which LFD updates came from a tariff calculation
-- **Manual milestone edits flow through the event pipeline** — user-submitted empty-in, full-out, and delivery-appointment events are now created as proper transport events. They update container attributes, fire `container.transport_event` webhooks, and appear consistently in the timeline like carrier-sourced events
-- **Updated Wayfair arrival notice extraction** — published a new versioned extraction schema for Wayfair arrival notices with refreshed gold datasets and classifier prompts, improving field-level accuracy on Wayfair documents
-- **Sort container dashboard by shipment number** — added Shipment Number as a sortable column on the container dashboard
-- **Sort container dashboard by delivery appointment** — added delivery appointment as a sortable field on the containers API and dashboard
-- **PAYG billing clarification** — the billing settings page now clearly explains how active free containers are counted on Pay-As-You-Go plans
-- **Bookings removed from the left nav** — the Bookings preview entry has been removed from the dashboard navigation while the workspace continues to evolve
+  - **`t49_calculation` source on the shipment timeline** — events created by the Smart LFD calculation engine now surface a `t49_calculation` source tag in the dashboard event timeline, so you can tell at a glance which LFD updates came from a tariff calculation
+  - **Manual milestone edits flow through the event pipeline** — user-submitted empty-in, full-out, and delivery-appointment events are now created as proper transport events. They update container attributes, fire `container.transport_event` webhooks, and appear consistently in the timeline like carrier-sourced events
+  - **Updated Wayfair arrival notice extraction** — published a new versioned extraction schema for Wayfair arrival notices with refreshed gold datasets and classifier prompts, improving field-level accuracy on Wayfair documents
+  - **Sort container dashboard by shipment number** — added Shipment Number as a sortable column on the container dashboard
+  - **Sort container dashboard by delivery appointment** — added delivery appointment as a sortable field on the containers API and dashboard
+  - **PAYG billing clarification** — the billing settings page now clearly explains how active free containers are counted on Pay-As-You-Go plans
+  - **Bookings removed from the left nav** — the Bookings preview entry has been removed from the dashboard navigation while the workspace continues to evolve
 
----
+  ---
 
   ### Bug fixes
 
-- **Tracking slot limit no longer blocks paying customers** — Fixed an issue where the active tracking slot limit could incorrectly block paying accounts from creating additional tracking requests. The limit and its warning now apply only to free plans
-- **CMDU ambiguous port events** — Rejected ambiguous CMDU port events that could otherwise be attributed to the wrong leg, and excluded pre-POD events from the destination-port heuristic so inland destinations are inferred more accurately
-- **YMLU POD selection** — Fixed port-of-discharge selection for YMLU shipments where only container-level data was available, so the correct POD is chosen
-- **NSRR top-level ETA** — Fixed parsing of Norfolk Southern's top-level ETA so rail ETAs populate when the carrier returns them at the response root
-- **WMC unavailable terminal status** — Where's My Container responses that report a container as unavailable are now handled cleanly instead of failing the terminal scrape
-- **Removed sort custom field columns are forgotten** — Deleting a custom field used as the active sort no longer leaves the dashboard stuck on an unknown sort column
-- **Map route Pylon widget** — Fixed the Pylon help bubble showing on the global vessel map; it now hides and re-shows correctly when navigating in and out of the map
-
+  - **Tracking slot limit no longer blocks paying customers** — Fixed an issue where the active tracking slot limit could incorrectly block paying accounts from creating additional tracking requests. The limit and its warning now apply only to free plans
+  - **CMDU ambiguous port events** — Rejected ambiguous CMDU port events that could otherwise be attributed to the wrong leg, and excluded pre-POD events from the destination-port heuristic so inland destinations are inferred more accurately
+  - **YMLU POD selection** — Fixed port-of-discharge selection for YMLU shipments where only container-level data was available, so the correct POD is chosen
+  - **NSRR top-level ETA** — Fixed parsing of Norfolk Southern's top-level ETA so rail ETAs populate when the carrier returns them at the response root
+  - **WMC unavailable terminal status** — Where's My Container responses that report a container as unavailable are now handled cleanly instead of failing the terminal scrape
+  - **Removed sort custom field columns are forgotten** — Deleting a custom field used as the active sort no longer leaves the dashboard stuck on an unknown sort column
+  - **Map route Pylon widget** — Fixed the Pylon help bubble showing on the global vessel map; it now hides and re-shows correctly when navigating in and out of the map
 </Update>
 
-<Update label="June 1, 2026" description="Global vessel map general availability, Wayfair document extraction, contract product additions, and a wave of carrier and dashboard bug fixes" tags={['API', 'Dashboard']}
-  rss="June 1, 2026: Global vessel map generally available, new Wayfair arrival notice and delivery order extraction, Lite and integration service fee contract products, BL submissions without containers, HDMU mobile LFD location inference, pending tracking request slot counting, and bug fixes for ZIM ETA promotion, SSL overview overwrites, transport event locations, document linking bridges, and dashboard filter search."
->
+<Update label="June 1, 2026" description="Global vessel map general availability, Wayfair document extraction, contract product additions, and a wave of carrier and dashboard bug fixes" rss="June 1, 2026: Global vessel map generally available, new Wayfair arrival notice and delivery order extraction, Lite and integration service fee contract products, BL submissions without containers, HDMU mobile LFD location inference, pending tracking request slot counting, and bug fixes for ZIM ETA promotion, SSL overview overwrites, transport event locations, document linking bridges, and dashboard filter search.">
   ### Global vessel map is now generally available
 
-The **global vessel map** is now enabled for all accounts in the Terminal49 dashboard. Live vessel positions, voyage details, and the shipments on board are available without a feature flag, with realtime updates and analytics tracking built in.
+  The **global vessel map** is now enabled for all accounts in the Terminal49 dashboard. Live vessel positions, voyage details, and the shipments on board are available without a feature flag, with realtime updates and analytics tracking built in.
 
----
+  ---
 
   ### Wayfair document extraction improvements
 
-Released new versioned extraction schemas for three Wayfair document types — **arrival notice**, **carrier delivery order**, and **cargo control document**. Highlights:
+  Released new versioned extraction schemas for three Wayfair document types — **arrival notice**, **carrier delivery order**, and **cargo control document**. Highlights:
 
-- Arrival notice now captures **place of delivery** (name, address, phone, available date, last free day, FIRMS code, and sublocation)
-- FIRMS code routing distinguishes rail-ramp destinations from the port of discharge, with both fields populated when both codes appear
-- **Hapag-Lloyd Canada** "Advice Note / Avis d'Expédition" documents are now correctly classified as arrival notices (previously misclassified as sea waybills)
-- Tighter `I` vs `1` disambiguation across carriers
+  - Arrival notice now captures **place of delivery** (name, address, phone, available date, last free day, FIRMS code, and sublocation)
+  - FIRMS code routing distinguishes rail-ramp destinations from the port of discharge, with both fields populated when both codes appear
+  - **Hapag-Lloyd Canada** "Advice Note / Avis d'Expédition" documents are now correctly classified as arrival notices (previously misclassified as sea waybills)
+  - Tighter `I` vs `1` disambiguation across carriers
 
-<Card title="Document processing guide" icon="file" href="/api-docs/in-depth-guides/document-processing-workflows">
-  How document linking works
-</Card>
+  <Card title="Document processing guide" icon="file" href="/api-docs/in-depth-guides/document-processing-workflows">
+    How document linking works
+  </Card>
 
----
+  ---
 
   ### BL submissions without containers
 
-You can now submit **bill of lading shipments before container numbers are known**. Tracking requests for BL submissions accept shipments with no containers, so you can initiate tracking earlier in your workflow and have containers attach as they're released by the carrier.
+  You can now submit **bill of lading shipments before container numbers are known**. Tracking requests for BL submissions accept shipments with no containers, so you can initiate tracking earlier in your workflow and have containers attach as they're released by the carrier.
 
----
+  ---
 
   ### New contract products
 
-Added two new contract products available through your account team:
+  Added two new contract products available through your account team:
 
-- **Lite** — a lower-tier subscription for smaller-volume customers
-- **Integration service fee** — a separate line item for one-time integration work
+  - **Lite** — a lower-tier subscription for smaller-volume customers
+  - **Integration service fee** — a separate line item for one-time integration work
 
-Contact your account team for pricing and availability.
+  Contact your account team for pricing and availability.
 
----
+  ---
 
   ### Updates
 
-- **Pending tracking requests count as one slot** — Pending tracking requests are now counted against a single tracking slot rather than per-container, giving free and metered plans more headroom while requests are awaiting manifest
-- **HDMU mobile LFD locations** — Last Free Day events from the HDMU mobile tracker now infer the correct terminal location, fixing missing per-terminal LFD displays for Hyundai (HDMU) containers
-- **SSL overview no longer overwrites terminal data** — Shipping line overview responses no longer overwrite terminal-sourced fields on containers, so terminal availability, holds, and fees stay authoritative when both sources are present
-- **Empty-In can override terminal status** — A reported empty-in event now correctly overrides a stale terminal status, so containers returned empty are reflected promptly in the dashboard and API
-- **Transport event location fallbacks removed** — Removed legacy fallbacks that could fill in incorrect locations on transport events. Event locations now reflect the source data directly, with no implicit substitutions
+  - **Pending tracking requests count as one slot** — Pending tracking requests are now counted against a single tracking slot rather than per-container, giving free and metered plans more headroom while requests are awaiting manifest
+  - **HDMU mobile LFD locations** — Last Free Day events from the HDMU mobile tracker now infer the correct terminal location, fixing missing per-terminal LFD displays for Hyundai (HDMU) containers
+  - **SSL overview no longer overwrites terminal data** — Shipping line overview responses no longer overwrite terminal-sourced fields on containers, so terminal availability, holds, and fees stay authoritative when both sources are present
+  - **Empty-In can override terminal status** — A reported empty-in event now correctly overrides a stale terminal status, so containers returned empty are reflected promptly in the dashboard and API
+  - **Transport event location fallbacks removed** — Removed legacy fallbacks that could fill in incorrect locations on transport events. Event locations now reflect the source data directly, with no implicit substitutions
 
----
+  ---
 
   ### Bug fixes
 
-- **ZIM destination ETA no longer auto-promotes to ATA** — Fixed an issue where ZIM destination ETAs could be promoted to an actual arrival time prematurely, causing inland arrival dates to flip without a real event
-- **Document linking via bridge shipments** — Documents no longer create an intermediate link when more than one shipment is involved in a reference bridge, reducing incorrect cross-shipment links
-- **Dashboard custom field date filters** — Fixed an error where the *not present* operator failed on date and datetime custom field filters, and resolved a related stale sort issue
-- **Harbor filter search** — Restored search inside the dashboard's chip-style filter dropdowns after the underlying picker upgrade
-- **Trawler `no_event_history` with containers** — Allowed the `no_event_history` tracker state to coexist with container records, preventing dropped updates for shipments whose carriers temporarily return no event history
-
+  - **ZIM destination ETA no longer auto-promotes to ATA** — Fixed an issue where ZIM destination ETAs could be promoted to an actual arrival time prematurely, causing inland arrival dates to flip without a real event
+  - **Document linking via bridge shipments** — Documents no longer create an intermediate link when more than one shipment is involved in a reference bridge, reducing incorrect cross-shipment links
+  - **Dashboard custom field date filters** — Fixed an error where the _not present_ operator failed on date and datetime custom field filters, and resolved a related stale sort issue
+  - **Harbor filter search** — Restored search inside the dashboard's chip-style filter dropdowns after the underlying picker upgrade
+  - **Trawler `no_event_history` with containers** — Allowed the `no_event_history` tracker state to coexist with container records, preventing dropped updates for shipments whose carriers temporarily return no event history
 </Update>
 
-<Update label="May 25, 2026" description="Tracking request custom fields API, KMTC and Termont integrations, container status in CSV export, free plan slot limits, and bug fixes" tags={['API', 'Dashboard']}
-  rss="May 25, 2026: Tracking request custom fields API, KMTC steamship tracker, Termont terminal scraper, alternative APM scraper integrations, container status in dashboard CSV export, Report Issue from container side panel, free plan tracking slot improvements, multi-period tariff history, and a wave of carrier, document linking, and dashboard bug fixes."
->
+<Update label="May 25, 2026" description="Tracking request custom fields API, KMTC and Termont integrations, container status in CSV export, free plan slot limits, and bug fixes" rss="May 25, 2026: Tracking request custom fields API, KMTC steamship tracker, Termont terminal scraper, alternative APM scraper integrations, container status in dashboard CSV export, Report Issue from container side panel, free plan tracking slot improvements, multi-period tariff history, and a wave of carrier, document linking, and dashboard bug fixes.">
   ### Tracking request custom fields API
 
-You can now manage **custom field values on tracking requests** via the API, in addition to shipments and containers. Use the new endpoints to attach predefined custom fields when a tracking request is created — values flow through to the resulting shipment and containers once tracking starts.
+  [You can now manage **custom field values on tracking requests** via the API, in addition to shipments and containers. Use the new endpoints to attach predefined custom fields when a tracking request is created — values flow through to the resulting shipment and containers once tracking starts.](/api-docs/api-reference/tracking-requests/auto-detect-carrier)
 
-<CardGroup cols={2}>
-  <Card title="List tracking request custom fields" icon="list" href="/api-docs/api-reference/tracking-requests/list-tracking-request-custom-fields">
-    List values on a tracking request
-  </Card>
-  <Card title="Create a tracking request custom field" icon="plus" href="/api-docs/api-reference/tracking-requests/create-tracking-request-custom-field">
-    Attach a value to a tracking request
-  </Card>
-</CardGroup>
+  <CardGroup cols={2}>
+    <Card title="List tracking request custom fields" icon="list" href="/api-docs/api-reference/tracking-requests/list-tracking-request-custom-fields">
+      List values on a tracking request
+    </Card>
 
----
+    <Card title="Create a tracking request custom field" icon="plus" href="/api-docs/api-reference/tracking-requests/create-tracking-request-custom-field">
+      Attach a value to a tracking request
+    </Card>
+  </CardGroup>
+
+  ---
 
   ### KMTC steamship tracker
 
-Added a direct integration for **KMTC (KORP)** shipments. Track KMTC containers, bills of lading, and bookings using their native SCAC, with full container, event, and route data.
+  Added a direct integration for **KMTC (KORP)** shipments. Track KMTC containers, bills of lading, and bookings using their native SCAC, with full container, event, and route data.
 
----
+  ---
 
   ### New terminal integrations
 
-- **Termont (Montreal)** — added a WordPress-based scraper for Termont container availability, status, and rail-state data
-- **APM Terminals — alternative scrapers** — two new APM scraper integrations (`apmweb_cffi` and `apmweb_firecrawl`) are available alongside the existing APM source, so terminals can be served by whichever endpoint performs best per site
+  - **Termont (Montreal)** — added a WordPress-based scraper for Termont container availability, status, and rail-state data
+  - **APM Terminals — alternative scrapers** — two new APM scraper integrations (`apmweb_cffi` and `apmweb_firecrawl`) are available alongside the existing APM source, so terminals can be served by whichever endpoint performs best per site
 
----
+  ---
 
   ### Container status in CSV export
 
-The container dashboard CSV export now includes a **Current Status** column and supports filtering by current status before export, so exported files reflect exactly what you see on screen.
+  The container dashboard CSV export now includes a **Current Status** column and supports filtering by current status before export, so exported files reflect exactly what you see on screen.
 
----
+  ---
 
   ### Report Issue from the container side panel
 
-The container details side panel now includes a **Report Issue** button so you can flag a data problem directly from the container you're viewing, without leaving the dashboard.
+  The container details side panel now includes a **Report Issue** button so you can flag a data problem directly from the container you're viewing, without leaving the dashboard.
 
----
+  ---
 
   ### Multi-period tariff history for Smart LFD
 
-The Smart LFD tariff engine now tracks **multiple historical tariff periods** per carrier, so Last Free Day calculations on older containers use the tariff rules that were in effect at the time. Tariff rules now also carry `tariff_number` and `tariff_rule_number` for traceability back to the source document, and `synthesis_warnings` surface any issues detected when a tariff was synthesized.
+  The Smart LFD tariff engine now tracks **multiple historical tariff periods** per carrier, so Last Free Day calculations on older containers use the tariff rules that were in effect at the time. Tariff rules now also carry `tariff_number` and `tariff_rule_number` for traceability back to the source document, and `synthesis_warnings` surface any issues detected when a tariff was synthesized.
 
-<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
-  View the container resource
-</Card>
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
 
----
+  ---
 
   ### Updates
 
-- **Document linking by custom fields** — documents can now be linked to shipments and containers using custom field values, in addition to PO numbers, BOLs, and container numbers
-- **PO number matching is more forgiving** — additional common typo patterns are now matched when linking documents via PO number
-- **Free plan tracking slot limits** — Free accounts now meter against active tracking slots with clearer in-app usage copy, and unknown-container slot handling has been tightened
-- **Inline custom field option creation** — single- and multi-select custom fields now let you create new options inline from the value picker, with several follow-up polish improvements
-- **Custom field filter-out option** — container filters now support filtering for records where a custom field is *not* set
-- **Quick link to shipment/container** — added a button to copy a direct link to a shipment or container from the dashboard
-- **EGLV Last Free Day events now include location** — EGLV LFD events now carry the inland destination location so per-terminal LFD displays correctly
-- **Arrival notice classification** — fixed an issue where some arrival notices were misclassified as sea waybills during document processing
-- **Hapag-Lloyd FIRMS code routing** — clarified FIRMS code handling on arrival notice extraction so terminal routing is more reliable
+  - **Document linking by custom fields** — documents can now be linked to shipments and containers using custom field values, in addition to PO numbers, BOLs, and container numbers
+  - **PO number matching is more forgiving** — additional common typo patterns are now matched when linking documents via PO number
+  - **Free plan tracking slot limits** — Free accounts now meter against active tracking slots with clearer in-app usage copy, and unknown-container slot handling has been tightened
+  - **Inline custom field option creation** — single- and multi-select custom fields now let you create new options inline from the value picker, with several follow-up polish improvements
+  - **Custom field filter-out option** — container filters now support filtering for records where a custom field is _not_ set
+  - **Quick link to shipment/container** — added a button to copy a direct link to a shipment or container from the dashboard
+  - **EGLV Last Free Day events now include location** — EGLV LFD events now carry the inland destination location so per-terminal LFD displays correctly
+  - **Arrival notice classification** — fixed an issue where some arrival notices were misclassified as sea waybills during document processing
+  - **Hapag-Lloyd FIRMS code routing** — clarified FIRMS code handling on arrival notice extraction so terminal routing is more reliable
 
----
+  ---
 
   ### Bug fixes
 
-- **TRKU future events** — TRKU events dated in the future are now classified correctly so container timelines no longer skip past upcoming events
-- **HMM mobile error pages** — HMM (HDMU) mobile responses that return an HTML error page are now handled cleanly instead of failing the tracker run
-- **MAEU tracking** — Migrated remaining MAEU traffic off the legacy tracker to MaeusynergyTracker for more reliable Maersk container data
-- **Document linking edge cases** — documents with both an explicit and implicit link no longer fail to link, child packets now inherit only direct links from their parent, and legacy `.xls` files using the `roo-xls` path are processed correctly again
-- **Container state filters** — removed the unused "loaded" and "dropped" values from the current-status filter so the dropdown only shows real states
-- **Dashboard search focus** — fixed an issue where selecting a recent search left the input out of focus, and tightened the global click listener that drives dropdowns
-- **Disabled integrations** — disabled integrations no longer appear in the credentials list
-- **Unknown account handling** — webhook and ingestion paths no longer raise when an unknown account is referenced
-- **Sentry instrumentation** — fixed a missing region on the Sentry cassette job and removed a path that could cause Sentry error reporting itself to loop
-- **Knock in-app guides** — improved rendering of the Knock guide banner and moved free-plan Knock syncing to commit-time so guides display reliably
-
+  - **TRKU future events** — TRKU events dated in the future are now classified correctly so container timelines no longer skip past upcoming events
+  - **HMM mobile error pages** — HMM (HDMU) mobile responses that return an HTML error page are now handled cleanly instead of failing the tracker run
+  - **MAEU tracking** — Migrated remaining MAEU traffic off the legacy tracker to MaeusynergyTracker for more reliable Maersk container data
+  - **Document linking edge cases** — documents with both an explicit and implicit link no longer fail to link, child packets now inherit only direct links from their parent, and legacy `.xls` files using the `roo-xls` path are processed correctly again
+  - **Container state filters** — removed the unused "loaded" and "dropped" values from the current-status filter so the dropdown only shows real states
+  - **Dashboard search focus** — fixed an issue where selecting a recent search left the input out of focus, and tightened the global click listener that drives dropdowns
+  - **Disabled integrations** — disabled integrations no longer appear in the credentials list
+  - **Unknown account handling** — webhook and ingestion paths no longer raise when an unknown account is referenced
+  - **Sentry instrumentation** — fixed a missing region on the Sentry cassette job and removed a path that could cause Sentry error reporting itself to loop
+  - **Knock in-app guides** — improved rendering of the Knock guide banner and moved free-plan Knock syncing to commit-time so guides display reliably
 </Update>
 
-<Update label="May 11, 2026" description="link.created webhook, Bookings preview, new terminal integrations, expanded CSV bulk update, and bug fixes" tags={['API', 'Dashboard']}
-  rss="May 11, 2026: link.created webhook for document-to-cargo links, Bookings preview, Port Houston and Port of Wilmington integrations, draft demurrage tariff rules for ONE/Evergreen/CMA CGM, value_timestamp on SSL LFD events, expanded CSV bulk update, per-account terminal scraper selection, and a wave of carrier and terminal bug fixes."
->
+<Update label="May 11, 2026" description="link.created webhook, Bookings preview, new terminal integrations, expanded CSV bulk update, and bug fixes" rss="May 11, 2026: link.created webhook for document-to-cargo links, Bookings preview, Port Houston and Port of Wilmington integrations, draft demurrage tariff rules for ONE/Evergreen/CMA CGM, value_timestamp on SSL LFD events, expanded CSV bulk update, per-account terminal scraper selection, and a wave of carrier and terminal bug fixes.">
   ### `link.created` webhook
 
-A new `link.created` webhook event fires whenever a document is linked to a shipment or container. Subscribe to it to react in real time when reference extraction connects an inbound document to your cargo — no polling required.
+  A new `link.created` webhook event fires whenever a document is linked to a shipment or container. Subscribe to it to react in real time when reference extraction connects an inbound document to your cargo — no polling required.
 
-<Card title="Event catalog" icon="list" href="/api-docs/webhooks/event-catalog">
-  Browse all webhook events
-</Card>
+  <Card title="Event catalog" icon="list" href="/api-docs/webhooks/event-catalog">
+    Browse all webhook events
+  </Card>
 
----
+  ---
 
   ### Bookings (preview)
 
-A new **Bookings** workspace is available as an early-access preview. Bookings ingests carrier schedules, surfaces gate-in cutoffs and vessel phase, and automatically initiates tracking once a booking has the schedule context it needs (POL, vessel, ETD). Contact your account team to enable the preview on your account.
+  A new **Bookings** workspace is available as an early-access preview. Bookings ingests carrier schedules, surfaces gate-in cutoffs and vessel phase, and automatically initiates tracking once a booking has the schedule context it needs (POL, vessel, ETD). Contact your account team to enable the preview on your account.
 
----
+  ---
 
   ### New terminal integrations
 
-- **Port Houston (Barbours Cut, S787)** — added a direct API integration for container status, holds, fees, and last free day at Port Houston
-- **Port of Wilmington (L194)** — added a Voyager-based scraper for Port of Wilmington container data
+  - **Port Houston (Barbours Cut, S787)** — added a direct API integration for container status, holds, fees, and last free day at Port Houston
+  - **Port of Wilmington (L194)** — added a Voyager-based scraper for Port of Wilmington container data
 
----
+  ---
 
   ### Per-account terminal scraper selection
 
-Accounts can now opt into specific terminal scraper integrations independently, so you can pilot new data sources or stay on the existing one on a per-account basis.
+  Accounts can now opt into specific terminal scraper integrations independently, so you can pilot new data sources or stay on the existing one on a per-account basis.
 
----
+  ---
 
   ### `value_timestamp` on shipping line LFD transport events
 
-The `value` and `value_timestamp` fields on transport events are now always returned in the API and on webhook payloads, including for shipping line Last Free Day events. Previously these were gated by a rail data permission; you can now see when an SSL LFD was reported without extra configuration.
+  The `value` and `value_timestamp` fields on transport events are now always returned in the API and on webhook payloads, including for shipping line Last Free Day events. Previously these were gated by a rail data permission; you can now see when an SSL LFD was reported without extra configuration.
 
-<Card title="Container transport events" icon="bolt" href="/api-docs/api-reference/containers/get-a-containers-transport-events">
-  Transport events API reference
-</Card>
+  <Card title="Container transport events" icon="bolt" href="/api-docs/api-reference/containers/get-a-containers-transport-events">
+    Transport events API reference
+  </Card>
 
----
+  ---
 
   ### Draft demurrage tariff rules for ONE, Evergreen, and CMA CGM
 
-Added draft demurrage tariff rule datasets for **ONE (ONEY)**, **Evergreen (EGLV)**, and **CMA CGM (CMDU)** to the Smart LFD tariff engine. Tariff rules now also carry `charge_type` (demurrage vs. detention) and `day_count_type` so calculated Last Free Day values reflect the carrier's specific tariff structure.
+  Added draft demurrage tariff rule datasets for **ONE (ONEY)**, **Evergreen (EGLV)**, and **CMA CGM (CMDU)** to the Smart LFD tariff engine. Tariff rules now also carry `charge_type` (demurrage vs. detention) and `day_count_type` so calculated Last Free Day values reflect the carrier's specific tariff structure.
 
-<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
-  View the container resource
-</Card>
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
 
----
+  ---
 
   ### Expanded CSV bulk update
 
-The container dashboard's CSV bulk update now supports more fields:
+  The container dashboard's CSV bulk update now supports more fields:
 
-- **Shipment tags and reference numbers** can be updated in the same CSV alongside container fields
-- **Tracking request custom fields** can be created and updated in bulk for tracking requests that are still pending or awaiting manifest
+  - **Shipment tags and reference numbers** can be updated in the same CSV alongside container fields
+  - **Tracking request custom fields** can be created and updated in bulk for tracking requests that are still pending or awaiting manifest
 
----
+  ---
 
   ### Manual refresh feedback
 
-When you trigger a manual refresh on a shipment, its containers now display a refreshing state in the dashboard so you can tell which records are still updating.
+  When you trigger a manual refresh on a shipment, its containers now display a refreshing state in the dashboard so you can tell which records are still updating.
 
----
+  ---
 
   ### Custom fields moved to Data Management
 
-Custom fields now live under **Data Management** in the dashboard, and tags share the same look-and-feel as custom fields for a more consistent experience when configuring shipment metadata.
+  Custom fields now live under **Data Management** in the dashboard, and tags share the same look-and-feel as custom fields for a more consistent experience when configuring shipment metadata.
 
-<Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
-  Custom Fields API reference
-</Card>
+  <Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+    Custom Fields API reference
+  </Card>
 
----
+  ---
 
   ### Daily email digest pacing
 
-Daily email digests are now spaced out across the delivery window instead of being scheduled in a single burst, improving deliverability and reducing duplicate-send risk for large accounts.
+  Daily email digests are now spaced out across the delivery window instead of being scheduled in a single burst, improving deliverability and reducing duplicate-send risk for large accounts.
 
----
+  ---
 
   ### Bug fixes
 
-- **Rail LFD on container pickup** — Rail Last Free Day no longer fails to update once a container has been picked up
-- **APM containers on rail** — Fixed an error that could occur for APM containers on rail with no equipment moves, allowing container data to load
-- **HDMU LFD events** — HDMU Last Free Day events now include the correct location for accurate per-terminal LFD display
-- **Swire ETA fallback** — Swire shipments now fall back to the tracking sheet for ETA when the primary source is missing, and route locations are extracted more reliably
-- **SMLU schedule port calls** — Fixed a NoMethodError affecting SMLU schedule lookups so shipments load consistently
-- **POL/POD location extraction** — Improved extraction of port-of-loading and port-of-discharge locations for **SSPH**, **ZIM (ZIMU)**, **TJFH**, **TXZJ/TXSJ**, and **YMLU** shipments, reducing missing or incorrect route locations
-- **Terminal scrape error handling** — Failures during terminal scrape context resolution are now handled cleanly so they no longer pollute terminal-health metrics
-- **Steamship tracker rate limits** — Expected rate-limit errors from upstream carriers are now silenced and vessel-event extraction is instrumented for better visibility into ingestion health
-
+  - **Rail LFD on container pickup** — Rail Last Free Day no longer fails to update once a container has been picked up
+  - **APM containers on rail** — Fixed an error that could occur for APM containers on rail with no equipment moves, allowing container data to load
+  - **HDMU LFD events** — HDMU Last Free Day events now include the correct location for accurate per-terminal LFD display
+  - **Swire ETA fallback** — Swire shipments now fall back to the tracking sheet for ETA when the primary source is missing, and route locations are extracted more reliably
+  - **SMLU schedule port calls** — Fixed a NoMethodError affecting SMLU schedule lookups so shipments load consistently
+  - **POL/POD location extraction** — Improved extraction of port-of-loading and port-of-discharge locations for **SSPH**, **ZIM (ZIMU)**, **TJFH**, **TXZJ/TXSJ**, and **YMLU** shipments, reducing missing or incorrect route locations
+  - **Terminal scrape error handling** — Failures during terminal scrape context resolution are now handled cleanly so they no longer pollute terminal-health metrics
+  - **Steamship tracker rate limits** — Expected rate-limit errors from upstream carriers are now silenced and vessel-event extraction is instrumented for better visibility into ingestion health
 </Update>
 
-<Update label="May 4, 2026" description="Global vessel map, custom field search, sensitive custom fields, expanded terminal coverage, and bug fixes" tags={['API', 'Dashboard']}
-  rss="May 4, 2026: Global vessel map in the dashboard, search by custom field values, sensitive custom fields, Felixstowe and DP World Vancouver scraper alternatives, destination ETAs without rail data, xlsm document support, and a wave of carrier and terminal bug fixes."
->
+<Update label="May 4, 2026" description="Global vessel map, custom field search, sensitive custom fields, expanded terminal coverage, and bug fixes" rss="May 4, 2026: Global vessel map in the dashboard, search by custom field values, sensitive custom fields, Felixstowe and DP World Vancouver scraper alternatives, destination ETAs without rail data, xlsm document support, and a wave of carrier and terminal bug fixes.">
   ### Global vessel map
 
-The Terminal49 dashboard now includes a **global vessel map** showing live positions for vessels carrying your shipments. Click any vessel to see its current voyage, route, and the shipments on board. The map streams updates over a websocket connection so positions stay current without manual refresh.
+  The Terminal49 dashboard now includes a **global vessel map** showing live positions for vessels carrying your shipments. Click any vessel to see its current voyage, route, and the shipments on board. The map streams updates over a websocket connection so positions stay current without manual refresh.
 
----
+  ---
 
   ### Search by custom field values
 
-Shipments and containers can now be searched by **custom field values** alongside built-in identifiers. Use the same search you already use for container numbers or PO numbers to find records by any custom field you've defined.
+  Shipments and containers can now be searched by **custom field values** alongside built-in identifiers. Use the same search you already use for container numbers or PO numbers to find records by any custom field you've defined.
 
-<Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
-  Custom Fields API reference
-</Card>
+  <Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+    Custom Fields API reference
+  </Card>
 
----
+  ---
 
   ### Sensitive custom fields
 
-Custom field definitions now support a `sensitive` flag. Mark a field as sensitive to restrict its visibility to authorized users — useful for fields containing internal references, financial data, or PII.
+  Custom field definitions now support a `sensitive` flag. Mark a field as sensitive to restrict its visibility to authorized users — useful for fields containing internal references, financial data, or PII.
 
----
+  ---
 
   ### Configurable duplicate document handling
 
-Accounts can now configure how duplicate documents are handled at upload time. Choose whether to reject duplicates, replace the existing document, or accept both, so document intake matches your team's workflow.
+  Accounts can now configure how duplicate documents are handled at upload time. Choose whether to reject duplicates, replace the existing document, or accept both, so document intake matches your team's workflow.
 
-<Card title="Document processing guide" icon="file" href="/api-docs/in-depth-guides/document-processing-workflows">
-  How document linking works
-</Card>
+  <Card title="Document processing guide" icon="file" href="/api-docs/in-depth-guides/document-processing-workflows">
+    How document linking works
+  </Card>
 
----
+  ---
 
   ### xlsm spreadsheet support
 
-Macro-enabled Excel files (`.xlsm`) are now accepted by the document upload pipeline and converted to CSV for reference extraction. Previously only `.xls` and `.xlsx` were processed; mixed Excel uploads now flow through end-to-end without manual conversion.
+  Macro-enabled Excel files (`.xlsm`) are now accepted by the document upload pipeline and converted to CSV for reference extraction. Previously only `.xls` and `.xlsx` were processed; mixed Excel uploads now flow through end-to-end without manual conversion.
 
----
+  ---
 
   ### Destination ETA for non-US/CA containers without rail data
 
-Containers routed to inland destinations outside the US and Canada now return a destination ETA even when no rail tracking data is available, expanding ETA coverage for international inland moves.
+  Containers routed to inland destinations outside the US and Canada now return a destination ETA even when no rail tracking data is available, expanding ETA coverage for international inland moves.
 
-<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
-  View the container resource
-</Card>
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
 
----
+  ---
 
   ### New terminal scrapers
 
-- **Felixstowe** — added a mobile-site-based scraper as an alternative data source, improving reliability for containers moving through Felixstowe
-- **DP World Vancouver (3380)** — added a public-API scraper for terminal data at DP World Vancouver
+  - **Felixstowe** — added a mobile-site-based scraper as an alternative data source, improving reliability for containers moving through Felixstowe
+  - **DP World Vancouver (3380)** — added a public-API scraper for terminal data at DP World Vancouver
 
----
+  ---
 
   ### Promo codes and coupon links for Pay-As-You-Go checkout
 
-Pay-As-You-Go customers can now enter a promo code at Stripe Checkout, or follow a coupon link that pre-applies the discount during signup.
+  Pay-As-You-Go customers can now enter a promo code at Stripe Checkout, or follow a coupon link that pre-applies the discount during signup.
 
----
+  ---
 
   ### Bug fixes
 
-- **YMLU transshipment events** — Fixed spurious full-out events generated at transshipment ports and corrected port-of-discharge mismatches for YMLU shipments
-- **MSC inland voyage numbers** — Stabilized voyage number assignment for MSC inland feeder and barge legs so the same leg no longer appears under different voyage numbers across updates
-- **ONE event timestamps** — Rail unloaded and other ONE events now use port-local time consistently, fixing display and ordering issues for ONE-tracked containers
-- **Bulk email CSV uploads** — Fixed an issue where rows using alternative SCACs were silently dropped from CSVs submitted by email
-- **Rail carrier lookup** — Rail carrier resolution now considers neighboring ports, improving carrier assignment for containers transferring between adjacent rail-served facilities
-- **Tideworks terminal sessions** — A 403 on the CSV endpoint now clears the cached session immediately, preventing a cascade of failed terminal lookups across containers
-- **Steamship tracker reliability** — Proxy and firewall blocks at carrier websites are now classified as `TrackerBlocked` errors, surfacing a clearer failure reason and enabling targeted retries
-- **POMTOC (L239)** — Routed POMTOC Tideworks requests through a residential proxy and added required Referer/Origin headers to restore data collection
-- **Free plan container limits** — Free plan accounts now meter against active container concurrency rather than monthly cumulative counts, so picked-up and delivered containers no longer count toward the limit
-- **Duplicate tags** — Eliminated a race condition that could cause duplicate tag creation to fail with a unique constraint error
-- **Postmark email intake** — Recipient email lookups are now case-insensitive, fixing missed matches on inbound document emails
-- **Pay-As-You-Go cancellation** — Fixed handling of Stripe subscription period dates so the cancel response returns accurate end-of-period timing for newer subscription structures
-- **Daily digest jobs** — Database errors during daily digest delivery now release the cache lock cleanly so the next run can proceed
-
+  - **YMLU transshipment events** — Fixed spurious full-out events generated at transshipment ports and corrected port-of-discharge mismatches for YMLU shipments
+  - **MSC inland voyage numbers** — Stabilized voyage number assignment for MSC inland feeder and barge legs so the same leg no longer appears under different voyage numbers across updates
+  - **ONE event timestamps** — Rail unloaded and other ONE events now use port-local time consistently, fixing display and ordering issues for ONE-tracked containers
+  - **Bulk email CSV uploads** — Fixed an issue where rows using alternative SCACs were silently dropped from CSVs submitted by email
+  - **Rail carrier lookup** — Rail carrier resolution now considers neighboring ports, improving carrier assignment for containers transferring between adjacent rail-served facilities
+  - **Tideworks terminal sessions** — A 403 on the CSV endpoint now clears the cached session immediately, preventing a cascade of failed terminal lookups across containers
+  - **Steamship tracker reliability** — Proxy and firewall blocks at carrier websites are now classified as `TrackerBlocked` errors, surfacing a clearer failure reason and enabling targeted retries
+  - **POMTOC (L239)** — Routed POMTOC Tideworks requests through a residential proxy and added required Referer/Origin headers to restore data collection
+  - **Free plan container limits** — Free plan accounts now meter against active container concurrency rather than monthly cumulative counts, so picked-up and delivered containers no longer count toward the limit
+  - **Duplicate tags** — Eliminated a race condition that could cause duplicate tag creation to fail with a unique constraint error
+  - **Postmark email intake** — Recipient email lookups are now case-insensitive, fixing missed matches on inbound document emails
+  - **Pay-As-You-Go cancellation** — Fixed handling of Stripe subscription period dates so the cancel response returns accurate end-of-period timing for newer subscription structures
+  - **Daily digest jobs** — Database errors during daily digest delivery now release the cache lock cleanly so the next run can proceed
 </Update>
 
-<Update label="April 27, 2026" description="Booking number type inference, delivered date filter, document fuzzy search, hold descriptions, and bug fixes" tags={['API', 'Dashboard']}
-  rss="April 27, 2026: Booking number type inference, delivered date filter on the container dashboard, document fuzzy search, hold descriptions, custom field reference number flag, and a wave of carrier and terminal bug fixes."
->
+<Update label="April 27, 2026" description="Booking number type inference, delivered date filter, document fuzzy search, hold descriptions, and bug fixes" rss="April 27, 2026: Booking number type inference, delivered date filter on the container dashboard, document fuzzy search, hold descriptions, custom field reference number flag, and a wave of carrier and terminal bug fixes.">
   ### Booking number support in Infer Tracking Number
 
-The [Infer Tracking Number](/api-docs/api-reference/tracking-requests/auto-detect-carrier) endpoint now predicts the carrier and number type for **booking numbers**, in addition to container numbers and bills of lading. Send a booking number you aren't sure how to route, and Terminal49 returns a confidence-scored decision so you can create the tracking request with the correct VOCC SCAC and `request_type`.
+  The [Infer Tracking Number](/api-docs/api-reference/tracking-requests/auto-detect-carrier) endpoint now predicts the carrier and number type for **booking numbers**, in addition to container numbers and bills of lading. Send a booking number you aren't sure how to route, and Terminal49 returns a confidence-scored decision so you can create the tracking request with the correct VOCC SCAC and `request_type`.
 
-<Card title="Infer Tracking Number guide" icon="wand-magic-sparkles" href="/api-docs/in-depth-guides/auto-detect-carrier">
-  How to use Infer Tracking Number in your workflow
-</Card>
+  <Card title="Infer Tracking Number guide" icon="wand-magic-sparkles" href="/api-docs/in-depth-guides/auto-detect-carrier">
+    How to use Infer Tracking Number in your workflow
+  </Card>
 
----
+  ---
 
   ### Delivered date filter and column on the container dashboard
 
-The container dashboard now includes a **Delivered at** column and date-range filter, plus delivered-date sorting. Quickly find recently delivered containers, sort by delivery date, or filter to a specific window for reporting and reconciliation.
+  The container dashboard now includes a **Delivered at** column and date-range filter, plus delivered-date sorting. Quickly find recently delivered containers, sort by delivery date, or filter to a specific window for reporting and reconciliation.
 
----
+  ---
 
   ### Fuzzy search for documents
 
-Document search is now fuzzy across shipment, container, and tracking request reference numbers. Minor typos, format differences, or partial reference numbers still return the right document, reducing time spent hunting for paperwork.
+  Document search is now fuzzy across shipment, container, and tracking request reference numbers. Minor typos, format differences, or partial reference numbers still return the right document, reducing time spent hunting for paperwork.
 
----
+  ---
 
   ### Hold descriptions on container holds
 
-Each hold returned on a container now includes a plain-language description explaining what the hold means and what's typically required to clear it. The descriptions are surfaced wherever holds appear so your team — and your customers — can act without looking up terminology.
+  Each hold returned on a container now includes a plain-language description explaining what the hold means and what's typically required to clear it. The descriptions are surfaced wherever holds appear so your team — and your customers — can act without looking up terminology.
 
-<Card title="Holds and fees guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
-  How to work with holds and fees data
-</Card>
-
----
-
-  ### Reference number flag on custom field definitions
-
-Custom field definitions now support a `reference_number` flag. Mark a custom field as a reference number and Terminal49 will treat its value as a searchable identifier alongside built-in references like PO numbers and BOLs.
-
-<Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
-  Custom Fields API reference
-</Card>
-
----
-
-  ### PO number normalization for document linking
-
-Document-to-shipment linking via PO numbers now normalizes common format variants (separators, prefixes, and casing differences), so documents match shipments even when the PO is written slightly differently across systems.
-
----
-
-  ### Bug fixes
-
-- **Containers requiring attention** — Picked-up, on-rail, empty-returned, and delivered containers no longer appear under the "needs attention" LFD view. Only containers still active at a terminal show up
-- **Tideworks fees** — Containers reported as on a vessel or on rail no longer return stale terminal fees from a previous move
-- **MSC Port of Discharge events** — Improved criteria for selecting the correct POD arrival event on MSC shipments
-- **LBCT inland transfers** — Fixed handling of on-dock-to-inland transfer events at LBCT, so rail moves out of the terminal are tracked correctly
-- **COSCO vessel departure** — Improved logic for determining when a COSCO vessel has departed the port of loading
-- **Vessel event deduplication** — Fixed duplicate vessel events on the shipment timeline coming from carriers and from the CSE invalidation pipeline
-- **Document linking race condition** — Eliminated a race condition that could leave a document briefly unlinked when references arrived from multiple sources at once
-- **Webhook notifications page** — Fixed an exception that could occur when listing webhook notifications containing document processing events
-- **Carrier integrations** — Fixes to MAEU auth handling (now treats 403 correctly), APM Empty In OAuth requests, BNSF rail scraping, NSRR equipment requests, Hapag-Lloyd booking sweeps for shipments with no containers, and Voyager terminal request headers
-- **Terminal data** — Updated headers for SSAMX and Holt agent terminals, and added external location mapping for PCIU
-- **Document email intake** — Tightened sender-email rules so unrelated inbox messages are filtered out, and fixed an edge case where a single email recipient was not handled as an array
-
-</Update>
-
-<Update label="April 20, 2026" description="Improved document linking, mark-as-delivered fix, LFD accuracy improvements, and terminal data fixes" tags={['API', 'Dashboard']}
-  rss="April 20, 2026: Smarter document-to-shipment linking via PO numbers, mark-as-delivered fix in the dashboard, LFD accuracy improvements, and multiple terminal data collection fixes."
->
-  ### Smarter document-to-shipment linking
-
-Documents are now matched to shipments using **indirect references** such as purchase order (PO) numbers. Previously, a document had to contain a direct identifier like a bill of lading or container number. Now, if a document references a PO number that appears on another already-linked document, Terminal49 can connect the two — reducing unlinked documents and manual work.
-
-<Card title="Document processing guide" icon="file" href="/api-docs/in-depth-guides/document-processing-workflows">
-  How document linking works
-</Card>
-
----
-
-  ### Improved document extraction accuracy
-
-Document data extraction now uses the original filename as additional context, improving field-level accuracy when the filename contains shipment identifiers or document type hints.
-
----
-
-  ### Bug fixes
-
-- **Mark as delivered** — Fixed an issue where marking a container as delivered from the dashboard event viewer could fail. User-submitted delivery events are now accepted correctly
-- **Stale terminal LFD dates** — Fixed a bug where outdated Last Free Day dates from a previous cycle could appear on containers still in transit. Terminal LFD events are now rejected until the container arrives at the port
-- **MSC departure events** — Corrected incorrect departure-from-POD events being reported for certain MSC containers
-- **Hapag-Lloyd tracking** — Fixed an error that could occur when Hapag-Lloyd returns an empty shipment overview, preventing container data from loading
-- **Norfolk Southern rail LFD timezone** — Fixed incorrect timezone parsing for Norfolk Southern rail Last Free Day dates, which could shift the date by a day
-- **Dashboard event viewer** — Fixed display issues in the unified event viewer for user-submitted events
-- **Terminal data collection** — Resolved connectivity and data retrieval issues at Goport, Maher, and Packer Avenue terminals, restoring terminal-sourced hold, fee, and availability data for containers at those facilities
-
-</Update>
-
-<Update label="April 14, 2026" description="Dashboard deep linking, calculated LFD, Smart LFD dashboard columns, and bug fixes" tags={['API', 'Dashboard']}
-  rss="April 14, 2026: Dashboard deep linking via URL, calculated Last Free Day from carrier tariffs, Smart LFD dashboard columns, and Hapag-Lloyd booking bug fix."
->
-  ### Dashboard deep linking
-
-You can now link directly to any shipment or container in the Terminal49 dashboard using a container number, bill of lading, booking number, or reference number — no internal IDs needed.
-
-Use the URL pattern:
-
-```
-https://app.terminal49.com/shipments/find?q={identifier}
-```
-
-The link automatically resolves to the correct tracking page, making it easy to link from a TMS, ERP, spreadsheet, or automated notification.
-
-<Card title="Deep linking guide" icon="link" href="/api-docs/in-depth-guides/dashboard-deep-linking">
-  How to build direct links to shipments and containers
-</Card>
-
----
-
-  ### Calculated Last Free Day
-
-The Smart LFD system now includes a **calculated Last Free Day** derived from carrier demurrage tariff rules. When a shipping line or terminal hasn't reported an LFD, Terminal49 computes one using the applicable tariff — including free days, start events, holidays, and business-day rules.
-
-Calculated values appear as a fallback in the `import_deadlines` field on the container API. If a reported LFD is available from the carrier or terminal, it takes priority.
-
-<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
-  View the container resource
-</Card>
-
----
-
-  ### Smart LFD dashboard columns
-
-The container dashboard now includes two new columns for accounts with Smart LFD enabled:
-
-- **Calc. Line LFD** — the calculated Last Free Day derived from carrier tariff rules
-- **Smart LFD** — the best available LFD with its source displayed, so you can see at a glance whether the date comes from the shipping line, terminal, or a tariff calculation
-
-Click the Smart LFD value to open a detail modal showing the full calculation breakdown, including tariff inputs, free days, and the day-by-day calendar.
-
----
-
-  ### Bug fixes
-
-- **Hapag-Lloyd booking tracking** — Fixed an issue where certain Hapag-Lloyd bookings could return an invalid number error, preventing container data from loading
-
-</Update>
-
-<Update label="April 2026" description="Smart Last Free Day, inland destination ETA source transparency, and bug fixes" tags={['API', 'Dashboard']}
-  rss="April 2026: Smart Last Free Day with per-source LFD breakdown, inland destination ETA source transparency, expanded SSL LFD coverage, and bug fixes."
->
-  ### Smart Last Free Day
-
-The container API now returns a detailed breakdown of **Last Free Day (LFD)** data within the `import_deadlines` field. Instead of a single date, you get separate LFD values from the shipping line and the terminal facility — at both the port of discharge and the inland destination.
-
-Each source includes:
-
-- **Original** — the first LFD reported
-- **Current** — the latest LFD reported
-- **Calculated** — a derived value when the raw date needs adjustment
-
-A **unified** selection shows which source Terminal49 considers the best current LFD and why.
-
-<Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
-  View the container resource
-</Card>
-
----
-
-  ### Inland destination ETA source transparency
-
-Containers now include an `inland_destination_eta_source_summary` field that tells you exactly where the displayed inland destination ETA comes from. Possible sources are:
-
-- **Shipping line** — ETA provided by the carrier
-- **Rail** — ETA from the rail carrier
-- **T49 operations team** — manually verified ETA
-- **T49 prediction engine** — machine-learning-based estimate
-
-The Terminal49 dashboard also shows the active ETA source, and hovering over it displays all available estimates so you can compare.
-
----
-
-  ### Expanded shipping line LFD coverage
-
-Shipping line Last Free Day data is now collected from additional SSA terminals, improving LFD accuracy for containers moving through those facilities.
-
-<Card title="Container table properties" icon="table" href="/datasync/table-properties/containers">
-  DataSync containers reference
-</Card>
-
----
-
-  ### Bug fixes
-
-- **Hapag-Lloyd booking tracking** — Fixed an error that could prevent booking equipment data from being returned for Hapag-Lloyd shipments
-- **Dashboard copy/paste** — Copy and paste keyboard shortcuts in the container dashboard no longer interfere with text input fields
-- **Webhook notification links** — The dashboard webhook notifications page now correctly displays reference links for events with multiple related resources
-
-</Update>
-
-<Update label="March 2026" description="TypeScript SDK, MCP server, Custom Fields API, webhook trigger endpoint, and DataSync improvements" tags={['API', 'SDK', 'MCP', 'DataSync']}
-  rss="March 2026: TypeScript SDK, MCP server for AI-powered tracking, Custom Fields API, webhook trigger endpoint, and DataSync improvements including shipping line LFD columns and pending hold status."
->
-  ### TypeScript SDK
-
-Released the **Terminal49 TypeScript SDK** (`@terminal49/sdk`), a typed client for Node.js 18+ with built-in retry logic, error handling, and JSON:API deserialization.
-
-- Track containers, retrieve shipments, and manage tracking requests with type-safe methods
-- Automatic retry with exponential backoff for rate limits and server errors
-- Flexible response formats: raw JSON:API, mapped objects, or both
-
-```bash
-npm install @terminal49/sdk
-```
-
-<Card title="SDK docs" icon="code" href="/sdk/introduction">
-  Get started with the TypeScript SDK
-</Card>
-
----
-
-  ### MCP server
-
-Launched the **Terminal49 MCP server**, letting you query live container and shipment data from Claude Desktop, Cursor, or any MCP-compatible AI client.
-
-- **10 tools** — search, track, get container details, shipment routing, transport events, and more
-- **3 prompts** — pre-built workflows for tracking, demurrage analysis, and delay root cause analysis
-- Connect with a single config block — no custom code required
-
-<Card title="MCP setup guide" icon="robot" href="/mcp/home">
-  Connect your AI client to Terminal49
-</Card>
-
----
-
-  ### Custom Fields API
-
-You can now create and manage **custom fields** on shipments and containers via the API. Define your own field schemas (text, number, date, single-select, multi-select), create option lists, and attach values to individual shipments or containers.
-
-- **Custom Field Definitions** — create, update, list, and delete field schemas scoped to shipments or containers
-- **Custom Field Options** — manage allowed values for select-type fields
-- **Custom Fields** — assign values to specific shipments or containers
-
-<Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
-  View the Custom Fields API reference
-</Card>
-
----
-
-  ### Webhook trigger endpoint
-
-Added `POST /webhooks/trigger` to send a one-time test webhook delivery to any HTTPS URL — without creating a webhook endpoint first. Use it to validate your webhook handler before going live.
-
-<Card title="Trigger a webhook" icon="webhook" href="/api-docs/api-reference/webhooks/trigger-a-webhook">
-  API reference for the trigger endpoint
-</Card>
-
----
-
-  ### DataSync improvements
-
-- **Shipping line Last Free Day** — new `ssl_last_free_day_on` and `ssl_last_free_day_on_local` columns on both the `containers` and `containers_rail` tables, so you can distinguish the shipping line's LFD from the terminal's LFD
-- **Pending hold status** — individual hold columns (`freight_hold`, `customs_hold`, `usda_hold`, `tmf_hold`, `other_hold`) now support a `"Pending"` value in addition to `"Hold"` and blank, giving you earlier visibility into holds before they become active
-
-<CardGroup cols={2}>
-  <Card title="Container table properties" icon="table" href="/datasync/table-properties/containers">
-    DataSync containers reference
-  </Card>
   <Card title="Holds and fees guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
     How to work with holds and fees data
   </Card>
-</CardGroup>
 
+  ---
+
+  ### Reference number flag on custom field definitions
+
+  Custom field definitions now support a `reference_number` flag. Mark a custom field as a reference number and Terminal49 will treat its value as a searchable identifier alongside built-in references like PO numbers and BOLs.
+
+  <Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+    Custom Fields API reference
+  </Card>
+
+  ---
+
+  ### PO number normalization for document linking
+
+  Document-to-shipment linking via PO numbers now normalizes common format variants (separators, prefixes, and casing differences), so documents match shipments even when the PO is written slightly differently across systems.
+
+  ---
+
+  ### Bug fixes
+
+  - **Containers requiring attention** — Picked-up, on-rail, empty-returned, and delivered containers no longer appear under the "needs attention" LFD view. Only containers still active at a terminal show up
+  - **Tideworks fees** — Containers reported as on a vessel or on rail no longer return stale terminal fees from a previous move
+  - **MSC Port of Discharge events** — Improved criteria for selecting the correct POD arrival event on MSC shipments
+  - **LBCT inland transfers** — Fixed handling of on-dock-to-inland transfer events at LBCT, so rail moves out of the terminal are tracked correctly
+  - **COSCO vessel departure** — Improved logic for determining when a COSCO vessel has departed the port of loading
+  - **Vessel event deduplication** — Fixed duplicate vessel events on the shipment timeline coming from carriers and from the CSE invalidation pipeline
+  - **Document linking race condition** — Eliminated a race condition that could leave a document briefly unlinked when references arrived from multiple sources at once
+  - **Webhook notifications page** — Fixed an exception that could occur when listing webhook notifications containing document processing events
+  - **Carrier integrations** — Fixes to MAEU auth handling (now treats 403 correctly), APM Empty In OAuth requests, BNSF rail scraping, NSRR equipment requests, Hapag-Lloyd booking sweeps for shipments with no containers, and Voyager terminal request headers
+  - **Terminal data** — Updated headers for SSAMX and Holt agent terminals, and added external location mapping for PCIU
+  - **Document email intake** — Tightened sender-email rules so unrelated inbox messages are filtered out, and fixed an edge case where a single email recipient was not handled as an array
 </Update>
 
-<Update label="February 2026" description="Container Holds, Fees, and Release Readiness guide" tags={['API', 'DataSync']}
-  rss="New guide: Container Holds, Fees, and Release Readiness — decision logic, enum references, webhook examples, and FAQ for determining when a container is ready for pickup."
->
+<Update label="April 20, 2026" description="Improved document linking, mark-as-delivered fix, LFD accuracy improvements, and terminal data fixes" rss="April 20, 2026: Smarter document-to-shipment linking via PO numbers, mark-as-delivered fix in the dashboard, LFD accuracy improvements, and multiple terminal data collection fixes.">
+  ### Smarter document-to-shipment linking
+
+  Documents are now matched to shipments using **indirect references** such as purchase order (PO) numbers. Previously, a document had to contain a direct identifier like a bill of lading or container number. Now, if a document references a PO number that appears on another already-linked document, Terminal49 can connect the two — reducing unlinked documents and manual work.
+
+  <Card title="Document processing guide" icon="file" href="/api-docs/in-depth-guides/document-processing-workflows">
+    How document linking works
+  </Card>
+
+  ---
+
+  ### Improved document extraction accuracy
+
+  Document data extraction now uses the original filename as additional context, improving field-level accuracy when the filename contains shipment identifiers or document type hints.
+
+  ---
+
+  ### Bug fixes
+
+  - **Mark as delivered** — Fixed an issue where marking a container as delivered from the dashboard event viewer could fail. User-submitted delivery events are now accepted correctly
+  - **Stale terminal LFD dates** — Fixed a bug where outdated Last Free Day dates from a previous cycle could appear on containers still in transit. Terminal LFD events are now rejected until the container arrives at the port
+  - **MSC departure events** — Corrected incorrect departure-from-POD events being reported for certain MSC containers
+  - **Hapag-Lloyd tracking** — Fixed an error that could occur when Hapag-Lloyd returns an empty shipment overview, preventing container data from loading
+  - **Norfolk Southern rail LFD timezone** — Fixed incorrect timezone parsing for Norfolk Southern rail Last Free Day dates, which could shift the date by a day
+  - **Dashboard event viewer** — Fixed display issues in the unified event viewer for user-submitted events
+  - **Terminal data collection** — Resolved connectivity and data retrieval issues at Goport, Maher, and Packer Avenue terminals, restoring terminal-sourced hold, fee, and availability data for containers at those facilities
+</Update>
+
+<Update label="April 14, 2026" description="Dashboard deep linking, calculated LFD, Smart LFD dashboard columns, and bug fixes" rss="April 14, 2026: Dashboard deep linking via URL, calculated Last Free Day from carrier tariffs, Smart LFD dashboard columns, and Hapag-Lloyd booking bug fix.">
+  ### Dashboard deep linking
+
+  You can now link directly to any shipment or container in the Terminal49 dashboard using a container number, bill of lading, booking number, or reference number — no internal IDs needed.
+
+  Use the URL pattern:
+
+  ```text
+  https://app.terminal49.com/shipments/find?q={identifier}
+  ```
+
+  The link automatically resolves to the correct tracking page, making it easy to link from a TMS, ERP, spreadsheet, or automated notification.
+
+  <Card title="Deep linking guide" icon="link" href="/api-docs/in-depth-guides/dashboard-deep-linking">
+    How to build direct links to shipments and containers
+  </Card>
+
+  ---
+
+  ### Calculated Last Free Day
+
+  The Smart LFD system now includes a **calculated Last Free Day** derived from carrier demurrage tariff rules. When a shipping line or terminal hasn't reported an LFD, Terminal49 computes one using the applicable tariff — including free days, start events, holidays, and business-day rules.
+
+  Calculated values appear as a fallback in the `import_deadlines` field on the container API. If a reported LFD is available from the carrier or terminal, it takes priority.
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
+
+  ---
+
+  ### Smart LFD dashboard columns
+
+  The container dashboard now includes two new columns for accounts with Smart LFD enabled:
+
+  - **Calc. Line LFD** — the calculated Last Free Day derived from carrier tariff rules
+  - **Smart LFD** — the best available LFD with its source displayed, so you can see at a glance whether the date comes from the shipping line, terminal, or a tariff calculation
+
+  Click the Smart LFD value to open a detail modal showing the full calculation breakdown, including tariff inputs, free days, and the day-by-day calendar.
+
+  ---
+
+  ### Bug fixes
+
+  - **Hapag-Lloyd booking tracking** — Fixed an issue where certain Hapag-Lloyd bookings could return an invalid number error, preventing container data from loading
+</Update>
+
+<Update label="April 2026" description="Smart Last Free Day, inland destination ETA source transparency, and bug fixes" rss="April 2026: Smart Last Free Day with per-source LFD breakdown, inland destination ETA source transparency, expanded SSL LFD coverage, and bug fixes.">
+  ### Smart Last Free Day
+
+  The container API now returns a detailed breakdown of **Last Free Day (LFD)** data within the `import_deadlines` field. Instead of a single date, you get separate LFD values from the shipping line and the terminal facility — at both the port of discharge and the inland destination.
+
+  Each source includes:
+
+  - **Original** — the first LFD reported
+  - **Current** — the latest LFD reported
+  - **Calculated** — a derived value when the raw date needs adjustment
+
+  A **unified** selection shows which source Terminal49 considers the best current LFD and why.
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
+
+  ---
+
+  ### Inland destination ETA source transparency
+
+  Containers now include an `inland_destination_eta_source_summary` field that tells you exactly where the displayed inland destination ETA comes from. Possible sources are:
+
+  - **Shipping line** — ETA provided by the carrier
+  - **Rail** — ETA from the rail carrier
+  - **T49 operations team** — manually verified ETA
+  - **T49 prediction engine** — machine-learning-based estimate
+
+  The Terminal49 dashboard also shows the active ETA source, and hovering over it displays all available estimates so you can compare.
+
+  ---
+
+  ### Expanded shipping line LFD coverage
+
+  Shipping line Last Free Day data is now collected from additional SSA terminals, improving LFD accuracy for containers moving through those facilities.
+
+  <Card title="Container table properties" icon="table" href="/datasync/table-properties/containers">
+    DataSync containers reference
+  </Card>
+
+  ---
+
+  ### Bug fixes
+
+  - **Hapag-Lloyd booking tracking** — Fixed an error that could prevent booking equipment data from being returned for Hapag-Lloyd shipments
+  - **Dashboard copy/paste** — Copy and paste keyboard shortcuts in the container dashboard no longer interfere with text input fields
+  - **Webhook notification links** — The dashboard webhook notifications page now correctly displays reference links for events with multiple related resources
+</Update>
+
+<Update label="March 2026" description="TypeScript SDK, MCP server, Custom Fields API, webhook trigger endpoint, and DataSync improvements" rss="March 2026: TypeScript SDK, MCP server for AI-powered tracking, Custom Fields API, webhook trigger endpoint, and DataSync improvements including shipping line LFD columns and pending hold status.">
+  ### TypeScript SDK
+
+  Released the **Terminal49 TypeScript SDK** (`@terminal49/sdk`), a typed client for Node.js 18\+ with built-in retry logic, error handling, and JSON:API deserialization.
+
+  - Track containers, retrieve shipments, and manage tracking requests with type-safe methods
+  - Automatic retry with exponential backoff for rate limits and server errors
+  - Flexible response formats: raw JSON:API, mapped objects, or both
+
+  ```bash
+  npm install @terminal49/sdk
+  ```
+
+  <Card title="SDK docs" icon="code" href="/sdk/introduction">
+    Get started with the TypeScript SDK
+  </Card>
+
+  ---
+
+  ### MCP server
+
+  Launched the **Terminal49 MCP server**, letting you query live container and shipment data from Claude Desktop, Cursor, or any MCP-compatible AI client.
+
+  - **10 tools** — search, track, get container details, shipment routing, transport events, and more
+  - **3 prompts** — pre-built workflows for tracking, demurrage analysis, and delay root cause analysis
+  - Connect with a single config block — no custom code required
+
+  <Card title="MCP setup guide" icon="robot" href="/mcp/home">
+    Connect your AI client to Terminal49
+  </Card>
+
+  ---
+
+  ### Custom Fields API
+
+  You can now create and manage **custom fields** on shipments and containers via the API. Define your own field schemas (text, number, date, single-select, multi-select), create option lists, and attach values to individual shipments or containers.
+
+  - **Custom Field Definitions** — create, update, list, and delete field schemas scoped to shipments or containers
+  - **Custom Field Options** — manage allowed values for select-type fields
+  - **Custom Fields** — assign values to specific shipments or containers
+
+  <Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+    View the Custom Fields API reference
+  </Card>
+
+  ---
+
+  ### Webhook trigger endpoint
+
+  Added `POST /webhooks/trigger` to send a one-time test webhook delivery to any HTTPS URL — without creating a webhook endpoint first. Use it to validate your webhook handler before going live.
+
+  <Card title="Trigger a webhook" icon="webhook" href="/api-docs/api-reference/webhooks/trigger-a-webhook">
+    API reference for the trigger endpoint
+  </Card>
+
+  ---
+
+  ### DataSync improvements
+
+  - **Shipping line Last Free Day** — new `ssl_last_free_day_on` and `ssl_last_free_day_on_local` columns on both the `containers` and `containers_rail` tables, so you can distinguish the shipping line's LFD from the terminal's LFD
+  - **Pending hold status** — individual hold columns (`freight_hold`, `customs_hold`, `usda_hold`, `tmf_hold`, `other_hold`) now support a `"Pending"` value in addition to `"Hold"` and blank, giving you earlier visibility into holds before they become active
+
+  <CardGroup cols={2}>
+    <Card title="Container table properties" icon="table" href="/datasync/table-properties/containers">
+      DataSync containers reference
+    </Card>
+
+    <Card title="Holds and fees guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
+      How to work with holds and fees data
+    </Card>
+  </CardGroup>
+</Update>
+
+<Update label="February 2026" description="Container Holds, Fees, and Release Readiness guide" rss="New guide: Container Holds, Fees, and Release Readiness — decision logic, enum references, webhook examples, and FAQ for determining when a container is ready for pickup.">
   ### Container Holds, Fees, and Release Readiness
 
-Published a comprehensive guide for working with holds and fees data in the Terminal49 API. The guide covers:
+  Published a comprehensive guide for working with holds and fees data in the Terminal49 API. The guide covers:
 
-- **Pickup readiness logic** — a decision flowchart and code example showing how to combine `available_for_pickup` with `holds_at_pod_terminal` to determine if a container can be picked up
-- **Hold and fee enum references** — quick-reference tables for all hold names and fee types, with expandable details for each value
-- **Webhook changeset examples** — how to subscribe to `container.updated` and react to hold/fee changes in real time
-- **Rail and inland destinations** — clarification that the same fields apply at inland rail terminals, not just the port of discharge
-- **FAQ** — answers to common integration questions like double-counting fees, sync lag between holds and availability, and case-sensitive hold names
+  - **Pickup readiness logic** — a decision flowchart and code example showing how to combine `available_for_pickup` with `holds_at_pod_terminal` to determine if a container can be picked up
+  - **Hold and fee enum references** — quick-reference tables for all hold names and fee types, with expandable details for each value
+  - **Webhook changeset examples** — how to subscribe to `container.updated` and react to hold/fee changes in real time
+  - **Rail and inland destinations** — clarification that the same fields apply at inland rail terminals, not just the port of discharge
+  - **FAQ** — answers to common integration questions like double-counting fees, sync lag between holds and availability, and case-sensitive hold names
 
-<Card title="Read the guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
-  Container Holds, Fees, and Release Readiness
-</Card>
-
+  <Card title="Read the guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
+    Container Holds, Fees, and Release Readiness
+  </Card>
 </Update>
 
-<Update label="December 2025" description="Infer Tracking Number (Beta)" tags={['API']}
-  rss="Added Infer Tracking Number (beta) to predict VOCC SCAC + number type prior to creating tracking requests."
->
+<Update label="December 2025" description="Infer Tracking Number (Beta)" rss="Added Infer Tracking Number (beta) to predict VOCC SCAC + number type prior to creating tracking requests.">
   ### Infer Tracking Number (Beta)
 
-Added the **Infer Tracking Number** endpoint to help you predict:
+  Added the **Infer Tracking Number** endpoint to help you predict:
 
-- The **VOCC SCAC** to use for tracking
-- The **number type** (container, bill of lading, booking)
-- A confidence-driven **decision** (`auto_select`, `needs_confirmation`, `no_prediction`)
+  - The **VOCC SCAC** to use for tracking
+  - The **number type** (container, bill of lading, booking)
+  - A confidence-driven **decision** (`auto_select`, `needs_confirmation`, `no_prediction`)
 
-<CardGroup cols={2}>
-  <Card
-    title="API Reference"
-    icon="code"
-    href="/api-docs/api-reference/tracking-requests/auto-detect-carrier"
-  >
-    Infer Tracking Number endpoint details
-  </Card>
-  <Card
-    title="Guide"
-    icon="book"
-    href="/api-docs/in-depth-guides/auto-detect-carrier"
-  >
-    How to use Infer Tracking Number in your workflow
-  </Card>
-</CardGroup>
+  <CardGroup cols={2}>
+    <Card title="API Reference" icon="code" href="/api-docs/api-reference/tracking-requests/auto-detect-carrier">
+      Infer Tracking Number endpoint details
+    </Card>
+
+    <Card title="Guide" icon="book" href="/api-docs/in-depth-guides/auto-detect-carrier">
+      How to use Infer Tracking Number in your workflow
+    </Card>
+  </CardGroup>
 
   <Tip>
-  Use Infer Tracking Number when you have a valid tracking number but don’t know the correct **VOCC SCAC**.
+    Use Infer Tracking Number when you have a valid tracking number but don’t know the correct **VOCC SCAC**.
   </Tip>
 </Update>
 
-<Update label="December 2025" description="Documentation improvements" tags={['API', 'DataSync']}
-  rss="Improved docs navigation and added an Updates tab for API/DataSync release notes."
->
+<Update label="December 2025" description="Documentation improvements" rss="Improved docs navigation and added an Updates tab for API/DataSync release notes.">
   ### Documentation improvements
 
-Added an **Updates** section to publish API/DataSync changes.
+  Added an **Updates** section to publish API/DataSync changes.
 
-Added cross-links from relevant docs to Infer Tracking Number.
-
+  Added cross-links from relevant docs to Infer Tracking Number.
 </Update>
