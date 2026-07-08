@@ -6,15 +6,17 @@ og:description: Create a custom field value on a shipment or container using the
 openapi: post /custom_fields
 ---
 
-Use this endpoint to create a custom field value on a shipment or container. The field must reference an existing custom field definition.
+Use this endpoint to create a custom field value on a shipment or container when you need to send the full JSON:API relationship payload yourself. The field must reference an existing custom field definition.
 
 ## Request body
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `entity` | Yes | Polymorphic relationship to a Shipment or Container |
-| `api_slug` | Yes | The slug of the custom field definition |
-| `value` | Yes | The field value (must match the definition's data type) |
+| `data.type` | Yes | Must be `custom_field` |
+| `data.attributes.api_slug` | Yes | The slug of the custom field definition |
+| `data.attributes.value` | Yes | The field value (must match the definition's data type) |
+| `data.relationships.entity.data.type` | Yes | `shipment` or `container` |
+| `data.relationships.entity.data.id` | Yes | The shipment or container ID |
 
 ## Value formats by data type
 
@@ -35,3 +37,55 @@ Use this endpoint to create a custom field value on a shipment or container. The
 - Enum values must match one of the definition's configured options
 - Reference values must match the definition's configured `reference_type`
 - The `api_slug` must reference a definition belonging to your account or a Terminal49 template
+
+## Example request
+
+```json
+{
+  "data": {
+    "type": "custom_field",
+    "attributes": {
+      "api_slug": "customer_reference_number",
+      "value": "ABC124"
+    },
+    "relationships": {
+      "entity": {
+        "data": {
+          "type": "shipment",
+          "id": "YOUR_SHIPMENT_ID"
+        }
+      }
+    }
+  }
+}
+```
+
+## Example response
+
+```json
+{
+  "data": {
+    "id": "YOUR_CUSTOM_FIELD_ID",
+    "type": "custom_field",
+    "attributes": {
+      "api_slug": "customer_reference_number",
+      "value": "ABC124",
+      "display_value": "ABC124"
+    },
+    "relationships": {
+      "entity": {
+        "data": {
+          "id": "YOUR_SHIPMENT_ID",
+          "type": "shipment"
+        }
+      },
+      "definition": {
+        "data": {
+          "id": "YOUR_DEFINITION_ID",
+          "type": "custom_field_definition"
+        }
+      }
+    }
+  }
+}
+```

@@ -18,8 +18,11 @@ Creates or updates a custom field on a container. If a custom field with the spe
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `api_slug` | Yes | The slug of the custom field definition |
-| `value` | Yes | The value to set (type depends on the definition's data type) |
+| `data.type` | Yes | Must be `custom_field` |
+| `data.attributes.api_slug` | Yes | The slug of the custom field definition |
+| `data.attributes.value` | Yes | The value to set (type depends on the definition's data type) |
+
+The container is implied by the path, so do not send `data.relationships.entity` on this endpoint.
 
 ## Authorization
 
@@ -34,3 +37,47 @@ Returns `201 Created` with the custom field resource on success.
 - Uses `find_or_initialize_by` internally, so it creates if missing or updates if it exists
 - Values are validated against the definition's data type
 - For enum fields, values are validated against the definition's options
+
+## Example request
+
+```json
+{
+  "data": {
+    "type": "custom_field",
+    "attributes": {
+      "api_slug": "customer_reference_number",
+      "value": "ABC124"
+    }
+  }
+}
+```
+
+## Example response
+
+```json
+{
+  "data": {
+    "id": "YOUR_CUSTOM_FIELD_ID",
+    "type": "custom_field",
+    "attributes": {
+      "api_slug": "customer_reference_number",
+      "value": "ABC124",
+      "display_value": "ABC124"
+    },
+    "relationships": {
+      "entity": {
+        "data": {
+          "id": "YOUR_CONTAINER_ID",
+          "type": "container"
+        }
+      },
+      "definition": {
+        "data": {
+          "id": "YOUR_DEFINITION_ID",
+          "type": "custom_field_definition"
+        }
+      }
+    }
+  }
+}
+```
