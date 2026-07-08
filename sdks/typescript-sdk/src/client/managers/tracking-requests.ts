@@ -105,6 +105,7 @@ export class TrackingRequestManager extends BaseManager {
     requestType: TrackingRequestType;
     requestNumber: string;
     scac?: string;
+    autoDetectVoccScac?: boolean;
     refNumbers?: string[];
     shipmentTags?: string[];
   }): Promise<any> {
@@ -119,16 +120,23 @@ export class TrackingRequestManager extends BaseManager {
       );
     }
 
+    const attributes: Record<string, unknown> = {
+      request_type: params.requestType,
+      request_number: params.requestNumber,
+      scac: params.scac ?? '',
+      ref_numbers: params.refNumbers,
+      shipment_tags: params.shipmentTags,
+    };
+
+    if (params.autoDetectVoccScac) {
+      attributes.auto_detect_vocc_scac = true;
+      if (!params.scac) delete attributes.scac;
+    }
+
     const payload = {
       data: {
         type: 'tracking_request' as const,
-        attributes: {
-          request_type: params.requestType,
-          request_number: params.requestNumber,
-          scac: params.scac ?? '',
-          ref_numbers: params.refNumbers,
-          shipment_tags: params.shipmentTags,
-        },
+        attributes,
       },
     };
 
