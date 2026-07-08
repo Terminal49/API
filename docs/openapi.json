@@ -1315,7 +1315,7 @@
                           },
                           "auto_detect_vocc_scac": {
                             "type": "boolean",
-                            "description": "Set to `true` to have Terminal49 infer the carrier SCAC from `request_number` when `scac` is not supplied. Detection is asynchronous: the tracking request is created immediately (HTTP `201`) with `status: \"pending\"` and `scac: null`. If a carrier is inferred, the request transitions to `status: \"created\"` with the detected `scac` populated. If no supported carrier can be inferred, it transitions to `status: \"failed\"` with `failed_reason: \"scac_auto_detect_failed\"` and no shipment is created. Poll the tracking request or use webhooks to observe the outcome — the create response does not include the detected `scac`.",
+                            "description": "Set to `true` to have Terminal49 infer the carrier SCAC from `request_number` when `scac` is not supplied. Detection is asynchronous: the tracking request is created immediately (HTTP `201`) with `status: \"pending\"` and `scac: null`. If a carrier is inferred, the request transitions to `status: \"created\"` with the detected `scac` populated. If no supported carrier can be inferred, it transitions to `status: \"failed\"` with `failed_reason: \"scac_auto_detect_failed\"` and no shipment is created. Poll the tracking request or use webhooks to observe the outcome \u2014 the create response does not include the detected `scac`.",
                             "default": false,
                             "example": true
                           },
@@ -2397,6 +2397,15 @@
                         }
                       }
                     }
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "type": "custom_field",
+                  "attributes": {
+                    "api_slug": "customer_reference_number",
+                    "value": "ABC124"
                   }
                 }
               }
@@ -8195,6 +8204,23 @@
                     }
                   }
                 }
+              },
+              "example": {
+                "data": {
+                  "type": "custom_field",
+                  "attributes": {
+                    "api_slug": "customer_reference_number",
+                    "value": "ABC124"
+                  },
+                  "relationships": {
+                    "entity": {
+                      "data": {
+                        "type": "shipment",
+                        "id": "YOUR_SHIPMENT_ID"
+                      }
+                    }
+                  }
+                }
               }
             }
           }
@@ -8425,6 +8451,15 @@
                     }
                   }
                 }
+              },
+              "example": {
+                "data": {
+                  "type": "custom_field",
+                  "attributes": {
+                    "api_slug": "customer_reference_number",
+                    "value": "ABC124"
+                  }
+                }
               }
             }
           }
@@ -8635,6 +8670,15 @@
                         }
                       }
                     }
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "type": "custom_field",
+                  "attributes": {
+                    "api_slug": "customer_reference_number",
+                    "value": "ABC124"
                   }
                 }
               }
@@ -10575,7 +10619,7 @@
             }
           },
           "400": {
-            "description": "Bad request — missing required `query` parameter",
+            "description": "Bad request \u2014 missing required `query` parameter",
             "content": {
               "application/json": {
                 "schema": {
@@ -10605,7 +10649,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid API token",
+            "description": "Unauthorized \u2014 missing or invalid API token",
             "content": {
               "application/json": {
                 "schema": {
