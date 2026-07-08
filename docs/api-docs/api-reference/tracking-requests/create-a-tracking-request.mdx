@@ -8,7 +8,7 @@ openapi: post /tracking_requests
 
 <Tip>
   **Don't know the SCAC?** Set `auto_detect_vocc_scac` to `true` and omit `scac`,
-  and Terminal49 will infer the shipping line for you. Detection runs
+  and Terminal49 will infer the carrier SCAC for you. Detection runs
   asynchronously: the request is created immediately with `status: "pending"` and
   `scac: null`, then resolves to `created` (with the detected `scac` populated) or
   `failed` (`failed_reason: "scac_auto_detect_failed"`) — poll the tracking request
