@@ -115,10 +115,19 @@ For events that do include the related records, the fields most integrations pul
 | --- | --- |
 | Event timestamp | Object with `type: "transport_event"` → `attributes.timestamp` |
 | Estimated timestamp (ETA events) | Object with `type: "estimated_event"` or `type: "transport_event"` → `attributes.timestamp` (or `attributes.estimated_timestamp` on legacy `estimated_event` payloads) |
+| Container ID | Object with `type: "container"` → `id` |
 | Container number | Object with `type: "container"` → `attributes.number` |
+| `pod_full_out_at`, `pod_arrived_at`, `pod_discharged_at`, `empty_terminated_at`, `pickup_lfd`, `available_for_pickup` | Object with `type: "container"` → `attributes.<field>` |
+| Shipment ID | Object with `type: "shipment"` → `id` |
 | Bill of lading number | Object with `type: "shipment"` → `attributes.bill_of_lading_number` |
+| Reference numbers (`ref_numbers`) | Object with `type: "shipment"` → `attributes.ref_numbers` |
+| `pod_eta_at`, `pod_original_eta_at`, `destination_eta_at`, `pod_ata_at` | Object with `type: "shipment"` → `attributes.<field>` |
 | Voyage number | Object with `type: "transport_event"` → `attributes.voyage_number` |
 | Location UN/LOCODE | Object with `type: "transport_event"` → `attributes.location_locode` |
+
+<Tip>
+ETA fields (`pod_eta_at`, `pod_original_eta_at`, `destination_eta_at`) and identifiers like `bill_of_lading_number` live on the **shipment**, not the container. If you only see container fields in a payload, look for the object with `type: "shipment"` in `included`. For a full mapping, see [Which object holds which field?](/api-docs/getting-started/list-shipments-and-containers#which-object-holds-which-field).
+</Tip>
 
 ## Container update changesets
 

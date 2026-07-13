@@ -22,6 +22,41 @@ After Terminal49 accepts a tracking request, it starts collecting available data
 
 Use these endpoints for on-demand lookups. For ongoing status monitoring, use webhooks instead of polling.
 
+## Which object holds which field?
+
+Tracking data is split across two resources. If you query the wrong endpoint you will not see the field you expect — for example, `pod_eta_at` is **not** returned by `GET /containers` because it lives on the shipment.
+
+| Field | Object | Endpoint |
+| --- | --- | --- |
+| `pod_eta_at` — current ETA at the port of discharge | `shipment` | `GET /shipments/{id}` |
+| `pod_original_eta_at` — first ETA reported by the carrier | `shipment` | `GET /shipments/{id}` |
+| `destination_eta_at` — ETA at the final destination (carrier view) | `shipment` | `GET /shipments/{id}` |
+| `pod_ata_at` — actual arrival at the port of discharge | `shipment` | `GET /shipments/{id}` |
+| `bill_of_lading_number` | `shipment` | `GET /shipments/{id}` |
+| `port_of_lading_name` / `port_of_discharge_name` | `shipment` | `GET /shipments/{id}` |
+| `shipping_line_scac` / `shipping_line_name` | `shipment` | `GET /shipments/{id}` |
+| `ref_numbers` | `shipment` | `GET /shipments/{id}` |
+| `number` — container number | `container` | `GET /containers/{id}` |
+| `pod_arrived_at` / `pod_discharged_at` | `container` | `GET /containers/{id}` |
+| `pod_full_out_at` — gated out of the port terminal | `container` | `GET /containers/{id}` |
+| `empty_terminated_at` — empty returned | `container` | `GET /containers/{id}` |
+| `pickup_lfd` — last free day | `container` | `GET /containers/{id}` |
+| `holds_at_pod_terminal` / `fees_at_pod_terminal` | `container` | `GET /containers/{id}` |
+| `available_for_pickup` / `availability_known` | `container` | `GET /containers/{id}` |
+| `ind_eta_at` / `ind_ata_at` — rail carrier ETA/ATA at inland destination | `container` | `GET /containers/{id}` (see [Rail integration guide](/api-docs/in-depth-guides/rail-integration-guide)) |
+
+### Fetching shipment fields alongside a container
+
+If you already have a container ID (or are filtering by container number) and want the shipment ETA fields in the same response, use the `include` query parameter to embed the related shipment:
+
+```bash
+curl "https://api.terminal49.com/v2/containers/{id}?include=shipment" \
+  -H "Content-Type: application/vnd.api+json" \
+  -H "Authorization: Token YOUR_API_KEY"
+```
+
+The shipment record — including `pod_eta_at`, `pod_original_eta_at`, and `destination_eta_at` — is returned in the top-level `included` array. See [Include related resources](/api-docs/in-depth-guides/including-resources) for the full syntax.
+
 ## Authentication
 
 As in the previous steps, every request sends your API key in the `Authorization` header:
