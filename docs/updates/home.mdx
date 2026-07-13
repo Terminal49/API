@@ -10,6 +10,85 @@ rss: true
   This page contains updates to **Terminal49 API** and **DataSync** only (not general product updates).
 </Info>
 
+<Update label="July 13, 2026" description="International terminal integrations for Hamburg, Hong Kong, Jebel Ali, Jeddah, and Dammam, POD terminal discovery beyond North America, CMA CGM mobile tracker, LFD operating-data pipeline, bill of lading release gates, dashboard container view improvements, and HLCU and OOLU fixes" rss="July 13, 2026: New terminal trackers for HHLA Hamburg (DEHAM), Hong Kong Seaport Alliance (HKHKG), DP World Jebel Ali (AEJEA), RSGT and DP World Jeddah (SAJED), and Saudi Global Ports Dammam (SADMM); POD terminal discovery extended beyond North America; new CMA CGM mobile HMAC tracker; LFD operating-data pipeline for per-terminal working days and holidays; bill of lading release gates (line, freight, customs) at BL grain; hide containers in shipments option; restored container edit actions; API-key access paused when billing is locked; V1 API surface cleanup; and fixes for HLCU gate event misclassification, false HLCU empty returns, OOLU multi-booking bill of lading numbers, shared FIRMS code disambiguation, and TILH schedule noise.">
+  ### New international terminal integrations
+
+  Six new terminal trackers expand Terminal49's coverage well beyond North America:
+
+  - **HHLA Hamburg (DEHAM)** — one integration covers all three HHLA container terminals (Burchardkai, Tollerort, Altenwerder) via the shared public COAST API, with Ready-To-Load status and outbound impediments surfaced as holds
+  - **Hong Kong (HKHKG)** — a single Hutchison Cplus integration covers HIT, ACT, COSCO-HIT (CHT), and MTL at Kwai Tsing; the per-record terminal field auto-corrects `pod_terminal` across operators
+  - **DP World Jebel Ali (AEJEA)** — Dubai Trade Container Enquiry, reachable directly (no browser required)
+  - **RSGT Jeddah (SAJED)** — Red Sea Gateway Terminal E-Track portal
+  - **DP World Jeddah** — Navis N4 Community Access Portal via the public DP World container status JSON API
+  - **Saudi Global Ports (SADMM)** — Dammam terminal tracking via the public Saudi Global Ports portal
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
+
+  ---
+
+  ### POD terminal discovery beyond North America
+
+  Destination-terminal discovery sweeps used to be hard-gated to US/CA/MX ports of discharge. With the new international terminal integrations live, discovery and near-arrival rescans now run for any POD that has a scrapable terminal — so Hamburg, Hong Kong, and future international terminals start collecting terminal data automatically instead of being one-shot at tracking creation.
+
+  ---
+
+  ### New CMA CGM mobile tracker
+
+  Added a third CMA CGM (CMDU) tracking path — **CmduMobile** — that hits the CMA CGM mobile app gateway with Kong HMAC authentication. It runs alongside the existing DCSA KeyId API and website scraper, giving CMDU shipments more redundancy against upstream outages and rate limits.
+
+  ---
+
+  ### LFD operating-data pipeline
+
+  Smart LFD now understands per-terminal **truck-gate operating schedules and holiday closures**. A new datasets pipeline sources terminal working days and calendar exceptions (holidays, weather closures, operational closures), and the demurrage calculator counts holiday closures as free days under `include_holidays` rules. Ocean Terminal Savannah is the first newly-FIRMS-scoped facility to join the pipeline.
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
+
+  ---
+
+  ### Bill of lading release gates
+
+  Added a new **BL-grain release gates** model — line, freight, and the carrier's customs decision — each with an explicit state (unknown → pending → held → cleared) and gate-specific disposition (e.g. customs exam, in-bond, documentation; line BL not surrendered). This is the foundation for reconciling release readiness at the bill of lading level, in addition to the container-level holds you already see.
+
+  <Card title="Holds and fees guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
+    How to work with holds and fees data
+  </Card>
+
+  ---
+
+  ### Hide containers in shipments
+
+  A new user preference lets you **hide the containers section** in shipment views by default. Handy if you work primarily at the shipment grain and want a tighter list without expanding each row.
+
+  ---
+
+  ### Updates
+
+  - **Container edit actions restored** — inline container edits are back on the shipment details page, with stricter equipment-type validation on update and admin reference edits working again
+  - **Shipment index and details on the V2 API** — the shipment listing, details, and edit views have been migrated fully to the Shipments V2 API for a leaner, more consistent data model
+  - **Customer filters now backed by parties** — `filter[customer_id]` on shipments and containers, and `filter[customer_name]` on containers, now match a customer party role's party (falling back to the shipment creator when no customer role is set). Filter keys and response shapes are unchanged
+  - **API-key access paused when billing is locked** — a billing lock now also pauses API-key (programmatic) access, matching how it already pauses dashboard access. Paying automatically restores API access with no separate unlock code
+  - **HLCU routed through curl_cffi** — Hapag-Lloyd API tracking now runs through the trawler curl_cffi path for improved reliability against upstream fingerprinting
+  - **Shared FIRMS code disambiguation** — LFD tariff importers now use the row's port to pick the right terminal when a FIRMS code is shared between facilities (e.g. BNSF Hobart at USCRC vs USLAX), instead of binding to an arbitrary one
+  - **Ocean Terminal Savannah FIRMS code** — set FIRMS code `L704` on Ocean Terminal Savannah so it can be terminal-scoped for LFD operating data alongside Garden City
+  - **V1 API surface cleanup** — retired 20 unused V1 controllers (cargos, ports, terminals, voyages, leads, messages, shares, documents, api_keys, and others) now that the dashboard runs on V2. Public API consumers should already be on V2
+
+  ---
+
+  ### Bug fixes
+
+  - **HLCU gate event misclassification** — off-dock drayage gate-ins on Hapag-Lloyd API responses (e.g. LA terminal → Long Beach rail ramp) were being rewritten to `empty_in`, incorrectly flipping containers to empty-returned mid-journey and auto-stopping tracking. Only the final movement of the journey is treated as the empty return now; unmapped rail gate events also produce proper rail arrivals so destination and inland ETAs populate on IPI shipments
+  - **False HLCU empty returns remediated** — cargos incorrectly flipped to empty-returned by the previous HLCU behavior have been rolled back, their tracking requests resumed, and shipments reprocessed
+  - **OOLU multi-booking BL numbers** — on multi-booking bills of lading, the OOCL mobile API returns every booking newline-joined with status labels; Terminal49 now parses this as a list and picks the entry matching the tracked reference (or the first non-rejected booking), and re-cleans previously-persisted multi-line values
+  - **TILH removed from vessel schedule ingest** — TILH-sourced schedules were producing unreliable vessel events and have been dropped from the vessel schedule pipeline
+  - **Reduced Sentry noise on party creation** — expected "party already exists" cases no longer report to Sentry
+
+</Update>
+
 <Update label="July 6, 2026" description="Zapier 2.0 integration rewrite, tracking request SCAC auto-detect, party filter and chips on the shipment dashboard, new Hapag-Lloyd public API tracker, new MAEU and OOLU Browser Use trackers, MSC US import demurrage tariff dataset, and a wave of HLCU, focus, and cargo fixes" rss="July 6, 2026: Zapier 2.0 full rewrite of the Terminal49 integration, tracking request SCAC auto-detect on create, party filter and party chips on the shipment dashboard, new Hapag-Lloyd public API tracker, new MAEU and OOLU Browser Use Cloud trackers (OOLU direct path retired), MSC (MSCU) US import demurrage tariff rules for Smart LFD, HLCU tracking requests included in the booking sweep, Faraday connection failure causes surfaced, shipment details migrated to the Shipments V2 API, and fixes for HLCU groups without container numbers, HLCU 500 → awaiting manifest, Destination Port stealing focus on load, discarded cargos not being removed after update, and WorkOS auth Sentry noise.">
   ### Zapier 2.0 integration
 
