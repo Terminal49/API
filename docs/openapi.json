@@ -1332,6 +1332,57 @@
                             "items": {
                               "type": "string"
                             }
+                          },
+                          "initial_custom_fields": {
+                            "type": "object",
+                            "description": "Optional custom field values to stage before the shipment and containers exist. Terminal49 applies `shipment` entries to the shipment and `containers` entries to matching containers once the tracking request resolves. Each `api_slug` must reference an existing custom field definition on your account.",
+                            "properties": {
+                              "shipment": {
+                                "type": "array",
+                                "description": "Custom field values to apply to the shipment created by this tracking request.",
+                                "items": {
+                                  "type": "object",
+                                  "required": [
+                                    "api_slug",
+                                    "value"
+                                  ],
+                                  "properties": {
+                                    "api_slug": {
+                                      "type": "string",
+                                      "description": "The `api_slug` of a custom field definition scoped to the `Shipment` entity type."
+                                    },
+                                    "value": {
+                                      "$ref": "#/components/schemas/custom_field_value"
+                                    }
+                                  }
+                                }
+                              },
+                              "containers": {
+                                "type": "array",
+                                "description": "Custom field values to apply to the containers created by this tracking request. Include `number` to target one specific container; omit it to apply the value to every container on the shipment.",
+                                "items": {
+                                  "type": "object",
+                                  "required": [
+                                    "api_slug",
+                                    "value"
+                                  ],
+                                  "properties": {
+                                    "api_slug": {
+                                      "type": "string",
+                                      "description": "The `api_slug` of a custom field definition scoped to the `Container` entity type."
+                                    },
+                                    "value": {
+                                      "$ref": "#/components/schemas/custom_field_value"
+                                    },
+                                    "number": {
+                                      "type": "string",
+                                      "description": "Container number to target. Omit to broadcast this value to every container on the shipment.",
+                                      "example": "MSCU1234567"
+                                    }
+                                  }
+                                }
+                              }
+                            }
                           }
                         },
                         "required": [
@@ -1384,6 +1435,30 @@
                       "attributes": {
                         "request_type": "bill_of_lading",
                         "request_number": "MEDUFR030802",
+                        "initial_custom_fields": {
+                          "shipment": [
+                            {
+                              "api_slug": "booking_reference",
+                              "value": "BOOK-2026-001"
+                            }
+                          ],
+                          "containers": [
+                            {
+                              "api_slug": "po_number",
+                              "value": "PO-123",
+                              "number": "MSCU1234567"
+                            },
+                            {
+                              "api_slug": "po_number",
+                              "value": "PO-999",
+                              "number": "TCLU7654321"
+                            },
+                            {
+                              "api_slug": "customs_broker",
+                              "value": "Acme Brokerage"
+                            }
+                          ]
+                        },
                         "ref_numbers": [
                           "PO12345",
                           "HBL12345",
