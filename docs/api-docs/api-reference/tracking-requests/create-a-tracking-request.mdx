@@ -26,7 +26,7 @@ openapi: post /tracking_requests
 
 Use `initial_custom_fields` to stage custom field values at creation time, before the shipment and containers exist. Terminal49 applies `shipment` entries to the shipment and `containers` entries to their containers once the tracking request resolves.
 
-Each `api_slug` must match an existing [custom field definition](/api-docs/api-reference/custom-fields/create-a-custom-field-definition) on your account — a `Shipment`-scoped definition for `shipment` entries, a `Container`-scoped definition for `containers` entries. Container entries without a `number` are applied to every container on the shipment; include `number` to target one specific container.
+Each `api_slug` must match an existing [custom field definition](/api-docs/api-reference/custom-fields/create-a-custom-field-definition) on your account — a `Shipment`-scoped definition for `shipment` entries, a `Container`-scoped definition for `containers` entries. Container entries without a `number` — or with `number` set to an empty string — are applied to every container on the shipment; include a non-empty `number` to target one specific container.
 
 ```json
 {
@@ -43,7 +43,8 @@ Each `api_slug` must match an existing [custom field definition](/api-docs/api-r
         "containers": [
           { "api_slug": "po_number", "value": "PO-123", "number": "MSCU1234567" },
           { "api_slug": "po_number", "value": "PO-999", "number": "TCLU7654321" },
-          { "api_slug": "customs_broker", "value": "Acme Brokerage" }
+          { "api_slug": "customs_broker", "value": "Acme Brokerage" },
+          { "api_slug": "seal_number", "value": "SEAL-0001", "number": "" }
         ]
       }
     }
@@ -51,4 +52,4 @@ Each `api_slug` must match an existing [custom field definition](/api-docs/api-r
 }
 ```
 
-In this example, `booking_reference` is set on the shipment; `po_number` is set per container by `number`; and `customs_broker`, which omits `number`, is applied to every container on the shipment.
+In this example, `booking_reference` is set on the shipment; `po_number` is set per container by `number`; and `customs_broker` and `seal_number` — which omit `number` or pass an empty string — are applied to every container on the shipment.

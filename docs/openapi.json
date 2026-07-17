@@ -1359,7 +1359,7 @@
                               },
                               "containers": {
                                 "type": "array",
-                                "description": "Custom field values to apply to the containers created by this tracking request. Include `number` to target one specific container; omit it to apply the value to every container on the shipment.",
+                                "description": "Custom field values to apply to the containers created by this tracking request. Include `number` to target one specific container; omit it (or pass an empty string) to apply the value to every container on the shipment.",
                                 "items": {
                                   "type": "object",
                                   "required": [
@@ -1376,7 +1376,7 @@
                                     },
                                     "number": {
                                       "type": "string",
-                                      "description": "Container number to target. Omit to broadcast this value to every container on the shipment.",
+                                      "description": "Container number to target. Omit this field, or pass an empty string, to broadcast this value to every container on the shipment.",
                                       "example": "MSCU1234567"
                                     }
                                   }
@@ -1456,6 +1456,11 @@
                             {
                               "api_slug": "customs_broker",
                               "value": "Acme Brokerage"
+                            },
+                            {
+                              "api_slug": "seal_number",
+                              "value": "SEAL-0001",
+                              "number": ""
                             }
                           ]
                         },
