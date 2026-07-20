@@ -121,6 +121,16 @@ If your endpoint goes down, Terminal49 retries failed deliveries. When your endp
 2. Re-fetch the current state of the affected shipments and containers from the REST API. Webhook notifications cannot be replayed — the [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint only sends a one-time sample payload for testing.
 3. For longer outages, list recent shipments via the API to catch up on any missed state changes.
 
+### Recover events you were never subscribed to
+
+If you add a new event to a webhook subscription after it has already fired for a shipment or container (for example, subscribing to `shipment.estimated.arrival` after the ETA has already changed several times), Terminal49 will **not** send those historical notifications retroactively.
+
+To recover state you missed:
+
+- Re-fetch the affected shipments and containers via the [Shipments](/api-docs/api-reference/shipments/list-shipments) and [Containers](/api-docs/api-reference/containers/list-containers) endpoints. This returns the **current** value of fields such as `pod_eta_at`, `pod_ata_at`, and the `import_deadlines` object.
+- You will only see the latest value, not the history of intermediate changes that occurred before you subscribed. If auditing every change matters to your workflow, subscribe to the event before you start ingesting the shipment.
+- The [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint sends a **sample** payload only. It is intended for testing your handler and does not replay real historical events for your shipments.
+
 ## Keep your webhook active
 
 Terminal49 may deactivate a webhook after repeated delivery failures. Check your webhook's `active` status periodically:

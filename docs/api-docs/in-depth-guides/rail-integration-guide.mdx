@@ -132,6 +132,39 @@ Finally, there is a webhook notification for when the destination ETA changes.
 
 Integrate these notifications by subscribing to the webhooks and handling the incoming data to update your systems.
 
+#### Set up a webhook for rail events
+
+Rail events use the same webhook infrastructure as ocean events — there is no separate rail-only endpoint or configuration. Create one webhook and subscribe it to the rail events you care about.
+
+You can create a webhook either from the [Developer Webhooks](https://app.terminal49.com/developers/webhooks) page in the dashboard or by calling [`POST /webhooks`](/api-docs/api-reference/webhooks/create-a-webhook) with the rail events in the `events` array:
+
+```json
+{
+  "data": {
+    "type": "webhook",
+    "attributes": {
+      "url": "https://your-endpoint.example.com/webhooks/terminal49",
+      "active": true,
+      "events": [
+        "container.transport.rail_loaded",
+        "container.transport.rail_departed",
+        "container.transport.rail_arrived",
+        "container.transport.arrived_at_inland_destination",
+        "container.transport.rail_unloaded",
+        "container.transport.estimated.arrived_at_inland_destination",
+        "container.pickup_lfd_rail.changed"
+      ]
+    }
+  }
+}
+```
+
+Notes:
+
+- `container.pickup_lfd_rail.changed` requires the [Rail Plan entitlement](/api-docs/useful-info/entitlements). Other rail events are available on standard API access.
+- `container.transport.rail_arrived` fires **every time** a container arrives at a rail terminal — including intermediate interchanges, not just the final inland destination. Use the included location data (terminal name, city, FIRMS code, LOCODE) to identify each stop.
+- Store the `secret` returned in the create response and verify the `X-T49-Webhook-Signature` header on each delivery. See the [Webhooks in-depth guide](/api-docs/in-depth-guides/webhooks) and [Webhooks best practices](/api-docs/webhooks/best-practices).
+
 ### Rail container attributes
 
 The following attributes are specific to rail container tracking and live on the [container object](/api-docs/api-reference/containers/get-a-container).

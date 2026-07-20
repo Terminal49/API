@@ -602,7 +602,7 @@
             },
             "in": "query",
             "name": "number",
-            "description": "Search shipments by the original request tracking `request_number`"
+            "description": "Search shipments by the original tracking `request_number` — typically a master bill of lading or booking number. This filter does **not** match container numbers; to look up a shipment by container number, use `GET /containers?filter[number]={container_number}` and include the related shipment via `include=shipment`."
           },
           {
             "schema": {
