@@ -1,0 +1,73 @@
+---
+title: "Connect Microsoft Copilot to Terminal49"
+sidebarTitle: "Microsoft Copilot"
+description: "Add the Terminal49 MCP server as a tool in Microsoft Copilot Studio agents using OAuth 2.0 with dynamic discovery — no API key required."
+keywords:
+  - "Terminal49 MCP server"
+  - "Microsoft Copilot Studio"
+  - "Copilot MCP"
+  - "OAuth"
+  - "dynamic client registration"
+  - "container tracking"
+---
+Add the Terminal49 MCP server as a tool in a Microsoft Copilot Studio agent so Copilot can answer questions with live container and shipment tracking data. Agents built in Copilot Studio can then be published to Microsoft 365 Copilot, Teams, and other channels.
+
+<Note>
+**No API key required.** The Terminal49 MCP server supports OAuth 2.1 with Dynamic Client Registration, which maps to Copilot Studio's **OAuth 2.0 → Dynamic discovery** authentication option. Users sign in with their Terminal49 credentials in the browser.
+</Note>
+
+## Prerequisites
+
+- Access to [Microsoft Copilot Studio](https://copilotstudio.microsoft.com) with permission to edit an agent and add tools.
+- The MCP tool configuration wizard enabled in your environment (Microsoft is rolling it out by region and tenant; if selecting the MCP option only opens documentation, the wizard isn't enabled for your tenant yet).
+
+## Add the server to an agent
+
+<Steps>
+  <Step title="Open your agent's tools">
+    In Copilot Studio, open your agent and go to the **Tools** page, then select **+ Add a tool**.
+  </Step>
+  <Step title="Create the MCP tool">
+    Select **+ New tool → Model Context Protocol**, then enter:
+
+    | Field | Value |
+    | --- | --- |
+    | Server name | `Terminal49` |
+    | Server description | `Live container and shipment tracking data from Terminal49` |
+    | Server URL | `https://mcp.terminal49.com` |
+  </Step>
+  <Step title="Choose OAuth with dynamic discovery">
+    Under **Authentication**, select **OAuth 2.0** and choose **Dynamic discovery**. Copilot Studio discovers Terminal49's authorization server and registers itself automatically — you don't need to enter client credentials.
+  </Step>
+  <Step title="Connect and sign in">
+    Create the tool, then select **Connect** (or open the connection manager) and sign in with your Terminal49 account in the browser window that opens.
+  </Step>
+  <Step title="Add the tool to the agent and test">
+    Make sure the tool is enabled for the agent, then ask in the test pane:
+
+    > "Using Terminal49, search for container CAIU1234567 and summarize its status."
+  </Step>
+</Steps>
+
+## Test your connection
+
+Ask the agent:
+
+> "List the tools available in the Terminal49 MCP server and what they're for."
+
+It should list tools such as `search_container`, `track_container`, and `get_container`. See the [tools reference](/mcp/home#tools-reference) for the full list, and [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+
+## Troubleshooting
+
+| Symptom | How to fix |
+|---------|------------|
+| MCP option only opens a documentation page | The MCP config wizard isn't enabled for your region or tenant yet — check with your Microsoft admin |
+| Connection fails during discovery | Confirm the URL is exactly `https://mcp.terminal49.com` (no path) and that OAuth 2.0 → Dynamic discovery is selected |
+| `401 Unauthorized` | Re-authenticate the connection from the agent's tool settings |
+| End users are asked to sign in | Expected — each user authorizes with their own Terminal49 account on first use |
+
+## Related guides
+
+- [MCP Overview](/mcp/home) – Tools, prompts, and resources reference
+- [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, including API-key and local stdio options
+- [Other MCP clients](/mcp/setup/other-clients) – Generic configuration for any client

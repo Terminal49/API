@@ -1,0 +1,73 @@
+---
+title: "Connect Any MCP Client to Terminal49"
+sidebarTitle: "Other MCP clients"
+description: "Generic configuration for connecting any MCP-compatible client to the Terminal49 MCP server, with OAuth 2.1 or an API key."
+keywords:
+  - "Terminal49 MCP server"
+  - "MCP client"
+  - "streamable HTTP"
+  - "OAuth 2.1"
+  - "API key"
+  - "container tracking"
+---
+Any client that supports MCP over streamable HTTP can connect to the Terminal49 MCP server. This page gives the generic settings; for step-by-step guides see [Claude](/mcp/setup/claude), [Claude Code](/mcp/setup/claude-code), [ChatGPT](/mcp/setup/chatgpt), [Cursor](/mcp/setup/cursor), [Microsoft Copilot](/mcp/setup/microsoft-copilot), [VS Code](/mcp/setup/vs-code), and [Agent plugins](/mcp/setup/agent-plugins) (Claude Code, Cursor, Codex, GitHub Copilot CLI).
+
+## Server details
+
+| Setting | Value |
+| --- | --- |
+| Server URL | `https://mcp.terminal49.com` |
+| Transport | HTTP (streamable) |
+| Authentication | OAuth 2.1 (recommended) or API key header |
+
+Always use the root origin `https://mcp.terminal49.com` — it is the canonical OAuth resource identifier, so OAuth clients bind to the correct token audience.
+
+## OAuth 2.1 (recommended — no API key)
+
+Point your client at `https://mcp.terminal49.com` with no credentials. Clients that implement MCP authorization discover everything automatically:
+
+- Protected resource metadata is served at `https://mcp.terminal49.com/.well-known/oauth-protected-resource`, which points to the authorization server at `https://auth.terminal49.com`.
+- Dynamic Client Registration is supported, so clients register themselves — no pre-configured client ID or secret is needed.
+- The flow is authorization code with PKCE: the client opens your browser, you sign in with your Terminal49 credentials and approve access, and the client stores and refreshes tokens automatically.
+
+```json
+{
+  "url": "https://mcp.terminal49.com"
+}
+```
+
+## API key (for clients without OAuth support)
+
+If your client can't run a browser OAuth flow (for example, a headless integration), create an API key in the [developer portal](https://app.terminal49.com/developers/api-keys) and send it in the `Authorization` header with the `Token` scheme:
+
+```json
+{
+  "url": "https://mcp.terminal49.com",
+  "headers": {
+    "Authorization": "Token YOUR_API_KEY"
+  }
+}
+```
+
+You can verify connectivity with `curl`:
+
+```bash
+curl -X POST https://mcp.terminal49.com \
+  -H "Authorization: Token $T49_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "MCP-Protocol-Version: 2025-06-18" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+```
+
+<Note>
+Use the `Token` scheme for API keys. The `Bearer` scheme is used for OAuth access tokens, which OAuth-capable clients obtain automatically during sign-in.
+</Note>
+
+The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP endpoints as the REST API.
+
+## Related guides
+
+- [MCP Overview](/mcp/home) – Tools, prompts, and resources reference
+- [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, local stdio development, deployment
+- [Test Numbers](/api-docs/useful-info/test-numbers) – Containers for testing

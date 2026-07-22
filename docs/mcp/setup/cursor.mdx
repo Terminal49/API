@@ -1,0 +1,93 @@
+---
+title: "Connect Cursor to Terminal49"
+sidebarTitle: "Cursor"
+description: "Connect the Cursor IDE to the Terminal49 MCP server with OAuth — no API key required."
+keywords:
+  - "Terminal49 MCP server"
+  - "Cursor MCP"
+  - "mcp.json"
+  - "OAuth"
+  - "container tracking"
+---
+Connect Cursor to the Terminal49 MCP server so its AI agent can answer questions with live container and shipment tracking data.
+
+<Note>
+**No API key required.** The Terminal49 MCP server supports OAuth 2.1. When you connect, Cursor opens a browser sign-in page — log in with your Terminal49 credentials and you're done.
+</Note>
+
+## Add the server
+
+<Steps>
+  <Step title="Add the Terminal49 server">
+    The fastest way is the one-click install button — it opens Cursor with the Terminal49 server configuration pre-filled; just confirm to install:
+
+    [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=terminal49&config=eyJ1cmwiOiJodHRwczovL21jcC50ZXJtaW5hbDQ5LmNvbSJ9)
+
+    Alternatively, add the server manually to `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` to make it available in every project):
+
+    ```json
+    {
+      "mcpServers": {
+        "terminal49": {
+          "url": "https://mcp.terminal49.com"
+        }
+      }
+    }
+    ```
+
+    You can also add it from the UI: **Cursor Settings → MCP → Add new MCP server**, using the same URL.
+  </Step>
+  <Step title="Sign in to Terminal49">
+    Cursor detects that the server requires authentication and shows a **Needs login** / **Connect** action next to it in **Cursor Settings → MCP**. Click it — your browser opens the Terminal49 sign-in page. Log in and approve access. Cursor stores and refreshes the tokens automatically.
+  </Step>
+  <Step title="Use it in a chat">
+    Open the agent chat and ask:
+
+    > "Using Terminal49, search for container CAIU1234567 and summarize its status."
+  </Step>
+</Steps>
+
+## Alternative: install the Terminal49 plugin
+
+Instead of adding the MCP server directly, you can install the **Terminal49** plugin, which configures the same MCP connection and adds a `container-tracking` skill that teaches Cursor's agent how to choose and sequence the Terminal49 tools. See the [Agent plugins guide](/mcp/setup/agent-plugins) for install steps and details.
+
+## API key alternative
+
+If you prefer a fixed credential (for example on a shared machine where the browser flow isn't practical), create an API key in the [developer portal](https://app.terminal49.com/developers/api-keys) and pass it as a header instead:
+
+```json
+{
+  "mcpServers": {
+    "terminal49": {
+      "url": "https://mcp.terminal49.com",
+      "headers": {
+        "Authorization": "Token YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Test your connection
+
+Ask the Cursor agent:
+
+> "List the tools available in the Terminal49 MCP server and what they're for."
+
+It should list tools such as `search_container`, `track_container`, and `get_container`. See the [tools reference](/mcp/home#tools-reference) for the full list, and [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+
+## Troubleshooting
+
+| Symptom | How to fix |
+|---------|------------|
+| Server shows as disconnected | Confirm the URL is exactly `https://mcp.terminal49.com` (no path), then toggle the server off and on in **Cursor Settings → MCP** |
+| Sign-in window never opens | Update Cursor to the latest version, then retry the **Connect** action |
+| `401 Unauthorized` | Re-run the login from **Cursor Settings → MCP**, or check the `Authorization: Token YOUR_API_KEY` header if you use an API key |
+| Tools list is empty | Restart Cursor so it reloads `mcp.json` |
+
+## Related guides
+
+- [Agent plugins](/mcp/setup/agent-plugins) – Terminal49 plugin with the `container-tracking` skill
+- [MCP Overview](/mcp/home) – Tools, prompts, and resources reference
+- [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, including API-key and local stdio options
+- [Other MCP clients](/mcp/setup/other-clients) – Generic configuration for any client

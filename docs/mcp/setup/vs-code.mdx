@@ -1,0 +1,74 @@
+---
+title: "Connect VS Code to Terminal49"
+sidebarTitle: "VS Code"
+description: "Connect VS Code and GitHub Copilot agent mode to the Terminal49 MCP server with OAuth — no API key required."
+keywords:
+  - "Terminal49 MCP server"
+  - "VS Code MCP"
+  - "GitHub Copilot"
+  - "mcp.json"
+  - "OAuth"
+  - "container tracking"
+---
+Connect VS Code to the Terminal49 MCP server so GitHub Copilot's agent mode can answer questions with live container and shipment tracking data.
+
+<Note>
+**No API key required.** The Terminal49 MCP server supports OAuth 2.1. When you connect, VS Code opens a browser sign-in page — log in with your Terminal49 credentials and you're done.
+</Note>
+
+## Prerequisites
+
+- VS Code 1.101 or later (required for remote MCP servers with OAuth).
+- GitHub Copilot enabled in VS Code.
+
+## Add the server
+
+<Steps>
+  <Step title="Create the MCP config">
+    Add the server to `.vscode/mcp.json` in your workspace:
+
+    ```json
+    {
+      "servers": {
+        "terminal49": {
+          "type": "http",
+          "url": "https://mcp.terminal49.com"
+        }
+      }
+    }
+    ```
+
+    Alternatively, run **MCP: Add Server** from the Command Palette, choose **HTTP**, and enter the same URL.
+  </Step>
+  <Step title="Start the server and sign in">
+    Save the file, then use the **Start** CodeLens above the server entry in `mcp.json` (or **MCP: List Servers** from the Command Palette). When VS Code prompts you to authenticate, allow it — your browser opens the Terminal49 sign-in page. Log in and approve access.
+  </Step>
+  <Step title="Use it in Copilot Chat">
+    Open Copilot Chat in **agent mode**, confirm the Terminal49 tools are enabled in the tools picker, and ask:
+
+    > "Using Terminal49, search for container CAIU1234567 and summarize its status."
+  </Step>
+</Steps>
+
+## Test your connection
+
+Ask Copilot in agent mode:
+
+> "List the tools available in the Terminal49 MCP server and what they're for."
+
+It should list tools such as `search_container`, `track_container`, and `get_container`. See the [tools reference](/mcp/home#tools-reference) for the full list, and [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+
+## Troubleshooting
+
+| Symptom | How to fix |
+|---------|------------|
+| Server won't start | Confirm the URL is exactly `https://mcp.terminal49.com` (no path) and VS Code is 1.101+ |
+| Never prompted to sign in | Use the **Auth** action from the CodeLens above the server in `mcp.json`, or restart the server |
+| `401 Unauthorized` | Re-authenticate via the server's CodeLens actions |
+| Tools missing in chat | Switch Copilot Chat to agent mode and enable the Terminal49 tools in the tools picker |
+
+## Related guides
+
+- [MCP Overview](/mcp/home) – Tools, prompts, and resources reference
+- [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, including API-key and local stdio options
+- [Other MCP clients](/mcp/setup/other-clients) – Generic configuration for any client

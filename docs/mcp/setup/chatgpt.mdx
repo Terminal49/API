@@ -1,0 +1,74 @@
+---
+title: "Connect ChatGPT to Terminal49"
+sidebarTitle: "ChatGPT"
+description: "Connect ChatGPT to the Terminal49 MCP server as a custom connector with OAuth — no API key required."
+keywords:
+  - "Terminal49 MCP server"
+  - "ChatGPT connector"
+  - "ChatGPT MCP"
+  - "developer mode"
+  - "OAuth"
+  - "container tracking"
+---
+Connect ChatGPT to the Terminal49 MCP server so it can answer questions with live container and shipment tracking data.
+
+<Note>
+**No API key required.** The Terminal49 MCP server supports OAuth 2.1. When you connect, ChatGPT opens a browser sign-in page — log in with your Terminal49 credentials and you're done.
+</Note>
+
+## Prerequisites
+
+- A paid ChatGPT plan. Custom MCP connectors require **Developer mode**, available on Plus, Pro, Business, Enterprise, and Edu plans. Free accounts cannot add custom connectors.
+- On Business, Enterprise, and Edu workspaces, an admin may need to enable Developer mode or approve the connector for the workspace.
+
+## Add the connector
+
+<Steps>
+  <Step title="Enable Developer mode">
+    In ChatGPT, open **Settings**, find the connectors section (labeled **Connectors** or **Apps**, depending on your version), open **Advanced settings**, and turn on **Developer mode**.
+  </Step>
+  <Step title="Create the connector">
+    In the same connectors section, click **Create** (or **Add custom connector**). You can also [open the create-connector screen directly](https://chatgpt.com/plugins#settings/Connectors?create-connector=true&redirectAfter=%2Fplugins). Then enter:
+
+    | Field | Value |
+    | --- | --- |
+    | Name | `Terminal49` |
+    | MCP server URL | `https://mcp.terminal49.com` |
+    | Authentication | `OAuth` |
+  </Step>
+  <Step title="Sign in to Terminal49">
+    Save the connector. ChatGPT opens the Terminal49 sign-in page in your browser. Log in with your Terminal49 account and approve access.
+  </Step>
+  <Step title="Use it in a chat">
+    In a new chat, enable the **Terminal49** connector from the tools menu (with Developer mode active), then ask:
+
+    > "Using Terminal49, search for container CAIU1234567 and summarize its status."
+  </Step>
+</Steps>
+
+<Note>
+OpenAI has moved the Developer mode toggle between settings sections over time. If you don't see it under the connectors section, check **Settings → Security** (or search the [OpenAI Help Center](https://help.openai.com) for "developer mode").
+</Note>
+
+## Test your connection
+
+Ask ChatGPT:
+
+> "List the tools available in the Terminal49 MCP server and what they're for."
+
+It should list tools such as `search_container`, `track_container`, and `get_container`. See the [tools reference](/mcp/home#tools-reference) for the full list, and [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+
+## Troubleshooting
+
+| Symptom | How to fix |
+|---------|------------|
+| No option to add a custom connector | Enable Developer mode; confirm your plan supports it, or ask your workspace admin |
+| Connector fails to create | Confirm the URL is exactly `https://mcp.terminal49.com` (no path) |
+| Sign-in window never opens | Pop-up blocked — allow pop-ups for chatgpt.com and retry |
+| `401 Unauthorized` after connecting | Remove and re-add the connector to refresh the OAuth token |
+
+## Related guides
+
+- [MCP Overview](/mcp/home) – Tools, prompts, and resources reference
+- [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, including API-key and local stdio options
+- [Other MCP clients](/mcp/setup/other-clients) – Generic configuration for any client
