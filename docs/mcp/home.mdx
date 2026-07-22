@@ -1,72 +1,44 @@
 ---
 title: "Terminal49 MCP Server"
 sidebarTitle: "MCP Overview"
-description: "Connect the Terminal49 MCP server to Claude Desktop or Cursor so AI tools can query, search, and answer questions with live shipment tracking data."
+description: "Connect the Terminal49 MCP server to Claude, ChatGPT, Cursor, Microsoft Copilot, or any MCP client so AI tools can query, search, and answer questions with live shipment tracking data."
 keywords:
   - "Terminal49 MCP server"
   - "AI container tracking"
   - "live shipment data"
-  - "Claude Desktop"
+  - "Claude"
+  - "ChatGPT"
   - "Cursor"
+  - "Microsoft Copilot"
+  - "OAuth"
   - "MCP config"
   - "shipment data assistant"
 ---
-Use the Terminal49 MCP server to let Claude or Cursor answer questions with live container and shipment data—without writing custom glue code.
+Use the Terminal49 MCP server to let Claude, ChatGPT, Cursor, Microsoft Copilot, or any MCP client answer questions with live container and shipment data—without writing custom glue code.
 
 ## TL;DR – get started in 5 minutes
 
 <Steps>
-  <Step title="Get your API key">
-    Create an API key in the [developer portal](https://app.terminal49.com/developers/api-keys).
-  </Step>
   <Step title="Pick your MCP client">
-    - **Claude Desktop** (macOS / Windows / Linux)
-    - **Cursor IDE**
+    Follow the setup guide for your tool:
+
+    - [Claude](/mcp/setup/claude) (claude.ai, Claude Desktop, Claude Code)
+    - [ChatGPT](/mcp/setup/chatgpt)
+    - [Cursor](/mcp/setup/cursor)
+    - [Microsoft Copilot](/mcp/setup/microsoft-copilot) (Copilot Studio)
+    - [VS Code](/mcp/setup/vs-code) (GitHub Copilot)
+    - [Other MCP clients](/mcp/setup/other-clients)
   </Step>
-  <Step title="Paste this config (Claude Desktop)">
-    Edit the Claude Desktop config file for your operating system:
-
-    | OS | Config path |
-    | --- | --- |
-    | macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-    | Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
-    | Linux | `~/.config/Claude/claude_desktop_config.json` |
-
-    ```json
-    {
-      "mcpServers": {
-        "terminal49": {
-          "url": "https://mcp.terminal49.com",
-          "headers": {
-            "Authorization": "Token YOUR_API_KEY"
-          }
-        }
-      }
-    }
-    ```
-
-    <Accordion title="Cursor IDE config">
-    ```json
-    {
-      "mcp": {
-        "servers": {
-          "terminal49": {
-            "url": "https://mcp.terminal49.com",
-            "headers": {
-              "Authorization": "Token YOUR_API_KEY"
-            }
-          }
-        }
-      }
-    }
-    ```
-    </Accordion>
+  <Step title="Add the connector URL">
+    Point the client at `https://mcp.terminal49.com`. No API key needed.
   </Step>
-  <Step title="Ask Claude">
+  <Step title="Sign in to Terminal49">
+    The server supports OAuth 2.1: your client opens a browser window, you sign in with your Terminal49 credentials and approve access. That's it.
+  </Step>
+  <Step title="Ask a question">
     > "Using the Terminal49 MCP server, track container CAIU1234567 with Maersk."
   </Step>
   <Step title="Explore tools">
-    Ask Claude:
     > "List the tools available in the Terminal49 MCP server and what they're for."
   </Step>
 </Steps>
@@ -86,17 +58,48 @@ For the full walkthrough (including local stdio dev, deployment, and SDK example
 | HTTP (streamable) | `POST https://mcp.terminal49.com` | Serverless, short-lived requests |
 
 **Authentication**:
-- API key only (OAuth not required for this release)
-- Pass `Authorization: Token YOUR_API_KEY`. Use the `Token` scheme for API keys. The `Bearer` scheme is reserved for WorkOS OAuth access tokens — it currently accepts API keys for backward compatibility, but once OAuth is enabled, `Bearer` accepts only WorkOS tokens.
-- The hosted endpoint always requires the `Authorization` header. Only the [local stdio server](/api-docs/in-depth-guides/mcp#local-stdio-development) reads the `T49_API_TOKEN` environment variable instead of a header.
+- **OAuth 2.1 (recommended)** – no API key needed. Add the connector URL, sign in with your Terminal49 credentials in the browser window your client opens, and approve access. Clients discover the authorization server (`https://auth.terminal49.com`) automatically and use authorization code with PKCE and Dynamic Client Registration.
+- **API key (for clients without OAuth support)** – create a key in the [developer portal](https://app.terminal49.com/developers/api-keys) and pass `Authorization: Token YOUR_API_KEY`. Use the `Token` scheme for API keys; the `Bearer` scheme is used for OAuth access tokens, which OAuth clients obtain automatically.
+- The [local stdio server](/api-docs/in-depth-guides/mcp#local-stdio-development) reads the `T49_API_TOKEN` environment variable instead.
 
 <Tip>
 Connector URL: `https://mcp.terminal49.com`. It is the canonical OAuth resource identifier, so OAuth clients (ChatGPT, Claude connectors) bind to the correct token audience.
 </Tip>
 
+## Setup guides
+
+<CardGroup cols={3}>
+  <Card title="Claude" href="/mcp/setup/claude">
+    claude.ai, Claude Desktop, and Claude Code
+  </Card>
+  <Card title="ChatGPT" href="/mcp/setup/chatgpt">
+    Custom connector with Developer mode
+  </Card>
+  <Card title="Cursor" href="/mcp/setup/cursor">
+    `mcp.json` or Cursor Settings → MCP
+  </Card>
+  <Card title="Microsoft Copilot" href="/mcp/setup/microsoft-copilot">
+    Copilot Studio agent tools
+  </Card>
+  <Card title="VS Code" href="/mcp/setup/vs-code">
+    GitHub Copilot agent mode
+  </Card>
+  <Card title="Other MCP clients" href="/mcp/setup/other-clients">
+    Generic OAuth or API-key configuration
+  </Card>
+</CardGroup>
+
 ## Any MCP client
 
-Use the same hosted Streamable HTTP endpoint in any MCP-compatible client:
+Use the same hosted Streamable HTTP endpoint in any MCP-compatible client. With an OAuth-capable client, no credentials are needed — just the URL:
+
+```json
+{
+  "url": "https://mcp.terminal49.com"
+}
+```
+
+If your client can't run a browser OAuth flow, pass an API key instead:
 
 ```json
 {
@@ -107,9 +110,7 @@ Use the same hosted Streamable HTTP endpoint in any MCP-compatible client:
 }
 ```
 
-<Note>
-OAuth is not available for the hosted MCP server yet. Use a Terminal49 API key until OAuth support is published.
-</Note>
+See [Other MCP clients](/mcp/setup/other-clients) for details on OAuth discovery and verification.
 
 The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP endpoints as the REST API.
 

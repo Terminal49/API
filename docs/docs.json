@@ -417,6 +417,17 @@
               "mcp/home",
               "api-docs/in-depth-guides/mcp"
             ]
+          },
+          {
+            "group": "Setup Guides",
+            "pages": [
+              "mcp/setup/claude",
+              "mcp/setup/chatgpt",
+              "mcp/setup/cursor",
+              "mcp/setup/microsoft-copilot",
+              "mcp/setup/vs-code",
+              "mcp/setup/other-clients"
+            ]
           }
         ]
       },

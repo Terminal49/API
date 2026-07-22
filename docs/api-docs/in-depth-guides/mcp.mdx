@@ -1,6 +1,6 @@
 ---
 title: "Terminal49 MCP Server Quickstart"
-description: "Set up the Terminal49 MCP server in Claude Desktop, Cursor, or another MCP-compatible client to query live shipment and container tracking data."
+description: "Set up the Terminal49 MCP server in Claude, ChatGPT, Cursor, Microsoft Copilot, or another MCP-compatible client to query live shipment and container tracking data."
 keywords:
   - "Terminal49 MCP server"
   - "AI container tracking"
@@ -10,10 +10,10 @@ keywords:
   - "Cursor"
   - "MCP config"
 ---
-This guide covers everything you need to connect Claude or Cursor to Terminal49's container tracking data via MCP.
+This guide covers everything you need to connect an MCP client to Terminal49's container tracking data.
 
 <Note>
-Just want to get started fast? See [MCP Overview](/mcp/home) for a 5-minute setup.
+Just want to get started fast? See the per-tool setup guides for [Claude](/mcp/setup/claude), [ChatGPT](/mcp/setup/chatgpt), [Cursor](/mcp/setup/cursor), [Microsoft Copilot](/mcp/setup/microsoft-copilot), and [VS Code](/mcp/setup/vs-code), or the [MCP Overview](/mcp/home) for a 5-minute setup.
 </Note>
 
 ## Prerequisites
@@ -22,16 +22,16 @@ Before you begin, make sure you have:
 
 <CardGroup cols={2}>
   <Card title="Terminal49 account" icon="user">
-    A Terminal49 account with API access
+    You sign in with your Terminal49 credentials during the OAuth flow — no API key needed
   </Card>
-  <Card title="API key" icon="key">
-    An API key from the [developer portal](https://app.terminal49.com/developers/api-keys)
+  <Card title="API key (optional)" icon="key">
+    Only needed for clients without OAuth support or the local stdio server — create one in the [developer portal](https://app.terminal49.com/developers/api-keys)
   </Card>
   <Card title="Node.js 24.x" icon="node-js">
     Required if running the MCP server locally
   </Card>
   <Card title="MCP client" icon="robot">
-    Claude Desktop or Cursor IDE
+    Claude, ChatGPT, Cursor, Microsoft Copilot, VS Code, or any MCP-compatible client
   </Card>
 </CardGroup>
 
@@ -49,16 +49,16 @@ Before you begin, make sure you have:
 |-----------|----------|----------|
 | HTTP (streamable) | `POST https://mcp.terminal49.com` | Serverless, short-lived requests |
 
-**Authentication**: API key only (OAuth not required for this release).
-Pass `Authorization: Token YOUR_API_KEY`. Use the `Token` scheme for API keys. The `Bearer` scheme is reserved for WorkOS OAuth access tokens — it currently accepts API keys for backward compatibility, but once OAuth is enabled, `Bearer` accepts only WorkOS tokens.
+**Authentication**: OAuth 2.1 (recommended) or API key.
 
-The hosted endpoint always requires the `Authorization` header. Only the [local stdio server](#local-stdio-development) reads the `T49_API_TOKEN` environment variable instead of a header.
+- **OAuth 2.1** – no API key needed. Add `https://mcp.terminal49.com` to your client; it discovers the authorization server (`https://auth.terminal49.com`) via protected resource metadata, registers itself with Dynamic Client Registration, and opens your browser so you can sign in with your Terminal49 credentials. Tokens are stored and refreshed by the client.
+- **API key** – for clients that can't run a browser OAuth flow, pass `Authorization: Token YOUR_API_KEY`. Use the `Token` scheme for API keys; the `Bearer` scheme is used for OAuth access tokens, which OAuth clients obtain automatically.
+
+Only the [local stdio server](#local-stdio-development) reads the `T49_API_TOKEN` environment variable instead of a header.
 
 <Tip>
-Claude Desktop and Cursor use the HTTP transport. For hosted production usage, connect to `https://mcp.terminal49.com` — the root origin is the canonical connector URL.
+For hosted production usage, connect to `https://mcp.terminal49.com` — the root origin is the canonical connector URL and OAuth resource identifier.
 </Tip>
-
-{/* OAuth hosted docs are not yet published. Links will be added when the pages are available. */}
 
 ---
 
@@ -82,7 +82,20 @@ SENTRY_SEND_DEFAULT_PII=false
 
 ## Configure your MCP client
 
-### Claude Desktop
+### OAuth setup (recommended)
+
+Most clients connect with just the server URL and a browser sign-in — no API key. Follow the guide for your tool:
+
+- [Claude](/mcp/setup/claude) – claude.ai, Claude Desktop, and Claude Code
+- [ChatGPT](/mcp/setup/chatgpt) – custom connector with Developer mode
+- [Cursor](/mcp/setup/cursor) – `mcp.json` or Cursor Settings → MCP
+- [Microsoft Copilot](/mcp/setup/microsoft-copilot) – Copilot Studio agent tools
+- [VS Code](/mcp/setup/vs-code) – GitHub Copilot agent mode
+- [Other MCP clients](/mcp/setup/other-clients) – generic configuration
+
+The manual configurations below use an API key instead. Use them for clients or environments where the browser OAuth flow isn't practical.
+
+### Claude Desktop (manual, API key)
 
 <Tabs>
   <Tab title="macOS">
@@ -135,19 +148,17 @@ SENTRY_SEND_DEFAULT_PII=false
   </Tab>
 </Tabs>
 
-### Cursor IDE
+### Cursor IDE (manual, API key)
 
-Add to your Cursor settings:
+Add to `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` for all projects):
 
 ```json
 {
-  "mcp": {
-    "servers": {
-      "terminal49": {
-        "url": "https://mcp.terminal49.com",
-        "headers": {
-          "Authorization": "Token YOUR_API_KEY"
-        }
+  "mcpServers": {
+    "terminal49": {
+      "url": "https://mcp.terminal49.com",
+      "headers": {
+        "Authorization": "Token YOUR_API_KEY"
       }
     }
   }
@@ -229,7 +240,7 @@ Need test container numbers? See [Test Numbers](/api-docs/useful-info/test-numbe
 | Symptom | Likely Cause | How to Fix |
 |---------|--------------|------------|
 | "Cannot connect to MCP server" | Wrong URL or config path | Confirm URL is `https://mcp.terminal49.com` and config file path matches your OS |
-| `401 Unauthorized` | Missing or invalid API key | Create a new API key in the [developer portal](https://app.terminal49.com/developers/api-keys); ensure the `Authorization: Token YOUR_API_KEY` header is set |
+| `401 Unauthorized` | Expired OAuth session, or missing/invalid API key | Disconnect and reconnect the connector to re-run the OAuth sign-in. If using an API key, create a new one in the [developer portal](https://app.terminal49.com/developers/api-keys) and ensure the `Authorization: Token YOUR_API_KEY` header is set |
 | `429 Too Many Requests` | Rate limit exceeded | See [Rate Limiting](/api-docs/in-depth-guides/rate-limiting); use webhooks instead of polling |
 | Tools list is empty | Config not loaded | Restart Claude/Cursor; check MCP inspector for errors |
 | "Tool not found" | Typo in tool name | Use exact names: `search_container`, `get_container`, etc. |
@@ -414,6 +425,7 @@ curl -X POST https://mcp.terminal49.com \
 ## Related guides
 
 - [MCP Overview](/mcp/home) – Quick start and tools reference
+- Setup guides: [Claude](/mcp/setup/claude), [ChatGPT](/mcp/setup/chatgpt), [Cursor](/mcp/setup/cursor), [Microsoft Copilot](/mcp/setup/microsoft-copilot), [VS Code](/mcp/setup/vs-code), [Other clients](/mcp/setup/other-clients)
 - [Rate Limiting](/api-docs/in-depth-guides/rate-limiting) – API limits (same for MCP)
 - [Test Numbers](/api-docs/useful-info/test-numbers) – Containers for testing
 - [Webhooks](/api-docs/in-depth-guides/webhooks) – Real-time updates
