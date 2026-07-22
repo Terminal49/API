@@ -422,6 +422,7 @@
             "group": "Setup Guides",
             "pages": [
               "mcp/setup/claude",
+              "mcp/setup/claude-code",
               "mcp/setup/chatgpt",
               "mcp/setup/cursor",
               "mcp/setup/microsoft-copilot",

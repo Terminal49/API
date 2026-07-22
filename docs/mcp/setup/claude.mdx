@@ -1,13 +1,12 @@
 ---
 title: "Connect Claude to Terminal49"
 sidebarTitle: "Claude"
-description: "Connect claude.ai, Claude Desktop, or Claude Code to the Terminal49 MCP server with OAuth — no API key required."
+description: "Connect claude.ai or Claude Desktop to the Terminal49 MCP server with OAuth — no API key required."
 keywords:
   - "Terminal49 MCP server"
   - "Claude connector"
   - "claude.ai custom connector"
   - "Claude Desktop"
-  - "Claude Code"
   - "OAuth"
   - "container tracking"
 ---
@@ -17,13 +16,17 @@ Connect Claude to the Terminal49 MCP server so it can answer questions with live
 **No API key required.** The Terminal49 MCP server supports OAuth 2.1. When you connect, Claude opens a browser sign-in page — log in with your Terminal49 credentials and you're done.
 </Note>
 
+<Tip>
+Using Claude Code? See the [Claude Code guide](/mcp/setup/claude-code) — it's one command from your terminal.
+</Tip>
+
 ## claude.ai and Claude Desktop
 
 Custom connectors are managed in the same place on claude.ai (web) and in the Claude Desktop app.
 
 <Steps>
   <Step title="Open connector settings">
-    In Claude, go to **Settings → Connectors**.
+    In Claude, go to **Settings → Connectors**. On claude.ai you can also [open the Add custom connector dialog directly](https://claude.ai/new?modal=add-custom-connector#settings/customize-connectors) and skip the next click.
   </Step>
   <Step title="Add the Terminal49 connector">
     Click **Add custom connector**, then enter:
@@ -49,16 +52,6 @@ Custom connectors are managed in the same place on claude.ai (web) and in the Cl
 Custom connectors are available on Claude Free, Pro, Max, Team, and Enterprise plans (Free is limited to one custom connector). On Team and Enterprise plans, an organization Owner must add the connector first under **Organization Settings → Connectors**; each member then connects their own Terminal49 account.
 </Note>
 
-## Claude Code
-
-Add the server from your terminal:
-
-```bash
-claude mcp add --transport http terminal49 https://mcp.terminal49.com
-```
-
-Then, inside a Claude Code session, run `/mcp`, select **terminal49**, and choose **Authenticate**. Your browser opens the Terminal49 sign-in page; after you log in, the server shows as connected.
-
 ## Test your connection
 
 Ask Claude:
@@ -78,6 +71,7 @@ Claude should list tools such as `search_container`, `track_container`, and `get
 
 ## Related guides
 
+- [Claude Code](/mcp/setup/claude-code) – Add the server from your terminal
 - [MCP Overview](/mcp/home) – Tools, prompts, and resources reference
 - [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, including API-key and local stdio options
 - [Other MCP clients](/mcp/setup/other-clients) – Generic configuration for any client

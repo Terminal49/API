@@ -13,7 +13,7 @@ keywords:
 This guide covers everything you need to connect an MCP client to Terminal49's container tracking data.
 
 <Note>
-Just want to get started fast? See the per-tool setup guides for [Claude](/mcp/setup/claude), [ChatGPT](/mcp/setup/chatgpt), [Cursor](/mcp/setup/cursor), [Microsoft Copilot](/mcp/setup/microsoft-copilot), and [VS Code](/mcp/setup/vs-code), or the [MCP Overview](/mcp/home) for a 5-minute setup.
+Just want to get started fast? See the per-tool setup guides for [Claude](/mcp/setup/claude), [Claude Code](/mcp/setup/claude-code), [ChatGPT](/mcp/setup/chatgpt), [Cursor](/mcp/setup/cursor), [Microsoft Copilot](/mcp/setup/microsoft-copilot), and [VS Code](/mcp/setup/vs-code), or the [MCP Overview](/mcp/home) for a 5-minute setup.
 </Note>
 
 ## Prerequisites
@@ -86,7 +86,8 @@ SENTRY_SEND_DEFAULT_PII=false
 
 Most clients connect with just the server URL and a browser sign-in — no API key. Follow the guide for your tool:
 
-- [Claude](/mcp/setup/claude) – claude.ai, Claude Desktop, and Claude Code
+- [Claude](/mcp/setup/claude) – claude.ai and Claude Desktop
+- [Claude Code](/mcp/setup/claude-code) – one `claude mcp add` command
 - [ChatGPT](/mcp/setup/chatgpt) – custom connector with Developer mode
 - [Cursor](/mcp/setup/cursor) – `mcp.json` or Cursor Settings → MCP
 - [Microsoft Copilot](/mcp/setup/microsoft-copilot) – Copilot Studio agent tools
@@ -378,7 +379,7 @@ curl -X POST https://mcp.terminal49.com \
 ## Related guides
 
 - [MCP Overview](/mcp/home) – Quick start and tools reference
-- Setup guides: [Claude](/mcp/setup/claude), [ChatGPT](/mcp/setup/chatgpt), [Cursor](/mcp/setup/cursor), [Microsoft Copilot](/mcp/setup/microsoft-copilot), [VS Code](/mcp/setup/vs-code), [Other clients](/mcp/setup/other-clients)
+- Setup guides: [Claude](/mcp/setup/claude), [Claude Code](/mcp/setup/claude-code), [ChatGPT](/mcp/setup/chatgpt), [Cursor](/mcp/setup/cursor), [Microsoft Copilot](/mcp/setup/microsoft-copilot), [VS Code](/mcp/setup/vs-code), [Other clients](/mcp/setup/other-clients)
 - [Rate Limiting](/api-docs/in-depth-guides/rate-limiting) – API limits (same for MCP)
 - [Test Numbers](/api-docs/useful-info/test-numbers) – Containers for testing
 - [Webhooks](/api-docs/in-depth-guides/webhooks) – Real-time updates
