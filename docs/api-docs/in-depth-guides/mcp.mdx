@@ -95,58 +95,9 @@ Most clients connect with just the server URL and a browser sign-in — no API k
 
 The manual configurations below use an API key instead. Use them for clients or environments where the browser OAuth flow isn't practical.
 
-### Claude Desktop (manual, API key)
-
-<Tabs>
-  <Tab title="macOS">
-    Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
-
-    ```json
-    {
-      "mcpServers": {
-        "terminal49": {
-          "url": "https://mcp.terminal49.com",
-          "headers": {
-            "Authorization": "Token YOUR_API_KEY"
-          }
-        }
-      }
-    }
-    ```
-  </Tab>
-  <Tab title="Windows">
-    Edit `%APPDATA%\Claude\claude_desktop_config.json`:
-
-    ```json
-    {
-      "mcpServers": {
-        "terminal49": {
-          "url": "https://mcp.terminal49.com",
-          "headers": {
-            "Authorization": "Token YOUR_API_KEY"
-          }
-        }
-      }
-    }
-    ```
-  </Tab>
-  <Tab title="Linux">
-    Edit `~/.config/Claude/claude_desktop_config.json`:
-
-    ```json
-    {
-      "mcpServers": {
-        "terminal49": {
-          "url": "https://mcp.terminal49.com",
-          "headers": {
-            "Authorization": "Token YOUR_API_KEY"
-          }
-        }
-      }
-    }
-    ```
-  </Tab>
-</Tabs>
+<Warning>
+claude.ai and Claude Desktop cannot send a static API-key header — they always authenticate through the OAuth connector flow. Follow the [Claude setup guide](/mcp/setup/claude) to connect them. For API-key-based local development in Claude Desktop, use the [local stdio server](#local-stdio-development) below instead.
+</Warning>
 
 ### Cursor IDE (manual, API key)
 
@@ -417,6 +368,8 @@ echo '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"search_container"
 curl -X POST https://mcp.terminal49.com \
   -H "Authorization: Token $T49_API_TOKEN" \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "MCP-Protocol-Version: 2025-06-18" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
 ```
 
