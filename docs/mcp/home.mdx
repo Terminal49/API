@@ -93,6 +93,26 @@ Connector URL: `https://mcp.terminal49.com`. It is the canonical OAuth resource 
   </Card>
 </CardGroup>
 
+## Agent plugins
+
+For coding agents, the [Terminal49/agent-plugins](https://github.com/Terminal49/agent-plugins) marketplace publishes a **Terminal49** plugin that bundles the MCP server connection with a shared `container-tracking` skill — workflow guidance that teaches agents how to search, track, and investigate container shipments. It supports Cursor, Claude Code, Codex, and GitHub Copilot CLI; authentication uses the same browser OAuth flow, so the plugin contains no API keys.
+
+```sh
+# Claude Code
+claude plugin marketplace add Terminal49/agent-plugins
+claude plugin install terminal49@terminal49
+
+# Codex
+codex plugin marketplace add Terminal49/agent-plugins
+codex plugin add terminal49@terminal49
+
+# GitHub Copilot CLI
+copilot plugin marketplace add Terminal49/agent-plugins
+copilot plugin install terminal49@terminal49
+```
+
+In Cursor, run `/add-plugin https://github.com/Terminal49/agent-plugins` in chat and install **Terminal49**. See the [Claude Code](/mcp/setup/claude-code#alternative-install-the-terminal49-plugin) and [Cursor](/mcp/setup/cursor#alternative-install-the-terminal49-plugin) guides, or the [repository README](https://github.com/Terminal49/agent-plugins#readme) for details.
+
 ## Any MCP client
 
 Use the same hosted Streamable HTTP endpoint in any MCP-compatible client. With an OAuth-capable client, no credentials are needed — just the URL:
