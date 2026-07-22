@@ -1,0 +1,96 @@
+---
+title: "Install the Terminal49 Agent Plugin"
+sidebarTitle: "Agent plugins"
+description: "Install the Terminal49 plugin in Claude Code, Cursor, Codex, or GitHub Copilot CLI — MCP connection plus a container-tracking skill, with OAuth and no API key."
+keywords:
+  - "Terminal49 agent plugins"
+  - "Terminal49 plugin"
+  - "container-tracking skill"
+  - "Claude Code plugin"
+  - "Cursor plugin"
+  - "Codex plugin"
+  - "GitHub Copilot CLI plugin"
+  - "OAuth"
+  - "container tracking"
+---
+Install the **Terminal49** plugin from the [Terminal49/agent-plugins](https://github.com/Terminal49/agent-plugins) marketplace to set up your coding agent in one step. The plugin configures the Terminal49 MCP server connection (`https://mcp.terminal49.com`) and adds a shared `container-tracking` skill, so you don't have to add the server manually.
+
+<Note>
+**No API key required.** The plugin contains no API keys or customer data. Authentication uses the same OAuth 2.1 browser flow as a direct MCP connection — sign in with your Terminal49 credentials when your agent first connects.
+</Note>
+
+## What the plugin provides
+
+- OAuth connection to `https://mcp.terminal49.com` — the same hosted MCP server the [other setup guides](/mcp/home#setup-guides) configure directly
+- A shared `container-tracking` skill that teaches agents how to choose and sequence the Terminal49 tools when searching, tracking, and investigating container shipments
+- Workflow guidance for status, pickup readiness, holds, ETAs, routes, delays, and demurrage-risk questions
+- Guardrails around tracking-request creation, credentials, dates, and missing data
+
+## Install
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```sh
+    claude plugin marketplace add Terminal49/agent-plugins
+    claude plugin install terminal49@terminal49
+    ```
+
+    The first time the Terminal49 tools are used, sign in through the browser OAuth flow. If you aren't prompted, run `/mcp`, select **terminal49**, and choose **Authenticate**.
+
+    Prefer adding the MCP server directly? See the [Claude Code guide](/mcp/setup/claude-code).
+  </Tab>
+  <Tab title="Cursor">
+    In Cursor chat, run:
+
+    ```text
+    /add-plugin https://github.com/Terminal49/agent-plugins
+    ```
+
+    Then select and install **Terminal49**. Cursor prompts you to connect the MCP server (the browser OAuth sign-in) when the plugin first needs it.
+
+    Prefer adding the MCP server directly? See the [Cursor guide](/mcp/setup/cursor).
+  </Tab>
+  <Tab title="Codex">
+    ```sh
+    codex plugin marketplace add Terminal49/agent-plugins
+    codex plugin add terminal49@terminal49
+    ```
+  </Tab>
+  <Tab title="GitHub Copilot CLI">
+    Copilot CLI reads the Claude-compatible marketplace included in the repository:
+
+    ```sh
+    copilot plugin marketplace add Terminal49/agent-plugins
+    copilot plugin install terminal49@terminal49
+    ```
+  </Tab>
+</Tabs>
+
+## Test the plugin
+
+After connecting your Terminal49 account, ask your agent:
+
+> "Where is container CAIU1234567?"
+
+> "Is this container ready for pickup, and are there any holds?"
+
+It should use tools such as `search_container`, `track_container`, and `get_container`. See the [tools reference](/mcp/home#tools-reference) for the full list, and [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+
+## Troubleshooting
+
+| Symptom | How to fix |
+|---------|------------|
+| Marketplace add fails | Confirm the marketplace reference is exactly `Terminal49/agent-plugins` (in Cursor, the full URL `https://github.com/Terminal49/agent-plugins`) |
+| Plugin installed but tools missing | Restart the agent session so it reloads the plugin's MCP configuration |
+| Sign-in window never opens | Pop-up blocked or no default browser — allow pop-ups and retry the authenticate action (in Claude Code, run `/mcp` and choose **Authenticate**) |
+| `401 Unauthorized` after connecting | Re-authenticate from your client's MCP settings to refresh the OAuth token |
+
+For plugin sources, the shared skill, and contribution guidelines, see the [repository README](https://github.com/Terminal49/agent-plugins#readme).
+
+## Related guides
+
+- [Claude Code](/mcp/setup/claude-code) – Add the MCP server directly with `claude mcp add`
+- [Cursor](/mcp/setup/cursor) – Add the MCP server directly via `mcp.json`
+- [MCP Overview](/mcp/home) – Tools, prompts, and resources reference
+- [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, including API-key and local stdio options
+- [Other MCP clients](/mcp/setup/other-clients) – Generic configuration for any client

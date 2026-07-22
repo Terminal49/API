@@ -427,6 +427,7 @@
               "mcp/setup/cursor",
               "mcp/setup/microsoft-copilot",
               "mcp/setup/vs-code",
+              "mcp/setup/agent-plugins",
               "mcp/setup/other-clients"
             ]
           }

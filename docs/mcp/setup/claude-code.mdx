@@ -39,14 +39,7 @@ Using claude.ai or Claude Desktop instead? See the [Claude guide](/mcp/setup/cla
 
 ## Alternative: install the Terminal49 plugin
 
-Instead of adding the MCP server directly, you can install the **Terminal49** plugin from the [Terminal49/agent-plugins](https://github.com/Terminal49/agent-plugins) marketplace. The plugin configures the same MCP connection (`https://mcp.terminal49.com`) and adds a `container-tracking` skill that teaches Claude Code how to choose and sequence the Terminal49 tools — covering status, pickup readiness, holds, ETAs, routes, delays, and demurrage-risk questions.
-
-```bash
-claude plugin marketplace add Terminal49/agent-plugins
-claude plugin install terminal49@terminal49
-```
-
-Authentication works the same way: the first time the Terminal49 tools are used, sign in through the browser OAuth flow (run `/mcp` and choose **Authenticate** if you aren't prompted). The plugin contains no API keys or customer data. See the [repository README](https://github.com/Terminal49/agent-plugins#readme) for details.
+Instead of adding the MCP server directly, you can install the **Terminal49** plugin, which configures the same MCP connection and adds a `container-tracking` skill that teaches Claude Code how to choose and sequence the Terminal49 tools. See the [Agent plugins guide](/mcp/setup/agent-plugins) for install commands and details.
 
 ## Test your connection
 
@@ -68,6 +61,7 @@ It should list tools such as `search_container`, `track_container`, and `get_con
 ## Related guides
 
 - [Claude](/mcp/setup/claude) – claude.ai and Claude Desktop connectors
+- [Agent plugins](/mcp/setup/agent-plugins) – Terminal49 plugin with the `container-tracking` skill
 - [MCP Overview](/mcp/home) – Tools, prompts, and resources reference
 - [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, including API-key and local stdio options
 - [Other MCP clients](/mcp/setup/other-clients) – Generic configuration for any client

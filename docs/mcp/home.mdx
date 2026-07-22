@@ -28,6 +28,7 @@ Use the Terminal49 MCP server to let Claude, ChatGPT, Cursor, Microsoft Copilot,
     - [Cursor](/mcp/setup/cursor)
     - [Microsoft Copilot](/mcp/setup/microsoft-copilot) (Copilot Studio)
     - [VS Code](/mcp/setup/vs-code) (GitHub Copilot)
+    - [Agent plugins](/mcp/setup/agent-plugins) (Claude Code, Cursor, Codex, GitHub Copilot CLI)
     - [Other MCP clients](/mcp/setup/other-clients)
   </Step>
   <Step title="Add the connector URL">
@@ -88,30 +89,13 @@ Connector URL: `https://mcp.terminal49.com`. It is the canonical OAuth resource 
   <Card title="VS Code" href="/mcp/setup/vs-code">
     GitHub Copilot agent mode
   </Card>
+  <Card title="Agent plugins" href="/mcp/setup/agent-plugins">
+    Terminal49 plugin for Claude Code, Cursor, Codex, and Copilot CLI
+  </Card>
   <Card title="Other MCP clients" href="/mcp/setup/other-clients">
     Generic OAuth or API-key configuration
   </Card>
 </CardGroup>
-
-## Agent plugins
-
-For coding agents, the [Terminal49/agent-plugins](https://github.com/Terminal49/agent-plugins) marketplace publishes a **Terminal49** plugin that bundles the MCP server connection with a shared `container-tracking` skill — workflow guidance that teaches agents how to search, track, and investigate container shipments. It supports Cursor, Claude Code, Codex, and GitHub Copilot CLI; authentication uses the same browser OAuth flow, so the plugin contains no API keys.
-
-```sh
-# Claude Code
-claude plugin marketplace add Terminal49/agent-plugins
-claude plugin install terminal49@terminal49
-
-# Codex
-codex plugin marketplace add Terminal49/agent-plugins
-codex plugin add terminal49@terminal49
-
-# GitHub Copilot CLI
-copilot plugin marketplace add Terminal49/agent-plugins
-copilot plugin install terminal49@terminal49
-```
-
-In Cursor, run `/add-plugin https://github.com/Terminal49/agent-plugins` in chat and install **Terminal49**. See the [Claude Code](/mcp/setup/claude-code#alternative-install-the-terminal49-plugin) and [Cursor](/mcp/setup/cursor#alternative-install-the-terminal49-plugin) guides, or the [repository README](https://github.com/Terminal49/agent-plugins#readme) for details.
 
 ## Any MCP client
 

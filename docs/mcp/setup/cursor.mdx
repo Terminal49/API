@@ -49,15 +49,7 @@ Connect Cursor to the Terminal49 MCP server so its AI agent can answer questions
 
 ## Alternative: install the Terminal49 plugin
 
-Instead of adding the MCP server directly, you can install the **Terminal49** plugin from the [Terminal49/agent-plugins](https://github.com/Terminal49/agent-plugins) marketplace. The plugin configures the same MCP connection (`https://mcp.terminal49.com`) and adds a `container-tracking` skill that teaches Cursor's agent how to choose and sequence the Terminal49 tools.
-
-In Cursor chat, run:
-
-```text
-/add-plugin https://github.com/Terminal49/agent-plugins
-```
-
-Then select and install **Terminal49**. Cursor prompts you to connect the MCP server (the same browser OAuth sign-in) when the plugin first needs it. See the [repository README](https://github.com/Terminal49/agent-plugins#readme) for details.
+Instead of adding the MCP server directly, you can install the **Terminal49** plugin, which configures the same MCP connection and adds a `container-tracking` skill that teaches Cursor's agent how to choose and sequence the Terminal49 tools. See the [Agent plugins guide](/mcp/setup/agent-plugins) for install steps and details.
 
 ## API key alternative
 
@@ -95,6 +87,7 @@ It should list tools such as `search_container`, `track_container`, and `get_con
 
 ## Related guides
 
+- [Agent plugins](/mcp/setup/agent-plugins) – Terminal49 plugin with the `container-tracking` skill
 - [MCP Overview](/mcp/home) – Tools, prompts, and resources reference
 - [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, including API-key and local stdio options
 - [Other MCP clients](/mcp/setup/other-clients) – Generic configuration for any client
