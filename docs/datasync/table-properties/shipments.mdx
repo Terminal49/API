@@ -21,8 +21,8 @@ A shipment contains 1 or more containers.
 | `shipment_id`                     | Shipment ID. This is the unique key of the table.                                               | `text`      |
 | `shipping_line_scac`              | Standard carrier alpha numeric code of the shipping line                                        | `text`      |
 | `shipping_line_name`              | Name of the shipping line                                                                       | `text`      |
-| `bill_of_lading_number`           | Shipment number from the tracking request                                                       | `text`      |
-| `normalized_number`               | The normalized version of the shipment number used for querying the carrier                     | `text`      |
+| `bill_of_lading_number`           | Shipment number exactly as submitted in the tracking request. May differ from `normalized_number` when the carrier expects a different format. | `text`      |
+| `normalized_number`               | The normalized version of the shipment number that Terminal49 uses when querying the carrier. Some carriers require a specific format (for example a stripped prefix or padded digits), so this value may differ from `bill_of_lading_number`. | `text`      |
 | `reference_numbers`               | Reference numbers of the shipment, contatenated                                                 | `text`      |
 | `tags`                            | Tags added to the shipment, sorted by alphabetical order, concatenated and separated by a comma | `text`      |
 | `customer_id`                     | Account ID of the customer                                                                      | `text`      |
