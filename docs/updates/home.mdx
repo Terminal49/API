@@ -10,6 +10,71 @@ rss: true
   This page contains updates to **Terminal49 API** and **DataSync** only (not general product updates).
 </Info>
 
+<Update label="July 27, 2026" description="New Oman terminal integrations (Sohar OICT and APM Salalah), Customer columns and filters powered by the party model, terminal-sourced container particulars filling in on cargos, clickable URLs in custom fields, guardrails on custom field templates, and fixes for YMLU POD stuck at transshipment, stop/resume tracking on cancelled requests, and vessel-particulars enrichment via IMO GISIS" rss="July 27, 2026: New terminal trackers for OICT Sohar (OMSOH) and APM Terminals Salalah (OMSLL); Customer column, filter, bulk import, and bulk update on the container dashboard migrated to the party model; terminal-sourced container equipment particulars (type, size, height, seal number, weight) now backfill on cargos when the shipping line omits them; URLs in short-text custom fields render as clickable links in the dashboard; in-use custom field templates can no longer be deleted; IMO GISIS vessel-particulars enrichment restored via CapSolver; parties panel always visible on shipment details; and fixes for YMLU POD frozen at the transshipment hub, stop/resume tracking on cancelled tracking requests, and Point-of-Virginia availability parsing.">
+  ### New Oman terminal integrations
+
+  Two new terminal trackers extend Terminal49's Middle East coverage:
+
+  - **APM Terminals Salalah (OMSLL)** — one of the largest transshipment hubs in the region, now delivering container-level milestones (vessel discharge, gate-out, empty return) for imports moving through the port. Transshipment-only histories are handled cleanly so reused container numbers can't overwrite tracked imports
+  - **Oman International Container Terminal — Sohar (OMSOH)** — infrastructure is in place for OICT Sohar and will light up once haulier account provisioning completes
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
+
+  ---
+
+  ### Customer columns and filters on the party model
+
+  The dashboard **Customer** column, filter, bulk import, and bulk update have all been migrated to the unified **party model**. Customer selections now share the same underlying record used by every other party role (consignee, shipper, notify, dray carrier), so:
+
+  - Customers set via the track-page bulk import propagate to the created shipment automatically
+  - Customer filters accept either a customer account id or a party id — saved views keep working either way
+  - Newly created and renamed customers appear immediately in customer pickers and lists
+  - The Customer column renders reliably on the container dashboard for accounts using the party model
+
+  The internal parties feature flag has been retired — parties are now the single source of truth for customer data across the dashboard.
+
+  ---
+
+  ### Terminal particulars fill in container details
+
+  When a shipping line hasn't yet published container equipment details, Terminal49 now **backfills equipment type, size, height, seal number, and weight from ocean terminal scrapers**. Carrier-provided values and manual edits are preserved — terminal data only fills gaps, and the equipment trio (type/size/height) is only written all-or-nothing so cargo records never end up with partial defaults. Rail terminals are excluded so line-haul equipment codes aren't overwritten.
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
+
+  ---
+
+  ### Clickable URLs in custom fields
+
+  URLs entered into **short-text custom fields** on shipments and containers now render as **clickable links** in the dashboard, so linked TMS records, shared docs, and support tickets are one click away without copy-paste. CSV exports remain plain text.
+
+  <Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+    Custom Fields API reference
+  </Card>
+
+  ---
+
+  ### Updates
+
+  - **Parties panel always visible on shipment details** — the parties panel is now anchored to the right side of the shipment details page at all viewport widths, instead of collapsing to the bottom on narrower screens
+  - **In-use custom field templates protected from deletion** — custom field templates that are already attached to shipments or containers can no longer be deleted, so existing values can't be orphaned
+  - **Clearer stop/resume tracking failures** — when the dashboard cannot stop or resume tracking on a shipment, it now surfaces a specific reason instead of silently succeeding or failing; stop-tracking no longer leaves shipments in a half-stopped state that kept getting refreshed
+  - **IMO GISIS vessel-particulars enrichment restored** — IMO GISIS (vessel name, flag, dimensions, and other particulars) is back online as an enrichment source after solving its Cloudflare Turnstile challenge via CapSolver
+
+  ---
+
+  ### Bug fixes
+
+  - **YMLU POD frozen at transshipment hub** — Yang Ming (YMLU) shipments could show their port of discharge stuck at a transshipment hub instead of advancing to the true final discharge port; POD now reflects the correct destination
+  - **Stop tracking on cancelled tracking requests** — clicking Stop Tracking on a shipment whose tracking request had been cancelled mid-scrape returned a 500 error; the action now succeeds cleanly, and mid-scrape cancellations no longer generate spurious background job errors
+  - **Point-of-Virginia availability parser** — fixed a crash in the POV availability parser that could fail a container lookup
+  - **WorkOS post-login destination** — signing in after a WorkOS logout-recovery flow now returns you to the page you were originally trying to reach, instead of dropping you on the default landing page
+
+</Update>
+
 <Update label="July 20, 2026" description="New terminal integrations for Barcelona, Basra, Chittagong, Gdynia, and Guayaquil, BNSF RailPASS rail tracker, drag-to-reorder container dashboard columns, per-container custom fields, account-level custom field limits, SSL release status enrichment, terminal-released hold visibility, and a wave of tracker hardening and bug fixes" rss="July 20, 2026: New terminal trackers for BEST Barcelona (ESBCN), Basra Gateway (IQUQR), Chittagong Port Authority (BDCGP), Gdynia BCT (PLGDY), and Contecon Guayaquil (ECGYE); BNSF RailPASS mobile rail tracker; drag-to-reorder column headers on Containers and Containers at Risk dashboards; per-container custom fields and initial custom fields at tracking-request creation; account-level custom-field limits replacing feature flags; SSL release status enrichment; terminal-released holds surfaced without polluting the legacy holds UI; Containers at Risk dashboard migrated to the shared Container::View; HIT Cplus transhipment/at-pier mapping and HHLA COAST retry hardening; Port Houston LFD and multi-mode holds fix plus EVP seal numbers; Trailer Bridge (TRBR) reference classification fix; ability to re-track a BL after stopping tracking; and fixes across HLCU MAEU access-denied, ONEY container-less bookings, GCT Canada holds, POV HREW holds, APM otherHolds, eModal unit statuses, Termont, MRTML LFD, wheresmycontainer, Trapacweb, Goport, and ScrapeTerminalJob edge cases.">
   ### New terminal integrations
 
