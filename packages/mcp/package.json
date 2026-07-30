@@ -29,7 +29,7 @@
     "@posthog/mcp": "0.10.1",
     "@sentry/node": "^10.55.0",
     "@terminal49/sdk": "0.3.1",
-    "posthog-node": "^5.46.1",
+    "posthog-node": "^5.0.0",
     "zod": "~4.3.6"
   },
   "devDependencies": {
