@@ -3,7 +3,10 @@
  * Implementation using @modelcontextprotocol/sdk with McpServer API
  */
 
-import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import {
+  McpServer,
+  ResourceTemplate,
+} from '@modelcontextprotocol/sdk/server/mcp.js';
 import { completable } from '@modelcontextprotocol/sdk/server/completable.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
@@ -31,6 +34,11 @@ import {
   listDisplayColumnsResource,
   readListDisplayColumnsResource,
 } from './resources/list-display.js';
+import {
+  instrumentMcpServerWithPostHog,
+  registerPostHogExitHook,
+  shutdownPostHog,
+} from './posthog.js';
 import {
   captureMcpException,
   flushMcpEvents,
@@ -1055,7 +1063,9 @@ function buildListResourceLinks(
   if (entityType !== 'container') {
     return [];
   }
-  const items = Array.isArray((result as any)?.items) ? (result as any).items : [];
+  const items = Array.isArray((result as any)?.items)
+    ? (result as any).items
+    : [];
   const links: ResourceLinkContent[] = [];
   for (const item of items) {
     const link = buildContainerResourceLink(asRecord(item));
@@ -1142,7 +1152,10 @@ function createCarrierScacCompleter(
   return async (value: string | undefined): Promise<string[]> => {
     try {
       const search = typeof value === 'string' ? value.trim() : '';
-      const { shipping_lines } = await executeGetSupportedShippingLines({ search }, client);
+      const { shipping_lines } = await executeGetSupportedShippingLines(
+        { search },
+        client,
+      );
       return shipping_lines.slice(0, 100).map((line) => line.scac);
     } catch {
       return [];
@@ -1164,16 +1177,26 @@ export function createTerminal49McpServer(
 
   const completeCarrierScac = createCarrierScacCompleter(client);
 
-  const server = instrumentMcpServer(
-    new McpServer(
-      {
-        name: 'terminal49-mcp',
-        version: '1.0.0',
-      },
-      {
-        instructions: TERMINAL49_SERVER_INSTRUCTIONS,
-      },
+  // Observability wrapping, outermost last. Sentry's wrapper returns a wrapped
+  // server; PostHog's `instrument()` patches request handlers in place and also
+  // proxies `_registeredTools`, so it is applied to the object the tools below
+  // are actually registered on and picks up every one of them. Both are no-ops
+  // when their respective env vars are unset.
+  const server = instrumentMcpServerWithPostHog(
+    instrumentMcpServer(
+      new McpServer(
+        {
+          name: 'terminal49-mcp',
+          version: '1.0.0',
+        },
+        {
+          instructions: TERMINAL49_SERVER_INSTRUCTIONS,
+        },
+      ),
     ),
+    // Groups the stateless HTTP path's events per account instead of minting an
+    // anonymous person per request.
+    { distinctId: accountId },
   );
 
   // ==================== TOOLS ====================
@@ -1238,7 +1261,12 @@ export function createTerminal49McpServer(
         'Track a container, bill of lading, or booking number. ' +
         'Uses inference to choose the carrier/type when possible, creates a tracking request, ' +
         'and returns detailed container information.',
-      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
       inputSchema: {
         number: z
           .string()
@@ -1691,13 +1719,17 @@ export function createTerminal49McpServer(
       description:
         'Quick container tracking workflow with carrier autocomplete',
       argsSchema: {
-        container_number: z.string().describe('Container number (e.g., CAIU1234567)'),
+        container_number: z
+          .string()
+          .describe('Container number (e.g., CAIU1234567)'),
         // Autocompletes from the live supported-carrier list (SCAC codes).
         // `completable` must wrap the INNER string so the MCP SDK (which
         // unwraps ZodOptional before checking isCompletable) advertises the
         // `completions` capability; `.optional()` is applied AFTER.
         carrier: completable(
-          z.string().describe('Shipping line SCAC code (e.g., MAEU for Maersk)'),
+          z
+            .string()
+            .describe('Shipping line SCAC code (e.g., MAEU for Maersk)'),
           completeCarrierScac,
         ).optional(),
       },
@@ -1876,6 +1908,15 @@ export async function runStdioServer() {
 
   const server = createTerminal49McpServer(apiToken, apiBaseUrl);
   const transport = new StdioServerTransport();
+
+  // Long-lived process: drain queued analytics on natural exit. No-ops (and
+  // registers no listener at all) when PostHog is unconfigured.
+  registerPostHogExitHook();
+
+  // The client closing stdin ends the session; flush before we lose the events.
+  transport.onclose = () => {
+    void shutdownPostHog();
+  };
 
   if (process.env.T49_MCP_STDIO_BANNER === '1') {
     console.error('Terminal49 MCP Server v1.0.0 running on stdio');
