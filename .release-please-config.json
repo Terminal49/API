@@ -29,8 +29,22 @@
           "type": "json",
           "path": "packages/mcp/package-lock.json",
           "jsonpath": "$.packages[''].dependencies['@terminal49/sdk']"
+        },
+        {
+          "type": "json",
+          "path": "sdks/typescript-sdk-cli/package.json",
+          "jsonpath": "$.dependencies['@terminal49/sdk']"
         }
       ]
+    },
+    "sdks/typescript-sdk-cli": {
+      "package-name": "@terminal49/cli",
+      "release-type": "node",
+      "changelog-path": "CHANGELOG.md",
+      "bump-minor-pre-major": true,
+      "tag-separator": "-",
+      "include-component-in-tag": true,
+      "component": "cli-v"
     }
   }
 }

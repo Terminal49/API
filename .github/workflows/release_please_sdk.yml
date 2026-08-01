@@ -1,10 +1,11 @@
-name: Release Please — TypeScript SDK
+name: Release Please — TypeScript SDK + CLI
 
 on:
   push:
     branches: [main]
     paths:
       - "sdks/typescript-sdk/**"
+      - "sdks/typescript-sdk-cli/**"
 
 permissions:
   actions: write
@@ -27,3 +28,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.release.outputs['sdks/typescript-sdk--tag_name'] }}
         run: gh workflow run publish_typescript_sdk.yml --repo "$GITHUB_REPOSITORY" --ref main -f tag="$RELEASE_TAG"
+
+      - name: Dispatch CLI publish
+        if: ${{ steps.release.outputs['sdks/typescript-sdk-cli--release_created'] == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs['sdks/typescript-sdk-cli--tag_name'] }}
+        run: gh workflow run publish_typescript_cli.yml --repo "$GITHUB_REPOSITORY" --ref main -f tag="$RELEASE_TAG"
