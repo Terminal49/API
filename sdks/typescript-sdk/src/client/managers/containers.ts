@@ -130,8 +130,10 @@ export class ContainerManager extends BaseManager {
     const payload = {
       data: {
         type: 'custom_field',
-        id: fieldId,
-        value,
+        attributes: {
+          api_slug: fieldId,
+          value,
+        },
       },
     };
     const raw = await this.transport.executeManual(
