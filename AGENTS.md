@@ -92,3 +92,24 @@ For substantive documentation writing, use the repo-local skill at `skills/termi
 
 - Never commit real API keys or secrets; use placeholders like `Token YOUR_API_KEY`.
 - The MCP gateway is public-facing — treat auth, the resource resolver, and the discovery endpoints as security-sensitive. Keep local credentials in your environment only.
+
+---
+
+## Cursor Cloud specific instructions
+
+Standard commands live in **Build and Development Commands** above; the notes below are the non-obvious gotchas for this environment. The startup update script already runs `npm ci` at the repo root.
+
+### Node version
+- The repo requires **Node 24** (`engines: 24.x`, `.tool-versions` pins `24.4.1`). The VM's baseline `node` on `PATH` (`/exec-daemon/node`) is **v22**; a login-shell hook selects nvm's Node 24, so **run commands from a login shell** (fresh terminals get Node 24). If `node -v` shows v22, run `nvm use 24` first — building/testing on v22 is untested here.
+
+### Products & how to run them (nothing here is a long-running backend — MCP/SDK are clients of the external Terminal49 API at `https://api.terminal49.com/v2`)
+- **SDK** (`@terminal49/sdk`): unit tests are fixture-based and need no network/token (`npm run test --workspace @terminal49/sdk -- --run`). `smoke`/`example` scripts hit the live API and need `T49_API_TOKEN`.
+- **MCP** (`@terminal49/mcp`): build then run the stdio server with `npm run mcp:stdio` (or `node packages/mcp/dist/index.js`). `initialize` + `tools/list` work **without** a token (see the quick-verification snippet in `packages/mcp/LOCAL_DEV.md`); a *successful* `tools/call` result needs a real `T49_API_TOKEN` (without one, tools return a generic Terminal49 error — the wiring still runs). The `api/` HTTP gateway (Path 2/3) additionally needs the Vercel CLI + a local backend and is optional.
+- **Docs** (`docs/`): see the mintlify gotcha below.
+
+### `mintlify dev` gotcha (docs preview)
+- Running `mintlify dev` / local `npx mintlify` **from inside this monorepo fails** — it reports `Unable to parse page metadata` for nearly every page and aborts with `Failed to parse MDX files`. The MDX/frontmatter is valid; the cause is the root `package.json` `overrides` (which pin `zod`/`express`/etc. inside `@mintlify/*` transitive deps) bleeding into the workspace-hoisted `mintlify` and breaking its parser.
+- **Workaround:** run an isolated mintlify install from the docs dir: `cd docs && npx -y mintlify@latest dev`. This serves all pages on `http://localhost:3000`. (Docs deploy via the hosted Mintlify Git integration and CI does not run the preview, so this only affects local preview.)
+
+### No local secrets by default
+- No `T49_API_TOKEN` is provisioned in the Cloud VM, so live SDK/MCP calls against the Terminal49 API can't be exercised without one (matches CI, where the live MCP eval skips without `MCP_EVAL_TOKEN`).
