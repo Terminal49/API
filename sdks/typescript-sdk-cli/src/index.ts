@@ -108,8 +108,9 @@ export function createProgram(): Command {
     registerCustomFieldOptionsCommand,
   ];
 
-  // biome-ignore lint/complexity/noForEach: The design contract requires registrar iteration with forEach.
-  registrars.forEach((register) => register(program));
+  for (const register of registrars) {
+    register(program);
+  }
 
   program
     .showHelpAfterError('(run --help for usage)')

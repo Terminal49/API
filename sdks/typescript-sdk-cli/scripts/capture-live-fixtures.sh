@@ -16,16 +16,20 @@ mkdir -p "$API_FIXTURES" "$TABLE_FIXTURES"
 # Live captures may contain customer/account identifiers. Sanitize every
 # generated fixture before committing it to the public repository.
 
+run_dev() {
+  npm --prefix "$CLI_DIR" run --silent dev -- "$@"
+}
+
 run_json() {
   local out="$1"
   shift
-  pnpm --dir "$CLI_DIR" --silent dev "$@" --json > "$API_FIXTURES/$out"
+  run_dev "$@" --json > "$API_FIXTURES/$out"
 }
 
 run_table() {
   local out="$1"
   shift
-  pnpm --dir "$CLI_DIR" --silent dev "$@" --table > "$TABLE_FIXTURES/$out"
+  run_dev "$@" --table > "$TABLE_FIXTURES/$out"
 }
 
 read_id() {
@@ -79,10 +83,10 @@ if [[ -n "$port_code" ]]; then
 fi
 
 set +e
-pnpm --dir "$CLI_DIR" --silent dev containers route "$container_id" --json > /tmp/t49.route.out 2> "$API_FIXTURES/containers.route.error.json"
-pnpm --dir "$CLI_DIR" --silent dev containers map "$container_id" --json > /tmp/t49.map.out 2> "$API_FIXTURES/containers.map.error.json"
-pnpm --dir "$CLI_DIR" --silent dev custom-fields list --page-size 2 --json > /tmp/t49.custom-fields.out 2> "$API_FIXTURES/custom-fields.list.error.json"
-pnpm --dir "$CLI_DIR" --silent dev webhook-notifications examples --json > /tmp/t49.webhook-examples.out 2> "$API_FIXTURES/webhook-notifications.examples.error.json"
+run_dev containers route "$container_id" --json > /tmp/t49.route.out 2> "$API_FIXTURES/containers.route.error.json"
+run_dev containers map "$container_id" --json > /tmp/t49.map.out 2> "$API_FIXTURES/containers.map.error.json"
+run_dev custom-fields list --page-size 2 --json > /tmp/t49.custom-fields.out 2> "$API_FIXTURES/custom-fields.list.error.json"
+run_dev webhook-notifications examples --json > /tmp/t49.webhook-examples.out 2> "$API_FIXTURES/webhook-notifications.examples.error.json"
 set -e
 
 run_table "shipments.list.txt" shipments list --page-size 2

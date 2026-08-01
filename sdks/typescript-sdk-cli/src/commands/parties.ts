@@ -3,7 +3,7 @@
  */
 
 import type { Command } from 'commander';
-import { action, addListOptions, listAction } from './action.js';
+import { action, addListOptions, cliEnvelope, listAction } from './action.js';
 
 type PartyListOptions = {
   page?: number;
@@ -63,10 +63,7 @@ export function registerPartiesCommand(program: Command): void {
         pageSize: options.pageSize,
         format: globals.format,
       });
-      return {
-        data: listDataFrom(result),
-        meta: paginationFrom(result),
-      };
+      return cliEnvelope(listDataFrom(result), paginationFrom(result));
     }),
   );
 

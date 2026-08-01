@@ -6,7 +6,7 @@
 
 import type { Command } from 'commander';
 import { parseJsonValue } from '../util/input.js';
-import { action, addListOptions, listAction } from './action.js';
+import { action, addListOptions, cliEnvelope, listAction } from './action.js';
 
 type ContainerListOptions = {
   include?: string;
@@ -175,10 +175,7 @@ export function registerContainersCommand(program: Command): void {
           },
         );
         warnUnsupportedFilters(result);
-        return {
-          data: listDataFrom(result),
-          meta: paginationFrom(result),
-        };
+        return cliEnvelope(listDataFrom(result), paginationFrom(result));
       },
       ({ client, globals }) => {
         const options = localOptions<ContainerListOptions>(listCommand);

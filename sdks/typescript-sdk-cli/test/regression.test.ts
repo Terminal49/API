@@ -155,4 +155,25 @@ describe('CLI regressions', () => {
     expect(shipments).not.toContain('--carrier');
     expect(shipments).not.toContain('--updated-after');
   });
+
+  it('cliEnvelope is branded so raw JSON:API docs are not mistaken for list envelopes', async () => {
+    const { cliEnvelope } = await import('../src/commands/action.js');
+    const envelope = cliEnvelope([{ id: '1' }], {
+      pagination: { meta: { total: 1 } },
+    });
+    expect(envelope.__cliEnvelope).toBe(true);
+    expect(envelope.data).toEqual([{ id: '1' }]);
+
+    // A JSON:API document has `data` but must not satisfy the branded envelope.
+    const jsonApi = {
+      data: {
+        type: 'container',
+        id: 'c1',
+        attributes: { number: 'ABCD1234567' },
+      },
+      included: [{ type: 'terminal', id: 't1' }],
+      links: { self: '/containers/c1' },
+    };
+    expect('__cliEnvelope' in jsonApi).toBe(false);
+  });
 });

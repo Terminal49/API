@@ -30,7 +30,9 @@ type ActionContext = {
   globals: GlobalOptions;
 };
 
-type EnvelopeResult = {
+/** Internal CLI list envelope — not a JSON:API document. */
+export type EnvelopeResult = {
+  readonly __cliEnvelope: true;
   data: unknown;
   meta?: {
     pagination?: unknown;
@@ -38,8 +40,11 @@ type EnvelopeResult = {
   };
 };
 
-function isEnvelopeResult(result: unknown): result is EnvelopeResult {
-  return Boolean(result && typeof result === 'object' && 'data' in result);
+export function cliEnvelope(
+  data: unknown,
+  meta?: EnvelopeResult['meta'],
+): EnvelopeResult {
+  return { __cliEnvelope: true, data, meta };
 }
 
 export function resolveGlobals(command: Command): GlobalOptions {
@@ -84,12 +89,12 @@ export function action<TArgs extends unknown[]>(
         timeoutMs: globals.timeoutMs,
       });
 
+      // Pass SDK/API results through as-is. Do not unwrap objects that happen
+      // to have a top-level `data` key — that is the JSON:API shape for
+      // `--format raw` and would drop `included` / `links` / `meta`.
+      // List commands that need pagination meta use listAction + cliEnvelope.
       const result = await run({ client, globals }, ...positional);
-      if (isEnvelopeResult(result)) {
-        formatter.output(name, result.data, result.meta);
-      } else {
-        formatter.output(name, result);
-      }
+      formatter.output(name, result);
     });
     await handler.apply(undefined, args);
   };

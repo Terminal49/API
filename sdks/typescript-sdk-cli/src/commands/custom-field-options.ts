@@ -4,7 +4,7 @@
 
 import type { Command } from 'commander';
 import { parseJsonObjectPayload } from '../util/input.js';
-import { action, addListOptions, listAction } from './action.js';
+import { action, addListOptions, cliEnvelope, listAction } from './action.js';
 
 type PayloadOptions = {
   payload: Record<string, unknown>;
@@ -73,10 +73,7 @@ export function registerCustomFieldOptionsCommand(program: Command): void {
         pageSize: options.pageSize,
         format: globals.format,
       });
-      return {
-        data: listDataFrom(result),
-        meta: paginationFrom(result),
-      };
+      return cliEnvelope(listDataFrom(result), paginationFrom(result));
     }),
   );
 

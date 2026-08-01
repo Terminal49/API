@@ -8,7 +8,7 @@ import { type Terminal49Client, ValidationError } from '@terminal49/sdk';
 import type { Command } from 'commander';
 import { InvalidArgumentError } from 'commander';
 import { parseJsonObjectPayload, splitCommaList } from '../util/input.js';
-import { action, addListOptions, listAction } from './action.js';
+import { action, addListOptions, cliEnvelope, listAction } from './action.js';
 import {
   formatCreateFromInferResult,
   formatInferResult,
@@ -205,10 +205,7 @@ export function registerTrackingRequestsCommand(program: Command): void {
             format: globals.format,
           },
         );
-        return {
-          data: listDataFrom(result),
-          meta: paginationFrom(result),
-        };
+        return cliEnvelope(listDataFrom(result), paginationFrom(result));
       },
       ({ client, globals }) => {
         const options = localOptions<TrackingListOptions>(listCommand);
