@@ -22,12 +22,18 @@ https://api.terminal49.com/v2
 
 ## Authentication
 
-Include your API key in the `Authorization` header, prefixed with `Token`:
+Include your API key in the `Authorization` header, prefixed with `Token` (not `Bearer`):
 
 ```bash
 curl https://api.terminal49.com/v2/shipments \
   -H "Authorization: Token YOUR_API_KEY"
 ```
+
+Replace `YOUR_API_KEY` with the raw key value from the [developer portal](https://app.terminal49.com/developers/api-keys) — no quotes, no `Bearer` prefix, and no extra whitespace. A `401 Unauthorized` response with `"Terminal49 API key could not be verified"` means the key is missing, malformed, revoked, or truncated when it was copied.
+
+<Warning>
+  The full API key value is only shown once, right after you create it. Copy the complete token from that screen and store it in a secret manager before navigating away — after that, the value is masked and cannot be revealed again. If you lost the full value, create a new key, copy it immediately, then delete the older key.
+</Warning>
 
 ## Request and response format
 
