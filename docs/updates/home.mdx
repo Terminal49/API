@@ -10,6 +10,82 @@ rss: true
   This page contains updates to **Terminal49 API** and **DataSync** only (not general product updates).
 </Info>
 
+<Update label="August 3, 2026" description="New Livorno terminal integration, unified parties experience across shipment sidebar, dashboard, and container cells, longer retry window for paid tracking requests, explicit release-status rollout across terminal integrations, and fixes for HMM pre-manifest B/Ls, bulk-upload customer assignments, HIT Cplus terminal oscillation, and Chittagong scraper reliability" rss="August 3, 2026: New Livorno TPCS (ITLIV) terminal tracker; unified parties experience with Customer on the shipment sidebar, add-party affordance from the shipment dashboard, editable party cells on the container dashboard, and a confirmation before removals; extended retry window for paid tracking requests with the expiry shown on the track page; explicit release-status normalization across terminal integrations; custom field Preset renamed to Template, plus grayed-out archived fields with unarchive/delete; and fixes for HMM B/Ls failing before manifest, bulk-upload customer assignments lost to replica lag, HIT Cplus ACT8/CHT8 sibling oscillation emitting spurious POD-terminal changes, Chittagong Port Authority (BDCGP) datacenter blocks, Trapac 403 misclassification, HDMU invalid-number handling, and a security fix for the customer Metabase dashboards endpoint.">
+  ### New Livorno terminal integration
+
+  Added a native terminal tracker for the **Port of Livorno (ITLIV)** via the public Tuscan Port Community System. One endpoint covers all Livorno terminals, and when a container lookup returns not-found the tracker automatically retries by bill of lading (with a SCAC-prefixed fallback) so manifested boxes still resolve. Container, vessel, arrival, and B/L milestones flow through the standard pipeline.
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
+
+  ---
+
+  ### Unified parties experience
+
+  The Parties surface across the dashboard has been consolidated into a single component and data flow, with several new affordances landing at the same time:
+
+  - **Customer and other parties on the shipment sidebar** — the container details drawer now shows a Parties section (including Customer) with inline `+ Assign` and `Change` affordances, rendered between the map and Shipment Fields
+  - **Add parties from the shipments dashboard** — the PARTIES column on the shipment list now offers a `+ add parties` empty state and a hover-pencil edit on rows that already have chips, opening the same editor used on the shipment details page
+  - **Editable party cells on the container dashboard** — inline party adds and per-role bulk updates are available directly from container rows
+  - **Confirmation before removals** — removing a party from the Parties card, the shipment Parties tab, or a dray-carrier assignment now prompts to confirm, naming the party, role, and scope it is leaving. Replacing a party still skips the dialog
+  - **Standalone Customer column retired from the shipment list** — the shipments list no longer renders a standalone Customer column; the customer surfaces as a "Cus" chip in the Parties column, and the extra width goes to Parties
+  - **Duplicate Customer field removed from Bulk Update Shipments** — the Flatfile bulk-update modal no longer shows Customer twice; parties are the single source for Customer
+
+  ---
+
+  ### Extended retry window for paid tracking requests
+
+  Paid tracking requests now retry for a **longer window** before giving up, and the effective expiry time is surfaced on the track page so you can see when a pending request will stop being retried. Auto-detected requests continue to use their own retry cap.
+
+  <Card title="Create a tracking request" icon="plus" href="/api-docs/api-reference/tracking-requests/create-a-tracking-request">
+    Tracking request API reference
+  </Card>
+
+  ---
+
+  ### Explicit release status across terminal integrations
+
+  Terminal-container parsers across the integration set have been rolled forward to report **explicit hold release status** through a shared normalization layer. The change consolidates release semantics behind one interface and unifies how APM, APM Miami, ATP Altamira, BEST Barcelona, BGT Click, CMSAMX, DP World Vancouver, e-Brama, eModal, ETS Link, Felixstowe, FMS API, GCT Canada, Goport, HHLA, and other trackers report cleared holds — with cleared entries no longer written inline alongside active holds. Downstream, `holds` remains the active-holds surface you already read from.
+
+  <Card title="Holds and fees guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
+    How to work with holds and fees data
+  </Card>
+
+  ---
+
+  ### Custom fields polish
+
+  - **Rename Preset to Template** — the "Add a Field" modal tab, empty state, admin "Create Template?" toggle, banner, and tooltips now use "Template" instead of "Preset" (internal identifiers unchanged)
+  - **Archived custom fields visible with unarchive/delete** — archived custom fields now appear grayed out for admins with clear unarchive and delete actions, instead of being hidden entirely
+  - **Longer field labels** — the custom field label column now expands to 50% for readability
+  - **Hover reveals all custom field values** — hovering a shipment or container's custom field row now expands the display so every configured value is visible without opening a detail view
+
+  <Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+    Custom Fields API reference
+  </Card>
+
+  ---
+
+  ### Updates
+
+  - **Shipment number over normalized number** — dashboard views that previously displayed the internal normalized reference now show the shipment number, matching what your team enters and searches for
+  - **Delivery-order and reference-list refresh polish** — creating a new template refreshes the list on success and drops the just-created template from the pick list, so it doesn't appear as a selectable option in its own creation flow
+
+  ---
+
+  ### Bug fixes
+
+  - **HMM B/Ls no longer fail before manifest** — Hyundai (HMM/HDMU) bills of lading submitted before the carrier assigns a container used to fail permanently as `invalid_number` on the first attempt because HMM's response for a not-yet-manifested B/L is byte-identical to its response for an unknown one. HMM B/L requests now park as awaiting-manifest and retry until the account's retry cap, matching Hapag-Lloyd's pre-booking behavior. Container lookups are unchanged
+  - **Bulk-upload customer assignments preserved** — CSV bulk uploads that created new customers could save affected rows with a null customer, because the follow-up read to match customers by name was served by a replica that hadn't caught up. Assignments now match against the records already in hand, and the customer list endpoint is served from the primary
+  - **HIT Cplus terminal oscillation debounced** — pre-discharge, the Hutchison Cplus feed's `terminal` field is a berth prediction that can oscillate between the ACT8/CHT8 sibling yards at Kwai Tsing while a box is "Inbound On-board." Each flip was re-attributing the container's POD terminal and emitting a spurious `container_pod_terminal_changed_event`. Pre-discharge readings now keep the already-assigned Cplus sibling terminal; once the box is ashore the terminal becomes authoritative again
+  - **Chittagong Port Authority (BDCGP) reliability restored** — the `cpatos.gov.bd` portal was rejecting Terminal49's datacenter egress with 4xx errors on every request. The Cpatos scraper now runs through residential egress, restoring container tracking at Chittagong
+  - **Trapac 403 classification** — Trapac forbidden responses are now classified correctly instead of surfacing as unknown tracker errors
+  - **HDMU invalid-number handling** — additional HDMU invalid-number edge cases are now handled cleanly instead of failing the tracker run
+  - **Metabase dashboards endpoint hardened** — the customer-facing `/v2/account_metabase_dashboards` endpoint no longer honors arbitrary `?include` values that could expose sensitive dashboard configuration. Reports continue to render normally from the inline label and signed iframe URL
+
+</Update>
+
 <Update label="July 27, 2026" description="New Oman terminal integrations (Sohar OICT and APM Salalah), Customer columns and filters powered by the party model, terminal-sourced container particulars filling in on cargos, clickable URLs in custom fields, guardrails on custom field templates, and fixes for YMLU POD stuck at transshipment, stop/resume tracking on cancelled requests, and vessel-particulars enrichment via IMO GISIS" rss="July 27, 2026: New terminal trackers for OICT Sohar (OMSOH) and APM Terminals Salalah (OMSLL); Customer column, filter, bulk import, and bulk update on the container dashboard migrated to the party model; terminal-sourced container equipment particulars (type, size, height, seal number, weight) now backfill on cargos when the shipping line omits them; URLs in short-text custom fields render as clickable links in the dashboard; in-use custom field templates can no longer be deleted; IMO GISIS vessel-particulars enrichment restored via CapSolver; parties panel always visible on shipment details; and fixes for YMLU POD frozen at the transshipment hub, stop/resume tracking on cancelled tracking requests, and Point-of-Virginia availability parsing.">
   ### New Oman terminal integrations
 
