@@ -106,6 +106,7 @@ When a hold is cleared, the object is removed from the array entirely. There is 
 | Hold name | Description | Who resolves it |
 |-----------|-------------|-----------------|
 | `freight` | Carrier freight charges unpaid | Shipping line or freight forwarder |
+| `line` | Carrier or steamship-line release pending | Shipping line |
 | `customs` | CBP hold — docs, exam, or inspection | Licensed customs broker |
 | `USDA` | USDA phytosanitary inspection | Customs broker or USDA compliance team |
 | `VACIS` | Non-intrusive X-ray / gamma-ray scan | Customs broker |
@@ -113,7 +114,7 @@ When a hold is cleared, the object is removed from the array entirely. There is 
 | `other` | Unmapped hold — check `description` | Terminal or broker |
 
 <Note>
-Hold names are case-sensitive. `USDA`, `VACIS`, and `TMF` are uppercase. `freight`, `customs`, and `other` are lowercase. Match values exactly in your code.
+Hold names are case-sensitive. `USDA`, `VACIS`, and `TMF` are uppercase. `freight`, `line`, `customs`, and `other` are lowercase. Match values exactly in your code.
 </Note>
 
 <AccordionGroup>
@@ -129,6 +130,20 @@ Hold names are case-sensitive. `USDA`, `VACIS`, and `TMF` are uppercase. `freigh
     ```
 
     **Who resolves it:** Contact the shipping line or your freight forwarder to confirm payment status.
+  </Accordion>
+
+  <Accordion title="line — Carrier release pending">
+    The terminal has not received or confirmed the ocean carrier's release for the container. Terminals may describe this as a line hold, bill of lading hold, carrier hold, or steamship-line release pending. This is distinct from a `freight` hold and does not by itself indicate unpaid freight charges.
+
+    ```json
+    {
+      "name": "line",
+      "status": "hold",
+      "description": "LINE HOLD"
+    }
+    ```
+
+    **Who resolves it:** Contact the shipping line to confirm that it has issued the container or bill of lading release to the terminal.
   </Accordion>
 
   <Accordion title="customs — CBP hold">
