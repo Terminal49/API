@@ -81,7 +81,7 @@ These events map to physical milestones in a container's journey. They fire in r
 | `container.transport.rail_departed` | Rail car departed. |
 | `container.transport.rail_arrived` | Rail car arrived. |
 | `container.transport.rail_unloaded` | Container unloaded from the rail car. |
-| `container.transport.arrived_at_inland_destination` | Container arrived at the final inland destination. |
+| `container.transport.arrived_at_inland_destination` | Container arrived at the final inland destination. Fires only for shipments with an inland rail leg. See the [Rail integration guide](/api-docs/in-depth-guides/rail-integration-guide). |
 
 ## Estimated events
 
@@ -92,7 +92,7 @@ These events fire when an estimated departure or arrival time changes.
 | `container.transport.estimated.vessel_departed` | ETA changed for vessel departure at the port of lading. |
 | `shipment.estimated.arrival` | ETA changed for the port of discharge (shipment level). |
 | `container.transport.estimated.vessel_arrived` | ETA changed for vessel arrival at the port of discharge (container level). |
-| `container.transport.estimated.arrived_at_inland_destination` | ETA changed for the inland destination. |
+| `container.transport.estimated.arrived_at_inland_destination` | ETA changed for the inland destination. Fires only for shipments with an inland rail leg. See the [Rail integration guide](/api-docs/in-depth-guides/rail-integration-guide). |
 
 ## Container update events
 
@@ -103,7 +103,7 @@ These events fire when container attributes change.
 | `container.created` | A new container was added to a shipment. Common for bookings where containers are assigned after sailing. |
 | `container.updated` | Container attributes changed at the terminal — fees, holds, LFD, pickup appointment, availability, or POD terminal. The payload includes a `changeset` of the updated fields. |
 | `container.pod_terminal_changed` | The port of discharge terminal assignment changed for the container. |
-| `container.pickup_lfd.changed` | The coalesced `pickup_lfd` attribute changed. This field combines the `import_deadlines` values, preferring the shipping line LFD when available. |
+| `container.pickup_lfd.changed` | The coalesced `pickup_lfd` attribute changed. It follows a fixed source priority: `pickup_lfd_line`, then `pickup_lfd_terminal`, then `pickup_lfd_rail`. It does not pick the earliest date — see [LFD & Availability Alerts](/api-docs/webhooks/use-cases/lfd-alerts#how-pickup_lfd-is-chosen). |
 | `container.pickup_lfd_line.changed` | The shipping line's Last Free Day (`import_deadlines.pickup_lfd_line`) changed. |
 | `container.pickup_lfd_terminal.changed` | The terminal-reported Last Free Day (`import_deadlines.pickup_lfd_terminal`) at the destination terminal changed. |
 | `container.pickup_lfd_rail.changed` | The rail-carrier-reported Last Free Day (`import_deadlines.pickup_lfd_rail`) at the inland rail destination changed. Rail Plan only — see [Entitlements](/api-docs/useful-info/entitlements). |
