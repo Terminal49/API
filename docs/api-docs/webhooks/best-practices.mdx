@@ -28,7 +28,7 @@ app.post("/webhooks/terminal49", async (req, res) => {
 });
 ```
 
-If you acknowledge before storing the event and your process crashes mid-handling, the notification is lost — Terminal49 sees a success response and does not retry.
+If you acknowledge before storing the event and your process crashes mid-handling, the notification is lost. Terminal49 sees a success response and does not retry.
 
 Any other response — including a timeout — triggers retries. If your endpoint consistently fails, Terminal49 retries up to 12 times before marking the notification as failed.
 
@@ -118,7 +118,7 @@ The Trigger endpoint sends an example payload for the event you choose. If you i
 If your endpoint goes down, Terminal49 retries failed deliveries. When your endpoint recovers:
 
 1. Use the [Webhook Notifications API](/api-docs/api-reference/webhook-notifications/list-webhook-notifications) to list recent notifications and identify the ones with `delivery_status: failed`.
-2. Re-fetch the current state of the affected shipments and containers from the REST API. Webhook notifications cannot be replayed — the [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint only sends a one-time sample payload for testing.
+2. Re-fetch the current state of the affected shipments and containers from the REST API. Webhook notifications cannot be replayed. The [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint only sends a one-time sample payload for testing.
 3. For longer outages, list recent shipments via the API to catch up on any missed state changes.
 
 ### Recover events you were never subscribed to

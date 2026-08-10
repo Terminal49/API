@@ -60,7 +60,7 @@ curl --request GET \
 
 The response is a standard GeoJSON FeatureCollection that can be directly used with most mapping libraries (Leaflet, Mapbox GL, Google Maps, etc.).
 
-<Accordion title="Example Response Overview">
+<Accordion title="Example response overview">
     ```json
     {
       "type": "FeatureCollection",
@@ -138,7 +138,7 @@ Geometry Type: `Point`
 
 Port features represent all ports in the container's route: the port of lading (POL), port of discharge (POD), and any transshipment ports (TS1, TS2, etc.).
 
-<Accordion title="Port Feature Example">
+<Accordion title="Port feature example">
     ```json
     {
       "type": "Feature",
@@ -172,7 +172,7 @@ Port features represent all ports in the container's route: the port of lading (
     ```
 </Accordion>
 
-<Accordion title="Port Feature Properties">
+<Accordion title="Port feature properties">
 | Property | Type | Description |
 |----------|------|-------------|
 | `feature_type` | string | Always `"port"` |
@@ -200,7 +200,7 @@ Geometry Type: `Point`
 
 This feature is only present when the container is currently on a vessel at sea. It represents the vessel's current position.
 
-<Accordion title="Current Vessel Feature Example">
+<Accordion title="Current vessel feature example">
     ```json
     {
       "type": "Feature",
@@ -244,7 +244,7 @@ This feature is only present when the container is currently on a vessel at sea.
     ```
 </Accordion>
 
-<Accordion title="Current Vessel Feature Properties">
+<Accordion title="Current vessel feature properties">
 | Property | Type | Description |
 |----------|------|-------------|
 | `feature_type` | string | Always `"current_vessel"` |
@@ -282,7 +282,7 @@ Geometry Type: `LineString`
 
 These features represent the actual historical paths taken by vessels for completed and in-progress legs of the journey. Each LineString contains a series of coordinates showing where the vessel traveled between two ports.
 
-<Accordion title="Past Vessel Locations Feature Example">
+<Accordion title="Past vessel locations feature example">
     ```json
     {
       "type": "Feature",
@@ -319,7 +319,7 @@ These features represent the actual historical paths taken by vessels for comple
     ```
 </Accordion>
 
-<Accordion title="Past Vessel Locations Properties">
+<Accordion title="Past vessel locations properties">
 | Property | Type | Description |
 |----------|------|-------------|
 | `feature_type` | string | Always `"past_vessel_locations"` |
@@ -339,7 +339,7 @@ Geometry Type: `LineString`
 
 These features represent predicted vessel paths for future legs that have not yet started. The LineString shows the estimated route between two ports.
 
-<Accordion title="Estimated Full Leg Feature Example">
+<Accordion title="Estimated full leg feature example">
     ```json
     {
       "type": "Feature",
@@ -364,7 +364,7 @@ These features represent predicted vessel paths for future legs that have not ye
     ```
 </Accordion>
 
-<Accordion title="Estimated Full Leg Properties">
+<Accordion title="Estimated full leg properties">
 | Property | Type | Description |
 |----------|------|-------------|
 | `feature_type` | string | Always `"estimated_full_legs"` |
@@ -380,7 +380,7 @@ Geometry Type: `LineString`
 
 This feature represents the predicted path from the vessel's current position to the next port. It is only present when the container is currently on a vessel at sea.
 
-<Accordion title="Estimated Partial Leg Feature Example">
+<Accordion title="Estimated partial leg feature example">
     ```json
     {
       "type": "Feature",
@@ -413,7 +413,7 @@ This feature represents the predicted path from the vessel's current position to
     ```
 </Accordion>
 
-<Accordion title="Estimated Partial Leg Properties">
+<Accordion title="Estimated partial leg properties">
 | Property | Type | Description |
 |----------|------|-------------|
 | `feature_type` | string | Always `"estimated_partial_leg"` |
@@ -444,7 +444,7 @@ To visualize a container's journey using the GeoJSON response on your own map (s
    - Display vessel information (name, IMO, speed, heading) for the current vessel
    - Show leg information (departure/arrival times, vessel ID) for path segments
 
-<Accordion title="Example: Using Leaflet.js">
+<Accordion title="Example: using Leaflet.js">
     ```javascript
     // Fetch the GeoJSON data
     fetch('https://api.terminal49.com/v2/containers/{id}/map_geojson', {

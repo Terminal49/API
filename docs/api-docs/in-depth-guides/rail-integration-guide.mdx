@@ -134,7 +134,7 @@ Integrate these notifications by subscribing to the webhooks and handling the in
 
 #### Set up a webhook for rail events
 
-Rail events use the same webhook infrastructure as ocean events — there is no separate rail-only endpoint or configuration. Create one webhook and subscribe it to the rail events you care about.
+Rail events use the same webhook infrastructure as ocean events. There is no separate rail-only endpoint or configuration. Create one webhook and subscribe it to the rail events you care about.
 
 You can create a webhook either from the [Developer Webhooks](https://app.terminal49.com/developers/webhooks) page in the dashboard or by calling [`POST /webhooks`](/api-docs/api-reference/webhooks/create-a-webhook) with the rail events in the `events` array:
 
@@ -197,7 +197,7 @@ The container's top-level `pickup_lfd` attribute is a coalesced value derived fr
 2. `import_deadlines.pickup_lfd_terminal` — LFD from the POD terminal (timezone: `pod_timezone`).
 3. `import_deadlines.pickup_lfd_rail` — LFD from the rail carrier at the inland destination (timezone: `final_destination_timezone`).
 
-For rail moves, subscribe to the `container.pickup_lfd_rail.changed` webhook to be notified when the rail carrier updates the inland LFD. The legacy `ind_facility_lfd_on` field is deprecated — read `import_deadlines.pickup_lfd_rail` instead.
+For rail moves, subscribe to the `container.pickup_lfd_rail.changed` webhook to be notified when the rail carrier updates the inland LFD. The legacy `ind_facility_lfd_on` field is deprecated. Read `import_deadlines.pickup_lfd_rail` instead.
 
 {/* TODO: Look at the other container attributes that could be fed via rail but are currently shipping-line-only.  Such as :current_issues, :pickup_appointment_at, :availability_known, :available_for_pickup  */}
 
