@@ -27,7 +27,7 @@ function getRegisteredTools(): Record<
 }
 
 describe('MCP tool annotations', () => {
-  const readOnlyTools = [
+  const retrievalTools = [
     'search_container',
     'get_container',
     'get_container_route',
@@ -39,21 +39,15 @@ describe('MCP tool annotations', () => {
     'list_tracking_requests',
   ];
 
-  // get_supported_shipping_lines is a closed-world catalog; the other read
-  // tools query live shipment data and should be open-world.
-  const closedWorldReadTools = ['get_supported_shipping_lines'];
-
-  it('marks the nine read tools as read-only', () => {
+  it('marks retrieval tools as non-destructive but not strictly read-only because they log', () => {
     const tools = getRegisteredTools();
 
-    for (const name of readOnlyTools) {
+    for (const name of retrievalTools) {
       const annotations = tools[name]?.annotations;
       expect(annotations, name).toBeDefined();
-      expect(annotations?.readOnlyHint, name).toBe(true);
-
-      if (!closedWorldReadTools.includes(name)) {
-        expect(annotations?.openWorldHint, name).toBe(true);
-      }
+      expect(annotations?.readOnlyHint, name).toBe(false);
+      expect(annotations?.destructiveHint, name).toBe(false);
+      expect(annotations?.openWorldHint, name).toBe(false);
     }
   });
 
@@ -65,7 +59,7 @@ describe('MCP tool annotations', () => {
     expect(annotations?.readOnlyHint).toBe(false);
     expect(annotations?.destructiveHint).toBe(false);
     expect(annotations?.idempotentHint).toBe(false);
-    expect(annotations?.openWorldHint).toBe(true);
+    expect(annotations?.openWorldHint).toBe(false);
   });
 
   it('marks get_supported_shipping_lines as a closed-world catalog', () => {
@@ -73,7 +67,8 @@ describe('MCP tool annotations', () => {
     const annotations = tools.get_supported_shipping_lines?.annotations;
 
     expect(annotations).toBeDefined();
-    expect(annotations?.readOnlyHint).toBe(true);
+    expect(annotations?.readOnlyHint).toBe(false);
+    expect(annotations?.destructiveHint).toBe(false);
     expect(annotations?.openWorldHint).toBe(false);
   });
 
@@ -90,7 +85,7 @@ describe('MCP tool annotations', () => {
     expect(
       Object.keys(tools).length,
       '_registeredTools is empty - SDK internals may have changed',
-    ).toBeGreaterThanOrEqual(readOnlyTools.length + 1);
+    ).toBeGreaterThanOrEqual(retrievalTools.length + 1);
 
     for (const [name, tool] of Object.entries(tools)) {
       expect(tool.annotations, name).toBeDefined();
