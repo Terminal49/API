@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ (startsWith(vars.CI_RUNNER_SMALL, 'blacksmith-') && vars.CI_RUNNER_SMALL) || 'blacksmith-2vcpu-ubuntu-2404' }}
     steps:
       - name: Checkout repository
-        uses: useblacksmith/checkout@v1
+        uses: actions/checkout@v4
 
       - name: Install jq (for Postman API call)
         run: sudo apt-get update && sudo apt-get install -y jq
