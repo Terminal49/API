@@ -21,3 +21,35 @@ openapi: post /tracking_requests
 <Info>
   This endpoint has its own rate-limit bucket: 100 tracking requests per minute per API key/account.
 </Info>
+
+## Setting custom field values before the shipment exists
+
+Use `initial_custom_fields` to stage custom field values at creation time, before the shipment and containers exist. Terminal49 applies `shipment` entries to the shipment and `containers` entries to their containers once the tracking request resolves.
+
+Each `api_slug` must match an existing [custom field definition](/api-docs/api-reference/custom-fields/create-a-custom-field-definition) on your account — a `Shipment`-scoped definition for `shipment` entries, a `Container`-scoped definition for `containers` entries. Container entries without a `number` — or with `number` set to an empty string — are applied to every container on the shipment; include a non-empty `number` to target one specific container.
+
+```json
+{
+  "data": {
+    "type": "tracking_request",
+    "attributes": {
+      "request_number": "MEDUAI047070",
+      "request_type": "bill_of_lading",
+      "scac": "MSCU",
+      "initial_custom_fields": {
+        "shipment": [
+          { "api_slug": "booking_reference", "value": "BOOK-2026-001" }
+        ],
+        "containers": [
+          { "api_slug": "po_number", "value": "PO-123", "number": "MSCU1234567" },
+          { "api_slug": "po_number", "value": "PO-999", "number": "TCLU7654321" },
+          { "api_slug": "customs_broker", "value": "Acme Brokerage" },
+          { "api_slug": "seal_number", "value": "SEAL-0001", "number": "" }
+        ]
+      }
+    }
+  }
+}
+```
+
+In this example, `booking_reference` is set on the shipment; `po_number` is set per container by `number`; and `customs_broker` and `seal_number` — which omit `number` or pass an empty string — are applied to every container on the shipment.
