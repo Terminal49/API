@@ -45,12 +45,7 @@ Make sure you have the following in place before building:
 
 ## Environments
 
-Your Terminal49 account has two environments, both accessible from the account switcher in the top-left corner when you log in:
-
-| Environment | Account name |
-| --- | --- |
-| Test | Wayfair Development (Castlegate Logistics) |
-| Production | Wayfair LLC |
+Your Terminal49 account may have separate test and production environments, accessible from the account switcher in the top-left corner when you log in.
 
 <Warning>
   Both environments make live calls. Documents submitted under either account are processed and costs will be incurred. There is no free sandbox for document processing at this time.
@@ -140,12 +135,7 @@ flowchart LR
 
 <Steps>
   <Step title="Submit document">
-    Email attachments to your account docs alias:
-
-    | Environment | Email address |
-    | --- | --- |
-    | Test | `wayfair-development-castlegate-logistics-60@docs.terminal49.com` |
-    | Production | `wayfair-llc-96@docs.terminal49.com` |
+    Email attachments to your account's unique docs alias (for example, `youraccount-42@docs.terminal49.com`). Find your alias under **User > Developers > API Keys**.
 
     **Supported file types:** PDF, PNG, JPEG, XLSX, XLS, CSV, Word (.doc, .docx).
 
@@ -346,7 +336,7 @@ If extraction fails, you will receive `document_representation.failed` instead. 
       "type": "email_submission",
       "attributes": {
         "subject": "[ediDocManager SHP HBL MBL HLCUSHA2601APKY2 / HBL CGGMSGH5110912]",
-        "from": ["sender@wayfair.com"],
+        "from": ["sender@example.com"],
         "sent_at": "2026-03-27T13:46:32-07:00"
       }
     },
@@ -380,16 +370,19 @@ If extraction fails, you will receive `document_representation.failed` instead. 
 
 ## Document Types in Scope
 
-The table below maps Wayfair's document type names to the `document_type` values returned by the API, along with the actual source documents Terminal49 may receive and classify into each type.
+The table below lists the document types Terminal49 currently classifies and extracts, along with the `document_type` value returned by the API.
 
-| Wayfair Document Type | `document_type` value | Observed Documents | Notes |
-| --- | --- | --- | --- |
-| Draft House Bill of Lading | `draft_house_bill_of_lading` | House Bill of Lading | `hbl_type: "DRAFT"` in payload |
-| Final House Bill of Lading | `final_house_bill_of_lading` | House Bill of Lading | `hbl_type: "TELEX"` in payload |
-| Importer Security Filing | `importer_security_filing` | Importer Security Filing | |
-| Master Bill of Lading | `master_bill_of_lading` | Sea Waybill | |
-| Dray Delivery Order | `dray_delivery_order` | Delivery Order (Castlegate variant), Delivery Order (Non-Castlegate variant) | Both variants map to the same `document_type` |
-| ARC | One of: `arrival_notice`, `general_notice`, `customs_entry`, `other` etc. | Arrival Notice, General Notice, Container Available Notice, In Bond, Freight Invoice | Wayfair uses "ARC" as an umbrella label, but these are distinct document types. Mapping is: Arrival Notice → `arrival_notice`; General Notice / Container Available Notice → `general_notice`; In Bond → `customs_entry`; Freight Invoice → `other` (in Wayfair schema). |
+| Document type | `document_type` value | Notes |
+| --- | --- | --- |
+| Draft House Bill of Lading | `draft_house_bill_of_lading` | `hbl_type: "DRAFT"` in payload |
+| Final House Bill of Lading | `final_house_bill_of_lading` | `hbl_type: "TELEX"` in payload; often issued as a Sea Waybill |
+| Importer Security Filing | `importer_security_filing` | |
+| Master Bill of Lading | `master_bill_of_lading` | Often issued as a Sea Waybill |
+| Delivery Order | `dray_delivery_order` | |
+| Arrival Notice | `arrival_notice` | |
+| General Notice | `general_notice` | Includes container available notices |
+| Customs Entry | `customs_entry` | Includes in-bond documents |
+| Other | `other` | Used when no dedicated schema exists yet, e.g. freight invoices |
 
 Additional document types will be added in future phases.
 
@@ -450,7 +443,7 @@ Additional document types will be added in future phases.
           },
           "consignee": {
             "name": "GOLDENSEE LIMITED",
-            "address": "C/O CASTLEGATE LOGISTICS INC 3300 INDIAN AVE, PERRIS SMALL PARCEL PERRIS, CA 92571"
+            "address": "C/O ACME LOGISTICS INC 100 MAIN ST, ANYTOWN, CA 90001"
           },
           "notify_party": {
             "name": "MOHAWK GLOBAL LOGISTICS",
@@ -501,7 +494,7 @@ Additional document types will be added in future phases.
       "type": "email_submission",
       "attributes": {
         "subject": "[ediDocManager SHP HBL MBL HLCUSHA2601APKY2 / HBL CGGMSGH5110912]",
-        "from": ["sender@wayfair.com"],
+        "from": ["sender@example.com"],
         "sent_at": "2026-03-27T13:03:05-07:00"
       }
     },
@@ -654,7 +647,7 @@ Additional document types will be added in future phases.
       "type": "email_submission",
       "attributes": {
         "subject": null,
-        "from": ["sender@wayfair.com"],
+        "from": ["sender@example.com"],
         "sent_at": "2026-03-27T23:03:18+03:00"
       }
     },
@@ -719,7 +712,7 @@ Additional document types will be added in future phases.
           "etd": "17-Feb-26",
           "eta": "04-Mar-26",
           "consignee_name": "Hulk International Limited",
-          "consignee_address_1": "C/O CASTLEGATE LOGISTICS INC 3300 INDIAN AVE, PERRIS SMALL PARCEL PERRIS, CA 92571",
+          "consignee_address_1": "C/O ACME LOGISTICS INC 100 MAIN ST, ANYTOWN, CA 90001",
           "consignee_address_2": null,
           "consignee_city": null,
           "consignee_state": null,
@@ -727,7 +720,7 @@ Additional document types will be added in future phases.
           "consignee_country": "US",
           "consignee_irs_tax_id": null,
           "buyer_name": "Hulk International Limited",
-          "buyer_address_1": "C/O CASTLEGATE LOGISTICS INC 3300 INDIAN AVE, PERRIS SMALL PARCEL PERRIS, CA 92571",
+          "buyer_address_1": "C/O ACME LOGISTICS INC 100 MAIN ST, ANYTOWN, CA 90001",
           "buyer_address_2": null,
           "buyer_city": null,
           "buyer_state": null,
@@ -735,8 +728,8 @@ Additional document types will be added in future phases.
           "buyer_country": "US",
           "buyer_duns": null,
           "buyer_duns4": null,
-          "ship_to_name": "Wayfair Warehouse Perris2 (SP)",
-          "ship_to_address_1": "3300 Indian Ave, Perris Small Parcel Perris, CA 92571",
+          "ship_to_name": "Acme Distribution Center 2",
+          "ship_to_address_1": "100 Main St, Anytown, CA 90001",
           "ship_to_address_2": null,
           "ship_to_city": null,
           "ship_to_state": null,
@@ -853,15 +846,15 @@ Additional document types will be added in future phases.
             "phone": null
           },
           "consignee": {
-            "name": "CASTLEGATE LOGISTICS INC",
+            "name": "ACME LOGISTICS INC",
             "address": "4 COPLEY PLACE FLOOR 7 BOSTON MA 02116 UNITED STATES",
-            "email": "OCEANIMPORT@CASTLEGATELOGISTICS.COM",
+            "email": "OCEANIMPORT@ACMELOGISTICS.COM",
             "phone": "1 617-532-5100"
           },
           "notify_party": {
-            "name": "CASTLEGATE LOGISTICS INC.",
+            "name": "ACME LOGISTICS INC.",
             "address": "4 COPLEY PLACE FLOOR 7 BOSTON MA 02116 UNITED STATES",
-            "email": "OCEANIMPORT@CASTLEGATELOGISTICS.COM",
+            "email": "OCEANIMPORT@ACMELOGISTICS.COM",
             "phone": "1 617-532-5100"
           },
           "also_notify": null,
@@ -970,7 +963,7 @@ Additional document types will be added in future phases.
         "created_at": "2026-03-27T20:05:39Z",
         "updated_at": "2026-03-27T20:05:39Z",
         "payload": {
-          "issuer_name": "CastleGate Logistics Inc",
+          "issuer_name": "Acme Logistics Inc",
           "issuer_fmc_oti_number": "026564N",
           "document_date": null,
           "document_number": null,
@@ -981,8 +974,8 @@ Additional document types will be added in future phases.
           "pickup_address_name": "New York APM Terminal, New Jersey",
           "pickup_address": null,
           "pickup_address_phone": null,
-          "delivery_name": "Wayfair Warehouse Cranbury",
-          "delivery_address": "48 Station Road Cranbury, New Jersey 08512 US",
+          "delivery_name": "Acme Distribution Center",
+          "delivery_address": "100 Main St, Anytown, NJ 08512 US",
           "ocean_carrier": "Hapag-Lloyd",
           "mbol": "HLCUSGN2512AWAC8",
           "hbol": null,
@@ -1045,7 +1038,7 @@ Additional document types will be added in future phases.
 - [`GET /webhook_notifications/examples`](/api-docs/api-reference/webhook-notifications/get-webhook-notification-payload-examples)
 - [`POST /webhooks/trigger`](/api-docs/api-reference/webhooks/trigger-a-webhook)
 
-For Wayfair document webhook events, you can trigger a test payload for a specific document type without sending an email:
+You can trigger a test payload for a specific document type without sending an email:
 
 ```bash
 curl -X POST https://api.terminal49.com/v2/webhooks/trigger \
