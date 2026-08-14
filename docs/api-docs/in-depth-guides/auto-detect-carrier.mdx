@@ -56,8 +56,8 @@ Submit any tracking number, and the API returns:
   <Step title="You submit a tracking number" icon="input-text">
     Just the number — no need to specify the shipping line or type
   </Step>
-  <Step title="We analyze the pattern" icon="microchip-ai">
-    Our system uses machine learning and historical data from millions of
+  <Step title="Terminal49 analyzes the pattern" icon="microchip-ai">
+    Terminal49 uses machine learning and historical data from millions of
     shipments to predict the shipping line.
   </Step>
   <Step title="You get the SCAC and confidence score" icon="bullseye-arrow">
@@ -74,7 +74,7 @@ Submit any tracking number, and the API returns:
   <Tab title="Container Number" icon="box">
     Container numbers follow the ISO 6346 format. While the first three letters (owner code) often indicate the owner, the container might be moved by a different shipping line (VOCC).
 
-    Our system analyzes the number against tens of millions of historical records to predict which shipping line is moving the container.
+    Terminal49 analyzes the number against tens of millions of historical records to predict which shipping line is moving the container.
 
     **Example Input:** `MSCU1234567`
 
@@ -278,7 +278,7 @@ Submit any tracking number, and the API returns:
 ## Understanding the response
 
 <AccordionGroup>
-  <Accordion title="Decision Types Explained" icon="code-branch" defaultOpen>
+  <Accordion title="Decision types explained" icon="code-branch" defaultOpen>
     The `decision` field tells you how confident the prediction is and what action to take:
 
     | Decision | When it's used | What to do |
@@ -295,7 +295,7 @@ Submit any tracking number, and the API returns:
 
   </Accordion>
 
-  <Accordion title="Validation Fields" icon="shield-check">
+  <Accordion title="Validation fields" icon="shield-check">
     The API validates numbers before returning predictions:
 
     | Field | Description |
@@ -311,7 +311,7 @@ Submit any tracking number, and the API returns:
 
   </Accordion>
 
-  <Accordion title="Full Response Schema" icon="brackets-curly">
+  <Accordion title="Full response schema" icon="brackets-curly">
     | Field | Type | Description |
     | ----- | ---- | ----------- |
     | `number_type` | string | Detected type: `container`, `bill_of_lading`, or `booking` |

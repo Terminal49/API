@@ -101,7 +101,7 @@ Each item in `holds_at_pod_terminal` is a `terminal_hold` object:
 | `status` | string | `"hold"` or `"pending"` |
 | `description` | string \| null | Raw text from the terminal, if provided |
 
-When a hold is cleared, the object is removed from the array entirely. There is no `"released"` status — an empty array means no active holds.
+When a hold is cleared, the object is removed from the array entirely. There is no `"released"` status. An empty array means no active holds.
 
 | Hold name | Description | Who resolves it |
 |-----------|-------------|-----------------|
@@ -454,11 +454,11 @@ const totalAmount = lineItems.reduce((acc, f) => acc + f.amount, 0);
   </Accordion>
 
   <Accordion title="Can a container have holds and fees at the same time?">
-    Yes. Holds and fees are independent. Holds block pickup — your container cannot be released until all holds are cleared. Fees are charges you owe (demurrage, exam costs, etc.) that may continue accruing whether or not holds are present.
+    Yes. Holds and fees are independent. Holds block pickup. Your container cannot be released until all holds are cleared. Fees are charges you owe (demurrage, exam costs, etc.) that may continue accruing whether or not holds are present.
   </Accordion>
 
   <Accordion title="What happens when a hold is cleared?">
-    The hold object is removed from the `holds_at_pod_terminal` array entirely. There is no `"released"` status — an empty array means no active holds. You receive a `container.updated` webhook when this happens.
+    The hold object is removed from the `holds_at_pod_terminal` array entirely. There is no `"released"` status. An empty array means no active holds. You receive a `container.updated` webhook when this happens.
   </Accordion>
 
   <Accordion title="Why does available_for_pickup say false when there are no holds?">

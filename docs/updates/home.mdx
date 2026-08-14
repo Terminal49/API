@@ -10,6 +10,197 @@ rss: true
   This page contains updates to **Terminal49 API** and **DataSync** only (not general product updates).
 </Info>
 
+<Update label="August 10, 2026" description="New Delivery Order workflow, OOCL tracker moved to the CargoSmart SCCT API, new Georgia Ports Authority Savannah API tracker, redesigned POD LFD cell with source chips and a detail panel, Complete Plan contract product in admin, container-level Dray Carrier in the expanded row, restored admin container delete from a B/L, wider carrier release-status coverage, and fixes across CMA CGM POL and barge events, YMLU last free days, Maersk missing containers, Full In / Empty Out stamping, locode resolution, TraPac LA future-dated updates, HMM container lookups, Goport batching, and OOLU CFFI resilience" rss="August 10, 2026: New Delivery Order workflow — draft, send, and track carrier acknowledgement through a reviewable link — plus DO view actions from the container modal and pickup triage; OOCL/OOLU tracker migrated to the CargoSmart SCCT JSON API; new Georgia Ports Authority Savannah (USSAV) API tracker; POD LFD cell redesigned as a date with per-source chips (Shipping line / Terminal, Est. / Manual), a coverage detail panel, and sortable Smart LFD; calculated LFDs now computed for every account (display still gated by opt-in, inland gated behind smart_lfd_ind); user-entered LFDs reported with a manual selection so cells label them accordingly; Complete Plan added to the admin contract product catalog; container-level Dray Carrier now assignable from the expanded container row; admin container delete from a B/L restored via V2 destroy; Terminal49 support accounts can now read container terminal history; hold detail now carries each source's own wording; terminal line holds routed into holds v2 with an admin toggle and active-holds backfill; expanded carrier release-status parsing across COSU, HDMU, MATS, ONEY, and YMLU trackers; Pickup Dray Carrier renamed to Dray Carrier across dashboard columns, filters, bulk upload, and CSV export; PartyRole is now the source of truth for customer, with new customers created as unbacked parties and customer id inputs accepting both party and account ids; party contact and location editing from the new side panel; and fixes for CMA CGM barge events (ABA/ABD) and POL resolution from the transport call, YMLU last free days placed by carrier label, Maersk payloads with no containers key, Maersk event location state, Full In / Empty Out timestamps stamped away from the POL, exact locode beating a fuzzy city guess, locode aliases applied to inland locations, Cplus CSX code mapped to DP World Hong Kong CT3, future-dated TraPac LA terminal updates, HMM container lookup crash on invalid numbers, GCT Canada !NOBLIMPORT hold description, Goport partial-batch failures and non-JSON responses, HTTPI SSL/timeout classification, GO! Port password-expiry detection, and OOLU CFFI failure classification and Cloudflare ticket retries.">
+  ### New Delivery Order workflow
+
+  A new **Delivery Order** experience lets you draft a DO, choose destinations from your party network, send it to the dray carrier, and follow the carrier's response through a public review link — no more sending PDFs by email and chasing acknowledgements.
+
+  - **Draft, edit, and send** — build a DO from the pickup triage view, pick a destination and contacts from the party network, and send it to the assigned dray carrier
+  - **Public review link** — carriers open a shareable link (no login), see the container list, and accept or push back with notes; state moves through a machine (draft → sent → accepted / declined) and expires on its own if left unanswered
+  - **View from the container** — the container modal and pickup triage row now surface a **View DO** action once a delivery order exists, opening the same draft view for review or resend
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
+
+  ---
+
+  ### New OOCL and Georgia Ports Authority integrations
+
+  - **OOCL / OOLU via CargoSmart SCCT** — the OOLU tracker now runs against the CargoSmart Shipment Connect (SCCT) JSON API. Container, booking, and B/L lookups all flow through the shared adapter, with better handling for multiline booking numbers, transshipments, and rail-to-inland moves. Customs holds and container events keep populating as before
+  - **Georgia Ports Authority (GPA) Savannah API** — a native API tracker for the Port of Savannah (USSAV) covering canonical container states, available-for-pickup, and vessel discharge
+
+  ---
+
+  ### Redesigned POD Last Free Day cell
+
+  The **Smart LFD** column has been replaced with a **POD LFD** cell that reads at a glance:
+
+  - **Date-first layout with source chips** — the date sits on the left, followed by monochrome one-letter chips for each source (**S** for the shipping line, **T** for the terminal) and an inline qualifier (**Est.** for calculated, **Manual** for user-entered). When the sources agree, one date and both chips render; when they diverge, both dates show with the binding (earlier) date first
+  - **Restrained coloring** — red only after the deadline has passed with no pickup seen, grey once picked up, plain otherwise. The old "approaching" highlight is retired
+  - **Clearer empty states** — the cell reads **Not discharged** before free time starts, and **+ Add LFD** once discharged with nothing reported
+  - **Detail panel** — clicking the cell opens a coverage breakdown per source, and the shipment page shows POD and IND deadlines together
+  - **Sortable Smart LFD** — the column now sorts (and exports) instead of silently ignoring the header click; non-opted accounts sort by reported values only
+
+  Calculated LFDs are now computed for every account, but only **displayed** to accounts opted into Smart LFD. Inland (IND) LFDs remain gated behind `smart_lfd_ind` because reliable inland calendars are not yet available for every location. Customer-entered LFDs are now reported as a **manual** selection so cells can label them as such.
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    Container resource with LFD fields
+  </Card>
+
+  ---
+
+  ### Wider carrier release status coverage
+
+  Release-status parsing has been added to more steamship trackers so the `release_statuses` on containers reflects what the carrier actually reports:
+
+  - **COSU / Cosco** — customs and freight release now surfaced
+  - **HDMU / Hyundai (mobile)** — customs, freight, terminal, and line release parsed
+  - **MATS / Matson (mobile and shared)** — customs and freight release parsed
+  - **ONEY / ONE** — customs, freight, and terminal release parsed
+  - **YMLU / Yang Ming (API and web)** — customs, freight, terminal, and line release parsed
+
+  <Card title="Holds and fees guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
+    How to work with holds and release data
+  </Card>
+
+  ---
+
+  ### Terminal holds v2 rollout continues
+
+  Terminal-line holds are now routed through the shared holds v2 pipeline across APM, APM Miami, eModal, GCT Canada, Navis, Ports America, Savannah, SSA Marine, Tideworks, TMS, TMS API, and Voyager Track. Alongside the routing:
+
+  - **Backfill of active facility holds** — a one-shot task reconciles the current active-holds state from the last terminal update so no in-flight holds are lost during migration
+  - **Admin toggle for holds v2** — the account edit view carries a `holds_v2` toggle for controlled enablement
+  - **Terminal-published hold gates** parsed and attributed
+  - **Attributable terminal hold releases** emitted with the terminal named as the release source
+  - **Source wording preserved as `detail`** — each hold source's own phrasing (carrier note, terminal note) is exposed as `detail`, alongside the normalized type
+
+  ---
+
+  ### Dashboard and admin updates
+
+  - **Dray Carrier on the expanded container row** — the expanded container row on the shipment page now shows the container's dray carrier with inline **+ Assign**, **Change carrier**, and **Remove assignment**. Reads and writes share the same store as the shipment sidebar
+  - **"Pickup Dray Carrier" renamed to "Dray Carrier"** — the label is now consistent across the container dashboard column, the bulk-upload field, filters, and CSV exports. Role keys, API attributes, and query params are unchanged
+  - **Complete Plan available in admin contracts** — the subscription plan dropdown in the admin contract form now offers **Complete**, alongside Essential and Lite
+  - **Party contact and location editor in the side panel** — the new parties side panel exposes account-scoped party contacts and locations with a full edit view
+  - **Admin container delete from a B/L restored** — Terminal49 admins can again remove an individual container from a shipment's B/L, with a confirmation dialog naming the container and the B/L. The action is gated behind a new admin-only policy on `DELETE /v2/containers/:id`
+  - **Terminal49 accounts can read container terminal history** — `/v2/containers/:id/container_updates` no longer 404s for Terminal49 staff viewing a customer's shipment, so the Terminal history tab renders for support and engineering
+
+  ---
+
+  ### Customer moves to the party model
+
+  `PartyRole(role: "customer")` is now the source of truth for a shipment's or tracking request's customer. The legacy `customer_id` column is frozen and every write path now writes a party role instead. For API and dashboard users:
+
+  - **New customers can be unbacked parties** — creating a customer no longer implicitly creates a shipper Account; unbacked customers are exposed under their party id (customers backed by an existing account keep exposing their account id)
+  - **Customer id inputs accept both id kinds** — tracking-request create, shipment update, bulk add, and merge accept either a party id or an account id and resolve to the right customer role
+  - **Customer dropdown is stable across reloads** — dashboards read customers through the parties endpoint so unbacked customers stay visible after refresh
+
+  <Card title="Adding a customer guide" icon="user-plus" href="/api-docs/in-depth-guides/adding-customer">
+    Attach customers to shipments
+  </Card>
+
+  ---
+
+  ### Bug fixes
+
+  - **CMA CGM barge events restored** — the actual barge arrival and departure event codes (`ABA` / `ABD`) are now mapped to feeder arrival and departure. Previously the actuals were unmapped and the planned twins (`PBA` / `PBD`) were dropped when the actuals landed, so river-port origins like Phnom Penh reported no departure at all. `pol_atd_at` and `pol_etd_at` now populate for these shipments
+  - **CMA CGM POL resolved from the transport call** — the port of lading now reads from the `DEPA`/`POL` transport call rather than a vessel-departed event that might be dropped for a missing timestamp. Downstream fields (`empty_out_at`, `pol_full_in_at`, `pol_vessel_loaded_at`, `pol_vessel_departed_at`) populate again
+  - **YMLU last free days placed by carrier label** — Yang Ming's terminal and ramp LFDs now attach to the POD or the inland destination based on the block's label ("Terminal Last Free Date" / "Ramp Last Free Date"), instead of being geocoded from a facility string that regularly parsed to the wrong port. Both deadlines are captured when a shipment discharges at one location and rails to another
+  - **Maersk payloads without a `containers` key** — Maersk (MAEU/SEAU/SAFM/SEJJ) tracking responses that omit the equipment list no longer crash the transformer. The shipment update proceeds even when the carrier has not yet assigned containers
+  - **Maersk locations resolve by city + state** — Maersk event locations now carry their state so city matching resolves correctly instead of colliding with same-named cities elsewhere
+  - **Full In / Empty Out stamped away from the POL** — `pol_full_in_at` and `empty_out_at` are now stamped wherever the container gates in, including inland depots and ICDs. The POL-only gate cost roughly 63,000 previously eligible events per month
+  - **Exact locode beats a fuzzy city guess** — location matching now resolves an explicit locode before falling back to a city string. Carriers naming metro-area locodes (like `THLKR` "Lat Krabang") no longer resolve 130 km away
+  - **Locode aliases apply to inland locations** — curated aliases such as `CAYEG` and `USMCI` now resolve on inland rail and airport-adjacent locations, not just seaports
+  - **Cplus CSX terminal code mapped to DP World Hong Kong (CT3)** — the legacy CSX prefix from the Hutchison Cplus feed no longer warns and now maps to the current DP World Hong Kong CT3 terminal
+  - **TraPac LA future-dated updates dropped** — TraPac LA terminal updates timestamped in the future are now discarded instead of overwriting current state
+  - **HMM container lookups no longer crash on invalid numbers** — unrecognized HMM container numbers are now classified as awaiting-manifest (matching the B/L path) rather than raising in the tracker
+  - **GCT Canada `!NOBLIMPORT` hold** — the Deltaport `!NOBLIMPORT` token is now recognized as an "other" hold with a friendlier description instead of surfacing the raw token and Sentry-ing every scrape
+  - **Goport batches survive per-container failures** — a single container's failed moves lookup no longer aborts the whole scrape; the rest of the batch reports normally and the failing container is retried
+  - **Goport tolerates non-JSON portal responses** — an expired-session HTML login page (returned under HTTP 200) is now caught and treated as a transient portal error instead of a critical unknown exception
+  - **HTTPI SSL and timeout errors classified as transient** — Hapag-Lloyd SOAP lookups that hit an SSL or timeout error are now marked `FAILED_REASON_UNREACHABLE` and retried, rather than surfacing as `FAILED_REASON_BAD_RESPONSE`
+  - **GO! Port password expiry named** — SCSPA terminals (GO! Port) now surface a `password_expired` credential error when the portal returns `pwdChangeRequired`, instead of a generic HTTP 403
+  - **OOLU CFFI resilience** — CargoSmart scrape failures are classified accurately, and Cloudflare ticket challenges retry rather than failing the run
+
+</Update>
+
+<Update label="August 3, 2026" description="New Livorno terminal integration, unified parties experience across shipment sidebar, dashboard, and container cells, longer retry window for paid tracking requests, explicit release-status rollout across terminal integrations, and fixes for HMM pre-manifest B/Ls, bulk-upload customer assignments, HIT Cplus terminal oscillation, and Chittagong scraper reliability" rss="August 3, 2026: New Livorno TPCS (ITLIV) terminal tracker; unified parties experience with Customer on the shipment sidebar, add-party affordance from the shipment dashboard, editable party cells on the container dashboard, and a confirmation before removals; extended retry window for paid tracking requests with the expiry shown on the track page; explicit release-status normalization across terminal integrations; custom field Preset renamed to Template, plus grayed-out archived fields with unarchive/delete; and fixes for HMM B/Ls failing before manifest, bulk-upload customer assignments lost to replica lag, HIT Cplus ACT8/CHT8 sibling oscillation emitting spurious POD-terminal changes, Chittagong Port Authority (BDCGP) datacenter blocks, Trapac 403 misclassification, HDMU invalid-number handling, and a security fix for the customer Metabase dashboards endpoint.">
+  ### New Livorno terminal integration
+
+  Added a native terminal tracker for the **Port of Livorno (ITLIV)** via the public Tuscan Port Community System. One endpoint covers all Livorno terminals, and when a container lookup returns not-found the tracker automatically retries by bill of lading (with a SCAC-prefixed fallback) so manifested boxes still resolve. Container, vessel, arrival, and B/L milestones flow through the standard pipeline.
+
+  <Card title="Container API reference" icon="warehouse" href="/api-docs/api-reference/containers/get-a-container">
+    View the container resource
+  </Card>
+
+  ---
+
+  ### Unified parties experience
+
+  The Parties surface across the dashboard has been consolidated into a single component and data flow, with several new affordances landing at the same time:
+
+  - **Customer and other parties on the shipment sidebar** — the container details drawer now shows a Parties section (including Customer) with inline `+ Assign` and `Change` affordances, rendered between the map and Shipment Fields
+  - **Add parties from the shipments dashboard** — the PARTIES column on the shipment list now offers a `+ add parties` empty state and a hover-pencil edit on rows that already have chips, opening the same editor used on the shipment details page
+  - **Editable party cells on the container dashboard** — inline party adds and per-role bulk updates are available directly from container rows
+  - **Confirmation before removals** — removing a party from the Parties card, the shipment Parties tab, or a dray-carrier assignment now prompts to confirm, naming the party, role, and scope it is leaving. Replacing a party still skips the dialog
+  - **Standalone Customer column retired from the shipment list** — the shipments list no longer renders a standalone Customer column; the customer surfaces as a "Cus" chip in the Parties column, and the extra width goes to Parties
+  - **Duplicate Customer field removed from Bulk Update Shipments** — the Flatfile bulk-update modal no longer shows Customer twice; parties are the single source for Customer
+
+  ---
+
+  ### Extended retry window for paid tracking requests
+
+  Paid tracking requests now retry for a **longer window** before giving up, and the effective expiry time is surfaced on the track page so you can see when a pending request will stop being retried. Auto-detected requests continue to use their own retry cap.
+
+  <Card title="Create a tracking request" icon="plus" href="/api-docs/api-reference/tracking-requests/create-a-tracking-request">
+    Tracking request API reference
+  </Card>
+
+  ---
+
+  ### Explicit release status across terminal integrations
+
+  Terminal-container parsers across the integration set have been rolled forward to report **explicit hold release status** through a shared normalization layer. The change consolidates release semantics behind one interface and unifies how APM, APM Miami, ATP Altamira, BEST Barcelona, BGT Click, CMSAMX, DP World Vancouver, e-Brama, eModal, ETS Link, Felixstowe, FMS API, GCT Canada, Goport, HHLA, and other trackers report cleared holds — with cleared entries no longer written inline alongside active holds. Downstream, `holds` remains the active-holds surface you already read from.
+
+  <Card title="Holds and fees guide" icon="book-open" href="/api-docs/in-depth-guides/holds-and-fees">
+    How to work with holds and fees data
+  </Card>
+
+  ---
+
+  ### Custom fields polish
+
+  - **Rename Preset to Template** — the "Add a Field" modal tab, empty state, admin "Create Template?" toggle, banner, and tooltips now use "Template" instead of "Preset" (internal identifiers unchanged)
+  - **Archived custom fields visible with unarchive/delete** — archived custom fields now appear grayed out for admins with clear unarchive and delete actions, instead of being hidden entirely
+  - **Longer field labels** — the custom field label column now expands to 50% for readability
+  - **Hover reveals all custom field values** — hovering a shipment or container's custom field row now expands the display so every configured value is visible without opening a detail view
+
+  <Card title="Custom Field Definitions" icon="brackets-curly" href="/api-docs/api-reference/custom-fields/list-custom-field-definitions">
+    Custom Fields API reference
+  </Card>
+
+  ---
+
+  ### Updates
+
+  - **Shipment number over normalized number** — dashboard views that previously displayed the internal normalized reference now show the shipment number, matching what your team enters and searches for
+  - **Delivery-order and reference-list refresh polish** — creating a new template refreshes the list on success and drops the just-created template from the pick list, so it doesn't appear as a selectable option in its own creation flow
+
+  ---
+
+  ### Bug fixes
+
+  - **HMM B/Ls no longer fail before manifest** — Hyundai (HMM/HDMU) bills of lading submitted before the carrier assigns a container used to fail permanently as `invalid_number` on the first attempt because HMM's response for a not-yet-manifested B/L is byte-identical to its response for an unknown one. HMM B/L requests now park as awaiting-manifest and retry until the account's retry cap, matching Hapag-Lloyd's pre-booking behavior. Container lookups are unchanged
+  - **Bulk-upload customer assignments preserved** — CSV bulk uploads that created new customers could save affected rows with a null customer, because the follow-up read to match customers by name was served by a replica that hadn't caught up. Assignments now match against the records already in hand, and the customer list endpoint is served from the primary
+  - **HIT Cplus terminal oscillation debounced** — pre-discharge, the Hutchison Cplus feed's `terminal` field is a berth prediction that can oscillate between the ACT8/CHT8 sibling yards at Kwai Tsing while a box is "Inbound On-board." Each flip was re-attributing the container's POD terminal and emitting a spurious `container_pod_terminal_changed_event`. Pre-discharge readings now keep the already-assigned Cplus sibling terminal; once the box is ashore the terminal becomes authoritative again
+  - **Chittagong Port Authority (BDCGP) reliability restored** — the `cpatos.gov.bd` portal was rejecting Terminal49's datacenter egress with 4xx errors on every request. The Cpatos scraper now runs through residential egress, restoring container tracking at Chittagong
+  - **Trapac 403 classification** — Trapac forbidden responses are now classified correctly instead of surfacing as unknown tracker errors
+  - **HDMU invalid-number handling** — additional HDMU invalid-number edge cases are now handled cleanly instead of failing the tracker run
+  - **Metabase dashboards endpoint hardened** — the customer-facing `/v2/account_metabase_dashboards` endpoint no longer honors arbitrary `?include` values that could expose sensitive dashboard configuration. Reports continue to render normally from the inline label and signed iframe URL
+
+</Update>
+
 <Update label="July 27, 2026" description="New Oman terminal integrations (Sohar OICT and APM Salalah), Customer columns and filters powered by the party model, terminal-sourced container particulars filling in on cargos, clickable URLs in custom fields, guardrails on custom field templates, and fixes for YMLU POD stuck at transshipment, stop/resume tracking on cancelled requests, and vessel-particulars enrichment via IMO GISIS" rss="July 27, 2026: New terminal trackers for OICT Sohar (OMSOH) and APM Terminals Salalah (OMSLL); Customer column, filter, bulk import, and bulk update on the container dashboard migrated to the party model; terminal-sourced container equipment particulars (type, size, height, seal number, weight) now backfill on cargos when the shipping line omits them; URLs in short-text custom fields render as clickable links in the dashboard; in-use custom field templates can no longer be deleted; IMO GISIS vessel-particulars enrichment restored via CapSolver; parties panel always visible on shipment details; and fixes for YMLU POD frozen at the transshipment hub, stop/resume tracking on cancelled tracking requests, and Point-of-Virginia availability parsing.">
   ### New Oman terminal integrations
 

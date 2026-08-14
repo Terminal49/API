@@ -15,7 +15,7 @@ When you submit a tracking request, your request is added to a queue to be check
 
 If Terminal49 has difficulty connecting to the shipping line or cannot parse the response, it retries up to 14 times.
 
-This process can take up to approximately 24 hours. You will not receive a `tracking_request.failed` webhook notification until Terminal49 has exhausted the retries, and the `status` field will not be changed to `failed` until then.
+This process can take up to approximately 24 hours. You will not receive a `tracking_request.failed` webhook notification until Terminal49 has exhausted the retries, and Terminal49 does not change the `status` field to `failed` until then.
 
 ## Request number not found / awaiting manifest
 
@@ -71,7 +71,7 @@ Terminal49 will stop tracking requests for the following reasons:
 - More than 56 days have passed since the shipment arrived at its destination.
 - There have been no updates from the shipping line for more than 56 days.
 
-In addition end-users may stop tracking a shipment through the dashboard.
+You can also stop tracking a shipment from the dashboard.
 
 ### Stopping tracking programmatically
 
@@ -79,7 +79,7 @@ Tracking is stopped at the **shipment level**, not on the tracking request or on
 
 - A tracking request initiates tracking and can create a shipment. Once the shipment exists, the shipment is the resource you manage.
 - There is no `DELETE` or "stop" endpoint on the `tracking_requests` resource. The tracking request `status` reflects the request outcome (`pending`, `created`, `failed`, `tracking_stopped`); the shipment is where active tracking is stopped or resumed.
-- Stopping a shipment stops tracking for **all containers on that shipment**. There is no per-container stop endpoint — this behavior is the same whether the shipment was originally tracked by bill of lading, booking, or container number.
+- Stopping a shipment stops tracking for **all containers on that shipment**. There is no per-container stop endpoint. This behavior is the same whether the shipment was originally tracked by bill of lading, booking, or container number.
 - To resume, use [Resume tracking a shipment](/api-docs/api-reference/shipments/resume-tracking-shipment).
 
 ## Retrieving status

@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "command": "parties.get",
+  "data": {
+    "data": {
+      "id": "aec89cee-f447-435d-88cc-172526f4d198",
+      "type": "party",
+      "attributes": {
+        "company_name": "Acme Imports LLC"
+      }
+    },
+    "links": {
+      "self": "https://api.terminal49.com/v2/parties/aec89cee-f447-435d-88cc-172526f4d198"
+    }
+  }
+}

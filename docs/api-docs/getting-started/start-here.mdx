@@ -38,6 +38,12 @@ You can use any HTTP client. [Postman](https://www.postman.com/) is useful for a
 
 Sign in to your Terminal49 account and go to the [developer portal](https://app.terminal49.com/developers/api-keys) to get your API key.
 
+<Warning>
+  The full API key value is only shown once, right after you create it. Copy the complete token from that screen and store it somewhere safe (for example, a password manager or your deployment's secret manager) before you navigate away. Once you leave the page, the key is masked and cannot be revealed again.
+
+  If you did not capture the full value, create a new key and copy it immediately. You can then delete the older key from the [developer portal](https://app.terminal49.com/developers/api-keys).
+</Warning>
+
 ## Send the Authorization header
 
 The API uses a Token-prefixed API key in the `Authorization` header. Send it with every request:

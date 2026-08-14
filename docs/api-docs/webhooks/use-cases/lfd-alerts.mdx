@@ -18,12 +18,22 @@ Last Free Day (LFD) is the deadline to pick up a container before demurrage char
 
 | Event | When it fires |
 |-------|---------------|
-| `container.pickup_lfd.changed` | The coalesced `pickup_lfd` field changed. It combines the line and terminal LFDs, preferring the shipping line LFD when available |
+| `container.pickup_lfd.changed` | The coalesced `pickup_lfd` field changed. See [How `pickup_lfd` is chosen](#how-pickup_lfd-is-chosen) for the source priority |
 | `container.pickup_lfd_line.changed` | The shipping line's Last Free Day changed |
 | `container.pickup_lfd_terminal.changed` | The destination terminal's Last Free Day changed |
 | `container.pickup_lfd_rail.changed` | The rail terminal's Last Free Day changed for an inland rail move ([Rail Plan](/api-docs/useful-info/entitlements) only) |
 | `container.transport.available` | The container is available for pickup at the destination |
 | `container.updated` | Container attributes changed (may include holds or availability updates) |
+
+## How `pickup_lfd` is chosen
+
+The coalesced `pickup_lfd` field follows a fixed source priority. It does not pick the earliest date, and it does not follow the most recently updated source.
+
+1. `import_deadlines.pickup_lfd_line` (shipping line) — used when present.
+2. `import_deadlines.pickup_lfd_terminal` (POD terminal) — used when there is no line LFD.
+3. `import_deadlines.pickup_lfd_rail` (rail carrier at the inland destination) — used when neither of the above is present. Rail Plan only.
+
+The line LFD wins even when the terminal LFD is sooner. If your demurrage exposure is driven by whichever LFD lands first, do not rely on `pickup_lfd` alone. Subscribe to `container.pickup_lfd_line.changed` and `container.pickup_lfd_terminal.changed` (and `container.pickup_lfd_rail.changed` for rail moves), read the individual `import_deadlines.*` fields from the included container, and compare them yourself to pick the earliest date.
 
 ## Handle LFD change events
 
@@ -86,7 +96,7 @@ Subscribe to both `container.transport.available` and `container.updated` events
 
 - **Demurrage prevention** — alert when LFD is within 48 hours and the container has not been dispatched
 - **Automated dispatch** — trigger a drayage order as soon as the container clears holds
-- **LFD comparison** — track terminal, rail terminal, and shipping line LFDs when applicable; the earlier date is the one that matters
+- **LFD comparison** — for demurrage planning, compare `import_deadlines.pickup_lfd_line`, `import_deadlines.pickup_lfd_terminal`, and (for rail) `import_deadlines.pickup_lfd_rail` yourself and act on the earliest date, since the coalesced `pickup_lfd` field follows a fixed priority instead (see [How `pickup_lfd` is chosen](#how-pickup_lfd-is-chosen))
 - **Hold monitoring** — watch for `container.updated` events where `holds_at_pod_terminal` changes
 
 ## Related

@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "command": "search",
+  "data": {
+    "data": [
+      {
+        "id": "4932792a-0154-4f57-83eb-11d4418b6e05",
+        "type": "search_result",
+        "attributes": {
+          "entity_type": "cargo",
+          "number": "TEST1000001",
+          "shipment_id": "fcc11d12-b8e6-49a8-8b1a-fc1f7e485b31",
+          "scac": "COSU",
+          "port_of_lading_name": null,
+          "port_of_discharge_name": null,
+          "containers_count": null,
+          "tracking_stopped": null,
+          "tracking_stopped_reason": null,
+          "status": null,
+          "failed_reason": null,
+          "ref_numbers": [],
+          "created_at": "2026-02-25T15:03:44Z",
+          "updated_at": "2026-02-28T22:09:51Z"
+        }
+      }
+    ],
+    "links": {
+      "self": "https://api.terminal49.com/v2/search?query=TEST1000001",
+      "current": "https://api.terminal49.com/v2/search?page[number]=1&query=TEST1000001"
+    }
+  }
+}

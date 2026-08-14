@@ -61,7 +61,7 @@ Subscribe only to the events your integration handles. Use the [Event Catalog](/
 
 The webhook response includes a `secret` attribute. Store it in your secrets manager.
 
-Terminal49 signs every webhook delivery with an HMAC SHA-256 digest of the raw request body. The digest is sent in the `X-T49-Webhook-Signature` header.
+Terminal49 signs every webhook delivery with an HMAC SHA-256 digest of the raw request body and sends the digest in the `X-T49-Webhook-Signature` header.
 
 ## Verify the signature
 

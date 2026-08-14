@@ -1,0 +1,600 @@
+{
+  "ok": true,
+  "command": "containers.raw-events",
+  "data": {
+    "data": [
+      {
+        "id": "c736190b-ecc4-438c-807d-c8965a0155df",
+        "type": "raw_event",
+        "attributes": {
+          "actual_on": null,
+          "estimated_at": null,
+          "actual_at": "2025-12-25T05:43:00Z",
+          "will_occur_at": null,
+          "event": "vessel_departed",
+          "timestamp": "2025-12-25T05:43:00Z",
+          "estimated": false,
+          "invalidated_at": null,
+          "index": 0,
+          "original_event": null,
+          "created_at": "2026-02-25T15:03:47Z",
+          "data_source": "shipping_line",
+          "data_provider_name": "COSCO",
+          "data_provider_code": "COSU",
+          "voyage_number": "39N",
+          "location_name": "Jakarta, Java",
+          "location_locode": "IDJKT",
+          "vessel_name": "SEASPAN EMERALD",
+          "vessel_imo": "9407134",
+          "timezone": "Asia/Jakarta"
+        },
+        "relationships": {
+          "location": {
+            "data": {
+              "id": "b81d9e6d-47e5-440c-8ee7-dd5f2403b206",
+              "type": "port"
+            }
+          },
+          "vessel": {
+            "data": {
+              "id": "c5adab58-8bb8-4b1e-8625-d695b69a477a",
+              "type": "vessel"
+            }
+          },
+          "container": {
+            "data": {
+              "id": "4932792a-0154-4f57-83eb-11d4418b6e05",
+              "type": "container"
+            }
+          },
+          "terminal": {
+            "data": null
+          }
+        }
+      },
+      {
+        "id": "ad5de463-bbdb-48e5-8fd1-cbd405e1e7a5",
+        "type": "raw_event",
+        "attributes": {
+          "actual_on": null,
+          "estimated_at": null,
+          "actual_at": "2026-01-08T21:59:00Z",
+          "will_occur_at": null,
+          "event": "transshipment_arrived",
+          "timestamp": "2026-01-08T21:59:00Z",
+          "estimated": false,
+          "invalidated_at": null,
+          "index": 1,
+          "original_event": null,
+          "created_at": "2026-02-25T15:03:47Z",
+          "data_source": "shipping_line",
+          "data_provider_name": "COSCO",
+          "data_provider_code": "COSU",
+          "voyage_number": "39N",
+          "location_name": "Shanghai",
+          "location_locode": "CNSHG",
+          "vessel_name": "SEASPAN EMERALD",
+          "vessel_imo": "9407134",
+          "timezone": "Asia/Shanghai"
+        },
+        "relationships": {
+          "location": {
+            "data": {
+              "id": "e3545cee-d677-402e-8303-c2eb0dbe8120",
+              "type": "port"
+            }
+          },
+          "vessel": {
+            "data": {
+              "id": "c5adab58-8bb8-4b1e-8625-d695b69a477a",
+              "type": "vessel"
+            }
+          },
+          "container": {
+            "data": {
+              "id": "4932792a-0154-4f57-83eb-11d4418b6e05",
+              "type": "container"
+            }
+          },
+          "terminal": {
+            "data": null
+          }
+        }
+      },
+      {
+        "id": "13af4c12-5d05-45a7-820e-bc8823921e91",
+        "type": "raw_event",
+        "attributes": {
+          "actual_on": null,
+          "estimated_at": null,
+          "actual_at": "2026-01-15T02:54:00Z",
+          "will_occur_at": null,
+          "event": "transshipment_departed",
+          "timestamp": "2026-01-15T02:54:00Z",
+          "estimated": false,
+          "invalidated_at": null,
+          "index": 2,
+          "original_event": null,
+          "created_at": "2026-02-25T15:03:47Z",
+          "data_source": "shipping_line",
+          "data_provider_name": "COSCO",
+          "data_provider_code": "COSU",
+          "voyage_number": "068E",
+          "location_name": "Shanghai",
+          "location_locode": "CNSHG",
+          "vessel_name": "OOCL FRANCE",
+          "vessel_imo": "9622617",
+          "timezone": "Asia/Shanghai"
+        },
+        "relationships": {
+          "location": {
+            "data": {
+              "id": "e3545cee-d677-402e-8303-c2eb0dbe8120",
+              "type": "port"
+            }
+          },
+          "vessel": {
+            "data": {
+              "id": "49665a3b-107a-4f58-88bf-998346abe9e3",
+              "type": "vessel"
+            }
+          },
+          "container": {
+            "data": {
+              "id": "4932792a-0154-4f57-83eb-11d4418b6e05",
+              "type": "container"
+            }
+          },
+          "terminal": {
+            "data": null
+          }
+        }
+      },
+      {
+        "id": "ed4975e0-beba-49f9-86bb-01ab46f215f1",
+        "type": "raw_event",
+        "attributes": {
+          "actual_on": null,
+          "estimated_at": null,
+          "actual_at": "2026-02-20T08:53:00Z",
+          "will_occur_at": null,
+          "event": "vessel_arrived",
+          "timestamp": "2026-02-20T08:53:00Z",
+          "estimated": false,
+          "invalidated_at": null,
+          "index": 3,
+          "original_event": null,
+          "created_at": "2026-02-25T15:03:47Z",
+          "data_source": "shipping_line",
+          "data_provider_name": "COSCO",
+          "data_provider_code": "COSU",
+          "voyage_number": "068E",
+          "location_name": "Virginia",
+          "location_locode": "USORF",
+          "vessel_name": "OOCL FRANCE",
+          "vessel_imo": "9622617",
+          "timezone": "America/New_York"
+        },
+        "relationships": {
+          "location": {
+            "data": {
+              "id": "f89f13ad-e247-4a93-8fb8-4a1e94a06b5f",
+              "type": "port"
+            }
+          },
+          "vessel": {
+            "data": {
+              "id": "49665a3b-107a-4f58-88bf-998346abe9e3",
+              "type": "vessel"
+            }
+          },
+          "container": {
+            "data": {
+              "id": "4932792a-0154-4f57-83eb-11d4418b6e05",
+              "type": "container"
+            }
+          },
+          "terminal": {
+            "data": null
+          }
+        }
+      },
+      {
+        "id": "831e5fd4-1f73-42a6-86b6-3e0a6fbfeb71",
+        "type": "raw_event",
+        "attributes": {
+          "actual_on": null,
+          "estimated_at": null,
+          "actual_at": "2026-02-25T10:26:00Z",
+          "will_occur_at": null,
+          "event": "rail_unloaded",
+          "timestamp": "2026-02-25T10:26:00Z",
+          "estimated": false,
+          "invalidated_at": null,
+          "index": 4,
+          "original_event": "De-ramp at Final Hub",
+          "created_at": "2026-02-25T15:03:47Z",
+          "data_source": "shipping_line",
+          "data_provider_name": "COSCO",
+          "data_provider_code": "COSU",
+          "voyage_number": null,
+          "location_name": "Detroit",
+          "location_locode": "USDET",
+          "vessel_name": null,
+          "vessel_imo": null,
+          "timezone": "America/Detroit"
+        },
+        "relationships": {
+          "location": {
+            "data": {
+              "id": "2aa85a4c-33f1-4607-854a-e547418157d8",
+              "type": "port"
+            }
+          },
+          "vessel": {
+            "data": null
+          },
+          "container": {
+            "data": {
+              "id": "4932792a-0154-4f57-83eb-11d4418b6e05",
+              "type": "container"
+            }
+          },
+          "terminal": {
+            "data": {
+              "id": "aeac0328-0a00-4e43-849e-c905be5f7174",
+              "type": "terminal"
+            }
+          }
+        }
+      },
+      {
+        "id": "f86fc02e-b3fd-417c-8f9c-373b874440d4",
+        "type": "raw_event",
+        "attributes": {
+          "actual_on": null,
+          "estimated_at": "2026-02-25T17:00:00Z",
+          "actual_at": null,
+          "will_occur_at": null,
+          "event": "arrived_at_destination",
+          "timestamp": "2026-02-25T17:00:00Z",
+          "estimated": true,
+          "invalidated_at": null,
+          "index": 5,
+          "original_event": null,
+          "created_at": "2026-02-25T15:03:47Z",
+          "data_source": "shipping_line",
+          "data_provider_name": "COSCO",
+          "data_provider_code": "COSU",
+          "voyage_number": null,
+          "location_name": "Detroit",
+          "location_locode": "USDET",
+          "vessel_name": null,
+          "vessel_imo": null,
+          "timezone": "America/Detroit"
+        },
+        "relationships": {
+          "location": {
+            "data": {
+              "id": "2aa85a4c-33f1-4607-854a-e547418157d8",
+              "type": "port"
+            }
+          },
+          "vessel": {
+            "data": null
+          },
+          "container": {
+            "data": {
+              "id": "4932792a-0154-4f57-83eb-11d4418b6e05",
+              "type": "container"
+            }
+          },
+          "terminal": {
+            "data": {
+              "id": "aeac0328-0a00-4e43-849e-c905be5f7174",
+              "type": "terminal"
+            }
+          }
+        }
+      },
+      {
+        "id": "84289060-78b9-4a34-87d6-7810751bf938",
+        "type": "raw_event",
+        "attributes": {
+          "actual_on": null,
+          "estimated_at": null,
+          "actual_at": "2026-02-26T14:53:00Z",
+          "will_occur_at": null,
+          "event": "full_out",
+          "timestamp": "2026-02-26T14:53:00Z",
+          "estimated": false,
+          "invalidated_at": null,
+          "index": 6,
+          "original_event": "Gate-out from Final Hub",
+          "created_at": "2026-02-26T16:25:20Z",
+          "data_source": "shipping_line",
+          "data_provider_name": "COSCO",
+          "data_provider_code": "COSU",
+          "voyage_number": null,
+          "location_name": "Detroit",
+          "location_locode": "USDET",
+          "vessel_name": null,
+          "vessel_imo": null,
+          "timezone": "America/Detroit"
+        },
+        "relationships": {
+          "location": {
+            "data": {
+              "id": "2aa85a4c-33f1-4607-854a-e547418157d8",
+              "type": "port"
+            }
+          },
+          "vessel": {
+            "data": null
+          },
+          "container": {
+            "data": {
+              "id": "4932792a-0154-4f57-83eb-11d4418b6e05",
+              "type": "container"
+            }
+          },
+          "terminal": {
+            "data": {
+              "id": "aeac0328-0a00-4e43-849e-c905be5f7174",
+              "type": "terminal"
+            }
+          }
+        }
+      }
+    ],
+    "included": [
+      {
+        "id": "c5adab58-8bb8-4b1e-8625-d695b69a477a",
+        "type": "vessel",
+        "attributes": {
+          "name": "SEASPAN EMERALD",
+          "imo": "9407134",
+          "mmsi": "563279800",
+          "latitude": 1.565,
+          "longitude": 120.383333333,
+          "nautical_speed_knots": 12,
+          "navigational_heading_degrees": 52,
+          "position_timestamp": "2026-02-28T21:57:46Z"
+        }
+      },
+      {
+        "id": "b81d9e6d-47e5-440c-8ee7-dd5f2403b206",
+        "type": "port",
+        "attributes": {
+          "id": "b81d9e6d-47e5-440c-8ee7-dd5f2403b206",
+          "name": "Jakarta, Java",
+          "code": "IDJKT",
+          "state_abbr": "JK",
+          "city": "Jakarta, Java",
+          "country_code": "ID",
+          "latitude": "-6.098516936",
+          "longitude": "106.902376052",
+          "time_zone": "Asia/Jakarta"
+        },
+        "relationships": {
+          "terminals": {
+            "data": [
+              {
+                "id": "b8e4a093-e2e9-491e-89a3-7774beec69b6",
+                "type": "terminal"
+              },
+              {
+                "id": "9ca8f0f7-13c7-4dfa-8d61-d791cf700258",
+                "type": "terminal"
+              },
+              {
+                "id": "c9dc3000-de0f-4930-89fd-7ffa5c479486",
+                "type": "terminal"
+              },
+              {
+                "id": "23a9033e-6be3-4ae0-86b9-49d91549cb98",
+                "type": "terminal"
+              },
+              {
+                "id": "0a2778ea-e6d2-4d14-8b48-1b067a5b17ba",
+                "type": "terminal"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "e3545cee-d677-402e-8303-c2eb0dbe8120",
+        "type": "port",
+        "attributes": {
+          "id": "e3545cee-d677-402e-8303-c2eb0dbe8120",
+          "name": "Shanghai",
+          "code": "CNSHG",
+          "state_abbr": "SH",
+          "city": "Shanghai",
+          "country_code": "CN",
+          "latitude": "31.36636",
+          "longitude": "121.6147",
+          "time_zone": "Asia/Shanghai"
+        },
+        "relationships": {
+          "terminals": {
+            "data": [
+              {
+                "id": "8e91badd-c7d9-4b91-81d0-2803b794dbeb",
+                "type": "terminal"
+              },
+              {
+                "id": "ebdae0ae-cde3-404d-896e-d4dc93c7fc34",
+                "type": "terminal"
+              },
+              {
+                "id": "18b2a7b6-05bc-4e39-86cb-5a75ad7fe3d3",
+                "type": "terminal"
+              },
+              {
+                "id": "6de673e6-758b-43e2-8a14-8eba4880b39b",
+                "type": "terminal"
+              },
+              {
+                "id": "f5416269-532b-4a3e-8a47-fcef0e530673",
+                "type": "terminal"
+              },
+              {
+                "id": "441b2b4b-b80f-4ebb-8ef2-ff734fa8094f",
+                "type": "terminal"
+              },
+              {
+                "id": "49b07e61-e55f-429c-8c3e-da7102918e3a",
+                "type": "terminal"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "49665a3b-107a-4f58-88bf-998346abe9e3",
+        "type": "vessel",
+        "attributes": {
+          "name": "OOCL FRANCE",
+          "imo": "9622617",
+          "mmsi": "477222700",
+          "latitude": 14.888958333,
+          "longitude": -76.929898333,
+          "nautical_speed_knots": 15,
+          "navigational_heading_degrees": 202,
+          "position_timestamp": "2026-02-28T20:51:39Z"
+        }
+      },
+      {
+        "id": "f89f13ad-e247-4a93-8fb8-4a1e94a06b5f",
+        "type": "port",
+        "attributes": {
+          "id": "f89f13ad-e247-4a93-8fb8-4a1e94a06b5f",
+          "name": "Virginia",
+          "code": "USORF",
+          "state_abbr": "VA",
+          "city": "Norfolk",
+          "country_code": "US",
+          "latitude": "36.910719502",
+          "longitude": "-76.324600462",
+          "time_zone": "America/New_York"
+        },
+        "relationships": {
+          "terminals": {
+            "data": [
+              {
+                "id": "b52acf92-4e90-472c-8ce9-ceb56b488b0f",
+                "type": "terminal"
+              },
+              {
+                "id": "9924385e-037d-4978-8cc1-20ff931e0339",
+                "type": "terminal"
+              },
+              {
+                "id": "13d70f03-306a-46fc-8856-929e5488a6f4",
+                "type": "terminal"
+              },
+              {
+                "id": "1b503afc-0fdb-456a-8915-15a4aa61d918",
+                "type": "terminal"
+              },
+              {
+                "id": "2faa5c1f-db9a-4262-815c-b6964dfb7bd6",
+                "type": "terminal"
+              },
+              {
+                "id": "e390b6d4-baa5-4064-8502-aa8acd193230",
+                "type": "terminal"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "2aa85a4c-33f1-4607-854a-e547418157d8",
+        "type": "port",
+        "attributes": {
+          "id": "2aa85a4c-33f1-4607-854a-e547418157d8",
+          "name": "Detroit",
+          "code": "USDET",
+          "state_abbr": "MI",
+          "city": "Detroit",
+          "country_code": "US",
+          "latitude": "42.258",
+          "longitude": "-83.1225",
+          "time_zone": "America/Detroit"
+        },
+        "relationships": {
+          "terminals": {
+            "data": [
+              {
+                "id": "aeac0328-0a00-4e43-849e-c905be5f7174",
+                "type": "terminal"
+              },
+              {
+                "id": "57b24f47-3c1c-40fe-8232-528c164848b5",
+                "type": "terminal"
+              },
+              {
+                "id": "d87b0cef-fed2-4b6f-8977-de63416ce1f4",
+                "type": "terminal"
+              },
+              {
+                "id": "6e71fd2d-17b3-4215-8f4c-fabfabc0772e",
+                "type": "terminal"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "aeac0328-0a00-4e43-849e-c905be5f7174",
+        "type": "terminal",
+        "attributes": {
+          "id": "aeac0328-0a00-4e43-849e-c905be5f7174",
+          "nickname": "NS - Livernois",
+          "name": "NS - Livernois",
+          "firms_code": "H796",
+          "smdg_code": null,
+          "bic_facility_code": "USDETNSRL",
+          "provided_data": {
+            "pickup_lfd": false,
+            "pod_full_out_at": false,
+            "pickup_lfd_notes": "",
+            "empty_terminated_at": false,
+            "available_for_pickup": false,
+            "fees_at_pod_terminal": false,
+            "holds_at_pod_terminal": false,
+            "pickup_appointment_at": false,
+            "pod_full_out_at_notes": "",
+            "location_at_pod_terminal": false,
+            "empty_terminated_at_notes": "",
+            "available_for_pickup_notes": "",
+            "fees_at_pod_terminal_notes": "",
+            "holds_at_pod_terminal_notes": "",
+            "pickup_appointment_at_notes": "",
+            "pod_full_out_chassis_number": false,
+            "location_at_pod_terminal_notes": "",
+            "pod_full_out_chassis_number_notes": ""
+          },
+          "street": null,
+          "city": "Jacksonville",
+          "state": null,
+          "state_abbr": null,
+          "zip": "32254",
+          "country": null,
+          "facility_type": "rail"
+        },
+        "relationships": {
+          "port": {
+            "data": {
+              "id": "2aa85a4c-33f1-4607-854a-e547418157d8",
+              "type": "port"
+            }
+          }
+        }
+      }
+    ]
+  }
+}
