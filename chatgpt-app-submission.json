@@ -1,0 +1,200 @@
+{
+  "$schema": "https://developers.openai.com/apps-sdk/schemas/chatgpt-app-submission.v1.json",
+  "schema_version": 1,
+  "app_info": {
+    "display_name": "Terminal49",
+    "subtitle": "Track ocean shipments",
+    "description": "Terminal49 helps users find and monitor ocean shipments and containers, inspect routes and transport events, check supported shipping lines, and create new tracking requests through ChatGPT.",
+    "category": "BUSINESS"
+  },
+  "tools": {
+    "search_container": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Searches the user's Terminal49 account without modifying records, but emits redacted operational logs.",
+        "open_world_justification": "Does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "track_container": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Creates a tracking request in the user's private Terminal49 account when the container is not already tracked.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "Creates a bounded tracking request and does not delete or overwrite existing data."
+      }
+    },
+    "get_container": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves container details without changing the container, but emits redacted operational logs.",
+        "open_world_justification": "Does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_shipment_details": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves shipment details without modifying records, but emits redacted operational logs.",
+        "open_world_justification": "Does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_container_transport_events": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves the transport-event timeline without changing it, but emits redacted operational logs.",
+        "open_world_justification": "Does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_supported_shipping_lines": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves the supported shipping-line catalog without modifying data, but emits redacted operational logs.",
+        "open_world_justification": "Reads a closed reference catalog and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_container_route": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves route and vessel data without modifying it, but emits redacted operational logs.",
+        "open_world_justification": "Does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "list_shipments": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Lists shipments without modifying them, but emits redacted operational logs.",
+        "open_world_justification": "Does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "list_containers": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Lists containers without modifying them, but emits redacted operational logs.",
+        "open_world_justification": "Does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "list_tracking_requests": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Lists tracking requests without changing their state, but emits redacted operational logs.",
+        "open_world_justification": "Does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    }
+  },
+  "test_cases": [
+    {
+      "description": "Find a tracked container by container number.",
+      "user_prompt": "Find the synthetic review fixture container CAIU1234567 in my Terminal49 account and summarize its current status.",
+      "file_attachment_urls": null,
+      "tools_triggered": "search_container",
+      "expected_output": "Returns matching container records with identifiers, status, shipping line, and available terminal information.",
+      "expected_output_url": null
+    },
+    {
+      "description": "List recently updated containers with a bounded result set.",
+      "user_prompt": "Show the first 10 containers updated recently in my Terminal49 account.",
+      "file_attachment_urls": null,
+      "tools_triggered": "list_containers",
+      "expected_output": "Returns up to 10 recent container records and clearly indicates any pagination or result limits.",
+      "expected_output_url": null
+    },
+    {
+      "description": "List shipments filtered by carrier.",
+      "user_prompt": "Show my recent Maersk shipments and include their containers.",
+      "file_attachment_urls": null,
+      "tools_triggered": "list_shipments",
+      "expected_output": "Returns shipments matching the carrier filter with available container relationships and pagination details.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Check whether a shipping line is supported before tracking.",
+      "user_prompt": "Does Terminal49 support tracking containers for Ocean Network Express?",
+      "file_attachment_urls": null,
+      "tools_triggered": "get_supported_shipping_lines",
+      "expected_output": "Returns matching supported shipping lines with their SCAC codes and names.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Create a tracking request for a container that is not already tracked.",
+      "user_prompt": "Track the synthetic review fixture container CAIU1234567 with carrier SCAC MAEU in my Terminal49 account.",
+      "file_attachment_urls": null,
+      "tools_triggered": "track_container",
+      "expected_output": "Returns the existing matching container or creates a tracking request and clearly reports whether a new request was created.",
+      "expected_output_url": null
+    }
+  ],
+  "negative_test_cases": [
+    {
+      "description": "Do not trigger for an unrelated weather request.",
+      "user_prompt": "What will the weather be in Los Angeles tomorrow?",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because general weather is outside Terminal49's supported workflows.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not trigger for freight-rate purchasing or quoting.",
+      "user_prompt": "Book the cheapest trucking rate from Los Angeles to Phoenix.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because it does not quote, purchase, or book transportation.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not trigger an unsupported destructive action.",
+      "user_prompt": "Delete all completed shipments from my account.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because it has no shipment-deletion capability.",
+      "expected_output_url": null
+    }
+  ]
+}
