@@ -1,0 +1,312 @@
+{
+  "ok": true,
+  "command": "custom-field-definitions.list",
+  "data": {
+    "data": [
+      {
+        "id": "cb55c591-560c-403b-8de5-5c22626cb9e6",
+        "type": "custom_field_definition",
+        "attributes": {
+          "entity_type": "Shipment",
+          "api_slug": "purchase_order_number",
+          "display_name": "Purchase Order Number",
+          "description": "Buyer’s order reference for procurement.",
+          "data_type": "short_text",
+          "reference_type": null,
+          "validation": null,
+          "default_format": null,
+          "default_value": null,
+          "template_id": null,
+          "created_at": "2025-10-13T23:08:04Z",
+          "updated_at": "2025-10-13T23:08:04Z"
+        },
+        "relationships": {
+          "account": {
+            "data": null
+          },
+          "fields": {
+            "data": []
+          },
+          "options": {
+            "data": []
+          }
+        }
+      },
+      {
+        "id": "e58a653f-8e51-4d8b-8ee3-4f280abd6bb8",
+        "type": "custom_field_definition",
+        "attributes": {
+          "entity_type": "Shipment",
+          "api_slug": "sales_order_number",
+          "display_name": "Sales Order Number",
+          "description": "Seller’s internal sales order reference.",
+          "data_type": "short_text",
+          "reference_type": null,
+          "validation": null,
+          "default_format": null,
+          "default_value": null,
+          "template_id": null,
+          "created_at": "2025-10-13T23:08:55Z",
+          "updated_at": "2025-10-13T23:08:55Z"
+        },
+        "relationships": {
+          "account": {
+            "data": null
+          },
+          "fields": {
+            "data": []
+          },
+          "options": {
+            "data": []
+          }
+        }
+      },
+      {
+        "id": "3a9a29ea-5910-409d-8304-d2594d94f5b7",
+        "type": "custom_field_definition",
+        "attributes": {
+          "entity_type": "Shipment",
+          "api_slug": "packing_list_number",
+          "display_name": "Packing List Number",
+          "description": "Reference number for associated packing list.",
+          "data_type": "short_text",
+          "reference_type": null,
+          "validation": null,
+          "default_format": null,
+          "default_value": null,
+          "template_id": null,
+          "created_at": "2025-10-13T23:10:02Z",
+          "updated_at": "2025-10-13T23:10:02Z"
+        },
+        "relationships": {
+          "account": {
+            "data": null
+          },
+          "fields": {
+            "data": []
+          },
+          "options": {
+            "data": []
+          }
+        }
+      },
+      {
+        "id": "ce5a39f8-2ecc-4ae3-85c8-7cc02b65d79a",
+        "type": "custom_field_definition",
+        "attributes": {
+          "entity_type": "Shipment",
+          "api_slug": "customer_reference_number",
+          "display_name": "Customer Reference Number",
+          "description": "Shipper or consignee reference for shipment.",
+          "data_type": "short_text",
+          "reference_type": null,
+          "validation": null,
+          "default_format": null,
+          "default_value": null,
+          "template_id": null,
+          "created_at": "2025-10-13T23:10:32Z",
+          "updated_at": "2025-10-13T23:10:32Z"
+        },
+        "relationships": {
+          "account": {
+            "data": null
+          },
+          "fields": {
+            "data": []
+          },
+          "options": {
+            "data": []
+          }
+        }
+      },
+      {
+        "id": "ea34e613-dd31-4477-8a11-f15e29953e58",
+        "type": "custom_field_definition",
+        "attributes": {
+          "entity_type": "Shipment",
+          "api_slug": "incoterm",
+          "display_name": "Incoterm",
+          "description": "International trade term defining responsibilities.",
+          "data_type": "enum",
+          "reference_type": null,
+          "validation": null,
+          "default_format": null,
+          "default_value": null,
+          "template_id": null,
+          "created_at": "2025-10-13T23:16:21Z",
+          "updated_at": "2025-10-13T23:16:21Z"
+        },
+        "relationships": {
+          "account": {
+            "data": null
+          },
+          "fields": {
+            "data": []
+          },
+          "options": {
+            "data": []
+          }
+        }
+      },
+      {
+        "id": "394a7066-e632-4f57-8ddb-c604a1715b0d",
+        "type": "custom_field_definition",
+        "attributes": {
+          "entity_type": "Shipment",
+          "api_slug": "fulfillment_type",
+          "display_name": "Fulfillment Type",
+          "description": "Fulfillment method (e.g., Stock, Direct).",
+          "data_type": "enum",
+          "reference_type": null,
+          "validation": null,
+          "default_format": null,
+          "default_value": null,
+          "template_id": null,
+          "created_at": "2025-10-13T23:20:45Z",
+          "updated_at": "2025-10-13T23:20:45Z"
+        },
+        "relationships": {
+          "account": {
+            "data": null
+          },
+          "fields": {
+            "data": []
+          },
+          "options": {
+            "data": [
+              {
+                "id": "65d51bba-fada-40f0-8052-4efcaf5a9aee",
+                "type": "custom_field_option"
+              },
+              {
+                "id": "5b31d7b5-cf91-40de-859a-e1a268acef10",
+                "type": "custom_field_option"
+              },
+              {
+                "id": "08eafef1-272d-432c-87c1-14aeb0aa3bba",
+                "type": "custom_field_option"
+              },
+              {
+                "id": "bd994ff3-7b29-4f8c-8d28-72e6f862ecaa",
+                "type": "custom_field_option"
+              },
+              {
+                "id": "a66d3f45-bb16-4c95-80cf-9d4cffdb2ac4",
+                "type": "custom_field_option"
+              },
+              {
+                "id": "7e096cf8-6a19-4bb9-8e69-de80710e3c0f",
+                "type": "custom_field_option"
+              },
+              {
+                "id": "c2be859b-51a0-4de1-8e80-a329f2159f26",
+                "type": "custom_field_option"
+              },
+              {
+                "id": "1e17fcab-ed04-47a1-83d3-ed0679b33cc6",
+                "type": "custom_field_option"
+              },
+              {
+                "id": "0ea7bd8c-0799-4df0-8464-d6cff9e4c716",
+                "type": "custom_field_option"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "1bd48b12-9a56-4588-8e82-9d0822f80670",
+        "type": "custom_field_definition",
+        "attributes": {
+          "entity_type": "Shipment",
+          "api_slug": "move_type",
+          "display_name": "Move Type",
+          "description": "Carrier-defined movement service. Normalize to one of the options below (e.g., Door-to-Door, Port-to-Port, CY/CY, CFS/CY). Used for planning, exceptions, and reporting.",
+          "data_type": "enum",
+          "reference_type": null,
+          "validation": null,
+          "default_format": null,
+          "default_value": null,
+          "template_id": null,
+          "created_at": "2025-10-13T23:23:25Z",
+          "updated_at": "2025-10-13T23:23:25Z"
+        },
+        "relationships": {
+          "account": {
+            "data": null
+          },
+          "fields": {
+            "data": []
+          },
+          "options": {
+            "data": []
+          }
+        }
+      },
+      {
+        "id": "3f785691-ea3b-4ba3-8fbf-cc684e63b545",
+        "type": "custom_field_definition",
+        "attributes": {
+          "entity_type": "Cargo",
+          "api_slug": "hazmat_indicator",
+          "display_name": "Hazmat Indicator",
+          "description": "Flag if container is hazardous.",
+          "data_type": "boolean",
+          "reference_type": null,
+          "validation": null,
+          "default_format": null,
+          "default_value": false,
+          "template_id": null,
+          "created_at": "2025-10-13T23:30:58Z",
+          "updated_at": "2025-10-13T23:30:58Z"
+        },
+        "relationships": {
+          "account": {
+            "data": null
+          },
+          "fields": {
+            "data": []
+          },
+          "options": {
+            "data": []
+          }
+        }
+      },
+      {
+        "id": "59b1506f-2c7d-41f9-8e38-a0ce852dfc89",
+        "type": "custom_field_definition",
+        "attributes": {
+          "entity_type": "Shipment",
+          "api_slug": "internal_id_number",
+          "display_name": "Internal ID number",
+          "description": null,
+          "data_type": "short_text",
+          "reference_type": null,
+          "validation": null,
+          "default_format": null,
+          "default_value": null,
+          "template_id": null,
+          "created_at": "2025-10-14T05:09:50Z",
+          "updated_at": "2025-10-14T05:09:50Z"
+        },
+        "relationships": {
+          "account": {
+            "data": null
+          },
+          "fields": {
+            "data": []
+          },
+          "options": {
+            "data": []
+          }
+        }
+      }
+    ],
+    "links": {
+      "self": "https://api.terminal49.com/v2/custom_field_definitions?page%5Bsize%5D=2",
+      "current": "https://api.terminal49.com/v2/custom_field_definitions?page[number]=1&page[size]=2",
+      "next": "https://api.terminal49.com/v2/custom_field_definitions?page[number]=2&page[size]=2",
+      "last": "https://api.terminal49.com/v2/custom_field_definitions?page[number]=2&page[size]=2"
+    }
+  }
+}

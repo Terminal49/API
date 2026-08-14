@@ -1,0 +1,53 @@
+{
+  "ok": true,
+  "command": "terminals.get",
+  "data": {
+    "data": {
+      "id": "b52acf92-4e90-472c-8ce9-ceb56b488b0f",
+      "type": "terminal",
+      "attributes": {
+        "id": "b52acf92-4e90-472c-8ce9-ceb56b488b0f",
+        "nickname": "Virginia (VIG)",
+        "name": "Virginia International Gateway",
+        "firms_code": "N195",
+        "smdg_code": "VIG",
+        "bic_facility_code": "USORFUNYS",
+        "provided_data": {
+          "pickup_lfd": true,
+          "pod_full_out_at": true,
+          "pickup_lfd_notes": "",
+          "available_for_pickup": true,
+          "fees_at_pod_terminal": false,
+          "holds_at_pod_terminal": true,
+          "pickup_appointment_at": false,
+          "location_at_pod_terminal": true,
+          "available_for_pickup_notes": "",
+          "fees_at_pod_terminal_notes": "",
+          "holds_at_pod_terminal_notes": "",
+          "pickup_appointment_at_notes": "",
+          "pod_full_out_chassis_number": false,
+          "location_at_pod_terminal_notes": "",
+          "pod_full_out_chassis_number_notes": ""
+        },
+        "street": "1000 Virginia International Gateway Blvd",
+        "city": "Portsmouth",
+        "state": "Virginia",
+        "state_abbr": "VA",
+        "zip": "23703-2361",
+        "country": "United States",
+        "facility_type": "ocean_terminal"
+      },
+      "relationships": {
+        "port": {
+          "data": {
+            "id": "f89f13ad-e247-4a93-8fb8-4a1e94a06b5f",
+            "type": "port"
+          }
+        }
+      }
+    },
+    "links": {
+      "self": "https://api.terminal49.com/v2/terminals/b52acf92-4e90-472c-8ce9-ceb56b488b0f"
+    }
+  }
+}

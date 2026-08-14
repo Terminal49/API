@@ -1,0 +1,85 @@
+{
+  "ok": true,
+  "command": "shipments.get",
+  "data": {
+    "id": "73b9b22a-73e5-4e77-824b-5e644d5c3d92",
+    "billOfLading": "HLCUFAKE260003",
+    "shippingLineScac": "HLCU",
+    "customerName": "Acme Imports LLC",
+    "containers": [
+      {
+        "id": "3ee1c667-683d-45f9-8dfa-abe1dd35697e",
+        "number": "TEST1000003"
+      }
+    ],
+    "createdAt": "2026-02-28T18:58:30Z",
+    "refNumbers": [],
+    "tags": [],
+    "billOfLadingNumber": "HLCUFAKE260003",
+    "normalizedNumber": "HLCUFAKE260003",
+    "shippingLineName": "Hapag-Lloyd",
+    "shippingLineShortName": "Hapag-Lloyd",
+    "portOfLadingLocode": "DEHAM",
+    "portOfLadingName": "Hamburg",
+    "portOfDischargeLocode": "USPEF",
+    "portOfDischargeName": "Port Everglades",
+    "podVesselName": "SEASPAN SAIGON",
+    "podVesselImo": "9301809",
+    "podVoyageNumber": "608N",
+    "destinationLocode": null,
+    "destinationName": null,
+    "destinationTimezone": null,
+    "destinationAtaAt": null,
+    "destinationEtaAt": null,
+    "polEtdAt": null,
+    "polAtdAt": "2026-01-16T15:15:57Z",
+    "polTimezone": "Europe/Berlin",
+    "podEtaAt": null,
+    "podOriginalEtaAt": null,
+    "polOriginalEtdAt": null,
+    "destinationOriginalEtaAt": null,
+    "podAtaAt": "2026-02-23T19:21:09Z",
+    "podTimezone": "America/New_York",
+    "lineTrackingLastAttemptedAt": "2026-02-28T18:58:30Z",
+    "lineTrackingLastSucceededAt": "2026-02-28T18:58:30Z",
+    "lineTrackingStoppedAt": null,
+    "lineTrackingStoppedReason": null,
+    "vesselAtPod": {
+      "name": "SEASPAN SAIGON",
+      "imo": "9301809",
+      "voyageNumber": "608N"
+    },
+    "ports": {
+      "portOfLading": {
+        "name": "Hamburg",
+        "code": "DEHAM",
+        "countryCode": "DE",
+        "etd": null,
+        "atd": "2026-01-16T15:15:57Z",
+        "timezone": "Europe/Berlin"
+      },
+      "portOfDischarge": {
+        "name": "Port Everglades",
+        "code": "USPEF",
+        "countryCode": "US",
+        "eta": null,
+        "ata": "2026-02-23T19:21:09Z",
+        "originalEta": null,
+        "timezone": "America/New_York",
+        "terminal": {
+          "id": "821391f7-3953-4a47-8f68-ded871114ba6",
+          "name": "Florida International Terminal",
+          "nickname": "FIT",
+          "firmsCode": "N751"
+        }
+      },
+      "destination": null
+    },
+    "tracking": {
+      "lineTrackingLastAttemptedAt": "2026-02-28T18:58:30Z",
+      "lineTrackingLastSucceededAt": "2026-02-28T18:58:30Z",
+      "lineTrackingStoppedAt": null,
+      "lineTrackingStoppedReason": null
+    }
+  }
+}

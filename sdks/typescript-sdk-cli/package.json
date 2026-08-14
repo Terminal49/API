@@ -1,0 +1,75 @@
+{
+  "name": "@terminal49/cli",
+  "version": "0.1.0",
+  "description": "Terminal49 container tracking CLI — for LLM agents, chat interfaces, and humans",
+  "type": "module",
+  "bin": {
+    "t49": "./dist/bin/t49.js"
+  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Terminal49/API.git",
+    "directory": "sdks/typescript-sdk-cli"
+  },
+  "homepage": "https://github.com/Terminal49/API/tree/main/sdks/typescript-sdk-cli#readme",
+  "bugs": {
+    "url": "https://github.com/Terminal49/API/issues"
+  },
+  "author": "Terminal49",
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "dev": "tsx bin/t49.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "fixtures:capture:live": "bash scripts/capture-live-fixtures.sh",
+    "lint": "oxlint src test bin && oxfmt --check src test bin",
+    "format": "oxfmt --write src test bin",
+    "prepublishOnly": "npm run build && npm run lint && npm run test"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "terminal49",
+    "container-tracking",
+    "shipping",
+    "cli",
+    "llm",
+    "agent"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@terminal49/sdk": "0.3.1",
+    "commander": "^13.0.0",
+    "cli-table3": "^0.6.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^4.0.13",
+    "@vitest/coverage-v8": "^4.0.18",
+    "oxfmt": "^0.55.0",
+    "oxlint": "^1.70.0",
+    "@types/node": "^20.19.0",
+    "msw": "^2.7.0",
+    "execa": "^9.5.0",
+    "tsx": "^4.19.0"
+  }
+}

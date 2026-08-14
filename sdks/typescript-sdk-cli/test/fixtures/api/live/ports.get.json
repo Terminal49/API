@@ -1,0 +1,62 @@
+{
+  "ok": true,
+  "command": "ports.get",
+  "data": {
+    "data": {
+      "id": "a40c5cab-0f7d-4595-8ce2-059b49546304",
+      "type": "port",
+      "attributes": {
+        "id": "a40c5cab-0f7d-4595-8ce2-059b49546304",
+        "name": "Hamburg",
+        "code": "DEHAM",
+        "state_abbr": "HH",
+        "city": "Hamburg",
+        "country_code": "DE",
+        "latitude": "53.530404621",
+        "longitude": "9.905771237",
+        "time_zone": "Europe/Berlin"
+      },
+      "relationships": {
+        "terminals": {
+          "data": [
+            {
+              "id": "e51a7231-2d55-4afd-8e37-10a2b7168105",
+              "type": "terminal"
+            },
+            {
+              "id": "2825beff-eb9d-4e95-854b-f1ea30980a05",
+              "type": "terminal"
+            },
+            {
+              "id": "a65e9a74-3e6f-4464-8144-584760e4601b",
+              "type": "terminal"
+            },
+            {
+              "id": "1d20479f-17b3-4cb8-81ac-b7e27e366dc6",
+              "type": "terminal"
+            },
+            {
+              "id": "e18150dc-2593-4a55-899e-95d442769c31",
+              "type": "terminal"
+            },
+            {
+              "id": "17e69fd2-0b12-4a02-88d3-64473461c130",
+              "type": "terminal"
+            },
+            {
+              "id": "8c9fba21-0e5c-4051-88b3-11ad932616ad",
+              "type": "terminal"
+            },
+            {
+              "id": "b6f33127-c559-4119-828d-8864332976f6",
+              "type": "terminal"
+            }
+          ]
+        }
+      }
+    },
+    "links": {
+      "self": "https://api.terminal49.com/v2/ports/DEHAM"
+    }
+  }
+}

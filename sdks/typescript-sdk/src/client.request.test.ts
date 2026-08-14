@@ -755,4 +755,73 @@ describe('Terminal49Client request building', () => {
       JSON.stringify({ number: 'HLCUAMM260301785' }),
     );
   });
+
+  it('posts container custom fields with attributes.api_slug', async () => {
+    const { fetchImpl, calls } = createMockFetch({
+      '/containers/cont-1/custom_fields': () =>
+        jsonResponse({
+          data: {
+            type: 'custom_field',
+            id: 'cf-1',
+            attributes: { api_slug: 'purchase_order', value: 'PO-99' },
+          },
+        }),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.containers.setCustomField('cont-1', 'purchase_order', 'PO-99');
+
+    expect(calls[0].init?.method).toBe('POST');
+    expect(calls[0].init?.body).toBe(
+      JSON.stringify({
+        data: {
+          type: 'custom_field',
+          attributes: { api_slug: 'purchase_order', value: 'PO-99' },
+        },
+      }),
+    );
+  });
+
+  it('posts shipment custom fields with attributes.api_slug', async () => {
+    const { fetchImpl, calls } = createMockFetch({
+      '/shipments/ship-1/custom_fields': () =>
+        jsonResponse({
+          data: {
+            type: 'custom_field',
+            id: 'cf-2',
+            attributes: { api_slug: 'customer_reference_number', value: 'ABC' },
+          },
+        }),
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.shipments.setCustomField(
+      'ship-1',
+      'customer_reference_number',
+      'ABC',
+    );
+
+    expect(calls[0].init?.method).toBe('POST');
+    expect(calls[0].init?.body).toBe(
+      JSON.stringify({
+        data: {
+          type: 'custom_field',
+          attributes: {
+            api_slug: 'customer_reference_number',
+            value: 'ABC',
+          },
+        },
+      }),
+    );
+  });
 });

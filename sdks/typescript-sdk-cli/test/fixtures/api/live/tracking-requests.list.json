@@ -1,0 +1,56 @@
+{
+  "ok": true,
+  "command": "tracking-requests.list",
+  "data": {
+    "items": [
+      {
+        "id": "5e1ce1dd-3139-43ac-8d6f-af003f29ea2a",
+        "requestType": "bill_of_lading",
+        "requestNumber": "ZIMUFAKE260005",
+        "status": "created",
+        "scac": "ZIMU",
+        "refNumbers": [],
+        "shipment": null,
+        "container": null,
+        "shipmentTags": [],
+        "createdAt": "2026-02-28T15:10:36Z",
+        "updatedAt": "2026-02-28T15:11:18Z",
+        "failedReason": null,
+        "isRetrying": false,
+        "retryCount": null
+      },
+      {
+        "id": "68ba217c-586f-4438-81e0-0c5112d7e7ac",
+        "requestType": "bill_of_lading",
+        "requestNumber": "ZIMUFAKE260006",
+        "status": "created",
+        "scac": "ZIMU",
+        "refNumbers": [],
+        "shipment": null,
+        "container": null,
+        "shipmentTags": [],
+        "createdAt": "2026-02-28T15:10:35Z",
+        "updatedAt": "2026-02-28T15:10:51Z",
+        "failedReason": null,
+        "isRetrying": false,
+        "retryCount": null
+      }
+    ],
+    "links": {
+      "self": "https://api.terminal49.com/v2/tracking_requests?page[size]=2",
+      "current": "https://api.terminal49.com/v2/tracking_requests?page[number]=1&page[size]=2",
+      "next": "https://api.terminal49.com/v2/tracking_requests?page[number]=2&page[size]=2",
+      "last": "https://api.terminal49.com/v2/tracking_requests?page[number]=2&page[size]=2"
+    },
+    "meta": {
+      "size": 2,
+      "total": 4,
+      "pagination": {
+        "current": 1,
+        "next": 2,
+        "last": 2,
+        "records": 4
+      }
+    }
+  }
+}

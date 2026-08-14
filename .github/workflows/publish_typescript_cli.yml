@@ -1,0 +1,75 @@
+name: Publish TypeScript CLI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish, for example cli-v-v0.1.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Resolve release tag
+        id: release-tag
+        run: echo "tag=${{ github.event.release.tag_name || inputs.tag }}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release-tag.outputs.tag }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org/
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Read CLI version
+        id: cli-version
+        run: |
+          version=$(node -p "require('./sdks/typescript-sdk-cli/package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check release tag matches CLI version
+        id: tag-check
+        run: |
+          tag="${{ steps.release-tag.outputs.tag }}"
+          version="${{ steps.cli-version.outputs.version }}"
+          if [[ "$tag" == "v$version" || "$tag" == "cli-v$version" || "$tag" == "$version" || "$tag" == "cli-v-v$version" ]]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "Release tag $tag does not match CLI version $version; skipping publish."
+          fi
+
+      - name: Install workspace dependencies
+        if: steps.tag-check.outputs.publish == 'true'
+        run: npm ci
+
+      - name: Build SDK (workspace dependency)
+        if: steps.tag-check.outputs.publish == 'true'
+        run: npm run build --workspace @terminal49/sdk
+
+      - name: Build CLI
+        if: steps.tag-check.outputs.publish == 'true'
+        run: npm run build --workspace @terminal49/cli
+
+      - name: Test CLI
+        if: steps.tag-check.outputs.publish == 'true'
+        run: npm run test --workspace @terminal49/cli
+
+      - name: Publish
+        if: steps.tag-check.outputs.publish == 'true'
+        working-directory: sdks/typescript-sdk-cli
+        run: npm publish --access public

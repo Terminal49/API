@@ -1,3 +1,4 @@
 {
-  "sdks/typescript-sdk": "0.3.1"
+  "sdks/typescript-sdk": "0.3.1",
+  "sdks/typescript-sdk-cli": "0.1.0"
 }
