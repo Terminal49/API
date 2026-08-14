@@ -689,7 +689,7 @@ rss: true
   - **Cargo events reprocessing** — force-reprocessing shipment cargo events now refreshes derived state consistently after upstream fixes
 </Update>
 
-<Update label="June 15, 2026" description="WorkOS hosted signup, OOCL direct scraper, calculated LFD in Pickup & Delivery, party assignment polish, and a wave of document, carrier, and dashboard bug fixes" rss="June 15, 2026: WorkOS hosted signup onboarding, new OOCL direct-to-track-page scraper, calculated LFD in the Pickup & Delivery dashboard, bulk party import on the Network page, Wayfair arrival notice and HBL extraction improvements, party assignment defaults and sorting, Custom Fields reorganization on Shipment Details, and bug fixes for LFD past pickup, YMLU transshipments, NSRR blocked responses, container event ordering, and Stripe period timestamps.">
+<Update label="June 15, 2026" description="WorkOS hosted signup, OOCL direct scraper, calculated LFD in Pickup & Delivery, party assignment polish, and a wave of document, carrier, and dashboard bug fixes" rss="June 15, 2026: WorkOS hosted signup onboarding, new OOCL direct-to-track-page scraper, calculated LFD in the Pickup & Delivery dashboard, bulk party import on the Network page, arrival notice and HBL extraction improvements, party assignment defaults and sorting, Custom Fields reorganization on Shipment Details, and bug fixes for LFD past pickup, YMLU transshipments, NSRR blocked responses, container event ordering, and Stripe period timestamps.">
   ### WorkOS hosted signup onboarding
 
   New accounts can now sign up through the **WorkOS hosted authentication flow**. The end-to-end onboarding handles email verification, recovery from unknown sign-ins, and concurrent same-email signup races automatically. Existing sign-in continues to work unchanged.
@@ -720,8 +720,8 @@ rss: true
 
   ### Updates
 
-  - **Wayfair arrival notice extraction** — new versioned schema with Maersk Canada CCN carrier-code extraction, PO reference truncation, freight payment terms derived from the marks block, and tighter classification so CMA CGM pre-arrival notices and multi-page Hapag-Lloyd Canada documents are no longer misclassified
-  - **Wayfair house bill of lading consistency** — draft and final Wayfair HBLs for the same shipment now produce consistent `hs_codes` values, and a new `consignee.fax` field is captured
+  - **Arrival notice extraction** — new versioned schema with Maersk Canada CCN carrier-code extraction, PO reference truncation, freight payment terms derived from the marks block, and tighter classification so CMA CGM pre-arrival notices and multi-page Hapag-Lloyd Canada documents are no longer misclassified
+  - **House bill of lading consistency** — draft and final HBLs for the same shipment now produce consistent `hs_codes` values, and a new `consignee.fax` field is captured
   - **Party assignment defaults and sorting** — party pickers default to the previously assigned party, parties are sorted for easier selection, and the role color palette has been toned down
   - **Custom Fields on Shipment Details** — custom shipment and container fields have been reorganized on the shipment details page for a cleaner layout and clearer separation between scopes
   - **Editable cells on Pickup & Delivery** — inline editing on the Pickup & Delivery phase tables has been polished, with a production-safe edit hook so save and validation behave consistently
@@ -863,7 +863,7 @@ rss: true
   - **Cargo events reprocessing** — force-reprocessing shipment cargo events now refreshes derived state consistently after upstream fixes
 </Update>
 
-<Update label="June 15, 2026" description="WorkOS hosted signup, OOCL direct scraper, calculated LFD in Pickup & Delivery, party assignment polish, and a wave of document, carrier, and dashboard bug fixes" rss="June 15, 2026: WorkOS hosted signup onboarding, new OOCL direct-to-track-page scraper, calculated LFD in the Pickup & Delivery dashboard, bulk party import on the Network page, Wayfair arrival notice and HBL extraction improvements, party assignment defaults and sorting, Custom Fields reorganization on Shipment Details, and bug fixes for LFD past pickup, YMLU transshipments, NSRR blocked responses, container event ordering, and Stripe period timestamps.">
+<Update label="June 15, 2026" description="WorkOS hosted signup, OOCL direct scraper, calculated LFD in Pickup & Delivery, party assignment polish, and a wave of document, carrier, and dashboard bug fixes" rss="June 15, 2026: WorkOS hosted signup onboarding, new OOCL direct-to-track-page scraper, calculated LFD in the Pickup & Delivery dashboard, bulk party import on the Network page, arrival notice and HBL extraction improvements, party assignment defaults and sorting, Custom Fields reorganization on Shipment Details, and bug fixes for LFD past pickup, YMLU transshipments, NSRR blocked responses, container event ordering, and Stripe period timestamps.">
   ### WorkOS hosted signup onboarding
 
   New accounts can now sign up through the **WorkOS hosted authentication flow**. The end-to-end onboarding handles email verification, recovery from unknown sign-ins, and concurrent same-email signup races automatically. Existing sign-in continues to work unchanged.
@@ -894,8 +894,8 @@ rss: true
 
   ### Updates
 
-  - **Wayfair arrival notice extraction** — new versioned schema with Maersk Canada CCN carrier-code extraction, PO reference truncation, freight payment terms derived from the marks block, and tighter classification so CMA CGM pre-arrival notices and multi-page Hapag-Lloyd Canada documents are no longer misclassified
-  - **Wayfair house bill of lading consistency** — draft and final Wayfair HBLs for the same shipment now produce consistent `hs_codes` values, and a new `consignee.fax` field is captured
+  - **Arrival notice extraction** — new versioned schema with Maersk Canada CCN carrier-code extraction, PO reference truncation, freight payment terms derived from the marks block, and tighter classification so CMA CGM pre-arrival notices and multi-page Hapag-Lloyd Canada documents are no longer misclassified
+  - **House bill of lading consistency** — draft and final HBLs for the same shipment now produce consistent `hs_codes` values, and a new `consignee.fax` field is captured
   - **Party assignment defaults and sorting** — party pickers default to the previously assigned party, parties are sorted for easier selection, and the role color palette has been toned down
   - **Custom Fields on Shipment Details** — custom shipment and container fields have been reorganized on the shipment details page for a cleaner layout and clearer separation between scopes
   - **Editable cells on Pickup & Delivery** — inline editing on the Pickup & Delivery phase tables has been polished, with a production-safe edit hook so save and validation behave consistently
@@ -911,7 +911,7 @@ rss: true
   - **Stripe 35-day period cap** — Fixed a Stripe timestamp issue that could cap subscription period dates at 35 days, restoring accurate end-of-period timing on PAYG accounts
 </Update>
 
-<Update label="June 8, 2026" description="Pickup & Delivery dashboard, bulk party assignment, event-driven calculated LFD, refreshed ONE/CMA CGM/Evergreen tariffs, and a wave of carrier and dashboard bug fixes" rss="June 8, 2026: New Pickup & Delivery dashboard, bulk party (role) assignment via CSV, event-driven calculated demurrage LFD, refreshed ONE/CMA CGM/Evergreen tariff rules, updated Wayfair arrival notice extraction, event-sourced manual milestone edits, shipment number and delivery appointment sorting, and bug fixes for CMDU port events, YMLU POD selection, NSRR ETAs, WMC unavailable status, and tracking slot limits.">
+<Update label="June 8, 2026" description="Pickup & Delivery dashboard, bulk party assignment, event-driven calculated LFD, refreshed ONE/CMA CGM/Evergreen tariffs, and a wave of carrier and dashboard bug fixes" rss="June 8, 2026: New Pickup & Delivery dashboard, bulk party (role) assignment via CSV, event-driven calculated demurrage LFD, refreshed ONE/CMA CGM/Evergreen tariff rules, updated arrival notice extraction, event-sourced manual milestone edits, shipment number and delivery appointment sorting, and bug fixes for CMDU port events, YMLU POD selection, NSRR ETAs, WMC unavailable status, and tracking slot limits.">
   ### Pickup & Delivery Dashboard
 
   A new **Pickup & Delivery** workspace is available in the Terminal49 dashboard, organizing containers by their pickup-and-delivery phase. View phase-grouped tables, edit pickup and delivery event datetimes inline, and sort by delivery appointment to focus on what needs to move next.
@@ -944,7 +944,7 @@ rss: true
 
   - **`t49_calculation` source on the shipment timeline** — events created by the Smart LFD calculation engine now surface a `t49_calculation` source tag in the dashboard event timeline, so you can tell at a glance which LFD updates came from a tariff calculation
   - **Manual milestone edits flow through the event pipeline** — user-submitted empty-in, full-out, and delivery-appointment events are now created as proper transport events. They update container attributes, fire `container.transport_event` webhooks, and appear consistently in the timeline like carrier-sourced events
-  - **Updated Wayfair arrival notice extraction** — published a new versioned extraction schema for Wayfair arrival notices with refreshed gold datasets and classifier prompts, improving field-level accuracy on Wayfair documents
+  - **Updated arrival notice extraction** — published a new versioned extraction schema for arrival notices with refreshed gold datasets and classifier prompts, improving field-level accuracy on these documents
   - **Sort container dashboard by shipment number** — added Shipment Number as a sortable column on the container dashboard
   - **Sort container dashboard by delivery appointment** — added delivery appointment as a sortable field on the containers API and dashboard
   - **PAYG billing clarification** — the billing settings page now clearly explains how active free containers are counted on Pay-As-You-Go plans
@@ -963,16 +963,16 @@ rss: true
   - **Map route Pylon widget** — Fixed the Pylon help bubble showing on the global vessel map; it now hides and re-shows correctly when navigating in and out of the map
 </Update>
 
-<Update label="June 1, 2026" description="Global vessel map general availability, Wayfair document extraction, contract product additions, and a wave of carrier and dashboard bug fixes" rss="June 1, 2026: Global vessel map generally available, new Wayfair arrival notice and delivery order extraction, Lite and integration service fee contract products, BL submissions without containers, HDMU mobile LFD location inference, pending tracking request slot counting, and bug fixes for ZIM ETA promotion, SSL overview overwrites, transport event locations, document linking bridges, and dashboard filter search.">
+<Update label="June 1, 2026" description="Global vessel map general availability, document extraction, contract product additions, and a wave of carrier and dashboard bug fixes" rss="June 1, 2026: Global vessel map generally available, new arrival notice and delivery order extraction, Lite and integration service fee contract products, BL submissions without containers, HDMU mobile LFD location inference, pending tracking request slot counting, and bug fixes for ZIM ETA promotion, SSL overview overwrites, transport event locations, document linking bridges, and dashboard filter search.">
   ### Global vessel map is now generally available
 
   The **global vessel map** is now enabled for all accounts in the Terminal49 dashboard. Live vessel positions, voyage details, and the shipments on board are available without a feature flag, with realtime updates and analytics tracking built in.
 
   ---
 
-  ### Wayfair document extraction improvements
+  ### Document extraction improvements
 
-  Released new versioned extraction schemas for three Wayfair document types — **arrival notice**, **carrier delivery order**, and **cargo control document**. Highlights:
+  Released new versioned extraction schemas for three document types — **arrival notice**, **carrier delivery order**, and **cargo control document**. Highlights:
 
   - Arrival notice now captures **place of delivery** (name, address, phone, available date, last free day, FIRMS code, and sublocation)
   - FIRMS code routing distinguishes rail-ramp destinations from the port of discharge, with both fields populated when both codes appear
