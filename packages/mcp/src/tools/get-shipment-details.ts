@@ -8,6 +8,7 @@
 
 import { Terminal49Client } from '@terminal49/sdk';
 import { dayDeltaInZone } from '../lib/temporal.js';
+import { logMcpEvent } from '../logging.js';
 
 export interface GetShipmentArgs {
   id: string;
@@ -23,14 +24,12 @@ export async function executeGetShipmentDetails(
   }
 
   const startTime = Date.now();
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.start',
-      tool: 'get_shipment_details',
-      shipment_id: args.id,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.start',
+    tool: 'get_shipment_details',
+    shipment_id: args.id,
+    timestamp: new Date().toISOString(),
+  });
 
   try {
     const includeContainers = args.include_containers !== false;
@@ -40,31 +39,27 @@ export async function executeGetShipmentDetails(
     const raw = (result as any)?.raw ?? result;
     const duration = Date.now() - startTime;
 
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.complete',
-        tool: 'get_shipment_details',
-        shipment_id: args.id,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.complete',
+      tool: 'get_shipment_details',
+      shipment_id: args.id,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
 
     return formatShipmentResponse(raw, includeContainers);
   } catch (error) {
     const duration = Date.now() - startTime;
 
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.error',
-        tool: 'get_shipment_details',
-        shipment_id: args.id,
-        error: (error as Error).name,
-        message: (error as Error).message,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.error',
+      tool: 'get_shipment_details',
+      shipment_id: args.id,
+      error: (error as Error).name,
+      message: (error as Error).message,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
 
     throw error;
   }

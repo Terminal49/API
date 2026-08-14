@@ -4,6 +4,7 @@
  */
 
 import { Terminal49Client } from '@terminal49/sdk';
+import { logMcpEvent } from '../logging.js';
 
 export interface ListContainersArgs {
   status?: string;
@@ -17,26 +18,24 @@ export interface ListContainersArgs {
 
 export async function executeListContainers(
   args: ListContainersArgs,
-  client: Terminal49Client
+  client: Terminal49Client,
 ): Promise<any> {
   const startTime = Date.now();
   const include = args.include?.trim() || undefined;
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.start',
-      tool: 'list_containers',
-      filters: {
-        status: args.status,
-        port: args.port,
-        carrier: args.carrier,
-        updated_after: args.updated_after,
-        include: include,
-      },
-      page: args.page,
-      page_size: args.page_size,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.start',
+    tool: 'list_containers',
+    filters: {
+      status: args.status,
+      port: args.port,
+      carrier: args.carrier,
+      updated_after: args.updated_after,
+      include: include,
+    },
+    page: args.page,
+    page_size: args.page_size,
+    timestamp: new Date().toISOString(),
+  });
 
   try {
     const result = await client.containers.list(
@@ -45,39 +44,39 @@ export async function executeListContainers(
         port: args.port,
         carrier: args.carrier,
         updatedAfter: args.updated_after,
-        include: include ? (include.split(',').map((s) => s.trim()) as any) : undefined,
+        include: include
+          ? (include.split(',').map((s) => s.trim()) as any)
+          : undefined,
       },
       {
         format: 'mapped',
         page: args.page,
         pageSize: args.page_size,
-      }
+      },
     );
 
     const duration = Date.now() - startTime;
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.complete',
-        tool: 'list_containers',
-        item_count: Array.isArray((result as any)?.items) ? (result as any).items.length : null,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      })
-    );
+    logMcpEvent({
+      event: 'tool.execute.complete',
+      tool: 'list_containers',
+      item_count: Array.isArray((result as any)?.items)
+        ? (result as any).items.length
+        : null,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
 
     return result;
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.error',
-        tool: 'list_containers',
-        error: (error as Error).name,
-        message: (error as Error).message,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      })
-    );
+    logMcpEvent({
+      event: 'tool.execute.error',
+      tool: 'list_containers',
+      error: (error as Error).name,
+      message: (error as Error).message,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
     throw error;
   }
 }

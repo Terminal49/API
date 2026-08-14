@@ -4,6 +4,7 @@
  */
 
 import { Terminal49Client } from '@terminal49/sdk';
+import { logMcpEvent } from '../logging.js';
 
 export interface SearchContainerArgs {
   query: string;
@@ -63,48 +64,42 @@ export async function executeSearchContainer(
   }
 
   const startTime = Date.now();
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.start',
-      tool: 'search_container',
-      query,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.start',
+    tool: 'search_container',
+    query,
+    timestamp: new Date().toISOString(),
+  });
 
   try {
     const result = await client.search(query);
     const formattedResult = formatSearchResponse(result);
 
     const duration = Date.now() - startTime;
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.complete',
-        tool: 'search_container',
-        query,
-        total_results: formattedResult.total_results,
-        containers_found: formattedResult.containers.length,
-        shipments_found: formattedResult.shipments.length,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.complete',
+      tool: 'search_container',
+      query,
+      total_results: formattedResult.total_results,
+      containers_found: formattedResult.containers.length,
+      shipments_found: formattedResult.shipments.length,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
 
     return formattedResult;
   } catch (error) {
     const duration = Date.now() - startTime;
 
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.error',
-        tool: 'search_container',
-        query,
-        error: (error as Error).name,
-        message: (error as Error).message,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.error',
+      tool: 'search_container',
+      query,
+      error: (error as Error).name,
+      message: (error as Error).message,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
 
     throw error;
   }

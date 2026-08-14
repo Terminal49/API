@@ -7,6 +7,7 @@
  */
 
 import { Terminal49Client } from '@terminal49/sdk';
+import { logMcpEvent } from '../logging.js';
 import {
   type ContainerStatusResult,
   resolveContainerStatus,
@@ -136,14 +137,12 @@ export async function executeGetContainer(
   }
 
   const startTime = Date.now();
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.start',
-      tool: 'get_container',
-      container_id: args.id,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.start',
+    tool: 'get_container',
+    container_id: args.id,
+    timestamp: new Date().toISOString(),
+  });
 
   try {
     const includes = resolveIncludes(args.include);
@@ -153,31 +152,27 @@ export async function executeGetContainer(
     const raw = (result as any)?.raw ?? result;
 
     const duration = Date.now() - startTime;
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.complete',
-        tool: 'get_container',
-        container_id: args.id,
-        includes,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.complete',
+      tool: 'get_container',
+      container_id: args.id,
+      includes,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
 
     return formatContainerResponse(raw, includes);
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.error',
-        tool: 'get_container',
-        container_id: args.id,
-        error: (error as Error).name,
-        message: (error as Error).message,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.error',
+      tool: 'get_container',
+      container_id: args.id,
+      error: (error as Error).name,
+      message: (error as Error).message,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
     throw error;
   }
 }

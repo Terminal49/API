@@ -14,6 +14,7 @@ import * as Sentry from '@sentry/node';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
 import { captureMcpException } from '../packages/mcp/src/sentry.js';
 import { protectedResourceMetadataUrl } from '../packages/mcp/src/resource.js';
+import { logMcpEvent } from '../packages/mcp/src/logging.js';
 
 type RequestLike = {
   method?: string;
@@ -214,24 +215,20 @@ function isMatchingClientSecret(providedToken: string, expectedSecret: string): 
   return timingSafeEqual(providedBuffer, expectedBuffer);
 }
 
-function buildRequestId(req: RequestLike): string {
-  const incomingId = getHeaderValue(req.headers['x-request-id']);
-  if (incomingId?.trim()) {
-    return incomingId.trim();
-  }
-
+function buildRequestId(): string {
+  // Caller-controlled request IDs can contain tokens or customer identifiers.
+  // Generate an internal correlation ID so the safe request_id log exemption
+  // never forwards arbitrary header content.
   return randomUUID();
 }
 
 function logLifecycle(event: string, requestId: string, details: Record<string, unknown> = {}): void {
-  console.error(
-    JSON.stringify({
-      event,
-      request_id: requestId,
-      timestamp: new Date().toISOString(),
-      ...details,
-    }),
-  );
+  logMcpEvent({
+    event,
+    request_id: requestId,
+    timestamp: new Date().toISOString(),
+    ...details,
+  });
 }
 
 function parseAllowList(value: string | undefined): Set<string> {
@@ -326,7 +323,7 @@ function validateRequestSecurity(req: RequestLike, res: ResponseLike): boolean {
  * Main handler for Vercel serverless function
  */
 export default async function handler(req: RequestLike, res: ResponseLike): Promise<void> {
-  const requestId = buildRequestId(req);
+  const requestId = buildRequestId();
   setCorsHeaders(res);
   logLifecycle('mcp.request.start', requestId, { method: req.method ?? 'UNKNOWN' });
 

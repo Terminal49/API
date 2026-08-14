@@ -96,6 +96,7 @@ function createRequest(
 
 describe('api/mcp handler lifecycle', () => {
   beforeEach(() => {
+    vi.restoreAllMocks();
     vi.resetModules();
     vi.clearAllMocks();
     vi.unstubAllGlobals();
@@ -138,8 +139,9 @@ describe('api/mcp handler lifecycle', () => {
   });
 
   it('returns 500 and still closes transport and server when handler throws', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockState.handleRequestImpl = async () => {
-      throw new Error('simulated failure');
+      throw new Error('simulated failure for container MSCU1234567');
     };
 
     const { default: handler } = await import('../../../api/mcp.ts');
@@ -156,6 +158,11 @@ describe('api/mcp handler lifecycle', () => {
     });
     // DEV-10663: the internal error message must never leak to clients.
     expect((res.payload as any)?.error?.data).toBeUndefined();
+
+    const serializedLogs = consoleError.mock.calls.flat().join('\n');
+    expect(serializedLogs).not.toContain('MSCU1234567');
+    expect(serializedLogs).not.toContain('simulated failure');
+    expect(serializedLogs).toContain('[REDACTED]');
 
     const server = mockState.servers[0];
     const transport = mockState.transports[0];
@@ -209,6 +216,28 @@ describe('api/mcp handler lifecycle', () => {
 
     expect(mockState.servers).toHaveLength(1);
     expect(res.statusCode).toBe(200);
+  });
+
+  it('does not log a caller-controlled request ID', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const callerRequestId = 'customer-token-secret-value';
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Bearer test-token',
+        'x-request-id': callerRequestId,
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    const serializedLogs = consoleError.mock.calls.flat().join('\n');
+    expect(serializedLogs).not.toContain(callerRequestId);
+    expect(serializedLogs).toMatch(
+      /"request_id":"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"/i,
+    );
   });
 
   it('returns 401 when Authorization header is absent even if T49_API_TOKEN is set', async () => {

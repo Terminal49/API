@@ -3,7 +3,10 @@
  * Implementation using @modelcontextprotocol/sdk with McpServer API
  */
 
-import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import {
+  McpServer,
+  ResourceTemplate,
+} from '@modelcontextprotocol/sdk/server/mcp.js';
 import { completable } from '@modelcontextprotocol/sdk/server/completable.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
@@ -36,6 +39,7 @@ import {
   flushMcpEvents,
   instrumentMcpServer,
 } from './sentry.js';
+import { logMcpEvent } from './logging.js';
 
 /**
  * MCP content-block annotations (per spec). `audience` lets a client decide who
@@ -1055,7 +1059,9 @@ function buildListResourceLinks(
   if (entityType !== 'container') {
     return [];
   }
-  const items = Array.isArray((result as any)?.items) ? (result as any).items : [];
+  const items = Array.isArray((result as any)?.items)
+    ? (result as any).items
+    : [];
   const links: ResourceLinkContent[] = [];
   for (const item of items) {
     const link = buildContainerResourceLink(asRecord(item));
@@ -1105,14 +1111,12 @@ function wrapToolWithContract<TArgs>(
       await flushMcpEvents();
       // Log the real error for operators; never echo internal messages (which
       // can contain upstream URLs, tokens, or stack detail) back to the client.
-      console.error(
-        JSON.stringify({
-          event: 'mcp.tool.error',
-          error: err.name,
-          message: err.message,
-          timestamp: new Date().toISOString(),
-        }),
-      );
+      logMcpEvent({
+        event: 'mcp.tool.error',
+        error: err.name,
+        message: err.message,
+        timestamp: new Date().toISOString(),
+      });
       return {
         content: [
           {
@@ -1142,7 +1146,10 @@ function createCarrierScacCompleter(
   return async (value: string | undefined): Promise<string[]> => {
     try {
       const search = typeof value === 'string' ? value.trim() : '';
-      const { shipping_lines } = await executeGetSupportedShippingLines({ search }, client);
+      const { shipping_lines } = await executeGetSupportedShippingLines(
+        { search },
+        client,
+      );
       return shipping_lines.slice(0, 100).map((line) => line.scac);
     } catch {
       return [];
@@ -1732,13 +1739,17 @@ export function createTerminal49McpServer(
       description:
         'Quick container tracking workflow with carrier autocomplete',
       argsSchema: {
-        container_number: z.string().describe('Container number (e.g., CAIU1234567)'),
+        container_number: z
+          .string()
+          .describe('Container number (e.g., CAIU1234567)'),
         // Autocompletes from the live supported-carrier list (SCAC codes).
         // `completable` must wrap the INNER string so the MCP SDK (which
         // unwraps ZodOptional before checking isCompletable) advertises the
         // `completions` capability; `.optional()` is applied AFTER.
         carrier: completable(
-          z.string().describe('Shipping line SCAC code (e.g., MAEU for Maersk)'),
+          z
+            .string()
+            .describe('Shipping line SCAC code (e.g., MAEU for Maersk)'),
           completeCarrierScac,
         ).optional(),
       },

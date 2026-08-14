@@ -4,6 +4,7 @@
  */
 
 import { NotFoundError, Terminal49Client } from '@terminal49/sdk';
+import { logMcpEvent } from '../logging.js';
 
 export interface GetContainerTransportEventsArgs {
   id: string;
@@ -30,27 +31,30 @@ export const getContainerTransportEventsTool = {
 
 export async function executeGetContainerTransportEvents(
   args: GetContainerTransportEventsArgs,
-  client: Terminal49Client
+  client: Terminal49Client,
 ): Promise<any> {
   if (!args.id || args.id.trim() === '') {
     throw new Error('Container ID is required');
   }
 
   const startTime = Date.now();
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.start',
-      tool: 'get_container_transport_events',
-      container_id: args.id,
-      timestamp: new Date().toISOString(),
-    })
-  );
+  logMcpEvent({
+    event: 'tool.execute.start',
+    tool: 'get_container_transport_events',
+    container_id: args.id,
+    timestamp: new Date().toISOString(),
+  });
 
   try {
     const result = await client.containers.events(args.id, { format: 'raw' });
     const raw = (result as any)?.raw ?? result;
 
-    logComplete(args.id, eventCount(raw), startTime, 'transport_events_subresource');
+    logComplete(
+      args.id,
+      eventCount(raw),
+      startTime,
+      'transport_events_subresource',
+    );
 
     // A 200 from the dedicated sub-resource means the container exists, even
     // when it carries zero events. Surface `container_found` consistently with
@@ -79,13 +83,17 @@ export async function executeGetContainerTransportEvents(
 async function fallbackToContainerInclude(
   id: string,
   client: Terminal49Client,
-  startTime: number
+  startTime: number,
 ): Promise<any> {
   let raw: any;
   try {
-    const fallbackResult = await client.containers.get(id, ['transport_events'], {
-      format: 'raw',
-    });
+    const fallbackResult = await client.containers.get(
+      id,
+      ['transport_events'],
+      {
+        format: 'raw',
+      },
+    );
     raw = (fallbackResult as any)?.raw ?? fallbackResult;
   } catch (fallbackError) {
     // A genuinely-missing container surfaces as a real tool error, distinct
@@ -100,7 +108,7 @@ async function fallbackToContainerInclude(
 
   return formatTransportEventsResponse(
     { data: events, included: raw?.included || [] },
-    { source: 'container_include_fallback', containerFound: true }
+    { source: 'container_include_fallback', containerFound: true },
   );
 }
 
@@ -118,49 +126,48 @@ function isNotFound(error: unknown): boolean {
   );
 }
 
-function logComplete(id: string, count: number, startTime: number, source: string): void {
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.complete',
-      tool: 'get_container_transport_events',
-      container_id: id,
-      event_count: count,
-      source,
-      duration_ms: Date.now() - startTime,
-      timestamp: new Date().toISOString(),
-    })
-  );
+function logComplete(
+  id: string,
+  count: number,
+  startTime: number,
+  source: string,
+): void {
+  logMcpEvent({
+    event: 'tool.execute.complete',
+    tool: 'get_container_transport_events',
+    container_id: id,
+    event_count: count,
+    source,
+    duration_ms: Date.now() - startTime,
+    timestamp: new Date().toISOString(),
+  });
 }
 
 function logFallback(id: string, error: unknown): void {
   // The primary 404 is expected (the sub-resource is not enabled for every
   // container), so it is not surfaced as an error — but operators
   // investigating fallback traffic need a signal to correlate against.
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.fallback',
-      tool: 'get_container_transport_events',
-      container_id: id,
-      reason: 'transport_events_subresource_not_found',
-      error: (error as Error).name,
-      message: (error as Error).message,
-      timestamp: new Date().toISOString(),
-    })
-  );
+  logMcpEvent({
+    event: 'tool.execute.fallback',
+    tool: 'get_container_transport_events',
+    container_id: id,
+    reason: 'transport_events_subresource_not_found',
+    error: (error as Error).name,
+    message: (error as Error).message,
+    timestamp: new Date().toISOString(),
+  });
 }
 
 function logError(id: string, error: unknown, startTime: number): void {
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.error',
-      tool: 'get_container_transport_events',
-      container_id: id,
-      error: (error as Error).name,
-      message: (error as Error).message,
-      duration_ms: Date.now() - startTime,
-      timestamp: new Date().toISOString(),
-    })
-  );
+  logMcpEvent({
+    event: 'tool.execute.error',
+    tool: 'get_container_transport_events',
+    container_id: id,
+    error: (error as Error).name,
+    message: (error as Error).message,
+    duration_ms: Date.now() - startTime,
+    timestamp: new Date().toISOString(),
+  });
 }
 
 function extractIncludedTransportEvents(raw: any): any[] {
@@ -173,7 +180,10 @@ interface FormatOptions {
   containerFound?: boolean;
 }
 
-function formatTransportEventsResponse(apiResponse: any, options: FormatOptions): any {
+function formatTransportEventsResponse(
+  apiResponse: any,
+  options: FormatOptions,
+): any {
   const events = Array.isArray(apiResponse)
     ? apiResponse
     : Array.isArray(apiResponse?.data)
@@ -253,7 +263,8 @@ function resolveLocation(attrs: any, relationships: any, included: any[]): any {
   // `location_name`), so surface a location whenever either is present rather
   // than dropping the movement location entirely.
   const embeddedName = normalizeText(attrs.location_name);
-  const embeddedCode = normalizeText(attrs.location_locode) || normalizeText(attrs.port_locode);
+  const embeddedCode =
+    normalizeText(attrs.location_locode) || normalizeText(attrs.port_locode);
   if (embeddedName || embeddedCode) {
     return {
       name: embeddedName,
@@ -311,7 +322,10 @@ function extractKeyMilestones(events: any[]): any {
     const timestamp = normalizeTimestamp(event.attributes?.timestamp);
 
     // Map common milestone events
-    if (eventType.includes('vessel.loaded') || eventType === 'container.transport.vessel_loaded') {
+    if (
+      eventType.includes('vessel.loaded') ||
+      eventType === 'container.transport.vessel_loaded'
+    ) {
       milestones.vessel_loaded_at = timestamp;
     } else if (
       eventType.includes('vessel.departed') ||
@@ -323,9 +337,15 @@ function extractKeyMilestones(events: any[]): any {
       eventType === 'container.transport.vessel_arrived'
     ) {
       milestones.vessel_arrived_at = timestamp;
-    } else if (eventType.includes('discharged') || eventType === 'container.transport.discharged') {
+    } else if (
+      eventType.includes('discharged') ||
+      eventType === 'container.transport.discharged'
+    ) {
       milestones.discharged_at = timestamp;
-    } else if (eventType.includes('rail.loaded') || eventType === 'container.transport.rail_loaded') {
+    } else if (
+      eventType.includes('rail.loaded') ||
+      eventType === 'container.transport.rail_loaded'
+    ) {
       milestones.rail_loaded_at = timestamp;
     } else if (
       eventType.includes('rail.departed') ||
@@ -337,7 +357,10 @@ function extractKeyMilestones(events: any[]): any {
       eventType === 'container.transport.rail_arrived'
     ) {
       milestones.rail_arrived_at = timestamp;
-    } else if (eventType.includes('full_out') || eventType === 'container.transport.full_out') {
+    } else if (
+      eventType.includes('full_out') ||
+      eventType === 'container.transport.full_out'
+    ) {
       milestones.delivered_at = timestamp;
     }
   });
