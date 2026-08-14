@@ -25,7 +25,7 @@
     "vercel"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@sentry/node": "^10.55.0",
     "@terminal49/sdk": "0.3.1",
     "zod": "~4.3.6"
@@ -39,13 +39,13 @@
     "vitest": "^4.1.1"
   },
   "overrides": {
-    "@hono/node-server": "^1.19.14",
+    "@hono/node-server": "^2.1.1",
     "ajv": "^8.20.0",
     "express-rate-limit": "^8.5.2",
-    "fast-uri": "^3.1.2",
+    "fast-uri": "^3.1.5",
     "postcss": "^8.5.14",
-    "hono": "^4.12.16",
-    "ip-address": "^10.1.1",
+    "hono": "^4.13.2",
+    "ip-address": "^10.5.0",
     "path-to-regexp": "^8.4.2",
     "picomatch": "^4.0.4",
     "qs": "^6.15.2",
