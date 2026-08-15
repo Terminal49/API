@@ -3,7 +3,11 @@
  */
 
 import type { Command } from 'commander';
-import { parseJsonObjectPayload, positiveInt, splitCommaList } from '../util/input.js';
+import {
+  parseJsonObjectPayload,
+  positiveInt,
+  splitCommaList,
+} from '../util/input.js';
 import { action } from './action.js';
 
 type PayloadOptions = {
@@ -24,7 +28,8 @@ function webhookPayload(options: PayloadOptions): Record<string, unknown> {
 
   const attributes: Record<string, unknown> = {};
   if (options.url !== undefined) attributes.url = options.url;
-  if (options.events !== undefined) attributes.events = splitCommaList(options.events);
+  if (options.events !== undefined)
+    attributes.events = splitCommaList(options.events);
   if (options.active !== undefined) attributes.active = options.active;
 
   return {
@@ -66,7 +71,11 @@ export function registerWebhooksCommand(program: Command): void {
   const createCommand = cmd
     .command('create')
     .description('Create a webhook')
-    .option('--payload <json>', 'Webhook object JSON payload', parseJsonObjectPayload)
+    .option(
+      '--payload <json>',
+      'Webhook object JSON payload',
+      parseJsonObjectPayload,
+    )
     .option('--url <url>', 'Webhook endpoint URL')
     .option('--events <csv>', 'Comma-separated webhook event names')
     .option('--active', 'Create an active webhook')
@@ -83,7 +92,11 @@ export function registerWebhooksCommand(program: Command): void {
   const updateCommand = cmd
     .command('update <id>')
     .description('Update a webhook')
-    .requiredOption('--payload <json>', 'Webhook object JSON payload', parseJsonObjectPayload);
+    .requiredOption(
+      '--payload <json>',
+      'Webhook object JSON payload',
+      parseJsonObjectPayload,
+    );
   updateCommand.action(
     action('webhooks.update', async ({ client, globals }, id: string) => {
       const options = localOptions<PayloadOptions>(updateCommand);

@@ -55,7 +55,9 @@ function listDataFrom(result: unknown): unknown {
 }
 
 export function registerCustomFieldsCommand(program: Command): void {
-  const cmd = program.command('custom-fields').description('Manage custom fields');
+  const cmd = program
+    .command('custom-fields')
+    .description('Manage custom fields');
 
   const listCommand = addListOptions(
     cmd.command('list').description('List custom field assignments'),
@@ -84,7 +86,11 @@ export function registerCustomFieldsCommand(program: Command): void {
   const createCommand = cmd
     .command('create')
     .description('Create a custom field assignment')
-    .requiredOption('--payload <json>', 'Custom field JSON payload', parseJsonObjectPayload);
+    .requiredOption(
+      '--payload <json>',
+      'Custom field JSON payload',
+      parseJsonObjectPayload,
+    );
   createCommand.action(
     action('custom-fields.create', async ({ client, globals }) => {
       const options = createCommand.opts() as PayloadOptions;
@@ -97,7 +103,11 @@ export function registerCustomFieldsCommand(program: Command): void {
   const updateCommand = cmd
     .command('update <id>')
     .description('Update a custom field assignment')
-    .requiredOption('--payload <json>', 'Custom field JSON payload', parseJsonObjectPayload);
+    .requiredOption(
+      '--payload <json>',
+      'Custom field JSON payload',
+      parseJsonObjectPayload,
+    );
   updateCommand.action(
     action('custom-fields.update', async ({ client, globals }, id: string) => {
       const options = updateCommand.opts() as PayloadOptions;

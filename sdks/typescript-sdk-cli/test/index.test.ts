@@ -7,7 +7,8 @@ function withFakeTty(fn: () => void): void {
   try {
     fn();
   } finally {
-    (process.stdout as unknown as { isTTY: boolean | undefined }).isTTY = original;
+    (process.stdout as unknown as { isTTY: boolean | undefined }).isTTY =
+      original;
   }
 }
 

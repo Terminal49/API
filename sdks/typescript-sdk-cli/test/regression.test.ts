@@ -104,7 +104,13 @@ describe('CLI regressions', () => {
     const token = 'tok_secret_123456';
     process.env.XDG_CONFIG_HOME = configHome;
 
-    const unknown = await runProgram(['--json', 'config', 'set', 'unknownKey', 'value']);
+    const unknown = await runProgram([
+      '--json',
+      'config',
+      'set',
+      'unknownKey',
+      'value',
+    ]);
     expect(unknown.status).toBe(2);
     expect(JSON.parse(unknown.stderr)).toMatchObject({
       ok: false,
@@ -133,8 +139,12 @@ describe('CLI regressions', () => {
 
   it('shipments and containers list do not expose unsupported SDK filters', () => {
     const program = createProgram();
-    const containers = optionLongNames(findCommand(program, ['containers', 'list']));
-    const shipments = optionLongNames(findCommand(program, ['shipments', 'list']));
+    const containers = optionLongNames(
+      findCommand(program, ['containers', 'list']),
+    );
+    const shipments = optionLongNames(
+      findCommand(program, ['shipments', 'list']),
+    );
 
     expect(containers).not.toContain('--status');
     expect(containers).not.toContain('--port');

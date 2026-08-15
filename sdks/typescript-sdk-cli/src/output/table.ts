@@ -137,7 +137,10 @@ function valueAtPath(row: Record<string, unknown>, path: string): unknown {
   }, row);
 }
 
-function valueForColumn(row: Record<string, unknown>, column: ColumnDef): unknown {
+function valueForColumn(
+  row: Record<string, unknown>,
+  column: ColumnDef,
+): unknown {
   const keys = Array.isArray(column.key) ? column.key : [column.key];
   for (const key of keys) {
     const value = valueAtPath(row, key);
@@ -165,7 +168,11 @@ function findValueDeep(input: unknown, key: string, depth = 6): unknown {
   return undefined;
 }
 
-function findNumeric(input: unknown, key: string, depth = 2): number | undefined {
+function findNumeric(
+  input: unknown,
+  key: string,
+  depth = 2,
+): number | undefined {
   const value = findValueDeep(input, key, depth);
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string') {
@@ -208,7 +215,11 @@ function findNumericByKeyPattern(
 
 function normalizeResultType(input: string): string {
   const normalized = input.trim().toLowerCase();
-  if (!normalized || normalized === 'search_result' || normalized === 'search-result') {
+  if (
+    !normalized ||
+    normalized === 'search_result' ||
+    normalized === 'search-result'
+  ) {
     return '';
   }
   if (normalized.includes('shipment')) return 'shipment';
@@ -219,7 +230,10 @@ function normalizeResultType(input: string): string {
   return normalized.replace(/\s+/g, '_');
 }
 
-function deriveResultType(flattened: Record<string, unknown>, match: string): string {
+function deriveResultType(
+  flattened: Record<string, unknown>,
+  match: string,
+): string {
   const typeCandidate = pickFirstDefined([
     valueAtPath(flattened, 'attributes.entity_type'),
     valueAtPath(flattened, 'attributes.entityType'),
@@ -254,8 +268,14 @@ function deriveResultType(flattened: Record<string, unknown>, match: string): st
   return 'unknown';
 }
 
-function deriveResultId(flattened: Record<string, unknown>, resultType: string): string {
-  const wrapperId = pickFirstDefined([valueAtPath(flattened, 'id'), valueAtPath(flattened, '_id')]);
+function deriveResultId(
+  flattened: Record<string, unknown>,
+  resultType: string,
+): string {
+  const wrapperId = pickFirstDefined([
+    valueAtPath(flattened, 'id'),
+    valueAtPath(flattened, '_id'),
+  ]);
   const resourceId = pickFirstDefined([
     valueAtPath(flattened, 'resultId'),
     valueAtPath(flattened, 'resourceId'),
@@ -330,7 +350,9 @@ function deriveDetails(flattened: Record<string, unknown>): string {
   const parts: string[] = [];
   if (scac) parts.push(`SCAC ${scac}`);
   if (containers !== undefined) {
-    parts.push(`${containers} ${containers === 1 ? 'container' : 'containers'}`);
+    parts.push(
+      `${containers} ${containers === 1 ? 'container' : 'containers'}`,
+    );
   }
   if (origin && destination) {
     parts.push(`${origin} -> ${destination}`);
@@ -338,7 +360,9 @@ function deriveDetails(flattened: Record<string, unknown>): string {
   return parts.join(' | ');
 }
 
-function unwrapSearchRow(row: Record<string, unknown>): Record<string, unknown> {
+function unwrapSearchRow(
+  row: Record<string, unknown>,
+): Record<string, unknown> {
   const source = valueAtPath(row, '_source');
   if (source && typeof source === 'object' && !Array.isArray(source)) {
     return {
@@ -362,7 +386,9 @@ function unwrapSearchRow(row: Record<string, unknown>): Record<string, unknown> 
   return row;
 }
 
-function flattenSearchMetadata(row: Record<string, unknown>): Record<string, unknown> {
+function flattenSearchMetadata(
+  row: Record<string, unknown>,
+): Record<string, unknown> {
   const sourceLike = unwrapSearchRow(row);
   const result: Record<string, unknown> = { ...sourceLike };
   const metaType = valueAtPath(row, '_index');
@@ -373,7 +399,8 @@ function flattenSearchMetadata(row: Record<string, unknown>): Record<string, unk
 function formatCell(value: unknown): string {
   if (value === undefined || value === null) return '';
   if (typeof value === 'string') return value;
-  if (typeof value === 'boolean' || typeof value === 'number') return String(value);
+  if (typeof value === 'boolean' || typeof value === 'number')
+    return String(value);
   if (Array.isArray(value)) return value.join(', ');
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
@@ -391,13 +418,18 @@ function normalizeRows(data: unknown): Record<string, unknown>[] {
   }
   if (hitsValue && typeof hitsValue === 'object' && !Array.isArray(hitsValue)) {
     const nestedHits = (hitsValue as Record<string, unknown>).hits;
-    if (Array.isArray(nestedHits)) return nestedHits as Record<string, unknown>[];
+    if (Array.isArray(nestedHits))
+      return nestedHits as Record<string, unknown>[];
   }
   if (Array.isArray((data as { data?: unknown }).data)) {
     return (data as { data?: unknown }).data as Record<string, unknown>[];
   }
   const singleData = (data as { data?: unknown }).data;
-  if (singleData && typeof singleData === 'object' && !Array.isArray(singleData)) {
+  if (
+    singleData &&
+    typeof singleData === 'object' &&
+    !Array.isArray(singleData)
+  ) {
     return [singleData as Record<string, unknown>];
   }
   return [data as Record<string, unknown>];
@@ -407,14 +439,17 @@ function hasRenderableValue(value: unknown): boolean {
   if (value === undefined || value === null) return false;
   if (typeof value === 'string') return value.trim() !== '';
   if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === 'object') return Object.keys(value as Record<string, unknown>).length > 0;
+  if (typeof value === 'object')
+    return Object.keys(value as Record<string, unknown>).length > 0;
   return true;
 }
 
 function inferUnknownColumns(rows: Record<string, unknown>[]): ColumnDef[] {
   const selected: ColumnDef[] = [];
   for (const candidate of unknownColumnCandidates) {
-    if (rows.some((row) => hasRenderableValue(valueForColumn(row, candidate)))) {
+    if (
+      rows.some((row) => hasRenderableValue(valueForColumn(row, candidate)))
+    ) {
       selected.push(candidate);
     }
     if (selected.length >= 6) break;
@@ -439,7 +474,9 @@ function pickFirstDefined(values: unknown[]): string {
   return '';
 }
 
-function enrichSearchRow(row: Record<string, unknown>): Record<string, unknown> {
+function enrichSearchRow(
+  row: Record<string, unknown>,
+): Record<string, unknown> {
   const flattened = flattenSearchMetadata(row);
 
   const reference = pickFirstDefined([
@@ -540,7 +577,10 @@ function enrichSearchRow(row: Record<string, unknown>): Record<string, unknown> 
   return enriched;
 }
 
-function rowsForCommand(command: string, data: unknown): Record<string, unknown>[] {
+function rowsForCommand(
+  command: string,
+  data: unknown,
+): Record<string, unknown>[] {
   const record =
     data && typeof data === 'object' && !Array.isArray(data)
       ? (data as Record<string, unknown>)
@@ -554,7 +594,8 @@ function rowsForCommand(command: string, data: unknown): Record<string, unknown>
     const mapped = record?.mapped;
     if (mapped && typeof mapped === 'object' && !Array.isArray(mapped)) {
       const locations = (mapped as Record<string, unknown>).locations;
-      if (Array.isArray(locations)) return locations as Record<string, unknown>[];
+      if (Array.isArray(locations))
+        return locations as Record<string, unknown>[];
     }
     if (Array.isArray(record?.locations)) {
       return record.locations as Record<string, unknown>[];
@@ -572,18 +613,27 @@ function isDetailCommand(command: string): boolean {
   return command.endsWith('.get') || command.endsWith('.get-by-imo');
 }
 
-function unwrapDetailObject(data: unknown): Record<string, unknown> | undefined {
-  if (!data || typeof data !== 'object' || Array.isArray(data)) return undefined;
+function unwrapDetailObject(
+  data: unknown,
+): Record<string, unknown> | undefined {
+  if (!data || typeof data !== 'object' || Array.isArray(data))
+    return undefined;
 
   const record = data as Record<string, unknown>;
   const jsonApiData = record.data;
-  if (jsonApiData && typeof jsonApiData === 'object' && !Array.isArray(jsonApiData)) {
+  if (
+    jsonApiData &&
+    typeof jsonApiData === 'object' &&
+    !Array.isArray(jsonApiData)
+  ) {
     const resource = jsonApiData as Record<string, unknown>;
     const attributes = resource.attributes;
     return {
       id: resource.id,
       type: resource.type,
-      ...(attributes && typeof attributes === 'object' && !Array.isArray(attributes)
+      ...(attributes &&
+      typeof attributes === 'object' &&
+      !Array.isArray(attributes)
         ? (attributes as Record<string, unknown>)
         : {}),
     };
@@ -601,7 +651,9 @@ function flattenDetailRows(
   for (const [key, item] of Object.entries(value)) {
     const label = prefix ? `${prefix}.${key}` : key;
     if (depth > 0 && item && typeof item === 'object' && !Array.isArray(item)) {
-      rows.push(...flattenDetailRows(item as Record<string, unknown>, label, depth - 1));
+      rows.push(
+        ...flattenDetailRows(item as Record<string, unknown>, label, depth - 1),
+      );
     } else if (hasRenderableValue(item)) {
       rows.push([label, item]);
     }

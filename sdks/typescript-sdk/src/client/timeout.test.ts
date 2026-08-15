@@ -20,7 +20,9 @@ describe('withTimeout', () => {
           new Promise<Response>((_resolve, reject) => {
             const signal = init?.signal;
             signal?.addEventListener('abort', () => {
-              reject(Object.assign(new Error('aborted'), { name: 'AbortError' }));
+              reject(
+                Object.assign(new Error('aborted'), { name: 'AbortError' }),
+              );
             });
           }),
       );

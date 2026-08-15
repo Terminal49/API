@@ -56,7 +56,8 @@ describe('Terminal49Client transport resilience', () => {
       });
 
       const resultPromise = client.getContainerRoute('abc');
-      const assertion = expect(resultPromise).rejects.toBeInstanceOf(Terminal49Error);
+      const assertion =
+        expect(resultPromise).rejects.toBeInstanceOf(Terminal49Error);
       await vi.advanceTimersByTimeAsync(500);
       await assertion;
       // 1 initial + 1 retry
@@ -90,7 +91,8 @@ describe('Terminal49Client transport resilience', () => {
       });
 
       const resultPromise = client.getContainerRoute('abc');
-      const assertion = expect(resultPromise).rejects.toBeInstanceOf(Terminal49Error);
+      const assertion =
+        expect(resultPromise).rejects.toBeInstanceOf(Terminal49Error);
       await vi.advanceTimersByTimeAsync(500);
       await assertion;
       expect(attempt).toBe(2);
@@ -226,7 +228,11 @@ describe('Terminal49Client transport resilience', () => {
     const fetchImpl = vi.fn(async (input: Request | URL | string) => {
       pageRequests += 1;
       const url = new URL(
-        typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url,
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url,
       );
       const page = Number(url.searchParams.get('page[number]') ?? '1');
       return jsonResponse({
@@ -250,7 +256,10 @@ describe('Terminal49Client transport resilience', () => {
 
     const items = [];
     // `maxPages` is type-reachable via ListOptions, so no cast is needed.
-    for await (const shipment of client.shipments.iterate({}, { pageSize: 1, maxPages: 3 })) {
+    for await (const shipment of client.shipments.iterate(
+      {},
+      { pageSize: 1, maxPages: 3 },
+    )) {
       items.push(shipment);
     }
 
@@ -265,7 +274,9 @@ describe('Terminal49Client transport resilience', () => {
         (_input: Request | URL | string, init?: RequestInit) =>
           new Promise<Response>((_resolve, reject) => {
             init?.signal?.addEventListener('abort', () => {
-              reject(Object.assign(new Error('aborted'), { name: 'AbortError' }));
+              reject(
+                Object.assign(new Error('aborted'), { name: 'AbortError' }),
+              );
             });
           }),
       );
@@ -279,7 +290,8 @@ describe('Terminal49Client transport resilience', () => {
       });
 
       const resultPromise = client.getContainer('abc');
-      const assertion = expect(resultPromise).rejects.toBeInstanceOf(TimeoutError);
+      const assertion =
+        expect(resultPromise).rejects.toBeInstanceOf(TimeoutError);
       await vi.advanceTimersByTimeAsync(100);
       await assertion;
     } finally {

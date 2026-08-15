@@ -40,7 +40,10 @@ export type EnvelopeResult = {
   };
 };
 
-export function cliEnvelope(data: unknown, meta?: EnvelopeResult['meta']): EnvelopeResult {
+export function cliEnvelope(
+  data: unknown,
+  meta?: EnvelopeResult['meta'],
+): EnvelopeResult {
   return { __cliEnvelope: true, data, meta };
 }
 
@@ -100,8 +103,16 @@ export function action<TArgs extends unknown[]>(
 export function addListOptions(command: Command): Command {
   return command
     .option('--all', 'Emit all pages as newline-delimited JSON')
-    .option('--max-pages <n>', 'Maximum pages to fetch with --all', positiveInt('--max-pages'))
-    .option('--max-rows <n>', 'Maximum rows to emit with --all', positiveInt('--max-rows'))
+    .option(
+      '--max-pages <n>',
+      'Maximum pages to fetch with --all',
+      positiveInt('--max-pages'),
+    )
+    .option(
+      '--max-rows <n>',
+      'Maximum rows to emit with --all',
+      positiveInt('--max-rows'),
+    )
     .option('--page <n>', 'Page number', positiveInt('--page'))
     .option('--page-size <n>', 'Page size', positiveInt('--page-size'));
 }
@@ -128,7 +139,9 @@ export function listAction(
 
       if (globals.all) {
         if (!iterate) {
-          throw new InvalidArgumentError('--all is not supported for this command');
+          throw new InvalidArgumentError(
+            '--all is not supported for this command',
+          );
         }
 
         for await (const item of iterate(ctx)) {

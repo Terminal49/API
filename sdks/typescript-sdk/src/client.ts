@@ -111,22 +111,28 @@ export class Terminal49Client {
     get: (id: string, options?: CallOptions) => this.getWebhook(id, options),
     create: (payload: Record<string, unknown>, options?: CallOptions) =>
       this.createWebhook(payload, options),
-    update: (id: string, payload: Record<string, unknown>, options?: CallOptions) =>
-      this.updateWebhook(id, payload, options),
-    delete: (id: string, options?: CallOptions) => this.deleteWebhook(id, options),
+    update: (
+      id: string,
+      payload: Record<string, unknown>,
+      options?: CallOptions,
+    ) => this.updateWebhook(id, payload, options),
+    delete: (id: string, options?: CallOptions) =>
+      this.deleteWebhook(id, options),
     ips: (options?: CallOptions) => this.getWebhookIps(options),
   };
 
   public webhookNotifications = {
     list: (options?: ListOptions) => this.listWebhookNotifications(options),
-    get: (id: string, options?: CallOptions) => this.getWebhookNotification(id, options),
+    get: (id: string, options?: CallOptions) =>
+      this.getWebhookNotification(id, options),
     examples: (event?: string, options?: CallOptions) =>
       this.getWebhookNotificationExamples(event, options),
   };
 
   public vessels = {
     get: (id: string, options?: CallOptions) => this.getVessel(id, options),
-    getByImo: (imo: string, options?: CallOptions) => this.getVesselByImo(imo, options),
+    getByImo: (imo: string, options?: CallOptions) =>
+      this.getVesselByImo(imo, options),
     futurePositions: (id: string, options?: CallOptions) =>
       this.getVesselFuturePositions(id, options),
     futurePositionsWithCoords: (id: string, options?: CallOptions) =>
@@ -152,12 +158,17 @@ export class Terminal49Client {
 
   public customFieldDefinitions = {
     list: (options?: ListOptions) => this.listCustomFieldDefinitions(options),
-    get: (id: string, options?: CallOptions) => this.getCustomFieldDefinition(id, options),
+    get: (id: string, options?: CallOptions) =>
+      this.getCustomFieldDefinition(id, options),
     create: (payload: Record<string, unknown>, options?: CallOptions) =>
       this.createCustomFieldDefinition(payload, options),
-    update: (id: string, payload: Record<string, unknown>, options?: CallOptions) =>
-      this.updateCustomFieldDefinition(id, payload, options),
-    delete: (id: string, options?: CallOptions) => this.deleteCustomFieldDefinition(id, options),
+    update: (
+      id: string,
+      payload: Record<string, unknown>,
+      options?: CallOptions,
+    ) => this.updateCustomFieldDefinition(id, payload, options),
+    delete: (id: string, options?: CallOptions) =>
+      this.deleteCustomFieldDefinition(id, options),
   };
 
   public customFieldOptions = {
@@ -165,8 +176,11 @@ export class Terminal49Client {
       this.listCustomFieldOptions(definitionId, options),
     get: (definitionId: string, optionId: string, options?: CallOptions) =>
       this.getCustomFieldOption(definitionId, optionId, options),
-    create: (definitionId: string, payload: Record<string, unknown>, options?: CallOptions) =>
-      this.createCustomFieldOption(definitionId, payload, options),
+    create: (
+      definitionId: string,
+      payload: Record<string, unknown>,
+      options?: CallOptions,
+    ) => this.createCustomFieldOption(definitionId, payload, options),
     update: (
       definitionId: string,
       optionId: string,
@@ -179,12 +193,17 @@ export class Terminal49Client {
 
   public customFields = {
     list: (options?: ListOptions) => this.listCustomFields(options),
-    get: (id: string, options?: CallOptions) => this.getCustomField(id, options),
+    get: (id: string, options?: CallOptions) =>
+      this.getCustomField(id, options),
     create: (payload: Record<string, unknown>, options?: CallOptions) =>
       this.createCustomField(payload, options),
-    update: (id: string, payload: Record<string, unknown>, options?: CallOptions) =>
-      this.updateCustomField(id, payload, options),
-    delete: (id: string, options?: CallOptions) => this.deleteCustomField(id, options),
+    update: (
+      id: string,
+      payload: Record<string, unknown>,
+      options?: CallOptions,
+    ) => this.updateCustomField(id, payload, options),
+    delete: (id: string, options?: CallOptions) =>
+      this.deleteCustomField(id, options),
   };
 
   constructor(config: Terminal49ClientConfig) {
@@ -209,7 +228,10 @@ export class Terminal49Client {
 
     this.shipments = new ShipmentManager(this.transport, defaultFormat);
     this.containers = new ContainerManager(this.transport, defaultFormat);
-    this.trackingRequests = new TrackingRequestManager(this.transport, defaultFormat);
+    this.trackingRequests = new TrackingRequestManager(
+      this.transport,
+      defaultFormat,
+    );
     this.shippingLines = new ShippingLineManager(this.transport, defaultFormat);
   }
 
@@ -236,13 +258,19 @@ export class Terminal49Client {
     // `/search` is not present in the generated OpenAPI types, so it cannot be
     // routed through the typed `client.GET(...)`. `executeManual` runs it through
     // the same Auth -> Retry -> ErrorMapping -> timeout pipeline as the typed client.
-    return this.transport.executeManual(`${this.transport.baseUrl}/search?${params.toString()}`);
+    return this.transport.executeManual(
+      `${this.transport.baseUrl}/search?${params.toString()}`,
+    );
   }
 
   /** Fetch a container by ID with optional included relationships. */
   async getContainer(
     id: string,
-    include: IncludeParam<ContainerInclude> = ['shipment', 'pod_terminal', 'pickup_facility'],
+    include: IncludeParam<ContainerInclude> = [
+      'shipment',
+      'pod_terminal',
+      'pickup_facility',
+    ],
     options?: CallOptions,
   ): Promise<any> {
     return this.containers.get(id, include, options);
@@ -262,7 +290,9 @@ export class Terminal49Client {
     const requestNumber = params.containerNumber || params.bookingNumber;
 
     if (!requestNumber) {
-      throw new ValidationError('request_number is required (/data/attributes/request_number)');
+      throw new ValidationError(
+        'request_number is required (/data/attributes/request_number)',
+      );
     }
 
     return this.trackingRequests.create({
@@ -338,7 +368,10 @@ export class Terminal49Client {
   }
 
   /** Resume tracking a previously stopped shipment. */
-  async resumeTrackingShipment(id: string, options?: CallOptions): Promise<any> {
+  async resumeTrackingShipment(
+    id: string,
+    options?: CallOptions,
+  ): Promise<any> {
     return this.shipments.resumeTracking(id, options);
   }
 
@@ -359,7 +392,10 @@ export class Terminal49Client {
   }
 
   /** Fetch normalized transport events for a container. */
-  async getContainerTransportEvents(id: string, options?: CallOptions): Promise<any> {
+  async getContainerTransportEvents(
+    id: string,
+    options?: CallOptions,
+  ): Promise<any> {
     return this.containers.events(id, options);
   }
 
@@ -369,7 +405,10 @@ export class Terminal49Client {
   }
 
   /** List supported shipping lines, optionally filtered by search text. */
-  async listShippingLines(search?: string, options?: CallOptions): Promise<any> {
+  async listShippingLines(
+    search?: string,
+    options?: CallOptions,
+  ): Promise<any> {
     return this.shippingLines.list(search, options);
   }
 
@@ -439,7 +478,10 @@ export class Terminal49Client {
   }
 
   /** Create a webhook. */
-  async createWebhook(payload: Record<string, unknown>, options?: CallOptions): Promise<any> {
+  async createWebhook(
+    payload: Record<string, unknown>,
+    options?: CallOptions,
+  ): Promise<any> {
     const raw = await this.transport.executeManual(this.endpoint('/webhooks'), {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -476,7 +518,9 @@ export class Terminal49Client {
 
   /** List webhook source IP ranges. */
   async getWebhookIps(options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(this.endpoint('/webhooks/ips'));
+    const raw = await this.transport.executeManual(
+      this.endpoint('/webhooks/ips'),
+    );
     return this.formatResult(raw, options?.format);
   }
 
@@ -489,7 +533,10 @@ export class Terminal49Client {
   }
 
   /** Fetch a webhook notification by ID. */
-  async getWebhookNotification(id: string, options?: CallOptions): Promise<any> {
+  async getWebhookNotification(
+    id: string,
+    options?: CallOptions,
+  ): Promise<any> {
     const raw = await this.transport.executeManual(
       this.endpoint(`/webhook_notifications/${encodeURIComponent(id)}`),
     );
@@ -497,7 +544,10 @@ export class Terminal49Client {
   }
 
   /** Fetch example webhook notification payloads. */
-  async getWebhookNotificationExamples(event?: string, options?: CallOptions): Promise<any> {
+  async getWebhookNotificationExamples(
+    event?: string,
+    options?: CallOptions,
+  ): Promise<any> {
     const raw = await this.transport.executeManual(
       this.endpoint('/webhook_notifications/examples', { event }),
     );
@@ -521,7 +571,10 @@ export class Terminal49Client {
   }
 
   /** Fetch future vessel positions. */
-  async getVesselFuturePositions(id: string, options?: CallOptions): Promise<any> {
+  async getVesselFuturePositions(
+    id: string,
+    options?: CallOptions,
+  ): Promise<any> {
     const raw = await this.transport.executeManual(
       this.endpoint(`/vessels/${encodeURIComponent(id)}/future_positions`),
     );
@@ -529,9 +582,14 @@ export class Terminal49Client {
   }
 
   /** Fetch future vessel positions with coordinates. */
-  async getVesselFuturePositionsWithCoords(id: string, options?: CallOptions): Promise<any> {
+  async getVesselFuturePositionsWithCoords(
+    id: string,
+    options?: CallOptions,
+  ): Promise<any> {
     const raw = await this.transport.executeManual(
-      this.endpoint(`/vessels/${encodeURIComponent(id)}/future_positions_with_coordinates`),
+      this.endpoint(
+        `/vessels/${encodeURIComponent(id)}/future_positions_with_coordinates`,
+      ),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -585,7 +643,10 @@ export class Terminal49Client {
   }
 
   /** Fetch a custom field definition by ID. */
-  async getCustomFieldDefinition(id: string, options?: CallOptions): Promise<any> {
+  async getCustomFieldDefinition(
+    id: string,
+    options?: CallOptions,
+  ): Promise<any> {
     const raw = await this.transport.executeManual(
       this.endpoint(`/custom_field_definitions/${encodeURIComponent(id)}`),
     );
@@ -597,11 +658,14 @@ export class Terminal49Client {
     payload: Record<string, unknown>,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(this.endpoint('/custom_field_definitions'), {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const raw = await this.transport.executeManual(
+      this.endpoint('/custom_field_definitions'),
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
     return this.formatResult(raw, options?.format);
   }
 
@@ -623,7 +687,10 @@ export class Terminal49Client {
   }
 
   /** Delete a custom field definition. */
-  async deleteCustomFieldDefinition(id: string, options?: CallOptions): Promise<any> {
+  async deleteCustomFieldDefinition(
+    id: string,
+    options?: CallOptions,
+  ): Promise<any> {
     const raw = await this.transport.executeManual(
       this.endpoint(`/custom_field_definitions/${encodeURIComponent(id)}`),
       { method: 'DELETE' },
@@ -632,7 +699,10 @@ export class Terminal49Client {
   }
 
   /** List options for a custom field definition. */
-  async listCustomFieldOptions(definitionId: string, options?: ListOptions): Promise<any> {
+  async listCustomFieldOptions(
+    definitionId: string,
+    options?: ListOptions,
+  ): Promise<any> {
     const raw = await this.transport.executeManual(
       this.endpoint(
         `/custom_field_definitions/${encodeURIComponent(definitionId)}/options`,
@@ -663,7 +733,9 @@ export class Terminal49Client {
     options?: CallOptions,
   ): Promise<any> {
     const raw = await this.transport.executeManual(
-      this.endpoint(`/custom_field_definitions/${encodeURIComponent(definitionId)}/options`),
+      this.endpoint(
+        `/custom_field_definitions/${encodeURIComponent(definitionId)}/options`,
+      ),
       {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -725,12 +797,18 @@ export class Terminal49Client {
   }
 
   /** Create a custom field assignment. */
-  async createCustomField(payload: Record<string, unknown>, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(this.endpoint('/custom_fields'), {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json' },
-    });
+  async createCustomField(
+    payload: Record<string, unknown>,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint('/custom_fields'),
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
     return this.formatResult(raw, options?.format);
   }
 
@@ -793,7 +871,10 @@ export class Terminal49Client {
     return this.trackingRequests.update(id, attrs, options);
   }
 
-  private endpoint(path: string, query?: Record<string, string | number | undefined>): string {
+  private endpoint(
+    path: string,
+    query?: Record<string, string | number | undefined>,
+  ): string {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(query ?? {})) {
       if (value !== undefined) params.set(key, String(value));
@@ -802,7 +883,9 @@ export class Terminal49Client {
     return `${this.transport.baseUrl}${path}${suffix ? `?${suffix}` : ''}`;
   }
 
-  private listQuery(options?: ListOptions): Record<string, string | number | undefined> {
+  private listQuery(
+    options?: ListOptions,
+  ): Record<string, string | number | undefined> {
     return {
       'page[number]': options?.page,
       'page[size]': options?.pageSize,
@@ -818,7 +901,9 @@ export class Terminal49Client {
     if (effective === 'raw') return raw;
     if (effective === 'mapped') return mapper ? mapper(raw) : (raw as any);
     if (effective === 'both') {
-      return mapper ? { raw, mapped: mapper(raw) } : { raw, mapped: raw as any };
+      return mapper
+        ? { raw, mapped: mapper(raw) }
+        : { raw, mapped: raw as any };
     }
     return raw;
   }

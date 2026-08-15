@@ -41,14 +41,20 @@ async function main() {
 
   if (shipmentId) {
     const s = await client.shipments.get(shipmentId, true, { format: 'both' });
-    console.log('Shipment:', (s as any).mapped?.id || (s as any).raw?.data?.id || 'unknown');
+    console.log(
+      'Shipment:',
+      (s as any).mapped?.id || (s as any).raw?.data?.id || 'unknown',
+    );
   }
 
   if (trackingRequestId) {
     const tr = await client.getTrackingRequest(trackingRequestId, {
       format: 'raw',
     });
-    console.log('Tracking request status:', (tr as any)?.data?.attributes?.status ?? 'n/a');
+    console.log(
+      'Tracking request status:',
+      (tr as any)?.data?.attributes?.status ?? 'n/a',
+    );
   }
 }
 

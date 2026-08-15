@@ -1,4 +1,8 @@
-import { mapTrackingRequest, type ResponseFormat, type Terminal49Client } from '@terminal49/sdk';
+import {
+  mapTrackingRequest,
+  type ResponseFormat,
+  type Terminal49Client,
+} from '@terminal49/sdk';
 
 type Mapper = (raw: unknown) => unknown;
 
@@ -34,7 +38,9 @@ export function formatInferResult(
   raw: unknown,
   format: ResponseFormat | undefined,
 ): unknown {
-  return formatMappedPayload(raw, format, (payload) => client.deserialize(payload));
+  return formatMappedPayload(raw, format, (payload) =>
+    client.deserialize(payload),
+  );
 }
 
 export function formatTrackingRequestResult(

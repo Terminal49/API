@@ -118,12 +118,20 @@ describe('Terminal49Client request building', () => {
     expect(params.get('page[number]')).toBe('2');
     expect(params.get('page[size]')).toBe('50');
     // ...and reports them back so callers know they were dropped.
-    expect(result.unsupportedFilters).toEqual(['status', 'port', 'carrier', 'updatedAfter']);
+    expect(result.unsupportedFilters).toEqual([
+      'status',
+      'port',
+      'carrier',
+      'updatedAfter',
+    ]);
   });
 
   it('removes containers from include when includeContainers=false', async () => {
     const search = buildSearchParams([
-      ['include', 'pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal'],
+      [
+        'include',
+        'pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal',
+      ],
     ]);
 
     const { fetchImpl, calls } = createMockFetch({
@@ -192,7 +200,9 @@ describe('Terminal49Client request building', () => {
     );
 
     const params = calls[0].url.searchParams;
-    expect(params.get('include')).toBe('shipment,pod_terminal,transport_events');
+    expect(params.get('include')).toBe(
+      'shipment,pod_terminal,transport_events',
+    );
     // `filter[status]` is unsupported on /containers, so it is omitted.
     expect(params.get('filter[status]')).toBeNull();
     expect(params.get('page[number]')).toBe('3');
@@ -227,7 +237,8 @@ describe('Terminal49Client request building', () => {
   it('hits container raw events and refresh endpoints', async () => {
     const { fetchImpl, calls } = createMockFetch({
       '/containers/cont-1/raw_events': () => jsonResponse({ data: [] }),
-      '/containers/cont-1/refresh': () => jsonResponse({ data: { id: 'cont-1' } }),
+      '/containers/cont-1/refresh': () =>
+        jsonResponse({ data: { id: 'cont-1' } }),
     });
 
     const client = new Terminal49Client({
@@ -239,8 +250,12 @@ describe('Terminal49Client request building', () => {
     await client.getContainerRawEvents('cont-1');
     await client.refreshContainer('cont-1');
 
-    expect(calls[0].url.pathname.endsWith('/containers/cont-1/raw_events')).toBe(true);
-    expect(calls[1].url.pathname.endsWith('/containers/cont-1/refresh')).toBe(true);
+    expect(
+      calls[0].url.pathname.endsWith('/containers/cont-1/raw_events'),
+    ).toBe(true);
+    expect(calls[1].url.pathname.endsWith('/containers/cont-1/refresh')).toBe(
+      true,
+    );
     expect(calls[1].init?.method).toBe('PATCH');
   });
 
@@ -454,9 +469,9 @@ describe('Terminal49Client request building', () => {
       fetchImpl,
     });
 
-    await expect(client.createTrackingRequestFromInfer('MSCU1234567')).rejects.toBeInstanceOf(
-      ValidationError,
-    );
+    await expect(
+      client.createTrackingRequestFromInfer('MSCU1234567'),
+    ).rejects.toBeInstanceOf(ValidationError);
   });
 
   it('throws when infer does not provide scac', async () => {
@@ -478,9 +493,9 @@ describe('Terminal49Client request building', () => {
       fetchImpl,
     });
 
-    await expect(client.createTrackingRequestFromInfer('MSCU1234567')).rejects.toBeInstanceOf(
-      ValidationError,
-    );
+    await expect(
+      client.createTrackingRequestFromInfer('MSCU1234567'),
+    ).rejects.toBeInstanceOf(ValidationError);
   });
 
   it('sends JSON:API payloads for shipment updates and tracking controls', async () => {
@@ -693,7 +708,10 @@ describe('Terminal49Client request building', () => {
     });
 
     const items = [];
-    for await (const shipment of client.shipments.iterate({}, { pageSize: 1 })) {
+    for await (const shipment of client.shipments.iterate(
+      {},
+      { pageSize: 1 },
+    )) {
       items.push(shipment);
     }
 
@@ -733,7 +751,9 @@ describe('Terminal49Client request building', () => {
     const headers = new Headers(calls[0].init?.headers);
     expect(headers.get('Authorization')).toBe('Token token-123');
     expect(headers.get('Content-Type')).toBe('application/json');
-    expect(calls[0].init?.body).toBe(JSON.stringify({ number: 'HLCUAMM260301785' }));
+    expect(calls[0].init?.body).toBe(
+      JSON.stringify({ number: 'HLCUAMM260301785' }),
+    );
   });
 
   it('posts container custom fields with attributes.api_slug', async () => {
@@ -785,7 +805,11 @@ describe('Terminal49Client request building', () => {
       fetchImpl,
     });
 
-    await client.shipments.setCustomField('ship-1', 'customer_reference_number', 'ABC');
+    await client.shipments.setCustomField(
+      'ship-1',
+      'customer_reference_number',
+      'ABC',
+    );
 
     expect(calls[0].init?.method).toBe('POST');
     expect(calls[0].init?.body).toBe(

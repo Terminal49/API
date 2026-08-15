@@ -38,11 +38,16 @@ export abstract class BaseManager {
     if (effective === 'raw') return raw;
     if (effective === 'mapped') return mapper ? mapper(raw) : (raw as any);
     if (effective === 'both')
-      return mapper ? { raw, mapped: mapper(raw) } : { raw, mapped: raw as any };
+      return mapper
+        ? { raw, mapped: mapper(raw) }
+        : { raw, mapped: raw as any };
     return raw;
   }
 
-  protected mapListResult<T>(doc: any, mapper: (doc: any) => T[]): PaginatedResult<T> {
+  protected mapListResult<T>(
+    doc: any,
+    mapper: (doc: any) => T[],
+  ): PaginatedResult<T> {
     return {
       items: mapper(doc),
       links: doc?.links,

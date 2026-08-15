@@ -10,7 +10,10 @@ import { mapTrackingRequest, mapTrackingRequestList } from '../mappers.js';
 import { copyStringParams, normalizeInclude } from '../query.js';
 import { BaseManager } from './base.js';
 
-export type TrackingRequestType = 'container' | 'bill_of_lading' | 'booking_number';
+export type TrackingRequestType =
+  | 'container'
+  | 'bill_of_lading'
+  | 'booking_number';
 
 export interface CreateTrackingRequestFromInferOptions {
   scac?: string;
@@ -25,7 +28,10 @@ export interface TrackingRequestListFilters {
 }
 
 export class TrackingRequestManager extends BaseManager {
-  async list(filters: TrackingRequestListFilters = {}, options?: ListOptions): Promise<any> {
+  async list(
+    filters: TrackingRequestListFilters = {},
+    options?: ListOptions,
+  ): Promise<any> {
     const params: Record<string, string> = {};
     copyStringParams(params, filters, ['include']);
     const includesStr = normalizeInclude(filters.include);
@@ -47,7 +53,8 @@ export class TrackingRequestManager extends BaseManager {
     options?: Omit<ListOptions, 'page'>,
   ): AsyncGenerator<TrackingRequest, void, unknown> {
     return this.createIterator<TrackingRequest>(
-      (pageOpts) => this.list(filters, { ...options, ...pageOpts, format: 'mapped' }),
+      (pageOpts) =>
+        this.list(filters, { ...options, ...pageOpts, format: 'mapped' }),
       options,
     );
   }
@@ -71,7 +78,11 @@ export class TrackingRequestManager extends BaseManager {
     return this.formatResult(raw, options?.format, mapTrackingRequest);
   }
 
-  async update(id: string, attrs: Record<string, any>, options?: CallOptions): Promise<any> {
+  async update(
+    id: string,
+    attrs: Record<string, any>,
+    options?: CallOptions,
+  ): Promise<any> {
     const payload = {
       data: {
         type: 'tracking_request' as const,
@@ -99,10 +110,14 @@ export class TrackingRequestManager extends BaseManager {
     shipmentTags?: string[];
   }): Promise<any> {
     if (!params.requestNumber) {
-      throw new ValidationError('request_number is required (/data/attributes/request_number)');
+      throw new ValidationError(
+        'request_number is required (/data/attributes/request_number)',
+      );
     }
     if (!params.requestType) {
-      throw new ValidationError('request_type is required (/data/attributes/request_type)');
+      throw new ValidationError(
+        'request_type is required (/data/attributes/request_type)',
+      );
     }
 
     const attributes: Record<string, unknown> = {
@@ -150,13 +165,19 @@ export class TrackingRequestManager extends BaseManager {
   ): Promise<{ infer: any; trackingRequest: any }> {
     const infer = await this.inferNumber(number);
     const attrs = infer?.data?.attributes || {};
-    const numberType = this.normalizeInferNumberType(attrs.number_type || options.numberType);
+    const numberType = this.normalizeInferNumberType(
+      attrs.number_type || options.numberType,
+    );
     const shippingLine = attrs.shipping_line || {};
     const selected = shippingLine.selected || null;
-    const candidates = Array.isArray(shippingLine.candidates) ? shippingLine.candidates : [];
+    const candidates = Array.isArray(shippingLine.candidates)
+      ? shippingLine.candidates
+      : [];
 
     const scac =
-      options.scac || selected?.scac || (candidates.length === 1 ? candidates[0]?.scac : undefined);
+      options.scac ||
+      selected?.scac ||
+      (candidates.length === 1 ? candidates[0]?.scac : undefined);
 
     if (!numberType) {
       throw new ValidationError(
@@ -181,11 +202,14 @@ export class TrackingRequestManager extends BaseManager {
     return { infer, trackingRequest };
   }
 
-  private normalizeInferNumberType(numberType?: string): TrackingRequestType | null {
+  private normalizeInferNumberType(
+    numberType?: string,
+  ): TrackingRequestType | null {
     if (!numberType) return null;
     if (numberType === 'booking') return 'booking_number';
     if (numberType === 'booking_number') return 'booking_number';
-    if (numberType === 'bill_of_lading' || numberType === 'container') return numberType;
+    if (numberType === 'bill_of_lading' || numberType === 'container')
+      return numberType;
     return null;
   }
 }

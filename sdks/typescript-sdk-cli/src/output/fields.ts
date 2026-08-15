@@ -28,7 +28,9 @@ function projectPath(value: unknown, parts: string[]): unknown {
     const projected = value
       .map((item) => {
         const projectedItem = projectPath(item, parts);
-        return projectedItem === undefined && isRecord(item) ? {} : projectedItem;
+        return projectedItem === undefined && isRecord(item)
+          ? {}
+          : projectedItem;
       })
       .filter((item) => item !== undefined);
     return projected.length > 0 || value.length === 0 ? projected : undefined;
@@ -42,7 +44,10 @@ function projectPath(value: unknown, parts: string[]): unknown {
   return { [head]: projected };
 }
 
-function mergeProjection(target: Record<string, unknown>, source: unknown): void {
+function mergeProjection(
+  target: Record<string, unknown>,
+  source: unknown,
+): void {
   if (!isRecord(source)) return;
 
   for (const [key, value] of Object.entries(source)) {
@@ -71,7 +76,10 @@ function mergeArrays(current: unknown[], next: unknown[]): unknown[] {
   });
 }
 
-function projectObject(value: Record<string, unknown>, fields: string[]): Record<string, unknown> {
+function projectObject(
+  value: Record<string, unknown>,
+  fields: string[],
+): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   fields.forEach((path) => {
     mergeProjection(result, projectPath(value, path.split('.')));
@@ -84,13 +92,17 @@ export function projectFields<T>(value: T, fields?: string): T {
   if (fieldList.length === 0) return value;
 
   if (Array.isArray(value)) {
-    return value.map((row) => (isRecord(row) ? projectObject(row, fieldList) : row)) as T;
+    return value.map((row) =>
+      isRecord(row) ? projectObject(row, fieldList) : row,
+    ) as T;
   }
   if (isRecord(value)) {
     if (Array.isArray(value.items)) {
       return {
         ...value,
-        items: value.items.map((row) => (isRecord(row) ? projectObject(row, fieldList) : row)),
+        items: value.items.map((row) =>
+          isRecord(row) ? projectObject(row, fieldList) : row,
+        ),
       } as T;
     }
     return projectObject(value, fieldList) as T;

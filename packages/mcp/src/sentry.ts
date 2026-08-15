@@ -3,7 +3,10 @@ import * as Sentry from '@sentry/node';
 
 type Environment = NodeJS.ProcessEnv;
 
-function parseBoolean(value: string | undefined, defaultValue: boolean): boolean {
+function parseBoolean(
+  value: string | undefined,
+  defaultValue: boolean,
+): boolean {
   if (!value) {
     return defaultValue;
   }
@@ -24,7 +27,10 @@ function parseBoolean(value: string | undefined, defaultValue: boolean): boolean
   }
 }
 
-function parseSampleRate(value: string | undefined, defaultValue: number): number {
+function parseSampleRate(
+  value: string | undefined,
+  defaultValue: number,
+): number {
   if (!value) {
     return defaultValue;
   }
@@ -42,7 +48,9 @@ function optionalValue(value: string | undefined): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-export function initializeSentryFromEnv(env: Environment = process.env): boolean {
+export function initializeSentryFromEnv(
+  env: Environment = process.env,
+): boolean {
   if (Sentry.isInitialized()) {
     return true;
   }
@@ -58,8 +66,11 @@ export function initializeSentryFromEnv(env: Environment = process.env): boolean
 
   Sentry.init({
     dsn,
-    environment: optionalValue(env.SENTRY_ENVIRONMENT) ?? optionalValue(env.NODE_ENV),
-    release: optionalValue(env.SENTRY_RELEASE) ?? optionalValue(env.VERCEL_GIT_COMMIT_SHA),
+    environment:
+      optionalValue(env.SENTRY_ENVIRONMENT) ?? optionalValue(env.NODE_ENV),
+    release:
+      optionalValue(env.SENTRY_RELEASE) ??
+      optionalValue(env.VERCEL_GIT_COMMIT_SHA),
     sendDefaultPii: parseBoolean(env.SENTRY_SEND_DEFAULT_PII, false),
     tracesSampleRate: parseSampleRate(env.SENTRY_TRACES_SAMPLE_RATE, 1),
   });

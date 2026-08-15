@@ -10,7 +10,10 @@ import { TimeoutError } from './errors.js';
  * promise rejects with a {@link TimeoutError}. A caller `signal` is honored too:
  * if it aborts first we forward that abort to the underlying request.
  */
-export function withTimeout(fetchImpl: typeof fetch, timeoutMs: number): typeof fetch {
+export function withTimeout(
+  fetchImpl: typeof fetch,
+  timeoutMs: number,
+): typeof fetch {
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
     return fetchImpl;
   }

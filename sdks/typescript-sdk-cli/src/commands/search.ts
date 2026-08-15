@@ -20,7 +20,9 @@ async function formatSearchResult(
 }
 
 export function registerSearchCommand(program: Command): void {
-  const cmd = program.command('search').description('Search terminal49 resources');
+  const cmd = program
+    .command('search')
+    .description('Search terminal49 resources');
 
   cmd
     .argument('<query>')

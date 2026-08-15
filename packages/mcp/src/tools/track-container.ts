@@ -31,7 +31,8 @@ export const trackContainerTool = {
       },
       numberType: {
         type: 'string',
-        description: 'Optional override: container | bill_of_lading | booking_number',
+        description:
+          'Optional override: container | bill_of_lading | booking_number',
       },
       containerNumber: {
         type: 'string',
@@ -43,7 +44,8 @@ export const trackContainerTool = {
       },
       scac: {
         type: 'string',
-        description: 'Optional SCAC code of the shipping line (e.g., MAEU for Maersk)',
+        description:
+          'Optional SCAC code of the shipping line (e.g., MAEU for Maersk)',
       },
       refNumbers: {
         type: 'array',
@@ -85,7 +87,11 @@ function normalizeNumberType(value: string | undefined): string | undefined {
     return 'container';
   }
 
-  if (normalized === 'BL' || normalized === 'B/L' || normalized === 'BILL_OF_LADING') {
+  if (
+    normalized === 'BL' ||
+    normalized === 'B/L' ||
+    normalized === 'BILL_OF_LADING'
+  ) {
     return 'bill_of_lading';
   }
 
@@ -125,9 +131,12 @@ async function findExistingTrackedContainer(
     }
 
     const exactMatch = result.containers.find(
-      (container) => normalizeTrackingNumber(container.container_number) === number,
+      (container) =>
+        normalizeTrackingNumber(container.container_number) === number,
     );
-    const match = exactMatch ?? (result.containers.length === 1 ? result.containers[0] : null);
+    const match =
+      exactMatch ??
+      (result.containers.length === 1 ? result.containers[0] : null);
     if (!match?.id) {
       return null;
     }
@@ -143,21 +152,27 @@ async function findExistingTrackedContainer(
 
 export async function executeTrackContainer(
   args: TrackContainerArgs,
-  client: Terminal49Client
+  client: Terminal49Client,
 ): Promise<any> {
-  const number = normalizeTrackingNumber(args.number || args.containerNumber || args.bookingNumber || '');
+  const number = normalizeTrackingNumber(
+    args.number || args.containerNumber || args.bookingNumber || '',
+  );
   if (!number || number.trim() === '') {
     throw new Error('Tracking number is required');
   }
 
-  const numberTypeOverride =
-    normalizeNumberType(
-      args.numberType ||
-        (args.containerNumber ? 'container' : args.bookingNumber ? 'booking_number' : undefined),
-    );
+  const numberTypeOverride = normalizeNumberType(
+    args.numberType ||
+      (args.containerNumber
+        ? 'container'
+        : args.bookingNumber
+          ? 'booking_number'
+          : undefined),
+  );
   const requestedScac = normalizeText(args.scac);
   const heuristicScac = inferScacFromPrefix(number);
-  const inferredNumberType = numberTypeOverride || inferNumberTypeFromPattern(number);
+  const inferredNumberType =
+    numberTypeOverride || inferNumberTypeFromPattern(number);
 
   const startTime = Date.now();
   console.error(
@@ -167,19 +182,26 @@ export async function executeTrackContainer(
       number,
       scac: requestedScac || heuristicScac,
       timestamp: new Date().toISOString(),
-    })
+    }),
   );
 
   try {
-    const existingContainer = await findExistingTrackedContainer(number, client);
+    const existingContainer = await findExistingTrackedContainer(
+      number,
+      client,
+    );
     if (existingContainer?.id) {
-      const containerDetails = await executeGetContainer({ id: existingContainer.id }, client);
+      const containerDetails = await executeGetContainer(
+        { id: existingContainer.id },
+        client,
+      );
       return {
         ...containerDetails,
         tracking_request_created: false,
         infer_result: {
           inferred_type: inferredNumberType,
-          selected_scac: requestedScac || existingContainer.shippingLine || heuristicScac,
+          selected_scac:
+            requestedScac || existingContainer.shippingLine || heuristicScac,
           source: 'search_match',
         },
       };
@@ -201,9 +223,14 @@ export async function executeTrackContainer(
     } catch (error) {
       const message = (error as Error).message;
       const pointer = parseValidationPointer(message);
-      const canFallbackToDirectCreate = Boolean(inferredNumberType && selectedScac);
+      const canFallbackToDirectCreate = Boolean(
+        inferredNumberType && selectedScac,
+      );
 
-      if ((pointer === '/data/attributes/number' || /infer/i.test(message)) && canFallbackToDirectCreate) {
+      if (
+        (pointer === '/data/attributes/number' || /infer/i.test(message)) &&
+        canFallbackToDirectCreate
+      ) {
         infer = {
           fallback: 'create_tracking_request',
           inferred_type: inferredNumberType,
@@ -233,7 +260,7 @@ export async function executeTrackContainer(
           numberType: numberTypeOverride,
           scac: requestedScac || heuristicScac,
           timestamp: new Date().toISOString(),
-        })
+        }),
       );
 
       return {
@@ -258,11 +285,14 @@ export async function executeTrackContainer(
         number,
         container_id: containerId,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
 
     // Step 2: Get full container details using the ID
-    const containerDetails = await executeGetContainer({ id: containerId }, client);
+    const containerDetails = await executeGetContainer(
+      { id: containerId },
+      client,
+    );
 
     const duration = Date.now() - startTime;
     console.error(
@@ -273,7 +303,7 @@ export async function executeTrackContainer(
         container_id: containerId,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
 
     return {
@@ -298,11 +328,11 @@ export async function executeTrackContainer(
           number,
           message,
           timestamp: new Date().toISOString(),
-        })
+        }),
       );
       throw new Error(
         `${message}. Automatic inference is currently unavailable for this input. Provide numberType (` +
-          'container | booking_number | bill_of_lading) and scac, or use search_container/get_container if it is already tracked.'
+          'container | booking_number | bill_of_lading) and scac, or use search_container/get_container if it is already tracked.',
       );
     }
 
@@ -315,7 +345,7 @@ export async function executeTrackContainer(
         message,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
 
     throw error;
@@ -333,7 +363,9 @@ function extractContainerId(response: any): string | null {
 
   // Check included array for container
   if (response.included && Array.isArray(response.included)) {
-    const container = response.included.find((item: any) => item.type === 'container');
+    const container = response.included.find(
+      (item: any) => item.type === 'container',
+    );
     if (container?.id) {
       return container.id;
     }

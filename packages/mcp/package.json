@@ -15,7 +15,7 @@
     "build": "tsc",
     "test": "vp test",
     "test:coverage": "vp test --run --coverage",
-    "lint": "vp lint src",
+    "lint": "vp lint src && vp fmt --check src",
     "format": "vp fmt --write src",
     "format:check": "vp fmt --check src",
     "type-check": "tsc --noEmit",

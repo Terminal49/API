@@ -16,7 +16,9 @@ const baseUrl = 'https://api.test/v2';
 
 describe('Terminal49Client error handling', () => {
   it('throws AuthenticationError when apiToken is missing', () => {
-    expect(() => new Terminal49Client({ apiToken: '' } as any)).toThrow(AuthenticationError);
+    expect(() => new Terminal49Client({ apiToken: '' } as any)).toThrow(
+      AuthenticationError,
+    );
   });
 
   it('validates required tracking request fields', async () => {
@@ -44,7 +46,9 @@ describe('Terminal49Client error handling', () => {
       }),
     ).rejects.toBeInstanceOf(ValidationError);
 
-    await expect(client.inferTrackingNumber('')).rejects.toBeInstanceOf(ValidationError);
+    await expect(client.inferTrackingNumber('')).rejects.toBeInstanceOf(
+      ValidationError,
+    );
   });
 
   it('maps 401 to AuthenticationError', async () => {
@@ -58,7 +62,9 @@ describe('Terminal49Client error handling', () => {
       apiBaseUrl: baseUrl,
       fetchImpl,
     });
-    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(AuthenticationError);
+    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(
+      AuthenticationError,
+    );
   });
 
   it('maps 403 with feature message to FeatureNotEnabledError', async () => {
@@ -72,7 +78,9 @@ describe('Terminal49Client error handling', () => {
       apiBaseUrl: baseUrl,
       fetchImpl,
     });
-    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(FeatureNotEnabledError);
+    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(
+      FeatureNotEnabledError,
+    );
   });
 
   it('maps 403 without feature message to AuthorizationError', async () => {
@@ -86,7 +94,9 @@ describe('Terminal49Client error handling', () => {
       apiBaseUrl: baseUrl,
       fetchImpl,
     });
-    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(AuthorizationError);
+    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(
+      AuthorizationError,
+    );
   });
 
   it('maps 404 to NotFoundError', async () => {
@@ -100,7 +110,9 @@ describe('Terminal49Client error handling', () => {
       apiBaseUrl: baseUrl,
       fetchImpl,
     });
-    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(NotFoundError);
+    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(
+      NotFoundError,
+    );
   });
 
   it('maps 429 to RateLimitError', async () => {
@@ -114,7 +126,9 @@ describe('Terminal49Client error handling', () => {
       apiBaseUrl: baseUrl,
       fetchImpl,
     });
-    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(RateLimitError);
+    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(
+      RateLimitError,
+    );
   });
 
   it('maps 5xx to UpstreamError', async () => {
@@ -128,7 +142,9 @@ describe('Terminal49Client error handling', () => {
       apiBaseUrl: baseUrl,
       fetchImpl,
     });
-    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(UpstreamError);
+    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(
+      UpstreamError,
+    );
   });
 
   it('maps unexpected status to Terminal49Error with status in message', async () => {
@@ -144,7 +160,9 @@ describe('Terminal49Client error handling', () => {
     });
 
     await expect(client.getContainer('abc')).rejects.toThrowError(/418/);
-    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(Terminal49Error);
+    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(
+      Terminal49Error,
+    );
   });
 
   it('extracts error messages with pointers', async () => {
@@ -174,6 +192,8 @@ describe('Terminal49Client error handling', () => {
         requestType: 'container',
         requestNumber: 'MSCU1234567',
       }),
-    ).rejects.toThrowError(/request_number is required \(\/data\/attributes\/request_number\)/);
+    ).rejects.toThrowError(
+      /request_number is required \(\/data\/attributes\/request_number\)/,
+    );
   });
 });

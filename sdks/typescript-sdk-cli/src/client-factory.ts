@@ -9,7 +9,11 @@
  *   4. Throw AUTH_MISSING error
  */
 
-import { AuthenticationError, type ResponseFormat, Terminal49Client } from '@terminal49/sdk';
+import {
+  AuthenticationError,
+  type ResponseFormat,
+  Terminal49Client,
+} from '@terminal49/sdk';
 import { type CliConfig, loadConfig } from './config.js';
 
 export interface CliGlobalOptions {
@@ -28,13 +32,16 @@ function configOnce(): Promise<CliConfig> {
   return configPromise;
 }
 
-export async function createClient(opts: CliGlobalOptions = {}): Promise<Terminal49Client> {
+export async function createClient(
+  opts: CliGlobalOptions = {},
+): Promise<Terminal49Client> {
   const cfg = await configOnce();
   const format = opts.format ?? cfg.defaultFormat ?? 'mapped';
   const token = opts.token ?? process.env.T49_API_TOKEN ?? cfg.token;
   const baseUrl = opts.baseUrl ?? process.env.T49_API_BASE_URL ?? cfg.baseUrl;
   const maxRetries = opts.maxRetries ?? cfg.maxRetries;
-  const accountId = opts.accountId ?? process.env.T49_ACCOUNT_ID ?? cfg.accountId;
+  const accountId =
+    opts.accountId ?? process.env.T49_ACCOUNT_ID ?? cfg.accountId;
   const timeoutMs = opts.timeoutMs ?? cfg.timeoutMs;
 
   if (!token || token.trim() === '') {
