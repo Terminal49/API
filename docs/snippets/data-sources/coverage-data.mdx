@@ -1,0 +1,1226 @@
+// Generated from Terminal49 prod integrations (Metabase db 2) on 2026-08-14.
+// Do not hand-edit rows — refresh from the integrations tables.
+
+export const coverageGeneratedOn = "2026-08-14";
+
+export const carriers = [
+  {
+    "name": "ANL",
+    "legalName": "Australia National Line",
+    "scac": "ANNU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "APL",
+    "legalName": "American President Lines",
+    "scac": "APLU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "Arkas",
+    "legalName": "Arkas Container Transport",
+    "scac": "ARKU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "Atlantic Container Line",
+    "legalName": "Atlantic Container Line",
+    "scac": "ACLU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "CMA CGM",
+    "legalName": "CMA CGM",
+    "scac": "CMDU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "COSCO",
+    "legalName": "COSCO",
+    "scac": "COSU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": false
+  },
+  {
+    "name": "Crowley",
+    "legalName": "Crowley",
+    "scac": "CLAM",
+    "alternativeScacs": [
+      "CWLQ"
+    ],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": false
+  },
+  {
+    "name": "CULines",
+    "legalName": "China United Lines",
+    "scac": "CULU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "Evergreen",
+    "legalName": "Evergreen",
+    "scac": "EGLV",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": false,
+    "bookingNumber": false,
+    "containerNumber": true
+  },
+  {
+    "name": "Gold Star Line",
+    "legalName": "Gold Star Line",
+    "scac": "GOSU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": false
+  },
+  {
+    "name": "Hapag-Lloyd",
+    "legalName": "Hapag-Lloyd",
+    "scac": "HLCU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "HEDE Shipping",
+    "legalName": "HEDE Shipping",
+    "scac": "HDUJ",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "HMM",
+    "legalName": "Hyundai Merchant Marine",
+    "scac": "HDMU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "ICL",
+    "legalName": "Independent Container Line",
+    "scac": "IILU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": false
+  },
+  {
+    "name": "KMTC",
+    "legalName": "Korea Marine Transport",
+    "scac": "KMTU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "Maersk",
+    "legalName": "Maersk",
+    "scac": "MAEU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "Matson",
+    "legalName": "Matson Navigation Company",
+    "scac": "MATS",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": false
+  },
+  {
+    "name": "MSC",
+    "legalName": "Mediterranean Shipping Company",
+    "scac": "MSCU",
+    "alternativeScacs": [
+      "MEDU"
+    ],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "ONE",
+    "legalName": "Ocean Network Express",
+    "scac": "ONEY",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "OOCL",
+    "legalName": "Orient Overseas Container Line",
+    "scac": "OOLU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "PIL",
+    "legalName": "Pacific International Lines",
+    "scac": "PCIU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": false,
+    "bookingNumber": false,
+    "containerNumber": true
+  },
+  {
+    "name": "Safmarine",
+    "legalName": "Safmarine Container Line",
+    "scac": "SAFM",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": false
+  },
+  {
+    "name": "Seaboard Marine",
+    "legalName": "Seaboard Marine",
+    "scac": "SMLU",
+    "alternativeScacs": [],
+    "access": "account",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": false
+  },
+  {
+    "name": "Sealand Americas",
+    "legalName": "Sealand Americas",
+    "scac": "SEAU",
+    "alternativeScacs": [
+      "SEAL"
+    ],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "Sealand Europe",
+    "legalName": "Sealand Europe",
+    "scac": "SEJJ",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "SeaLead",
+    "legalName": "SeaLead",
+    "scac": "SQQY",
+    "alternativeScacs": [
+      "SJHH"
+    ],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "Seth Shipping",
+    "legalName": "Seth Shipping",
+    "scac": "SSPH",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": false
+  },
+  {
+    "name": "SM Line",
+    "legalName": "SM Line",
+    "scac": "SMLM",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": false
+  },
+  {
+    "name": "Swire",
+    "legalName": "Swire (includes Westwood)",
+    "scac": "SSBF",
+    "alternativeScacs": [
+      "WWSU"
+    ],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": false
+  },
+  {
+    "name": "Swire Shipping",
+    "legalName": "Swire Shipping",
+    "scac": "CHVW",
+    "alternativeScacs": [
+      "QWJA",
+      "PLLU"
+    ],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": false
+  },
+  {
+    "name": "Trailer Bridge",
+    "legalName": "Trailer Bridge",
+    "scac": "TRBR",
+    "alternativeScacs": [
+      "TBIE",
+      "PYRR"
+    ],
+    "access": "account",
+    "billOfLading": false,
+    "bookingNumber": true,
+    "containerNumber": false
+  },
+  {
+    "name": "Transfar",
+    "legalName": "Transfar",
+    "scac": "TJFH",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": false
+  },
+  {
+    "name": "TS Lines",
+    "legalName": "T.S. Lines",
+    "scac": "TXZJ",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": false,
+    "bookingNumber": false,
+    "containerNumber": true
+  },
+  {
+    "name": "Turkon",
+    "legalName": "Turkon Line",
+    "scac": "TRKU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "Wan Hai",
+    "legalName": "Wan Hai Lines",
+    "scac": "WHLC",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "World Direct Shipping",
+    "legalName": "World Direct Shipping",
+    "scac": "WDSB",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": false,
+    "bookingNumber": false,
+    "containerNumber": true
+  },
+  {
+    "name": "Yang Ming",
+    "legalName": "Yangming Marine Transport",
+    "scac": "YMLU",
+    "alternativeScacs": [
+      "YMPR",
+      "YMSG",
+      "YMJA"
+    ],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": true
+  },
+  {
+    "name": "ZIM",
+    "legalName": "Zim American Integrated Shipping Services",
+    "scac": "ZIMU",
+    "alternativeScacs": [],
+    "access": "public",
+    "billOfLading": true,
+    "bookingNumber": true,
+    "containerNumber": false
+  }
+];
+
+export const terminals = [
+  {
+    "name": "Chittagong Port",
+    "port": "Chittagong",
+    "locode": "BDCGP",
+    "country": "Bangladesh",
+    "region": "Asia",
+    "firmsCode": "BDCGPCPA"
+  },
+  {
+    "name": "Asia Container Terminals",
+    "port": "Hong Kong",
+    "locode": "HKHKG",
+    "country": "Hong Kong",
+    "region": "Asia",
+    "firmsCode": "HKHKGACTHK"
+  },
+  {
+    "name": "COSCO-HIT",
+    "port": "Hong Kong",
+    "locode": "HKHKG",
+    "country": "Hong Kong",
+    "region": "Asia",
+    "firmsCode": "HKHKGCHTHK"
+  },
+  {
+    "name": "Hong Kong International Terminals",
+    "port": "Hong Kong",
+    "locode": "HKHKG",
+    "country": "Hong Kong",
+    "region": "Asia",
+    "firmsCode": "HKHKGHITHK"
+  },
+  {
+    "name": "Hong Kong Modern Terminals",
+    "port": "Hong Kong",
+    "locode": "HKHKG",
+    "country": "Hong Kong",
+    "region": "Asia",
+    "firmsCode": "HKHKGMTLHK"
+  },
+  {
+    "name": "South End Container Terminal",
+    "port": "Halifax",
+    "locode": "CAHAL",
+    "country": "Canada",
+    "region": "Canada",
+    "firmsCode": "2036"
+  },
+  {
+    "name": "MGTP Cast - Section 77",
+    "port": "Montreal",
+    "locode": "CAMTR",
+    "country": "Canada",
+    "region": "Canada",
+    "firmsCode": "2425"
+  },
+  {
+    "name": "MGTP Racine - Section 66",
+    "port": "Montreal",
+    "locode": "CAMTR",
+    "country": "Canada",
+    "region": "Canada",
+    "firmsCode": "2591"
+  },
+  {
+    "name": "Maisonneuve - Section 68",
+    "port": "Montreal",
+    "locode": "CAMTR",
+    "country": "Canada",
+    "region": "Canada",
+    "firmsCode": "2619"
+  },
+  {
+    "name": "Viau - Section 52",
+    "port": "Montreal",
+    "locode": "CAMTR",
+    "country": "Canada",
+    "region": "Canada",
+    "firmsCode": "5540"
+  },
+  {
+    "name": "Prince Rupert Container Terminal",
+    "port": "Prince Rupert",
+    "locode": "CAPRR",
+    "country": "Canada",
+    "region": "Canada",
+    "firmsCode": "5086"
+  },
+  {
+    "name": "DP World Centerm",
+    "port": "Vancouver",
+    "locode": "CAVAN",
+    "country": "Canada",
+    "region": "Canada",
+    "firmsCode": "3380"
+  },
+  {
+    "name": "GCT Deltaport",
+    "port": "Vancouver",
+    "locode": "CAVAN",
+    "country": "Canada",
+    "region": "Canada",
+    "firmsCode": "3891"
+  },
+  {
+    "name": "GCT Vanterm",
+    "port": "Vancouver",
+    "locode": "CAVAN",
+    "country": "Canada",
+    "region": "Canada",
+    "firmsCode": "3395"
+  },
+  {
+    "name": "Hutchison Ports BEST",
+    "port": "Barcelona",
+    "locode": "ESBCN",
+    "country": "Spain",
+    "region": "Europe",
+    "firmsCode": "ESBCNBEST"
+  },
+  {
+    "name": "Baltic Container Terminal Gdynia",
+    "port": "Gdynia",
+    "locode": "PLGDY",
+    "country": "Poland",
+    "region": "Europe",
+    "firmsCode": "PLGDYBCT"
+  },
+  {
+    "name": "HHLA Container Terminal Altenwerder",
+    "port": "Hamburg",
+    "locode": "DEHAM",
+    "country": "Germany",
+    "region": "Europe",
+    "firmsCode": "DEHAMCTA"
+  },
+  {
+    "name": "HHLA Container Terminal Burchardkai",
+    "port": "Hamburg",
+    "locode": "DEHAM",
+    "country": "Germany",
+    "region": "Europe",
+    "firmsCode": "DEHAMCTB"
+  },
+  {
+    "name": "HHLA Container Terminal Tollerort",
+    "port": "Hamburg",
+    "locode": "DEHAM",
+    "country": "Germany",
+    "region": "Europe",
+    "firmsCode": "DEHAMCTT"
+  },
+  {
+    "name": "Terminal Alto Fondale",
+    "port": "Livorno",
+    "locode": "ITLIV",
+    "country": "Italy",
+    "region": "Europe",
+    "firmsCode": "ITLIVTAFLIV"
+  },
+  {
+    "name": "Terminal Darsena Toscana",
+    "port": "Livorno",
+    "locode": "ITLIV",
+    "country": "Italy",
+    "region": "Europe",
+    "firmsCode": "ITLIVTDT"
+  },
+  {
+    "name": "Terminal Dock Etruschi",
+    "port": "Livorno",
+    "locode": "ITLIV",
+    "country": "Italy",
+    "region": "Europe",
+    "firmsCode": "ITLIVIMP"
+  },
+  {
+    "name": "Terminal Lorenzini",
+    "port": "Livorno",
+    "locode": "ITLIV",
+    "country": "Italy",
+    "region": "Europe",
+    "firmsCode": "ITLIVLOREN"
+  },
+  {
+    "name": "Conateco Terminal",
+    "port": "Naples",
+    "locode": "ITNAP",
+    "country": "Italy",
+    "region": "Europe",
+    "firmsCode": "ITNAPCONA"
+  },
+  {
+    "name": "Contecon Guayaquil",
+    "port": "Guayaquil",
+    "locode": "ECGYE",
+    "country": "Ecuador",
+    "region": "Latin America",
+    "firmsCode": "ECGYECONTE"
+  },
+  {
+    "name": "Terminal Portuaria",
+    "port": "Altamira",
+    "locode": "MXATM",
+    "country": "Mexico",
+    "region": "Mexico",
+    "firmsCode": "20"
+  },
+  {
+    "name": "International Terminal",
+    "port": "Ensenada",
+    "locode": "MXESE",
+    "country": "Mexico",
+    "region": "Mexico",
+    "firmsCode": "27"
+  },
+  {
+    "name": "APM Terminals",
+    "port": "Lazaro Cardenas",
+    "locode": "MXLZC",
+    "country": "Mexico",
+    "region": "Mexico",
+    "firmsCode": "257"
+  },
+  {
+    "name": "Terminal Portuaria de Contenedores",
+    "port": "Lazaro Cardenas",
+    "locode": "MXLZC",
+    "country": "Mexico",
+    "region": "Mexico",
+    "firmsCode": "200"
+  },
+  {
+    "name": "Contecon",
+    "port": "Manzanillo",
+    "locode": "MXZLO",
+    "country": "Mexico",
+    "region": "Mexico",
+    "firmsCode": "241"
+  },
+  {
+    "name": "SSA Mexico",
+    "port": "Manzanillo",
+    "locode": "MXZLO",
+    "country": "Mexico",
+    "region": "Mexico",
+    "firmsCode": "39"
+  },
+  {
+    "name": "Terminal Internacional de Manzanillo",
+    "port": "Manzanillo",
+    "locode": "MXZLO",
+    "country": "Mexico",
+    "region": "Mexico",
+    "firmsCode": "40"
+  },
+  {
+    "name": "Terminal de Contenedores de Yucatan",
+    "port": "Progreso",
+    "locode": "MXPGO",
+    "country": "Mexico",
+    "region": "Mexico",
+    "firmsCode": "184"
+  },
+  {
+    "name": "Hutchison ICAVE",
+    "port": "Veracruz",
+    "locode": "MXVER",
+    "country": "Mexico",
+    "region": "Mexico",
+    "firmsCode": "69"
+  },
+  {
+    "name": "Dammam First Container Terminal",
+    "port": "Ad Dammam",
+    "locode": "SADMM",
+    "country": "Saudi Arabia",
+    "region": "Middle East",
+    "firmsCode": "SADMMFCT"
+  },
+  {
+    "name": "Dammam Second Container Terminal",
+    "port": "Ad Dammam",
+    "locode": "SADMM",
+    "country": "Saudi Arabia",
+    "region": "Middle East",
+    "firmsCode": "SADMMSCT"
+  },
+  {
+    "name": "DP World Jebel Ali",
+    "port": "Jebel Ali",
+    "locode": "AEJEA",
+    "country": "United Arab Emirates",
+    "region": "Middle East",
+    "firmsCode": "AEJEADPWJ2"
+  },
+  {
+    "name": "DP World Jebel Ali",
+    "port": "Jebel Ali",
+    "locode": "AEJEA",
+    "country": "United Arab Emirates",
+    "region": "Middle East",
+    "firmsCode": "AEJEADPWJ3"
+  },
+  {
+    "name": "DP World Jebel Ali CT1",
+    "port": "Jebel Ali",
+    "locode": "AEJEA",
+    "country": "United Arab Emirates",
+    "region": "Middle East",
+    "firmsCode": "AEJEADPWJA"
+  },
+  {
+    "name": "DP World Jebel Ali CT4",
+    "port": "Jebel Ali",
+    "locode": "AEJEA",
+    "country": "United Arab Emirates",
+    "region": "Middle East",
+    "firmsCode": "AEJEADPWJ4"
+  },
+  {
+    "name": "DP World South Container Terminal Jeddah",
+    "port": "Jeddah",
+    "locode": "SAJED",
+    "country": "Saudi Arabia",
+    "region": "Middle East",
+    "firmsCode": "SAJEDDPW"
+  },
+  {
+    "name": "Red Sea Gateway Terminal",
+    "port": "Jeddah",
+    "locode": "SAJED",
+    "country": "Saudi Arabia",
+    "region": "Middle East",
+    "firmsCode": "SAJEDRSGT"
+  },
+  {
+    "name": "APM Terminals Salalah",
+    "port": "Salalah",
+    "locode": "OMSLL",
+    "country": "Oman",
+    "region": "Middle East",
+    "firmsCode": "OMSLLAPMT"
+  },
+  {
+    "name": "Basra Gateway Terminal East",
+    "port": "Umm Qasr Pt",
+    "locode": "IQUQR",
+    "country": "Iraq",
+    "region": "Middle East",
+    "firmsCode": "IQUQRBGTE"
+  },
+  {
+    "name": "Basra Gateway Terminal West",
+    "port": "Umm Qasr Pt",
+    "locode": "IQUQR",
+    "country": "Iraq",
+    "region": "Middle East",
+    "firmsCode": "IQUQRBGTW"
+  },
+  {
+    "name": "Seagirt Terminal",
+    "port": "Baltimore",
+    "locode": "USBAL",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "C324"
+  },
+  {
+    "name": "Hugh K. Leatherman Terminal",
+    "port": "Charleston",
+    "locode": "USCHS",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "LCT9"
+  },
+  {
+    "name": "North Charleston Terminal",
+    "port": "Charleston",
+    "locode": "USCHS",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "L391"
+  },
+  {
+    "name": "Wando Welch Terminal",
+    "port": "Charleston",
+    "locode": "USCHS",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "N598"
+  },
+  {
+    "name": "Blount Island Terminal",
+    "port": "Jacksonville",
+    "locode": "USJAX",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "N296"
+  },
+  {
+    "name": "Tote Maritime",
+    "port": "Jacksonville",
+    "locode": "USJAX",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "N762"
+  },
+  {
+    "name": "Trapac Jacksonville Terminal",
+    "port": "Jacksonville",
+    "locode": "USJAX",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "M029"
+  },
+  {
+    "name": "Port of Miami Terminal Operating Company",
+    "port": "Miami Seaport",
+    "locode": "USMIA",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "L239"
+  },
+  {
+    "name": "South Florida Container Terminal",
+    "port": "Miami Seaport",
+    "locode": "USMIA",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "N775"
+  },
+  {
+    "name": "GCT Bayonne",
+    "port": "New York / New Jersey",
+    "locode": "USNYC",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "E364"
+  },
+  {
+    "name": "GCT New York LP",
+    "port": "New York / New Jersey",
+    "locode": "USNYC",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "E005"
+  },
+  {
+    "name": "Maher Terminals",
+    "port": "New York / New Jersey",
+    "locode": "USNYC",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "E416"
+  },
+  {
+    "name": "Port Elizabeth",
+    "port": "New York / New Jersey",
+    "locode": "USNYC",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "E425"
+  },
+  {
+    "name": "Port Newark Container Terminal",
+    "port": "New York / New Jersey",
+    "locode": "USNYC",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "F577"
+  },
+  {
+    "name": "Packer Avenue",
+    "port": "PhilaPort",
+    "locode": "USPHL",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "C095"
+  },
+  {
+    "name": "Tioga Marine Terminal",
+    "port": "PhilaPort",
+    "locode": "USPHL",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "B197"
+  },
+  {
+    "name": "Garden City Terminals",
+    "port": "Savannah",
+    "locode": "USSAV",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "L737"
+  },
+  {
+    "name": "Norfolk International Terminals",
+    "port": "Virginia",
+    "locode": "USORF",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "L005"
+  },
+  {
+    "name": "Portsmouth Marine Terminal",
+    "port": "Virginia",
+    "locode": "USORF",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "L045"
+  },
+  {
+    "name": "Virginia International Gateway",
+    "port": "Virginia",
+    "locode": "USORF",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "N195"
+  },
+  {
+    "name": "Port of Wilmington Container Terminal",
+    "port": "Wilmington (NC)",
+    "locode": "USILM",
+    "country": "United States",
+    "region": "US East Coast",
+    "firmsCode": "L194"
+  },
+  {
+    "name": "Barbours Cut Terminal",
+    "port": "Houston",
+    "locode": "USHOU",
+    "country": "United States",
+    "region": "US Gulf",
+    "firmsCode": "S787"
+  },
+  {
+    "name": "Bayport Container Terminal",
+    "port": "Houston",
+    "locode": "USHOU",
+    "country": "United States",
+    "region": "US Gulf",
+    "firmsCode": "V136"
+  },
+  {
+    "name": "APM Terminal",
+    "port": "Mobile",
+    "locode": "USMOB",
+    "country": "United States",
+    "region": "US Gulf",
+    "firmsCode": "R103"
+  },
+  {
+    "name": "Napoleon Container Terminal",
+    "port": "New Orleans",
+    "locode": "USMSY",
+    "country": "United States",
+    "region": "US Gulf",
+    "firmsCode": "P260"
+  },
+  {
+    "name": "New Orleans Terminal",
+    "port": "New Orleans",
+    "locode": "USMSY",
+    "country": "United States",
+    "region": "US Gulf",
+    "firmsCode": "Q795"
+  },
+  {
+    "name": "Port Everglades Terminal",
+    "port": "Port Everglades",
+    "locode": "USPEF",
+    "country": "United States",
+    "region": "US Gulf",
+    "firmsCode": "O664"
+  },
+  {
+    "name": "Tampa Bay Container Terminal",
+    "port": "Tampa",
+    "locode": "USTPA",
+    "country": "United States",
+    "region": "US Gulf",
+    "firmsCode": "M669"
+  },
+  {
+    "name": "International Transportation Service",
+    "port": "Long Beach",
+    "locode": "USLGB",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Y309"
+  },
+  {
+    "name": "Long Beach Container Terminal",
+    "port": "Long Beach",
+    "locode": "USLGB",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "WAC8"
+  },
+  {
+    "name": "Pacific Container Terminal",
+    "port": "Long Beach",
+    "locode": "USLGB",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "W182"
+  },
+  {
+    "name": "SSA Pier A",
+    "port": "Long Beach",
+    "locode": "USLGB",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Z978"
+  },
+  {
+    "name": "Shippers Transport Express",
+    "port": "Long Beach",
+    "locode": "USLGB",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "STA"
+  },
+  {
+    "name": "Shippers Transport Express - Carson",
+    "port": "Long Beach",
+    "locode": "USLGB",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Z773"
+  },
+  {
+    "name": "Total Terminals International",
+    "port": "Long Beach",
+    "locode": "USLGB",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Z952"
+  },
+  {
+    "name": "APM Terminals",
+    "port": "Los Angeles",
+    "locode": "USLAX",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "W185"
+  },
+  {
+    "name": "Everport Terminal Services",
+    "port": "Los Angeles",
+    "locode": "USLAX",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Y124"
+  },
+  {
+    "name": "Fenix Marine Services",
+    "port": "Los Angeles",
+    "locode": "USLAX",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Y257"
+  },
+  {
+    "name": "TraPac LA",
+    "port": "Los Angeles",
+    "locode": "USLAX",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Y258"
+  },
+  {
+    "name": "West Basin Container Terminal",
+    "port": "Los Angeles",
+    "locode": "USLAX",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Y773"
+  },
+  {
+    "name": "Yusen Terminals",
+    "port": "Los Angeles",
+    "locode": "USLAX",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Y790"
+  },
+  {
+    "name": "Ben E. Nutter Terminal",
+    "port": "Oakland",
+    "locode": "USOAK",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "WBA5"
+  },
+  {
+    "name": "Oakland International Container Terminal",
+    "port": "Oakland",
+    "locode": "USOAK",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Z985"
+  },
+  {
+    "name": "Shippers Transport Express",
+    "port": "Oakland",
+    "locode": "USOAK",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "STO"
+  },
+  {
+    "name": "TraPac Terminal",
+    "port": "Oakland",
+    "locode": "USOAK",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Y549"
+  },
+  {
+    "name": "Terminal 6",
+    "port": "Portland",
+    "locode": "USPDX",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "X005"
+  },
+  {
+    "name": "SSA Terminal 18",
+    "port": "Seattle",
+    "locode": "USSEA",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "X117"
+  },
+  {
+    "name": "SSA Terminal 30",
+    "port": "Seattle",
+    "locode": "USSEA",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Y197"
+  },
+  {
+    "name": "Terminal 5",
+    "port": "Seattle",
+    "locode": "USSEA",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Y400"
+  },
+  {
+    "name": "Husky Terminal",
+    "port": "Tacoma",
+    "locode": "USTIW",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Z693"
+  },
+  {
+    "name": "Pierce County Terminal",
+    "port": "Tacoma",
+    "locode": "USTIW",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "X215"
+  },
+  {
+    "name": "Washington United Terminals",
+    "port": "Tacoma",
+    "locode": "USTIW",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Z705"
+  },
+  {
+    "name": "West Sitcum Terminal (Matson)",
+    "port": "Tacoma",
+    "locode": "USTIW",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "X335"
+  },
+  {
+    "name": "Berths 8&9",
+    "port": "Felixstowe",
+    "locode": "GBFXT",
+    "country": "United Kingdom",
+    "region": "United Kingdom",
+    "firmsCode": "GBFXTLNG"
+  },
+  {
+    "name": "Trinity Terminal",
+    "port": "Felixstowe",
+    "locode": "GBFXT",
+    "country": "United Kingdom",
+    "region": "United Kingdom",
+    "firmsCode": "GBFXTTTY"
+  },
+  {
+    "name": "DP World London Gateway",
+    "port": "London Gateway Port",
+    "locode": "GBLGP",
+    "country": "United Kingdom",
+    "region": "United Kingdom",
+    "firmsCode": "GBLGPDPWLG"
+  },
+  {
+    "name": "DP World Southampton",
+    "port": "Southampton",
+    "locode": "GBSOU",
+    "country": "United Kingdom",
+    "region": "United Kingdom",
+    "firmsCode": "GBSOUDPWS"
+  }
+];

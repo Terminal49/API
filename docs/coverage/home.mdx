@@ -1,0 +1,100 @@
+---
+title: "Data coverage"
+sidebarTitle: "Overview"
+description: "See which ocean carriers, ports and terminals, rail carriers, and vessels Terminal49 tracks, and what data each source returns."
+keywords:
+  - "Terminal49 API"
+  - "data coverage"
+  - "supported carriers"
+  - "shipping lines"
+  - "VOCC"
+  - "supported terminals"
+  - "rail carriers"
+  - "vessel tracking"
+  - "SCAC"
+mode: "wide"
+---
+
+Terminal49 is a single Automated Container Tracking API for bills of lading, bookings, and container numbers. Behind it are direct integrations with ocean carriers, port terminal operators, and North American rail carriers, plus AIS vessel data — normalized into one data model so you integrate once and get every source.
+
+This section lists exactly what is live in production, so you can verify coverage for your lanes before you write a line of code. Coverage reflects production as of 14 August 2026; the [coverage changelog](/coverage/changelog) records additions and removals. Use [`GET /shipping_lines`](/api-docs/api-reference/shipping-lines/shipping-lines) for the current carrier list on your account.
+
+<Columns cols={2}>
+  <Card title="Ocean carriers" icon="ship" href="/coverage/ocean-carriers">
+    Direct integrations with 36+ shipping lines (VOCCs). Filter by name, SCAC, or track-by type.
+  </Card>
+  <Card title="Ports & terminals" icon="warehouse" href="/coverage/terminals">
+    Global port and terminal mapping on every route, plus direct terminal integrations at 100+ terminals.
+  </Card>
+  <Card title="Rail carriers" icon="train" href="/coverage/rail">
+    All six North American Class I railroads that move containers, with inland milestones and LFD.
+  </Card>
+  <Card title="Vessels" icon="location-crosshairs" href="/coverage/vessels">
+    Vessel identity on every voyage, plus AIS position and projected route on paid plans.
+  </Card>
+</Columns>
+
+<Card title="Coverage changelog" icon="clock-rotate-left" href="/coverage/changelog" horizontal>
+  New carriers and terminals as they come online, and anything removed from the live set.
+</Card>
+
+## Data sources
+
+- **Ocean carriers (shipping lines / VOCCs):** bill of lading and booking details, vessel ETAs, containers, and transport milestones. See [ocean carriers](/coverage/ocean-carriers).
+- **Ports & terminals:** global mapping of origin, destination, transshipment, and inland locations on every route, plus availability, last free day (LFD), holds, and fees straight from the terminal operator. See [ports & terminals](/coverage/terminals).
+- **Rail carriers:** inland rail milestones across North America. See [rail carriers](/coverage/rail).
+- **Vessels:** identity on the voyage, plus AIS position and projected route. See [vessels](/coverage/vessels).
+
+## Supported ocean carriers
+
+Terminal49 integrates directly with each supported shipping line and normalizes their data into a single API. Filter by name, Standard Carrier Alpha Code (SCAC), or the number types you can send on a [tracking request](/api-docs/getting-started/tracking-shipments-and-containers).
+
+<Card title="Open the ocean carrier list" icon="ship" href="/coverage/ocean-carriers">
+  36 public lines with bill of lading, booking, and container support. Includes account-enabled carriers and known field gaps.
+</Card>
+
+### Account-enabled carriers
+
+Some carriers are live in production but not in the public default set. Contact Terminal49 to enable them on your account.
+
+See [account-enabled carriers](/coverage/ocean-carriers#account-enabled-carriers) for Seaboard Marine (`SMLU`) and Trailer Bridge (`TRBR`).
+
+## Supported terminals
+
+Terminal49 maps origin, destination, transshipment, and inland ports and terminals globally on every route, and attributes carrier events — arrival, departure, loaded, discharged, transshipment — to the location where they occur. Direct terminal integrations add the operational answers on top: availability, holds, fees, and last free day, straight from the terminal operator.
+
+<Card title="Open the ports & terminals list" icon="warehouse" href="/coverage/terminals">
+  Global port and terminal mapping, plus 100+ directly integrated terminals with UN/LOCODE and FIRMS codes.
+</Card>
+
+## Rail carriers
+
+Tracking continues inland: North American rail milestones, rail ETA, and rail LFD arrive on the same container objects, covering all six Class I railroads — BNSF, CN, CP, CSX, Norfolk Southern, and Union Pacific.
+
+<Card title="Open rail carrier coverage" icon="train" href="/coverage/rail">
+  Carrier SCACs, inland events, rail LFD, and how rail data appears on the container.
+</Card>
+
+## Known issues (ocean)
+
+Shipment data comes from the carrier, and some carriers do not publish every field. The gaps we see most often — missing seal numbers, weights, or equipment types — are listed on the [ocean carriers](/coverage/ocean-carriers#known-issues-ocean) page.
+
+## Data fields and availability
+
+The tables on [field availability](/coverage/fields) describe the fields you can retrieve, and whether a field is always present, carrier-dependent, terminal-dependent, or journey-dependent (for example inland rail).
+
+### Shipment data
+
+Shipment data comes from the carrier. It contains the bill of lading details and references the related containers. See [shipment fields](/coverage/fields#shipment-data).
+
+### Container data
+
+Container data is combined from every source into one view. Some fields appear only after a milestone has passed. See [container fields](/coverage/fields#container-data).
+
+### Milestone event data
+
+When a milestone passes, Terminal49 can send a webhook. See [milestone fields](/coverage/fields#milestone-event-data) and the [webhook event catalog](/api-docs/webhooks/event-catalog).
+
+### Milestone events supported
+
+The full milestone list — vessel, terminal, rail, transshipment, and inland — is on [field availability](/coverage/fields#milestone-events-supported).

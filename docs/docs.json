@@ -84,7 +84,6 @@
               "api-docs/in-depth-guides/rate-limiting",
               "api-docs/in-depth-guides/including-resources",
               "api-docs/in-depth-guides/quickstart",
-              "api-docs/useful-info/api-data-sources-availability",
               "api-docs/useful-info/pricing",
               "api-docs/useful-info/entitlements",
               "api-docs/useful-info/test-numbers",
@@ -296,6 +295,42 @@
               "api-docs/api-reference/parties/create-a-party",
               "api-docs/api-reference/parties/get-a-party",
               "api-docs/api-reference/parties/edit-a-party"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Data Coverage",
+        "icon": "globe",
+        "groups": [
+          {
+            "group": " ",
+            "pages": [
+              "coverage/home"
+            ]
+          },
+          {
+            "group": "Sources",
+            "icon": "database",
+            "pages": [
+              "coverage/ocean-carriers",
+              "coverage/terminals",
+              "coverage/rail",
+              "coverage/vessels"
+            ]
+          },
+          {
+            "group": "Fields",
+            "icon": "table",
+            "pages": [
+              "coverage/fields"
+            ]
+          },
+          {
+            "group": "Updates",
+            "icon": "clock-rotate-left",
+            "pages": [
+              "coverage/changelog"
             ]
           }
         ]
@@ -554,6 +589,10 @@
     {
       "source": "/api-docs/getting-started/sdk-quickstart",
       "destination": "/sdk/quickstart"
+    },
+    {
+      "source": "/api-docs/useful-info/api-data-sources-availability",
+      "destination": "/coverage/home"
     }
   ],
   "contextual": {

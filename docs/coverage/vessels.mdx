@@ -1,0 +1,41 @@
+---
+title: "Vessels"
+description: "Vessel identity, AIS position, and projected route data available on Terminal49 shipments and the Vessels API."
+keywords:
+  - "Terminal49 API"
+  - "vessel tracking"
+  - "AIS"
+  - "IMO"
+  - "vessel position"
+mode: "wide"
+---
+
+Every tracked shipment includes the vessel on the current voyage: name, IMO number, and voyage number. That identity comes from the ocean carrier and is available as soon as the carrier publishes the voyage.
+
+AIS position and projected route are available on paid plans through the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-id).
+
+## What you get
+
+| Data | Source | Availability |
+| ---- | ------ | ------------ |
+| Vessel name | Ocean carrier | On the shipment and transport events once the voyage is known |
+| IMO number | Ocean carrier | Same as vessel name |
+| Voyage number | Ocean carrier | Same as vessel name |
+| MMSI | AIS | Vessels API, paid plans |
+| Current latitude / longitude | AIS | Vessels API, paid plans |
+| Speed and heading | AIS | Vessels API, paid plans |
+| Position timestamp | AIS | Vessels API, paid plans |
+| Position history | AIS | Vessels API when `show_positions` is true |
+| Projected route | AIS + schedule | [Future positions](/api-docs/api-reference/vessels/get-vessel-future-positions) |
+
+## How to look up a vessel
+
+- [`GET /vessels/{id}`](/api-docs/api-reference/vessels/get-a-vessel-using-the-id) — Terminal49 vessel ID from a shipment or event
+- [`GET /vessels` by IMO](/api-docs/api-reference/vessels/get-a-vessel-using-the-imo) — when you already have the IMO number
+- [`GET /vessels/{id}/future_positions`](/api-docs/api-reference/vessels/get-vessel-future-positions) — estimated positions between ports, one minute apart
+
+Use the [map](/api-docs/in-depth-guides/terminal49-map) and [routing](/api-docs/in-depth-guides/routing) guides when you want to plot the voyage.
+
+## What vessel data is not
+
+AIS coverage is not a substitute for carrier milestones. A position update does not mean the container is loaded, discharged, or available. Treat AIS as the vessel's location; treat ocean, terminal, and rail events as the container's status.

@@ -1,0 +1,106 @@
+---
+title: "Field availability"
+description: "Which shipment, container, and milestone fields Terminal49 returns, and whether each field is always present or source-dependent."
+keywords:
+  - "Terminal49 API"
+  - "data availability"
+  - "shipment fields"
+  - "container fields"
+  - "milestones"
+mode: "wide"
+---
+
+The tables below describe the fields you can retrieve, and whether a field is always present, carrier-dependent, terminal-dependent, or journey-dependent (for example inland rail).
+
+## Shipment data
+
+Shipment data comes from the carrier. It contains the bill of lading details and references the related containers.
+
+| Data | Availability | More details | Notes |
+| ---- | ------------ | ------------ | ----- |
+| Port of Lading | Always | Port of Lading name, UN/LOCODE, timezone | |
+| Port of Discharge | Always | Port of Discharge name, UN/LOCODE, timezone | |
+| Final Destination beyond Port of Discharge | Carrier dependent, journey dependent | Destination name, UN/LOCODE, timezone | Only for inland moves provided or booked by the carrier. |
+| Listing of container numbers | Always | Container numbers with the attributes below | |
+| Bill of Lading Number | Always (you supply it) | BOL | |
+| Shipping Line Details | Always | SCAC, shipping line name | |
+| Voyage Details | Milestone-based | Vessel name, vessel IMO, voyage number | |
+| Estimated Time of Departure | Carrier dependent | Timestamp | |
+| Actual Time of Departure | Always | Timestamp | After departure |
+| Estimated Time of Arrival at Port of Discharge | Carrier dependent | Timestamp | |
+| Actual Time of Arrival at Port of Discharge | Always | Timestamp | After arrival |
+| Estimated Time of Arrival at Final Destination | Carrier dependent, journey dependent | Timestamp | Inland moves only |
+
+## Container data
+
+Container data is combined from every source into one view. Some fields appear only after a milestone has passed.
+
+| Data | Availability | More details | Notes |
+| ---- | ------------ | ------------ | ----- |
+| Container Number | Always | number | |
+| Seal Number | Carrier dependent | number | |
+| Equipment Type | Always | Dry, reefer, open top, flat rack, tank, hard top | |
+| Equipment length | Always | 20, 40, 45, 50 | |
+| Equipment height | Always | Standard, high cube | |
+| Weight | Carrier dependent | Number | |
+| Terminal Availability | Always | Availability known, available for pickup | |
+| Holds | Terminal dependent | Array of statuses | Hold name (customs, freight, TMF, other, USDA) and status (pending, hold), plus any extra description |
+| Fees | Terminal dependent | Array of statuses | Fee type (demurrage, exam, other) and amount |
+| Last Free Day | Terminal dependent | Date | |
+| Arrived at Port of Discharge | Always | Once arrived | |
+| Discharged at Port of Discharge | Always | Once discharged | |
+| Full Out at Port of Discharge | Always | | |
+| Full out at final destination | Journey dependent | Non-port final destination only | |
+| Rail Loaded At Port of Discharge | Journey dependent | Non-port final destination only | |
+| Rail Departed At Port of Discharge | Journey dependent | Non-port final destination only | |
+| Rail Carrier SCAC at Port of Discharge | Journey dependent | Non-port final destination only | |
+| ETA for final destination | Carrier dependent, journey dependent | Non-port final destination only | |
+| ATA for final destination | Journey dependent | Non-port final destination only | |
+| LFD at final destination | Carrier dependent, journey dependent | Non-port final destination only | |
+
+## Milestone event data
+
+When a milestone passes, Terminal49 can send a webhook. Container, shipment, vessel, location, and terminal objects use the fields above. See the [webhook event catalog](/api-docs/webhooks/event-catalog) for payload examples.
+
+| Milestone data | Description |
+| -------------- | ----------- |
+| Event Name | Event name, for example `container.transport.vessel_loaded` |
+| Created At | When Terminal49 created the event |
+| Timestamp | When the event occurred |
+| Timezone | Timezone of the event |
+| Voyage Number | Voyage number of the vessel |
+| Container | Link to container data |
+| Shipment | Link to shipment data |
+| Vessel | Vessel the event occurred on |
+| Location | Where the event occurred |
+| Terminal | Terminal the event occurred at |
+
+## Milestone events supported
+
+| Milestone | Event name |
+| --------- | ---------- |
+| Vessel Loaded | container.transport.vessel_loaded |
+| Vessel Departed | container.transport.vessel_departed |
+| Vessel Arrived | container.transport.vessel_arrived |
+| Vessel Berthed | container.transport.vessel_berthed |
+| Vessel Discharged | container.transport.vessel_discharged |
+| Empty Out | container.transport.empty_out |
+| Full In | container.transport.full_in |
+| Full Out | container.transport.full_out |
+| Empty In | container.transport.empty_in |
+| Rail Departed | container.transport.rail_departed |
+| Rail Arrived | container.transport.rail_arrived |
+| Rail Loaded | container.transport.rail_loaded |
+| Rail Unloaded | container.transport.rail_unloaded |
+| Transshipment Arrived | container.transport.transshipment_arrived |
+| Transshipment Discharged | container.transport.transshipment_discharged |
+| Transshipment Loaded | container.transport.transshipment_loaded |
+| Transshipment Departed | container.transport.transshipment_departed |
+| Feeder Arrived | container.transport.feeder_arrived |
+| Feeder Discharged | container.transport.feeder_discharged |
+| Feeder Loaded | container.transport.feeder_loaded |
+| Feeder Departed | container.transport.feeder_departed |
+| Arrived at inland destination | container.transport.arrived_at_inland_destination |
+| Estimated Arrived at inland destination | container.transport.estimated.arrived_at_inland_destination |
+| Pickup LFD changed | container.pickup_lfd.changed |
+| Available at Destination | container.transport.available |
