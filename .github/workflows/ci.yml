@@ -7,6 +7,8 @@ on:
     branches: [main, master, feature/**]
 
 jobs:
+  # Consumer compatibility: the standalone SDK lockfile on every supported
+  # Node version, with no workspace tooling involved.
   sdk:
     runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
     strategy:
@@ -22,36 +24,39 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            sdks/typescript-sdk/package-lock.json
+          cache-dependency-path: sdks/typescript-sdk/package-lock.json
       - name: Install standalone SDK deps
-        if: matrix.node-version != 24
-        run: npm ci
-      - name: Install workspace deps for tooling
-        if: matrix.node-version == 24
-        working-directory: ${{ github.workspace }}
         run: npm ci
       - name: Build SDK
         run: npm run build
       - name: Type-check SDK
         run: npm run type-check
+      - name: Test SDK
+        run: npm test -- --run
+
+  # Development tooling: root workspace lockfile on the development runtime.
+  # Lint/format/docs are static checks, so one modern Node version suffices.
+  sdk-tooling:
+    runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install workspace deps
+        run: npm ci
+      - name: Build SDK
+        run: npm run build --workspace @terminal49/sdk
       - name: Generate SDK docs
-        if: matrix.node-version == 24
-        run: npm run docs
+        run: npm run docs --workspace @terminal49/sdk
       - name: Check generated SDK docs are up to date
-        if: matrix.node-version == 24
-        working-directory: ${{ github.workspace }}
         run: |
           git diff --exit-code -- docs/sdk/reference
           test -z "$(git status --porcelain -- docs/sdk/reference)"
-      - name: Test SDK
-        run: npm test -- --run
-      # Vite+ linting is static, so it only needs the development runtime.
-      # Build/test still cover the full matrix for consumers.
       - name: Check SDK (Vite+ and anti-slop)
-        if: matrix.node-version == 24
-        run: npm run lint
+        run: npm run lint --workspace @terminal49/sdk
 
   cli:
     runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
@@ -111,3 +116,5 @@ jobs:
         run: npm run eval --workspace @terminal49/mcp
       - name: Check MCP (Vite+ and anti-slop)
         run: npm run lint --workspace @terminal49/mcp
+      - name: Check API gateway (Vite+ and anti-slop)
+        run: npm run lint:api
