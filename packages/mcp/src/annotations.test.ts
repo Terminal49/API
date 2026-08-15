@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { createTerminal49McpServer } from './server.js';
 
 vi.mock('@sentry/node', () => ({

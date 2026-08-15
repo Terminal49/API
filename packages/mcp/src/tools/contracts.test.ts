@@ -1,5 +1,5 @@
 import { FeatureNotEnabledError, NotFoundError, type Terminal49Client } from '@terminal49/sdk';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { executeGetContainer } from './get-container.js';
 import { executeGetContainerRoute } from './get-container-route.js';
 import { executeGetContainerTransportEvents } from './get-container-transport-events.js';

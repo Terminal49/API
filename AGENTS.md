@@ -8,7 +8,7 @@ This repo is **not docs-only**. It contains three things that ship independently
 2. **The Terminal49 MCP server + OAuth gateway** (`api/`, `packages/mcp/`) — deployed to **mcp.terminal49.com** on Vercel.
 3. **The Terminal49 TypeScript SDK** (`sdks/typescript-sdk/`) — published to npm as `@terminal49/sdk`.
 
-It is an **npm workspaces monorepo** (`packages/*`, `sdks/*`), Node 24. The root `package-lock.json` is the authoritative lockfile; `npm ci` (root) and Vercel both install from it.
+It is an **npm workspaces monorepo** (`packages/*`, `sdks/*`), Node 24. Vite+ is the development toolchain and delegates package installation to npm. The root `package-lock.json` is the authoritative workspace lockfile; `vp install` (root) and Vercel both install from it.
 
 > `CLAUDE.md` / `claude.md` are symlinks to this file. Edit `AGENTS.md` to change agent instructions.
 
@@ -37,7 +37,7 @@ For substantive documentation writing, use the repo-local skill at `skills/termi
 - `src/server.ts` — `createTerminal49McpServer()`, built on `@modelcontextprotocol/sdk` (`McpServer`, `registerTool`/`registerResource`). Used by both the stdio entry (`src/index.ts`) and the `api/` HTTP gateway.
 - `src/resource.ts` — **single source of truth** for the OAuth `resource` identifier. Both the PRM endpoint and the `WWW-Authenticate` challenge resolve through it so they can never diverge (RFC 9728). Do not reintroduce per-file resource derivation.
 - `src/tools/`, `src/resources/` — MCP tools and resources.
-- `tests/`, `src/**/*.test.ts` — vitest.
+- `tests/`, `src/**/*.test.ts` — Vitest through Vite+.
 
 ### TypeScript SDK (`sdks/typescript-sdk/`) — `@terminal49/sdk`
 - `src/` — the client (JSON:API, openapi-fetch). `src/generated/**` is generated — **do not hand-edit**.
@@ -63,10 +63,10 @@ For substantive documentation writing, use the repo-local skill at `skills/termi
 - Regenerate Postman: `openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags`
 
 ### Code (npm workspaces)
-- Install: `npm ci` (root)
-- Test: `npm run test --workspace @terminal49/mcp -- --run` · `npm run test --workspace @terminal49/sdk -- --run` (vitest)
+- Install: `vp install` (root; use `npm ci` for frozen CI installs)
+- Test: `npm run test --workspace @terminal49/mcp` · `npm run test --workspace @terminal49/sdk` (Vite+ / Vitest)
 - Typecheck / build: `npm run build --workspace @terminal49/mcp` · `--workspace @terminal49/sdk` (tsc). `api/` is typechecked by the root config: `npx tsc --noEmit -p tsconfig.json`.
-- **Lint/format: oxlint + oxfmt** (migrated off Biome). `npm run lint --workspace <pkg>`; auto-format with `npm run format --workspace <pkg>` (oxfmt). Config: `.oxlintrc.json` + `.oxfmtrc.json` per package. The SDK lint also runs `oxfmt --check`; MCP is lint-only.
+- **Lint/format: Vite+** (Oxlint + Oxfmt with vendored anti-slop rules). `npm run lint --workspace <pkg>`; auto-format with `npm run format --workspace <pkg>`. Configuration lives in each package's `vite.config.ts`; the shared vendored plugin is in `tools/oxlint/anti-slop/`.
 - CI (`.github/workflows/ci.yml`) runs build + test + lint for both packages.
 - Running the MCP server locally + testing tool calls with Claude Desktop (stdio and gateway paths): [packages/mcp/LOCAL_DEV.md](packages/mcp/LOCAL_DEV.md). Gateway env template: `.env.local.example`.
 

@@ -22,8 +22,15 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: sdks/typescript-sdk/package-lock.json
-      - name: Install SDK deps
+          cache-dependency-path: |
+            package-lock.json
+            sdks/typescript-sdk/package-lock.json
+      - name: Install standalone SDK deps
+        if: matrix.node-version != 24
+        run: npm ci
+      - name: Install workspace deps for tooling
+        if: matrix.node-version == 24
+        working-directory: ${{ github.workspace }}
         run: npm ci
       - name: Build SDK
         run: npm run build
@@ -40,9 +47,9 @@ jobs:
           test -z "$(git status --porcelain -- docs/sdk/reference)"
       - name: Test SDK
         run: npm test -- --run
-      # oxlint/oxfmt require Node 20+; lint is static so it only needs one
-      # modern runtime. Build/test still cover the full matrix for consumers.
-      - name: Lint SDK (oxlint + oxfmt)
+      # Vite+ linting is static, so it only needs the development runtime.
+      # Build/test still cover the full matrix for consumers.
+      - name: Check SDK (Vite+ and anti-slop)
         if: matrix.node-version == 24
         run: npm run lint
 
@@ -69,9 +76,9 @@ jobs:
         run: npm run type-check --workspace @terminal49/cli
       - name: Test CLI
         run: npm run test --workspace @terminal49/cli
-      # oxlint/oxfmt require Node 20+; lint is static so it only needs one
-      # modern runtime. Build/test still cover the full matrix for consumers.
-      - name: Lint CLI (oxlint + oxfmt)
+      # Vite+ linting is static, so it only needs the development runtime.
+      # Build/test still cover the full matrix for consumers.
+      - name: Check CLI (Vite+ and anti-slop)
         if: matrix.node-version == 24
         run: npm run lint --workspace @terminal49/cli
 
@@ -102,5 +109,5 @@ jobs:
         env:
           MCP_EVAL_TOKEN: ${{ secrets.MCP_EVAL_TOKEN }}
         run: npm run eval --workspace @terminal49/mcp
-      - name: Lint MCP (oxlint + oxfmt)
+      - name: Check MCP (Vite+ and anti-slop)
         run: npm run lint --workspace @terminal49/mcp

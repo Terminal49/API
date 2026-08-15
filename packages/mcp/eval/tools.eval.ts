@@ -13,7 +13,7 @@
  * Endpoint defaults to production; override with MCP_EVAL_ENDPOINT.
  */
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vite-plus/test';
 import {
   EvalClient,
   isRecord,

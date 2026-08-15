@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { AuthenticationError, NetworkError } from '@terminal49/sdk';
 import { Command, InvalidArgumentError } from 'commander';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { listFilters } from '../src/commands/tracking-requests.js';
 import { getExitCode } from '../src/errors.js';
 import { createProgram } from '../src/index.js';
