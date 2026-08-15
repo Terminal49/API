@@ -66,7 +66,8 @@ For substantive documentation writing, use the repo-local skill at `skills/termi
 - Install: `vp install` (root; use `npm ci` for frozen CI installs)
 - Test: `npm run test --workspace @terminal49/mcp` · `npm run test --workspace @terminal49/sdk` (Vite+ / Vitest)
 - Typecheck / build: `npm run build --workspace @terminal49/mcp` · `--workspace @terminal49/sdk` (tsc). `api/` is typechecked by the root config: `npx tsc --noEmit -p tsconfig.json`.
-- **Lint/format: Vite+** (Oxlint + Oxfmt with vendored anti-slop rules). `npm run lint --workspace <pkg>`; auto-format with `npm run format --workspace <pkg>`. Configuration lives in each package's `vite.config.ts`; the shared vendored plugin is in `tools/oxlint/anti-slop/`.
+- **Lint/format: Vite+** (Oxlint + Oxfmt with vendored anti-slop rules). `npm run lint --workspace <pkg>`; auto-format with `npm run format --workspace <pkg>`; the `api/` gateway is covered by root `npm run lint:api` / `npm run format`. All configuration lives in the **root `vite.config.ts`** — Vite+ resolves only the root config in a monorepo, so do not add workspace-level `vite.config.ts` files (they are silently ignored). The vendored plugin is in `tools/oxlint/anti-slop/` (see its README for local modifications to re-apply when re-vendoring).
+- **Toolchain version coupling** (root `package.json`): the `vite` override alias (`npm:@voidzero-dev/vite-plus-core`), the exact `vitest` pin, the `@vitest/coverage-v8` devDeps in workspaces, and `@oxlint/plugins` must all move in lockstep with the `vite-plus` version — do not bump any of them independently.
 - CI (`.github/workflows/ci.yml`) runs build + test + lint for both packages.
 - Running the MCP server locally + testing tool calls with Claude Desktop (stdio and gateway paths): [packages/mcp/LOCAL_DEV.md](packages/mcp/LOCAL_DEV.md). Gateway env template: `.env.local.example`.
 

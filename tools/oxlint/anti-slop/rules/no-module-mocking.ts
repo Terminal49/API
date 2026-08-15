@@ -44,6 +44,7 @@ function isTestFrameworkObject(
     }
     const source = definition.parent.source.value;
     const name = importedName(definition.node);
+    // Local patch (see README.md): Vite+ re-exports vitest as `vite-plus/test`.
     return (
       ((source === "vitest" || source === "vite-plus/test") && name === "vi") ||
       (source === "@jest/globals" && name === "jest")
