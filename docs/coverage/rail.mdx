@@ -14,6 +14,12 @@ mode: "wide"
 
 Terminal49 keeps tracking after the container leaves the ocean terminal. For inland moves on North American rail, the same container and shipment objects pick up rail milestones, the rail carrier's ETA, and the rail last free day — no separate tracking request needed.
 
+<Note>
+  Rail last free day data (`import_deadlines.pickup_lfd_rail` and the
+  `container.pickup_lfd_rail.changed` webhook) requires the Rail Plan on your
+  account. See [entitlements](/api-docs/useful-info/entitlements).
+</Note>
+
 ## North American Class I rail
 
 Terminal49 covers all six Class I railroads that move intermodal containers in North America:
@@ -31,7 +37,7 @@ Terminal49 covers all six Class I railroads that move intermodal containers in N
 
 - Rail loaded, departed, arrived, and unloaded events
 - Arrival at the inland destination, with the rail carrier's ETA and ATA
-- Rail last free day (LFD) at the inland facility
+- Rail last free day (LFD) at the inland facility — requires the [Rail Plan](/api-docs/useful-info/entitlements)
 - Pickup availability after unload
 - The rail carrier SCAC at port of discharge and at the inland destination (they can differ)
 
@@ -80,4 +86,4 @@ Use the rail fields when you want the inland railroad's view. Use the shipment f
 2. `pickup_lfd_terminal` — port of discharge terminal
 3. `pickup_lfd_rail` — rail carrier at the inland destination
 
-Subscribe to `container.pickup_lfd_rail.changed` when you need the inland railroad's LFD specifically.
+Subscribe to `container.pickup_lfd_rail.changed` when you need the inland railroad's LFD specifically. Rail LFD data requires the [Rail Plan](/api-docs/useful-info/entitlements); without it, `pickup_lfd_rail` values and the webhook are not delivered.
