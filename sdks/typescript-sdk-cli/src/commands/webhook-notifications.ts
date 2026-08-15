@@ -45,10 +45,8 @@ export function registerWebhookNotificationsCommand(program: Command): void {
     .command('get <id>')
     .description('Get a webhook notification')
     .action(
-      action(
-        'webhook-notifications.get',
-        async ({ client, globals }, id: string) =>
-          client.webhookNotifications.get(id, { format: globals.format }),
+      action('webhook-notifications.get', async ({ client, globals }, id: string) =>
+        client.webhookNotifications.get(id, { format: globals.format }),
       ),
     );
 

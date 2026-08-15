@@ -28,15 +28,9 @@ function optionalList(value: string | undefined): string[] | undefined {
   return splitCommaList(value);
 }
 
-function mapType(
-  value: string,
-): 'container' | 'bill_of_lading' | 'booking_number' {
+function mapType(value: string): 'container' | 'bill_of_lading' | 'booking_number' {
   if (value === 'booking') return 'booking_number';
-  if (
-    value === 'booking_number' ||
-    value === 'container' ||
-    value === 'bill_of_lading'
-  ) {
+  if (value === 'booking_number' || value === 'container' || value === 'bill_of_lading') {
     return value;
   }
   throw new InvalidArgumentError('Invalid tracking request type');
@@ -63,9 +57,7 @@ function inferredScac(infer: unknown, override?: string): string | undefined {
 }
 
 export function registerTrackCommand(program: Command): void {
-  const cmd = program
-    .command('track')
-    .description('Infer tracking number and create a request');
+  const cmd = program.command('track').description('Infer tracking number and create a request');
 
   cmd
     .argument('<number>')
@@ -93,11 +85,7 @@ export function registerTrackCommand(program: Command): void {
             shipmentTags: optionalList(options.shipmentTags),
           });
 
-          return formatCreateFromInferResult(
-            client,
-            { infer, trackingRequest },
-            globals.format,
-          );
+          return formatCreateFromInferResult(client, { infer, trackingRequest }, globals.format);
         }
 
         const result = await client.trackingRequests.createFromInfer(value, {

@@ -2,12 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
-import {
-  loadConfig,
-  writeConfig,
-  getConfigPath,
-  resetConfig,
-} from '../src/config.js';
+import { loadConfig, writeConfig, getConfigPath, resetConfig } from '../src/config.js';
 
 describe('config persistence', () => {
   const originalConfigHome = process.env.XDG_CONFIG_HOME;

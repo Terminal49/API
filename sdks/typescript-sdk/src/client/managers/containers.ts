@@ -6,11 +6,7 @@ import type {
   ListOptions,
 } from '../../types/options.js';
 import { mapContainerList, mapRoute, mapTransportEvents } from '../mappers.js';
-import {
-  applyTypedPagination,
-  buildContainerListQuery,
-  normalizeInclude,
-} from '../query.js';
+import { applyTypedPagination, buildContainerListQuery, normalizeInclude } from '../query.js';
 import { BaseManager } from './base.js';
 
 const DEFAULT_CONTAINER_INCLUDES = [
@@ -22,11 +18,7 @@ const DEFAULT_CONTAINER_INCLUDES = [
 export class ContainerManager extends BaseManager {
   async get(
     id: string,
-    include: IncludeParam<ContainerInclude> = [
-      'shipment',
-      'pod_terminal',
-      'pickup_facility',
-    ],
+    include: IncludeParam<ContainerInclude> = ['shipment', 'pod_terminal', 'pickup_facility'],
     options?: CallOptions,
   ): Promise<any> {
     const includeParam = normalizeInclude(include);
@@ -73,8 +65,7 @@ export class ContainerManager extends BaseManager {
     options?: Omit<ListOptions, 'page'>,
   ): AsyncGenerator<Container, void, unknown> {
     return this.createIterator<Container>(
-      (pageOpts) =>
-        this.list(filters, { ...options, ...pageOpts, format: 'mapped' }),
+      (pageOpts) => this.list(filters, { ...options, ...pageOpts, format: 'mapped' }),
       options,
     );
   }

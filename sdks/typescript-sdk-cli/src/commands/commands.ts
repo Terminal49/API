@@ -114,22 +114,19 @@ export function registerCommandsCommand(program: Command): void {
     .description('List available commands and supported flags')
     .option('--json', 'Force JSON output')
     .action(
-      withErrorHandling(
-        'commands',
-        async (_options: { json?: boolean }, command: Command) => {
-          const opts = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: Boolean(opts.json),
-            compact: opts.compact,
-          });
-          formatter.output('commands', {
-            command: 'commands',
-            globalOptions: collectOptions(program.options),
-            outputContract: OUTPUT_CONTRACT,
-            exitCodeContract: EXIT_CODE_CONTRACT,
-            items: collectCommands(program),
-          });
-        },
-      ),
+      withErrorHandling('commands', async (_options: { json?: boolean }, command: Command) => {
+        const opts = command.optsWithGlobals();
+        const formatter = createFormatter({
+          json: Boolean(opts.json),
+          compact: opts.compact,
+        });
+        formatter.output('commands', {
+          command: 'commands',
+          globalOptions: collectOptions(program.options),
+          outputContract: OUTPUT_CONTRACT,
+          exitCodeContract: EXIT_CODE_CONTRACT,
+          items: collectCommands(program),
+        });
+      }),
     );
 }

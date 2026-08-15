@@ -46,9 +46,7 @@ export function createProgram(): Command {
 
   program
     .name('t49')
-    .description(
-      'Terminal49 container tracking CLI — for LLM agents, chat interfaces, and humans',
-    )
+    .description('Terminal49 container tracking CLI — for LLM agents, chat interfaces, and humans')
     .version(loadPackageVersion())
     // Global flags
     .option('--json', 'Force JSON output (mutually exclusive with --table)')
@@ -56,20 +54,12 @@ export function createProgram(): Command {
     .option('--compact', 'Minified JSON (reduces LLM token usage)')
     .option('--fields <fields>', 'Comma-separated field projection')
     .addOption(
-      new Option('--format <format>', 'Response format').choices([
-        'raw',
-        'mapped',
-        'both',
-      ]),
+      new Option('--format <format>', 'Response format').choices(['raw', 'mapped', 'both']),
     )
     .option('--token <token>', 'API token (overrides env/config)')
     .option('--base-url <url>', 'API base URL override')
     .option('--account-id <id>', 'Account id for user-scoped bearer tokens')
-    .option(
-      '--timeout <ms>',
-      'Request timeout in milliseconds',
-      positiveInt('--timeout'),
-    )
+    .option('--timeout <ms>', 'Request timeout in milliseconds', positiveInt('--timeout'))
     .option(
       '--max-retries <n>',
       'Retry attempts for 429/5xx responses',
@@ -81,9 +71,7 @@ export function createProgram(): Command {
 
     // Enforce mutual exclusion of --json and --table
     if (global.json && global.table) {
-      throw new InvalidArgumentError(
-        '--json and --table are mutually exclusive',
-      );
+      throw new InvalidArgumentError('--json and --table are mutually exclusive');
     }
   });
 
@@ -112,9 +100,7 @@ export function createProgram(): Command {
     register(program);
   }
 
-  program
-    .showHelpAfterError('(run --help for usage)')
-    .showSuggestionAfterError();
+  program.showHelpAfterError('(run --help for usage)').showSuggestionAfterError();
 
   return program;
 }

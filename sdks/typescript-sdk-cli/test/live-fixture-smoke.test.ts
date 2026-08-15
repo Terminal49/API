@@ -4,12 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vite-plus/test';
 import { renderTable } from '../src/output/table.js';
 
-const fixtureDir = join(
-  dirname(fileURLToPath(import.meta.url)),
-  'fixtures',
-  'api',
-  'live',
-);
+const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'api', 'live');
 
 function readFixture<T = unknown>(name: string): T {
   const raw = readFileSync(join(fixtureDir, name), 'utf8');
@@ -63,9 +58,7 @@ describe('live fixture smoke', () => {
 
   it('captures upstream and validation error envelope fixtures', () => {
     const upstream = readFixture<any>('custom-fields.list.error.json');
-    const validation = readFixture<any>(
-      'webhook-notifications.examples.error.json',
-    );
+    const validation = readFixture<any>('webhook-notifications.examples.error.json');
 
     expect(upstream.ok).toBe(false);
     expect(upstream.error.code).toBe('UPSTREAM_ERROR');

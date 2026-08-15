@@ -55,9 +55,7 @@ describe('retry-policy', () => {
     it('does not retry a programming-bug TypeError with a non-network message', () => {
       // Masking real bugs by retrying them maxRetries times is worse than failing fast.
       expect(
-        isRetryableNetworkError(
-          new TypeError("Cannot read properties of undefined (reading 'x')"),
-        ),
+        isRetryableNetworkError(new TypeError("Cannot read properties of undefined (reading 'x')")),
       ).toBe(false);
     });
   });
@@ -74,9 +72,7 @@ describe('retry-policy', () => {
     });
 
     it('allows retry for writes that carry an Idempotency-Key', () => {
-      expect(
-        shouldRetryRequest({ method: 'POST', hasIdempotencyKey: true }),
-      ).toBe(true);
+      expect(shouldRetryRequest({ method: 'POST', hasIdempotencyKey: true })).toBe(true);
     });
   });
 

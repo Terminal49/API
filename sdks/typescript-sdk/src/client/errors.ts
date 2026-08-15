@@ -97,8 +97,7 @@ export class TimeoutError extends Terminal49Error {
  */
 export function toNetworkError(error: unknown): Terminal49Error {
   if (error instanceof Terminal49Error) return error;
-  const message =
-    error instanceof Error ? error.message : 'Network request failed';
+  const message = error instanceof Error ? error.message : 'Network request failed';
   return new NetworkError(`Network request failed: ${message}`, error);
 }
 
@@ -149,11 +148,7 @@ export function toTerminal49Error(
     case 400:
       return new ValidationError(message, status, details);
     case 401:
-      return new AuthenticationError(
-        'Invalid or missing API token',
-        status,
-        details,
-      );
+      return new AuthenticationError('Invalid or missing API token', status, details);
     case 403: {
       const normalized = message || 'Access forbidden';
       const featureNotEnabled = /not enabled|feature/i.test(normalized);
@@ -162,28 +157,16 @@ export function toTerminal49Error(
         : new AuthorizationError(normalized, status, details);
     }
     case 404:
-      return new NotFoundError(
-        message || 'Resource not found',
-        status,
-        details,
-      );
+      return new NotFoundError(message || 'Resource not found', status, details);
     case 422:
       return new ValidationError(message, status, details);
     case 429:
-      return new RateLimitError(
-        message || 'Rate limit exceeded',
-        status,
-        details,
-      );
+      return new RateLimitError(message || 'Rate limit exceeded', status, details);
     case 500:
     case 502:
     case 503:
     case 504:
-      return new UpstreamError(
-        message || `Upstream server error (${status})`,
-        status,
-        details,
-      );
+      return new UpstreamError(message || `Upstream server error (${status})`, status, details);
     default:
       return new Terminal49Error(
         `Unexpected response status: ${status}${message ? ` - ${message}` : ''}`,

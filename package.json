@@ -9,10 +9,10 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "vp run build --recursive",
-    "check": "vp run lint --recursive && vp run type-check --recursive",
-    "format": "vp run format --recursive",
-    "test": "vp run test --recursive",
+    "build": "npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp && npm run build --workspace @terminal49/cli",
+    "check": "npm run lint --workspaces && npm run type-check --workspaces",
+    "format": "npm run format --workspaces",
+    "test": "npm test --workspaces",
     "sdk:docs": "npm run docs --workspace @terminal49/sdk"
   },
   "dependencies": {
@@ -21,7 +21,7 @@
     "openapi-typescript": "^7.13.0"
   },
   "devDependencies": {
-    "@oxlint/plugins": "^1.77.0",
+    "@oxlint/plugins": "1.77.0",
     "@types/node": "^24.10.13",
     "dotenv": "^17.3.1",
     "vite-plus": "0.2.9"
@@ -67,7 +67,9 @@
         "brace-expansion": "5.0.6"
       }
     },
-    "uuid": "^11.1.1"
+    "uuid": "^11.1.1",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9",
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": "24.x"

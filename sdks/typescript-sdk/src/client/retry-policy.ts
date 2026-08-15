@@ -114,10 +114,7 @@ const BACKOFF_BASE_MS = 500;
  * `Retry-After` value (`retryAfterMs`), that is honored; otherwise the SDK uses
  * exponential backoff `2 ** attempt * 500`.
  */
-export function computeBackoffDelay(
-  attempt: number,
-  retryAfterMs?: number,
-): number {
+export function computeBackoffDelay(attempt: number, retryAfterMs?: number): number {
   if (typeof retryAfterMs === 'number' && retryAfterMs >= 0) {
     return retryAfterMs;
   }

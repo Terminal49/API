@@ -52,10 +52,8 @@ function paginationFrom(result: unknown): PaginationEnvelope | undefined {
 function warnUnsupportedFilters(result: unknown): void {
   const record = asRecord(result);
   const mapped = asRecord(record?.mapped);
-  const unsupportedFilters =
-    record?.unsupportedFilters ?? mapped?.unsupportedFilters;
-  if (!Array.isArray(unsupportedFilters) || unsupportedFilters.length === 0)
-    return;
+  const unsupportedFilters = record?.unsupportedFilters ?? mapped?.unsupportedFilters;
+  if (!Array.isArray(unsupportedFilters) || unsupportedFilters.length === 0) return;
   process.stderr.write(
     `Warning: unsupported filters ignored by SDK: ${unsupportedFilters.join(', ')}\n`,
   );
@@ -77,10 +75,7 @@ function listDataFrom(result: unknown): unknown {
   return result;
 }
 
-function demurrageFromRaw(
-  containerId: string,
-  raw: unknown,
-): Record<string, unknown> {
+function demurrageFromRaw(containerId: string, raw: unknown): Record<string, unknown> {
   const container = asRecord(asRecord(asRecord(raw)?.data)?.attributes) ?? {};
   return {
     container_id: containerId,
@@ -94,10 +89,7 @@ function demurrageFromRaw(
   };
 }
 
-function railFromRaw(
-  containerId: string,
-  raw: unknown,
-): Record<string, unknown> {
+function railFromRaw(containerId: string, raw: unknown): Record<string, unknown> {
   const record = asRecord(raw);
   const container = asRecord(asRecord(record?.data)?.attributes) ?? {};
   const included = Array.isArray(record?.included) ? record.included : [];
@@ -135,9 +127,7 @@ async function formattedFromRaw(
 }
 
 export function registerContainersCommand(program: Command): void {
-  const cmd = program
-    .command('containers')
-    .description('Container lookup and operations');
+  const cmd = program.command('containers').description('Container lookup and operations');
 
   const getCommand = cmd
     .command('get <id>')
@@ -156,10 +146,7 @@ export function registerContainersCommand(program: Command): void {
     cmd
       .command('list')
       .description('List containers')
-      .option(
-        '--include <resources>',
-        'Comma-separated include list for each container',
-      ),
+      .option('--include <resources>', 'Comma-separated include list for each container'),
   );
   listCommand.action(
     listAction(
@@ -222,28 +209,20 @@ export function registerContainersCommand(program: Command): void {
     .command('custom-fields <id>')
     .description('Get custom fields for a container')
     .action(
-      action(
-        'containers.custom-fields',
-        async ({ client, globals }, id: string) =>
-          client.containers.customFields(id, { format: globals.format }),
+      action('containers.custom-fields', async ({ client, globals }, id: string) =>
+        client.containers.customFields(id, { format: globals.format }),
       ),
     );
 
   const setCustomFieldCommand = cmd
     .command('set-custom-field <id> <field-id>')
     .description('Set a container custom field value')
-    .requiredOption(
-      '--value <json>',
-      'Custom field JSON value',
-      parseJsonValue,
-    );
+    .requiredOption('--value <json>', 'Custom field JSON value', parseJsonValue);
   setCustomFieldCommand.action(
     action(
       'containers.set-custom-field',
       async ({ client, globals }, id: string, fieldId: string) => {
-        const options = localOptions<SetCustomFieldOptions>(
-          setCustomFieldCommand,
-        );
+        const options = localOptions<SetCustomFieldOptions>(setCustomFieldCommand);
         return client.containers.setCustomField(id, fieldId, options.value, {
           format: globals.format,
         });
@@ -289,8 +268,7 @@ export function registerContainersCommand(program: Command): void {
       action('containers.rail', async ({ client, globals }, id: string) =>
         formattedFromRaw(
           globals.format,
-          () =>
-            client.containers.get(id, ['transport_events'], { format: 'raw' }),
+          () => client.containers.get(id, ['transport_events'], { format: 'raw' }),
           (raw) => railFromRaw(id, raw),
         ),
       ),

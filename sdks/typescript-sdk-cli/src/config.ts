@@ -75,10 +75,7 @@ export async function loadConfig(): Promise<CliConfig> {
   try {
     content = await fs.readFile(configPath, 'utf8');
   } catch (error) {
-    if (
-      typeof error === 'object' &&
-      (error as NodeJS.ErrnoException).code === 'ENOENT'
-    ) {
+    if (typeof error === 'object' && (error as NodeJS.ErrnoException).code === 'ENOENT') {
       return { version: CONFIG_VERSION };
     }
     throw new Error(
@@ -99,9 +96,7 @@ export async function loadConfig(): Promise<CliConfig> {
   }
 }
 
-export async function writeConfig(
-  input: Partial<CliConfig>,
-): Promise<CliConfig> {
+export async function writeConfig(input: Partial<CliConfig>): Promise<CliConfig> {
   const merged = sanitizeConfig({
     ...((await loadConfig()) as unknown as Record<string, unknown>),
     ...(input as unknown as Record<string, unknown>),
@@ -127,10 +122,7 @@ export async function resetConfig(): Promise<void> {
   try {
     await fs.unlink(configPath);
   } catch (error) {
-    if (
-      typeof error !== 'object' ||
-      (error as NodeJS.ErrnoException).code !== 'ENOENT'
-    ) {
+    if (typeof error !== 'object' || (error as NodeJS.ErrnoException).code !== 'ENOENT') {
       throw error;
     }
   }

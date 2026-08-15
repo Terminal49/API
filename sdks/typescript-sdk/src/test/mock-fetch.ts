@@ -1,8 +1,4 @@
-export function jsonResponse(
-  body: any,
-  status = 200,
-  headers?: Record<string, string>,
-): Response {
+export function jsonResponse(body: any, status = 200, headers?: Record<string, string>): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json', ...headers },
@@ -14,10 +10,7 @@ export function createMockFetch(
 ) {
   const calls: Array<{ init?: RequestInit; url: URL }> = [];
 
-  const fetchImpl = async (
-    input: Request | URL | string,
-    init?: RequestInit,
-  ) => {
+  const fetchImpl = async (input: Request | URL | string, init?: RequestInit) => {
     const request = input instanceof Request ? input : undefined;
     const urlString =
       typeof input === 'string'
@@ -28,11 +21,7 @@ export function createMockFetch(
 
     const url = new URL(urlString);
     const derivedBody =
-      init && 'body' in init
-        ? init.body
-        : request
-          ? await request.clone().text()
-          : undefined;
+      init && 'body' in init ? init.body : request ? await request.clone().text() : undefined;
     const effectiveInit: RequestInit | undefined =
       init || request
         ? {

@@ -38,9 +38,7 @@ export class ShipmentManager extends BaseManager {
   ): Promise<any> {
     const includesStr = normalizeIncludeWithDefault(
       options?.include,
-      includeContainers
-        ? DEFAULT_SHIPMENT_INCLUDES
-        : SHIPMENT_INCLUDES_WITHOUT_CONTAINERS,
+      includeContainers ? DEFAULT_SHIPMENT_INCLUDES : SHIPMENT_INCLUDES_WITHOUT_CONTAINERS,
     );
 
     const raw = await this.transport.execute(() =>
@@ -73,10 +71,7 @@ export class ShipmentManager extends BaseManager {
       filters.includeContainers === false
         ? SHIPMENT_INCLUDES_WITHOUT_CONTAINERS
         : DEFAULT_SHIPMENT_INCLUDES;
-    const { query, unsupportedFilters } = buildShipmentListQuery(
-      filters,
-      defaultInclude,
-    );
+    const { query, unsupportedFilters } = buildShipmentListQuery(filters, defaultInclude);
     applyTypedPagination(query, options);
 
     const raw = await this.transport.execute(() =>
@@ -95,17 +90,12 @@ export class ShipmentManager extends BaseManager {
     options?: Omit<ListOptions, 'page'>,
   ): AsyncGenerator<Shipment, void, unknown> {
     return this.createIterator<Shipment>(
-      (pageOpts) =>
-        this.list(filters, { ...options, ...pageOpts, format: 'mapped' }),
+      (pageOpts) => this.list(filters, { ...options, ...pageOpts, format: 'mapped' }),
       options,
     );
   }
 
-  async update(
-    id: string,
-    attrs: Record<string, any>,
-    options?: CallOptions,
-  ): Promise<any> {
+  async update(id: string, attrs: Record<string, any>, options?: CallOptions): Promise<any> {
     const payload = {
       data: {
         type: 'shipment' as const,

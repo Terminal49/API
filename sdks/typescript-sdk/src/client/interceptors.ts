@@ -1,9 +1,5 @@
 import type { Middleware, MiddlewareCallbackParams } from 'openapi-fetch';
-import {
-  extractErrorMessage,
-  toNetworkError,
-  toTerminal49Error,
-} from './errors.js';
+import { extractErrorMessage, toNetworkError, toTerminal49Error } from './errors.js';
 import {
   computeBackoffDelay,
   isRetryableNetworkError,
@@ -61,10 +57,7 @@ export class RetryInterceptor {
 
   onRequest({ request, id }: Pick<MiddlewareCallbackParams, 'id' | 'request'>) {
     try {
-      this.replayableRequests.set(
-        this.requestKey(request, id),
-        request.clone(),
-      );
+      this.replayableRequests.set(this.requestKey(request, id), request.clone());
     } catch {
       this.replayableRequests.delete(this.requestKey(request, id));
     }
@@ -90,9 +83,7 @@ export class RetryInterceptor {
         this.isRetryable(replayableRequest) &&
         attempt < this.maxRetries
       ) {
-        const retryAfterMs = parseRetryAfterMs(
-          currentResponse.headers.get('Retry-After'),
-        );
+        const retryAfterMs = parseRetryAfterMs(currentResponse.headers.get('Retry-After'));
         await this.sleep(computeBackoffDelay(attempt, retryAfterMs));
 
         try {
@@ -192,10 +183,6 @@ export class ErrorMappingInterceptor {
       // Ignore
     }
 
-    throw toTerminal49Error(
-      response.status,
-      extractErrorMessage(errorBody),
-      errorBody,
-    );
+    throw toTerminal49Error(response.status, extractErrorMessage(errorBody), errorBody);
   }
 }

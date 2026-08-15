@@ -61,10 +61,8 @@ function paginationFrom(result: unknown): PaginationEnvelope | undefined {
 function warnUnsupportedFilters(result: unknown): void {
   const record = asRecord(result);
   const mapped = asRecord(record?.mapped);
-  const unsupportedFilters =
-    record?.unsupportedFilters ?? mapped?.unsupportedFilters;
-  if (!Array.isArray(unsupportedFilters) || unsupportedFilters.length === 0)
-    return;
+  const unsupportedFilters = record?.unsupportedFilters ?? mapped?.unsupportedFilters;
+  if (!Array.isArray(unsupportedFilters) || unsupportedFilters.length === 0) return;
   process.stderr.write(
     `Warning: unsupported filters ignored by SDK: ${unsupportedFilters.join(', ')}\n`,
   );
@@ -105,9 +103,7 @@ function updateAttributes(options: UpdateOptions): Record<string, unknown> {
 }
 
 export function registerShipmentsCommand(program: Command): void {
-  const cmd = program
-    .command('shipments')
-    .description('Shipment lookup and operations');
+  const cmd = program.command('shipments').description('Shipment lookup and operations');
 
   const getCommand = cmd
     .command('get <id>')
@@ -129,22 +125,10 @@ export function registerShipmentsCommand(program: Command): void {
       .command('list')
       .description('List shipments')
       .option('--number <number>', 'Filter by original tracking request number')
-      .option(
-        '--tracking-stopped',
-        'Only include shipments with tracking stopped',
-      )
-      .option(
-        '--no-tracking-stopped',
-        'Only include shipments still being tracked',
-      )
-      .option(
-        '--include <resources>',
-        'Comma-separated include list for each shipment',
-      )
-      .option(
-        '--no-include-containers',
-        'Exclude container fields for each shipment',
-      ),
+      .option('--tracking-stopped', 'Only include shipments with tracking stopped')
+      .option('--no-tracking-stopped', 'Only include shipments still being tracked')
+      .option('--include <resources>', 'Comma-separated include list for each shipment')
+      .option('--no-include-containers', 'Exclude container fields for each shipment'),
   );
   listCommand.action(
     listAction(
@@ -189,11 +173,7 @@ export function registerShipmentsCommand(program: Command): void {
   const updateCommand = cmd
     .command('update <id>')
     .description('Update shipment attributes')
-    .option(
-      '--payload <json>',
-      'JSON payload for update body',
-      parseJsonObjectPayload,
-    )
+    .option('--payload <json>', 'JSON payload for update body', parseJsonObjectPayload)
     .option(
       '--attr <key=value...>',
       'Individual attributes to set',
@@ -212,10 +192,8 @@ export function registerShipmentsCommand(program: Command): void {
     .command('stop-tracking <id>')
     .description('Stop tracking a shipment')
     .action(
-      action(
-        'shipments.stop-tracking',
-        async ({ client, globals }, id: string) =>
-          client.shipments.stopTracking(id, { format: globals.format }),
+      action('shipments.stop-tracking', async ({ client, globals }, id: string) =>
+        client.shipments.stopTracking(id, { format: globals.format }),
       ),
     );
 
@@ -223,10 +201,8 @@ export function registerShipmentsCommand(program: Command): void {
     .command('resume-tracking <id>')
     .description('Resume shipment tracking')
     .action(
-      action(
-        'shipments.resume-tracking',
-        async ({ client, globals }, id: string) =>
-          client.shipments.resumeTracking(id, { format: globals.format }),
+      action('shipments.resume-tracking', async ({ client, globals }, id: string) =>
+        client.shipments.resumeTracking(id, { format: globals.format }),
       ),
     );
 
@@ -234,28 +210,20 @@ export function registerShipmentsCommand(program: Command): void {
     .command('custom-fields <id>')
     .description('Get custom fields for a shipment')
     .action(
-      action(
-        'shipments.custom-fields',
-        async ({ client, globals }, id: string) =>
-          client.shipments.customFields(id, { format: globals.format }),
+      action('shipments.custom-fields', async ({ client, globals }, id: string) =>
+        client.shipments.customFields(id, { format: globals.format }),
       ),
     );
 
   const setCustomFieldCommand = cmd
     .command('set-custom-field <id> <field-id>')
     .description('Set a shipment custom field value')
-    .requiredOption(
-      '--value <json>',
-      'Custom field JSON value',
-      parseJsonValue,
-    );
+    .requiredOption('--value <json>', 'Custom field JSON value', parseJsonValue);
   setCustomFieldCommand.action(
     action(
       'shipments.set-custom-field',
       async ({ client, globals }, id: string, fieldId: string) => {
-        const options = localOptions<SetCustomFieldOptions>(
-          setCustomFieldCommand,
-        );
+        const options = localOptions<SetCustomFieldOptions>(setCustomFieldCommand);
         return client.shipments.setCustomField(id, fieldId, options.value, {
           format: globals.format,
         });

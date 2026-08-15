@@ -50,12 +50,8 @@ describe('Terminal49Client', () => {
     // exactly once and the UpstreamError is surfaced.
     let attempt = 0;
     const requestBodies: string[] = [];
-    const fetchImpl = async (
-      input: Request | URL | string,
-      init?: RequestInit,
-    ) => {
-      const request =
-        input instanceof Request ? input : new Request(input, init);
+    const fetchImpl = async (input: Request | URL | string, init?: RequestInit) => {
+      const request = input instanceof Request ? input : new Request(input, init);
       const url = new URL(request.url);
       requestBodies.push(await request.text());
 
@@ -98,9 +94,7 @@ describe('Terminal49Client', () => {
       fetchImpl,
     });
 
-    await expect(client.getContainer('missing')).rejects.toBeInstanceOf(
-      NotFoundError,
-    );
+    await expect(client.getContainer('missing')).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it('adds auth header and include params when fetching container', async () => {
@@ -122,9 +116,7 @@ describe('Terminal49Client', () => {
 
     const headers = new Headers(calls[0].init?.headers);
     expect(headers.get('Authorization')).toBe('Token token-123');
-    expect(calls[0].url.searchParams.get('include')).toBe(
-      'shipment,pod_terminal,pickup_facility',
-    );
+    expect(calls[0].url.searchParams.get('include')).toBe('shipment,pod_terminal,pickup_facility');
   });
 
   it('preserves bearer auth and sends account header when configured', async () => {
@@ -166,17 +158,11 @@ describe('Terminal49Client', () => {
     await client.getShipment('ship-1');
     await client.listShippingLines('MAEU');
 
-    const includeCall = calls.find((c) =>
-      c.url.pathname.endsWith('/shipments/ship-1'),
-    );
+    const includeCall = calls.find((c) => c.url.pathname.endsWith('/shipments/ship-1'));
     expect(includeCall).toBeDefined();
-    expect(includeCall?.url.searchParams.get('include')).toContain(
-      'containers',
-    );
+    expect(includeCall?.url.searchParams.get('include')).toContain('containers');
 
-    const shippingCall = calls.find((c) =>
-      c.url.pathname.endsWith('/shipping_lines'),
-    );
+    const shippingCall = calls.find((c) => c.url.pathname.endsWith('/shipping_lines'));
     expect(shippingCall).toBeDefined();
     expect(shippingCall?.url.searchParams.get('search')).toBe('MAEU');
   });
@@ -336,8 +322,7 @@ describe('Terminal49Client', () => {
     };
 
     const { fetchImpl } = createMockFetch({
-      '/containers?include=shipment,pod_terminal,pickup_facility': () =>
-        jsonResponse(doc),
+      '/containers?include=shipment,pod_terminal,pickup_facility': () => jsonResponse(doc),
     });
 
     const client = new Terminal49Client({
@@ -346,10 +331,7 @@ describe('Terminal49Client', () => {
       fetchImpl,
     });
 
-    const result = (await client.listContainers(
-      {},
-      { format: 'mapped' },
-    )) as any;
+    const result = (await client.listContainers({}, { format: 'mapped' })) as any;
     expect(result.items[0].equipment?.type).toBe('dry');
     expect(result.items[0].terminals?.podTerminal?.name).toBe('Terminal 1');
   });
@@ -385,8 +367,7 @@ describe('Terminal49Client', () => {
     };
 
     const { fetchImpl } = createMockFetch({
-      '/containers/abc/transport_events?include=location,terminal': () =>
-        jsonResponse(doc),
+      '/containers/abc/transport_events?include=location,terminal': () => jsonResponse(doc),
     });
 
     const client = new Terminal49Client({
@@ -415,9 +396,7 @@ describe('Terminal49Client', () => {
       fetchImpl,
     });
 
-    await expect(client.getContainerRoute('abc')).rejects.toBeInstanceOf(
-      FeatureNotEnabledError,
-    );
+    await expect(client.getContainerRoute('abc')).rejects.toBeInstanceOf(FeatureNotEnabledError);
   });
 
   it('handles validation errors with proper message extraction', async () => {
@@ -444,9 +423,7 @@ describe('Terminal49Client', () => {
 
     await expect(
       client.trackContainer({ bookingNumber: '', refNumbers: ['a'] }),
-    ).rejects.toThrowError(
-      /request_number is required \(\/data\/attributes\/request_number\)/,
-    );
+    ).rejects.toThrowError(/request_number is required \(\/data\/attributes\/request_number\)/);
 
     await expect(
       client.trackContainer({ bookingNumber: '', refNumbers: ['a'] }),

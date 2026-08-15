@@ -78,10 +78,8 @@ export function registerCustomFieldDefinitionsCommand(program: Command): void {
     .command('get <id>')
     .description('Get a custom field definition')
     .action(
-      action(
-        'custom-field-definitions.get',
-        async ({ client, globals }, id: string) =>
-          client.customFieldDefinitions.get(id, { format: globals.format }),
+      action('custom-field-definitions.get', async ({ client, globals }, id: string) =>
+        client.customFieldDefinitions.get(id, { format: globals.format }),
       ),
     );
 
@@ -111,25 +109,20 @@ export function registerCustomFieldDefinitionsCommand(program: Command): void {
       parseJsonObjectPayload,
     );
   updateCommand.action(
-    action(
-      'custom-field-definitions.update',
-      async ({ client, globals }, id: string) => {
-        const options = updateCommand.opts() as PayloadOptions;
-        return client.customFieldDefinitions.update(id, options.payload, {
-          format: globals.format,
-        });
-      },
-    ),
+    action('custom-field-definitions.update', async ({ client, globals }, id: string) => {
+      const options = updateCommand.opts() as PayloadOptions;
+      return client.customFieldDefinitions.update(id, options.payload, {
+        format: globals.format,
+      });
+    }),
   );
 
   cmd
     .command('delete <id>')
     .description('Delete a custom field definition')
     .action(
-      action(
-        'custom-field-definitions.delete',
-        async ({ client, globals }, id: string) =>
-          client.customFieldDefinitions.delete(id, { format: globals.format }),
+      action('custom-field-definitions.delete', async ({ client, globals }, id: string) =>
+        client.customFieldDefinitions.delete(id, { format: globals.format }),
       ),
     );
 }

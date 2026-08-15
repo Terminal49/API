@@ -35,9 +35,7 @@ export interface ErrorContext {
 }
 
 function getCommandContext(args: unknown[]): ErrorContext {
-  const command = args.find(
-    (candidate) => candidate instanceof Command,
-  ) as Command | null;
+  const command = args.find((candidate) => candidate instanceof Command) as Command | null;
   return { command };
 }
 
@@ -53,15 +51,9 @@ function resolveContext(context: ErrorContext): {
 }
 
 export function getExitCode(error: unknown): CliExitCode {
-  if (error instanceof InvalidArgumentError || error instanceof CommanderError)
-    return 2;
+  if (error instanceof InvalidArgumentError || error instanceof CommanderError) return 2;
   if (error instanceof NetworkError) return 9;
-  if (
-    error instanceof AuthError ||
-    getStatus(error) === 401 ||
-    getStatus(error) === 403
-  )
-    return 3;
+  if (error instanceof AuthError || getStatus(error) === 401 || getStatus(error) === 403) return 3;
   if (error instanceof RateLimitError || getStatus(error) === 429) return 4;
   if (error instanceof ValidationError || getStatus(error) === 422) return 6;
   if (error instanceof Terminal49Error) return getHttpExitCode(error.status);
@@ -72,16 +64,10 @@ export function getErrorCode(error: unknown): string {
   if (error instanceof InvalidArgumentError || error instanceof CommanderError)
     return 'USAGE_ERROR';
   if (error instanceof NetworkError) return 'NETWORK_ERROR';
-  if (
-    error instanceof AuthError ||
-    getStatus(error) === 401 ||
-    getStatus(error) === 403
-  )
+  if (error instanceof AuthError || getStatus(error) === 401 || getStatus(error) === 403)
     return 'AUTH_ERROR';
-  if (error instanceof RateLimitError || getStatus(error) === 429)
-    return 'RATE_LIMITED';
-  if (error instanceof ValidationError || getStatus(error) === 422)
-    return 'VALIDATION_ERROR';
+  if (error instanceof RateLimitError || getStatus(error) === 429) return 'RATE_LIMITED';
+  if (error instanceof ValidationError || getStatus(error) === 422) return 'VALIDATION_ERROR';
   if (error instanceof Terminal49Error) {
     if (error.status === 404) return 'NOT_FOUND';
     if (error.status && error.status >= 500) return 'UPSTREAM_ERROR';
@@ -120,15 +106,10 @@ function toUpperSnake(input: string): string {
 function getRetryAfterMs(error: unknown): number | undefined {
   if (typeof error !== 'object' || error === null) return undefined;
   const value = (error as { retryAfterMs?: unknown }).retryAfterMs;
-  return typeof value === 'number' && Number.isFinite(value)
-    ? value
-    : undefined;
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
-export function printError(
-  error: unknown,
-  context: ErrorContext = { command: null },
-): void {
+export function printError(error: unknown, context: ErrorContext = { command: null }): void {
   const { json, compact } = resolveContext(context);
   const code = getErrorCode(error);
   const payload = {
@@ -138,8 +119,7 @@ export function printError(
       message: getErrorMessage(error),
       details: error instanceof Terminal49Error ? error.details : undefined,
       retryable: code === 'RATE_LIMITED' ? true : undefined,
-      retryAfterMs:
-        code === 'RATE_LIMITED' ? getRetryAfterMs(error) : undefined,
+      retryAfterMs: code === 'RATE_LIMITED' ? getRetryAfterMs(error) : undefined,
     },
   };
 
@@ -164,10 +144,7 @@ export function withErrorHandling<TArgs extends unknown[]>(
   commandNameOrAction: string | ((...args: TArgs) => Promise<unknown>),
   maybeAction?: (...args: TArgs) => Promise<unknown>,
 ) {
-  const action =
-    typeof commandNameOrAction === 'function'
-      ? commandNameOrAction
-      : maybeAction;
+  const action = typeof commandNameOrAction === 'function' ? commandNameOrAction : maybeAction;
 
   return async (...args: TArgs): Promise<void> => {
     try {

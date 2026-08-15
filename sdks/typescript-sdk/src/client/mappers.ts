@@ -1,10 +1,4 @@
-import type {
-  Container,
-  Route,
-  Shipment,
-  ShippingLine,
-  TrackingRequest,
-} from '../types/models.js';
+import type { Container, Route, Shipment, ShippingLine, TrackingRequest } from '../types/models.js';
 import { JsonApiDocument, omitKeys } from './jsonapi.js';
 
 /**
@@ -76,12 +70,9 @@ export function mapTransportEvents(doc: any) {
 export function mapRoute(doc: any): Route {
   const apiDoc = new JsonApiDocument(doc);
   const route = apiDoc.getAttributes(apiDoc.data, false);
-  const routeLocations =
-    apiDoc.getRelationship(apiDoc.data, 'route_locations') || [];
+  const routeLocations = apiDoc.getRelationship(apiDoc.data, 'route_locations') || [];
 
-  const locations = (
-    Array.isArray(routeLocations) ? routeLocations : [routeLocations]
-  )
+  const locations = (Array.isArray(routeLocations) ? routeLocations : [routeLocations])
     .map((location: any) => {
       if (!location) return null;
 
@@ -90,10 +81,7 @@ export function mapRoute(doc: any): Route {
       // (type port|terminal); there is no `port` relationship.
       const port = apiDoc.getRelationship(location, 'location');
       const inboundVessel = apiDoc.getRelationship(location, 'inbound_vessel');
-      const outboundVessel = apiDoc.getRelationship(
-        location,
-        'outbound_vessel',
-      );
+      const outboundVessel = apiDoc.getRelationship(location, 'outbound_vessel');
 
       return {
         port: port
@@ -276,9 +264,7 @@ export function mapContainer(doc: any): Container {
 
 export function mapContainerList(doc: any): Container[] {
   if (!Array.isArray(doc?.data)) return [];
-  return doc.data.map((item: any) =>
-    mapContainer({ data: item, included: doc.included || [] }),
-  );
+  return doc.data.map((item: any) => mapContainer({ data: item, included: doc.included || [] }));
 }
 
 export function mapShipment(doc: any): Shipment {
@@ -289,8 +275,7 @@ export function mapShipment(doc: any): Shipment {
 
   const shipment: Shipment = {
     id: data?.id,
-    billOfLading:
-      attrs.bill_of_lading_number || attrs.bill_of_lading || attrs.bl_number,
+    billOfLading: attrs.bill_of_lading_number || attrs.bill_of_lading || attrs.bl_number,
     shippingLineScac: attrs.shipping_line_scac,
     customerName: attrs.customer_name,
     containers: [],
@@ -391,9 +376,7 @@ export function mapShipment(doc: any): Shipment {
 
 export function mapShipmentList(doc: any): Shipment[] {
   if (!Array.isArray(doc?.data)) return [];
-  return doc.data.map((item: any) =>
-    mapShipment({ data: item, included: doc.included || [] }),
-  );
+  return doc.data.map((item: any) => mapShipment({ data: item, included: doc.included || [] }));
 }
 
 export function mapTrackingRequest(doc: any): TrackingRequest {
@@ -424,9 +407,7 @@ export function mapTrackingRequest(doc: any): TrackingRequest {
     container: container
       ? {
           id: container.id,
-          number:
-            container.attributes?.number ||
-            container.attributes?.container_number,
+          number: container.attributes?.number || container.attributes?.container_number,
           status: container.attributes?.status,
         }
       : null,

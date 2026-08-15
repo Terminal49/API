@@ -102,19 +102,13 @@ function optionalList(value: string | undefined): string[] | undefined {
 function mapType(value: string | undefined): TrackingRequestType {
   if (!value) return 'container';
   if (value === 'booking') return 'booking_number';
-  if (
-    value === 'booking_number' ||
-    value === 'container' ||
-    value === 'bill_of_lading'
-  ) {
+  if (value === 'booking_number' || value === 'container' || value === 'bill_of_lading') {
     return value;
   }
   throw new InvalidArgumentError('Invalid tracking request type');
 }
 
-export function listFilters(
-  options: TrackingListOptions,
-): Record<string, string | undefined> {
+export function listFilters(options: TrackingListOptions): Record<string, string | undefined> {
   return {
     include: options.include,
     'filter[request_number]': options.requestNumber,
@@ -197,14 +191,11 @@ export function registerTrackingRequestsCommand(program: Command): void {
       'tracking-requests.list',
       async ({ client, globals }) => {
         const options = localOptions<TrackingListOptions>(listCommand);
-        const result = await client.trackingRequests.list(
-          listFilters(options),
-          {
-            page: options.page,
-            pageSize: options.pageSize,
-            format: globals.format,
-          },
-        );
+        const result = await client.trackingRequests.list(listFilters(options), {
+          page: options.page,
+          pageSize: options.pageSize,
+          format: globals.format,
+        });
         return cliEnvelope(listDataFrom(result), paginationFrom(result));
       },
       ({ client, globals }) => {
@@ -260,28 +251,22 @@ export function registerTrackingRequestsCommand(program: Command): void {
     .description('Update a tracking request')
     .requiredOption('--payload <json>', 'JSON payload', parseJsonObjectPayload);
   updateCommand.action(
-    action(
-      'tracking-requests.update',
-      async ({ client, globals }, id: string) => {
-        const options = localOptions<TrackingUpdateOptions>(updateCommand);
-        return client.trackingRequests.update(id, options.payload ?? {}, {
-          format: globals.format,
-        });
-      },
-    ),
+    action('tracking-requests.update', async ({ client, globals }, id: string) => {
+      const options = localOptions<TrackingUpdateOptions>(updateCommand);
+      return client.trackingRequests.update(id, options.payload ?? {}, {
+        format: globals.format,
+      });
+    }),
   );
 
   cmd
     .command('infer <number>')
     .description('Infer SCAC and request type')
     .action(
-      action(
-        'tracking-requests.infer',
-        async ({ client, globals }, number: string) => {
-          const result = await client.trackingRequests.inferNumber(number);
-          return formatInferResult(client, result, globals.format);
-        },
-      ),
+      action('tracking-requests.infer', async ({ client, globals }, number: string) => {
+        const result = await client.trackingRequests.inferNumber(number);
+        return formatInferResult(client, result, globals.format);
+      }),
     );
 
   const createFromInferCommand = cmd
@@ -292,19 +277,10 @@ export function registerTrackingRequestsCommand(program: Command): void {
     .option('--ref-numbers <numbers>', 'Comma-separated reference numbers')
     .option('--shipment-tags <tags>', 'Comma-separated shipment tags');
   createFromInferCommand.action(
-    action(
-      'tracking-requests.create-from-infer',
-      async ({ client, globals }, number: string) => {
-        const options = localOptions<TrackingInferOptions>(
-          createFromInferCommand,
-        );
-        const result = await createFromInferWithTypeOverride(
-          client,
-          number,
-          options,
-        );
-        return formatCreateFromInferResult(client, result, globals.format);
-      },
-    ),
+    action('tracking-requests.create-from-infer', async ({ client, globals }, number: string) => {
+      const options = localOptions<TrackingInferOptions>(createFromInferCommand);
+      const result = await createFromInferWithTypeOverride(client, number, options);
+      return formatCreateFromInferResult(client, result, globals.format);
+    }),
   );
 }

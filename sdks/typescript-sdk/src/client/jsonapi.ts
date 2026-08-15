@@ -26,9 +26,7 @@ export class JsonApiDocument {
     const rel = data?.relationships?.[name]?.data;
     if (!rel) return null;
     if (Array.isArray(rel)) {
-      return rel
-        .map((r) => this.getIncluded(r.type, r.id))
-        .filter((i) => i !== undefined);
+      return rel.map((r) => this.getIncluded(r.type, r.id)).filter((i) => i !== undefined);
     }
     return this.getIncluded(rel.type, rel.id);
   }

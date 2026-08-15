@@ -6,9 +6,7 @@ import type {
   ShipmentInclude,
 } from '../types/options.js';
 
-export type IncludeParam<TInclude extends string> =
-  | readonly TInclude[]
-  | string;
+export type IncludeParam<TInclude extends string> = readonly TInclude[] | string;
 
 /**
  * Maximum `page[size]` accepted by the Terminal49 v2 list endpoints. Values
@@ -18,12 +16,8 @@ export type IncludeParam<TInclude extends string> =
 export const MAX_PAGE_SIZE = 100;
 
 /** Typed query objects for the JSON:API list endpoints, sourced from the generated OpenAPI spec. */
-type ContainerListQuery = NonNullable<
-  paths['/containers']['get']['parameters']['query']
->;
-type ShipmentListQuery = NonNullable<
-  paths['/shipments']['get']['parameters']['query']
->;
+type ContainerListQuery = NonNullable<paths['/containers']['get']['parameters']['query']>;
+type ShipmentListQuery = NonNullable<paths['/shipments']['get']['parameters']['query']>;
 
 /** Filters accepted by {@link buildContainerListQuery}. Mirrors the public `containers.list` signature. */
 export interface ContainerListFilters {
@@ -58,19 +52,12 @@ export interface ListQueryResult<TQuery> {
  * (verified against docs/openapi.json + the generated OpenAPI types). The API
  * silently drops them, so we report them back instead of pretending they worked.
  */
-const UNSUPPORTED_FILTER_KEYS = [
-  'status',
-  'port',
-  'carrier',
-  'updatedAfter',
-] as const;
+const UNSUPPORTED_FILTER_KEYS = ['status', 'port', 'carrier', 'updatedAfter'] as const;
 
 function collectUnsupportedFilters(
   filters: Partial<Record<(typeof UNSUPPORTED_FILTER_KEYS)[number], unknown>>,
 ): string[] {
-  return UNSUPPORTED_FILTER_KEYS.filter(
-    (key) => filters[key] !== undefined && filters[key] !== '',
-  );
+  return UNSUPPORTED_FILTER_KEYS.filter((key) => filters[key] !== undefined && filters[key] !== '');
 }
 
 export function normalizeInclude<TInclude extends string>(
@@ -157,10 +144,7 @@ export function buildContainerListQuery(
 ): ListQueryResult<ContainerListQuery> {
   const query: ContainerListQuery = {};
 
-  const includeStr = normalizeIncludeWithDefault(
-    filters.include,
-    defaultInclude ?? [],
-  );
+  const includeStr = normalizeIncludeWithDefault(filters.include, defaultInclude ?? []);
   if (includeStr) query.include = includeStr;
 
   return { query, unsupportedFilters: collectUnsupportedFilters(filters) };
@@ -177,10 +161,7 @@ export function buildShipmentListQuery(
 ): ListQueryResult<ShipmentListQuery> {
   const query: ShipmentListQuery = {};
 
-  const includeStr = normalizeIncludeWithDefault(
-    filters.include,
-    defaultInclude ?? [],
-  );
+  const includeStr = normalizeIncludeWithDefault(filters.include, defaultInclude ?? []);
   if (includeStr) query.include = includeStr;
 
   if (filters.number !== undefined && filters.number !== '') {

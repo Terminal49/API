@@ -25,9 +25,7 @@ export interface ListOptions extends CallOptions {
   maxRows?: number;
 }
 
-export type IncludeParam<TInclude extends string> =
-  | readonly TInclude[]
-  | string;
+export type IncludeParam<TInclude extends string> = readonly TInclude[] | string;
 
 export type ShipmentInclude =
   | 'containers'

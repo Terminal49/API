@@ -8,13 +8,7 @@
 
 import { Command, InvalidArgumentError } from 'commander';
 import { createClient } from '../client-factory.js';
-import {
-  getConfigPath,
-  loadConfig,
-  resetConfig,
-  type CliConfig,
-  writeConfig,
-} from '../config.js';
+import { getConfigPath, loadConfig, resetConfig, type CliConfig, writeConfig } from '../config.js';
 import { withErrorHandling } from '../errors.js';
 import { createFormatter } from '../output/formatter.js';
 
@@ -36,25 +30,20 @@ const NUMERIC_CONFIG_KEYS = new Set<ConfigKey>(['maxRetries', 'timeoutMs']);
 const FORMAT_VALUES = new Set(['raw', 'mapped', 'both']);
 
 export function registerConfigCommand(program: Command): void {
-  const cmd = program
-    .command('config')
-    .description('View and manage CLI config');
+  const cmd = program.command('config').description('View and manage CLI config');
 
   cmd
     .command('path')
     .description('Print path to config file')
     .action(
-      withErrorHandling(
-        'config.path',
-        async (_options: unknown, command: Command) => {
-          const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            compact: global.compact,
-          });
-          formatter.output('config.path', { path: getConfigPath() });
-        },
-      ),
+      withErrorHandling('config.path', async (_options: unknown, command: Command) => {
+        const global = command.optsWithGlobals();
+        const formatter = createFormatter({
+          json: global.json,
+          compact: global.compact,
+        });
+        formatter.output('config.path', { path: getConfigPath() });
+      }),
     );
 
   cmd
@@ -67,11 +56,7 @@ export function registerConfigCommand(program: Command): void {
         async (key: string, options: RevealOptions, command: Command) => {
           const configKey = validateConfigKey(key);
           const config = await loadConfig();
-          const value = redactConfigValue(
-            configKey,
-            config[configKey],
-            options.reveal,
-          );
+          const value = redactConfigValue(configKey, config[configKey], options.reveal);
           const formatter = createFormatter({
             json: command.optsWithGlobals().json,
             compact: command.optsWithGlobals().compact,
@@ -87,12 +72,7 @@ export function registerConfigCommand(program: Command): void {
     .action(
       withErrorHandling(
         'config.set',
-        async (
-          key: string,
-          value: string,
-          _options: unknown,
-          command: Command,
-        ) => {
+        async (key: string, value: string, _options: unknown, command: Command) => {
           const configKey = validateConfigKey(key);
           const global = command.optsWithGlobals();
           const formatter = createFormatter({
@@ -113,91 +93,77 @@ export function registerConfigCommand(program: Command): void {
     .description('List all config values')
     .option('--reveal', 'Reveal sensitive values such as token')
     .action(
-      withErrorHandling(
-        'config.list',
-        async (options: RevealOptions, command: Command) => {
-          const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            compact: global.compact,
-          });
-          const cfg = await loadConfig();
-          formatter.output('config.list', redactConfig(cfg, options.reveal));
-        },
-      ),
+      withErrorHandling('config.list', async (options: RevealOptions, command: Command) => {
+        const global = command.optsWithGlobals();
+        const formatter = createFormatter({
+          json: global.json,
+          compact: global.compact,
+        });
+        const cfg = await loadConfig();
+        formatter.output('config.list', redactConfig(cfg, options.reveal));
+      }),
     );
 
   cmd
     .command('clear')
     .description('Clear config values by deleting the file')
     .action(
-      withErrorHandling(
-        'config.clear',
-        async (_options: unknown, command: Command) => {
-          const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            compact: global.compact,
-          });
-          await resetConfig();
-          formatter.output('config.clear', { removed: true });
-        },
-      ),
+      withErrorHandling('config.clear', async (_options: unknown, command: Command) => {
+        const global = command.optsWithGlobals();
+        const formatter = createFormatter({
+          json: global.json,
+          compact: global.compact,
+        });
+        await resetConfig();
+        formatter.output('config.clear', { removed: true });
+      }),
     );
 
   cmd
     .command('auth-status')
     .description('Check whether the CLI has usable auth credentials')
     .action(
-      withErrorHandling(
-        'config.auth-status',
-        async (_options: unknown, command: Command) => {
-          const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            compact: global.compact,
-          });
-          const cfg = await loadConfig();
-          const status = {
-            hasToken: Boolean(
-              global.token || process.env.T49_API_TOKEN || cfg.token,
-            ),
-            tokenSource: global.token
-              ? 'flag'
-              : process.env.T49_API_TOKEN
-                ? 'env'
-                : cfg.token
-                  ? 'config'
-                  : 'missing',
-          };
-          formatter.output('config.auth-status', status);
-        },
-      ),
+      withErrorHandling('config.auth-status', async (_options: unknown, command: Command) => {
+        const global = command.optsWithGlobals();
+        const formatter = createFormatter({
+          json: global.json,
+          compact: global.compact,
+        });
+        const cfg = await loadConfig();
+        const status = {
+          hasToken: Boolean(global.token || process.env.T49_API_TOKEN || cfg.token),
+          tokenSource: global.token
+            ? 'flag'
+            : process.env.T49_API_TOKEN
+              ? 'env'
+              : cfg.token
+                ? 'config'
+                : 'missing',
+        };
+        formatter.output('config.auth-status', status);
+      }),
     );
 
   cmd
     .command('client-check')
     .description('Verify client can be instantiated')
     .action(
-      withErrorHandling(
-        'config.client-check',
-        async (_options: unknown, command: Command) => {
-          const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            compact: global.compact,
-          });
-          await createClient({
-            token: global.token,
-            baseUrl: global.baseUrl,
-            format: global.format as 'raw' | 'mapped' | 'both',
-            maxRetries: global.maxRetries,
-            accountId: global.accountId,
-            timeoutMs: global.timeoutMs ?? global.timeout,
-          });
-          formatter.output('config.client-check', { ok: true });
-        },
-      ),
+      withErrorHandling('config.client-check', async (_options: unknown, command: Command) => {
+        const global = command.optsWithGlobals();
+        const formatter = createFormatter({
+          json: global.json,
+          compact: global.compact,
+        });
+        await createClient({
+          token: global.token,
+          baseUrl: global.baseUrl,
+          format: global.format as 'raw' | 'mapped' | 'both',
+          maxRetries: global.maxRetries,
+          accountId: global.accountId,
+          timeoutMs: global.timeoutMs ?? global.timeout,
+        });
+        formatter.output('config.client-check', { ok: true });
+      }),
     );
 }
 
@@ -218,9 +184,7 @@ function parseConfigValue(key: ConfigKey, value: string): string | number {
   }
 
   if (key === 'defaultFormat' && !FORMAT_VALUES.has(value)) {
-    throw new InvalidArgumentError(
-      'defaultFormat must be one of raw, mapped, both',
-    );
+    throw new InvalidArgumentError('defaultFormat must be one of raw, mapped, both');
   }
 
   return value;
@@ -230,17 +194,12 @@ function redactConfig(config: CliConfig, reveal = false): ConfigOutput {
   const output: ConfigOutput = {};
   for (const key of CONFIG_KEYS) {
     const value = config[key];
-    if (value !== undefined)
-      output[key] = redactConfigValue(key, value, reveal);
+    if (value !== undefined) output[key] = redactConfigValue(key, value, reveal);
   }
   return output;
 }
 
-function redactConfigValue(
-  key: ConfigKey,
-  value: unknown,
-  reveal = false,
-): unknown {
+function redactConfigValue(key: ConfigKey, value: unknown, reveal = false): unknown {
   if (key !== 'token' || reveal || typeof value !== 'string') return value;
   if (value.length <= 4) return '***';
   const suffix = value.slice(-4);

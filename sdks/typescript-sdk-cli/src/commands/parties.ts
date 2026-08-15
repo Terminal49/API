@@ -52,9 +52,7 @@ function listDataFrom(result: unknown): unknown {
 export function registerPartiesCommand(program: Command): void {
   const cmd = program.command('parties').description('List and get parties');
 
-  const listCommand = addListOptions(
-    cmd.command('list').description('List parties'),
-  );
+  const listCommand = addListOptions(cmd.command('list').description('List parties'));
   listCommand.action(
     listAction('parties.list', async ({ client, globals }) => {
       const options = listCommand.opts() as PartyListOptions;

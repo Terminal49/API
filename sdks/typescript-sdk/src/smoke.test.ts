@@ -51,9 +51,7 @@ if (!token || !runSmoke) {
     const itIf = inferNumber ? it : it.skip;
 
     itIf('infers tracking number', async () => {
-      const result = await client.trackingRequests.inferNumber(
-        inferNumber as string,
-      );
+      const result = await client.trackingRequests.inferNumber(inferNumber as string);
       expect(result).toBeTruthy();
     });
   });

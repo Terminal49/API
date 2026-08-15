@@ -18,11 +18,7 @@ function createRecordingFetch() {
   const calls: URL[] = [];
   const fetchImpl = (async (input: Request | URL | string) => {
     const urlString =
-      typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.toString()
-          : input.url;
+      typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
     calls.push(new URL(urlString));
     return new Response(JSON.stringify({ data: [] }), {
       status: 200,
@@ -53,9 +49,7 @@ describe('pure list-query builders', () => {
     expect(query['filter[pod_locode]' as keyof typeof query]).toBeUndefined();
     expect(query['filter[line_scac]' as keyof typeof query]).toBeUndefined();
     expect(query['filter[updated_at]' as keyof typeof query]).toBeUndefined();
-    expect(unsupportedFilters.sort()).toEqual(
-      ['carrier', 'port', 'status', 'updatedAfter'].sort(),
-    );
+    expect(unsupportedFilters.sort()).toEqual(['carrier', 'port', 'status', 'updatedAfter'].sort());
   });
 
   it('keeps supported container keys (include) and reports nothing unsupported', () => {
@@ -88,9 +82,7 @@ describe('pure list-query builders', () => {
     expect(query.number).toBe('TRK-1');
     expect(query.include).toBe('containers');
 
-    expect(unsupportedFilters.sort()).toEqual(
-      ['carrier', 'port', 'status', 'updatedAfter'].sort(),
-    );
+    expect(unsupportedFilters.sort()).toEqual(['carrier', 'port', 'status', 'updatedAfter'].sort());
   });
 
   it('clamps page size to the API maximum and floors at 1', () => {
@@ -185,9 +177,6 @@ describe('ShipmentManager.list filter correctness', () => {
       { format: 'mapped' },
     )) as { unsupportedFilters?: string[] };
 
-    expect(result.unsupportedFilters?.sort()).toEqual([
-      'carrier',
-      'updatedAfter',
-    ]);
+    expect(result.unsupportedFilters?.sort()).toEqual(['carrier', 'updatedAfter']);
   });
 });
