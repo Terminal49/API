@@ -4,7 +4,11 @@
  * NOTE: This is a PAID FEATURE in Terminal49 API
  */
 
-import { FeatureNotEnabledError, NotFoundError, Terminal49Client } from '@terminal49/sdk';
+import {
+  FeatureNotEnabledError,
+  NotFoundError,
+  Terminal49Client,
+} from '@terminal49/sdk';
 
 export interface FeatureNotEnabledResult {
   error: 'FeatureNotEnabled';
@@ -43,7 +47,7 @@ export const getContainerRouteTool = {
 
 export async function executeGetContainerRoute(
   args: GetContainerRouteArgs,
-  client: Terminal49Client
+  client: Terminal49Client,
 ): Promise<any> {
   if (!args.id || args.id.trim() === '') {
     throw new Error('Container ID is required');
@@ -56,7 +60,7 @@ export async function executeGetContainerRoute(
       tool: 'get_container_route',
       container_id: args.id,
       timestamp: new Date().toISOString(),
-    })
+    }),
   );
 
   try {
@@ -71,7 +75,7 @@ export async function executeGetContainerRoute(
         container_id: args.id,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
 
     const summary = formatRouteResponse(raw);
@@ -80,7 +84,10 @@ export async function executeGetContainerRoute(
     const duration = Date.now() - startTime;
     const err = error as any;
 
-    if (err instanceof FeatureNotEnabledError || (err?.status === 403 && /not enabled|feature/i.test(err.message))) {
+    if (
+      err instanceof FeatureNotEnabledError ||
+      (err?.status === 403 && /not enabled|feature/i.test(err.message))
+    ) {
       return handleFeatureNotEnabled(args.id, duration);
     }
 
@@ -97,14 +104,17 @@ export async function executeGetContainerRoute(
         message: (error as Error).message,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
 
     throw error;
   }
 }
 
-function handleFeatureNotEnabled(containerId: string, duration: number): FeatureNotEnabledResult {
+function handleFeatureNotEnabled(
+  containerId: string,
+  duration: number,
+): FeatureNotEnabledResult {
   const friendlyMessage =
     'Route tracking is a paid feature and is not enabled for this Terminal49 account. ' +
     'Contact support@terminal49.com to enable route data, or use get_container / get_container_transport_events for partial context.';
@@ -118,7 +128,7 @@ function handleFeatureNotEnabled(containerId: string, duration: number): Feature
       message: friendlyMessage,
       duration_ms: duration,
       timestamp: new Date().toISOString(),
-    })
+    }),
   );
 
   return {
@@ -129,7 +139,10 @@ function handleFeatureNotEnabled(containerId: string, duration: number): Feature
   };
 }
 
-function handleRouteNotFound(containerId: string, duration: number): NotFoundResult {
+function handleRouteNotFound(
+  containerId: string,
+  duration: number,
+): NotFoundResult {
   const friendlyMessage =
     'Route data was not found for this container. The container ID may be incorrect or route data is unavailable.';
 
@@ -142,13 +155,14 @@ function handleRouteNotFound(containerId: string, duration: number): NotFoundRes
       message: friendlyMessage,
       duration_ms: duration,
       timestamp: new Date().toISOString(),
-    })
+    }),
   );
 
   return {
     error: 'NotFound',
     message: friendlyMessage,
-    alternative: 'Use search_container to find the correct container ID, or get_container for basic details.',
+    alternative:
+      'Use search_container to find the correct container ID, or get_container for basic details.',
   };
 }
 
@@ -161,7 +175,9 @@ function formatRouteResponse(apiResponse: any): any {
   const routeLocationRefs = relationships.route_locations?.data || [];
   const routeLocations = routeLocationRefs
     .map((ref: any) => {
-      const location = included.find((item: any) => item.id === ref.id && item.type === 'route_location');
+      const location = included.find(
+        (item: any) => item.id === ref.id && item.type === 'route_location',
+      );
       if (!location) return null;
 
       const attrs = location.attributes || {};
@@ -169,13 +185,19 @@ function formatRouteResponse(apiResponse: any): any {
 
       // Find port info
       const portId = rels.port?.data?.id;
-      const port = included.find((item: any) => item.id === portId && item.type === 'port');
+      const port = included.find(
+        (item: any) => item.id === portId && item.type === 'port',
+      );
 
       // Find vessel info
       const inboundVesselId = rels.inbound_vessel?.data?.id;
       const outboundVesselId = rels.outbound_vessel?.data?.id;
-      const inboundVessel = included.find((item: any) => item.id === inboundVesselId && item.type === 'vessel');
-      const outboundVessel = included.find((item: any) => item.id === outboundVesselId && item.type === 'vessel');
+      const inboundVessel = included.find(
+        (item: any) => item.id === inboundVesselId && item.type === 'vessel',
+      );
+      const outboundVessel = included.find(
+        (item: any) => item.id === outboundVesselId && item.type === 'vessel',
+      );
 
       return {
         port: port

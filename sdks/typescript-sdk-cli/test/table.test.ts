@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { renderTable } from '../src/output/table.js';
 
 describe('renderTable', () => {

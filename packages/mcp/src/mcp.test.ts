@@ -1,5 +1,5 @@
 import { getCompleter } from '@modelcontextprotocol/sdk/server/completable.js';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import {
   buildListContract,
   createTerminal49McpServer,

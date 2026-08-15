@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import protectedResourceHandler from '../../../api/oauth-protected-resource.ts';
 import authorizationServerHandler from '../../../api/oauth-authorization-server.ts';

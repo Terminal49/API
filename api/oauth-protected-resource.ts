@@ -27,11 +27,14 @@ export default function handler(req: RequestLike, res: ResponseLike): void {
     return;
   }
 
-  const authorizationServer = process.env.WORKOS_AUTHORIZATION_SERVER_URL?.trim() ||
+  const authorizationServer =
+    process.env.WORKOS_AUTHORIZATION_SERVER_URL?.trim() ||
     process.env.WORKOS_ISSUER?.trim();
 
   if (!authorizationServer) {
-    res.status(500).json({ error: 'WORKOS_AUTHORIZATION_SERVER_URL or WORKOS_ISSUER must be set.' });
+    res.status(500).json({
+      error: 'WORKOS_AUTHORIZATION_SERVER_URL or WORKOS_ISSUER must be set.',
+    });
     return;
   }
 
@@ -48,6 +51,8 @@ export default function handler(req: RequestLike, res: ResponseLike): void {
     resource: resolveMcpResource(req),
     authorization_servers: [authorizationServer.replace(/\/+$/, '')],
     bearer_methods_supported: ['header'],
-    ...(scopesSupported.length > 0 ? { scopes_supported: scopesSupported } : {}),
+    ...(scopesSupported.length > 0
+      ? { scopes_supported: scopesSupported }
+      : {}),
   });
 }

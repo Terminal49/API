@@ -39,7 +39,9 @@ function setCorsHeaders(res: ResponseLike): void {
   );
 }
 
-function getHeaderValue(value: string | string[] | undefined): string | undefined {
+function getHeaderValue(
+  value: string | string[] | undefined,
+): string | undefined {
   if (Array.isArray(value)) {
     return value[0];
   }
@@ -47,16 +49,19 @@ function getHeaderValue(value: string | string[] | undefined): string | undefine
   return value;
 }
 
-function extractAuthorizationToken(
-  authorizationHeader: string | undefined,
-): { scheme?: 'Bearer' | 'Token'; token?: string; source?: 'authorization' } {
+function extractAuthorizationToken(authorizationHeader: string | undefined): {
+  scheme?: 'Bearer' | 'Token';
+  token?: string;
+  source?: 'authorization';
+} {
   if (authorizationHeader?.trim()) {
     const trimmed = authorizationHeader.trim();
     const authMatch = trimmed.match(/^(bearer|token)\s+(.+)$/i);
     if (authMatch?.[2]) {
       const token = authMatch[2].trim();
       if (token.length > 0) {
-        const scheme = authMatch[1].toLowerCase() === 'bearer' ? 'Bearer' : 'Token';
+        const scheme =
+          authMatch[1].toLowerCase() === 'bearer' ? 'Bearer' : 'Token';
         return { scheme, token, source: 'authorization' };
       }
     }
@@ -85,11 +90,15 @@ type UnauthorizedReason = 'missing_credentials' | 'invalid_token';
 
 function oauthConfigured(): boolean {
   return Boolean(
-    process.env.WORKOS_AUTHORIZATION_SERVER_URL?.trim() || process.env.WORKOS_ISSUER?.trim(),
+    process.env.WORKOS_AUTHORIZATION_SERVER_URL?.trim() ||
+    process.env.WORKOS_ISSUER?.trim(),
   );
 }
 
-function wwwAuthenticateHeader(req: RequestLike, reason: UnauthorizedReason): string {
+function wwwAuthenticateHeader(
+  req: RequestLike,
+  reason: UnauthorizedReason,
+): string {
   const parts = ['Bearer realm="mcp"'];
 
   // RFC 6750 §3.1: include an error code only when a token was actually
@@ -124,7 +133,8 @@ function authKitMcpEnabled(): boolean {
 }
 
 function resolveEndpointUrl(): string {
-  const apiBaseUrl = process.env.T49_API_BASE_URL?.trim() || 'https://api.terminal49.com/v2';
+  const apiBaseUrl =
+    process.env.T49_API_BASE_URL?.trim() || 'https://api.terminal49.com/v2';
   return `${apiBaseUrl.replace(/\/+$/, '')}/connected-clients/resolve`;
 }
 
@@ -144,7 +154,8 @@ async function resolveConnectedClientToken(
   token: string,
   requestId: string,
 ): Promise<{ apiToken: string; accountId: string }> {
-  const resolveSecret = process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET?.trim() ||
+  const resolveSecret =
+    process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET?.trim() ||
     process.env.T49_MCP_RESOLVE_SECRET?.trim();
   if (!resolveSecret) {
     throw new ConnectedClientResolveError(
@@ -184,9 +195,12 @@ async function resolveConnectedClientToken(
     // surface that as retryable so clients don't discard a valid token and loop
     // through re-authentication during a Terminal49 outage.
     const kind: ResolveFailureKind =
-      response.status === 401 || response.status === 403 ? 'invalid_token' : 'upstream';
+      response.status === 401 || response.status === 403
+        ? 'invalid_token'
+        : 'upstream';
     throw new ConnectedClientResolveError(
-      payload.error || `Terminal49 connected client resolve failed with ${response.status}`,
+      payload.error ||
+        `Terminal49 connected client resolve failed with ${response.status}`,
       kind,
     );
   }
@@ -203,7 +217,10 @@ async function resolveConnectedClientToken(
   return { apiToken: `Bearer ${accessToken}`, accountId };
 }
 
-function isMatchingClientSecret(providedToken: string, expectedSecret: string): boolean {
+function isMatchingClientSecret(
+  providedToken: string,
+  expectedSecret: string,
+): boolean {
   const providedBuffer = Buffer.from(providedToken);
   const expectedBuffer = Buffer.from(expectedSecret);
 
@@ -223,7 +240,11 @@ function buildRequestId(req: RequestLike): string {
   return randomUUID();
 }
 
-function logLifecycle(event: string, requestId: string, details: Record<string, unknown> = {}): void {
+function logLifecycle(
+  event: string,
+  requestId: string,
+  details: Record<string, unknown> = {},
+): void {
   console.error(
     JSON.stringify({
       event,
@@ -247,7 +268,10 @@ function parseAllowList(value: string | undefined): Set<string> {
   );
 }
 
-function isAllowedHost(hostHeader: string | undefined, allowList: Set<string>): boolean {
+function isAllowedHost(
+  hostHeader: string | undefined,
+  allowList: Set<string>,
+): boolean {
   if (allowList.size === 0) {
     return true;
   }
@@ -325,13 +349,20 @@ function validateRequestSecurity(req: RequestLike, res: ResponseLike): boolean {
 /**
  * Main handler for Vercel serverless function
  */
-export default async function handler(req: RequestLike, res: ResponseLike): Promise<void> {
+export default async function handler(
+  req: RequestLike,
+  res: ResponseLike,
+): Promise<void> {
   const requestId = buildRequestId(req);
   setCorsHeaders(res);
-  logLifecycle('mcp.request.start', requestId, { method: req.method ?? 'UNKNOWN' });
+  logLifecycle('mcp.request.start', requestId, {
+    method: req.method ?? 'UNKNOWN',
+  });
 
   if (!validateRequestSecurity(req, res)) {
-    logLifecycle('mcp.request.rejected', requestId, { reason: 'request_security_validation_failed' });
+    logLifecycle('mcp.request.rejected', requestId, {
+      reason: 'request_security_validation_failed',
+    });
     return;
   }
 
@@ -349,7 +380,10 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
       error: 'Method not allowed',
       message: 'Only POST requests are accepted',
     });
-    logLifecycle('mcp.request.complete', requestId, { reason: 'method_not_allowed', method: req.method });
+    logLifecycle('mcp.request.complete', requestId, {
+      reason: 'method_not_allowed',
+      method: req.method,
+    });
     return;
   }
 
@@ -386,7 +420,10 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
       }
 
       if (cleanupErrors.length > 0) {
-        logLifecycle('mcp.request.cleanup.error', requestId, { reason, errors: cleanupErrors });
+        logLifecycle('mcp.request.cleanup.error', requestId, {
+          reason,
+          errors: cleanupErrors,
+        });
         return;
       }
 
@@ -415,7 +452,9 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
         message:
           'Missing valid Authorization header. Use `Authorization: Bearer <token>` or `Authorization: Token <token>`.',
       });
-      logLifecycle('mcp.request.complete', requestId, { reason: 'missing_authorization' });
+      logLifecycle('mcp.request.complete', requestId, {
+        reason: 'missing_authorization',
+      });
       return;
     }
 
@@ -433,7 +472,10 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
     // packages/mcp/WORKOS_MCP_SETUP.md (rollout note).
     if (authKitMcpEnabled() && resolvedAuth.scheme === 'Bearer') {
       try {
-        const resolved = await resolveConnectedClientToken(callerToken, requestId);
+        const resolved = await resolveConnectedClientToken(
+          callerToken,
+          requestId,
+        );
         resolvedTerminal49Auth = {
           apiToken: resolved.apiToken,
           accountId: resolved.accountId,
@@ -467,7 +509,8 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
           // their token is bad and triggers re-auth loops. 502 invites a retry.
           res.status(502).json({
             error: 'Bad Gateway',
-            message: 'Authorization service is temporarily unavailable. Please retry.',
+            message:
+              'Authorization service is temporarily unavailable. Please retry.',
           });
         }
         return;
@@ -477,9 +520,12 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
         setCorsHeaders(res);
         res.status(500).json({
           error: 'Server misconfiguration',
-          message: 'T49_MCP_CLIENT_SECRET must be set when T49_API_TOKEN is configured.',
+          message:
+            'T49_MCP_CLIENT_SECRET must be set when T49_API_TOKEN is configured.',
         });
-        logLifecycle('mcp.request.complete', requestId, { reason: 'missing_client_secret' });
+        logLifecycle('mcp.request.complete', requestId, {
+          reason: 'missing_client_secret',
+        });
         return;
       }
 
@@ -490,7 +536,9 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
           error: 'Unauthorized',
           message: 'Invalid client credentials.',
         });
-        logLifecycle('mcp.request.complete', requestId, { reason: 'invalid_client_secret' });
+        logLifecycle('mcp.request.complete', requestId, {
+          reason: 'invalid_client_secret',
+        });
         return;
       }
 
