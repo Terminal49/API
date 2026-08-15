@@ -17,7 +17,7 @@ export interface ListShipmentsArgs {
 
 export async function executeListShipments(
   args: ListShipmentsArgs,
-  client: Terminal49Client
+  client: Terminal49Client,
 ): Promise<any> {
   const startTime = Date.now();
   console.error(
@@ -34,7 +34,7 @@ export async function executeListShipments(
       page: args.page,
       page_size: args.page_size,
       timestamp: new Date().toISOString(),
-    })
+    }),
   );
 
   try {
@@ -50,7 +50,7 @@ export async function executeListShipments(
         format: 'mapped',
         page: args.page,
         pageSize: args.page_size,
-      }
+      },
     );
 
     const duration = Date.now() - startTime;
@@ -58,10 +58,12 @@ export async function executeListShipments(
       JSON.stringify({
         event: 'tool.execute.complete',
         tool: 'list_shipments',
-        item_count: Array.isArray((result as any)?.items) ? (result as any).items.length : null,
+        item_count: Array.isArray((result as any)?.items)
+          ? (result as any).items.length
+          : null,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
 
     return result;
@@ -75,7 +77,7 @@ export async function executeListShipments(
         message: (error as Error).message,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
     throw error;
   }

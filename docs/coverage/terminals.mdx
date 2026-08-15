@@ -1,0 +1,49 @@
+---
+title: "Ports & terminals"
+description: "Terminal49 maps ports and terminals globally on every container route, and connects directly to terminal operators for availability, last free day, holds, and fees."
+keywords:
+  - "Terminal49 API"
+  - "port coverage"
+  - "supported terminals"
+  - "transshipment"
+  - "FIRMS"
+  - "UN/LOCODE"
+  - "last free day"
+mode: "wide"
+---
+
+import { terminals } from "/snippets/data-sources/coverage-data.mdx";
+import { TerminalCoverageTable } from "/snippets/data-sources/coverage-tables.mdx";
+
+Terminal49 covers ports and terminals at two levels: a global port and terminal dataset that maps every container's route, and direct terminal integrations that add the operational data you need to execute imports and exports.
+
+## Global port and terminal mapping
+
+Every tracked container's route is mapped end to end against Terminal49's global port and terminal dataset — origin, destination, transshipment, and inland ports and terminals worldwide, each identified by UN/LOCODE. Transport events reported by the ocean carrier — loaded, departed, arrived, berthed, discharged, and transshipment moves — are attributed to the port and terminal where they occur.
+
+This mapping is global and applies to every shipment. You always know where a container is, which locations it moves through, and what happened at each one, on any lane the ocean carriers serve.
+
+## Import and export execution data
+
+At the terminals below, Terminal49 also connects directly to the terminal operator. That connection adds the attributes that drive import and export execution at the gate:
+
+- **Pickup availability** — whether the container is ready to be picked up
+- **Last free day (LFD)** — when demurrage starts
+- **Holds** — customs, freight, TMF, USDA, and other holds with status
+- **Fees** — demurrage, exam, and other charges with amounts
+
+A port that is not in this table still appears on routes with carrier-reported events; the table below is where the terminal-level operational data comes from.
+
+Search by terminal, port, UN/LOCODE, or FIRMS code, or filter by region.
+
+Holds, fees, LFD, and pickup availability vary by terminal. A terminal on this list does not mean every field is present for every container — see [field availability](/coverage/fields) for what each field depends on.
+
+Coverage reflects production as of 14 August 2026.
+
+## Direct terminal integrations
+
+<TerminalCoverageTable terminals={terminals} />
+
+Boston (Conley), Saint John, and Fraser Surrey are not currently supported. At Port Everglades, Port Everglades Terminal is supported; Florida International Terminal is not.
+
+For how holds, fees, and LFD appear on a container, see [holds and fees](/api-docs/in-depth-guides/holds-and-fees).

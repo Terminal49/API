@@ -44,7 +44,8 @@ function stripTrailingSlashes(value: string): string {
 
 function configuredResource(): string | undefined {
   const configured =
-    process.env.WORKOS_MCP_RESOURCE?.trim() || process.env.T49_MCP_RESOURCE_URL?.trim();
+    process.env.WORKOS_MCP_RESOURCE?.trim() ||
+    process.env.T49_MCP_RESOURCE_URL?.trim();
   return configured ? stripTrailingSlashes(configured) : undefined;
 }
 

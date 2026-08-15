@@ -65,15 +65,13 @@ async function loadShippingLines(
   });
   const data = Array.isArray(response) ? response : [];
 
-  const mapped = data.map(
-    (item: any): Partial<ShippingLineRecord> => ({
-      scac: item.scac,
-      name: item.name,
-      short_name: item.shortName,
-      bol_prefix: item.bolPrefix,
-      notes: item.notes,
-    }),
-  );
+  const mapped = data.map((item: any): Partial<ShippingLineRecord> => ({
+    scac: item.scac,
+    name: item.name,
+    short_name: item.shortName,
+    bol_prefix: item.bolPrefix,
+    notes: item.notes,
+  }));
 
   return mapped
     .filter(

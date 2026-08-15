@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { evaluateDemurrageUrgency } from './demurrage.js';
 
 const NOW = new Date('2026-02-10T00:00:00Z');

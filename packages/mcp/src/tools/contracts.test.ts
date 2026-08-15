@@ -1,5 +1,9 @@
-import { FeatureNotEnabledError, NotFoundError, type Terminal49Client } from '@terminal49/sdk';
-import { describe, expect, it, vi } from 'vitest';
+import {
+  FeatureNotEnabledError,
+  NotFoundError,
+  type Terminal49Client,
+} from '@terminal49/sdk';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { executeGetContainer } from './get-container.js';
 import { executeGetContainerRoute } from './get-container-route.js';
 import { executeGetContainerTransportEvents } from './get-container-transport-events.js';
@@ -770,9 +774,13 @@ describe('MCP tool contracts', () => {
     ).rejects.toBeInstanceOf(NotFoundError);
 
     expect(events).toHaveBeenCalledWith('missing-container', { format: 'raw' });
-    expect(get).toHaveBeenCalledWith('missing-container', ['transport_events'], {
-      format: 'raw',
-    });
+    expect(get).toHaveBeenCalledWith(
+      'missing-container',
+      ['transport_events'],
+      {
+        format: 'raw',
+      },
+    );
   });
 
   it('get_container_transport_events returns an empty-but-valid timeline for a container with no events', async () => {

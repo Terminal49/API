@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite-plus/test/config';
 
 /**
  * Config for the live tool eval suite (`npm run eval`). Kept separate from the

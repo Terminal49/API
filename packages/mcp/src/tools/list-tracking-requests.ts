@@ -15,7 +15,7 @@ export interface ListTrackingRequestsArgs {
 
 export async function executeListTrackingRequests(
   args: ListTrackingRequestsArgs,
-  client: Terminal49Client
+  client: Terminal49Client,
 ): Promise<any> {
   const startTime = Date.now();
   console.error(
@@ -26,7 +26,7 @@ export async function executeListTrackingRequests(
       page: args.page,
       page_size: args.page_size,
       timestamp: new Date().toISOString(),
-    })
+    }),
   );
 
   try {
@@ -41,7 +41,9 @@ export async function executeListTrackingRequests(
     const filters = {
       ...safeFilters,
       ...(args.status ? { 'filter[status]': args.status } : {}),
-      ...(args.request_type ? { 'filter[request_type]': args.request_type } : {}),
+      ...(args.request_type
+        ? { 'filter[request_type]': args.request_type }
+        : {}),
     };
 
     const result = await client.trackingRequests.list(filters, {
@@ -55,10 +57,12 @@ export async function executeListTrackingRequests(
       JSON.stringify({
         event: 'tool.execute.complete',
         tool: 'list_tracking_requests',
-        item_count: Array.isArray((result as any)?.items) ? (result as any).items.length : null,
+        item_count: Array.isArray((result as any)?.items)
+          ? (result as any).items.length
+          : null,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
 
     return result;
@@ -72,7 +76,7 @@ export async function executeListTrackingRequests(
         message: (error as Error).message,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
     throw error;
   }

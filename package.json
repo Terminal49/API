@@ -2,19 +2,19 @@
   "name": "terminal49-api",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "description": "Terminal49 API with MCP Server",
   "workspaces": [
     "packages/*",
     "sdks/*"
   ],
+  "type": "module",
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp && npm run build --workspace @terminal49/cli",
+    "check": "npm run lint:api && npm run lint --workspaces && npm run type-check --workspaces",
+    "format": "vp fmt --write api && npm run format --workspaces",
+    "lint:api": "vp lint api && vp fmt --check api",
     "test": "npm test --workspaces",
     "sdk:docs": "npm run docs --workspace @terminal49/sdk"
-  },
-  "engines": {
-    "node": "24.x"
   },
   "dependencies": {
     "mintlify": "^4.2.585",
@@ -22,27 +22,20 @@
     "openapi-typescript": "^7.13.0"
   },
   "devDependencies": {
+    "@oxlint/plugins": "1.77.0",
     "@types/node": "^24.10.13",
-    "dotenv": "^17.3.1"
+    "dotenv": "^17.3.1",
+    "vite-plus": "0.2.9"
   },
   "overrides": {
-    "postcss": "^8.5.14",
-    "axios": "^1.16.0",
-    "brace-expansion": "5.0.6",
-    "fast-uri": "^3.1.2",
-    "uuid": "^11.1.1",
-    "js-yaml": "^4.1.1",
-    "lodash": "^4.18.1",
-    "minimatch": {
-      "brace-expansion": "5.0.6"
+    "@mintlify/previewing": {
+      "express": "4.22.2"
     },
-    "minimatch@10.2.5": {
-      "brace-expansion": "5.0.6"
+    "@mintlify/scraping": {
+      "zod": "3.25.76"
     },
-    "typedoc": {
-      "minimatch": {
-        "brace-expansion": "5.0.6"
-      }
+    "@mintlify/validation": {
+      "zod": "3.25.76"
     },
     "@terminal49/sdk": {
       "typedoc": {
@@ -51,21 +44,35 @@
         }
       }
     },
-    "hono": "^4.12.16",
-    "ip-address": "^10.1.1",
-    "@mintlify/scraping": {
-      "zod": "3.25.76"
-    },
-    "@mintlify/validation": {
-      "zod": "3.25.76"
-    },
-    "@mintlify/previewing": {
-      "express": "4.22.2"
-    },
-    "express-rate-limit": "^8.5.2",
-    "rollup": "^4.60.4",
+    "axios": "^1.16.0",
+    "brace-expansion": "5.0.6",
     "chromium-bidi": {
       "zod": "3.23.8"
-    }
+    },
+    "express-rate-limit": "^8.5.2",
+    "fast-uri": "^3.1.2",
+    "hono": "^4.12.16",
+    "ip-address": "^10.1.1",
+    "js-yaml": "^4.1.1",
+    "lodash": "^4.18.1",
+    "minimatch": {
+      "brace-expansion": "5.0.6"
+    },
+    "minimatch@10.2.5": {
+      "brace-expansion": "5.0.6"
+    },
+    "postcss": "^8.5.14",
+    "rollup": "^4.60.4",
+    "typedoc": {
+      "minimatch": {
+        "brace-expansion": "5.0.6"
+      }
+    },
+    "uuid": "^11.1.1",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9",
+    "vitest": "4.1.10"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

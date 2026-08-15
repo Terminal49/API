@@ -17,7 +17,7 @@ export interface ListContainersArgs {
 
 export async function executeListContainers(
   args: ListContainersArgs,
-  client: Terminal49Client
+  client: Terminal49Client,
 ): Promise<any> {
   const startTime = Date.now();
   const include = args.include?.trim() || undefined;
@@ -45,13 +45,15 @@ export async function executeListContainers(
         port: args.port,
         carrier: args.carrier,
         updatedAfter: args.updated_after,
-        include: include ? (include.split(',').map((s) => s.trim()) as any) : undefined,
+        include: include
+          ? (include.split(',').map((s) => s.trim()) as any)
+          : undefined,
       },
       {
         format: 'mapped',
         page: args.page,
         pageSize: args.page_size,
-      }
+      },
     );
 
     const duration = Date.now() - startTime;
@@ -59,10 +61,12 @@ export async function executeListContainers(
       JSON.stringify({
         event: 'tool.execute.complete',
         tool: 'list_containers',
-        item_count: Array.isArray((result as any)?.items) ? (result as any).items.length : null,
+        item_count: Array.isArray((result as any)?.items)
+          ? (result as any).items.length
+          : null,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
 
     return result;
@@ -76,7 +80,7 @@ export async function executeListContainers(
         message: (error as Error).message,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
-      })
+      }),
     );
     throw error;
   }

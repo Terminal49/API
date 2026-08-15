@@ -1,0 +1,79 @@
+---
+title: "Ocean carriers"
+description: "Ocean carriers (shipping lines / VOCCs) Terminal49 integrates with directly, including SCAC, track-by type, account-enabled lines, and known field gaps."
+keywords:
+  - "Terminal49 API"
+  - "supported carriers"
+  - "shipping lines"
+  - "VOCC"
+  - "SCAC"
+  - "bill of lading"
+mode: "wide"
+---
+
+import { carriers } from "/snippets/data-sources/coverage-data.mdx";
+import { CarrierCoverageTable } from "/snippets/data-sources/coverage-tables.mdx";
+
+Ocean carriers — also called shipping lines or vessel-operating common carriers (VOCCs) — are the primary source of shipment data. Terminal49 integrates directly with each carrier below and normalizes bill of lading details, bookings, containers, vessel ETAs, and transport milestones into a single API.
+
+Track with a bill of lading number, booking number, or container number, depending on what the carrier supports. Filter the list by name, Standard Carrier Alpha Code (SCAC), or track-by type.
+
+Coverage reflects production as of 14 August 2026. Use [`GET /shipping_lines`](/api-docs/api-reference/shipping-lines/shipping-lines) for the current list on your account.
+
+<Tip>
+  Have a tracking number but not the SCAC? The [Auto-Detect
+  Carrier](/api-docs/in-depth-guides/auto-detect-carrier) API identifies the carrier for you.
+</Tip>
+
+<CarrierCoverageTable carriers={carriers} access="public" />
+
+Westwood shipments are tracked through Swire (`SSBF`); `WWSU` is an alternative SCAC on that line.
+
+## Account-enabled carriers
+
+These carriers are live in production but are not part of the public default set. Contact Terminal49 to enable them on your account before sending tracking requests.
+
+<CarrierCoverageTable carriers={carriers} access="account" />
+
+## Known issues (ocean)
+
+Shipment data comes from the carrier, and some carriers do not publish every field. These are the gaps we see most often:
+
+<AccordionGroup>
+  <Accordion title="CMA CGM, APL, ANL">
+    No container weight. No container seal number.
+  </Accordion>
+  <Accordion title="Maersk, Sealand, Safmarine">
+    Shipment departure and arrival events are not always available, depending on when the bill of lading is entered. No container seal number.
+  </Accordion>
+  <Accordion title="MSC">
+    No container seal number.
+  </Accordion>
+  <Accordion title="Hapag-Lloyd">
+    No container weight. No container seal number.
+  </Accordion>
+  <Accordion title="Evergreen">
+    All dates are provided as dates, not datetimes. Terminal49 stores them as midnight at the event location when the location is available, otherwise midnight UTC. Only dry, reefer, and flatpack equipment types are mapped.
+  </Accordion>
+  <Accordion title="COSCO">
+    No departure or arrival events. Departure and arrival timestamps can still be present.
+  </Accordion>
+  <Accordion title="OOCL">
+    No container seal number.
+  </Accordion>
+  <Accordion title="ONE">
+    Only dry and reefer equipment types are mapped.
+  </Accordion>
+  <Accordion title="Yang Ming">
+    When a bill of lading has multiple containers, the returned weight is the shipment average (gross weight divided by container count).
+  </Accordion>
+  <Accordion title="HMM">
+    No container type.
+  </Accordion>
+  <Accordion title="ZIM">
+    No container weight. No container seal number.
+  </Accordion>
+  <Accordion title="Swire / Westwood">
+    No container weight. Only dry equipment types are mapped.
+  </Accordion>
+</AccordionGroup>

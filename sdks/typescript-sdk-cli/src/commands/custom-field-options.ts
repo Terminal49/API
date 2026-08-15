@@ -127,7 +127,9 @@ export function registerCustomFieldOptionsCommand(program: Command): void {
           definitionId,
           optionId,
           options.payload,
-          { format: globals.format },
+          {
+            format: globals.format,
+          },
         );
       },
     ),
