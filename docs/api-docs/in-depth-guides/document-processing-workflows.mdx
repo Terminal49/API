@@ -13,113 +13,176 @@ keywords:
   - "email submissions"
 ---
 
-This guide is for first-time integrators building document automation.
+Shipping documents (House Bills of Lading, Master Bills of Lading, arrival notices, delivery orders, and more) arrive in shared inboxes and have traditionally required manual classification, data entry, and filing. This integration automates that workflow: Terminal49 receives each document by email, classifies it, extracts structured fields, and delivers the results to your system via webhook.
 
-You can submit documents in two ways:
+The outcome is less manual re-keying, faster time-to-file, and fewer errors from misfiled or delayed documents, freeing your team from routine data entry to focus on true exceptions.
 
-- Email attachments to your unique account docs alias
-- API endpoint
+Submit documents by emailing attachments to your account docs alias. Terminal49 then handles the rest: classify -> extract -> webhook result.
 
-Both follow the same customer-facing lifecycle: submit -\> classify -\> extract -\> webhook result.
+## Before You Start
+
+Make sure you have the following in place before building:
+
+<Steps>
+  <Step title="Terminal49 account access">
+    Confirm you can log in and switch between the test and production accounts (see [Environments](#environments) below).
+  </Step>
+  <Step title="API key">
+    Generate an API key from **User > Developers > API Keys**. You'll need this to register your webhook and call the API.
+  </Step>
+  <Step title="A publicly accessible HTTPS endpoint">
+    Your server needs a reachable HTTPS URL to receive webhook POST requests from Terminal49. For local development, use a tool like [ngrok](https://ngrok.com) to expose a local port.
+  </Step>
+  <Step title="Webhook subscription">
+    Register your endpoint and subscribe to `document_representation.created` and `document_representation.failed` (see [Subscribing to Events](#subscribing-to-events) below).
+  </Step>
+</Steps>
+
+## Environments
+
+Your Terminal49 account may have separate test and production environments, accessible from the account switcher in the top-left corner when you log in.
+
+<Warning>
+  Both environments make live calls. Documents submitted under either account are processed and costs will be incurred. There is no free sandbox for document processing at this time.
+</Warning>
+
+## Authentication
+
+All API calls require an API key passed as a Bearer token:
+
+```
+Authorization: Token YOUR_API_KEY
+```
+
+To get your API key, go to **User > Developers > API Keys** (click your username in the bottom-left corner of the navigation). For more detail, see [Start Here](/api-docs/getting-started/start-here).
+
+## Subscribing to Events
+
+Register a webhook endpoint to receive document processing notifications:
+
+```bash
+curl -X POST https://api.terminal49.com/v2/webhooks \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "webhook",
+      "attributes": {
+        "url": "https://your-server.com/webhooks/t49-documents",
+        "active": true,
+        "events": [
+          "document_representation.created",
+          "document_representation.failed"
+        ]
+      }
+    }
+  }'
+```
+
+You can also configure webhooks from the Terminal49 dashboard:
+
+1. Click your username in the bottom-left corner of the navigation.
+2. Go to **User > Developers > Webhooks**.
+3. To add a new endpoint, click **Create Webhook**, fill in your URL, and select the relevant events under **Document Events**.
+4. To update an existing endpoint, click into it and toggle on the document events you need.
+
+## Webhook Endpoint Requirements
+
+Your endpoint must meet the following requirements to reliably receive webhook notifications:
+
+**Response codes:** Return HTTP `200`, `201`, `202`, or `204`. Any other response (including a timeout) is treated as a delivery failure and will trigger retries.
+
+**Retries:** Terminal49 will retry failed deliveries multiple times. Design your endpoint to be idempotent. Use `data.id` (the `webhook_notification` UUID) as your idempotency key to avoid processing the same event twice.
+
+**HTTPS:** Your endpoint must be accessible over HTTPS.
+
+**IP allowlist:** Webhook notifications are sent from the following IP addresses. Allowlist these if your infrastructure restricts inbound traffic:
+
+```
+35.222.62.171
+3.230.67.145
+44.217.15.129
+```
+
+**Signature verification (recommended):** Each webhook is signed using HMAC SHA-256. The signature is included in the `X-T49-Webhook-Signature` header. To verify, retrieve the `secret` from your webhook configuration and compute the HMAC digest of the raw request body; it should match the header value.
+
+```ruby
+secret = ENV.fetch('T49_WEBHOOK_SECRET')
+hmac = OpenSSL::HMAC.hexdigest('SHA256', secret, request.body.read)
+verified = request.headers['X-T49-Webhook-Signature'] == hmac
+```
 
 ## Workflow diagrams
 
 ```mermaid
 flowchart LR
-    A[User emails document attachments] --> B[Upload File] --> C[API /POST Documents] 
-    C --> D[Terminal49 receives and parses documents]
-    D --> E[Terminal49 classifies documents]
-    E --> F[Terminal49 extracts structured data]
-    F --> G[Terminal49 sends webhook result]
+    A[Email sent to docs alias] --> B[Terminal49 receives document]
+    B --> C{Duplicate?}
+    C -- Yes --> Z[Ignored, no webhook fired]
+    C -- No --> D[Terminal49 classifies document]
+    D --> E[Terminal49 extracts structured data]
+    E --> F{Extraction outcome}
+    F -- Success --> G[document_representation.created]
+    F -- Failure --> H[document_representation.failed]
 ```
 
 ## Workflow: step-by-step
 
 <Steps>
   <Step title="Submit document">
-    Use email (attachments to your docs alias) or Upload directly by API
+    Email attachments to your account's unique docs alias (for example, `youraccount-42@docs.terminal49.com`). Find your alias under **User > Developers > API Keys**.
+
+    **Supported file types:** PDF, PNG, JPEG, XLSX, XLS, CSV, Word (.doc, .docx).
+
+    **Multiple attachments:** Each attachment in a single email is processed independently and generates its own webhook event. All resulting webhooks reference the same `email_submission`.
+
+    **Unsupported files:** Encrypted or password-protected files cannot be processed and will result in a `document_representation.failed` event.
   </Step>
   <Step title="Terminal49 processes document">
-    Terminal49 classifies and extracts data asynchronously.
+    Terminal49 classifies and extracts structured data asynchronously. Processing typically completes within seconds to a few minutes depending on document complexity.
   </Step>
   <Step title="Receive webhook result">
-    You receive `document.extracted` or `document.extraction_failed`.
-  </Step>
-  <Step title="Handle duplicates">
-    If the same file content already exists for your account, it is treated as duplicate and not processed again.
-  </Step>
-  <Step title="API POST document">
-    POST document through endpoint. Used by email 
+    You receive `document_representation.created` (extraction succeeded) or `document_representation.failed` (extraction could not complete). Parse the payload, route by `document_type`, store the extracted fields, and trigger your downstream processes.
   </Step>
 </Steps>
 
 <Tip>
-  Treat submission as asynchronous. Do not assume extraction is complete immediately after upload/email.
+  Treat submission as fire-and-forget. Do not poll or wait for a response after sending the email. The webhook is the signal that processing is complete.
 </Tip>
 
-## Technical implementation (one end-to-end example)
+<Note>
+  If the same file content has already been processed for your account, it is treated as a duplicate and ignored. No webhook is fired.
+</Note>
 
-Example scenario: user uploads one file, `invoice.pdf`.
+## Webhooks You Should Handle
 
-### 1) Submit the document
+A `document_representation` is the structured extraction result for a document. `document_representation.created` means extraction succeeded and structured data is available in the payload. `document_representation.failed` means Terminal49 could not produce an extraction result.
 
-`POST /documents`
+| Event | Meaning | Signal |
+| --- | --- | --- |
+| `document_representation.created` | Extraction completed successfully | `document_type` is set; `payload` contains extracted fields |
+| `document_representation.failed` | Extraction did not complete | `document_type` is `"unknown"`; `last_document_representation` is `null` |
 
-Before creating the document, complete the direct upload flow and get a `signed_id`: [`Direct Upload for Documents`](/api-docs/in-depth-guides/direct-upload-documents).
+## Webhook Payload Structure
 
-Note: `attached_document` is the S3 `signed_id` from the file direct upload.
+Every document webhook follows the same envelope structure. The `payload` object inside `document_representation` contains the extracted fields and varies by document type. See [Document Types in Scope](#document-types-in-scope) for full examples.
 
-```json
-{
-  "data": {
-    "type": "document",
-    "attributes": {
-      "name": "invoice.pdf",
-      "attached_document": "eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBLi4u"
-    }
-  }
-}
-```
-
-Response (`201`):
+`document_representation.created` envelope:
 
 ```json
 {
   "data": {
-    "id": "5ab53a5e-0d68-4a8f-8d3d-1d24555d20cb",
-    "type": "document",
-    "attributes": {
-      "name": "invoice.pdf",
-      "document_type": null,
-      "file_name": "invoice.pdf",
-      "file_content_type": "application/pdf",
-      "file_size_bytes": 248193,
-      "created_at": "2026-03-26T08:14:24Z",
-      "updated_at": "2026-03-26T08:14:24Z"
-    }
-  }
-}
-```
-
-### 2) Receive extraction webhook
-
-`document.extracted` example:
-
-```json
-{
-  "data": {
-    "id": "40cb28de-63ee-4542-909e-a19efe46904d",
+    "id": "89ec3520-cea3-447d-8404-341e0bfd3aa6",
     "type": "webhook_notification",
     "attributes": {
-      "event": "document.extracted",
+      "event": "document_representation.created",
       "delivery_status": "pending",
-      "created_at": "2026-03-26T08:17:06Z",
-      "version": "2026-03-10"
+      "created_at": "2026-03-27T20:05:39Z"
     },
     "relationships": {
-      "document": {
+      "reference_object": {
         "data": {
-          "id": "5ab53a5e-0d68-4a8f-8d3d-1d24555d20cb",
+          "id": "e75541c0-9ad5-408b-9747-23415adfbca0",
           "type": "document"
         }
       }
@@ -127,31 +190,25 @@ Response (`201`):
   },
   "included": [
     {
-      "id": "5ab53a5e-0d68-4a8f-8d3d-1d24555d20cb",
+      "id": "b3abc297-624a-4eaa-a0e9-4ac4ebbd064f",
+      "type": "document_representation",
+      "attributes": {
+        "schema_version": "draft_house_bill_of_lading@2026-03-23",
+        "payload": {},
+        "created_at": "2026-03-27T20:05:39Z",
+        "updated_at": "2026-03-27T20:05:39Z"
+      }
+    },
+    {
+      "id": "e75541c0-9ad5-408b-9747-23415adfbca0",
       "type": "document",
       "attributes": {
-        "name": "invoice.pdf",
-        "document_type": "commercial_invoice",
-        "source": "upload",
+        "document_type": "draft_house_bill_of_lading",
+        "source": "email",
         "file_name": "invoice.pdf",
-        "file_content_type": "application/pdf",
-        "file_size_bytes": 248193,
-        "created_at": "2026-03-26T08:14:24Z",
-        "updated_at": "2026-03-26T08:17:05Z"
+        "file_url": "https://t49-documents-prod.s3.amazonaws.com/..."
       },
       "relationships": {
-        "account": {
-          "data": {
-            "id": "91d5b7cc-6d3f-4c87-b8bb-f5f31ed866f4",
-            "type": "account"
-          }
-        },
-        "user": {
-          "data": {
-            "id": "fa25bdf2-0692-48f9-a8a7-cad8eb99527f",
-            "type": "user"
-          }
-        },
         "email_submission": {
           "data": {
             "id": "7de2c356-5d2a-4d6e-99f4-6f0d2d63e357",
@@ -160,70 +217,193 @@ Response (`201`):
         },
         "last_document_representation": {
           "data": {
-            "id": "ab1fba20-6b7b-4d5f-95e8-e2c55a7a8f89",
+            "id": "b3abc297-624a-4eaa-a0e9-4ac4ebbd064f",
             "type": "document_representation"
           }
         }
-      },
-      "links": {
-        "self": "/documents/5ab53a5e-0d68-4a8f-8d3d-1d24555d20cb",
-        "download": "/documents/5ab53a5e-0d68-4a8f-8d3d-1d24555d20cb/download_url"
-      }
-    },
-    {
-      "id": "7de2c356-5d2a-4d6e-99f4-6f0d2d63e357",
-      "type": "email_submission",
-      "attributes": {
-        "subject": "Invoice #INV-10027",
-        "body_preview": "Please find attached invoice INV-10027.",
-        "from": [
-          "ap@acme-manufacturing.com"
-        ],
-        "to": [
-          "docs+account@terminal49.com"
-        ],
-        "cc": [],
-        "message_id": "<abc123@acme-manufacturing.com>",
-        "sent_at": "2026-03-26T08:14:11Z",
-        "created_at": "2026-03-26T08:14:12Z",
-        "updated_at": "2026-03-26T08:14:12Z"
-      }
-    },
-    {
-      "id": "ab1fba20-6b7b-4d5f-95e8-e2c55a7a8f89",
-      "type": "document_representation",
-      "attributes": {
-        "schema_version": "2026-03-23",
-        "payload": {
-          "invoice_number": "INV-10027",
-          "invoice_date": "2026-03-25",
-          "supplier_name": "Acme Manufacturing Ltd",
-          "total_amount": "12450.00",
-          "currency": "USD"
-        },
-        "created_at": "2026-03-26T08:17:05Z",
-        "updated_at": "2026-03-26T08:17:05Z"
       }
     }
   ]
 }
 ```
 
-### 3) Persist extracted outcome in your system
+When the webhook document is a child document (split from a larger packet), the document include also contains `attributes.parsed.packetSegment` and a `parent_document` relationship:
 
-Use the webhook `event` and included `document` payload to update your internal record for that document.
+```json
+{
+  "id": "child-document-id",
+  "type": "document",
+  "attributes": {
+    "document_type": "arrival_notice",
+    "file_name": "packet_child_1.pdf",
+    "file_url": "https://t49-documents-prod.s3.amazonaws.com/...",
+    "parsed": {
+      "packetSegment": {
+        "startPage": 3,
+        "endPage": 7
+      }
+    }
+  },
+  "relationships": {
+    "parent_document": {
+      "data": {
+        "id": "parent-document-id",
+        "type": "document"
+      }
+    },
+    "last_document_representation": {
+      "data": {
+        "id": "b3abc297-624a-4eaa-a0e9-4ac4ebbd064f",
+        "type": "document_representation"
+      }
+    }
+  }
+}
+```
 
-## Webhooks you should handle
+<Note>
+  `file_url` is a pre-signed S3 URL and expires after 1 hour. Download the file promptly after receiving the webhook, or fetch a fresh URL using the endpoint below.
+</Note>
 
-| Event | Meaning |
-| --- | --- |
-| `document.extracted` | Extraction completed successfully |
-| `document.extraction_failed` | Extraction did not complete |
+### Fetching a fresh download URL
+
+If the `file_url` from the webhook has expired, request a new one:
+
+```bash
+curl -X GET https://api.terminal49.com/v2/documents/{id}/download_url \
+  -H "Authorization: Token YOUR_API_KEY"
+```
+
+Replace `{id}` with the document `id` from the webhook payload. Response:
+
+```json
+{
+  "download_url": "https://t49-documents-prod.s3.amazonaws.com/..."
+}
+```
+
+### Schema versioning
+
+Every webhook payload includes a `schema_version` field that identifies the document type and the schema date in use:
+
+```
+"schema_version": "draft_house_bill_of_lading@2026-03-23"
+```
+
+Your account is pinned to a specific schema date. All document types will use the latest schema version up to and including that date. Terminal49 can update your pinned version when you are ready to migrate.
+
+**What changes the version:**
+- Breaking changes (fields removed, renamed, or restructured) increment the date. Terminal49 will either support parallel versions during a migration window or coordinate a cutover date with you.
+- Non-breaking additions (new optional fields) do not change the version.
+
+Use `schema_version` to route your parsing logic. If you support multiple versions, branch on this field.
+
+### Persisting extracted data
+
+Use the `document_type` and `schema_version` to look up the expected `payload` fields for that document type, then store the extracted data in your system.
+
+### Handling a failed extraction
+
+If extraction fails, you will receive `document_representation.failed` instead. The key signal is `"document_type": "unknown"` means the document was received but could not be classified or extracted. There is no `document_representation` in `included` and `last_document_representation` will be `null`.
+
+```json
+{
+  "data": {
+    "id": "014551bd-32c8-46c1-b17c-3a9f1984e39f",
+    "type": "webhook_notification",
+    "attributes": {
+      "event": "document_representation.failed",
+      "delivery_status": "pending",
+      "created_at": "2026-03-27T20:46:56Z"
+    },
+    "relationships": {
+      "reference_object": {
+        "data": {
+          "id": "31e9df4a-7539-4b44-8409-8e9c350d2ac7",
+          "type": "document"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "90df411d-b836-498b-bf0d-b320d56ab311",
+      "type": "email_submission",
+      "attributes": {
+        "subject": "[ediDocManager SHP HBL MBL HLCUSHA2601APKY2 / HBL CGGMSGH5110912]",
+        "from": ["sender@example.com"],
+        "sent_at": "2026-03-27T13:46:32-07:00"
+      }
+    },
+    {
+      "id": "31e9df4a-7539-4b44-8409-8e9c350d2ac7",
+      "type": "document",
+      "attributes": {
+        "document_type": "unknown",
+        "file_name": "f134a7229b5cf7b6c241c566448b9293_fail-1234.pdf",
+        "file_url": "https://t49-documents-prod.s3.amazonaws.com/..."
+      },
+      "relationships": {
+        "last_document_representation": {
+          "data": null
+        },
+        "email_submission": {
+          "data": {
+            "id": "90df411d-b836-498b-bf0d-b320d56ab311",
+            "type": "email_submission"
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+<Warning>
+  `document_type: "unknown"` means Terminal49 could not classify or extract the document. Log the document `id` and `file_url` for investigation. If failures recur on the same document type, contact Terminal49 support.
+</Warning>
+
+## Document Types in Scope
+
+The table below lists the document types Terminal49 currently classifies and extracts, along with the `document_type` value returned by the API.
+
+| Document type | `document_type` value | Notes |
+| --- | --- | --- |
+| Draft House Bill of Lading | `draft_house_bill_of_lading` | `hbl_type: "DRAFT"` in payload |
+| Final House Bill of Lading | `final_house_bill_of_lading` | `hbl_type: "TELEX"` in payload; often issued as a Sea Waybill |
+| Importer Security Filing | `importer_security_filing` | |
+| Master Bill of Lading | `master_bill_of_lading` | Often issued as a Sea Waybill |
+| Delivery Order | `dray_delivery_order` | |
+| Arrival Notice | `arrival_notice` | |
+| General Notice | `general_notice` | Includes container available notices |
+| Customs Entry | `customs_entry` | Includes in-bond documents |
+| Other | `other` | Used when no dedicated schema exists yet, e.g. freight invoices |
+
+Additional document types will be added in future phases.
+
+<Info>
+  **Null fields are intentional.** A `null` value means Terminal49 looked for that field in the source document but did not find it. Treat `null` as "checked, not present" rather than "field not supported" or "not checked".
+</Info>
 
 ## Use these endpoints while integrating
 
 - [`GET /webhook_notifications/examples`](/api-docs/api-reference/webhook-notifications/get-webhook-notification-payload-examples)
 - [`POST /webhooks/trigger`](/api-docs/api-reference/webhooks/trigger-a-webhook)
+
+You can trigger a test payload for a specific document type without sending an email:
+
+```bash
+curl -X POST https://api.terminal49.com/v2/webhooks/trigger \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-endpoint.example/webhooks",
+    "event": "document_representation.created",
+    "sample": {
+      "document_type": "dray_delivery_order"
+    }
+  }'
+```
 
 <Info>
   Webhook event availability depends on your account configuration. If you are not receiving expected events, contact Terminal49 support.
@@ -231,7 +411,6 @@ Use the webhook `event` and included `document` payload to update your internal 
 
 ## APIs involved
 
-- [`POST /documents`](/api-docs/api-reference/documents/upload-a-document)
 - [`GET /documents`](/api-docs/api-reference/documents/list-documents)
 - [`GET /documents/{id}`](/api-docs/api-reference/documents/get-a-document)
 - [`GET /documents/{id}/download_url`](/api-docs/api-reference/documents/get-a-document-download-url)
@@ -239,7 +418,3 @@ Use the webhook `event` and included `document` payload to update your internal 
 - [`GET /email_submissions/{id}`](/api-docs/api-reference/email-submissions/get-an-email-submission)
 - [`GET /document_schemas/{id}`](/api-docs/api-reference/document-schemas/get-a-document-schema)
 - [`Document representations resource`](/api-docs/api-reference/document-representations/document-representations-resource)
-
-## Planned (not live yet)
-
-- `email_submission.created` webhook event after inbound email acceptance.
