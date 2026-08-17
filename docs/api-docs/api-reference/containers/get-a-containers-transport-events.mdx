@@ -6,6 +6,24 @@ og:description: Fetch detailed transport event data for containers, providing re
 openapi: get /containers/{id}/transport_events
 ---
 
-This endpoint returns the container's full normalized transport event history — vessel, rail, transshipment, terminal/gate, delivery, and document events — across the entire journey. It does not support filtering by event type, data source, or timestamp via query parameters. To narrow results to a subset (for example, terminal-only events such as `full_in`, `full_out`, `empty_out`, `empty_in`, `vessel_discharged`, `vessel_arrived`, or `vessel_berthed`), fetch the full list and filter client-side on `attributes.event` or `attributes.data_source`.
+This endpoint returns the container's normalized transport event history — vessel, rail, transshipment, terminal/gate, delivery, and document events — across the entire journey. It does not accept filters for event type, data source, or timestamp. To narrow results to a subset (for example, terminal-only events such as `full_in`, `full_out`, `empty_out`, `empty_in`, `vessel_discharged`, `vessel_arrived`, or `vessel_berthed`), fetch the list and filter client-side on `attributes.event` or `attributes.data_source`.
+
+## Pagination
+
+The response follows the standard Terminal49 pagination shape: a `links` object (`self`, `current`, `next`, `prev`, `last`) and a `meta` object with `size` (page size) and `total` (total events for the container). Most containers have far fewer transport events than one page, so `links.next` is usually absent and a single request returns the full history.
+
+When a container does have more events than fit on one page, follow `links.next` until it is absent. Do not construct pagination URLs by hand — use the URLs returned in `links`.
+
+## Event types
+
+The `attributes.event` field is one of a fixed set of normalized event names covering vessel, rail, transshipment, feeder, terminal/gate, inland-destination, availability, and delivery milestones. The complete enum is defined on the `transport_event` schema in the OpenAPI spec and mirrored in the [Webhook Event Catalog](/api-docs/webhooks/event-catalog), which describes what each event means.
+
+The `attributes.data_source` field indicates where the event originated: `shipping_line`, `terminal`, or `ais`.
+
+## Null locations and timezones
 
 Some events may have a `null` `location_locode` and `timezone` — most commonly on estimated events. See [Event Timestamps](/api-docs/in-depth-guides/event-timestamps) for details on how to interpret those timestamps.
+
+## `transport_events` vs `raw_events`
+
+`transport_events` is the recommended endpoint for milestone data. Events are normalized across carriers and go through additional vetting to reduce false positives. `raw_events` is deprecated and returns the carrier feed as-is; it contains more events but with less consistent normalization. See [Get a container's raw events](/api-docs/api-reference/containers/get-a-containers-raw-events) for details.
