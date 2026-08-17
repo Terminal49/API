@@ -34,7 +34,7 @@ Make sure you have the following in place before building:
     Your server needs a reachable HTTPS URL to receive webhook POST requests from Terminal49. For local development, use a tool like [ngrok](https://ngrok.com) to expose a local port.
   </Step>
   <Step title="Webhook subscription">
-    Register your endpoint and subscribe to `document_representation.created` and `document_representation.failed` (see [Subscribing to Events](#subscribing-to-events) below).
+    Register your endpoint and subscribe to `document.extracted` and `document.extraction_failed` (see [Subscribing to Events](#subscribing-to-events) below).
   </Step>
 </Steps>
 
@@ -71,8 +71,8 @@ curl -X POST https://api.terminal49.com/v2/webhooks \
         "url": "https://your-server.com/webhooks/t49-documents",
         "active": true,
         "events": [
-          "document_representation.created",
-          "document_representation.failed"
+          "document.extracted",
+          "document.extraction_failed"
         ]
       }
     }
@@ -122,8 +122,8 @@ flowchart LR
     C -- No --> D[Terminal49 classifies document]
     D --> E[Terminal49 extracts structured data]
     E --> F{Extraction outcome}
-    F -- Success --> G[document_representation.created]
-    F -- Failure --> H[document_representation.failed]
+    F -- Success --> G[document.extracted]
+    F -- Failure --> H[document.extraction_failed]
 ```
 
 ## Workflow: step-by-step
@@ -136,13 +136,13 @@ flowchart LR
 
     **Multiple attachments:** Each attachment in a single email is processed independently and generates its own webhook event. All resulting webhooks reference the same `email_submission`.
 
-    **Unsupported files:** Encrypted or password-protected files cannot be processed and will result in a `document_representation.failed` event.
+    **Unsupported files:** Encrypted or password-protected files cannot be processed and will result in a `document.extraction_failed` event.
   </Step>
   <Step title="Terminal49 processes document">
     Terminal49 classifies and extracts structured data asynchronously. Processing typically completes within seconds to a few minutes depending on document complexity.
   </Step>
   <Step title="Receive webhook result">
-    You receive `document_representation.created` (extraction succeeded) or `document_representation.failed` (extraction could not complete). Parse the payload, route by `document_type`, store the extracted fields, and trigger your downstream processes.
+    You receive `document.extracted` (extraction succeeded) or `document.extraction_failed` (extraction could not complete). Parse the payload, route by `document_type`, store the extracted fields, and trigger your downstream processes.
   </Step>
 </Steps>
 
@@ -156,18 +156,18 @@ flowchart LR
 
 ## Webhooks You Should Handle
 
-A `document_representation` is the structured extraction result for a document. `document_representation.created` means extraction succeeded and structured data is available in the payload. `document_representation.failed` means Terminal49 could not produce an extraction result.
+A `document_representation` is the structured extraction result for a document. `document.extracted` means extraction succeeded and structured data is available in the payload. `document.extraction_failed` means Terminal49 could not produce an extraction result.
 
 | Event | Meaning | Signal |
 | --- | --- | --- |
-| `document_representation.created` | Extraction completed successfully | `document_type` is set; `payload` contains extracted fields |
-| `document_representation.failed` | Extraction did not complete | `document_type` is `"unknown"`; `last_document_representation` is `null` |
+| `document.extracted` | Extraction completed successfully | `document_type` is set; `payload` contains extracted fields |
+| `document.extraction_failed` | Extraction did not complete | `document_type` is `"unknown"`; `last_document_representation` is `null` |
 
 ## Webhook Payload Structure
 
 Every document webhook follows the same envelope structure. The `payload` object inside `document_representation` contains the extracted fields and varies by document type. See [Document Types in Scope](#document-types-in-scope) for full examples.
 
-`document_representation.created` envelope:
+`document.extracted` envelope:
 
 ```json
 {
@@ -175,7 +175,7 @@ Every document webhook follows the same envelope structure. The `payload` object
     "id": "89ec3520-cea3-447d-8404-341e0bfd3aa6",
     "type": "webhook_notification",
     "attributes": {
-      "event": "document_representation.created",
+      "event": "document.extracted",
       "delivery_status": "pending",
       "created_at": "2026-03-27T20:05:39Z"
     },
@@ -304,7 +304,7 @@ Use the `document_type` and `schema_version` to look up the expected `payload` f
 
 ### Handling a failed extraction
 
-If extraction fails, you will receive `document_representation.failed` instead. The key signal is `"document_type": "unknown"` means the document was received but could not be classified or extracted. There is no `document_representation` in `included` and `last_document_representation` will be `null`.
+If extraction fails, you will receive `document.extraction_failed` instead. The key signal is `"document_type": "unknown"` means the document was received but could not be classified or extracted. There is no `document_representation` in `included` and `last_document_representation` will be `null`.
 
 ```json
 {
@@ -312,7 +312,7 @@ If extraction fails, you will receive `document_representation.failed` instead. 
     "id": "014551bd-32c8-46c1-b17c-3a9f1984e39f",
     "type": "webhook_notification",
     "attributes": {
-      "event": "document_representation.failed",
+      "event": "document.extraction_failed",
       "delivery_status": "pending",
       "created_at": "2026-03-27T20:46:56Z"
     },
@@ -390,7 +390,7 @@ Additional document types will be added in future phases.
 - [`GET /webhook_notifications/examples`](/api-docs/api-reference/webhook-notifications/get-webhook-notification-payload-examples)
 - [`POST /webhooks/trigger`](/api-docs/api-reference/webhooks/trigger-a-webhook)
 
-You can trigger a test payload for a specific document type without sending an email:
+You can trigger a test payload without sending an email:
 
 ```bash
 curl -X POST https://api.terminal49.com/v2/webhooks/trigger \
@@ -398,10 +398,7 @@ curl -X POST https://api.terminal49.com/v2/webhooks/trigger \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://your-endpoint.example/webhooks",
-    "event": "document_representation.created",
-    "sample": {
-      "document_type": "dray_delivery_order"
-    }
+    "event": "document.extracted"
   }'
 ```
 
