@@ -17,7 +17,7 @@
     "sdk:docs": "npm run docs --workspace @terminal49/sdk"
   },
   "dependencies": {
-    "mintlify": "^4.2.585",
+    "mintlify": "^4.2.805",
     "openapi-fetch": "^0.15.2",
     "openapi-typescript": "^7.13.0"
   },
@@ -50,7 +50,7 @@
       "zod": "3.23.8"
     },
     "express-rate-limit": "^8.5.2",
-    "fast-uri": "^3.1.2",
+    "fast-uri": "^3.1.5",
     "hono": "^4.12.16",
     "ip-address": "^10.1.1",
     "js-yaml": "^4.1.1",
@@ -61,7 +61,7 @@
     "minimatch@10.2.5": {
       "brace-expansion": "5.0.6"
     },
-    "postcss": "^8.5.14",
+    "postcss": "^8.5.26",
     "rollup": "^4.60.4",
     "typedoc": {
       "minimatch": {
