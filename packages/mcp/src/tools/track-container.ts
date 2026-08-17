@@ -4,6 +4,7 @@
  */
 
 import { Terminal49Client } from '@terminal49/sdk';
+import { logMcpEvent } from '../logging.js';
 import { executeGetContainer } from './get-container.js';
 import { executeSearchContainer } from './search-container.js';
 
@@ -175,15 +176,13 @@ export async function executeTrackContainer(
     numberTypeOverride || inferNumberTypeFromPattern(number);
 
   const startTime = Date.now();
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.start',
-      tool: 'track_container',
-      number,
-      scac: requestedScac || heuristicScac,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.start',
+    tool: 'track_container',
+    number,
+    scac: requestedScac || heuristicScac,
+    timestamp: new Date().toISOString(),
+  });
 
   try {
     const existingContainer = await findExistingTrackedContainer(
@@ -253,15 +252,13 @@ export async function executeTrackContainer(
     const containerId = extractContainerId(trackingRequest);
 
     if (!containerId) {
-      console.error(
-        JSON.stringify({
-          event: 'tracking_request.pending',
-          number,
-          numberType: numberTypeOverride,
-          scac: requestedScac || heuristicScac,
-          timestamp: new Date().toISOString(),
-        }),
-      );
+      logMcpEvent({
+        event: 'tracking_request.pending',
+        number,
+        numberType: numberTypeOverride,
+        scac: requestedScac || heuristicScac,
+        timestamp: new Date().toISOString(),
+      });
 
       return {
         tracking_request_created: true,
@@ -279,14 +276,12 @@ export async function executeTrackContainer(
       };
     }
 
-    console.error(
-      JSON.stringify({
-        event: 'tracking_request.created',
-        number,
-        container_id: containerId,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tracking_request.created',
+      number,
+      container_id: containerId,
+      timestamp: new Date().toISOString(),
+    });
 
     // Step 2: Get full container details using the ID
     const containerDetails = await executeGetContainer(
@@ -295,16 +290,14 @@ export async function executeTrackContainer(
     );
 
     const duration = Date.now() - startTime;
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.complete',
-        tool: 'track_container',
-        number,
-        container_id: containerId,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.complete',
+      tool: 'track_container',
+      number,
+      container_id: containerId,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
 
     return {
       ...containerDetails,
@@ -322,31 +315,27 @@ export async function executeTrackContainer(
       /request type/.test(message) ||
       /\/data\/attributes\/number/.test(message)
     ) {
-      console.error(
-        JSON.stringify({
-          event: 'tracking_request.hint',
-          number,
-          message,
-          timestamp: new Date().toISOString(),
-        }),
-      );
+      logMcpEvent({
+        event: 'tracking_request.hint',
+        number,
+        message,
+        timestamp: new Date().toISOString(),
+      });
       throw new Error(
         `${message}. Automatic inference is currently unavailable for this input. Provide numberType (` +
           'container | booking_number | bill_of_lading) and scac, or use search_container/get_container if it is already tracked.',
       );
     }
 
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.error',
-        tool: 'track_container',
-        number,
-        error: (error as Error).name,
-        message,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.error',
+      tool: 'track_container',
+      number,
+      error: (error as Error).name,
+      message,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
 
     throw error;
   }

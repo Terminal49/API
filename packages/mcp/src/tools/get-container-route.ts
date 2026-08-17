@@ -9,6 +9,7 @@ import {
   NotFoundError,
   Terminal49Client,
 } from '@terminal49/sdk';
+import { logMcpEvent } from '../logging.js';
 
 export interface FeatureNotEnabledResult {
   error: 'FeatureNotEnabled';
@@ -54,29 +55,25 @@ export async function executeGetContainerRoute(
   }
 
   const startTime = Date.now();
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.start',
-      tool: 'get_container_route',
-      container_id: args.id,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.start',
+    tool: 'get_container_route',
+    container_id: args.id,
+    timestamp: new Date().toISOString(),
+  });
 
   try {
     const result = await client.containers.route(args.id, { format: 'both' });
     const raw = (result as any)?.raw ?? result;
     const duration = Date.now() - startTime;
 
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.complete',
-        tool: 'get_container_route',
-        container_id: args.id,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.complete',
+      tool: 'get_container_route',
+      container_id: args.id,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
 
     const summary = formatRouteResponse(raw);
     return summary;
@@ -95,17 +92,15 @@ export async function executeGetContainerRoute(
       return handleRouteNotFound(args.id, duration);
     }
 
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.error',
-        tool: 'get_container_route',
-        container_id: args.id,
-        error: (error as Error).name,
-        message: (error as Error).message,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.error',
+      tool: 'get_container_route',
+      container_id: args.id,
+      error: (error as Error).name,
+      message: (error as Error).message,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
 
     throw error;
   }
@@ -119,17 +114,15 @@ function handleFeatureNotEnabled(
     'Route tracking is a paid feature and is not enabled for this Terminal49 account. ' +
     'Contact support@terminal49.com to enable route data, or use get_container / get_container_transport_events for partial context.';
 
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.error',
-      tool: 'get_container_route',
-      container_id: containerId,
-      error: 'FeatureNotEnabled',
-      message: friendlyMessage,
-      duration_ms: duration,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.error',
+    tool: 'get_container_route',
+    container_id: containerId,
+    error: 'FeatureNotEnabled',
+    message: friendlyMessage,
+    duration_ms: duration,
+    timestamp: new Date().toISOString(),
+  });
 
   return {
     error: 'FeatureNotEnabled',
@@ -146,17 +139,15 @@ function handleRouteNotFound(
   const friendlyMessage =
     'Route data was not found for this container. The container ID may be incorrect or route data is unavailable.';
 
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.error',
-      tool: 'get_container_route',
-      container_id: containerId,
-      error: 'NotFound',
-      message: friendlyMessage,
-      duration_ms: duration,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.error',
+    tool: 'get_container_route',
+    container_id: containerId,
+    error: 'NotFound',
+    message: friendlyMessage,
+    duration_ms: duration,
+    timestamp: new Date().toISOString(),
+  });
 
   return {
     error: 'NotFound',

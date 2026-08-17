@@ -27,7 +27,10 @@ function getRegisteredTools(): Record<
 }
 
 describe('MCP tool annotations', () => {
-  const readOnlyTools = [
+  // ChatGPT app submission requires readOnlyHint: false for all tools that emit
+  // operational logs (which all Terminal49 tools do) and openWorldHint: false
+  // since they only interact with the user's private Terminal49 account.
+  const allTools = [
     'search_container',
     'get_container',
     'get_container_route',
@@ -37,44 +40,32 @@ describe('MCP tool annotations', () => {
     'list_containers',
     'list_shipments',
     'list_tracking_requests',
+    'track_container',
   ];
 
-  // get_supported_shipping_lines is a closed-world catalog; the other read
-  // tools query live shipment data and should be open-world.
-  const closedWorldReadTools = ['get_supported_shipping_lines'];
-
-  it('marks the nine read tools as read-only', () => {
+  it('marks all tools with conservative ChatGPT submission annotations', () => {
     const tools = getRegisteredTools();
 
-    for (const name of readOnlyTools) {
+    for (const name of allTools) {
       const annotations = tools[name]?.annotations;
       expect(annotations, name).toBeDefined();
-      expect(annotations?.readOnlyHint, name).toBe(true);
-
-      if (!closedWorldReadTools.includes(name)) {
-        expect(annotations?.openWorldHint, name).toBe(true);
-      }
+      // All tools emit redacted operational logs, so readOnlyHint is false.
+      expect(annotations?.readOnlyHint, `${name}.readOnlyHint`).toBe(false);
+      // All tools interact only with private Terminal49 accounts, not third-party systems.
+      expect(annotations?.openWorldHint, `${name}.openWorldHint`).toBe(false);
+      // No tool deletes or overwrites data irreversibly.
+      expect(annotations?.destructiveHint, `${name}.destructiveHint`).toBe(
+        false,
+      );
     }
   });
 
-  it('marks track_container as a non-destructive non-idempotent write', () => {
+  it('marks track_container as non-idempotent', () => {
     const tools = getRegisteredTools();
     const annotations = tools.track_container?.annotations;
 
     expect(annotations).toBeDefined();
-    expect(annotations?.readOnlyHint).toBe(false);
-    expect(annotations?.destructiveHint).toBe(false);
     expect(annotations?.idempotentHint).toBe(false);
-    expect(annotations?.openWorldHint).toBe(true);
-  });
-
-  it('marks get_supported_shipping_lines as a closed-world catalog', () => {
-    const tools = getRegisteredTools();
-    const annotations = tools.get_supported_shipping_lines?.annotations;
-
-    expect(annotations).toBeDefined();
-    expect(annotations?.readOnlyHint).toBe(true);
-    expect(annotations?.openWorldHint).toBe(false);
   });
 
   it('annotates every registered tool', () => {
@@ -90,7 +81,7 @@ describe('MCP tool annotations', () => {
     expect(
       Object.keys(tools).length,
       '_registeredTools is empty - SDK internals may have changed',
-    ).toBeGreaterThanOrEqual(readOnlyTools.length + 1);
+    ).toBeGreaterThanOrEqual(allTools.length);
 
     for (const [name, tool] of Object.entries(tools)) {
       expect(tool.annotations, name).toBeDefined();
