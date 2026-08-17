@@ -35,6 +35,11 @@ import {
   readListDisplayColumnsResource,
 } from './resources/list-display.js';
 import {
+  instrumentMcpServerWithPostHog,
+  registerPostHogExitHook,
+  shutdownPostHog,
+} from './posthog.js';
+import {
   captureMcpException,
   flushMcpEvents,
   instrumentMcpServer,
@@ -1172,16 +1177,26 @@ export function createTerminal49McpServer(
 
   const completeCarrierScac = createCarrierScacCompleter(client);
 
-  const server = instrumentMcpServer(
-    new McpServer(
-      {
-        name: 'terminal49-mcp',
-        version: '1.0.0',
-      },
-      {
-        instructions: TERMINAL49_SERVER_INSTRUCTIONS,
-      },
+  // Observability wrapping, outermost last. Sentry's wrapper returns a wrapped
+  // server; PostHog's `instrument()` patches request handlers in place and also
+  // proxies `_registeredTools`, so it is applied to the object the tools below
+  // are actually registered on and picks up every one of them. Both are no-ops
+  // when their respective env vars are unset.
+  const server = instrumentMcpServerWithPostHog(
+    instrumentMcpServer(
+      new McpServer(
+        {
+          name: 'terminal49-mcp',
+          version: '1.0.0',
+        },
+        {
+          instructions: TERMINAL49_SERVER_INSTRUCTIONS,
+        },
+      ),
     ),
+    // Groups the stateless HTTP path's events per account instead of minting an
+    // anonymous person per request.
+    { distinctId: accountId },
   );
 
   // ==================== TOOLS ====================
@@ -1893,6 +1908,15 @@ export async function runStdioServer() {
 
   const server = createTerminal49McpServer(apiToken, apiBaseUrl);
   const transport = new StdioServerTransport();
+
+  // Long-lived process: drain queued analytics on natural exit. No-ops (and
+  // registers no listener at all) when PostHog is unconfigured.
+  registerPostHogExitHook();
+
+  // The client closing stdin ends the session; flush before we lose the events.
+  transport.onclose = () => {
+    void shutdownPostHog();
+  };
 
   if (process.env.T49_MCP_STDIO_BANNER === '1') {
     console.error('Terminal49 MCP Server v1.0.0 running on stdio');

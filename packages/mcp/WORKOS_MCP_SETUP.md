@@ -54,6 +54,10 @@ In the WorkOS environment referenced by `WORKOS_AUTHORIZATION_SERVER_URL`:
 | `T49_CONNECTED_CLIENTS_RESOLVE_SECRET` | the resolve shared secret | Required to call `/connected-clients/resolve` |
 | `T49_MCP_ALLOWED_HOSTS` | include `mcp.terminal49.com` (if set at all) | Host allowlist; missing host → 403 |
 | `T49_MCP_SCOPES_SUPPORTED` | **leave unset** | WorkOS only issues `openid/profile/email/offline_access`; advertising `mcp:tools` etc. causes `invalid_scope` |
+| `POSTHOG_PROJECT_API_KEY` | the PostHog project API key | Enables MCP tool-usage analytics. **Leave unset and the integration is inert** — no client, no network call |
+| `POSTHOG_HOST` | optional; defaults to `https://f.terminal49.com` | First-party ingestion proxy, same host the docs site uses (`docs/docs.json`) |
+| `POSTHOG_ENABLED` | optional; defaults to `true` | Set `false` to kill-switch analytics without removing the key |
+| `POSTHOG_DEBUG` | optional; defaults to `false` | Verbose PostHog client logging; leave off in production |
 
 ## 3. Smoke tests
 

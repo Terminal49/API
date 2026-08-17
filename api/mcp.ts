@@ -12,6 +12,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as Sentry from '@sentry/node';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
+import { flushPostHogEvents } from '../packages/mcp/src/posthog.js';
 import { captureMcpException } from '../packages/mcp/src/sentry.js';
 import { protectedResourceMetadataUrl } from '../packages/mcp/src/resource.js';
 
@@ -604,5 +605,12 @@ export default async function handler(
     if (shouldFlushSentry || Sentry.isInitialized()) {
       await Sentry.flush(2000).catch(() => undefined);
     }
+    // Vercel freezes the function the moment the response is sent, so any batch
+    // still queued in the PostHog client would be dropped (or leak into the next
+    // invocation on a reused instance). Awaiting the flush here mirrors the
+    // Sentry.flush() above: one batched request per invocation. Deliberately
+    // preferred over `waitUntil`, which would add a @vercel/functions
+    // dependency for the same guarantee. No-ops when PostHog is unconfigured.
+    await flushPostHogEvents();
   }
 }
