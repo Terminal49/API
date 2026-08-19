@@ -4,6 +4,7 @@
  */
 
 import { NotFoundError, Terminal49Client } from '@terminal49/sdk';
+import { logMcpEvent } from '../logging.js';
 
 export interface GetContainerTransportEventsArgs {
   id: string;
@@ -37,14 +38,12 @@ export async function executeGetContainerTransportEvents(
   }
 
   const startTime = Date.now();
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.start',
-      tool: 'get_container_transport_events',
-      container_id: args.id,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.start',
+    tool: 'get_container_transport_events',
+    container_id: args.id,
+    timestamp: new Date().toISOString(),
+  });
 
   try {
     const result = await client.containers.events(args.id, { format: 'raw' });
@@ -133,48 +132,42 @@ function logComplete(
   startTime: number,
   source: string,
 ): void {
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.complete',
-      tool: 'get_container_transport_events',
-      container_id: id,
-      event_count: count,
-      source,
-      duration_ms: Date.now() - startTime,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.complete',
+    tool: 'get_container_transport_events',
+    container_id: id,
+    event_count: count,
+    source,
+    duration_ms: Date.now() - startTime,
+    timestamp: new Date().toISOString(),
+  });
 }
 
 function logFallback(id: string, error: unknown): void {
   // The primary 404 is expected (the sub-resource is not enabled for every
   // container), so it is not surfaced as an error — but operators
   // investigating fallback traffic need a signal to correlate against.
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.fallback',
-      tool: 'get_container_transport_events',
-      container_id: id,
-      reason: 'transport_events_subresource_not_found',
-      error: (error as Error).name,
-      message: (error as Error).message,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.fallback',
+    tool: 'get_container_transport_events',
+    container_id: id,
+    reason: 'transport_events_subresource_not_found',
+    error: (error as Error).name,
+    message: (error as Error).message,
+    timestamp: new Date().toISOString(),
+  });
 }
 
 function logError(id: string, error: unknown, startTime: number): void {
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.error',
-      tool: 'get_container_transport_events',
-      container_id: id,
-      error: (error as Error).name,
-      message: (error as Error).message,
-      duration_ms: Date.now() - startTime,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.error',
+    tool: 'get_container_transport_events',
+    container_id: id,
+    error: (error as Error).name,
+    message: (error as Error).message,
+    duration_ms: Date.now() - startTime,
+    timestamp: new Date().toISOString(),
+  });
 }
 
 function extractIncludedTransportEvents(raw: any): any[] {

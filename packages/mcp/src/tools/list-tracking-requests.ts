@@ -4,6 +4,7 @@
  */
 
 import { Terminal49Client } from '@terminal49/sdk';
+import { logMcpEvent } from '../logging.js';
 
 export interface ListTrackingRequestsArgs {
   filters?: Record<string, string>;
@@ -18,16 +19,14 @@ export async function executeListTrackingRequests(
   client: Terminal49Client,
 ): Promise<any> {
   const startTime = Date.now();
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.start',
-      tool: 'list_tracking_requests',
-      filters: args.filters,
-      page: args.page,
-      page_size: args.page_size,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.start',
+    tool: 'list_tracking_requests',
+    filters: args.filters,
+    page: args.page,
+    page_size: args.page_size,
+    timestamp: new Date().toISOString(),
+  });
 
   try {
     // Pagination is owned exclusively by the capped `page`/`page_size` schema.
@@ -53,31 +52,27 @@ export async function executeListTrackingRequests(
     });
 
     const duration = Date.now() - startTime;
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.complete',
-        tool: 'list_tracking_requests',
-        item_count: Array.isArray((result as any)?.items)
-          ? (result as any).items.length
-          : null,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.complete',
+      tool: 'list_tracking_requests',
+      item_count: Array.isArray((result as any)?.items)
+        ? (result as any).items.length
+        : null,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
 
     return result;
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.error',
-        tool: 'list_tracking_requests',
-        error: (error as Error).name,
-        message: (error as Error).message,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.error',
+      tool: 'list_tracking_requests',
+      error: (error as Error).name,
+      message: (error as Error).message,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
     throw error;
   }
 }
