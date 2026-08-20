@@ -8,7 +8,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "vp test --run",
+    "test": "vp test --run src",
     "lint": "vp lint src && vp fmt --check src",
     "format": "vp fmt --write src",
     "type-check": "tsc --noEmit"
