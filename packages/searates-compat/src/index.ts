@@ -5,10 +5,10 @@ export {
 } from './client.js';
 export { createShippingLinesHandler, createTrackingHandler } from './http.js';
 export {
+  emptyTrackingEnvelope,
   mapEvent,
   mapShippingLines,
   mapTrackingPayload,
-  pendingEnvelope,
 } from './mapping.js';
 export { SeaRatesCompatibilityGateway, type GatewayConfig } from './service.js';
 export type {

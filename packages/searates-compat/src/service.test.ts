@@ -67,13 +67,13 @@ describe('SeaRates compatibility gateway', () => {
     });
     await expect(gateway.tracking(undefined, query)).resolves.toEqual({
       status: 'error',
-      message: 'API_KEY_REQUIRED',
-      data: null,
+      message: 'WRONG_PARAMETERS',
+      data: {},
     });
     await expect(gateway.tracking('wrong-key', query)).resolves.toEqual({
       status: 'error',
       message: 'API_KEY_WRONG',
-      data: null,
+      data: {},
     });
   });
 
@@ -91,7 +91,41 @@ describe('SeaRates compatibility gateway', () => {
     await expect(gateway.tracking('bad-t49-key', query)).resolves.toEqual({
       status: 'error',
       message: 'API_KEY_WRONG',
-      data: null,
+      data: {},
+    });
+  });
+
+  it('uses SeaRates empty-data semantics while T49 is still pending', async () => {
+    const gateway = new SeaRatesCompatibilityGateway({
+      pollTimeoutMs: 0,
+      fetchImpl: async (input) => {
+        const url = String(input);
+        if (url.includes('/shipments?')) return response({ data: [] });
+        if (url.includes('/tracking_requests?')) {
+          return response({
+            data: [
+              {
+                id: 'request-1',
+                type: 'tracking_request',
+                attributes: { status: 'pending' },
+                relationships: { tracked_object: { data: null } },
+              },
+            ],
+          });
+        }
+        throw new Error(`Unexpected fixture request: ${url}`);
+      },
+    });
+
+    await expect(
+      gateway.tracking('pass-through-key', query),
+    ).resolves.toMatchObject({
+      status: 'success',
+      message: 'SEALINE_HASNT_PROVIDE_INFO',
+      data: {
+        metadata: { status: 'UNKNOWN' },
+        containers: [],
+      },
     });
   });
 

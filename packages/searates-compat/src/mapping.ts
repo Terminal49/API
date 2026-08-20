@@ -18,10 +18,10 @@ interface EventMapping {
 
 const EVENT_MAPPINGS: Record<string, EventMapping> = {
   'container.transport.empty_out': {
-    code: 'GTOT',
+    code: 'PICK',
     description: 'Empty Picked-up at Depot',
     eventType: 'EQUIPMENT',
-    status: 'CEP',
+    status: 'CPS',
     transport: 'TRUCK',
   },
   'container.transport.full_in': {
@@ -206,7 +206,7 @@ function equipment(attributes: JsonObject): {
 function seaRatesStatus(value: unknown): string {
   if (typeof value !== 'string') return 'UNKNOWN';
   if (['delivered', 'empty_returned', 'picked_up'].includes(value)) {
-    return 'COMPLETED';
+    return 'DELIVERED';
   }
   if (
     [
@@ -311,8 +311,8 @@ export function mapTrackingPayload(payload: TrackingPayload): SeaRatesEnvelope {
   );
   const overallStatus = containerStatuses.includes('IN_TRANSIT')
     ? 'IN_TRANSIT'
-    : containerStatuses.includes('COMPLETED')
-      ? 'COMPLETED'
+    : containerStatuses.includes('DELIVERED')
+      ? 'DELIVERED'
       : 'UNKNOWN';
 
   const locationList = locationResources.map((resource) => {
@@ -470,14 +470,14 @@ export function mapTrackingPayload(payload: TrackingPayload): SeaRatesEnvelope {
   };
 }
 
-export function pendingEnvelope(
+export function emptyTrackingEnvelope(
   number: string,
   type?: TrackingType,
   sealine?: string,
 ): SeaRatesEnvelope {
   return {
     status: 'success',
-    message: 'PENDING',
+    message: 'SEALINE_HASNT_PROVIDE_INFO',
     data: {
       metadata: {
         type: defaultType(number, type),
@@ -529,6 +529,7 @@ export function mapShippingLines(document: JsonApiDocument): SeaRatesEnvelope {
         : alternatives;
       return {
         name: stringValue(attributes.name),
+        short_name: stringValue(attributes.short_name),
         active: true,
         active_types: {
           ct: attributes.container_number_tracking_support === true,

@@ -75,7 +75,7 @@ export function createTrackingHandler(
       response.status(405).json({
         status: 'error',
         message: 'METHOD_NOT_ALLOWED',
-        data: null,
+        data: {},
       });
       return;
     }
@@ -90,7 +90,7 @@ export function createTrackingHandler(
       response.status(200).json({
         status: 'error',
         message: 'WRONG_TYPE',
-        data: null,
+        data: {},
       });
       return;
     }
@@ -124,7 +124,7 @@ export function createShippingLinesHandler(
       response.status(405).json({
         status: 'error',
         message: 'METHOD_NOT_ALLOWED',
-        data: null,
+        data: {},
       });
       return;
     }

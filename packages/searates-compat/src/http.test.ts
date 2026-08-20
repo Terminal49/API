@@ -94,7 +94,7 @@ describe('GET /tracking contract', () => {
     expect(output.body).toEqual({
       status: 'error',
       message: 'WRONG_TYPE',
-      data: null,
+      data: {},
     });
   });
 });

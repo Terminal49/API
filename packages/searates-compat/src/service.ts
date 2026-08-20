@@ -5,9 +5,9 @@ import {
   type Terminal49ClientConfig,
 } from './client.js';
 import {
+  emptyTrackingEnvelope,
   mapShippingLines,
   mapTrackingPayload,
-  pendingEnvelope,
 } from './mapping.js';
 import type {
   JsonApiDocument,
@@ -28,7 +28,7 @@ export interface GatewayConfig {
 }
 
 function errorEnvelope(message: string): SeaRatesEnvelope {
-  return { status: 'error', message, data: null };
+  return { status: 'error', message, data: {} };
 }
 
 function secureEqual(left: string, right: string): boolean {
@@ -78,7 +78,7 @@ export class SeaRatesCompatibilityGateway {
     apiKey: string | undefined,
     query: TrackingQuery,
   ): Promise<SeaRatesEnvelope> {
-    if (!apiKey) return errorEnvelope('API_KEY_REQUIRED');
+    if (!apiKey) return errorEnvelope('WRONG_PARAMETERS');
     if (!query.number) return errorEnvelope('WRONG_NUMBER');
 
     let client: Terminal49PublicClient;
@@ -101,22 +101,24 @@ export class SeaRatesCompatibilityGateway {
           type,
         });
         if (resolution.state === 'failed') {
-          const message =
-            resolution.failedReason === 'scac_auto_detect_failed'
-              ? 'AUTO_CANT_DETECT_SEALINE'
-              : resolution.failedReason === 'invalid_number'
-                ? 'WRONG_NUMBER'
-                : 'SEALINE_HASNT_PROVIDE_INFO';
-          return errorEnvelope(message);
+          if (resolution.failedReason === 'scac_auto_detect_failed') {
+            return errorEnvelope('AUTO_CANT_DETECT_SEALINE');
+          }
+          if (resolution.failedReason === 'invalid_number') {
+            return errorEnvelope('WRONG_NUMBER');
+          }
+          return emptyTrackingEnvelope(query.number, type, query.sealine);
         }
         if (resolution.state === 'pending') {
-          return pendingEnvelope(query.number, type, query.sealine);
+          return emptyTrackingEnvelope(query.number, type, query.sealine);
         }
         shipmentDocument = await client.shipment(resolution.shipmentId);
       }
 
       const shipment = shipmentFrom(shipmentDocument);
-      if (!shipment) return pendingEnvelope(query.number, type, query.sealine);
+      if (!shipment) {
+        return emptyTrackingEnvelope(query.number, type, query.sealine);
+      }
       let containers = containerResources(shipmentDocument);
 
       if (query.forceUpdate && containers.length > 0) {
@@ -158,7 +160,7 @@ export class SeaRatesCompatibilityGateway {
     try {
       client = this.client(apiKey, true);
     } catch {
-      return errorEnvelope(apiKey ? 'API_KEY_WRONG' : 'API_KEY_REQUIRED');
+      return errorEnvelope(apiKey ? 'API_KEY_WRONG' : 'WRONG_PARAMETERS');
     }
     try {
       return mapShippingLines(await client.shippingLines());

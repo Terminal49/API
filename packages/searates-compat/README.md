@@ -80,12 +80,14 @@ gateway:
 1. creates or reuses a Terminal49 tracking request;
 2. polls it for a short, bounded interval;
 3. returns the full SeaRates envelope if the shipment becomes available; or
-4. returns `status: "success"`, `message: "PENDING"`, `metadata.status:
-   "UNKNOWN"`, and empty data arrays.
+4. returns SeaRates' successful empty-data outcome:
+   `status: "success"`, `message: "SEALINE_HASNT_PROVIDE_INFO"`,
+   `metadata.status: "UNKNOWN"`, and empty data arrays.
 
-Retry the same `GET /tracking` request after a pending response. The gateway
-reuses the existing tracking request instead of creating another one. Terminal49
-failure reasons are translated to SeaRates-style messages such as
+SeaRates has no documented pending response, so the gateway does not invent one.
+Retry the same `GET /tracking` request after the empty-data outcome. The gateway
+reuses the existing Terminal49 tracking request instead of creating another one.
+Terminal49 failure reasons are translated to SeaRates-style messages such as
 `WRONG_NUMBER`, `AUTO_CANT_DETECT_SEALINE`, and
 `SEALINE_HASNT_PROVIDE_INFO`.
 

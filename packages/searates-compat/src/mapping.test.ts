@@ -64,7 +64,7 @@ describe('SeaRates response mapping', () => {
   });
 
   it.each([
-    ['container.transport.empty_out', 'GTOT', 'CEP'],
+    ['container.transport.empty_out', 'PICK', 'CPS'],
     ['container.transport.full_in', 'GTIN', 'CGI'],
     ['container.transport.vessel_loaded', 'LOAD', 'CLL'],
     ['container.transport.vessel_departed', 'DEPA', 'VDL'],
@@ -99,6 +99,7 @@ describe('SeaRates response mapping', () => {
       data: [
         {
           name: 'Mediterranean Shipping Company',
+          short_name: 'MSC',
           active: true,
           active_types: {
             ct: true,
