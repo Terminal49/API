@@ -43,8 +43,12 @@ You do not need to talk to anyone to try this.
 </Warning>
 
 <Tip>
-  If you want to test without a live shipment, use the [test tracking numbers](/api-docs/useful-info/test-numbers), which simulate success, failure, and edge-case outcomes.
+  If you want to test without a live shipment, use the [test tracking numbers](/api-docs/useful-info/test-numbers), which simulate success and failure outcomes.
 </Tip>
+
+<Note>
+  **Migration offer:** sign up now and the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-id) — vessel schedules, AIS positions, and projected routes — is free for your first month.
+</Note>
 
 ## The architectural shift
 
@@ -67,28 +71,28 @@ The biggest difference is not the workflow. It is the data surface. Terminal49 i
 |  | Vizion | Terminal49 |
 | --- | --- | --- |
 | Tracking model | Reference subscription, then push or poll | Register once, then push or poll |
-| Authentication | API key header (format varies by plan) | `Authorization: Token` header |
-| Base URL | `https://api.vizionapi.com` | `https://api.terminal49.com/v2` |
+| Authentication | `X-API-Key` header | `Authorization: Token` header |
+| Base URL | `https://prod.vizionapi.com` | `https://api.terminal49.com/v2` |
 | Content type | `application/json` | `application/vnd.api+json` |
 | Response format | Custom JSON | JSON:API |
 | Webhooks | Subscription-based | 30\+ events, HMAC-signed |
-| Carrier identification | Carrier reference or SCAC | `scac`, or omit and use Infer |
-| Terminal holds and fees | Not available | Included on the container object |
-| Last free day | Not available | Included, with per-source breakdown |
+| Carrier identification | Carrier reference or SCAC | `scac`, or `auto_detect_vocc_scac` |
+| Terminal holds and fees | No direct equivalent | Included on the container object |
+| Last free day | No direct equivalent | Included, with per-source breakdown |
 | Rail milestones | Limited | North American Class I and short-line |
 | Getting an API key | Typically requires sales contact for higher tiers | Self-serve |
 
 ## Authentication
 
-Move from Vizion's key header to Terminal49's `Token` prefix. Note the content type change.
+Move from Vizion's `X-API-Key` header to Terminal49's `Authorization: Token` header. Note the content type change.
 
 <CodeGroup>
 
 ```bash Vizion
-curl -X POST https://api.vizionapi.com/v1/references \
+curl -X POST https://prod.vizionapi.com/references \
   -H "Content-Type: application/json" \
-  -H "Authorization: YOUR_VIZION_KEY" \
-  -d '{"container": "MRKU9465770", "carrier": "MAEU"}'
+  -H "X-API-Key: YOUR_VIZION_KEY" \
+  -d '{"container_id": "MRKU9465770", "carrier_code": "MAEU"}'
 ```
 
 ```bash Terminal49
@@ -107,21 +111,21 @@ curl -X POST https://api.terminal49.com/v2/tracking_requests \
   Note the `Token` prefix. It is not `Bearer`.
 </Note>
 
-Vizion's exact header format varies by plan or integration type. If you pass the key in a custom header like `x-api-key`, the change is the same: move the value into `Authorization: Token YOUR_T49_KEY`.
+Vizion reads the key from the `X-API-Key` header. Terminal49 reads it from `Authorization: Token YOUR_T49_KEY` — a different header name and a prefixed value, so change both.
 
 ## Request parameter mapping
 
 | Vizion parameter | Terminal49 equivalent | Notes |
 | --- | --- | --- |
-| `container` or `bill_of_lading` | `request_number` | One identifier per tracking request |
-| `carrier` | `scac` | Same SCAC values for most carriers |
-| `carrier` omitted | Omit `scac`, or call [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) | Returns the predicted SCAC and number type |
+| `container_id` or `bill_of_lading` | `request_number` | One identifier per tracking request |
+| `carrier_code` | `scac` | Same SCAC values for most carriers |
+| `carrier_code` omitted | Set `auto_detect_vocc_scac: true`, or call [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) first | Auto-detection runs asynchronously; a failed inference fails the tracking request with `scac_auto_detect_failed` |
 | `callback_url` | `POST /v2/webhooks` | Register once, subscribe to specific events |
-| \[provider's refresh field\] | `POST /v2/containers/{id}/refresh` | Forces an immediate pull from all sources |
-| \[provider's reference tagging\] | `shipment.attributes.reference_numbers` | Tag shipments with your internal IDs |
+| Re-poll / refresh | `PATCH /v2/containers/{id}/refresh` | Forces an immediate pull from all sources. Paid feature — requires account enablement, limited to 10 requests per minute |
+| Your internal reference tags | `shipment.attributes.reference_numbers` | Tag shipments with your internal IDs |
 
 <Note>
-  Vizion accepts a carrier reference or name alongside the number. Terminal49 takes a SCAC (`request_type` \+ `scac`) or omits the SCAC to use Infer. Track by BOL and we return every container on that bill of lading as related container resources.
+  Vizion accepts a carrier reference or name alongside the number. Terminal49 takes a SCAC (`request_type` \+ `scac`) or omits the SCAC to use Infer. Track by BOL and we return every container on that bill of lading as related container resources. Container-number tracking requests are currently in beta.
 </Note>
 
 ## Response field mapping
@@ -134,47 +138,47 @@ Use the [`include` parameter](/api-docs/in-depth-guides/including-resources) to 
 
 | Vizion | Terminal49 |
 | --- | --- |
-| \[provider's shipment number field\] | `shipment.attributes.bill_of_lading_number` |
-| \[provider's carrier field\] | `shipment.attributes.shipping_line_scac` |
-| \[provider's carrier name field\] | `shipment.attributes.shipping_line_name` |
-| \[provider's shipment status field\] | Derived from container status and milestones |
-| \[provider's origin location field\] | `shipment.relationships.port_of_lading` |
-| \[provider's destination location field\] | `shipment.relationships.port_of_discharge` |
-| \[provider's inland destination field\] | `shipment.relationships.destination` |
-| \[provider's ETA field\] | `shipment.attributes.pod_eta_at` |
-| \[provider's vessel name field\] | `shipment.attributes.pod_vessel_name` |
-| \[provider's vessel IMO field\] | `shipment.attributes.pod_vessel_imo` |
+| Bill of lading number | `shipment.attributes.bill_of_lading_number` |
+| Carrier SCAC | `shipment.attributes.shipping_line_scac` |
+| Carrier name | `shipment.attributes.shipping_line_name` |
+| Shipment status | Derived from container status and milestones |
+| Port of loading | `shipment.relationships.port_of_lading` |
+| Port of discharge | `shipment.relationships.port_of_discharge` |
+| Inland destination | `shipment.relationships.destination` |
+| ETA at discharge port | `shipment.attributes.pod_eta_at` |
+| Vessel name | `shipment.attributes.pod_vessel_name` |
+| Vessel IMO | `shipment.attributes.pod_vessel_imo` |
 
 ### Container level
 
 | Vizion | Terminal49 |
 | --- | --- |
-| \[provider's container number field\] | `container.attributes.number` |
-| \[provider's ISO code field\] | `container.attributes.equipment_type` \+ `equipment_length` \+ `equipment_height` |
-| \[provider's container size/type field\] | Same three fields above |
-| \[provider's container status field\] | `container.attributes.current_status` |
-| \[provider's events array\] | Container timestamps, [transport events](/api-docs/api-reference/containers/get-a-containers-transport-events), and webhook events |
+| Container number | `container.attributes.number` |
+| Equipment / ISO code | `container.attributes.equipment_type` \+ `equipment_length` \+ `equipment_height` |
+| Container size / type | Same three fields above |
+| Container status | `container.attributes.current_status` |
+| Events array | Container timestamps, [transport events](/api-docs/api-reference/containers/get-a-containers-transport-events), and webhook events |
 
 <Note>
-  Vizion returns a single ISO code string like `45G1`. Terminal49 splits this into three normalized fields: type (dry, reefer, open top, flat rack, tank, hard top), length (20, 40, 45, 50), and height (standard, high cube). If you were parsing ISO codes yourself, you can delete that code.
+  Vizion returns a single ISO code string like `45G1`. Terminal49 splits this into three normalized fields: type (dry, reefer, open top, flat rack, bulk, tank), length (10, 20, 40, 45), and height (standard, high cube). If you were parsing ISO codes yourself, you can delete that code.
 </Note>
 
 ### Locations, facilities, and vessels
 
 | Vizion | Terminal49 |
 | --- | --- |
-| \[provider's port name field\] | `port.attributes.name` |
-| \[provider's port UN/LOCODE field\] | `port.attributes.code` |
-| \[provider's port lat/lng fields\] | `port.attributes.latitude` / `.longitude` |
-| \[provider's port timezone field\] | `port.attributes.time_zone` |
-| \[provider's port country field\] | `port.attributes.country_code` |
-| \[provider's terminal name field\] | `terminal.attributes.name` |
-| \[provider's terminal SMDG field\] | `terminal.attributes.smdg_code` |
-| \[provider's terminal BIC field\] | `terminal.attributes.bic_code` |
-| \[provider's vessel name field\] | `shipment.attributes.pod_vessel_name` |
-| \[provider's vessel IMO field\] | `shipment.attributes.pod_vessel_imo` |
-| \[provider's vessel MMSI field\] | Available via the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-imo) |
-| \[provider's vessel call sign/flag fields\] | Not returned |
+| Port name | `port.attributes.name` |
+| Port UN/LOCODE | `port.attributes.code` |
+| Port coordinates | `port.attributes.latitude` / `.longitude` |
+| Port timezone | `port.attributes.time_zone` |
+| Port country | `port.attributes.country_code` |
+| Terminal / facility name | `terminal.attributes.name` |
+| Terminal SMDG code | `terminal.attributes.smdg_code` |
+| Terminal BIC facility code | `terminal.attributes.bic_facility_code` |
+| Vessel name | `shipment.attributes.pod_vessel_name` |
+| Vessel IMO | `shipment.attributes.pod_vessel_imo` |
+| Vessel MMSI | Available via the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-imo) |
+| Vessel call sign / flag | Not returned |
 
 ## Milestone and event mapping
 
@@ -182,14 +186,14 @@ Vizion returns event arrays via updates or webhooks. Terminal49 exposes the same
 
 | Vizion event | Milestone | Terminal49 event |
 | --- | --- | --- |
-| \[provider's loaded event\] | Loaded on vessel at origin | `container.transport.vessel_loaded` |
-| \[provider's departed event\] | Vessel departed origin | `container.transport.vessel_departed` |
-| \[provider's arrived event\] | Vessel arrived at destination | `container.transport.vessel_arrived` |
-| \[provider's discharged event\] | Discharged from vessel | `container.transport.vessel_discharged` |
-| \[provider's gated out event\] | Gated out at destination | `container.transport.full_out` |
-| \[provider's gated in event\] | Gated in at origin | `container.transport.full_in` |
-| \[provider's empty pickup event\] | Empty picked up at origin | `container.transport.empty_out` |
-| \[provider's empty return event\] | Empty returned at destination | `container.transport.empty_in` |
+| Loaded on vessel | Loaded on vessel at origin | `container.transport.vessel_loaded` |
+| Vessel departed | Vessel departed origin | `container.transport.vessel_departed` |
+| Vessel arrived | Vessel arrived at destination | `container.transport.vessel_arrived` |
+| Discharged from vessel | Discharged from vessel | `container.transport.vessel_discharged` |
+| Gated out (full out) | Gated out at destination | `container.transport.full_out` |
+| Gated in (full in) | Gated in at origin | `container.transport.full_in` |
+| Empty picked up | Empty picked up at origin | `container.transport.empty_out` |
+| Empty returned | Empty returned at destination | `container.transport.empty_in` |
 
 Terminal49 also emits milestones Vizion has no equivalent for:
 
@@ -292,7 +296,7 @@ function isReadyForPickup(container) {
 Full detail in [Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
 
 <Info>
-  Holds, fees, LFD, and availability come back on the container object wherever the terminal is a supported source. They are not a paid add-on and they do not require a sales conversation. See [Entitlements](/api-docs/useful-info/entitlements) for the features that do require account enablement. Rail LFD and the embeddable widget are the main ones.
+  Holds, fees, LFD, and availability come back on the container object wherever the terminal is a supported source. They are not a paid add-on and they do not require a sales conversation. See [Entitlements](/api-docs/useful-info/entitlements) for the features that do require account enablement. Routing Data (container map and vessel positions), rail LFD, container refresh, and the embeddable map and widget are the gated ones.
 </Info>
 
 ## Gotchas that will bite you
@@ -341,15 +345,15 @@ Rough equivalence for the Vizion errors you are handling today:
 
 | Vizion error | Terminal49 |
 | --- | --- |
-| \[provider auth error\] | HTTP 401 |
-| \[provider permission error\] | HTTP 403 |
-| \[provider rate limit error\] | HTTP 429 |
-| \[provider validation error\] | HTTP 400 or 422 |
-| \[provider carrier not supported\] | HTTP 422 |
-| \[provider no data found\] | `tracking_request.failed`, or `awaiting_manifest` if not yet manifested |
-| \[provider temporary unavailability\] | Not surfaced. We retry internally. |
+| Auth error | HTTP 401 |
+| Permission error | HTTP 403 |
+| Rate limit error | HTTP 429 |
+| Validation error | HTTP 400 or 422 |
+| Carrier not supported | HTTP 422 |
+| No data found | `tracking_request.failed`, or `awaiting_manifest` if not yet manifested |
+| Temporary unavailability | Not surfaced. We retry internally. |
 
-The [TypeScript SDK](/sdk/introduction) maps these to typed errors (`AuthenticationError`, `ValidationError`, `RateLimitError`, `UpstreamError`, `FeatureNotEnabledError`) and retries rate-limit and server errors automatically with exponential backoff.
+The [TypeScript SDK](/sdk/introduction) maps these to typed errors (`AuthenticationError`, `ValidationError`, `RateLimitError`, `UpstreamError`, `FeatureNotEnabledError`, `AuthorizationError`, `NotFoundError`) and retries rate-limit and server errors automatically with exponential backoff.
 
 ## Where we are narrower than Vizion
 
@@ -483,7 +487,7 @@ Copy this into your agent. Replace the bracketed placeholders in the **Repo cont
 ```markdown Terminal49 migration agent prompt expandable icon=robot wrap
 You are migrating this codebase from the Vizion tracking API to the Terminal49 API,
 side by side. Terminal49's authoritative migration guide is at
-https://terminal49.com/docs/api-docs/getting-started/migrate-from-vizion. Use it as
+https://terminal49.com/docs/migrate/vizion. Use it as
 the source of truth for field mappings, event names, error codes, and behavior differences.
 
 # Repo context (fill this in before running)
@@ -533,7 +537,7 @@ the source of truth for field mappings, event names, error codes, and behavior d
     tracking request ID.
   - `getShipment(id, { include: 'containers,port_of_lading,port_of_discharge,...' })`.
   - `getContainer(id)`.
-  - `refreshContainer(id)` mapping to `POST /v2/containers/{id}/refresh`.
+  - `refreshContainer(id)` mapping to `PATCH /v2/containers/{id}/refresh`.
 - Normalize responses to the same shape Vizion callers expect today, using the field
   mapping from the guide. Split `iso_code` into `equipment_type`, `equipment_length`,
   `equipment_height`. Convert timestamps to UTC + `time_zone`.
@@ -638,6 +642,6 @@ If something in this mapping is wrong or incomplete, tell us. We would rather fi
   </Card>
 
   <Card title="Test numbers" icon="flask" href="/api-docs/useful-info/test-numbers">
-    Simulate success, failure, and edge cases
+    Simulate success and failure outcomes
   </Card>
 </CardGroup>

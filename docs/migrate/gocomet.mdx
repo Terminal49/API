@@ -45,8 +45,12 @@ You do not need to talk to anyone to try this.
 </Warning>
 
 <Tip>
-  If you want to test without a live shipment, use the [test tracking numbers](/api-docs/useful-info/test-numbers), which simulate success, failure, and edge-case outcomes.
+  If you want to test without a live shipment, use the [test tracking numbers](/api-docs/useful-info/test-numbers), which simulate success and failure outcomes.
 </Tip>
+
+<Note>
+  **Migration offer:** sign up now and the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-id) — vessel schedules, AIS positions, and projected routes — is free for your first month.
+</Note>
 
 ## The architectural shift
 
@@ -72,13 +76,13 @@ You can keep polling if you prefer. Point your existing scheduler at `GET /v2/sh
 | --- | --- | --- |
 | Tracking model | Poll on demand | Register once, then push or poll |
 | Authentication | API key via header | `Authorization: Token` header |
-| Base URL | `https://gocomet.com` | `https://api.terminal49.com/v2` |
+| Base URL | Your GoComet API endpoint | `https://api.terminal49.com/v2` |
 | Content type | `application/json` | `application/vnd.api+json` |
 | Response format | Custom JSON | JSON:API |
 | Webhooks | Limited or none | 30\+ events, HMAC-signed |
-| Carrier identification | SCAC or carrier name | `scac`, or omit and use Infer |
-| Terminal holds and fees | Not available | Included on the container object |
-| Last free day | Not available | Included, with per-source breakdown |
+| Carrier identification | SCAC or carrier name | `scac`, or `auto_detect_vocc_scac` |
+| Terminal holds and fees | No direct equivalent | Included on the container object |
+| Last free day | No direct equivalent | Included, with per-source breakdown |
 | Rail milestones | Limited | North American Class I and short-line |
 | Getting an API key | Self-serve | Self-serve |
 
@@ -89,7 +93,8 @@ Move from your provider's API key header format to ours.
 <CodeGroup>
 
 ```bash GoComet
-curl "https://gocomet.com/api/shipment-tracking" \
+# However your GoComet integration authenticates today, for example:
+curl "https://<your-gocomet-api-endpoint>/shipment-tracking" \
   -H "X-API-Key: YOUR_GOCOMET_KEY" \
   -H "Content-Type: application/json"
 ```
@@ -114,18 +119,18 @@ curl -X POST https://api.terminal49.com/v2/tracking_requests \
 
 | GoComet parameter | Terminal49 equivalent | Notes |
 | --- | --- | --- |
-| \[GoComet reference number field\] | `request_number` | Container number, BOL, or booking |
-| \[GoComet BOL type parameter\] | `request_type: "bill_of_lading"` | Master or house BOL |
-| \[GoComet container type parameter\] | `request_type: "container"` |  |
-| \[GoComet booking type parameter\] | `request_type: "booking_number"` |  |
-| \[GoComet carrier identifier field\] | `scac` | Same SCAC values for most carriers |
-| \[GoComet auto-detect parameter\] | Omit `scac`, or call [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) | Returns the predicted SCAC and number type |
-| \[GoComet force refresh parameter\] | `POST /v2/containers/{id}/refresh` | Forces an immediate pull from all sources |
-| \[GoComet route parameter\] | Always included | See [Routing](/api-docs/in-depth-guides/routing) |
-| \[GoComet API key header\] | `Authorization` header |  |
+| Reference number field | `request_number` | Container number, BOL, or booking |
+| BOL type parameter | `request_type: "bill_of_lading"` | Master or house BOL |
+| Container type parameter | `request_type: "container"` |  |
+| Booking type parameter | `request_type: "booking_number"` |  |
+| Carrier identifier field | `scac` | Same SCAC values for most carriers |
+| Auto-detect parameter | Set `auto_detect_vocc_scac: true`, or call [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) first | Auto-detection runs asynchronously; a failed inference fails the tracking request with `scac_auto_detect_failed` |
+| Force refresh parameter | `PATCH /v2/containers/{id}/refresh` | Forces an immediate pull from all sources. Paid feature — requires account enablement, limited to 10 requests per minute |
+| Route parameter | `GET /v2/containers/{id}/map_geojson` — requires the Routing Data entitlement | See [Routing](/api-docs/in-depth-guides/routing) |
+| API key header | `Authorization` header |  |
 
 <Note>
-  Terminal49 takes one identifier per tracking request. Track by BOL and we return every container on that bill of lading as related container resources.
+  Terminal49 takes one identifier per tracking request. Track by BOL and we return every container on that bill of lading as related container resources. Container-number tracking requests are currently in beta.
 </Note>
 
 ## Response field mapping
@@ -138,45 +143,45 @@ Use the [`include` parameter](/api-docs/in-depth-guides/including-resources) to 
 
 | GoComet | Terminal49 |
 | --- | --- |
-| \[GoComet BOL field\] | `shipment.attributes.bill_of_lading_number` |
-| \[GoComet carrier SCAC field\] | `shipment.attributes.shipping_line_scac` |
-| \[GoComet carrier name field\] | `shipment.attributes.shipping_line_name` |
-| \[GoComet shipment status field\] | Derived from container status and milestones |
-| \[GoComet origin place field\] | `shipment.attributes.port_of_lading_*` (place of receipt) |
-| \[GoComet POL field\] | `shipment.relationships.port_of_lading` |
-| \[GoComet POD field\] | `shipment.relationships.port_of_discharge` |
-| \[GoComet destination field\] | `shipment.relationships.destination` (inland) |
-| \[GoComet ETA field\] | `shipment.attributes.pod_eta_at` |
+| BOL field | `shipment.attributes.bill_of_lading_number` |
+| Carrier SCAC field | `shipment.attributes.shipping_line_scac` |
+| Carrier name field | `shipment.attributes.shipping_line_name` |
+| Shipment status field | Derived from container status and milestones |
+| Origin place field | `shipment.attributes.port_of_lading_*` (place of receipt) |
+| POL field | `shipment.relationships.port_of_lading` |
+| POD field | `shipment.relationships.port_of_discharge` |
+| Destination field | `shipment.relationships.destination` (inland) |
+| ETA field | `shipment.attributes.pod_eta_at` |
 
 ### Container level
 
 | GoComet | Terminal49 |
 | --- | --- |
-| \[GoComet container number field\] | `container.attributes.number` |
-| \[GoComet ISO code field\] | `container.attributes.equipment_type` \+ `equipment_length` \+ `equipment_height` |
-| \[GoComet container size field\] | Same three fields above |
-| \[GoComet container status field\] | `container.attributes.current_status` |
-| \[GoComet container events field\] | Container timestamps, [transport events](/api-docs/api-reference/containers/get-a-containers-transport-events), and webhook events |
+| Container number field | `container.attributes.number` |
+| ISO code field | `container.attributes.equipment_type` \+ `equipment_length` \+ `equipment_height` |
+| Container size field | Same three fields above |
+| Container status field | `container.attributes.current_status` |
+| Container events field | Container timestamps, [transport events](/api-docs/api-reference/containers/get-a-containers-transport-events), and webhook events |
 
 <Note>
-  GoComet likely returns a single ISO code string like `45G1`. Terminal49 splits this into three normalized fields: type (dry, reefer, open top, flat rack, tank, hard top), length (20, 40, 45, 50), and height (standard, high cube). If you were parsing ISO codes yourself, you can delete that code.
+  GoComet likely returns a single ISO code string like `45G1`. Terminal49 splits this into three normalized fields: type (dry, reefer, open top, flat rack, bulk, tank), length (10, 20, 40, 45), and height (standard, high cube). If you were parsing ISO codes yourself, you can delete that code.
 </Note>
 
 ### Locations, facilities, and vessels
 
 | GoComet | Terminal49 |
 | --- | --- |
-| \[GoComet port name field\] | `port.attributes.name` |
-| \[GoComet port code field\] | `port.attributes.code` |
-| \[GoComet port lat/lng fields\] | `port.attributes.latitude` / `.longitude` |
-| \[GoComet port timezone field\] | `port.attributes.time_zone` |
-| \[GoComet port country field\] | `port.attributes.country_code` |
-| \[GoComet terminal name field\] | `terminal.attributes.name` |
-| \[GoComet terminal SMDG field\] | `terminal.attributes.smdg_code` |
-| \[GoComet terminal BIC field\] | `terminal.attributes.bic_code` |
-| \[GoComet vessel name field\] | `shipment.attributes.pod_vessel_name` |
-| \[GoComet vessel IMO field\] | `shipment.attributes.pod_vessel_imo` |
-| \[GoComet vessel MMSI field\] | Available via the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-imo) |
+| Port name field | `port.attributes.name` |
+| Port code field | `port.attributes.code` |
+| Port lat/lng fields | `port.attributes.latitude` / `.longitude` |
+| Port timezone field | `port.attributes.time_zone` |
+| Port country field | `port.attributes.country_code` |
+| Terminal name field | `terminal.attributes.name` |
+| Terminal SMDG field | `terminal.attributes.smdg_code` |
+| Terminal BIC field | `terminal.attributes.bic_facility_code` |
+| Vessel name field | `shipment.attributes.pod_vessel_name` |
+| Vessel IMO field | `shipment.attributes.pod_vessel_imo` |
+| Vessel MMSI field | Available via the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-imo) |
 
 ## Milestone and event mapping
 
@@ -184,12 +189,12 @@ GoComet returns a flat events array with event names or codes attached to each s
 
 | GoComet event | Milestone | Terminal49 event |
 | --- | --- | --- |
-| \[GoComet loaded event\] | Loaded on vessel at origin | `container.transport.vessel_loaded` |
-| \[GoComet departed event\] | Vessel departed origin | `container.transport.vessel_departed` |
-| \[GoComet arrived event\] | Vessel arrived at destination | `container.transport.vessel_arrived` |
-| \[GoComet discharged event\] | Discharged from vessel | `container.transport.vessel_discharged` |
-| \[GoComet gated out event\] | Gated out at destination | `container.transport.full_out` |
-| \[GoComet gated in event\] | Gated in at origin | `container.transport.full_in` |
+| Loaded event | Loaded on vessel at origin | `container.transport.vessel_loaded` |
+| Departed event | Vessel departed origin | `container.transport.vessel_departed` |
+| Arrived event | Vessel arrived at destination | `container.transport.vessel_arrived` |
+| Discharged event | Discharged from vessel | `container.transport.vessel_discharged` |
+| Gated out event | Gated out at destination | `container.transport.full_out` |
+| Gated in event | Gated in at origin | `container.transport.full_in` |
 | — | Empty picked up at origin | `container.transport.empty_out` |
 | — | Empty returned at destination | `container.transport.empty_in` |
 
@@ -294,7 +299,7 @@ function isReadyForPickup(container) {
 Full detail in [Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
 
 <Info>
-  Holds, fees, LFD, and availability come back on the container object wherever the terminal is a supported source. They are not a paid add-on and they do not require a sales conversation. See [Entitlements](/api-docs/useful-info/entitlements) for the features that do require account enablement. Rail LFD and the embeddable widget are the main ones.
+  Holds, fees, LFD, and availability come back on the container object wherever the terminal is a supported source. They are not a paid add-on and they do not require a sales conversation. See [Entitlements](/api-docs/useful-info/entitlements) for the features that do require account enablement. Routing Data (container map and vessel positions), rail LFD, container refresh, and the embeddable map and widget are the gated ones.
 </Info>
 
 ## Gotchas that will bite you
@@ -347,15 +352,15 @@ Rough equivalence for the GoComet errors you are handling today:
 
 | GoComet error | Terminal49 |
 | --- | --- |
-| \[GoComet invalid API key error\] | HTTP 401 |
-| \[GoComet insufficient permissions error\] | HTTP 403 |
-| \[GoComet rate limit error\] | HTTP 429 |
-| \[GoComet invalid parameter error\] | HTTP 400 or 422 |
-| \[GoComet unsupported carrier error\] | HTTP 422 |
-| \[GoComet no data found error\] | `tracking_request.failed`, or `awaiting_manifest` if not yet manifested |
-| \[GoComet service unavailable error\] | Not surfaced. We retry internally. |
+| Invalid API key error | HTTP 401 |
+| Insufficient permissions error | HTTP 403 |
+| Rate limit error | HTTP 429 |
+| Invalid parameter error | HTTP 400 or 422 |
+| Unsupported carrier error | HTTP 422 |
+| No data found error | `tracking_request.failed`, or `awaiting_manifest` if not yet manifested |
+| Service unavailable error | Not surfaced. We retry internally. |
 
-The [TypeScript SDK](/sdk/introduction) maps these to typed errors (`AuthenticationError`, `ValidationError`, `RateLimitError`, `UpstreamError`, `FeatureNotEnabledError`) and retries rate-limit and server errors automatically with exponential backoff.
+The [TypeScript SDK](/sdk/introduction) maps these to typed errors (`AuthenticationError`, `ValidationError`, `RateLimitError`, `UpstreamError`, `FeatureNotEnabledError`, `AuthorizationError`, `NotFoundError`) and retries rate-limit and server errors automatically with exponential backoff.
 
 ## Where we are narrower than GoComet
 
@@ -489,7 +494,7 @@ Copy this into your agent. Replace the bracketed placeholders in the **Repo cont
 ```markdown Terminal49 migration agent prompt expandable icon=robot wrap
 You are migrating this codebase from the GoComet tracking API to the Terminal49 API,
 side by side. Terminal49's authoritative migration guide is at
-https://terminal49.com/docs/api-docs/getting-started/migrate-from-gocomet. Use it as
+https://terminal49.com/docs/migrate/gocomet. Use it as
 the source of truth for field mappings, event names, error codes, and behavior differences.
 
 # Repo context (fill this in before running)
@@ -539,7 +544,7 @@ the source of truth for field mappings, event names, error codes, and behavior d
     tracking request ID.
   - `getShipment(id, { include: 'containers,port_of_lading,port_of_discharge,...' })`.
   - `getContainer(id)`.
-  - `refreshContainer(id)` mapping to `POST /v2/containers/{id}/refresh`.
+  - `refreshContainer(id)` mapping to `PATCH /v2/containers/{id}/refresh`.
 - Normalize responses to the same shape GoComet callers expect today, using the field
   mapping from the guide. Split `iso_code` into `equipment_type`, `equipment_length`,
   `equipment_height`. Convert timestamps to UTC + `time_zone`.
@@ -644,6 +649,6 @@ If something in this mapping is wrong or incomplete, tell us. We would rather fi
   </Card>
 
   <Card title="Test numbers" icon="flask" href="/api-docs/useful-info/test-numbers">
-    Simulate success, failure, and edge cases
+    Simulate success and failure outcomes
   </Card>
 </CardGroup>
