@@ -136,7 +136,8 @@ export class Terminal49PublicClient {
     | { shipmentId: string; state: 'created' }
   > {
     const existing = await this.trackingRequests(input.number, input.scac);
-    let requestResource = resourceArray(existing)[0];
+    let requestResource: JsonApiResource | undefined =
+      resourceArray(existing)[0];
 
     if (!requestResource) {
       const attributes: Record<string, string | boolean> = {

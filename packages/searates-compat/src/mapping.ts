@@ -232,7 +232,15 @@ function collectResources(payload: TrackingPayload): JsonApiResource[] {
     if (Array.isArray(document.data)) resources.push(...document.data);
     resources.push(...(document.included || []));
   }
-  return resources;
+  const unique = new Map<string, JsonApiResource>();
+  for (const resource of resources) {
+    const key = `${resource.type}:${resource.id}`;
+    const existing = unique.get(key);
+    if (!existing || Object.keys(attrs(resource)).length > 0) {
+      unique.set(key, resource);
+    }
+  }
+  return [...unique.values()];
 }
 
 export function mapEvent(

@@ -99,7 +99,7 @@ describe('SeaRates compatibility gateway', () => {
     const gateway = new SeaRatesCompatibilityGateway({
       serviceApiToken: 'service-token',
       fetchImpl: async (input) => {
-        expect(String(input)).toEndWith('/shipping_lines');
+        expect(String(input).endsWith('/shipping_lines')).toBe(true);
         return response(shippingLinesFixture);
       },
     });
