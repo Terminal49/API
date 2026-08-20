@@ -1,0 +1,692 @@
+---
+title: "Migrating from Gnosis Freight"
+sidebarTitle: "Gnosis Freight"
+description: "Map Gnosis Freight's Container Lifecycle Management (CLM) Platform fields, OAuth2 auth, and container polling to their Terminal49 equivalents. Includes authentication, request mapping, and migration checklist."
+---
+
+If you have Gnosis Freight's CLM platform in production, this page maps it onto Terminal49 field by field, so you can cut over without reverse-engineering our schema.
+
+There is no compatibility shim. You will change your request code and your response parsing. Gnosis and Terminal49 both track ocean containers through terminals and rail, so most of the work is a rename and reshape, not a redesign.
+
+## Start in sixty seconds
+
+Signing up and getting a key is self-serve.
+
+<Steps>
+  <Step title="Create an account">
+    Sign up at [app.terminal49.com](https://app.terminal49.com). The free plan tracks up to 10 active containers.
+  </Step>
+  <Step title="Generate an API key">
+    Create a key at [app.terminal49.com/developers/api-keys](https://app.terminal49.com/developers/api-keys).
+  </Step>
+  <Step title="Make your first request">
+    ```bash
+    curl -X POST https://api.terminal49.com/v2/tracking_requests \
+      -H "Content-Type: application/vnd.api+json" \
+      -H "Authorization: Token YOUR_API_KEY" \
+      -d '{
+        "data": {
+          "type": "tracking_request",
+          "attributes": {
+            "request_number": "YOUR_BOL_NUMBER",
+            "request_type": "bill_of_lading",
+            "scac": "MAEU"
+          }
+        }
+      }'
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  The full API key is shown once, right after you create it. Copy it before you navigate away. After that it is masked and cannot be revealed. If you miss it, create a new key and delete the old one.
+</Warning>
+
+<Note>
+  The free plan tracks up to 10 active containers. Creating tracking requests through the API works right away; reading tracking data back through the API requires a free 7-day API trial (same 10-container limit) — contact us via in-app chat or support@terminal49.com and we enable it.
+</Note>
+
+<Tip>
+  If you want to test without a live shipment, use the [test tracking numbers](/api-docs/useful-info/test-numbers), which simulate success and failure outcomes.
+</Tip>
+
+<Note>
+  **Migration offer:** sign up now and the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-id) — vessel schedules, AIS positions, and projected routes — is free for your first month.
+</Note>
+
+## The architectural shift
+
+Gnosis's CLM platform (tracking engine "Marlo") and Terminal49 both integrate with ocean carriers, terminals, and rail. The difference is in how you fetch the result and how much of the operational picture arrives already computed for you.
+
+<CardGroup cols={2}>
+  <Card title="Before: Gnosis Freight" icon="rotate">
+    Get an OAuth2 token via POST /api/auth/token. Create a tracking request via POST /api/v1/tracking\_requests/ with an array of MBL numbers. Poll GET /api/v1/containers/ for state, or read a separate webhook schema for push updates.
+  </Card>
+
+  <Card title="After: Terminal49" icon="webhook">
+    POST /tracking\_requests once, per bill of lading. Terminal49 polls carriers, terminals, and rail, then POSTs to your endpoint as things change. Container objects carry holds, fees, and last free day directly.
+  </Card>
+</CardGroup>
+
+The biggest mechanical change is the tracking request shape: Gnosis accepts an array of MBL numbers in one call, while Terminal49 takes one bill of lading, booking, or container number per tracking request. If you batch MBLs today, you will loop over that array and issue one request per number.
+
+## Quick comparison
+
+|  | Gnosis Freight | Terminal49 |
+| --- | --- | --- |
+| Tracking model | Create tracking request, then poll or receive push updates | Register once, then push or poll |
+| Authentication | OAuth2 password grant, `Bearer` token | `Authorization: Token` header |
+| Base URL | `https://api.freight.fyi` | `https://api.terminal49.com/v2` |
+| Content type | `application/json` | `application/vnd.api+json` |
+| Response format | Custom JSON, paginated container list | JSON:API |
+| Webhooks | Schema published, dictionary of field names and types | 30\+ named events, HMAC-signed |
+| Carrier identification | Inferred from MBL number | `scac`, or `auto_detect_vocc_scac` |
+| Modes covered | Ocean, rail, air, customs, drayage execution | Ocean and rail |
+| Fee prediction | Predictive amounts (`gnosis_estimated_*` fields) | Terminal-reported amounts only, no prediction |
+| Getting an API key | Issued by an account rep or via the CLM portal | Self-serve |
+
+## Authentication
+
+Gnosis uses an OAuth2 password grant: exchange a username and password for a bearer token, then send that token on every request. Terminal49 uses a static API key sent as a token, with no separate token-exchange step.
+
+<CodeGroup>
+
+```bash Gnosis Freight
+# Step 1: get a token
+curl -X POST https://api.freight.fyi/api/auth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=YOUR_USERNAME&password=YOUR_PASSWORD"
+
+# Step 2: use it
+curl -X POST https://api.freight.fyi/api/v1/tracking_requests/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"mbl_numbers": ["MRKU9465770"]}'
+```
+
+```bash Terminal49
+curl -X POST https://api.terminal49.com/v2/tracking_requests \
+  -H "Content-Type: application/vnd.api+json" \
+  -H "Authorization: Token YOUR_T49_KEY" \
+  -d '{"data":{"type":"tracking_request","attributes":{
+       "request_number":"MRKU9465770",
+       "request_type":"bill_of_lading"}}}'
+```
+
+</CodeGroup>
+
+<Note>
+  Note the prefix. Gnosis uses `Bearer`. Terminal49 uses `Token`.
+</Note>
+
+Gnosis tokens are issued from a username and password, and (depending on how your account is configured) may expire and need refreshing. Terminal49 API keys are static: generate one in the dashboard and use it until you rotate it yourself. There is no token-refresh flow to build.
+
+## Request parameter mapping
+
+| Gnosis Freight parameter | Terminal49 equivalent | Notes |
+| --- | --- | --- |
+| `mbl_numbers` (array) | `request_number` + `request_type: "bill_of_lading"` | Terminal49 takes one identifier per tracking request, not an array. Loop over your MBL array and issue one `POST /tracking_requests` per number. |
+| Carrier detected automatically from MBL | `scac`, or `auto_detect_vocc_scac: true` | Terminal49 can also infer the SCAC when you set `auto_detect_vocc_scac: true`, or by calling [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) first. Auto-detection is asynchronous; a failed inference fails the tracking request with `scac_auto_detect_failed`. |
+| `organization_uuid` query param | Not applicable | Terminal49 scopes tracking requests to your account by API key; there is no separate organization identifier to pass. |
+| Booking, per-container, and air variants of create tracking request | `request_type: "booking_number"` or `request_type: "container"` for ocean; no air equivalent | Container-number tracking requests are currently in beta. Air cargo has no Terminal49 equivalent. |
+| Polling `GET /api/v1/containers/` | `POST /v2/webhooks`, or `GET /v2/containers` | Register a webhook to be notified of changes instead of polling, or keep polling if that fits your architecture better. |
+| Re-poll a specific container | `PATCH /v2/containers/{id}/refresh` | Forces an immediate pull from all sources. Paid feature — requires account enablement, limited to 10 requests per minute. |
+
+<Note>
+  Gnosis's `POST /api/v1/tracking_requests/` accepts multiple MBL numbers in a single call and returns one tracking request per number internally. Terminal49's `POST /v2/tracking_requests` is one call per bill of lading, booking, or container. Track by BOL and we return every container on that bill of lading as related container resources.
+</Note>
+
+## Response field mapping
+
+Terminal49 is JSON:API compliant, so relationships between shipments, containers, ports, and terminals are explicit rather than something you reassemble from ID references. Gnosis returns a flat, paginated container list from `GET /api/v1/containers/` (`{metadata, containers: [...]}`); Terminal49 splits the same information across shipment, container, port, and terminal resources.
+
+Use the [`include` parameter](/api-docs/in-depth-guides/including-resources) to sideload related resources in one call instead of chasing IDs.
+
+### Shipment level
+
+| Gnosis Freight | Terminal49 |
+| --- | --- |
+| `mbl` / `mbls` | `shipment.attributes.bill_of_lading_number` |
+| Carrier inferred from MBL | `shipment.attributes.shipping_line_scac`, `shipment.attributes.shipping_line_name` |
+| `por_locode`, `por_city` | `shipment.relationships.port_of_lading` (place of receipt, where applicable) |
+| `pol_locode`, `pol_city` | `shipment.relationships.port_of_lading` |
+| `pod_locode`, `pod_city` | `shipment.relationships.port_of_discharge` |
+| `vessel_eta_dt` | `shipment.attributes.pod_eta_at` |
+| `gnosis_vessel_eta_dt` (predictive ETA) | No equivalent. Terminal49 does not publish a separate predictive ETA field. |
+| `vessel_ata_dt` | `shipment.attributes.pod_ata_at` |
+| `mother_vessel` / `mother_vessel_imo` | `shipment.attributes.pod_vessel_name` / `pod_vessel_imo` |
+| `mother_voyage` | Not returned as a discrete voyage-number field |
+| `current_vessel`, `first_vessel` | Not applicable — Terminal49 exposes the vessel active for the current leg via [transport events](/api-docs/api-reference/containers/get-a-containers-transport-events) rather than named "current"/"first" vessel fields |
+| `transshipments` | [Transshipment transport events](/api-docs/webhooks/event-catalog) (arrived, discharged, loaded, departed) |
+| `barge_journeys` | [Feeder vessel transport events](/api-docs/webhooks/event-catalog) (arrived, discharged, loaded, departed) |
+
+### Container level
+
+| Gnosis Freight | Terminal49 |
+| --- | --- |
+| `container_number` | `container.attributes.number` |
+| `uuid` | `container.id` |
+| `container_journey_start_key` | No direct equivalent |
+| `container_status` (e.g. "At Origin", "On the Water", "Awaiting Discharge") | `container.attributes.current_status` (Terminal49's own status values — see [Container Statuses](/api-docs/in-depth-guides/container-statuses)) |
+| `tracking` (bool) | Whether the parent tracking request or shipment is active; see `shipment.attributes.tracked` and [stop/resume tracking](/api-docs/api-reference/shipments/stop-tracking-shipment) |
+| `available_for_pickup` (bool) | `container.attributes.available_for_pickup` — same name, same boolean |
+| Equipment size/type (not itemized in the verified field list) | `container.attributes.equipment_type` \+ `equipment_length` \+ `equipment_height` |
+
+<Note>
+  Terminal49 normalizes equipment into three fields: type (dry, reefer, open top, flat rack, bulk, tank), length (10, 20, 40, 45), and height (standard, high cube). If you parse a combined size/type code from Gnosis today, you can delete that parsing step.
+</Note>
+
+### Locations, facilities, and vessels
+
+| Gnosis Freight | Terminal49 |
+| --- | --- |
+| `pol_locode` / `pod_locode` / `por_locode` | `port.attributes.code` on the relevant port relationship |
+| `pol_city` / `pod_city` / `por_city` | `port.attributes.name` |
+| `pol_terminal_name` | `terminal.attributes.name` on `port_of_lading_terminal` |
+| `pod_terminal_name` (with FIRMS code) | `terminal.attributes.name` \+ `terminal.attributes.firms_code` on `pod_terminal` |
+| Terminal SMDG code (not in Gnosis's verified field list) | `terminal.attributes.smdg_code` |
+| Terminal BIC facility code (not in Gnosis's verified field list) | `terminal.attributes.bic_facility_code` |
+| `mother_vessel` / `mother_vessel_imo` | `shipment.attributes.pod_vessel_name` / `pod_vessel_imo` |
+| Vessel MMSI, call sign, position | Available via the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-imo) for MMSI and position; call sign is not returned |
+
+## Milestone and event mapping
+
+Gnosis exposes milestones as dated fields on the container object (`loaded_on_vessel_dt`, `discharged_dt`, and so on) plus a separate webhook schema endpoint. Terminal49 exposes the same milestones as normalized transport events and pushes each one to your webhook.
+
+| Gnosis Freight field | Milestone | Terminal49 event |
+| --- | --- | --- |
+| `loaded_on_vessel_dt` | Loaded on vessel at origin | `container.transport.vessel_loaded` |
+| Vessel departure | Vessel departed origin | `container.transport.vessel_departed` |
+| `vessel_ata_dt` | Vessel arrived at destination | `container.transport.vessel_arrived` |
+| `discharged_dt` | Discharged from vessel | `container.transport.vessel_discharged` |
+| `available_for_pickup` flipping true | Available for pickup | `container.transport.available` |
+| `available_for_pickup` flipping false | No longer available for pickup | `container.transport.not_available` |
+| `is_railing` / `loaded_on_rail_dt` | Loaded onto rail car | `container.transport.rail_loaded` |
+| Rail departure | Rail car departed | `container.transport.rail_departed` |
+| `rail_ata_dt` | Rail car arrived | `container.transport.rail_arrived` |
+| `rail_discharged_dt` | Container unloaded from rail car | `container.transport.rail_unloaded` |
+| `rail_notify_dt` | Arrived at final inland destination | `container.transport.arrived_at_inland_destination` |
+| `customs_clearance_dt` | No direct transport-event equivalent. See the `customs` entry on `holds_at_pod_terminal` for a hold-based signal instead. | — |
+
+Terminal49 also emits milestones Gnosis's verified field list has no equivalent for:
+
+- **Empty picked up / returned:** `container.transport.empty_out` and `.empty_in`
+- **Full gated in / out:** `container.transport.full_in` and `.full_out`
+- **Vessel berthed:** `container.transport.vessel_berthed`
+- **Transshipment:** arrived, discharged, loaded, departed
+- **Feeder vessel and barge:** arrived, discharged, loaded, departed
+- **ETA changes:** `container.transport.estimated.vessel_arrived`, `shipment.estimated.arrival`
+
+See the full [event catalog](/api-docs/webhooks/event-catalog).
+
+### Registering a webhook
+
+Gnosis publishes its webhook shape as a schema dictionary at `GET /api/v1/webhooks/containers/webhook_schema`, which you inspect and subscribe to out of band. Terminal49 webhooks are self-service: register a URL and a list of named events directly.
+
+```bash
+curl -X POST https://api.terminal49.com/v2/webhooks \
+  -H "Content-Type: application/vnd.api+json" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -d '{
+    "data": {
+      "type": "webhook",
+      "attributes": {
+        "url": "https://your-endpoint.example.com/t49",
+        "active": true,
+        "events": [
+          "container.transport.vessel_discharged",
+          "container.transport.available",
+          "container.pickup_lfd.changed"
+        ]
+      }
+    }
+  }'
+```
+
+Payloads are HMAC-signed. See [webhook setup](/api-docs/in-depth-guides/webhooks) for signature verification, and [List webhook IPs](/api-docs/api-reference/webhooks/list-webhook-ips) if your firewall restricts inbound traffic.
+
+## What you gain
+
+This is the part worth reading even if the rest is mechanical. Terminal49 integrates with terminals directly, and normalizes holds, fees, and last free day into a fixed shape you don't have to reconcile yourself.
+
+### Holds
+
+`holds_at_pod_terminal` is an array of active holds blocking pickup:
+
+```json
+{
+  "holds_at_pod_terminal": [
+    { "name": "customs", "status": "hold", "description": "CBP HOLD" },
+    { "name": "freight", "status": "hold", "description": null }
+  ]
+}
+```
+
+Hold names are `freight`, `customs`, `USDA`, `VACIS`, `TMF`, and `other`. Status is `hold` or `pending`. When a hold clears, the object is removed from the array. There is no released state.
+
+<Warning>
+  Hold names are case-sensitive. `USDA`, `VACIS`, and `TMF` are uppercase; `freight`, `customs`, and `other` are lowercase. Match exactly.
+</Warning>
+
+Gnosis's `holds` object is a dictionary of hold types where a `true` value means the container is held by that party. Terminal49's shape is an array of objects, one per active hold, each carrying a name, a status, and a description. Rewrite any code that checks `holds.customs === true` to instead check whether an entry with `name: "customs"` exists in the array.
+
+### Fees
+
+`fees_at_pod_terminal` carries type, amount, and currency:
+
+```json
+{
+  "fees_at_pod_terminal": [
+    { "type": "demurrage", "amount": 850.00, "currency_code": "USD" },
+    { "type": "exam", "amount": 450.00, "currency_code": "USD" }
+  ]
+}
+```
+
+Fee types are `demurrage`, `extended_dwell_time`, `exam`, `total`, and `other`.
+
+<Warning>
+  Some terminals report a `total` line item alongside individual fees. Filter it out before summing or you will double-count.
+</Warning>
+
+Gnosis's `demurrage_amount` maps to a `demurrage` entry in `fees_at_pod_terminal`. Gnosis also publishes predictive fields — `gnosis_estimated_demurrage_amount`, `gnosis_estimated_detention_amount`, and `gnosis_estimated_next_day_demurrage_amount` — that project charges before the terminal reports them. Terminal49 has no equivalent: `fees_at_pod_terminal` only reports amounts the terminal has actually posted. If your workflow depends on predictive fee amounts, budget time to either drop that logic or replace it with your own estimate.
+
+### Last free day
+
+`pickup_lfd` is a coalesced value that follows a fixed source priority: shipping line, then terminal, then rail. It does not pick the earliest date. The individual sources are available separately on `import_deadlines`:
+
+- `pickup_lfd_line`: the shipping line's LFD (per diem deadline) — the Terminal49 equivalent of Gnosis's `last_free_detention_day_dt`
+- `pickup_lfd_terminal`: the terminal's LFD (demurrage deadline) — the equivalent of Gnosis's `last_free_demurrage_day_dt`
+- `pickup_lfd_rail`: the rail carrier's LFD at the inland destination
+
+Each has its own webhook event, so you can alert on whichever source your operation cares about. Gnosis's `gnosis_estimated_last_free_demurrage_day_dt` is a predictive estimate; Terminal49 has no equivalent, since `import_deadlines` only carries dates the terminal or line has actually published.
+
+### Release readiness
+
+Two fields answer "can I pick this up?" `available_for_pickup` and the holds array:
+
+```javascript
+function isReadyForPickup(container) {
+  const { available_for_pickup, holds_at_pod_terminal } = container.attributes;
+  const hasActiveHolds = holds_at_pod_terminal.some(h => h.status === 'hold');
+  return available_for_pickup === true && !hasActiveHolds;
+}
+```
+
+Gnosis's `available_for_pickup` field is a straight match — same name, same boolean. The difference is what you check alongside it: swap a dictionary lookup on `holds` for an array scan on `holds_at_pod_terminal`.
+
+Full detail in [Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
+
+<Info>
+  Holds, fees, LFD, and availability come back on the container object wherever the terminal is a supported source. They are not a paid add-on and they do not require a sales conversation. See [Entitlements](/api-docs/useful-info/entitlements) for the features that do require account enablement. Routing Data (container map and vessel positions), rail LFD, container refresh, and the embeddable map and widget are the gated ones.
+</Info>
+
+## Gotchas that will bite you
+
+<AccordionGroup>
+  <Accordion title="MBL arrays become one tracking request per number" icon="layer-group">
+    Gnosis's `POST /api/v1/tracking_requests/` accepts an array of `mbl_numbers` in a single call. Terminal49's `POST /v2/tracking_requests` takes one `request_number` per call. If you currently batch MBLs, loop over the array and fire one request per bill of lading; store the returned `tracking_request.id` per number, not per batch.
+  </Accordion>
+
+  <Accordion title="OAuth2 token exchange goes away" icon="key">
+    Gnosis requires exchanging a username and password for a bearer token before every session (and refreshing it as needed). Terminal49 API keys are static — generate one, send it as `Authorization: Token YOUR_API_KEY`, and delete the token-refresh logic entirely.
+  </Accordion>
+
+  <Accordion title="JSON:API response shape" icon="code">
+    Gnosis returns a flat `{metadata, containers: [...]}` list. Terminal49 relationships are ID references into an `included` array. Use a JSON:API client library, or use `include` to sideload exactly what you need. Parsing raw JSON works but you will write more code than you expect.
+  </Accordion>
+
+  <Accordion title="Holds go from a boolean map to an array" icon="fingerprint">
+    Gnosis's `holds` object marks each hold type `true` or `false`. Terminal49's `holds_at_pod_terminal` is an array containing only the holds currently active, each with a name, status, and description. Rewrite `holds.customs === true` checks as array-membership checks.
+  </Accordion>
+
+  <Accordion title="Timestamps are UTC with a separate timezone field" icon="clock">
+    Terminal49 stores event timestamps in UTC and returns the matching IANA timezone alongside. Convert for display rather than assuming local time. See [Event Timestamps](/api-docs/in-depth-guides/event-timestamps).
+  </Accordion>
+
+  <Accordion title="Empty arrays are the normal state" icon="brackets-square">
+    `holds_at_pod_terminal: []` and `fees_at_pod_terminal: []` mean no active holds or fees. This is the common case. Do not treat it as missing data.
+  </Accordion>
+
+  <Accordion title="container.updated carries a changeset" icon="code-compare">
+    Terminal changes (fees, holds, LFD, appointment, availability) arrive on `container.updated` with a `changeset` showing old value first, new value second. Use it instead of diffing state yourself, the way you might diff two `GET /api/v1/containers/` polls today.
+  </Accordion>
+
+  <Accordion title="Async lifecycle" icon="hourglass-half">
+    `POST /tracking_requests` returns immediately with a pending status. The shipment appears once the carrier responds. Subscribe to `tracking_request.succeeded`, `tracking_request.failed`, and `tracking_request.awaiting_manifest` rather than expecting shipment data in the creation response. See [Tracking Request Lifecycle](/api-docs/in-depth-guides/tracking-request-lifecycle).
+  </Accordion>
+</AccordionGroup>
+
+## Error handling
+
+Gnosis returns a `422 HTTPValidationError` with an array of validation details (location, message, type) for malformed requests. Terminal49 uses standard HTTP status codes consistently across every endpoint.
+
+| Status | Meaning |
+| --- | --- |
+| 400 | Malformed request or failed validation |
+| 401 | Missing or invalid API key |
+| 403 | Key lacks permission, or the feature is not enabled on your plan |
+| 404 | Resource does not exist |
+| 422 | Valid syntax, rejected content. For example, a malformed container number |
+| 429 | Rate limited. See [Rate Limiting](/api-docs/in-depth-guides/rate-limiting) |
+| 5xx | Terminal49 or an upstream carrier or terminal is unavailable |
+
+Rough equivalence for the Gnosis errors you are handling today:
+
+| Gnosis Freight | Terminal49 |
+| --- | --- |
+| Invalid or expired OAuth2 token | HTTP 401 |
+| `422 HTTPValidationError` (bad MBL format, missing field) | HTTP 400 or 422 |
+| Carrier not supported | HTTP 422 |
+| No data found | `tracking_request.failed`, or `tracking_request.awaiting_manifest` if not yet manifested |
+| Temporary unavailability | Not surfaced. We retry internally. |
+
+The [TypeScript SDK](/sdk/introduction) maps these to typed errors (`AuthenticationError`, `ValidationError`, `RateLimitError`, `UpstreamError`, `FeatureNotEnabledError`, `AuthorizationError`, `NotFoundError`) and retries rate-limit and server errors automatically with exponential backoff.
+
+## Where we are narrower than Gnosis Freight
+
+Worth knowing before you commit.
+
+**No air cargo tracking.** Gnosis's CLM platform covers air cargo alongside ocean and rail. Terminal49 tracks ocean containers and their rail legs only. If your integration depends on air shipment visibility, this migration handles only the ocean and rail portion.
+
+**No drayage execution features.** Gnosis is built as an execution platform with import drayage workflows (`import_drayage`). Terminal49 is a tracking and visibility API — it tells you what happened and what's next, but it does not book, dispatch, or execute drayage moves.
+
+**No customs milestone tracking.** Gnosis exposes customs milestones and a `customs_clearance_dt` field directly. Terminal49 has no direct equivalent beyond the `customs` entry on `holds_at_pod_terminal`, which tells you whether a customs hold is currently blocking pickup, not a full customs event timeline.
+
+**No predictive fee or ETA estimates.** Gnosis publishes `gnosis_estimated_*` fields for demurrage, detention, next-day demurrage, and LFD, plus a `gnosis_vessel_eta_dt` predictive ETA. Terminal49 reports what carriers and terminals have actually posted — `pod_eta_at`, `fees_at_pod_terminal`, and `import_deadlines` — and does not predict future values.
+
+**Carrier count.** Terminal49 integrates directly with 36 ocean carriers, plus 2 more enabled on request, as of 14 August 2026. Check your carrier mix against the [ocean carrier list](/coverage/ocean-carriers) before cutover, and read the known issues section there. We publish the per-carrier field gaps.
+
+**Terminal data is North America.** Holds, fees, LFD, and availability come from direct terminal integrations concentrated in the US and Canada, with European ports expanding. Ocean milestones work globally; terminal-level operational data does not yet.
+
+**Some fields are source-dependent.** Seal number, container weight, and departure or arrival events vary by carrier. The [field availability reference](/coverage/fields) says which fields are always present and which depend on the carrier, terminal, or journey.
+
+## Migration checklist
+
+Everyone does the base path. Then pick a branch.
+
+### Base path
+
+<Steps>
+  <Step title="Get a key">
+    Self-serve at [app.terminal49.com/developers/api-keys](https://app.terminal49.com/developers/api-keys). Copy it immediately, it is shown once.
+  </Step>
+  <Step title="Switch authentication">
+    Drop the OAuth2 password-grant token exchange. Move to `Authorization: Token`, a single static key.
+  </Step>
+  <Step title="Check your carrier mix">
+    Compare your Gnosis-tracked carriers against the [carrier list](/coverage/ocean-carriers). Flag anything missing before you cut over.
+  </Step>
+  <Step title="Unbatch your MBL arrays">
+    Replace one call with an array of `mbl_numbers` with one `POST /tracking_requests` per bill of lading, booking, or container.
+  </Step>
+  <Step title="Handle the async lifecycle">
+    Tracking requests start pending. Handle `succeeded`, `failed`, and `awaiting_manifest` rather than expecting data on creation.
+  </Step>
+  <Step title="Update response parsing">
+    JSON:API structure, split equipment fields, UTC timestamps with a separate timezone, holds as an array instead of a boolean map.
+  </Step>
+  <Step title="Update error handling">
+    Replace `422 HTTPValidationError` envelope parsing with HTTP status-code checks.
+  </Step>
+  <Step title="Backfill active shipments">
+    Submit tracking requests for everything currently in transit. Send us the list if it is large and we will load it.
+  </Step>
+  <Step title="Decide what to do about predictive fields">
+    Gnosis's `gnosis_estimated_*` amounts and ETA have no Terminal49 equivalent. Decide whether to drop that logic or replace it with your own estimate before cutover.
+  </Step>
+</Steps>
+
+### Then pick one
+
+<Tabs>
+  <Tab title="Webhook path">
+    <Steps>
+      <Step title="Expose an HTTPS endpoint">
+        Accept our POST payloads at a public URL.
+      </Step>
+      <Step title="Register a webhook">
+        Subscribe only to events you act on.
+      </Step>
+      <Step title="Verify HMAC signatures">
+        Reject any payload whose signature does not match.
+      </Step>
+      <Step title="Whitelist our IPs">
+        Only needed if your firewall restricts inbound traffic.
+      </Step>
+      <Step title="Trigger a test delivery">
+        Confirm end-to-end before going live.
+      </Step>
+      <Step title="Retire your polling job">
+        Remove the loop that called `GET /api/v1/containers/` on a schedule.
+      </Step>
+    </Steps>
+
+    See [webhook best practices](/api-docs/webhooks/best-practices) for retries and idempotency.
+  </Tab>
+  <Tab title="Polling path">
+    <Steps>
+      <Step title="Store the tracking request ID">
+        The creation response is pending and carries no shipment yet. Keep the tracking request ID, then fetch the tracking request again (or handle `tracking_request.succeeded`) to get the shipment ID once the carrier responds.
+      </Step>
+      <Step title="Repoint your scheduler">
+        Point it at `GET /v2/shipments` or `GET /v2/containers` instead of `GET /api/v1/containers/`.
+      </Step>
+      <Step title="Keep your existing cadence">
+        No change to how often you poll.
+      </Step>
+    </Steps>
+
+    Skipped: endpoint setup, signature verification, IP whitelisting, delivery testing.
+
+    <Tip>
+      Terminal data changes on a cadence polling tends to miss. If you only adopt webhooks for one thing, make it `container.updated` and `container.pickup_lfd.changed`.
+    </Tip>
+  </Tab>
+</Tabs>
+
+## Migrate with an AI coding agent
+
+If you use Cursor, Claude Code, Windsurf, Copilot, or another AI coding assistant, hand it the prompt below. It is written to run a **side-by-side migration**: the agent stands up a Terminal49 client next to your existing Gnosis Freight code, shadows every Gnosis call with a Terminal49 call, diffs the responses, and only cuts over once parity is proven.
+
+<Tip>
+  Point your agent at this page as context (paste the URL or add it as a doc source). The prompt references the mappings above, so the more of this page the agent can see, the better it does.
+</Tip>
+
+<AccordionGroup>
+  <Accordion title="How to use this prompt" icon="wand-magic-sparkles">
+    1. Open your repo in your AI coding tool.
+    2. Add this page as a documentation source, or paste its URL into the chat.
+    3. Copy the prompt below into a new chat and send it.
+    4. Answer the agent's discovery questions (Gnosis client location, env var names, carrier mix).
+    5. Review each PR the agent opens. It should ship in small, reviewable steps: client, shadow, parity harness, cutover, cleanup.
+  </Accordion>
+
+  <Accordion title="What the agent will produce" icon="list-check">
+    - A `Terminal49Client` alongside your existing `GnosisClient`, sharing the same interface where possible.
+    - A shadow-mode wrapper that calls both providers and logs response diffs without changing behavior.
+    - A parity report per shipment: matched fields, diverged fields, and Terminal49-only fields (holds, fees, LFD).
+    - A feature-flagged cutover: route reads to Terminal49, keep Gnosis as fallback until you flip the flag off.
+    - A webhook receiver with HMAC verification, or a polling scheduler, depending on which path you pick.
+    - A cleanup PR that removes Gnosis code, env vars, the OAuth2 token-refresh logic, dependencies, and dedupe logic.
+  </Accordion>
+</AccordionGroup>
+
+### The prompt
+
+Copy this into your agent. Replace the bracketed placeholders in the **Repo context** block before sending.
+
+```markdown Terminal49 migration agent prompt expandable icon=robot wrap
+You are migrating this codebase from the Gnosis Freight CLM API to the Terminal49 API,
+side by side. Terminal49's authoritative migration guide is at
+https://terminal49.com/docs/migrate/gnosisfreight. Use it as
+the source of truth for field mappings, event names, error codes, and behavior differences.
+
+# Repo context (fill this in before running)
+
+- Gnosis client lives at: [path/to/gnosis/client.ts]
+- Gnosis is called from: [list the call sites or "find them"]
+- Language and framework: [e.g. TypeScript + Node, Python + FastAPI, Ruby on Rails]
+- Storage for tracking state: [e.g. Postgres table `shipments`]
+- Current polling schedule: [e.g. cron every 2h via BullMQ]
+- Carrier mix (SCACs we track most): [e.g. MAEU, MSCU, CMDU, HLCU, ONEY]
+- Deployment target: [e.g. AWS ECS, Vercel, Fly.io]
+- Secret store: [e.g. AWS Secrets Manager, `.env`, Doppler]
+
+# Rules
+
+1. Do not delete Gnosis code until the cleanup step. Migration is side by side.
+2. Ship in small PRs. Each PR must build, pass tests, and be independently revertable.
+3. Never invent Terminal49 fields, endpoints, or event names. If the guide does not
+   confirm a mapping, ask me. Do not guess.
+4. Terminal49 uses `Authorization: Token <key>` (not `Bearer`, and no OAuth2 token
+   exchange) and content type `application/vnd.api+json`. Get this right on the first
+   request.
+5. Terminal49 is asynchronous. `POST /tracking_requests` returns pending. Data arrives
+   via `tracking_request.succeeded`, `tracking_request.failed`, or
+   `tracking_request.awaiting_manifest` webhooks, or by polling `GET /v2/shipments`. Do not expect shipment data on creation.
+6. Terminal49 accepts one bill of lading, booking, or container number per tracking
+   request, not an array like Gnosis's `mbl_numbers`. Loop over any batch and issue one
+   request per number.
+7. Timestamps are UTC with a separate IANA `time_zone` field. Do not assume local time.
+8. `holds_at_pod_terminal: []` and `fees_at_pod_terminal: []` are the normal state,
+   not missing data. A fee `amount` of 0 is valid. Holds are an array of active holds,
+   not a boolean dictionary like Gnosis's `holds` object.
+9. On `container.updated`, prefer the `changeset` over diffing state yourself.
+10. Terminal49 has no equivalent for Gnosis's `gnosis_estimated_*` predictive fee and
+    ETA fields, air cargo tracking, drayage execution, or customs milestone timelines.
+    Do not attempt to fake these — flag them to me if the app depends on them.
+
+# Plan (execute in order, one PR per step)
+
+## PR 1 — Discovery and interface
+
+- Grep the repo for every Gnosis call site. List them in the PR description.
+- Extract the Gnosis client's public surface into an interface
+  (`TrackingProvider` with methods like `track(number, type, scac)`,
+  `getShipment(id)`, `refresh(id)`).
+- Make the existing Gnosis client implement it. No behavior change.
+
+## PR 2 — Terminal49 client
+
+- Add a `Terminal49Client` implementing the same `TrackingProvider` interface.
+- Auth via `T49_API_KEY` env var, header `Authorization: Token ${key}`. No token
+  exchange, no refresh logic.
+- Base URL `https://api.terminal49.com/v2`, content type `application/vnd.api+json`.
+- Implement:
+  - `createTrackingRequest({ request_number, request_type, scac })` returning the
+    tracking request ID. Call this once per MBL number, not once per batch.
+  - `getShipment(id, { include: 'containers,port_of_lading,port_of_discharge,...' })`.
+  - `getContainer(id)`.
+  - `refreshContainer(id)` mapping to `PATCH /v2/containers/{id}/refresh`.
+- Normalize responses to the same shape Gnosis callers expect today, using the field
+  mapping from the guide. Convert Gnosis's `holds` boolean map into array-membership
+  checks against `holds_at_pod_terminal`. Convert timestamps to UTC + `time_zone`.
+- Map errors to typed classes: `AuthenticationError` (401), `AuthorizationError` (403),
+  `ValidationError` (400/422), `RateLimitError` (429), `UpstreamError` (5xx),
+  `FeatureNotEnabledError` (403 + feature flag response).
+- Add unit tests using recorded fixtures. Do not hit the live API in tests.
+
+## PR 3 — Shadow mode
+
+- Add a `ShadowProvider` that wraps both clients. On every read:
+  - Call Gnosis as the primary. Return its response.
+  - Fire-and-forget a Terminal49 call for the same identifier.
+  - Log a structured diff: matched fields, diverged fields, T49-only fields.
+- Gate with env var `TRACKING_SHADOW_MODE=true`. Off by default.
+- Add a parity report script that aggregates shadow logs by SCAC and field.
+- Do NOT change what callers see. This step is observation only.
+
+## PR 4 — Backfill script
+
+- Write a one-shot script that reads all active shipments from our database and calls
+  `POST /tracking_requests` for each (one per BOL, booking, or container — unbatch any
+  MBL arrays).
+- Store the returned `tracking_request.id` and eventual `shipment.id` on our records.
+- Rate-limit to respect Terminal49's limits (handle 429 with exponential backoff).
+- Idempotent: safe to re-run. Skip rows already backfilled.
+
+## PR 5 — Webhook receiver (only if we picked the webhook path)
+
+- Add `POST /webhooks/terminal49` endpoint.
+- Verify HMAC signature using the shared secret from `T49_WEBHOOK_SECRET`. Reject on
+  mismatch with 401.
+- Handle these events at minimum:
+  - `tracking_request.succeeded`, `tracking_request.failed`, `tracking_request.awaiting_manifest`
+  - `container.transport.vessel_discharged`, `container.transport.available`,
+    `container.transport.full_out`
+  - `container.updated` (use the `changeset`, do not diff)
+  - `container.pickup_lfd.changed`
+- Persist events idempotently keyed by event ID.
+- Register the webhook via `POST /v2/webhooks` from a bootstrap script, subscribing
+  only to events we handle.
+- If our firewall restricts inbound traffic, whitelist Terminal49 IPs from
+  `GET /v2/webhooks/ips`.
+
+## PR 6 — Cutover behind a flag
+
+- Add feature flag `TRACKING_PROVIDER` with values `gnosis` (default) and `terminal49`.
+- Route all reads through the flag. Gnosis stays available as a fallback for one
+  release cycle.
+- Flip staging to `terminal49`, verify parity report is clean, then flip production.
+
+## PR 7 — Cleanup
+
+- Delete `GnosisClient`, its tests, its env vars, its OAuth2 token-refresh logic, its
+  dedupe cache, and any equipment-code parsing helpers Terminal49 makes redundant.
+- Remove the shadow provider and the feature flag.
+- Update README and any runbooks. Note the new webhook endpoint if applicable.
+
+# Definition of done
+
+- All Gnosis call sites now go through Terminal49.
+- Webhook (or polling) is live in production.
+- Parity report shows no unexplained divergences for our top 10 SCACs.
+- Holds, fees, and LFD are exposed to whichever downstream system needs them
+  (dashboard, alerts, customer emails). Do not migrate without wiring these up. They
+  are the reason to do this properly.
+- Any code depending on Gnosis's predictive fields, air cargo tracking, drayage
+  execution, or customs milestones has been explicitly reviewed with me — none of
+  these carry over automatically.
+- Gnosis dependency, env vars, and dead code are gone from the repo.
+
+# Ask me before you
+
+- Choose between the webhook path and the polling path. Default to webhooks unless our
+  infra makes an inbound HTTPS endpoint hard.
+- Change the shape of any function Gnosis callers use today. Prefer a normalization
+  layer inside the Terminal49 client.
+- Add a new dependency. Prefer stdlib and what is already in the repo.
+- Touch anything outside the tracking integration.
+
+Start with PR 1. Post the list of Gnosis call sites and the proposed
+`TrackingProvider` interface, and wait for my review before writing PR 2.
+```
+
+<Note>
+  The prompt is deliberately opinionated on side-by-side migration and small PRs. If your team prefers a big-bang cutover or a different branching model, edit the **Plan** section before sending it to your agent.
+</Note>
+
+## Getting help
+
+Send us your list of active container and bill of lading numbers and we will load them rather than making you script the backfill.
+
+If something in this mapping is wrong or incomplete, tell us. We would rather fix the page than have you work around it.
+
+<CardGroup cols={2}>
+  <Card title="API reference" icon="code" href="/api-docs/api-reference/introduction">
+    Every endpoint, with request and response schemas
+  </Card>
+
+  <Card title="TypeScript SDK" icon="rectangle-terminal" href="/sdk/introduction">
+    Typed client with retries and pagination built in
+  </Card>
+
+  <Card title="Coverage" icon="ship" href="/coverage/home">
+    Carriers, terminals, rail, and field availability
+  </Card>
+
+  <Card title="Test numbers" icon="flask" href="/api-docs/useful-info/test-numbers">
+    Simulate success and failure outcomes
+  </Card>
+</CardGroup>

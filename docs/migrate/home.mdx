@@ -1,12 +1,12 @@
 ---
 title: "Migrate to Terminal49"
 sidebarTitle: "Overview"
-description: "Move your container tracking integration to Terminal49 from SeaRates, project44, FourKites, Vizion, OpenTrack, ShipsGo, GoComet, or Beacon in a weekend."
+description: "Move your container tracking integration to Terminal49 from SeaRates, project44, FourKites, Vizion, OpenTrack, ShipsGo, GoComet, Beacon, or Gnosis Freight in a weekend."
 ---
 
 Terminal49 integrates directly with 36\+ ocean carriers and North American terminals. If you are running another provider today, these guides map your current integration onto ours, field by field, so you can cut over without reverse-engineering our schema.
 
-Every guide covers the same ground: authentication, request and response mapping, event and webhook equivalents, error handling, the gotchas that will bite you, and a migration checklist. Each one also carries a prompt you can hand to Cursor, Claude Code, or Copilot to run the migration side by side.
+Every guide covers the same ground: authentication, request and response mapping, event and webhook equivalents, error handling, the gotchas that will bite you, and a migration checklist. Each one also carries a prompt you can hand to Claude Code, Codex, Cursor, or Copilot to run the migration side by side.
 
 ## Why we care so much about terminal data
 
@@ -54,13 +54,17 @@ If you have ever had to explain a demurrage invoice to a customer, you already u
   <Card title="Beacon" icon="signal-stream" href="/migrate/beacon">
     Supply chain visibility. Replace shipment-level polling with per-container webhooks.
   </Card>
+
+  <Card title="Gnosis Freight" icon="container-storage" href="/migrate/gnosisfreight">
+    Container Lifecycle Management platform. Move MBL-based tracking and polling onto tracking requests and webhooks.
+  </Card>
 </CardGroup>
 
 ## What every migration has in common
 
 <Steps>
   <Step title="Self-serve an API key">
-    Create an account at [app.terminal49.com](https://app.terminal49.com) and generate a key at [app.terminal49.com/developers/api-keys](https://app.terminal49.com/developers/api-keys). The free Developer Key tracks up to 10 active containers, enough for a parity test. No call required.
+    Create an account at [app.terminal49.com](https://app.terminal49.com) and generate a key at [app.terminal49.com/developers/api-keys](https://app.terminal49.com/developers/api-keys). The free plan tracks up to 10 active containers, enough for a parity test. Creating tracking requests through the API is immediate; to read tracking data back through the API, ask us to enable the free 7-day API trial (same 10-container limit) via in-app chat or support@terminal49.com.
   </Step>
   <Step title="Register tracking requests once">
     `POST /v2/tracking_requests` per BOL, booking, or container. We poll the carrier, terminal, and rail sources on your behalf.
@@ -72,6 +76,10 @@ If you have ever had to explain a demurrage invoice to a customer, you already u
     Holds, fees, last free day, release readiness. These are the reason to migrate rather than port like for like.
   </Step>
 </Steps>
+
+<Note>
+  **Migration offer:** sign up now and the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-id) — vessel schedules, AIS positions, and projected routes — is free for your first month.
+</Note>
 
 ## The fields that change how your week goes
 
@@ -145,7 +153,79 @@ curl -X POST https://api.terminal49.com/v2/tracking_requests \
 
 ## Migrate with an AI coding agent
 
-Every provider page carries a copyable prompt that walks an AI coding assistant through a **side-by-side migration**: stand up a Terminal49 client next to your current provider, shadow every call, diff the responses, and cut over only once parity is proven. The prompts are opinionated about small PRs and reference the mappings on each page, so give your agent the page URL as context.
+Every provider page carries a copyable prompt that walks an AI coding assistant — Claude Code, Codex, Cursor, Copilot, or any agent that can read your repo — through a **side-by-side migration**: stand up a Terminal49 client next to your current provider, shadow every call, diff the responses, and cut over only once parity is proven. The prompts are opinionated about small PRs and reference the mappings on each page, so give your agent the page URL as context.
+
+Coming from a provider we have not written up? Use the generic version below and fill in the provider name.
+
+```markdown Terminal49 side-by-side migration prompt (generic) expandable icon=robot wrap
+You are migrating this codebase from our current container tracking provider,
+[PROVIDER], to the Terminal49 API, side by side. Terminal49's documentation is at
+https://terminal49.com/docs — use the API reference and the migration guides under
+https://terminal49.com/docs/migrate/home as the source of truth for field mappings,
+event names, error codes, and behavior. Never invent Terminal49 fields, endpoints,
+or event names; if the docs do not confirm a mapping, ask me.
+
+# Repo context (fill this in before running)
+
+- [PROVIDER] client lives at: [path/to/client]
+- [PROVIDER] is called from: [list the call sites or "find them"]
+- Language and framework: [e.g. TypeScript + Node, Python + FastAPI, Ruby on Rails]
+- Storage for tracking state: [e.g. Postgres table `shipments`]
+- Current polling schedule: [e.g. cron every 2h]
+- Carrier mix (SCACs we track most): [e.g. MAEU, MSCU, CMDU, HLCU, ONEY]
+- Secret store: [e.g. AWS Secrets Manager, `.env`, Doppler]
+
+# Terminal49 facts (do not deviate)
+
+- Auth header is `Authorization: Token <key>` — not `Bearer`.
+- Content type is `application/vnd.api+json`; responses are JSON:API with `data`,
+  `relationships`, and an `included` array.
+- Base URL is `https://api.terminal49.com/v2`.
+- Tracking is asynchronous: `POST /tracking_requests` returns pending; data arrives via
+  `tracking_request.succeeded` / `tracking_request.failed` /
+  `tracking_request.awaiting_manifest` webhooks, or by polling `GET /v2/shipments`. Do not expect shipment data on creation.
+- Timestamps are UTC with a separate IANA `time_zone` field.
+- `holds_at_pod_terminal: []` and `fees_at_pod_terminal: []` are the normal state, not
+  missing data.
+- On `container.updated`, use the `changeset` instead of diffing state yourself.
+
+# Plan (one small, revertable PR per step)
+
+1. Discovery: find every [PROVIDER] call site; extract the client's public surface into
+   a `TrackingProvider` interface; make the existing client implement it.
+2. Terminal49 client: implement the same interface against Terminal49
+   (`createTrackingRequest`, `getShipment` with `include=containers`, `getContainer`).
+   Normalize responses to the shape existing callers expect. Map errors to typed
+   classes by HTTP status (401, 403, 400/422, 404, 429, 5xx). Unit tests on recorded
+   fixtures only.
+3. Shadow mode: wrap both clients; [PROVIDER] stays primary; fire-and-forget the same
+   lookup against Terminal49 and log structured diffs. Add a parity report aggregated
+   by SCAC and field. No caller-visible changes.
+4. Backfill: one-shot idempotent script that creates a tracking request per active BOL,
+   booking, or container and stores the returned IDs.
+5. Webhooks (preferred) or polling: HMAC-verified receiver, idempotent event storage
+   keyed by event ID, registered via `POST /v2/webhooks` for only the events we handle.
+6. Cutover behind a `TRACKING_PROVIDER` feature flag; [PROVIDER] stays as fallback for
+   one release cycle; flip staging first, verify the parity report, then production.
+7. Cleanup: delete the [PROVIDER] client, env vars, dependencies, and dedupe logic;
+   remove the shadow layer and the flag.
+
+# Definition of done
+
+- All call sites go through Terminal49; webhooks or polling live in production.
+- Parity report is clean for our top SCACs.
+- Holds (`holds_at_pod_terminal`), fees (`fees_at_pod_terminal`), last free day
+  (`pickup_lfd`), and `available_for_pickup` are wired into whichever downstream
+  system acts on them. They are the reason to migrate properly.
+- [PROVIDER] is gone from the repo.
+
+# Ask me before you
+
+- Choose webhooks vs polling.
+- Change any function signature existing callers use.
+- Add a dependency.
+- Touch anything outside the tracking integration.
+```
 
 ## Start somewhere
 
@@ -159,7 +239,7 @@ Every provider page carries a copyable prompt that walks an AI coding assistant 
   </Card>
 
   <Card title="Test numbers" icon="flask" href="/api-docs/useful-info/test-numbers">
-    Simulate success, failure, and edge cases before you cut over
+    Simulate success and failure before you cut over
   </Card>
 
   <Card title="Send us your list" icon="comment" href="https://www.terminal49.com/demo">

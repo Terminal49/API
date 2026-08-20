@@ -10,11 +10,11 @@ OpenTrack and Terminal49 both do ocean container tracking. The differences are T
 
 ## Start in sixty seconds
 
-You do not need to talk to anyone to try this.
+Signing up and getting a key is self-serve.
 
 <Steps>
   <Step title="Create an account">
-    Sign up at [app.terminal49.com](https://app.terminal49.com). The free Developer Key tracks up to 10 active containers.
+    Sign up at [app.terminal49.com](https://app.terminal49.com). The free plan tracks up to 10 active containers.
   </Step>
   <Step title="Generate an API key">
     Create a key at [app.terminal49.com/developers/api-keys](https://app.terminal49.com/developers/api-keys).
@@ -42,9 +42,17 @@ You do not need to talk to anyone to try this.
   The full API key is shown once, right after you create it. Copy it before you navigate away. After that it is masked and cannot be revealed. If you miss it, create a new key and delete the old one.
 </Warning>
 
+<Note>
+  The free plan tracks up to 10 active containers. Creating tracking requests through the API works right away; reading tracking data back through the API requires a free 7-day API trial (same 10-container limit) — contact us via in-app chat or support@terminal49.com and we enable it.
+</Note>
+
 <Tip>
-  If you want to test without a live shipment, use the [test tracking numbers](/api-docs/useful-info/test-numbers), which simulate success, failure, and edge-case outcomes.
+  If you want to test without a live shipment, use the [test tracking numbers](/api-docs/useful-info/test-numbers), which simulate success and failure outcomes.
 </Tip>
+
+<Note>
+  **Migration offer:** sign up now and the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-id) — vessel schedules, AIS positions, and projected routes — is free for your first month.
+</Note>
 
 ## The architectural shift
 
@@ -70,15 +78,15 @@ You can keep polling if you prefer. Point your existing scheduler at `GET /v2/sh
 | --- | --- | --- |
 | Tracking model | Poll on demand | Register once, then push or poll |
 | Authentication | API key in header or query | `Authorization: Token` header |
-| Base URL | \[OpenTrack API domain\] | `https://api.terminal49.com/v2` |
+| Base URL | API domain | `https://api.terminal49.com/v2` |
 | Content type | `application/json` | `application/vnd.api+json` |
 | Response format | Custom JSON | JSON:API |
 | Webhooks | May be available | 30\+ events, HMAC-signed |
-| Carrier identification | SCAC or similar | `scac`, or omit and use Infer |
-| Terminal holds and fees | Not available | Included on the container object |
-| Last free day | Not available | Included, with per-source breakdown |
+| Carrier identification | SCAC or similar | `scac`, or `auto_detect_vocc_scac` |
+| Terminal holds and fees | No direct equivalent | Included on the container object |
+| Last free day | No direct equivalent | Included, with per-source breakdown |
 | Rail milestones | Limited | North American Class I and short-line |
-| Getting an API key | \[OpenTrack signup URL\] | Self-serve |
+| Getting an API key | Signup URL | Self-serve |
 
 ## Authentication
 
@@ -87,8 +95,9 @@ Move your key into the `Authorization: Token` header.
 <CodeGroup>
 
 ```bash OpenTrack
-curl -H "Authorization: [YOUR_OPENTRACK_KEY]" \
-  "[OpenTrack API domain]/[your OpenTrack shipment endpoint]"
+# However your OpenTrack integration authenticates today, for example:
+curl -H "Authorization: YOUR_OPENTRACK_KEY" \
+  "https://<your-opentrack-api-endpoint>/shipments"
 ```
 
 ```bash Terminal49
@@ -111,15 +120,15 @@ curl -X POST https://api.terminal49.com/v2/tracking_requests \
 
 | OpenTrack parameter | Terminal49 equivalent | Notes |
 | --- | --- | --- |
-| \[OpenTrack container number field\] | `request_number` | Pass in the tracking request attributes |
-| \[OpenTrack BOL field\] | `request_type: "bill_of_lading"` | Master or house BOL |
-| \[OpenTrack booking field\] | `request_type: "booking_number"` |  |
-| \[OpenTrack SCAC field\] | `scac` | Same SCAC values for most carriers |
-| Auto-detect carrier | Omit `scac`, or call [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) | Returns the predicted SCAC and number type |
-| Force refresh | `POST /v2/containers/{id}/refresh` | Forces an immediate pull from all sources |
+| Container number field | `request_number` | Pass in the tracking request attributes |
+| BOL field | `request_type: "bill_of_lading"` | Master or house BOL |
+| Booking field | `request_type: "booking_number"` |  |
+| SCAC field | `scac` | Same SCAC values for most carriers |
+| Auto-detect carrier | Set `auto_detect_vocc_scac: true`, or call [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) first | Auto-detection runs asynchronously; a failed inference fails the tracking request with `scac_auto_detect_failed` |
+| Force refresh | `PATCH /v2/containers/{id}/refresh` | Forces an immediate pull from all sources. Paid feature — requires account enablement, limited to 10 requests per minute |
 
 <Note>
-  OpenTrack may accept a combined identifier value in a single field. Terminal49 takes one identifier per tracking request. Track by BOL and we return every container on that bill of lading as related container resources.
+  OpenTrack may accept a combined identifier value in a single field. Terminal49 takes one identifier per tracking request. Track by BOL and we return every container on that bill of lading as related container resources. Container-number tracking requests are currently in beta.
 </Note>
 
 ## Response field mapping
@@ -132,57 +141,57 @@ Use the [`include` parameter](/api-docs/in-depth-guides/including-resources) to 
 
 | OpenTrack | Terminal49 |
 | --- | --- |
-| \[OpenTrack BOL field\] | `shipment.attributes.bill_of_lading_number` |
-| \[OpenTrack SCAC field\] | `shipment.attributes.shipping_line_scac` |
-| \[OpenTrack carrier name field\] | `shipment.attributes.shipping_line_name` |
-| \[OpenTrack status field\] | Derived from container status and milestones |
-| \[OpenTrack origin port field\] | `shipment.relationships.port_of_lading` |
-| \[OpenTrack destination port field\] | `shipment.relationships.port_of_discharge` |
-| \[OpenTrack inland destination field\] | `shipment.relationships.destination` |
-| \[OpenTrack ETA field\] | `shipment.attributes.pod_eta_at` |
+| BOL field | `shipment.attributes.bill_of_lading_number` |
+| SCAC field | `shipment.attributes.shipping_line_scac` |
+| Carrier name field | `shipment.attributes.shipping_line_name` |
+| Status field | Derived from container status and milestones |
+| Origin port field | `shipment.relationships.port_of_lading` |
+| Destination port field | `shipment.relationships.port_of_discharge` |
+| Inland destination field | `shipment.relationships.destination` |
+| ETA field | `shipment.attributes.pod_eta_at` |
 
 ### Container level
 
 | OpenTrack | Terminal49 |
 | --- | --- |
-| \[OpenTrack container number field\] | `container.attributes.number` |
-| \[OpenTrack ISO code field\] | `container.attributes.equipment_type` \+ `equipment_length` \+ `equipment_height` |
-| \[OpenTrack size/type field\] | Same three fields above |
-| \[OpenTrack container status field\] | `container.attributes.current_status` |
-| \[OpenTrack events array\] | Container timestamps, [transport events](/api-docs/api-reference/containers/get-a-containers-transport-events), and webhook events |
+| Container number field | `container.attributes.number` |
+| ISO code field | `container.attributes.equipment_type` \+ `equipment_length` \+ `equipment_height` |
+| Size/type field | Same three fields above |
+| Container status field | `container.attributes.current_status` |
+| Events array | Container timestamps, [transport events](/api-docs/api-reference/containers/get-a-containers-transport-events), and webhook events |
 
 <Note>
-  OpenTrack may return a single ISO code string like `45G1`. Terminal49 splits this into three normalized fields: type (dry, reefer, open top, flat rack, tank, hard top), length (20, 40, 45, 50), and height (standard, high cube). If you were parsing ISO codes yourself, you can delete that code.
+  OpenTrack may return a single ISO code string like `45G1`. Terminal49 splits this into three normalized fields: type (dry, reefer, open top, flat rack, bulk, tank), length (10, 20, 40, 45), and height (standard, high cube). If you were parsing ISO codes yourself, you can delete that code.
 </Note>
 
 ### Locations, facilities, and vessels
 
 | OpenTrack | Terminal49 |
 | --- | --- |
-| \[OpenTrack port name field\] | `port.attributes.name` |
-| \[OpenTrack port code field\] | `port.attributes.code` |
-| \[OpenTrack port lat/lng fields\] | `port.attributes.latitude` / `.longitude` |
-| \[OpenTrack port timezone field\] | `port.attributes.time_zone` |
-| \[OpenTrack port country field\] | `port.attributes.country_code` |
-| \[OpenTrack terminal name field\] | `terminal.attributes.name` |
-| \[OpenTrack terminal SMDG field\] | `terminal.attributes.smdg_code` |
-| \[OpenTrack terminal BIC field\] | `terminal.attributes.bic_code` |
-| \[OpenTrack vessel name field\] | `shipment.attributes.pod_vessel_name` |
-| \[OpenTrack vessel IMO field\] | `shipment.attributes.pod_vessel_imo` |
-| \[OpenTrack vessel MMSI field\] | Available via the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-imo) |
+| Port name field | `port.attributes.name` |
+| Port code field | `port.attributes.code` |
+| Port lat/lng fields | `port.attributes.latitude` / `.longitude` |
+| Port timezone field | `port.attributes.time_zone` |
+| Port country field | `port.attributes.country_code` |
+| Terminal name field | `terminal.attributes.name` |
+| Terminal SMDG field | `terminal.attributes.smdg_code` |
+| Terminal BIC field | `terminal.attributes.bic_facility_code` |
+| Vessel name field | `shipment.attributes.pod_vessel_name` |
+| Vessel IMO field | `shipment.attributes.pod_vessel_imo` |
+| Vessel MMSI field | Available via the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-imo) |
 
 ## Milestone and event mapping
 
-OpenTrack returns a flat event array with \[OpenTrack's event vocabulary\]. Terminal49 exposes the same milestones as normalized transport events and pushes each one to your webhook.
+OpenTrack returns a flat event array with Event vocabulary. Terminal49 exposes the same milestones as normalized transport events and pushes each one to your webhook.
 
 | OpenTrack event | Milestone | Terminal49 event |
 | --- | --- | --- |
-| \[OpenTrack loaded event\] | Loaded on vessel at origin | `container.transport.vessel_loaded` |
-| \[OpenTrack departed event\] | Vessel departed origin | `container.transport.vessel_departed` |
-| \[OpenTrack arrived event\] | Vessel arrived at destination | `container.transport.vessel_arrived` |
-| \[OpenTrack discharged event\] | Discharged from vessel | `container.transport.vessel_discharged` |
-| \[OpenTrack gated out event\] | Gated out at destination | `container.transport.full_out` |
-| \[OpenTrack gated in event\] | Gated in at origin | `container.transport.full_in` |
+| Loaded event | Loaded on vessel at origin | `container.transport.vessel_loaded` |
+| Departed event | Vessel departed origin | `container.transport.vessel_departed` |
+| Arrived event | Vessel arrived at destination | `container.transport.vessel_arrived` |
+| Discharged event | Discharged from vessel | `container.transport.vessel_discharged` |
+| Gated out event | Gated out at destination | `container.transport.full_out` |
+| Gated in event | Gated in at origin | `container.transport.full_in` |
 | — | Empty picked up at origin | `container.transport.empty_out` |
 | — | Empty returned at destination | `container.transport.empty_in` |
 
@@ -287,7 +296,7 @@ function isReadyForPickup(container) {
 Full detail in [Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
 
 <Info>
-  Holds, fees, LFD, and availability come back on the container object wherever the terminal is a supported source. They are not a paid add-on and they do not require a sales conversation. See [Entitlements](/api-docs/useful-info/entitlements) for the features that do require account enablement. Rail LFD and the embeddable widget are the main ones.
+  Holds, fees, LFD, and availability come back on the container object wherever the terminal is a supported source. They are not a paid add-on and they do not require a sales conversation. See [Entitlements](/api-docs/useful-info/entitlements) for the features that do require account enablement. Routing Data (container map and vessel positions), rail LFD, container refresh, and the embeddable map and widget are the gated ones.
 </Info>
 
 ## Gotchas that will bite you
@@ -336,15 +345,15 @@ Rough equivalence for the OpenTrack errors you are handling today:
 
 | OpenTrack error | Terminal49 |
 | --- | --- |
-| \[OpenTrack authentication error\] | HTTP 401 |
-| \[OpenTrack authorization error\] | HTTP 403 |
-| \[OpenTrack rate limit error\] | HTTP 429 |
-| \[OpenTrack validation error\] | HTTP 400 or 422 |
-| \[OpenTrack unsupported carrier error\] | HTTP 422 |
-| \[OpenTrack no data found error\] | `tracking_request.failed`, or `awaiting_manifest` if not yet manifested |
-| \[OpenTrack server error\] | Not surfaced. We retry internally or return HTTP 5xx. |
+| Authentication error | HTTP 401 |
+| Authorization error | HTTP 403 |
+| Rate limit error | HTTP 429 |
+| Validation error | HTTP 400 or 422 |
+| Unsupported carrier error | HTTP 422 |
+| No data found error | `tracking_request.failed`, or `tracking_request.awaiting_manifest` if not yet manifested |
+| Server error | Not surfaced. We retry internally or return HTTP 5xx. |
 
-The [TypeScript SDK](/sdk/introduction) maps these to typed errors (`AuthenticationError`, `ValidationError`, `RateLimitError`, `UpstreamError`, `FeatureNotEnabledError`) and retries rate-limit and server errors automatically with exponential backoff.
+The [TypeScript SDK](/sdk/introduction) maps these to typed errors (`AuthenticationError`, `ValidationError`, `RateLimitError`, `UpstreamError`, `FeatureNotEnabledError`, `AuthorizationError`, `NotFoundError`) and retries rate-limit and server errors automatically with exponential backoff.
 
 ## Where we are narrower than OpenTrack
 
@@ -423,8 +432,8 @@ Everyone does the base path. Then pick a branch.
   </Tab>
   <Tab title="Polling path">
     <Steps>
-      <Step title="Store the IDs">
-        Keep the tracking request ID and shipment ID from the creation response.
+      <Step title="Store the tracking request ID">
+        The creation response is pending and carries no shipment yet. Keep the tracking request ID, then fetch the tracking request again (or handle `tracking_request.succeeded`) to get the shipment ID once the carrier responds.
       </Step>
       <Step title="Repoint your scheduler">
         Point it at `GET /v2/shipments` or `GET /v2/containers`.
@@ -499,8 +508,8 @@ mappings, event names, error codes, and behavior differences.
 4. Terminal49 uses `Authorization: Token <key>` (not `Bearer`) and content type
    `application/vnd.api+json`. Get this right on the first request.
 5. Terminal49 is asynchronous. `POST /tracking_requests` returns pending. Data arrives
-   via `tracking_request.succeeded`, `tracking_request.failed`, or `awaiting_manifest`
-   webhooks, or by polling `GET /v2/shipments`. Do not expect shipment data on creation.
+   via `tracking_request.succeeded`, `tracking_request.failed`, or
+   `tracking_request.awaiting_manifest` webhooks, or by polling `GET /v2/shipments`. Do not expect shipment data on creation.
 6. Timestamps are UTC with a separate IANA `time_zone` field. Do not assume local time.
 7. `holds_at_pod_terminal: []` and `fees_at_pod_terminal: []` are the normal state,
    not missing data. A fee `amount` of 0 is valid.
@@ -526,7 +535,7 @@ mappings, event names, error codes, and behavior differences.
     tracking request ID.
   - `getShipment(id, { include: 'containers,port_of_lading,port_of_discharge,...' })`.
   - `getContainer(id)`.
-  - `refreshContainer(id)` mapping to `POST /v2/containers/{id}/refresh`.
+  - `refreshContainer(id)` mapping to `PATCH /v2/containers/{id}/refresh`.
 - Normalize responses to the same shape OpenTrack callers expect today, using the field
   mapping from the guide. Split `iso_code` into `equipment_type`, `equipment_length`,
   `equipment_height`. Convert timestamps to UTC + `time_zone`.
@@ -631,6 +640,6 @@ If something in this mapping is wrong or incomplete, tell us. We would rather fi
   </Card>
 
   <Card title="Test numbers" icon="flask" href="/api-docs/useful-info/test-numbers">
-    Simulate success, failure, and edge cases
+    Simulate success and failure outcomes
   </Card>
 </CardGroup>

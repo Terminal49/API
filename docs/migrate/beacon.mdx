@@ -2,20 +2,19 @@
 title: "Migrating from Beacon"
 sidebarTitle: "Beacon"
 description: "Map Beacon tracking API fields, parameters, and errors to their Terminal49 equivalents. Includes webhook setup, carrier coverage, and a migration checklist."
-icon: "face-smile-relaxed"
 ---
 
-Beacon combines visibility with forwarding services. If you use only the tracking API, moving to Terminal49 gives you direct terminal integrations (holds, fees, LFD) and 30\+ webhook events. This guide covers the tracking API only, not their forwarding service.
+Beacon is a supply chain visibility platform that also tracks air waybills and offers order management. If you use only the ocean tracking API, moving to Terminal49 gives you direct terminal integrations (holds, fees, LFD) and 30\+ webhook events. This guide covers ocean container and BOL tracking only, not Beacon's air tracking or order management.
 
 There is no compatibility shim. You will change your request code and your response parsing. For most integrations that is an afternoon.
 
 ## Start in sixty seconds
 
-You do not need to talk to anyone to try this.
+Signing up and getting a key is self-serve.
 
 <Steps>
   <Step title="Create an account">
-    Sign up at [app.terminal49.com](https://app.terminal49.com). The free Developer Key tracks up to 10 active containers.
+    Sign up at [app.terminal49.com](https://app.terminal49.com). The free plan tracks up to 10 active containers.
   </Step>
   <Step title="Generate an API key">
     Create a key at [app.terminal49.com/developers/api-keys](https://app.terminal49.com/developers/api-keys).
@@ -43,19 +42,27 @@ You do not need to talk to anyone to try this.
   The full API key is shown once, right after you create it. Copy it before you navigate away. After that it is masked and cannot be revealed. If you miss it, create a new key and delete the old one.
 </Warning>
 
+<Note>
+  The free plan tracks up to 10 active containers. Creating tracking requests through the API works right away; reading tracking data back through the API requires a free 7-day API trial (same 10-container limit) — contact us via in-app chat or support@terminal49.com and we enable it.
+</Note>
+
 <Tip>
-  If you want to test without a live shipment, use the [test tracking numbers](/api-docs/useful-info/test-numbers), which simulate success, failure, and edge-case outcomes.
+  If you want to test without a live shipment, use the [test tracking numbers](/api-docs/useful-info/test-numbers), which simulate success and failure outcomes.
 </Tip>
+
+<Note>
+  **Migration offer:** sign up now and the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-id) — vessel schedules, AIS positions, and projected routes — is free for your first month.
+</Note>
 
 ## The architectural shift
 
-Beacon gives you a shipment-centric API. You call it with a number, get current state back, and own the schedule, the cache, and the deduplication.
+Beacon gives you a container-centric API. You register a container number, poll for current state, and own the schedule, the cache, and the deduplication.
 
 Terminal49 splits this in two. You register a tracking request once. We keep it updated and push changes to your webhook.
 
 <CardGroup cols={2}>
   <Card title="Before: Beacon" icon="rotate">
-    Cron every few hours, call Beacon's shipment endpoint, diff against your cache, dedupe events, then write to your database. Every call spends quota. Freshness is capped by your polling interval.
+    Cron every 2+ hours, call Beacon's container endpoint, diff against your cache, dedupe events, then write to your database. Every successful call spends contracted usage. Freshness is capped by your polling interval.
   </Card>
 
   <Card title="After: Terminal49" icon="webhook">
@@ -69,28 +76,40 @@ You can keep polling if you prefer. Point your existing scheduler at `GET /v2/sh
 
 |  | Beacon | Terminal49 |
 | --- | --- | --- |
-| Tracking model | Poll on demand | Register once, then push or poll |
-| Authentication | API key or bearer token | `Authorization: Token` header |
-| Base URL | `https://beacon.io` | `https://api.terminal49.com/v2` |
+| Tracking model | Register containers, then poll (max every 2h recommended) | Register once, then push or poll |
+| Authentication | Username/password login → short-lived Bearer token | `Authorization: Token` header |
+| Base URL | `https://api.beacon.com/v1` | `https://api.terminal49.com/v2` |
 | Content type | `application/json` | `application/vnd.api+json` |
-| Response format | Custom JSON | JSON:API |
-| Webhooks | Supported | 30\+ events, HMAC-signed |
-| Carrier identification | Carrier name or code | `scac`, or omit and use Infer |
-| Terminal holds and fees | Not available | Included on the container object |
-| Last free day | Not available | Included, with per-source breakdown |
+| Response format | JSON API schema | JSON:API |
+| Webhooks | Available via support | 30\+ events, HMAC-signed |
+| Carrier identification | 4-character SCAC (`carrier_code`) | `scac`, or `auto_detect_vocc_scac` |
+| Terminal holds and fees | No direct equivalent | Included on the container object |
+| Last free day | No direct equivalent | Included, with per-source breakdown |
 | Rail milestones | Limited | North American Class I and short-line |
-| Getting an API key | Self-serve | Self-serve |
+| Getting an API key | Granted per user by your customer success manager | Self-serve |
 
 ## Authentication
 
-Move the key into the `Authorization: Token` header and set the content type to `application/vnd.api+json`.
+Beacon issues a short-lived Bearer token from a login call and expects you to refresh it before it expires. Terminal49 uses a single static API key, so this entire flow goes away.
 
 <CodeGroup>
 
 ```bash Beacon
-curl -X GET "https://beacon.io/api/v1/shipments?number=MRKU9465770" \
-  -H "Authorization: Bearer YOUR_BEACON_KEY" \
+# Step 1: log in to get an access token (max 20 requests/minute)
+curl -X POST https://api.beacon.com/v1/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "YOUR_BEACON_USERNAME", "password": "YOUR_BEACON_PASSWORD"}'
+# Returns: { "access_token", "refresh_token", "token_type": "Bearer", "expires_in": 300 }
+
+# Step 2: call the API with the access token (expires after 300 seconds)
+curl -X GET "https://api.beacon.com/v1/containers/MRKU9465770" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json"
+
+# Step 3: refresh before it expires
+curl -X POST https://api.beacon.com/v1/login/token \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token": "YOUR_REFRESH_TOKEN"}'
 ```
 
 ```bash Terminal49
@@ -109,23 +128,34 @@ curl -X POST https://api.terminal49.com/v2/tracking_requests \
   Note the `Token` prefix. It is not `Bearer`.
 </Note>
 
+<Tip>
+  Terminal49's API key does not expire. Once you switch, delete the login call, the token cache, the 300-second expiry timer, and the refresh logic entirely — there is nothing to replace them with.
+</Tip>
+
+Beacon also requires your customer success manager to grant API access per user before you can call the API at all. Terminal49 keys are self-serve from the dashboard.
+
 ## Request parameter mapping
 
-| Beacon parameter | Terminal49 equivalent | Notes |
+Beacon's `POST /v1/containers` takes an array of container objects in one call. Terminal49's `POST /tracking_requests` takes one identifier per request, but that identifier can be a container number, a BOL, or a booking number.
+
+| Beacon field | Terminal49 equivalent | Notes |
 | --- | --- | --- |
-| `[Beacon's shipment identifier]` | `request_number` | Container, BOL, or booking number |
-| `[Beacon's container identifier]` | `request_type: "container"` |  |
-| `[Beacon's BOL identifier]` | `request_type: "bill_of_lading"` | Master or house BOL |
-| `[Beacon's booking identifier]` | `request_type: "booking_number"` |  |
-| `[Beacon's carrier field]` | `scac` | Same SCAC values for most carriers |
-| Omit carrier | Omit `scac`, or call [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) | Returns the predicted SCAC and number type |
-| `[Beacon's refresh parameter]` | `POST /v2/containers/{id}/refresh` | Forces an immediate pull from all sources |
-| `[Beacon's route data]` | Always included | See [Routing](/api-docs/in-depth-guides/routing) |
+| `container_number` (required) | `request_number` + `request_type: "container"` | Terminal49 also accepts BOL (`request_type: "bill_of_lading"`) and booking numbers (`request_type: "booking_number"`) as the identifier, which Beacon's container endpoint does not |
+| `carrier_code` (optional, 4-char SCAC) | `scac` | Same SCAC format |
+| Omit `carrier_code` | Set `auto_detect_vocc_scac: true`, or call [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) first | Auto-detection runs asynchronously; a failed inference fails the tracking request with `scac_auto_detect_failed` |
+| `destination_warehouse_name` (optional) | No equivalent field | Terminal49 does not model an inland warehouse name on the tracking request; the container's `relationships.destination` covers inland rail/port destinations |
+| `custom_fields` (optional, up to 10 `{name, value}` pairs) | `ref_numbers` (array of strings) on the tracking request, per the [OpenAPI spec](/api-docs/api-reference/introduction) | Terminal49 stores these as a flat list of reference strings, not named key/value pairs — if you rely on the field name to route data downstream, you'll need to encode that in the string or handle it in your own mapping layer |
+| Refresh parameter | `PATCH /v2/containers/{id}/refresh` | Forces an immediate pull from all sources. Paid feature — requires account enablement, limited to 10 requests per minute |
+| Route data | `GET /v2/containers/{id}/map_geojson` — requires the Routing Data entitlement | See [Routing](/api-docs/in-depth-guides/routing) |
 | API key header | `Authorization` header | `Token` prefix, not `Bearer` |
 
 <Note>
-  Terminal49 takes one identifier per tracking request. Track by BOL and we return every container on that bill of lading as related container resources.
+  Terminal49 takes one identifier per tracking request. Track by BOL and we return every container on that bill of lading as related container resources. Container-number tracking requests are currently in beta.
 </Note>
+
+<Warning>
+  Beacon consumes your contracted usage whenever a request succeeds and returns tracking data — even for containers you've stopped actively watching. Terminal49's free plan tracks up to 10 active containers at no cost; beyond that, usage is based on active tracking requests, not per-call lookups.
+</Warning>
 
 ## Response field mapping
 
@@ -133,63 +163,63 @@ Terminal49 is JSON:API compliant, so relationships between shipments, containers
 
 Use the [`include` parameter](/api-docs/in-depth-guides/including-resources) to sideload related resources in one call instead of chasing IDs.
 
+Beacon's `GET /v1/containers/{containerNumber}` response is container-centric — it does not return a separate shipment object. Below, the Beacon column reflects the real field names from that response.
+
 ### Shipment level
 
-| Beacon | Terminal49 |
+| Beacon field | Terminal49 |
 | --- | --- |
-| `[Beacon's shipment number field]` | `shipment.attributes.bill_of_lading_number` |
-| `[Beacon's carrier code field]` | `shipment.attributes.shipping_line_scac` |
-| `[Beacon's carrier name field]` | `shipment.attributes.shipping_line_name` |
-| `[Beacon's shipment status field]` | Derived from container status and milestones |
-| `[Beacon's origin location field]` | `shipment.relationships.port_of_lading` |
-| `[Beacon's destination location field]` | `shipment.relationships.port_of_discharge` |
-| `[Beacon's inland destination field]` | `shipment.relationships.destination` |
-| `[Beacon's ETA field]` | `shipment.attributes.pod_eta_at` |
-| `[Beacon's cache or refresh fields]` | No equivalent. Refresh is managed for you. |
+| `carrier.code` | `shipment.attributes.shipping_line_scac` |
+| `carrier.name` | `shipment.attributes.shipping_line_name` |
+| `status` (enum) | Derived from container status and milestones |
+| `port_of_loading` | `shipment.relationships.port_of_lading` |
+| `port_of_discharge` | `shipment.relationships.port_of_discharge` |
+| `vessel_arrival_dates.estimated_date` | `shipment.attributes.pod_eta_at` |
+| No polling/refresh cache field | No equivalent. Refresh is managed for you. |
 
 ### Container level
 
-| Beacon | Terminal49 |
+| Beacon field | Terminal49 |
 | --- | --- |
-| `[Beacon's container number field]` | `container.attributes.number` |
-| `[Beacon's equipment code field]` | `container.attributes.equipment_type` \+ `equipment_length` \+ `equipment_height` |
-| `[Beacon's container status field]` | `container.attributes.current_status` |
-| `[Beacon's event array field]` | Container timestamps, [transport events](/api-docs/api-reference/containers/get-a-containers-transport-events), and webhook events |
+| `container_number` | `container.attributes.number` |
+| `status` (enum: `GATED_OUT_EMPTY`, `GATED_IN_FULL`, `LOADED_AT_POL`, `IN_TRANSIT`, `ARRIVED_AT_POD`, `DISCHARGED_AT_POD`, `GATED_OUT_FULL`, `PROCESSING`) | `container.attributes.current_status` |
+| `gated_out_empty_dates` … `gated_out_full_dates` (each with `estimated_date` and/or `actual_date`) | Container timestamps, [transport events](/api-docs/api-reference/containers/get-a-containers-transport-events), and webhook events — see the milestone mapping below |
+| `custom_fields` | Set at tracking-request time as `ref_numbers`; not returned on the container object |
+| `purchase_orders` | No equivalent. Terminal49's tracking API does not do order management |
 
 <Note>
-  Beacon may return a single equipment code string like `45G1`. Terminal49 splits this into three normalized fields: type (dry, reefer, open top, flat rack, tank, hard top), length (20, 40, 45, 50), and height (standard, high cube). If you were parsing equipment codes yourself, you can delete that code.
+  Beacon's documented container response does not include an equipment type or size field. If your integration reads container equipment (dry, reefer, size) from Beacon today, confirm with Beacon support where that comes from before you map it — Terminal49 returns it as `container.attributes.equipment_type`, `equipment_length` (10, 20, 40, 45), and `equipment_height` (standard, high cube).
 </Note>
 
 ### Locations, facilities, and vessels
 
-| Beacon | Terminal49 |
+| Beacon field | Terminal49 |
 | --- | --- |
-| `[Beacon's port name field]` | `port.attributes.name` |
-| `[Beacon's port code field]` | `port.attributes.code` |
-| `[Beacon's port coordinates]` | `port.attributes.latitude` / `.longitude` |
-| `[Beacon's port timezone]` | `port.attributes.time_zone` |
-| `[Beacon's port country field]` | `port.attributes.country_code` |
-| `[Beacon's terminal name field]` | `terminal.attributes.name` |
-| `[Beacon's terminal code field]` | `terminal.attributes.smdg_code` or `bic_code` |
-| `[Beacon's vessel name field]` | `shipment.attributes.pod_vessel_name` |
-| `[Beacon's vessel IMO field]` | `shipment.attributes.pod_vessel_imo` |
-| `[Beacon's vessel MMSI field]` | Available via the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-imo) |
-| `[Beacon's vessel extra fields]` | Not returned |
+| `port_of_loading.name` | `port.attributes.name` |
+| `port_of_loading.un_location_code` | `port.attributes.code` |
+| `port_of_discharge.name` / `.un_location_code` | Same fields, on the discharge port resource |
+| Port coordinates | Not returned by Beacon. Terminal49: `port.attributes.latitude` / `.longitude` |
+| Port timezone | Not returned by Beacon. Terminal49: `port.attributes.time_zone` |
+| Port country | Not returned by Beacon. Terminal49: `port.attributes.country_code` |
+| Terminal name/code | Not returned by Beacon. Terminal49: `terminal.attributes.name`, `terminal.attributes.smdg_code` or `bic_facility_code` |
+| `vessel.name` | `shipment.attributes.pod_vessel_name` |
+| `vessel.imo_number` | `shipment.attributes.pod_vessel_imo` |
+| Vessel MMSI, position, extra fields | Not returned by Beacon. Available on Terminal49 via the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-imo) |
 
 ## Milestone and event mapping
 
-Beacon returns a flat events array with status codes or names. Terminal49 exposes the same milestones as normalized transport events and pushes each one to your webhook.
+Beacon returns each milestone as its own date object with `estimated_date` and/or `actual_date`, rather than a single flat events array. Terminal49 exposes the same milestones as normalized transport events and pushes each one to your webhook.
 
-| Beacon milestone | Terminal49 event |
+| Beacon date object | Terminal49 event |
 | --- | --- |
-| `[Beacon's loaded event]` | `container.transport.vessel_loaded` |
-| `[Beacon's departed event]` | `container.transport.vessel_departed` |
-| `[Beacon's arrived event]` | `container.transport.vessel_arrived` |
-| `[Beacon's discharged event]` | `container.transport.vessel_discharged` |
-| `[Beacon's gated out event]` | `container.transport.full_out` |
-| `[Beacon's gated in event]` | `container.transport.full_in` |
-| `[Beacon's empty out event]` | `container.transport.empty_out` |
-| `[Beacon's empty in event]` | `container.transport.empty_in` |
+| `gated_out_empty_dates` | `container.transport.empty_out` |
+| `gated_in_full_dates` | `container.transport.full_in` |
+| `loaded_dates` | `container.transport.vessel_loaded` |
+| `vessel_departure_dates` | `container.transport.vessel_departed` |
+| `vessel_arrival_dates` | `container.transport.vessel_arrived` |
+| `discharged_dates` | `container.transport.vessel_discharged` |
+| `gated_out_full_dates` | `container.transport.full_out` |
+| No equivalent | `container.transport.empty_in` |
 
 Terminal49 also emits milestones Beacon has no equivalent for:
 
@@ -292,14 +322,22 @@ function isReadyForPickup(container) {
 Full detail in [Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
 
 <Info>
-  Holds, fees, LFD, and availability come back on the container object wherever the terminal is a supported source. They are not a paid add-on and they do not require a sales conversation. See [Entitlements](/api-docs/useful-info/entitlements) for the features that do require account enablement. Rail LFD and the embeddable widget are the main ones.
+  Holds, fees, LFD, and availability come back on the container object wherever the terminal is a supported source. They are not a paid add-on and they do not require a sales conversation. See [Entitlements](/api-docs/useful-info/entitlements) for the features that do require account enablement. Routing Data (container map and vessel positions), rail LFD, container refresh, and the embeddable map and widget are the gated ones.
 </Info>
 
 ## Gotchas that will bite you
 
 <AccordionGroup>
-  <Accordion title="Scope is tracking only, not forwarding" icon="arrows-left-right">
-    Beacon also offers freight forwarding and booking management. Terminal49 does not. If your integration uses Beacon forwarding APIs, plan to keep Beacon for those or replace them separately.
+  <Accordion title="Scope is ocean only, not air or orders" icon="arrows-left-right">
+    Beacon also tracks air waybills (AWBs) and offers order management (creating and updating orders, linking an order to a shipment). Terminal49 does not do either. If your integration uses Beacon for air freight or order management, plan to keep Beacon for those or replace them separately — this guide covers ocean container and BOL tracking only.
+  </Accordion>
+
+  <Accordion title="No more token refresh loop" icon="key">
+    Beacon's access token expires every 300 seconds, so a real integration ends up with a refresh timer, a token cache, and retry logic around `401`s from an expired token. Terminal49's API key is static — delete all of that. There is no login call, no refresh endpoint, and no expiry to track.
+  </Accordion>
+
+  <Accordion title="Usage accounting works differently" icon="receipt">
+    Beacon consumes your contracted usage every time a request succeeds and returns tracking data, even for containers you're no longer actively watching — so idle containers you forgot to stop polling still cost you. Terminal49's free plan tracks up to 10 active containers; usage is based on active tracking requests, not per-call lookups, so stopping a tracking request stops it counting.
   </Accordion>
 
   <Accordion title="Tracking requests are asynchronous" icon="hourglass-half">
@@ -311,7 +349,11 @@ Full detail in [Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/ho
   </Accordion>
 
   <Accordion title="Timestamps are UTC with a separate timezone field" icon="clock">
-    Beacon may return local time or timezone-naive timestamps. Terminal49 stores event timestamps in UTC and returns the matching IANA timezone alongside. Convert for display rather than assuming local time. See [Event Timestamps](/api-docs/in-depth-guides/event-timestamps).
+    Beacon's date fields carry a local UTC offset for the event's location, but fall back to a plain `...Z` UTC timestamp if no zone information is available, or a date with no time at all if no time information is available — so parsing has to branch on which shape you got. Terminal49 always stores event timestamps in UTC and returns the matching IANA timezone alongside as a separate field. Convert for display rather than assuming local time. See [Event Timestamps](/api-docs/in-depth-guides/event-timestamps).
+  </Accordion>
+
+  <Accordion title="Polling cadence vs. webhooks" icon="arrows-rotate">
+    Beacon recommends polling `GET /v1/containers/{containerNumber}` no more than once every 2 hours. If your Beacon integration is polling on a cron, you can either keep the same cadence against `GET /v2/containers`, or drop polling entirely and let Terminal49 push webhook events as they happen — freshness is no longer capped by how often you ask.
   </Accordion>
 
   <Accordion title="Empty arrays are the normal state" icon="brackets-square">
@@ -325,7 +367,7 @@ Full detail in [Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/ho
 
 ## Error handling
 
-Beacon returns HTTP status codes with error details in the response body. Terminal49 also uses standard HTTP status codes. Replace any Beacon-specific error parsing with status-code checks.
+Beacon returns HTTP status codes with an error body containing `timestamp`, `error`, and `sub_error` fields. Terminal49 also uses standard HTTP status codes. Replace any Beacon-specific error parsing with status-code checks.
 
 | Status | Meaning |
 | --- | --- |
@@ -337,17 +379,16 @@ Beacon returns HTTP status codes with error details in the response body. Termin
 | 429 | Rate limited. See [Rate Limiting](/api-docs/in-depth-guides/rate-limiting) |
 | 5xx | Terminal49 or an upstream carrier or terminal is unavailable |
 
-Rough equivalence for the Beacon errors you are handling today:
+Rough equivalence for the Beacon status codes you are handling today:
 
-| Beacon error | Terminal49 |
+| Beacon status | Terminal49 |
 | --- | --- |
-| `[Beacon's invalid key error]` | HTTP 401 |
-| `[Beacon's insufficient permissions error]` | HTTP 403 |
-| `[Beacon's rate limit error]` | HTTP 429 |
-| `[Beacon's invalid parameter error]` | HTTP 400 or 422 |
-| `[Beacon's unsupported carrier error]` | HTTP 422 |
-| `[Beacon's no data found error]` | `tracking_request.failed`, or `awaiting_manifest` if not yet manifested |
-| `[Beacon's carrier unavailable error]` | Not surfaced. We retry internally. |
+| 400 Bad request | HTTP 400 or 422 |
+| 401 Unauthorised (missing or expired token) | HTTP 401 — but there is no token to expire, since the key is static |
+| 403 Forbidden | HTTP 403 |
+| 429 Rate limit exceeded (120/min non-login, 20/min login) | HTTP 429. See [Rate Limiting](/api-docs/in-depth-guides/rate-limiting) for Terminal49's limits |
+| No tracking data found | `tracking_request.failed`, or `tracking_request.awaiting_manifest` if not yet manifested |
+| Carrier unavailable | Not surfaced. We retry internally. |
 
 The [TypeScript SDK](/sdk/introduction) maps these to typed errors (`AuthenticationError`, `ValidationError`, `RateLimitError`, `UpstreamError`, `FeatureNotEnabledError`, `AuthorizationError`, `NotFoundError`) and retries rate-limit and server errors automatically with exponential backoff.
 
@@ -355,13 +396,13 @@ The [TypeScript SDK](/sdk/introduction) maps these to typed errors (`Authenticat
 
 Worth knowing before you commit.
 
-**Carrier count.** Terminal49 integrates directly with 36 ocean carriers, plus 2 more enabled on request, as of 14 August 2026. Beacon may list more. Ours are direct integrations covering the lines that move volume into North America, and each is normalized into one schema. Check your carrier mix against the [ocean carrier list](/coverage/ocean-carriers) before cutover, and read the known issues section there. We publish the per-carrier field gaps.
+**Carrier count.** Terminal49 integrates directly with 36 ocean carriers, plus 2 more enabled on request, as of 14 August 2026. Beacon advertises coverage across 160\+ ocean and air carriers combined. Ours are direct integrations covering the lines that move volume into North America, and each is normalized into one schema. Check your carrier mix against the [ocean carrier list](/coverage/ocean-carriers) before cutover, and read the known issues section there. We publish the per-carrier field gaps.
 
 **Terminal data is North America.** Holds, fees, LFD, and availability come from direct terminal integrations concentrated in the US and Canada, with European ports expanding. Ocean milestones work globally; terminal-level operational data does not yet.
 
-**No air, parcel, or road tracking.** If your integration covers those modes, this migration handles only the ocean portion.
+**No air tracking.** Beacon also tracks air waybills (AWBs). Terminal49 tracks ocean only. If your integration covers air freight, keep it on Beacon or move it elsewhere — this migration handles only the ocean portion.
 
-**No freight forwarding or booking management.** We do not offer forwarding services, rate calculators, or booking APIs. If your Beacon integration uses those, keep Beacon for them or replace them separately.
+**No order management.** Beacon lets you create and update orders and link an order to a shipment. Terminal49 does not model orders — it tracks shipments and containers. If your Beacon integration uses order management, keep Beacon for that or replace it separately.
 
 **Some fields are source-dependent.** Seal number, container weight, and departure or arrival events vary by carrier. The [field availability reference](/coverage/fields) says which fields are always present and which depend on the carrier, terminal, or journey.
 
@@ -430,8 +471,8 @@ Everyone does the base path. Then pick a branch.
   </Tab>
   <Tab title="Polling path">
     <Steps>
-      <Step title="Store the IDs">
-        Keep the tracking request ID and shipment ID from the creation response.
+      <Step title="Store the tracking request ID">
+        The creation response is pending and carries no shipment yet. Keep the tracking request ID, then fetch the tracking request again (or handle `tracking_request.succeeded`) to get the shipment ID once the carrier responds.
       </Step>
       <Step title="Repoint your scheduler">
         Point it at `GET /v2/shipments` or `GET /v2/containers`.
@@ -472,7 +513,8 @@ If you use Cursor, Claude Code, Windsurf, Copilot, or another AI coding assistan
     - A parity report per shipment: matched fields, diverged fields, and Terminal49-only fields (holds, fees, LFD).
     - A feature-flagged cutover: route reads to Terminal49, keep Beacon as fallback until you flip the flag off.
     - A webhook receiver with HMAC verification, or a polling scheduler, depending on which path you pick.
-    - A cleanup PR that removes Beacon code, env vars, dependencies, and dedupe logic.
+    - A cleanup PR that removes Beacon code, its login/token-refresh flow, env vars,
+      dependencies, and dedupe logic.
   </Accordion>
 </AccordionGroup>
 
@@ -483,16 +525,20 @@ Copy this into your agent. Replace the bracketed placeholders in the **Repo cont
 ```markdown Terminal49 migration agent prompt expandable icon=robot wrap
 You are migrating this codebase from the Beacon tracking API to the Terminal49 API,
 side by side. Terminal49's authoritative migration guide is at
-https://terminal49.com/docs/api-docs/getting-started/migrate-from-beacon. Use it as
+https://terminal49.com/docs/migrate/beacon. Use it as
 the source of truth for field mappings, event names, error codes, and behavior differences.
 
 # Repo context (fill this in before running)
 
 - Beacon client lives at: [path/to/beacon/client.ts]
 - Beacon is called from: [list the call sites or "find them"]
+- Beacon auth env vars in use today: [e.g. BEACON_USERNAME, BEACON_PASSWORD — Beacon
+  logs in via POST /v1/login and refreshes a 300-second access token via
+  POST /v1/login/token; note anywhere that refresh timer or token cache lives]
 - Language and framework: [e.g. TypeScript + Node, Python + FastAPI, Ruby on Rails]
 - Storage for tracking state: [e.g. Postgres table `shipments`]
-- Current polling schedule: [e.g. cron every 2h via BullMQ]
+- Current polling schedule: [e.g. cron every 2h via BullMQ, matching Beacon's recommended
+  minimum interval]
 - Carrier mix (SCACs we track most): [e.g. MAEU, MSCU, CMDU, HLCU, ONEY]
 - Deployment target: [e.g. AWS ECS, Vercel, Fly.io]
 - Secret store: [e.g. AWS Secrets Manager, `.env`, Doppler]
@@ -506,8 +552,8 @@ the source of truth for field mappings, event names, error codes, and behavior d
 4. Terminal49 uses `Authorization: Token <key>` (not `Bearer`) and content type
    `application/vnd.api+json`. Get this right on the first request.
 5. Terminal49 is asynchronous. `POST /tracking_requests` returns pending. Data arrives
-   via `tracking_request.succeeded`, `tracking_request.failed`, or `awaiting_manifest`
-   webhooks, or by polling `GET /v2/shipments`. Do not expect shipment data on creation.
+   via `tracking_request.succeeded`, `tracking_request.failed`, or
+   `tracking_request.awaiting_manifest` webhooks, or by polling `GET /v2/shipments`. Do not expect shipment data on creation.
 6. Timestamps are UTC with a separate IANA `time_zone` field. Do not assume local time.
 7. `holds_at_pod_terminal: []` and `fees_at_pod_terminal: []` are the normal state,
    not missing data. A fee `amount` of 0 is valid.
@@ -533,7 +579,7 @@ the source of truth for field mappings, event names, error codes, and behavior d
     tracking request ID.
   - `getShipment(id, { include: 'containers,port_of_lading,port_of_discharge,...' })`.
   - `getContainer(id)`.
-  - `refreshContainer(id)` mapping to `POST /v2/containers/{id}/refresh`.
+  - `refreshContainer(id)` mapping to `PATCH /v2/containers/{id}/refresh`.
 - Normalize responses to the same shape Beacon callers expect today, using the field
   mapping from the guide. Split equipment codes into `equipment_type`, `equipment_length`,
   `equipment_height`. Convert timestamps to UTC + `time_zone`.
@@ -586,8 +632,14 @@ the source of truth for field mappings, event names, error codes, and behavior d
 
 ## PR 7 — Cleanup
 
-- Delete `BeaconClient`, its tests, its env vars, its dedupe cache, and any
-  equipment-code parsing helpers Terminal49 makes redundant.
+- Delete `BeaconClient`, its tests, its dedupe cache, and any equipment-code parsing
+  helpers Terminal49 makes redundant.
+- Delete the Beacon login flow entirely: the `POST /v1/login` call, the
+  `POST /v1/login/token` refresh call, the token cache, and any refresh timer or
+  scheduled job tied to the 300-second expiry. Terminal49's key does not expire, so
+  none of this has a replacement — it just goes away.
+- Remove `BEACON_USERNAME`, `BEACON_PASSWORD`, and any Beacon token env vars from the
+  secret store and deployment config.
 - Remove the shadow provider and the feature flag.
 - Update README and any runbooks. Note the new webhook endpoint if applicable.
 
@@ -638,6 +690,6 @@ If something in this mapping is wrong or incomplete, tell us. We would rather fi
   </Card>
 
   <Card title="Test numbers" icon="flask" href="/api-docs/useful-info/test-numbers">
-    Simulate success, failure, and edge cases
+    Simulate success and failure outcomes
   </Card>
 </CardGroup>
