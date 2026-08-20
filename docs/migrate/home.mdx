@@ -1,0 +1,130 @@
+---
+title: "Migrate to Terminal49"
+sidebarTitle: "Overview"
+description: "Move your container tracking integration to Terminal49 from SeaRates, Project44, FourKites, Vizion, OpenTrack, ShipsGo, GoComet, or Beacon in a weekend."
+---
+
+Terminal49 is a direct integration with 36\+ ocean carriers and North American terminals, so the container object carries holds, fees, last free day, and release readiness that most tracking APIs do not expose. If you are running another provider today, this section maps your current integration onto Terminal49, field by field, so you can cut over without reverse-engineering our schema.
+
+Each guide covers the same ground: authentication, request and response mapping, event and webhook equivalents, error handling, gotchas, and a step-by-step migration checklist. There is also an AI coding agent prompt on each page that you can hand to Cursor, Claude Code, or Copilot to run a side-by-side migration.
+
+## Pick your current provider
+
+<CardGroup cols={2}>
+  <Card title="SeaRates" icon="ship" href="/migrate/searates">
+    Poll-based ocean tracking API. Move from `api_key` query param and custom JSON to JSON:API \+ webhooks.
+  </Card>
+
+  <Card title="Project44" icon="network-wired" href="/migrate/project44">
+    Enterprise multi-modal visibility. Focus on the ocean shipments and swap in HMAC-signed webhooks.
+  </Card>
+
+  <Card title="FourKites" icon="truck" href="/migrate/fourkites">
+    Multi-modal supply chain visibility. Replace the ocean feed with direct carrier and terminal integrations.
+  </Card>
+
+  <Card title="Vizion" icon="eye" href="/migrate/vizion">
+    Container tracking with reference IDs and webhook events. Map subscriptions onto tracking requests.
+  </Card>
+
+  <Card title="OpenTrack" icon="folder-open" href="/migrate/opentrack">
+    Ocean tracking API. Cut over to Terminal49 for terminal-level holds, fees, and LFD.
+  </Card>
+
+  <Card title="ShipsGo" icon="anchor" href="/migrate/shipsgo">
+    Ocean tracking and analytics. Swap the polling loop for webhooks and normalize event codes.
+  </Card>
+
+  <Card title="GoComet" icon="satellite" href="/migrate/gocomet">
+    Multi-modal tracking with a shipment-centric model. Move to JSON:API \+ webhook events.
+  </Card>
+
+  <Card title="Beacon" icon="signal-stream" href="/migrate/beacon">
+    Supply chain visibility. Replace shipment-level polling with per-container webhooks.
+  </Card>
+</CardGroup>
+
+## What every migration has in common
+
+<Steps>
+  <Step title="Self-serve an API key">
+    Create a Terminal49 account at [app.terminal49.com](https://app.terminal49.com) and generate a key at [app.terminal49.com/developers/api-keys](https://app.terminal49.com/developers/api-keys). The free Developer Key tracks up to 10 active containers, enough for a parity test.
+  </Step>
+  <Step title="Register tracking requests once">
+    `POST /v2/tracking_requests` per BOL, booking, or container. Terminal49 polls the carrier, terminal, and rail sources on your behalf.
+  </Step>
+  <Step title="Receive updates via webhook">
+    Subscribe to the events you act on. 30\+ webhook events, HMAC-signed, delivered as changes happen. Polling remains available if you prefer.
+  </Step>
+  <Step title="Wire up the operational fields">
+    Holds, fees, last free day, and release readiness come back on the container object wherever the terminal is a supported source. These are the reason to migrate rather than port like for like.
+  </Step>
+</Steps>
+
+## What Terminal49 gives you that most providers do not
+
+<CardGroup cols={2}>
+  <Card title="Terminal holds" icon="hand">
+    `holds_at_pod_terminal` lists active holds (`customs`, `freight`, `USDA`, `VACIS`, `TMF`, `other`) with status and description. Alert operations before demurrage clocks start.
+  </Card>
+
+  <Card title="Terminal fees" icon="dollar-sign">
+    `fees_at_pod_terminal` returns type, amount, and currency for demurrage, exam, and dwell-time fees straight from the terminal.
+  </Card>
+
+  <Card title="Last free day" icon="calendar-days">
+    `pickup_lfd` with per-source breakdown for shipping line, terminal, and rail. Each source has its own webhook event.
+  </Card>
+
+  <Card title="Release readiness" icon="circle-check">
+    `available_for_pickup` combined with the holds array answers "can I pick this up?" in one call.
+  </Card>
+</CardGroup>
+
+## The core API shape, once
+
+Regardless of where you are coming from, the Terminal49 request pattern is the same.
+
+```bash Create a tracking request
+curl -X POST https://api.terminal49.com/v2/tracking_requests \
+  -H "Content-Type: application/vnd.api+json" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -d '{
+    "data": {
+      "type": "tracking_request",
+      "attributes": {
+        "request_number": "YOUR_BOL_NUMBER",
+        "request_type": "bill_of_lading",
+        "scac": "MAEU"
+      }
+    }
+  }'
+```
+
+<Note>
+  Terminal49 uses `Authorization: Token <key>`, not `Bearer`. Content type is `application/vnd.api+json` (JSON:API). Responses include `data`, `relationships`, and an `included` array.
+</Note>
+
+## Migrate with an AI coding agent
+
+Every provider page includes a copyable prompt that walks an AI coding assistant through a **side-by-side migration**: stand up a Terminal49 client next to your current provider, shadow every call, diff responses, and only cut over once parity is proven. The prompts are opinionated on small PRs and reference the mappings on each page, so hand them the page URL as context.
+
+## Still not sure what you need?
+
+<CardGroup cols={2}>
+  <Card title="Coverage" icon="globe" href="/coverage/home">
+    Carriers, terminals, rail, and per-field availability
+  </Card>
+
+  <Card title="API reference" icon="code" href="/api-docs/api-reference/introduction">
+    Every endpoint, with request and response schemas
+  </Card>
+
+  <Card title="Test numbers" icon="flask" href="/api-docs/useful-info/test-numbers">
+    Simulate success, failure, and edge cases before you cut over
+  </Card>
+
+  <Card title="Talk to us" icon="comment" href="https://www.terminal49.com/demo">
+    We will load your active shipments so you do not have to script the backfill
+  </Card>
+</CardGroup>

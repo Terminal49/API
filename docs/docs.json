@@ -336,6 +336,32 @@
         ]
       },
       {
+        "tab": "Migrate to T49",
+        "icon": "arrow-right-arrow-left",
+        "groups": [
+          {
+            "group": " ",
+            "pages": [
+              "migrate/home"
+            ]
+          },
+          {
+            "group": "Provider Guides",
+            "icon": "list-check",
+            "pages": [
+              "migrate/searates",
+              "migrate/project44",
+              "migrate/fourkites",
+              "migrate/vizion",
+              "migrate/opentrack",
+              "migrate/shipsgo",
+              "migrate/gocomet",
+              "migrate/beacon"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "SDK Docs",
         "icon": "rectangle-terminal",
         "groups": [
@@ -593,6 +619,10 @@
     {
       "source": "/api-docs/useful-info/api-data-sources-availability",
       "destination": "/coverage/home"
+    },
+    {
+      "source": "/api-docs/getting-started/migrate-from-searates",
+      "destination": "/migrate/searates"
     }
   ],
   "contextual": {

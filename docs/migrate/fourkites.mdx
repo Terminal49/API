@@ -1,0 +1,493 @@
+---
+title: "Migrating from FourKites"
+sidebarTitle: "FourKites"
+description: "Map FourKites ocean tracking fields, parameters, and errors to their Terminal49 equivalents. Includes webhook setup, carrier coverage, and a migration checklist."
+---
+
+<Note>
+  This guide covers the ocean tracking portion only. FourKites road, rail, and LTL tracking are out of scope here; keep them in FourKites unless you are replacing them with another provider.
+</Note>
+
+If you have FourKites ocean tracking in production, this page maps it onto Terminal49 field by field, so you can cut over without reverse-engineering our schema.
+
+Terminal49 is a direct-integration ocean and North American terminal API, self-serve, with holds and fees out of the box. FourKites is multi-modal, enterprise-priced, and centered on their broader visibility platform. This guide addresses only the ocean container portion.
+
+There is no compatibility shim. You will change your request code and your response parsing. For most integrations that is an afternoon.
+
+## Start in sixty seconds
+
+You do not need to talk to anyone to try this.
+
+<Steps>
+  <Step title="Create an account">
+    [Create an account](https://app.terminal49.com) — the free Developer Key tracks up to 10 active containers.
+  </Step>
+  <Step title="Generate an API key">
+    Generate a key at [app.terminal49.com/developers/api-keys](https://app.terminal49.com/developers/api-keys).
+  </Step>
+  <Step title="Run your first curl">
+    ```bash
+    curl -X POST https://api.terminal49.com/v2/tracking_requests \
+      -H "Content-Type: application/vnd.api+json" \
+      -H "Authorization: Token YOUR_API_KEY" \
+      -d '{
+        "data": {
+          "type": "tracking_request",
+          "attributes": {
+            "request_number": "YOUR_BOL_NUMBER",
+            "request_type": "bill_of_lading",
+            "scac": "MAEU"
+          }
+        }
+      }'
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  The full API key is shown once, right after you create it. Copy it before you navigate away — after that it is masked and cannot be revealed. If you miss it, create a new key and delete the old one.
+</Warning>
+
+If you want to test without a live shipment, use the [test tracking numbers](/api-docs/useful-info/test-numbers), which simulate success, failure, and edge-case outcomes.
+
+## The architectural shift
+
+FourKites tracks shipments across modes in a single enterprise platform. Ocean is one product among many, organized around loads and shipments with nested segments.
+
+Terminal49 splits ocean tracking in two. You register a tracking request once. We keep it updated and push changes to your webhook.
+
+<CardGroup cols={2}>
+  <Card title="Before — FourKites" icon="rotate">
+    Query the FourKites platform for shipment or load state, often across ocean, road, and rail segments. Extract ocean data from the multi-modal shipment model. Polling, enterprise contract, and broad visibility scope.
+  </Card>
+
+  <Card title="After — Terminal49" icon="webhook">
+    `POST /tracking_requests` once → Terminal49 polls carriers, terminals, and rail → we POST to your endpoint as things change → write to your database. No cache layer, no dedupe logic. Ocean only, direct terminal data.
+  </Card>
+</CardGroup>
+
+You can keep polling if you prefer — point your existing scheduler at `GET /v2/shipments` or `GET /v2/containers`. But webhooks are the reason the API is shaped this way, and terminal data (holds, fees, last free day) changes on a cadence that polling tends to miss.
+
+## Quick comparison
+
+|  | FourKites | Terminal49 |
+| --- | --- | --- |
+| Tracking model | Poll via enterprise platform | Register once, then push or poll |
+| Authentication | OAuth2 bearer token or API key header | `Authorization: Token` header |
+| Base URL | `https://fourkites.com` | `https://api.terminal49.com/v2` |
+| Content type | `application/json` | `application/vnd.api+json` |
+| Response format | Custom JSON | JSON:API |
+| Webhooks | Available | 30\+ events, HMAC-signed |
+| Carrier identification | SCAC or internal mapping | `scac`, or omit and use Infer |
+| Terminal holds and fees | Not available | Included on the container object |
+| Last free day | Not available | Included, with per-source breakdown |
+| Rail milestones | Available | North American Class I and short-line |
+| Multi-modal scope | Ocean, road, rail, freight | Ocean and North American terminals only |
+| Getting an API key | Enterprise contract | Self-serve |
+
+## Authentication
+
+Move from OAuth2 bearer tokens or API key headers to a single `Authorization: Token` header.
+
+<CodeGroup>
+
+```bash FourKites
+curl "https://fourkites.com/[your provider's shipment resource]" \
+  -H "Authorization: Bearer YOUR_FOURKITES_TOKEN"
+```
+
+```bash Terminal49
+curl -X POST https://api.terminal49.com/v2/tracking_requests \
+  -H "Content-Type: application/vnd.api+json" \
+  -H "Authorization: Token YOUR_T49_KEY" \
+  -d '{"data":{"type":"tracking_request","attributes":{
+       "request_number":"MRKU9465770",
+       "request_type":"container",
+       "scac":"MAEU"}}}'
+```
+
+</CodeGroup>
+
+Note the `Token` prefix. It is not `Bearer`.
+
+## Request parameter mapping
+
+| FourKites parameter | Terminal49 equivalent | Notes |
+| --- | --- | --- |
+| `[provider's shipment identifier]` | `request_number` |  |
+| `[provider's container identifier]` | `request_type: "container"` \+ `request_number` |  |
+| `[provider's bill of lading field]` | `request_type: "bill_of_lading"` | Master or house BOL |
+| `[provider's booking number field]` | `request_type: "booking_number"` |  |
+| SCAC / carrier code | `scac` | Same SCAC values for most carriers |
+| `[provider's auto-detect option]` | Omit `scac`, or call [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) | Returns the predicted SCAC and number type |
+| `[provider's refresh option]` | `POST /v2/containers/{id}/refresh` | Forces an immediate pull from all sources |
+| `[provider's route field]` | Always included | See [Routing](/api-docs/in-depth-guides/routing) |
+
+<Note>
+  FourKites organizes around shipments and loads that may contain multiple segments across modes. Terminal49 takes one ocean identifier per tracking request. Track by BOL and we return every container on that bill of lading as related container resources.
+</Note>
+
+## Response field mapping
+
+Terminal49 is JSON:API compliant, so relationships between shipments, containers, ports, and terminals are explicit rather than something you reassemble from ID references.
+
+Use the [`include` parameter](/api-docs/in-depth-guides/including-resources) to sideload related resources in one call instead of chasing IDs.
+
+### Shipment level
+
+| FourKites | Terminal49 |
+| --- | --- |
+| `[provider's bill of lading field]` | `shipment.attributes.bill_of_lading_number` |
+| `[provider's carrier scac field]` | `shipment.attributes.shipping_line_scac` |
+| `[provider's carrier name field]` | `shipment.attributes.shipping_line_name` |
+| `[provider's shipment status field]` | Derived from container status and milestones |
+| `[provider's origin location]` | `shipment.attributes.port_of_lading_*` (place of receipt) |
+| `[provider's port of loading]` | `shipment.relationships.port_of_lading` |
+| `[provider's port of discharge]` | `shipment.relationships.port_of_discharge` |
+| `[provider's destination]` | `shipment.relationships.destination` (inland) |
+| `[provider's ETA field]` | `shipment.attributes.pod_eta_at` |
+
+### Container level
+
+| FourKites | Terminal49 |
+| --- | --- |
+| `[provider's container number field]` | `container.attributes.number` |
+| `[provider's equipment code field]` | `container.attributes.equipment_type` \+ `equipment_length` \+ `equipment_height` |
+| `[provider's container status field]` | `container.attributes.current_status` |
+| `[provider's event list]` | Container timestamps, [transport events](/api-docs/api-reference/containers/get-a-containers-transport-events), and webhook events |
+
+<Note>
+  FourKites may return an ISO code string like `45G1`. Terminal49 splits this into three normalized fields: type (dry, reefer, open top, flat rack, tank, hard top), length (20, 40, 45, 50), and height (standard, high cube). If you were parsing ISO codes yourself, you can delete that code.
+</Note>
+
+### Locations, facilities, and vessels
+
+| FourKites | Terminal49 |
+| --- | --- |
+| `[provider's port name field]` | `port.attributes.name` |
+| `[provider's port code field]` | `port.attributes.code` |
+| `[provider's port coordinates]` | `port.attributes.latitude` / `.longitude` |
+| `[provider's port timezone]` | `port.attributes.time_zone` |
+| `[provider's port country]` | `port.attributes.country_code` |
+| `[provider's terminal name field]` | `terminal.attributes.name` |
+| `[provider's terminal smdg code]` | `terminal.attributes.smdg_code` |
+| `[provider's terminal bic code]` | `terminal.attributes.bic_code` |
+| `[provider's vessel name field]` | `shipment.attributes.pod_vessel_name` |
+| `[provider's vessel IMO field]` | `shipment.attributes.pod_vessel_imo` |
+| `[provider's vessel MMSI field]` | Available via the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-imo) |
+| `[provider's vessel call sign / flag]` | Not returned |
+
+## Milestone and event mapping
+
+FourKites returns milestones within your shipment or load resource. Terminal49 exposes the same milestones as normalized transport events and pushes each one to your webhook.
+
+Where mappings exist:
+
+| FourKites milestone | Terminal49 event |
+| --- | --- |
+| `[provider's vessel loaded event]` | `container.transport.vessel_loaded` |
+| `[provider's vessel departed event]` | `container.transport.vessel_departed` |
+| `[provider's vessel arrived event]` | `container.transport.vessel_arrived` |
+| `[provider's vessel discharged event]` | `container.transport.vessel_discharged` |
+| `[provider's full out / gated out event]` | `container.transport.full_out` |
+| `[provider's full in / gated in event]` | `container.transport.full_in` |
+| — | `container.transport.empty_out` |
+| — | `container.transport.empty_in` |
+
+Terminal49 also emits milestones with no FourKites ocean equivalent:
+
+- **Vessel berthed** — `container.transport.vessel_berthed`
+- **Available for pickup** — `container.transport.available` and `.not_available`
+- **Transshipment** — arrived, discharged, loaded, departed
+- **Feeder vessel and barge** — arrived, discharged, loaded, departed
+- **Rail** — loaded, departed, arrived, unloaded, plus `arrived_at_inland_destination`
+
+See the full [event catalog](/api-docs/webhooks/event-catalog).
+
+### Registering a webhook
+
+```bash
+curl -X POST https://api.terminal49.com/v2/webhooks \
+  -H "Content-Type: application/vnd.api+json" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -d '{
+    "data": {
+      "type": "webhook",
+      "attributes": {
+        "url": "https://your-endpoint.example.com/t49",
+        "active": true,
+        "events": [
+          "container.transport.vessel_discharged",
+          "container.transport.available",
+          "container.pickup_lfd.changed"
+        ]
+      }
+    }
+  }'
+```
+
+Payloads are HMAC-signed. See [webhook setup](/api-docs/in-depth-guides/webhooks) for signature verification, and [List webhook IPs](/api-docs/api-reference/webhooks/list-webhook-ips) if your firewall restricts inbound traffic.
+
+## What you gain
+
+This is the part worth reading even if the rest is mechanical. Terminal49 integrates with terminals directly, not only carriers, so the container object carries operational data that has no FourKites equivalent.
+
+### Holds
+
+`holds_at_pod_terminal` is an array of active holds blocking pickup:
+
+```json
+{
+  "holds_at_pod_terminal": [
+    { "name": "customs", "status": "hold", "description": "CBP HOLD" },
+    { "name": "freight", "status": "hold", "description": null }
+  ]
+}
+```
+
+Hold names are `freight`, `customs`, `USDA`, `VACIS`, `TMF`, and `other`. Status is `hold` or `pending`. When a hold clears, the object is removed from the array — there is no released state.
+
+<Warning>
+  Hold names are case-sensitive. `USDA`, `VACIS`, and `TMF` are uppercase; `freight`, `customs`, and `other` are lowercase. Match exactly.
+</Warning>
+
+### Fees
+
+`fees_at_pod_terminal` carries type, amount, and currency:
+
+```json
+{
+  "fees_at_pod_terminal": [
+    { "type": "demurrage", "amount": 850.00, "currency_code": "USD" },
+    { "type": "exam", "amount": 450.00, "currency_code": "USD" }
+  ]
+}
+```
+
+Fee types are `demurrage`, `extended_dwell_time`, `exam`, `total`, and `other`.
+
+<Warning>
+  Some terminals report a `total` line item alongside individual fees. Filter it out before summing or you will double-count.
+</Warning>
+
+### Last free day
+
+`pickup_lfd` is a coalesced value that follows a fixed source priority: shipping line, then terminal, then rail. It does not pick the earliest date. The individual sources are available separately on `import_deadlines`:
+
+- `pickup_lfd_line` — the shipping line's LFD (per diem deadline)
+- `pickup_lfd_terminal` — the terminal's LFD (demurrage deadline)
+- `pickup_lfd_rail` — the rail carrier's LFD at the inland destination
+
+Each has its own webhook event, so you can alert on whichever source your operation cares about.
+
+### Release readiness
+
+Two fields answer "can I pick this up?" — `available_for_pickup` and the holds array:
+
+```javascript
+function isReadyForPickup(container) {
+  const { available_for_pickup, holds_at_pod_terminal } = container.attributes;
+  const hasActiveHolds = holds_at_pod_terminal.some(h => h.status === 'hold');
+  return available_for_pickup === true && !hasActiveHolds;
+}
+```
+
+Full detail in [Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
+
+<Info>
+  Holds, fees, LFD, and availability come back on the container object wherever the terminal is a supported source. They are not a paid add-on and they do not require a sales conversation. See [Entitlements](/api-docs/useful-info/entitlements) for the features that do require account enablement — rail LFD and the embeddable widget are the main ones.
+</Info>
+
+## Gotchas that will bite you
+
+<AccordionGroup>
+  <Accordion title="Enterprise contract vs self-serve pricing">
+    FourKites is an enterprise platform. Terminal49 is self-serve with a Developer Key that tracks up to 10 containers free. If you need volume pricing, it exists, but you do not need a contract to start.
+  </Accordion>
+
+  <Accordion title="Multi-modal shipment model: extract ocean segments">
+    FourKites shipments may contain road, rail, and ocean segments in one object. Terminal49 is ocean only. Map only the ocean leg. Keep road and rail in FourKites or replace them separately.
+  </Accordion>
+
+  <Accordion title="FourKites event vocabulary differs from normalized transport events">
+    FourKites event names and codes are specific to their platform. You will need a mapping table to translate them onto Terminal49's normalized events such as `container.transport.vessel_discharged`. Where exact mappings do not exist, handle the Terminal49 events directly.
+  </Accordion>
+
+  <Accordion title="Tracking requests are asynchronous">
+    `POST /tracking_requests` returns immediately with a pending status. The shipment appears once the carrier responds. Subscribe to `tracking_request.succeeded` and `tracking_request.failed` rather than expecting shipment data in the creation response. A request may also land in `awaiting_manifest` if the carrier has not manifested the shipment yet — we retry automatically. See [Tracking Request Lifecycle](/api-docs/in-depth-guides/tracking-request-lifecycle).
+  </Accordion>
+
+  <Accordion title="Timestamps are UTC with a separate timezone field">
+    FourKites may return local time or timestamps with offset. Terminal49 stores event timestamps in UTC and returns the matching IANA timezone alongside. Convert for display rather than assuming local time. See [Event Timestamps](/api-docs/in-depth-guides/event-timestamps).
+  </Accordion>
+
+  <Accordion title="Empty arrays are the normal state">
+    `holds_at_pod_terminal: []` and `fees_at_pod_terminal: []` mean no active holds or fees. This is the common case. Do not treat it as missing data.
+  </Accordion>
+
+  <Accordion title="container.updated carries a changeset">
+    Terminal changes (fees, holds, LFD, appointment, availability) arrive on `container.updated` with a `changeset` showing old value first, new value second. Use it instead of diffing state yourself.
+  </Accordion>
+</AccordionGroup>
+
+## Error handling
+
+FourKites returns errors within the response body of their platform API. Terminal49 uses standard HTTP status codes. Replace body checks and message-string matching with status-code checks.
+
+| Status | Meaning |
+| --- | --- |
+| 400 | Malformed request or failed validation |
+| 401 | Missing or invalid API key |
+| 403 | Key lacks permission, or the feature is not enabled on your plan |
+| 404 | Resource does not exist |
+| 422 | Valid syntax, rejected content — for example a malformed container number |
+| 429 | Rate limited. See [Rate Limiting](/api-docs/in-depth-guides/rate-limiting) |
+| 5xx | Terminal49 or an upstream carrier or terminal is unavailable |
+
+Rough equivalence for the FourKites errors you are handling today:
+
+| FourKites error | Terminal49 |
+| --- | --- |
+| `[provider's auth error]` | HTTP 401 |
+| `[provider's permission error]` | HTTP 403 |
+| `[provider's rate limit error]` | HTTP 429 |
+| `[provider's validation error]` | HTTP 400 or 422 |
+| `[provider's not found error]` | HTTP 404 |
+| `[provider's upstream unavailable error]` | Not surfaced — we retry internally |
+
+The [TypeScript SDK](/sdk/introduction) maps these to typed errors (`AuthenticationError`, `ValidationError`, `RateLimitError`, `UpstreamError`, `FeatureNotEnabledError`, `AuthorizationError`, `NotFoundError`) and retries rate-limit and server errors automatically with exponential backoff.
+
+## Where we are narrower than FourKites
+
+Worth knowing before you commit.
+
+**Carrier count.** Terminal49 integrates directly with 36 ocean carriers, plus 2 more enabled on request — as of 14 August 2026. Check your carrier mix against the [ocean carrier list](/coverage/ocean-carriers) before cutover, and read the known issues section there — we publish the per-carrier field gaps.
+
+**Terminal data is North America.** Holds, fees, LFD, and availability come from direct terminal integrations concentrated in the US and Canada, with European ports expanding. Ocean milestones work globally; terminal-level operational data does not yet.
+
+**No road, rail, or LTL tracking.** FourKites is multi-modal. Terminal49 is ocean and North American terminals only. This migration handles only the ocean portion.
+
+**No freight rates or sailing schedules.** We do not offer a rate calculator, rate index, or schedule search.
+
+**Some fields are source-dependent.** Seal number, container weight, and departure or arrival events vary by carrier. The [field availability reference](/coverage/fields) says which fields are always present and which depend on the carrier, terminal, or journey.
+
+## Migration checklist
+
+Everyone does the base path. Then pick a branch.
+
+### Base path
+
+<Steps>
+  <Step title="Get a key">
+    Self-serve at [app.terminal49.com/developers/api-keys](https://app.terminal49.com/developers/api-keys). Copy it immediately — it is shown once.
+  </Step>
+  <Step title="Switch authentication">
+    Move from OAuth2 bearer or API key to `Authorization: Token`. Note the `Token` prefix.
+  </Step>
+  <Step title="Check your carrier mix">
+    Compare your FourKites carrier values against the [carrier list](/coverage/ocean-carriers). Flag anything missing before you cut over.
+  </Step>
+  <Step title="Extract ocean segments">
+    Identify the ocean leg of each FourKites shipment. Discard road, rail, and LTL for this migration.
+  </Step>
+  <Step title="Create tracking requests">
+    One `POST /tracking_requests` per BOL, booking, or container, replacing the per-request lookup.
+  </Step>
+  <Step title="Handle the async lifecycle">
+    Tracking requests start pending. Handle `succeeded`, `failed`, and `awaiting_manifest` rather than expecting data on creation.
+  </Step>
+  <Step title="Update response parsing">
+    JSON:API structure, split equipment fields, UTC timestamps with a separate timezone.
+  </Step>
+  <Step title="Update error handling">
+    Replace body checks with HTTP status codes.
+  </Step>
+  <Step title="Backfill active shipments">
+    Submit tracking requests for everything currently in transit. Send us the list if it is large and we will load it.
+  </Step>
+  <Step title="Add the terminal fields">
+    Holds, fees, and LFD are the reason to do this properly rather than porting like for like.
+  </Step>
+</Steps>
+
+### Then pick one
+
+<Tabs>
+  <Tab title="Webhook path">
+    1. Expose an HTTPS endpoint that accepts our POST payloads.
+    2. Register a webhook and subscribe only to events you act on.
+    3. Verify HMAC signatures.
+    4. Whitelist our IPs if your firewall restricts inbound traffic.
+    5. Trigger a test delivery before going live.
+    6. Retire your polling job and your dedupe layer.
+
+    See [webhook best practices](/api-docs/webhooks/best-practices) for retries and idempotency.
+  </Tab>
+  <Tab title="Polling path">
+    1. Store the tracking request ID and shipment ID from the creation response.
+    2. Repoint your existing scheduler at `GET /v2/shipments` or `GET /v2/containers`.
+    3. Keep your existing cadence.
+
+    Skipped: endpoint setup, signature verification, IP whitelisting, delivery testing.
+
+    Terminal data changes on a cadence polling tends to miss. If you only adopt webhooks for one thing, make it `container.updated` and `container.pickup_lfd.changed`.
+  </Tab>
+</Tabs>
+
+## Migrate with an AI coding agent
+
+```markdown Terminal49 migration agent prompt expandable icon=robot wrap
+You are migrating this codebase from the FourKites ocean tracking API to Terminal49.
+
+Context you already have:
+- The existing integration uses FourKites for ocean container tracking.
+- Environment variables FOURKITES_BASE_URL and FOURKITES_API_KEY are in use.
+- The app polls for shipment state and stores events in the database.
+
+Your task:
+1. Replace all FourKites ocean API calls with Terminal49 equivalents.
+2. Remove polling for ocean shipments; register webhooks for
+   container.transport.vessel_discharged, container.transport.available,
+   container.pickup_lfd.changed, tracking_request.succeeded, and tracking_request.failed.
+3. Parse JSON:API responses and map fields:
+   - shipment.attributes.bill_of_lading_number
+   - shipment.attributes.shipping_line_scac
+   - shipment.attributes.shipping_line_name
+   - container.attributes.number
+   - container.attributes.equipment_type / equipment_length / equipment_height
+   - container.attributes.holds_at_pod_terminal
+   - container.attributes.fees_at_pod_terminal
+   - container.attributes.pickup_lfd
+   - container.attributes.available_for_pickup
+4. Handle async tracking request lifecycle: succeeded, failed, awaiting_manifest.
+5. Update error handling to use HTTP status codes and typed SDK errors.
+6. Keep road, rail, and LTL tracking in FourKites or leave stubs pointing elsewhere.
+7. Add holds_at_pod_terminal and fees_at_pod_terminal to the data model.
+8. Write tests for webhook signature verification and container.updated changeset parsing.
+9. Do not change anything outside the ocean tracking module.
+10. Use the Terminal49 TypeScript SDK where possible.
+```
+
+## Getting help
+
+Send us your list of active container and bill of lading numbers and we will load them rather than making you script the backfill.
+
+If something in this mapping is wrong or incomplete, tell us. We would rather fix the page than have you work around it.
+
+<CardGroup cols={2}>
+  <Card title="API reference" icon="code" href="/api-docs/api-reference/introduction">
+    Every endpoint, with request and response schemas
+  </Card>
+
+  <Card title="TypeScript SDK" icon="rectangle-terminal" href="/sdk/introduction">
+    Typed client with retries and pagination built in
+  </Card>
+
+  <Card title="Coverage" icon="ship" href="/coverage/home">
+    Carriers, terminals, rail, and field availability
+  </Card>
+
+  <Card title="Test numbers" icon="flask" href="/api-docs/useful-info/test-numbers">
+    Simulate success, failure, and edge cases
+  </Card>
+</CardGroup>
