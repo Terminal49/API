@@ -8,13 +8,23 @@ System (AIS) products.
 
 ## Endpoints
 
-- `GET /tracking`
-- `GET /info/sealines`
+- `GET /searates-api/tracking`
+- `GET /searates-api/info/sealines`
 
-The Vercel deployment maps these paths to `api/tracking.ts` and
-`api/info/sealines.ts`. `/info/terminals` is intentionally omitted because the
-Terminal49 public API can fetch a known terminal but does not provide a
-supported-terminals list.
+The dedicated migrate Vercel application in `apps/migrate` maps these paths to
+its tracking and sealines handlers. The vendor-prefixed layout leaves room for
+future compatibility APIs without placing them on the MCP application.
+`/info/terminals` is intentionally omitted because the Terminal49 public API can
+fetch a known terminal but does not provide a supported-terminals list.
+
+The intended production URLs are:
+
+- `https://migrate.terminal49.com/searates-api/tracking`
+- `https://migrate.terminal49.com/searates-api/info/sealines`
+
+The custom domain is not live yet. Until DNS and the production domain are
+configured, deployments use their Vercel preview hostname with the same
+`/searates-api/...` paths.
 
 ## Configure authentication
 
@@ -53,7 +63,7 @@ T49_SEARATES_POLL_INTERVAL_MS=500
 Change the SeaRates base URL and keep the existing query parameters:
 
 ```bash
-curl "https://YOUR_GATEWAY.example.com/tracking?api_key=YOUR_GATEWAY_KEY&number=MSCU1234567&type=CT&sealine=MSCU"
+curl "https://migrate.terminal49.com/searates-api/tracking?api_key=YOUR_GATEWAY_KEY&number=MSCU1234567&type=CT&sealine=MSCU"
 ```
 
 The gateway accepts `type=CT`, `type=BL`, and `type=BK`, plus `force_update`,
@@ -65,7 +75,7 @@ implemented.
 Fetch the carrier dictionary with:
 
 ```bash
-curl "https://YOUR_GATEWAY.example.com/info/sealines?api_key=YOUR_GATEWAY_KEY"
+curl "https://migrate.terminal49.com/searates-api/info/sealines?api_key=YOUR_GATEWAY_KEY"
 ```
 
 In service-token mode, `/info/sealines` also works without `api_key`, matching
@@ -101,3 +111,32 @@ Terminal49 failure reasons are translated to SeaRates-style messages such as
   flat-rack, hard-top, and tank combinations. Unknown combinations are `null`.
 - Holds, fees, Last Free Day (LFD), and other Terminal49-only terminal
   intelligence are deliberately excluded.
+
+## Create the dedicated Vercel project
+
+Create a second Vercel project in the Terminal49 team and import this same
+repository. This is a dashboard setup step; CI does not create or configure the
+project.
+
+Use these project settings:
+
+| Setting                                         | Value                                                                                                                    |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Root Directory                                  | `apps/migrate`                                                                                                           |
+| Include source files outside the Root Directory | Enabled                                                                                                                  |
+| Framework Preset                                | Other                                                                                                                    |
+| Install Command                                 | `cd ../.. && npm ci`                                                                                                     |
+| Build Command                                   | `cd ../.. && npm run build --workspace @terminal49/searates-compat && npm run build --workspace @terminal49/migrate-app` |
+| Node.js Version                                 | 24                                                                                                                       |
+
+The outside-root source setting is required because the app consumes the
+`@terminal49/searates-compat` workspace from `packages/searates-compat`.
+
+Configure either pass-through mode or the service-token environment variables
+described above in the new project. Do not copy them into the MCP Vercel
+project.
+
+After the project has a successful production deployment and DNS is ready, add
+`migrate.terminal49.com` under the project's production domains. Vercel will
+show the DNS record that must be added; do not assume the domain is active until
+Vercel verifies it.

@@ -1,0 +1,25 @@
+{
+  "name": "@terminal49/migrate-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vercel application for vendor compatibility APIs",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "node -e \"JSON.parse(require('fs').readFileSync('vercel.json', 'utf8'))\"",
+    "lint": "vp lint api && vp fmt --check api",
+    "format": "vp fmt --write api",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@terminal49/searates-compat": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.13",
+    "typescript": "^5.6.3",
+    "vite-plus": "0.2.9"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}

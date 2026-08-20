@@ -2,16 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "installCommand": "npm ci",
-  "buildCommand": "npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp && npm run build --workspace @terminal49/searates-compat",
+  "buildCommand": "npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp",
   "functions": {
     "api/mcp.ts": {
       "maxDuration": 30
-    },
-    "api/tracking.ts": {
-      "maxDuration": 30
-    },
-    "api/info/sealines.ts": {
-      "maxDuration": 15
     },
     "api/oauth-protected-resource.ts": {
       "maxDuration": 10
@@ -27,14 +21,6 @@
     {
       "source": "/.well-known/openai-apps-challenge",
       "destination": "/api/openai-apps-challenge"
-    },
-    {
-      "source": "/tracking",
-      "destination": "/api/tracking"
-    },
-    {
-      "source": "/info/sealines",
-      "destination": "/api/info/sealines"
     },
     {
       "source": "/.well-known/oauth-protected-resource",
