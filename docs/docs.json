@@ -346,7 +346,7 @@
             ]
           },
           {
-            "group": "Provider Guides",
+            "group": "Migration Guides",
             "icon": "list-check",
             "pages": [
               "migrate/searates",
