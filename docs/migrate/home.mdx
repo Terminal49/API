@@ -1,7 +1,7 @@
 ---
 title: "Migrate to Terminal49"
 sidebarTitle: "Overview"
-description: "Move your container tracking integration to Terminal49 from SeaRates, project44, FourKites, Vizion, OpenTrack, ShipsGo, GoComet, or Beacon in a weekend."
+description: "Move your container tracking integration to Terminal49 from SeaRates, project44, FourKites, Vizion, OpenTrack, ShipsGo, GoComet, Beacon, or Gnosis Freight in a weekend."
 ---
 
 Terminal49 integrates directly with 36\+ ocean carriers and North American terminals. If you are running another provider today, these guides map your current integration onto ours, field by field, so you can cut over without reverse-engineering our schema.
@@ -54,13 +54,17 @@ If you have ever had to explain a demurrage invoice to a customer, you already u
   <Card title="Beacon" icon="signal-stream" href="/migrate/beacon">
     Supply chain visibility. Replace shipment-level polling with per-container webhooks.
   </Card>
+
+  <Card title="Gnosis Freight" icon="container-storage" href="/migrate/gnosisfreight">
+    Container Lifecycle Management platform. Move MBL-based tracking and polling onto tracking requests and webhooks.
+  </Card>
 </CardGroup>
 
 ## What every migration has in common
 
 <Steps>
   <Step title="Self-serve an API key">
-    Create an account at [app.terminal49.com](https://app.terminal49.com) and generate a key at [app.terminal49.com/developers/api-keys](https://app.terminal49.com/developers/api-keys). The free Developer Key tracks up to 10 active containers, enough for a parity test. No call required.
+    Create an account at [app.terminal49.com](https://app.terminal49.com) and generate a key at [app.terminal49.com/developers/api-keys](https://app.terminal49.com/developers/api-keys). The free plan tracks up to 10 active containers, enough for a parity test. Creating tracking requests through the API is immediate; to read tracking data back through the API, ask us to enable the free 7-day API trial (same 10-container limit) via in-app chat or support@terminal49.com.
   </Step>
   <Step title="Register tracking requests once">
     `POST /v2/tracking_requests` per BOL, booking, or container. We poll the carrier, terminal, and rail sources on your behalf.

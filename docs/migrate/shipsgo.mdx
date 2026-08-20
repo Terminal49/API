@@ -10,9 +10,9 @@ There is no compatibility shim. You will change your request code and your respo
 
 ## Start in sixty seconds
 
-You do not need to talk to anyone to try this.
+Signing up and getting a key is self-serve.
 
-1. [Create an account](https://app.terminal49.com) — the free Developer Key tracks up to 10 active containers.
+1. [Create an account](https://app.terminal49.com) — the free plan tracks up to 10 active containers.
 2. Generate a key at [app.terminal49.com/developers/api-keys](https://app.terminal49.com/developers/api-keys).
 3. Run this:
 
@@ -35,6 +35,10 @@ curl -X POST https://api.terminal49.com/v2/tracking_requests \
 <Warning>
   The full API key is shown once, right after you create it. Copy it before you navigate away — after that it is masked and cannot be revealed. If you miss it, create a new key and delete the old one.
 </Warning>
+
+<Note>
+  The free plan tracks up to 10 active containers. Creating tracking requests through the API works right away; reading tracking data back through the API requires a free 7-day API trial (same 10-container limit) — contact us via in-app chat or support@terminal49.com and we enable it.
+</Note>
 
 If you want to test without a live shipment, use the [test tracking numbers](/api-docs/useful-info/test-numbers), which simulate success and failure outcomes.
 
