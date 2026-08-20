@@ -182,8 +182,8 @@ or event names; if the docs do not confirm a mapping, ask me.
   `relationships`, and an `included` array.
 - Base URL is `https://api.terminal49.com/v2`.
 - Tracking is asynchronous: `POST /tracking_requests` returns pending; data arrives via
-  `tracking_request.succeeded` / `tracking_request.failed` / `awaiting_manifest`
-  webhooks, or by polling `GET /v2/shipments`. Do not expect shipment data on creation.
+  `tracking_request.succeeded` / `tracking_request.failed` /
+  `tracking_request.awaiting_manifest` webhooks, or by polling `GET /v2/shipments`. Do not expect shipment data on creation.
 - Timestamps are UTC with a separate IANA `time_zone` field.
 - `holds_at_pod_terminal: []` and `fees_at_pod_terminal: []` are the normal state, not
   missing data.

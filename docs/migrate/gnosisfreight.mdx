@@ -128,7 +128,7 @@ Gnosis tokens are issued from a username and password, and (depending on how you
 | `mbl_numbers` (array) | `request_number` + `request_type: "bill_of_lading"` | Terminal49 takes one identifier per tracking request, not an array. Loop over your MBL array and issue one `POST /tracking_requests` per number. |
 | Carrier detected automatically from MBL | `scac`, or `auto_detect_vocc_scac: true` | Terminal49 can also infer the SCAC when you set `auto_detect_vocc_scac: true`, or by calling [Infer Tracking Number](/api-docs/in-depth-guides/auto-detect-carrier) first. Auto-detection is asynchronous; a failed inference fails the tracking request with `scac_auto_detect_failed`. |
 | `organization_uuid` query param | Not applicable | Terminal49 scopes tracking requests to your account by API key; there is no separate organization identifier to pass. |
-| Booking, per-container, and air variants of create tracking request | `request_type: "booking"` or `request_type: "container"` for ocean; no air equivalent | Container-number tracking requests are currently in beta. Air cargo has no Terminal49 equivalent. |
+| Booking, per-container, and air variants of create tracking request | `request_type: "booking_number"` or `request_type: "container"` for ocean; no air equivalent | Container-number tracking requests are currently in beta. Air cargo has no Terminal49 equivalent. |
 | Polling `GET /api/v1/containers/` | `POST /v2/webhooks`, or `GET /v2/containers` | Register a webhook to be notified of changes instead of polling, or keep polling if that fits your architecture better. |
 | Re-poll a specific container | `PATCH /v2/containers/{id}/refresh` | Forces an immediate pull from all sources. Paid feature — requires account enablement, limited to 10 requests per minute. |
 
@@ -378,7 +378,7 @@ Rough equivalence for the Gnosis errors you are handling today:
 | Invalid or expired OAuth2 token | HTTP 401 |
 | `422 HTTPValidationError` (bad MBL format, missing field) | HTTP 400 or 422 |
 | Carrier not supported | HTTP 422 |
-| No data found | `tracking_request.failed`, or `awaiting_manifest` if not yet manifested |
+| No data found | `tracking_request.failed`, or `tracking_request.awaiting_manifest` if not yet manifested |
 | Temporary unavailability | Not surfaced. We retry internally. |
 
 The [TypeScript SDK](/sdk/introduction) maps these to typed errors (`AuthenticationError`, `ValidationError`, `RateLimitError`, `UpstreamError`, `FeatureNotEnabledError`, `AuthorizationError`, `NotFoundError`) and retries rate-limit and server errors automatically with exponential backoff.
@@ -466,8 +466,8 @@ Everyone does the base path. Then pick a branch.
   </Tab>
   <Tab title="Polling path">
     <Steps>
-      <Step title="Store the IDs">
-        Keep the tracking request ID and shipment ID from the creation response.
+      <Step title="Store the tracking request ID">
+        The creation response is pending and carries no shipment yet. Keep the tracking request ID, then fetch the tracking request again (or handle `tracking_request.succeeded`) to get the shipment ID once the carrier responds.
       </Step>
       <Step title="Repoint your scheduler">
         Point it at `GET /v2/shipments` or `GET /v2/containers` instead of `GET /api/v1/containers/`.
@@ -543,8 +543,8 @@ the source of truth for field mappings, event names, error codes, and behavior d
    exchange) and content type `application/vnd.api+json`. Get this right on the first
    request.
 5. Terminal49 is asynchronous. `POST /tracking_requests` returns pending. Data arrives
-   via `tracking_request.succeeded`, `tracking_request.failed`, or `awaiting_manifest`
-   webhooks, or by polling `GET /v2/shipments`. Do not expect shipment data on creation.
+   via `tracking_request.succeeded`, `tracking_request.failed`, or
+   `tracking_request.awaiting_manifest` webhooks, or by polling `GET /v2/shipments`. Do not expect shipment data on creation.
 6. Terminal49 accepts one bill of lading, booking, or container number per tracking
    request, not an array like Gnosis's `mbl_numbers`. Loop over any batch and issue one
    request per number.

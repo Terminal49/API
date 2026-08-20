@@ -354,7 +354,7 @@ Rough equivalence for the Vizion errors you are handling today:
 | Rate limit error | HTTP 429 |
 | Validation error | HTTP 400 or 422 |
 | Carrier not supported | HTTP 422 |
-| No data found | `tracking_request.failed`, or `awaiting_manifest` if not yet manifested |
+| No data found | `tracking_request.failed`, or `tracking_request.awaiting_manifest` if not yet manifested |
 | Temporary unavailability | Not surfaced. We retry internally. |
 
 The [TypeScript SDK](/sdk/introduction) maps these to typed errors (`AuthenticationError`, `ValidationError`, `RateLimitError`, `UpstreamError`, `FeatureNotEnabledError`, `AuthorizationError`, `NotFoundError`) and retries rate-limit and server errors automatically with exponential backoff.
@@ -438,8 +438,8 @@ Everyone does the base path. Then pick a branch.
   </Tab>
   <Tab title="Polling path">
     <Steps>
-      <Step title="Store the IDs">
-        Keep the tracking request ID and shipment ID from the creation response.
+      <Step title="Store the tracking request ID">
+        The creation response is pending and carries no shipment yet. Keep the tracking request ID, then fetch the tracking request again (or handle `tracking_request.succeeded`) to get the shipment ID once the carrier responds.
       </Step>
       <Step title="Repoint your scheduler">
         Point it at `GET /v2/shipments` or `GET /v2/containers`.
@@ -514,8 +514,8 @@ the source of truth for field mappings, event names, error codes, and behavior d
 4. Terminal49 uses `Authorization: Token <key>` (not `Bearer`) and content type
    `application/vnd.api+json`. Get this right on the first request.
 5. Terminal49 is asynchronous. `POST /tracking_requests` returns pending. Data arrives
-   via `tracking_request.succeeded`, `tracking_request.failed`, or `awaiting_manifest`
-   webhooks, or by polling `GET /v2/shipments`. Do not expect shipment data on creation.
+   via `tracking_request.succeeded`, `tracking_request.failed`, or
+   `tracking_request.awaiting_manifest` webhooks, or by polling `GET /v2/shipments`. Do not expect shipment data on creation.
 6. Timestamps are UTC with a separate IANA `time_zone` field. Do not assume local time.
 7. `holds_at_pod_terminal: []` and `fees_at_pod_terminal: []` are the normal state,
    not missing data. A fee `amount` of 0 is valid.
