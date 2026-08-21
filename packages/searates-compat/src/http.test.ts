@@ -124,6 +124,13 @@ describe('GET /tracking contract', () => {
       message: 'WRONG_TYPE',
       data: {},
     });
+
+    const omitted = response();
+    await handler(
+      request('/reference?api_key=gateway-key&number=MSCU1234567'),
+      omitted.response,
+    );
+    expect(gateway.query?.type).toBe('BL');
   });
 
   it('returns a SeaRates-style WRONG_TYPE envelope', async () => {

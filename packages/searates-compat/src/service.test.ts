@@ -167,18 +167,36 @@ describe('SeaRates compatibility gateway', () => {
 
   it('does not serve the pre-refresh shipment when refresh stays unresolved', async () => {
     let refreshCalls = 0;
+    let refreshAccepted = false;
+    const requestOnlyUpdate = {
+      ...shipmentFixture,
+      included: (shipmentFixture.included || []).map((resource) =>
+        resource.type === 'container'
+          ? {
+              ...resource,
+              attributes: {
+                ...resource.attributes,
+                pod_last_tracking_request_at: '2026-08-20T12:00:00Z',
+                shipment_last_tracking_request_at: '2026-08-20T12:00:00Z',
+              },
+            }
+          : resource,
+      ),
+    };
     const gateway = new SeaRatesCompatibilityGateway({
-      pollTimeoutMs: 0,
+      pollIntervalMs: 0,
+      pollTimeoutMs: 5,
       fetchImpl: async (input, init) => {
         const url = String(input);
         if (init?.method === 'PATCH') {
           refreshCalls += 1;
+          refreshAccepted = true;
           return response({ data: null });
         }
         if (url.includes('/shipments?')) {
           return response({ data: [shipmentFixture.data] });
         }
-        return response(shipmentFixture);
+        return response(refreshAccepted ? requestOnlyUpdate : shipmentFixture);
       },
     });
 

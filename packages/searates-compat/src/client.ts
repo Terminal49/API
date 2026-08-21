@@ -69,28 +69,12 @@ function selectTrackingRequest(
 }
 
 function freshnessSignature(document: JsonApiDocument): string {
-  const resources = [
-    ...(Array.isArray(document.data)
+  const shipment = Array.isArray(document.data)
+    ? document.data.find((resource) => resource.type === 'shipment')
+    : document.data?.type === 'shipment'
       ? document.data
-      : document.data
-        ? [document.data]
-        : []),
-    ...(document.included || []),
-  ];
-  return resources
-    .filter((resource) => ['container', 'shipment'].includes(resource.type))
-    .map((resource) => {
-      const attributes = resource.attributes || {};
-      return [
-        resource.id,
-        attributes.line_tracking_last_succeeded_at,
-        attributes.pod_last_tracking_request_at,
-        attributes.shipment_last_tracking_request_at,
-        attributes.terminal_checked_at,
-      ].join(':');
-    })
-    .sort()
-    .join('|');
+      : undefined;
+  return String(shipment?.attributes?.line_tracking_last_succeeded_at || '');
 }
 
 function trackingType(type: TrackingType): Terminal49TrackingType {

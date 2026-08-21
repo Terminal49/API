@@ -159,6 +159,57 @@ describe('SeaRates positional event mapping', () => {
     ).toEqual(['CLL', 'CLT']);
   });
 
+  it('folds duplicate first loads before assigning ordinal milestones', () => {
+    const result = mapTrackingPayload(
+      payload([
+        event(
+          'load-copy-1',
+          'container.transport.vessel_loaded',
+          '2026-08-01T10:00:00Z',
+        ),
+        event(
+          'load-copy-2',
+          'container.transport.vessel_loaded',
+          '2026-08-01T10:00:00Z',
+        ),
+      ]),
+    );
+    expect(
+      eventsFrom(result).filter((item) => item.event_code === 'LOAD'),
+    ).toMatchObject([{ status: 'CLL' }]);
+  });
+
+  it('does not promote a hub load to origin when the timeline starts mid-journey', () => {
+    const result = mapTrackingPayload(
+      payload([
+        event(
+          'hub-arrival',
+          'container.transport.transshipment_arrived',
+          '2026-08-04T10:00:00Z',
+          'port-pod',
+        ),
+        event(
+          'hub-discharge',
+          'container.transport.transshipment_discharged',
+          '2026-08-04T12:00:00Z',
+          'port-pod',
+        ),
+        event(
+          'hub-load',
+          'container.transport.transshipment_loaded',
+          '2026-08-05T10:00:00Z',
+          'port-pod',
+        ),
+      ]),
+    );
+    expect(
+      eventsFrom(result).find((item) => item.event_code === 'LOAD'),
+    ).toMatchObject({ status: 'CLT' });
+    expect(responseData(result).route).toMatchObject({
+      pol: { date: '2026-08-01 12:00:00', location: 1 },
+    });
+  });
+
   it('maps hub and last sea arrivals to VAT and VAD by order', () => {
     const result = mapTrackingPayload(
       payload([
@@ -364,6 +415,24 @@ describe('SeaRates positional event mapping', () => {
           size_type: "40' High Cube Open Top",
         },
       ],
+    });
+  });
+
+  it('selects the requested container rather than the first shipment sibling', () => {
+    const trackingPayload = payload([], 'picked_up', 'CT', 'MSCU1234567');
+    trackingPayload.included = [
+      {
+        id: 'sibling',
+        type: 'container',
+        attributes: {
+          number: 'TCLU7654321',
+          current_status: 'on_ship',
+        },
+      },
+      ...trackingPayload.included,
+    ];
+    expect(responseData(mapTrackingPayload(trackingPayload))).toMatchObject({
+      containers: [{ number: 'MSCU1234567' }],
     });
   });
 

@@ -64,6 +64,12 @@ function numberValue(value: unknown): number | null {
   return typeof value === 'number' ? value : null;
 }
 
+function normalizeNumber(value: unknown): string {
+  return typeof value === 'string'
+    ? value.replace(/\s+/g, '').toUpperCase()
+    : '';
+}
+
 function formatParts(date: Date, timeZone: string): string | null {
   try {
     const parts = new Intl.DateTimeFormat('en-CA', {
@@ -393,15 +399,33 @@ function isSea(event: EventDraft): boolean {
 }
 
 function assignStatuses(events: EventDraft[]): void {
-  const seaLoads = events.filter(
-    (event) => event.code === 'LOAD' && isSea(event),
+  const seaEvents = events.filter(isSea);
+  const originLoad = seaEvents.find(
+    (event, index) =>
+      event.code === 'LOAD' &&
+      !seaEvents
+        .slice(0, index)
+        .some((earlier) =>
+          ['ARRI', 'DEPA', 'DISC', 'LOAD'].includes(earlier.code || ''),
+        ),
   );
-  const seaDepartures = events.filter(
-    (event) => event.code === 'DEPA' && isSea(event),
+  const originDeparture = seaEvents.find(
+    (event, index) =>
+      event.code === 'DEPA' &&
+      !seaEvents
+        .slice(0, index)
+        .some((earlier) =>
+          ['ARRI', 'DEPA', 'DISC'].includes(earlier.code || ''),
+        ) &&
+      !seaEvents
+        .slice(0, index)
+        .some((earlier) => earlier.code === 'LOAD' && earlier !== originLoad),
   );
-  const firstSeaBoundary = [...seaLoads, ...seaDepartures].sort(
-    (left, right) => (left.instant ?? Infinity) - (right.instant ?? Infinity),
-  )[0];
+  const firstSeaBoundary = [originLoad, originDeparture]
+    .filter((event): event is EventDraft => Boolean(event))
+    .sort(
+      (left, right) => (left.instant ?? Infinity) - (right.instant ?? Infinity),
+    )[0];
   const lastSeaArrival = [...events]
     .reverse()
     .find((event) => event.code === 'ARRI' && isSea(event));
@@ -446,10 +470,10 @@ function assignStatuses(events: EventDraft[]): void {
       event.status = 'CDC';
     } else if (event.code === 'LOAD') {
       event.status =
-        event === seaLoads[0] ? 'CLL' : isSea(event) ? 'CLT' : 'LTS';
+        event === originLoad ? 'CLL' : isSea(event) ? 'CLT' : 'LTS';
     } else if (event.code === 'DEPA') {
       event.status =
-        event === seaDepartures[0] ? 'VDL' : isSea(event) ? 'VDT' : 'LTS';
+        event === originDeparture ? 'VDL' : isSea(event) ? 'VDT' : 'LTS';
     } else if (event.code === 'ARRI') {
       const laterSailing = events.some(
         (later) =>
@@ -521,12 +545,72 @@ function assignStatuses(events: EventDraft[]): void {
 }
 
 function samePlace(left: EventDraft, right: EventDraft): boolean {
-  const leftPlace = left.location ?? left.facility;
-  const rightPlace = right.location ?? right.facility;
-  return leftPlace === rightPlace || leftPlace === null || rightPlace === null;
+  const leftLocated = left.location !== null || left.facility !== null;
+  const rightLocated = right.location !== null || right.facility !== null;
+  if (!leftLocated || !rightLocated) return true;
+  if (
+    left.location !== null &&
+    right.location !== null &&
+    left.location !== right.location
+  ) {
+    return false;
+  }
+  if (
+    left.facility !== null &&
+    right.facility !== null &&
+    left.facility !== right.facility
+  ) {
+    return false;
+  }
+  return (
+    (left.location !== null && right.location !== null) ||
+    (left.facility !== null && right.facility !== null)
+  );
 }
 
-function deduplicate(events: EventDraft[]): EventDraft[] {
+function preferEvent(existing: EventDraft, event: EventDraft): EventDraft {
+  const eventLocated = event.location !== null || event.facility !== null;
+  const existingLocated =
+    existing.location !== null || existing.facility !== null;
+  if (
+    (eventLocated && !existingLocated) ||
+    (eventLocated === existingLocated && event.actual && !existing.actual) ||
+    (eventLocated === existingLocated &&
+      event.actual === existing.actual &&
+      event.order > existing.order)
+  ) {
+    return event;
+  }
+  return existing;
+}
+
+function deduplicateRaw(events: EventDraft[]): EventDraft[] {
+  const kept: EventDraft[] = [];
+  for (const event of events) {
+    const isExplicitLand =
+      event.transport === 'RAIL' ||
+      (event.transport === 'TRUCK' && event.explicitConveyance);
+    if (!event.code || isExplicitLand || !event.instantKey) {
+      kept.push(event);
+      continue;
+    }
+    const duplicateIndex = kept.findIndex(
+      (candidate) =>
+        candidate.code === event.code &&
+        candidate.transport === event.transport &&
+        candidate.instantKey === event.instantKey &&
+        samePlace(candidate, event),
+    );
+    if (duplicateIndex < 0) {
+      kept.push(event);
+    } else {
+      kept[duplicateIndex] = preferEvent(kept[duplicateIndex], event);
+    }
+  }
+  return kept;
+}
+
+function deduplicateMilestones(events: EventDraft[]): EventDraft[] {
   const kept: EventDraft[] = [];
   for (const event of events) {
     if (event.status === 'LTS' || event.status === 'UNKN') {
@@ -544,19 +628,7 @@ function deduplicate(events: EventDraft[]): EventDraft[] {
       kept.push(event);
       continue;
     }
-    const existing = kept[duplicateIndex];
-    const eventLocated = event.location !== null || event.facility !== null;
-    const existingLocated =
-      existing.location !== null || existing.facility !== null;
-    if (
-      (eventLocated && !existingLocated) ||
-      (eventLocated === existingLocated && event.actual && !existing.actual) ||
-      (eventLocated === existingLocated &&
-        event.actual === existing.actual &&
-        event.order > existing.order)
-    ) {
-      kept[duplicateIndex] = event;
-    }
+    kept[duplicateIndex] = preferEvent(kept[duplicateIndex], event);
   }
   return kept.sort((left, right) => {
     if (left.instant === null && right.instant === null) {
@@ -593,9 +665,9 @@ function buildTimeline(
   ids: EventIds,
   locationByNumber: Map<number, JsonApiResource>,
 ): EventDraft[] {
-  const drafts = draftEvents(resources, ids, locationByNumber);
+  const drafts = deduplicateRaw(draftEvents(resources, ids, locationByNumber));
   assignStatuses(drafts);
-  return deduplicate(drafts);
+  return deduplicateMilestones(drafts);
 }
 
 function routePoint(event: EventDraft | undefined): {
@@ -645,9 +717,17 @@ export function mapTrackingPayload(payload: TrackingPayload): SeaRatesEnvelope {
     vessels,
   };
   const shipmentAttributes = attrs(payload.shipment);
-  const containerResources = payload.included.filter(
+  const allContainerResources = payload.included.filter(
     (resource) => resource.type === 'container',
   );
+  const containerResources =
+    payload.requestedType === 'CT'
+      ? allContainerResources.filter(
+          (resource) =>
+            normalizeNumber(attrs(resource).number) ===
+            normalizeNumber(payload.requestedNumber),
+        )
+      : allContainerResources;
   const timelines = new Map<string, EventDraft[]>();
   const statuses: string[] = [];
 

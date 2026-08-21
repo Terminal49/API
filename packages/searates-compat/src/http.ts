@@ -69,6 +69,7 @@ export function createTrackingHandler(
   gateway = new SeaRatesCompatibilityGateway(gatewayConfig()),
   options: {
     allowedTypes?: readonly TrackingType[];
+    defaultType?: TrackingType;
     forcedType?: TrackingType;
     singularContainer?: boolean;
   } = {},
@@ -97,9 +98,11 @@ export function createTrackingHandler(
       .toUpperCase();
     const sealine = first(params, 'sealine')?.toUpperCase();
     const rawType = first(params, 'type');
-    const parsedType = options.forcedType || trackingType(rawType);
+    const requestedType = trackingType(rawType);
+    const parsedType =
+      options.forcedType || requestedType || options.defaultType;
     if (
-      (!options.forcedType && rawType && !parsedType) ||
+      (!options.forcedType && rawType && !requestedType) ||
       (parsedType &&
         options.allowedTypes &&
         !options.allowedTypes.includes(parsedType))
@@ -140,7 +143,10 @@ export function createContainerHandler(
 export function createReferenceHandler(
   gateway = new SeaRatesCompatibilityGateway(gatewayConfig()),
 ) {
-  return createTrackingHandler(gateway, { allowedTypes: ['BL', 'BK'] });
+  return createTrackingHandler(gateway, {
+    allowedTypes: ['BL', 'BK'],
+    defaultType: 'BL',
+  });
 }
 
 export function createShippingLinesHandler(
