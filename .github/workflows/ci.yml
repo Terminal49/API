@@ -203,15 +203,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          comment="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+          preview_url="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
             --paginate \
-            --jq '[.[] | select(.user.login == "vercel[bot]" or .user.login == "vercel")][-1].body')"
-          if [[ "$comment" =~ \[Preview\]\((https://[^)]+\.vercel\.app)\) ]]; then
-            echo "endpoint=${BASH_REMATCH[1]}/mcp" >> "$GITHUB_OUTPUT"
-          else
+            --jq '[.[] | select(.user.login == "vercel[bot]" or .user.login == "vercel")][-1].body | capture("\\[Preview\\]\\((?<url>https://[^)]+\\.vercel\\.app)\\)").url')"
+          if [[ -z "$preview_url" ]]; then
             echo "Could not resolve Vercel preview URL"
             exit 1
           fi
+          echo "endpoint=${preview_url}/mcp" >> "$GITHUB_OUTPUT"
       - name: POST handshake and tools/list to Vercel preview
         env:
           MCP_HTTP_ENDPOINT: ${{ steps.preview.outputs.endpoint }}
