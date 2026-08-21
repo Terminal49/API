@@ -9,6 +9,8 @@ System (AIS) products.
 ## Endpoints
 
 - `GET /searates-api/tracking`
+- `GET /searates-api/container` (deprecated SeaRates singular-container shape)
+- `GET /searates-api/reference` (deprecated SeaRates BL/BK shape)
 - `GET /searates-api/info/sealines`
 
 The dedicated migrate Vercel application in `apps/migrate` maps these paths to
@@ -20,6 +22,8 @@ fetch a known terminal but does not provide a supported-terminals list.
 The intended production URLs are:
 
 - `https://migrate.terminal49.com/searates-api/tracking`
+- `https://migrate.terminal49.com/searates-api/container`
+- `https://migrate.terminal49.com/searates-api/reference`
 - `https://migrate.terminal49.com/searates-api/info/sealines`
 
 The custom domain is not live yet. Until DNS and the production domain are
@@ -34,7 +38,7 @@ Choose one of two modes:
 
 Leave `T49_SEARATES_API_TOKEN` unset. The gateway treats the SeaRates `api_key`
 query parameter as a Terminal49 API key and sends it upstream as
-`Authorization: Bearer <api_key>`.
+`Authorization: Token <api_key>`.
 
 ### Service-token mode
 
@@ -90,16 +94,14 @@ gateway:
 1. creates or reuses a Terminal49 tracking request;
 2. polls it for a short, bounded interval;
 3. returns the full SeaRates envelope if the shipment becomes available; or
-4. returns SeaRates' successful empty-data outcome:
-   `status: "success"`, `message: "SEALINE_HASNT_PROVIDE_INFO"`,
-   `metadata.status: "UNKNOWN"`, and empty data arrays.
+4. returns SeaRates' no-data error:
+   `status: "error"`, `message: "NO_TRACKING_INFO"`, and `data: {}`.
 
 SeaRates has no documented pending response, so the gateway does not invent one.
-Retry the same `GET /tracking` request after the empty-data outcome. The gateway
-reuses the existing Terminal49 tracking request instead of creating another one.
-Terminal49 failure reasons are translated to SeaRates-style messages such as
-`WRONG_NUMBER`, `AUTO_CANT_DETECT_SEALINE`, and
-`SEALINE_HASNT_PROVIDE_INFO`.
+Retry the same `GET /tracking` request after `NO_TRACKING_INFO`. The gateway
+reuses a matching active Terminal49 tracking request instead of creating another
+one. Terminal49 failure reasons are translated to SeaRates-style messages such
+as `WRONG_NUMBER`, `AUTO_CANT_DETECT_SEALINE`, and `NO_TRACKING_INFO`.
 
 ## Compatibility limits
 

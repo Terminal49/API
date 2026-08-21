@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { toContainerEnvelope } from './mapping.js';
 import { SeaRatesCompatibilityGateway, type GatewayConfig } from './service.js';
 import type { TrackingQuery, TrackingType } from './types.js';
 
@@ -34,6 +35,7 @@ function trackingType(value: string | undefined): TrackingType | undefined {
 function gatewayConfig(): GatewayConfig {
   const pollTimeout = Number(process.env.T49_SEARATES_POLL_TIMEOUT_MS);
   const pollInterval = Number(process.env.T49_SEARATES_POLL_INTERVAL_MS);
+  const requestTimeout = Number(process.env.T49_SEARATES_REQUEST_TIMEOUT_MS);
   return {
     apiBaseUrl: process.env.T49_API_BASE_URL,
     clientSecret: process.env.T49_SEARATES_CLIENT_SECRET,
@@ -44,6 +46,10 @@ function gatewayConfig(): GatewayConfig {
     pollTimeoutMs:
       Number.isFinite(pollTimeout) && pollTimeout >= 0
         ? pollTimeout
+        : undefined,
+    requestTimeoutMs:
+      Number.isFinite(requestTimeout) && requestTimeout > 0
+        ? requestTimeout
         : undefined,
     serviceApiToken: process.env.T49_SEARATES_API_TOKEN,
   };
@@ -61,6 +67,11 @@ function requestParams(request: RequestLike): URLSearchParams {
 
 export function createTrackingHandler(
   gateway = new SeaRatesCompatibilityGateway(gatewayConfig()),
+  options: {
+    allowedTypes?: readonly TrackingType[];
+    forcedType?: TrackingType;
+    singularContainer?: boolean;
+  } = {},
 ) {
   return async (
     request: RequestLike,
@@ -86,7 +97,13 @@ export function createTrackingHandler(
       .toUpperCase();
     const sealine = first(params, 'sealine')?.toUpperCase();
     const rawType = first(params, 'type');
-    if (rawType && !trackingType(rawType)) {
+    const parsedType = options.forcedType || trackingType(rawType);
+    if (
+      (!options.forcedType && rawType && !parsedType) ||
+      (parsedType &&
+        options.allowedTypes &&
+        !options.allowedTypes.includes(parsedType))
+    ) {
       response.status(200).json({
         status: 'error',
         message: 'WRONG_TYPE',
@@ -100,12 +117,30 @@ export function createTrackingHandler(
       number,
       route: booleanParam(params, 'route'),
       sealine,
-      type: trackingType(rawType),
+      type: parsedType,
     };
+    const envelope = await gateway.tracking(first(params, 'api_key'), query);
     response
       .status(200)
-      .json(await gateway.tracking(first(params, 'api_key'), query));
+      .json(
+        options.singularContainer ? toContainerEnvelope(envelope) : envelope,
+      );
   };
+}
+
+export function createContainerHandler(
+  gateway = new SeaRatesCompatibilityGateway(gatewayConfig()),
+) {
+  return createTrackingHandler(gateway, {
+    forcedType: 'CT',
+    singularContainer: true,
+  });
+}
+
+export function createReferenceHandler(
+  gateway = new SeaRatesCompatibilityGateway(gatewayConfig()),
+) {
+  return createTrackingHandler(gateway, { allowedTypes: ['BL', 'BK'] });
 }
 
 export function createShippingLinesHandler(

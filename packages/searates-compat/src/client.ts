@@ -24,6 +24,7 @@ export interface Terminal49ClientConfig {
   fetchImpl?: typeof fetch;
   pollIntervalMs?: number;
   pollTimeoutMs?: number;
+  requestTimeoutMs?: number;
 }
 
 function normalizeToken(token: string): string {
@@ -39,6 +40,57 @@ function trackedObjectId(resource: JsonApiResource): string | null {
   return tracked && !Array.isArray(tracked) && tracked.type === 'shipment'
     ? tracked.id
     : null;
+}
+
+function resourceTimestamp(resource: JsonApiResource): number {
+  const value =
+    resource.attributes?.updated_at || resource.attributes?.created_at;
+  return typeof value === 'string' ? Date.parse(value) || 0 : 0;
+}
+
+function selectTrackingRequest(
+  resources: JsonApiResource[],
+  requestType: Terminal49TrackingType,
+): JsonApiResource | undefined {
+  return resources
+    .filter(
+      (resource) =>
+        resource.attributes?.request_type === requestType &&
+        resource.attributes?.status !== 'failed',
+    )
+    .sort((left, right) => {
+      const leftTracked = trackedObjectId(left) ? 1 : 0;
+      const rightTracked = trackedObjectId(right) ? 1 : 0;
+      return (
+        rightTracked - leftTracked ||
+        resourceTimestamp(right) - resourceTimestamp(left)
+      );
+    })[0];
+}
+
+function freshnessSignature(document: JsonApiDocument): string {
+  const resources = [
+    ...(Array.isArray(document.data)
+      ? document.data
+      : document.data
+        ? [document.data]
+        : []),
+    ...(document.included || []),
+  ];
+  return resources
+    .filter((resource) => ['container', 'shipment'].includes(resource.type))
+    .map((resource) => {
+      const attributes = resource.attributes || {};
+      return [
+        resource.id,
+        attributes.line_tracking_last_succeeded_at,
+        attributes.pod_last_tracking_request_at,
+        attributes.shipment_last_tracking_request_at,
+        attributes.terminal_checked_at,
+      ].join(':');
+    })
+    .sort()
+    .join('|');
 }
 
 function trackingType(type: TrackingType): Terminal49TrackingType {
@@ -61,6 +113,7 @@ export class Terminal49PublicClient {
   private readonly fetchImpl: typeof fetch;
   private readonly pollIntervalMs: number;
   private readonly pollTimeoutMs: number;
+  private readonly requestTimeoutMs: number;
   private readonly token: string;
 
   constructor(config: Terminal49ClientConfig) {
@@ -72,6 +125,7 @@ export class Terminal49PublicClient {
     this.fetchImpl = config.fetchImpl || fetch;
     this.pollIntervalMs = config.pollIntervalMs ?? 500;
     this.pollTimeoutMs = config.pollTimeoutMs ?? 4_000;
+    this.requestTimeoutMs = config.requestTimeoutMs ?? 10_000;
   }
 
   async shippingLines(): Promise<JsonApiDocument> {
@@ -105,9 +159,11 @@ export class Terminal49PublicClient {
     return shipment ? this.shipment(shipment.id) : null;
   }
 
-  async shipment(id: string): Promise<JsonApiDocument> {
+  async shipment(id: string, timeoutMs?: number): Promise<JsonApiDocument> {
     return this.request(
       `/shipments/${encodeURIComponent(id)}?include=containers,port_of_lading,port_of_discharge,pod_terminal,destination,destination_terminal`,
+      {},
+      timeoutMs,
     );
   }
 
@@ -126,6 +182,23 @@ export class Terminal49PublicClient {
     );
   }
 
+  async waitForShipmentUpdate(
+    shipmentId: string,
+    previous: JsonApiDocument,
+  ): Promise<JsonApiDocument | null> {
+    const baseline = freshnessSignature(previous);
+    const deadline = Date.now() + this.pollTimeoutMs;
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, this.pollIntervalMs));
+      const current = await this.shipment(
+        shipmentId,
+        Math.min(this.requestTimeoutMs, Math.max(1, deadline - Date.now())),
+      );
+      if (freshnessSignature(current) !== baseline) return current;
+    }
+    return null;
+  }
+
   async resolveTrackingRequest(input: {
     number: string;
     scac?: string;
@@ -136,8 +209,10 @@ export class Terminal49PublicClient {
     | { shipmentId: string; state: 'created' }
   > {
     const existing = await this.trackingRequests(input.number, input.scac);
-    let requestResource: JsonApiResource | undefined =
-      resourceArray(existing)[0];
+    let requestResource = selectTrackingRequest(
+      resourceArray(existing),
+      trackingType(input.type),
+    );
 
     if (!requestResource) {
       const attributes: Record<string, string | boolean> = {
@@ -178,8 +253,11 @@ export class Terminal49PublicClient {
       }
       if (Date.now() >= deadline) return { state: 'pending' };
       await new Promise((resolve) => setTimeout(resolve, this.pollIntervalMs));
+      const remainingMs = Math.max(1, deadline - Date.now());
       const next = await this.request(
         `/tracking_requests/${encodeURIComponent(requestResource.id)}?include=tracked_object`,
+        {},
+        Math.min(this.requestTimeoutMs, remainingMs),
       );
       requestResource = Array.isArray(next.data)
         ? next.data[0]
@@ -194,7 +272,7 @@ export class Terminal49PublicClient {
     const params = new URLSearchParams({
       'filter[request_number]': number,
       include: 'tracked_object',
-      'page[size]': '1',
+      'page[size]': '30',
     });
     if (scac) params.set('filter[scac]', scac);
     return this.request(`/tracking_requests?${params.toString()}`);
@@ -203,12 +281,17 @@ export class Terminal49PublicClient {
   private async request(
     path: string,
     init: RequestInit = {},
+    timeoutMs = this.requestTimeoutMs,
   ): Promise<JsonApiDocument> {
+    const timeoutSignal = AbortSignal.timeout(Math.max(1, timeoutMs));
     const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
       ...init,
+      signal: init.signal
+        ? AbortSignal.any([init.signal, timeoutSignal])
+        : timeoutSignal,
       headers: {
         Accept: 'application/vnd.api+json',
-        Authorization: `Bearer ${this.token}`,
+        Authorization: `Token ${this.token}`,
         ...init.headers,
       },
     });

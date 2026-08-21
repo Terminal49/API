@@ -50,19 +50,37 @@ export interface SeaRatesEvent {
   actual: boolean;
   date: string | null;
   description: string;
-  event_code: string;
-  event_type: 'EQUIPMENT' | 'TRANSPORT';
+  event_code: SeaRatesEventCode | null;
+  event_type: 'EQUIPMENT' | 'TRANSPORT' | null;
   facility: number | null;
   is_additional_event: boolean;
   is_date_from_sealine: boolean;
   location: number | null;
   order_id: number;
   status: string;
-  transport_type: 'BARGE' | 'RAIL' | 'TRUCK' | 'VESSEL';
+  transport_type: 'BARGE' | 'RAIL' | 'TRUCK' | 'VESSEL' | null;
   type: 'land' | 'sea';
   vessel: number | null;
   voyage: string | null;
 }
+
+export type SeaRatesEventCode =
+  | 'ARRI'
+  | 'CONF'
+  | 'CUSI'
+  | 'CUSR'
+  | 'DEPA'
+  | 'DISC'
+  | 'GTIN'
+  | 'GTOT'
+  | 'INSP'
+  | 'ISSU'
+  | 'LOAD'
+  | 'PICK'
+  | 'RECE'
+  | 'RELS'
+  | 'STRP'
+  | 'STUF';
 
 export interface SeaRatesEnvelope {
   status: 'error' | 'success';

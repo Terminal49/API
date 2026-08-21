@@ -95,7 +95,7 @@ describe('SeaRates compatibility gateway', () => {
     });
   });
 
-  it('uses SeaRates empty-data semantics while T49 is still pending', async () => {
+  it('returns NO_TRACKING_INFO while T49 is still pending', async () => {
     const gateway = new SeaRatesCompatibilityGateway({
       pollTimeoutMs: 0,
       fetchImpl: async (input) => {
@@ -117,16 +117,76 @@ describe('SeaRates compatibility gateway', () => {
       },
     });
 
-    await expect(
-      gateway.tracking('pass-through-key', query),
-    ).resolves.toMatchObject({
-      status: 'success',
-      message: 'SEALINE_HASNT_PROVIDE_INFO',
-      data: {
-        metadata: { status: 'UNKNOWN' },
-        containers: [],
+    await expect(gateway.tracking('pass-through-key', query)).resolves.toEqual({
+      status: 'error',
+      message: 'NO_TRACKING_INFO',
+      data: {},
+    });
+  });
+
+  it('does not exceed the ten-container force-refresh limit', async () => {
+    if (!shipmentFixture.data || Array.isArray(shipmentFixture.data)) {
+      throw new Error('Shipment fixture must contain one resource');
+    }
+    const included = Array.from({ length: 11 }, (_, index) => ({
+      id: `container-${index}`,
+      type: 'container',
+      attributes: { number: `MSCU12345${String(index).padStart(2, '0')}` },
+    }));
+    let refreshCalls = 0;
+    const document = {
+      data: shipmentFixture.data,
+      included,
+    };
+    const gateway = new SeaRatesCompatibilityGateway({
+      fetchImpl: async (input, init) => {
+        const url = String(input);
+        if (init?.method === 'PATCH') {
+          refreshCalls += 1;
+          return response({ data: null });
+        }
+        if (url.includes('/shipments?')) {
+          return response({ data: [shipmentFixture.data] });
+        }
+        return response(document);
       },
     });
+
+    await expect(
+      gateway.tracking('pass-through-key', { ...query, forceUpdate: true }),
+    ).resolves.toEqual({
+      status: 'error',
+      message: 'API_KEY_RATE_LIMIT',
+      data: {},
+    });
+    expect(refreshCalls).toBe(0);
+  });
+
+  it('does not serve the pre-refresh shipment when refresh stays unresolved', async () => {
+    let refreshCalls = 0;
+    const gateway = new SeaRatesCompatibilityGateway({
+      pollTimeoutMs: 0,
+      fetchImpl: async (input, init) => {
+        const url = String(input);
+        if (init?.method === 'PATCH') {
+          refreshCalls += 1;
+          return response({ data: null });
+        }
+        if (url.includes('/shipments?')) {
+          return response({ data: [shipmentFixture.data] });
+        }
+        return response(shipmentFixture);
+      },
+    });
+
+    await expect(
+      gateway.tracking('pass-through-key', { ...query, forceUpdate: true }),
+    ).resolves.toEqual({
+      status: 'error',
+      message: 'NO_TRACKING_INFO',
+      data: {},
+    });
+    expect(refreshCalls).toBe(1);
   });
 
   it('serves the sealines dictionary from /shipping_lines', async () => {

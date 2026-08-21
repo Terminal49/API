@@ -59,8 +59,67 @@ describe('tracking request shaping', () => {
       },
     });
     expect(create?.init?.headers).toMatchObject({
-      Authorization: 'Bearer test-token',
+      Authorization: 'Token test-token',
     });
+  });
+
+  it('reuses only an active request with the matching request type', async () => {
+    const requests: Array<{ init?: RequestInit; url: string }> = [];
+    const fetchImpl: typeof fetch = async (input, init) => {
+      const url = String(input);
+      requests.push({ init, url });
+      return jsonResponse({
+        data: [
+          {
+            id: 'failed-bl',
+            type: 'tracking_request',
+            attributes: {
+              request_type: 'bill_of_lading',
+              status: 'failed',
+              updated_at: '2026-08-03T00:00:00Z',
+            },
+          },
+          {
+            id: 'tracked-booking',
+            type: 'tracking_request',
+            attributes: {
+              request_type: 'booking_number',
+              status: 'created',
+              updated_at: '2026-08-02T00:00:00Z',
+            },
+            relationships: {
+              tracked_object: {
+                data: { id: 'wrong-shipment', type: 'shipment' },
+              },
+            },
+          },
+          {
+            id: 'pending-bl',
+            type: 'tracking_request',
+            attributes: {
+              request_type: 'bill_of_lading',
+              status: 'pending',
+              updated_at: '2026-08-01T00:00:00Z',
+            },
+          },
+        ],
+      });
+    };
+    const client = new Terminal49PublicClient({
+      apiToken: 'test-token',
+      fetchImpl,
+      pollTimeoutMs: 0,
+    });
+
+    await expect(
+      client.resolveTrackingRequest({
+        number: 'MEDUFR030802',
+        type: 'BL',
+      }),
+    ).resolves.toEqual({ state: 'pending' });
+    expect(requests.some((request) => request.init?.method === 'POST')).toBe(
+      false,
+    );
   });
 
   it('uses asynchronous carrier detection when sealine is omitted', async () => {

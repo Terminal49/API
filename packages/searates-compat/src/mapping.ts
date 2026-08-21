@@ -4,139 +4,45 @@ import type {
   JsonObject,
   SeaRatesEnvelope,
   SeaRatesEvent,
+  SeaRatesEventCode,
   TrackingPayload,
-  TrackingType,
 } from './types.js';
 
-interface EventMapping {
-  code: string;
-  description: string;
-  eventType: 'EQUIPMENT' | 'TRANSPORT';
-  status: string;
-  transport: 'BARGE' | 'RAIL' | 'TRUCK' | 'VESSEL';
+type Conveyance = 'BARGE' | 'RAIL' | 'TRUCK' | 'VESSEL';
+
+interface EventIds {
+  facilities: Map<string, number>;
+  locations: Map<string, number>;
+  locationsByLocode: Map<string, number>;
+  vessels: Map<string, number>;
 }
 
-const EVENT_MAPPINGS: Record<string, EventMapping> = {
-  'container.transport.empty_out': {
-    code: 'PICK',
-    description: 'Empty Picked-up at Depot',
-    eventType: 'EQUIPMENT',
-    status: 'CPS',
-    transport: 'TRUCK',
-  },
-  'container.transport.full_in': {
-    code: 'GTIN',
-    description: 'Gate in at Port terminal',
-    eventType: 'EQUIPMENT',
-    status: 'CGI',
-    transport: 'TRUCK',
-  },
-  'container.transport.vessel_loaded': {
-    code: 'LOAD',
-    description: 'Loaded on board',
-    eventType: 'EQUIPMENT',
-    status: 'CLL',
-    transport: 'VESSEL',
-  },
-  'container.transport.vessel_departed': {
-    code: 'DEPA',
-    description: 'Vessel Departure',
-    eventType: 'TRANSPORT',
-    status: 'VDL',
-    transport: 'VESSEL',
-  },
-  'container.transport.vessel_arrived': {
-    code: 'ARRI',
-    description: 'Vessel Arrival',
-    eventType: 'TRANSPORT',
-    status: 'VAD',
-    transport: 'VESSEL',
-  },
-  'container.transport.vessel_discharged': {
-    code: 'DISC',
-    description: 'Discharged from vessel',
-    eventType: 'EQUIPMENT',
-    status: 'CDD',
-    transport: 'VESSEL',
-  },
-  'container.transport.transshipment_arrived': {
-    code: 'ARRI',
-    description: 'Vessel Arrival at transshipment port',
-    eventType: 'TRANSPORT',
-    status: 'VAT',
-    transport: 'VESSEL',
-  },
-  'container.transport.transshipment_discharged': {
-    code: 'DISC',
-    description: 'Discharged in transshipment',
-    eventType: 'EQUIPMENT',
-    status: 'CDT',
-    transport: 'VESSEL',
-  },
-  'container.transport.transshipment_loaded': {
-    code: 'LOAD',
-    description: 'Loaded at transshipment port',
-    eventType: 'EQUIPMENT',
-    status: 'CLT',
-    transport: 'VESSEL',
-  },
-  'container.transport.transshipment_departed': {
-    code: 'DEPA',
-    description: 'Vessel Departure from transshipment port',
-    eventType: 'TRANSPORT',
-    status: 'VDT',
-    transport: 'VESSEL',
-  },
-  'container.transport.full_out': {
-    code: 'GTOT',
-    description: 'Gate out from final port',
-    eventType: 'EQUIPMENT',
-    status: 'CGO',
-    transport: 'TRUCK',
-  },
-  'container.transport.delivered': {
-    code: 'DLVY',
-    description: 'Container delivered to consignee',
-    eventType: 'EQUIPMENT',
-    status: 'CDC',
-    transport: 'TRUCK',
-  },
-  'container.transport.empty_in': {
-    code: 'GTIN',
-    description: 'Empty container returned to depot',
-    eventType: 'EQUIPMENT',
-    status: 'CER',
-    transport: 'TRUCK',
-  },
-  'container.transport.rail_loaded': {
-    code: 'LOAD',
-    description: 'Loaded on rail',
-    eventType: 'EQUIPMENT',
-    status: 'LTS',
-    transport: 'RAIL',
-  },
-  'container.transport.rail_departed': {
-    code: 'DEPA',
-    description: 'Rail departure',
-    eventType: 'TRANSPORT',
-    status: 'LTS',
-    transport: 'RAIL',
-  },
-  'container.transport.rail_arrived': {
-    code: 'ARRI',
-    description: 'Rail arrival',
-    eventType: 'TRANSPORT',
-    status: 'LTS',
-    transport: 'RAIL',
-  },
-  'container.transport.rail_unloaded': {
-    code: 'DISC',
-    description: 'Discharged from rail',
-    eventType: 'EQUIPMENT',
-    status: 'LTS',
-    transport: 'RAIL',
-  },
-};
+interface EventDraft {
+  actual: boolean;
+  code: SeaRatesEventCode | null;
+  description: string;
+  eventType: 'EQUIPMENT' | 'TRANSPORT' | null;
+  explicitConveyance: boolean;
+  facility: number | null;
+  instant: number | null;
+  instantKey: string;
+  location: number | null;
+  name: string;
+  order: number;
+  status: string;
+  transport: Conveyance | null;
+  type: 'land' | 'sea';
+  vessel: number | null;
+  voyage: string | null;
+  date: string | null;
+}
+
+const SEA_OPERATION_CODES = new Set<SeaRatesEventCode>([
+  'ARRI',
+  'DEPA',
+  'DISC',
+  'LOAD',
+]);
 
 function attrs(resource: JsonApiResource): JsonObject {
   return resource.attributes || {};
@@ -150,11 +56,6 @@ function relatedId(
   return data && !Array.isArray(data) ? data.id : null;
 }
 
-function formatDate(value: unknown): string | null {
-  if (typeof value !== 'string' || !value) return null;
-  return value.replace('T', ' ').replace(/(?:\.\d+)?Z$/, '');
-}
-
 function stringValue(value: unknown): string | null {
   return typeof value === 'string' && value.length > 0 ? value : null;
 }
@@ -163,67 +64,57 @@ function numberValue(value: unknown): number | null {
   return typeof value === 'number' ? value : null;
 }
 
+function formatParts(date: Date, timeZone: string): string | null {
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      day: '2-digit',
+      hour: '2-digit',
+      hour12: false,
+      minute: '2-digit',
+      month: '2-digit',
+      second: '2-digit',
+      timeZone,
+      year: 'numeric',
+    }).formatToParts(date);
+    const values = new Map(parts.map((part) => [part.type, part.value]));
+    return `${values.get('year')}-${values.get('month')}-${values.get('day')} ${values.get('hour')}:${values.get('minute')}:${values.get('second')}`;
+  } catch {
+    return null;
+  }
+}
+
+function formatDate(value: unknown, timeZone?: string | null): string | null {
+  if (typeof value !== 'string' || !value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    const match = value.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})/);
+    return match ? `${match[1]} ${match[2]}` : null;
+  }
+  if (timeZone) {
+    const local = formatParts(parsed, timeZone);
+    if (local) return local;
+  }
+  const offsetMatch = value.match(
+    /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})(?:\.\d+)?[+-]\d{2}:\d{2}$/,
+  );
+  if (offsetMatch) return `${offsetMatch[1]} ${offsetMatch[2]}`;
+  return parsed.toISOString().slice(0, 19).replace('T', ' ');
+}
+
+function timestamp(value: unknown): { instant: number | null; key: string } {
+  if (typeof value !== 'string' || !value) {
+    return { instant: null, key: '' };
+  }
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed)
+    ? { instant: null, key: value }
+    : { instant: parsed, key: String(parsed) };
+}
+
 function resourceIndex(
   resources: JsonApiResource[],
 ): Map<string, JsonApiResource> {
   return new Map(resources.map((resource) => [resource.id, resource]));
-}
-
-function equipment(attributes: JsonObject): {
-  isoCode: string | null;
-  sizeType: string | null;
-} {
-  const length = numberValue(attributes.equipment_length);
-  const height = stringValue(attributes.equipment_height);
-  const type = stringValue(attributes.equipment_type);
-  if (!length || !height || !type) return { isoCode: null, sizeType: null };
-
-  const first = length === 20 ? '2' : length === 40 ? '4' : 'L';
-  const second = height === 'high_cube' ? '5' : '2';
-  const typeCode: Record<string, string> = {
-    dry: 'G1',
-    flat_rack: 'P1',
-    hard_top: 'U1',
-    open_top: 'U1',
-    reefer: 'R1',
-    tank: 'T1',
-  };
-  const label: Record<string, string> = {
-    dry: 'Dry',
-    flat_rack: 'Flat Rack',
-    hard_top: 'Hard Top',
-    open_top: 'Open Top',
-    reefer: 'Reefer',
-    tank: 'Tank',
-  };
-  const heightLabel = height === 'high_cube' ? ' High Cube' : '';
-  return {
-    isoCode: typeCode[type] ? `${first}${second}${typeCode[type]}` : null,
-    sizeType: `${length}'${heightLabel} ${label[type] || type}`,
-  };
-}
-
-function seaRatesStatus(value: unknown): string {
-  if (typeof value !== 'string') return 'UNKNOWN';
-  if (['delivered', 'empty_returned', 'picked_up'].includes(value)) {
-    return 'DELIVERED';
-  }
-  if (
-    [
-      'available',
-      'awaiting_inland_transfer',
-      'in_transit',
-      'not_available',
-      'on_ship',
-    ].includes(value)
-  ) {
-    return 'IN_TRANSIT';
-  }
-  return 'UNKNOWN';
-}
-
-function defaultType(number: string, type?: TrackingType): TrackingType {
-  return type || (/^[A-Z]{4}\d{7}$/.test(number) ? 'CT' : 'BL');
 }
 
 function collectResources(payload: TrackingPayload): JsonApiResource[] {
@@ -243,42 +134,478 @@ function collectResources(payload: TrackingPayload): JsonApiResource[] {
   return [...unique.values()];
 }
 
-export function mapEvent(
-  resource: JsonApiResource,
-  orderId: number,
-  ids: {
-    facilities: Map<string, number>;
-    locations: Map<string, number>;
-    vessels: Map<string, number>;
-  },
-): SeaRatesEvent | null {
-  const attributes = attrs(resource);
-  const eventName = stringValue(attributes.event);
-  if (!eventName) return null;
-  const normalizedName = eventName.replace('.estimated.', '.');
-  const mapping = EVENT_MAPPINGS[normalizedName];
-  if (!mapping) return null;
-  const estimated = eventName.includes('.estimated.');
-  const locationId = relatedId(resource, 'location');
-  const facilityId = relatedId(resource, 'terminal');
-  const vesselId = relatedId(resource, 'vessel');
+function equipment(attributes: JsonObject): {
+  isoCode: string | null;
+  sizeType: string | null;
+} {
+  const length = numberValue(attributes.equipment_length);
+  const height = stringValue(attributes.equipment_height);
+  const type = stringValue(attributes.equipment_type)
+    ?.toLowerCase()
+    .replaceAll('_', ' ');
+  if (!length || !height || !type) return { isoCode: null, sizeType: null };
+
+  const lengthCode = new Map([
+    [10, '1'],
+    [20, '2'],
+    [40, '4'],
+    [45, 'L'],
+  ]).get(length);
+  const typeCode = new Map([
+    ['dry', 'G1'],
+    ['flat rack', 'P1'],
+    ['open top', 'U1'],
+    ['reefer', 'R1'],
+    ['tank', 'T1'],
+  ]).get(type);
+  const label = new Map([
+    ['bulk', 'Bulk'],
+    ['dry', 'Dry'],
+    ['flat rack', 'Flat Rack'],
+    ['open top', 'Open Top'],
+    ['reefer', 'Reefer'],
+    ['tank', 'Tank'],
+  ]).get(type);
+  const heightCode = height === 'high_cube' ? '5' : '2';
+  const heightLabel = height === 'high_cube' ? ' High Cube' : '';
   return {
-    actual: !estimated,
-    date: formatDate(attributes.timestamp),
-    description: mapping.description,
-    event_type: mapping.eventType,
-    event_code: mapping.code,
-    status: mapping.status,
-    facility: facilityId ? (ids.facilities.get(facilityId) ?? null) : null,
-    is_additional_event: false,
-    is_date_from_sealine: attributes.data_source === 'shipping_line',
-    location: locationId ? (ids.locations.get(locationId) ?? null) : null,
-    order_id: orderId,
-    transport_type: mapping.transport,
-    type: mapping.transport === 'VESSEL' ? 'sea' : 'land',
-    vessel: vesselId ? (ids.vessels.get(vesselId) ?? null) : null,
-    voyage: stringValue(attributes.voyage_number),
+    isoCode:
+      lengthCode && typeCode ? `${lengthCode}${heightCode}${typeCode}` : null,
+    sizeType: label ? `${length}'${heightLabel} ${label}` : null,
   };
+}
+
+function seaRatesStatus(value: unknown, events: EventDraft[]): string {
+  const normalized =
+    typeof value === 'string' ? value.toLowerCase().replaceAll(' ', '_') : '';
+  if (['delivered', 'empty_returned'].includes(normalized)) return 'DELIVERED';
+  if (
+    [
+      'available',
+      'awaiting_inland_transfer',
+      'departed',
+      'discharged',
+      'dropped',
+      'grounded',
+      'hold',
+      'in_transit',
+      'loaded',
+      'not_available',
+      'off_dock',
+      'on_rail',
+      'on_ship',
+      'picked_up',
+    ].includes(normalized)
+  ) {
+    return 'IN_TRANSIT';
+  }
+  if (events.some((event) => ['CDC', 'CER'].includes(event.status))) {
+    return 'DELIVERED';
+  }
+  if (
+    events.some((event) =>
+      [
+        'CDD',
+        'CDT',
+        'CGI',
+        'CGO',
+        'CLL',
+        'CLT',
+        'LTS',
+        'VAD',
+        'VAT',
+        'VDL',
+        'VDT',
+      ].includes(event.status),
+    )
+  ) {
+    return 'IN_TRANSIT';
+  }
+  if (['booked', 'created', 'new', 'planned'].includes(normalized)) {
+    return 'PLANNED';
+  }
+  return events.length > 0 ? 'PLANNED' : 'UNKNOWN';
+}
+
+function eventDescription(name: string, attributes: JsonObject): string {
+  const supplied =
+    stringValue(attributes.description) ||
+    stringValue(attributes.original_event);
+  if (supplied) return supplied;
+  const label = name.split('.').at(-1)?.replaceAll('_', ' ') || 'Unknown event';
+  return label.replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function classifyCode(
+  name: string,
+  description: string,
+): SeaRatesEventCode | null {
+  const text = `${name} ${description}`.toLowerCase();
+  if (/\b(customs).*(release|released)\b/.test(text)) return 'CUSR';
+  if (/\b(customs).*(inspect|inspection)\b/.test(text)) return 'CUSI';
+  if (/\b(stuff|stuffing|stuffed)\b/.test(text)) return 'STUF';
+  if (/\b(strip|stripping|stripped)\b/.test(text)) return 'STRP';
+  if (/\b(receive|received)\b/.test(text)) return 'RECE';
+  if (/\b(confirm|confirmed|booking_confirmed)\b/.test(text)) return 'CONF';
+  if (/\b(issue|issued)\b/.test(text)) return 'ISSU';
+  if (/\b(inspect|inspected)\b/.test(text)) return 'INSP';
+  if (/\b(release|released)\b/.test(text)) return 'RELS';
+  if (/\b(pickup|picked up|picked_up)\b/.test(text)) return 'PICK';
+  if (/\b(full_out|empty_out|gate out|gate_out)\b/.test(text)) return 'GTOT';
+  if (/\b(full_in|empty_in|gate in|gate_in|drop)\b/.test(text)) return 'GTIN';
+  if (/\b(discharg|unload)\w*\b/.test(text)) return 'DISC';
+  if (/\b(load|loaded)\w*\b/.test(text)) return 'LOAD';
+  if (/\b(depart|departure)\w*\b/.test(text)) return 'DEPA';
+  if (/\b(arriv|arrival)\w*\b/.test(text)) return 'ARRI';
+  return null;
+}
+
+function conveyance(
+  resource: JsonApiResource,
+  name: string,
+  description: string,
+  code: SeaRatesEventCode | null,
+): { explicit: boolean; transport: Conveyance | null } {
+  const attributes = attrs(resource);
+  const supplied =
+    stringValue(attributes.transport_type) || stringValue(attributes.mode);
+  const text = `${supplied || ''} ${name} ${description}`.toLowerCase();
+  if (/\b(rail|train)\b/.test(text)) {
+    return {
+      explicit: Boolean(supplied) || /rail/.test(name),
+      transport: 'RAIL',
+    };
+  }
+  if (/\b(barge|feeder|waterway)\b/.test(text)) {
+    return { explicit: true, transport: 'BARGE' };
+  }
+  if (/\b(truck|road)\b/.test(text)) {
+    return { explicit: Boolean(supplied), transport: 'TRUCK' };
+  }
+  if (/\binland\b/.test(text)) {
+    return { explicit: true, transport: 'TRUCK' };
+  }
+  if (
+    /\b(vessel|ocean|ship|transshipment)\b/.test(text) ||
+    relatedId(resource, 'vessel') ||
+    (code && SEA_OPERATION_CODES.has(code))
+  ) {
+    return { explicit: Boolean(supplied), transport: 'VESSEL' };
+  }
+  return { explicit: false, transport: 'TRUCK' };
+}
+
+function eventLocation(
+  resource: JsonApiResource,
+  ids: EventIds,
+): number | null {
+  const relationshipId = relatedId(resource, 'location');
+  if (relationshipId) return ids.locations.get(relationshipId) ?? null;
+  const locode = stringValue(attrs(resource).location_locode);
+  return locode ? (ids.locationsByLocode.get(locode) ?? null) : null;
+}
+
+function eventTimeZone(
+  resource: JsonApiResource,
+  locationByNumber: Map<number, JsonApiResource>,
+  location: number | null,
+): string | null {
+  return (
+    stringValue(attrs(resource).timezone) ||
+    (location
+      ? stringValue(
+          attrs(locationByNumber.get(location) || { id: '', type: '' })
+            .time_zone,
+        )
+      : null)
+  );
+}
+
+function draftEvents(
+  resources: JsonApiResource[],
+  ids: EventIds,
+  locationByNumber: Map<number, JsonApiResource>,
+): EventDraft[] {
+  return resources
+    .map((resource, order): EventDraft | null => {
+      const attributes = attrs(resource);
+      const rawName = stringValue(attributes.event);
+      if (!rawName) return null;
+      const name = rawName.replace('.estimated.', '.');
+      const description = eventDescription(name, attributes);
+      const code = classifyCode(name, description);
+      const isDelay = /\b(delay|delayed|transshipment delay)\b/i.test(
+        `${name} ${description}`,
+      );
+      const mode = isDelay
+        ? { explicit: false, transport: null }
+        : conveyance(resource, name, description, code);
+      const location = eventLocation(resource, ids);
+      const eventTimestamp = attributes.timestamp;
+      const parsed = timestamp(eventTimestamp);
+      const isLand = mode.transport === 'RAIL' || mode.transport === 'TRUCK';
+      return {
+        actual:
+          !rawName.includes('.estimated.') && attributes.estimated !== true,
+        code,
+        date: formatDate(
+          eventTimestamp,
+          eventTimeZone(resource, locationByNumber, location),
+        ),
+        description,
+        eventType: isDelay
+          ? null
+          : code === 'ARRI' || code === 'DEPA'
+            ? 'TRANSPORT'
+            : 'EQUIPMENT',
+        explicitConveyance: mode.explicit,
+        facility: relatedId(resource, 'terminal')
+          ? (ids.facilities.get(relatedId(resource, 'terminal') || '') ?? null)
+          : null,
+        instant: parsed.instant,
+        instantKey: parsed.key,
+        location,
+        name,
+        order,
+        status: isDelay ? 'TSD' : 'UNKN',
+        transport: mode.transport,
+        type: isDelay || !isLand ? 'sea' : 'land',
+        vessel:
+          isLand || !relatedId(resource, 'vessel')
+            ? null
+            : (ids.vessels.get(relatedId(resource, 'vessel') || '') ?? null),
+        voyage: isLand ? null : stringValue(attributes.voyage_number),
+      };
+    })
+    .filter((event): event is EventDraft => event !== null)
+    .sort((left, right) => {
+      if (left.instant === null && right.instant === null) {
+        return left.order - right.order;
+      }
+      if (left.instant === null) return 1;
+      if (right.instant === null) return -1;
+      return left.instant - right.instant || left.order - right.order;
+    });
+}
+
+function isSea(event: EventDraft): boolean {
+  return event.transport === 'VESSEL' || event.transport === 'BARGE';
+}
+
+function assignStatuses(events: EventDraft[]): void {
+  const seaLoads = events.filter(
+    (event) => event.code === 'LOAD' && isSea(event),
+  );
+  const seaDepartures = events.filter(
+    (event) => event.code === 'DEPA' && isSea(event),
+  );
+  const firstSeaBoundary = [...seaLoads, ...seaDepartures].sort(
+    (left, right) => (left.instant ?? Infinity) - (right.instant ?? Infinity),
+  )[0];
+  const lastSeaArrival = [...events]
+    .reverse()
+    .find((event) => event.code === 'ARRI' && isSea(event));
+  const finalSeaDischarge = [...events]
+    .reverse()
+    .find(
+      (event) =>
+        event.code === 'DISC' &&
+        isSea(event) &&
+        !/transshipment/.test(event.name) &&
+        !events.some(
+          (later) =>
+            later.order !== event.order &&
+            (later.instant ?? -Infinity) > (event.instant ?? -Infinity) &&
+            isSea(later) &&
+            (later.code === 'LOAD' || later.code === 'DEPA'),
+        ),
+    );
+
+  for (const event of events) {
+    if (event.status === 'TSD') continue;
+    const text = `${event.name} ${event.description}`.toLowerCase();
+    const isExplicitInland =
+      event.transport === 'RAIL' ||
+      (event.transport === 'TRUCK' && event.explicitConveyance);
+    const afterPod =
+      finalSeaDischarge?.instant !== null &&
+      finalSeaDischarge?.instant !== undefined &&
+      event.instant !== null &&
+      event.instant >= finalSeaDischarge.instant;
+    const empty = /\bempty\b/.test(text);
+
+    if (
+      isExplicitInland &&
+      event.code &&
+      ['ARRI', 'DEPA', 'DISC', 'GTIN', 'GTOT', 'LOAD', 'PICK'].includes(
+        event.code,
+      )
+    ) {
+      event.status = 'LTS';
+    } else if (event.name.endsWith('.delivered')) {
+      event.status = 'CDC';
+    } else if (event.code === 'LOAD') {
+      event.status =
+        event === seaLoads[0] ? 'CLL' : isSea(event) ? 'CLT' : 'LTS';
+    } else if (event.code === 'DEPA') {
+      event.status =
+        event === seaDepartures[0] ? 'VDL' : isSea(event) ? 'VDT' : 'LTS';
+    } else if (event.code === 'ARRI') {
+      const laterSailing = events.some(
+        (later) =>
+          later.instant !== null &&
+          event.instant !== null &&
+          later.instant > event.instant &&
+          isSea(later) &&
+          (later.code === 'LOAD' || later.code === 'DEPA'),
+      );
+      event.status =
+        !isSea(event) ||
+        (firstSeaBoundary?.instant !== null &&
+          event.instant !== null &&
+          firstSeaBoundary?.instant !== undefined &&
+          event.instant < firstSeaBoundary.instant)
+          ? 'LTS'
+          : event === lastSeaArrival && !laterSailing
+            ? 'VAD'
+            : 'VAT';
+    } else if (event.code === 'DISC') {
+      const laterSailing = events.some(
+        (later) =>
+          later.instant !== null &&
+          event.instant !== null &&
+          later.instant > event.instant &&
+          isSea(later) &&
+          (later.code === 'LOAD' || later.code === 'DEPA'),
+      );
+      event.status = !isSea(event)
+        ? 'LTS'
+        : event !== finalSeaDischarge ||
+            laterSailing ||
+            /transshipment/.test(event.name)
+          ? 'CDT'
+          : 'CDD';
+    } else if (event.code === 'GTOT') {
+      event.status =
+        empty || event.name.endsWith('.empty_out')
+          ? 'CEP'
+          : afterPod || event.name.endsWith('.full_out')
+            ? 'CGO'
+            : firstSeaBoundary &&
+                event.instant !== null &&
+                firstSeaBoundary.instant !== null &&
+                event.instant < firstSeaBoundary.instant
+              ? 'CEP'
+              : 'UNKN';
+    } else if (event.code === 'GTIN') {
+      event.status =
+        empty || event.name.endsWith('.empty_in')
+          ? 'CER'
+          : event.name.endsWith('.full_in') && !afterPod
+            ? 'CGI'
+            : afterPod
+              ? 'CER'
+              : 'UNKN';
+    } else if (event.code === 'PICK') {
+      event.status = isExplicitInland
+        ? 'LTS'
+        : afterPod
+          ? 'CGO'
+          : empty && /merchant haul/.test(text)
+            ? 'CEP'
+            : 'CPS';
+    } else {
+      event.status = 'UNKN';
+    }
+  }
+}
+
+function samePlace(left: EventDraft, right: EventDraft): boolean {
+  const leftPlace = left.location ?? left.facility;
+  const rightPlace = right.location ?? right.facility;
+  return leftPlace === rightPlace || leftPlace === null || rightPlace === null;
+}
+
+function deduplicate(events: EventDraft[]): EventDraft[] {
+  const kept: EventDraft[] = [];
+  for (const event of events) {
+    if (event.status === 'LTS' || event.status === 'UNKN') {
+      kept.push(event);
+      continue;
+    }
+    const duplicateIndex = kept.findIndex(
+      (candidate) =>
+        event.instantKey.length > 0 &&
+        candidate.instantKey === event.instantKey &&
+        candidate.status === event.status &&
+        samePlace(candidate, event),
+    );
+    if (duplicateIndex < 0) {
+      kept.push(event);
+      continue;
+    }
+    const existing = kept[duplicateIndex];
+    const eventLocated = event.location !== null || event.facility !== null;
+    const existingLocated =
+      existing.location !== null || existing.facility !== null;
+    if (
+      (eventLocated && !existingLocated) ||
+      (eventLocated === existingLocated && event.actual && !existing.actual) ||
+      (eventLocated === existingLocated &&
+        event.actual === existing.actual &&
+        event.order > existing.order)
+    ) {
+      kept[duplicateIndex] = event;
+    }
+  }
+  return kept.sort((left, right) => {
+    if (left.instant === null && right.instant === null) {
+      return left.order - right.order;
+    }
+    if (left.instant === null) return 1;
+    if (right.instant === null) return -1;
+    return left.instant - right.instant || left.order - right.order;
+  });
+}
+
+function publicEvent(event: EventDraft, order: number): SeaRatesEvent {
+  return {
+    actual: event.actual,
+    date: event.date,
+    description: event.description,
+    event_code: event.code,
+    event_type: event.eventType,
+    facility: event.facility,
+    is_additional_event: false,
+    is_date_from_sealine: true,
+    location: event.location,
+    order_id: order,
+    status: event.status,
+    transport_type: event.transport,
+    type: event.type,
+    vessel: event.type === 'land' ? null : event.vessel,
+    voyage: event.type === 'land' ? null : event.voyage,
+  };
+}
+
+function buildTimeline(
+  resources: JsonApiResource[],
+  ids: EventIds,
+  locationByNumber: Map<number, JsonApiResource>,
+): EventDraft[] {
+  const drafts = draftEvents(resources, ids, locationByNumber);
+  assignStatuses(drafts);
+  return deduplicate(drafts);
+}
+
+function routePoint(event: EventDraft | undefined): {
+  actual: boolean | null;
+  date: string | null;
+  location: number | null;
+} {
+  return event
+    ? { actual: event.actual, date: event.date, location: event.location }
+    : { actual: null, date: null, location: null };
 }
 
 export function mapTrackingPayload(payload: TrackingPayload): SeaRatesEnvelope {
@@ -296,24 +623,123 @@ export function mapTrackingPayload(payload: TrackingPayload): SeaRatesEnvelope {
   const locations = new Map(
     locationResources.map((resource, index) => [resource.id, index + 1]),
   );
+  const locationsByLocode = new Map(
+    locationResources.flatMap((resource, index) => {
+      const code = stringValue(attrs(resource).code);
+      return code ? [[code, index + 1] as const] : [];
+    }),
+  );
+  const locationByNumber = new Map(
+    locationResources.map((resource, index) => [index + 1, resource]),
+  );
   const facilities = new Map(
     facilityResources.map((resource, index) => [resource.id, index + 1]),
   );
   const vessels = new Map(
     vesselResources.map((resource, index) => [resource.id, index + 1]),
   );
+  const ids: EventIds = {
+    facilities,
+    locations,
+    locationsByLocode,
+    vessels,
+  };
   const shipmentAttributes = attrs(payload.shipment);
   const containerResources = payload.included.filter(
     (resource) => resource.type === 'container',
   );
-  const containerStatuses = containerResources.map((resource) =>
-    seaRatesStatus(attrs(resource).current_status),
+  const timelines = new Map<string, EventDraft[]>();
+  const statuses: string[] = [];
+
+  const containers = containerResources.map((resource) => {
+    const attributes = attrs(resource);
+    const eventDocument = payload.eventsByContainerId.get(resource.id);
+    const eventResources = Array.isArray(eventDocument?.data)
+      ? eventDocument.data
+      : [];
+    const timeline = buildTimeline(eventResources, ids, locationByNumber);
+    timelines.set(resource.id, timeline);
+    const status = seaRatesStatus(attributes.current_status, timeline);
+    statuses.push(status);
+    const details = equipment(attributes);
+    return {
+      number: stringValue(attributes.number),
+      iso_code: details.isoCode,
+      size_type: details.sizeType,
+      status,
+      is_status_from_sealine: false,
+      events_mirrored: false,
+      events: timeline.map(publicEvent),
+    };
+  });
+
+  const allEvents = [...timelines.values()]
+    .flat()
+    .sort(
+      (left, right) => (left.instant ?? Infinity) - (right.instant ?? Infinity),
+    );
+  const polEvent =
+    allEvents.find(
+      (event) =>
+        event.code === 'DEPA' && event.status === 'VDL' && isSea(event),
+    ) ||
+    allEvents.find(
+      (event) =>
+        event.code === 'LOAD' && event.status === 'CLL' && isSea(event),
+    );
+  const podEvent = [...allEvents]
+    .reverse()
+    .find((event) => event.code === 'DISC' && event.status === 'CDD');
+  const prepolEvent = allEvents.find(
+    (event) =>
+      ['GTIN', 'GTOT', 'PICK'].includes(event.code || '') &&
+      (polEvent?.instant === null ||
+        polEvent?.instant === undefined ||
+        (event.instant !== null && event.instant < polEvent.instant)),
   );
-  const overallStatus = containerStatuses.includes('IN_TRANSIT')
+  const postpodEvent = [...allEvents]
+    .reverse()
+    .find(
+      (event) =>
+        (['CDC', 'CER', 'CGO'].includes(event.status) ||
+          ['GTIN', 'GTOT', 'PICK'].includes(event.code || '') ||
+          /\.not_available$|\.available$/.test(event.name)) &&
+        (podEvent?.instant === null ||
+          podEvent?.instant === undefined ||
+          (event.instant !== null && event.instant > podEvent.instant)),
+    );
+
+  const polLocationId = relatedId(payload.shipment, 'port_of_lading');
+  const podLocationId = relatedId(payload.shipment, 'port_of_discharge');
+  const fallbackPol = {
+    actual: Boolean(shipmentAttributes.pol_atd_at),
+    date: formatDate(
+      shipmentAttributes.pol_atd_at || shipmentAttributes.pol_etd_at,
+      stringValue(shipmentAttributes.pol_timezone),
+    ),
+    location: polLocationId ? (locations.get(polLocationId) ?? null) : null,
+  };
+  const fallbackPod = {
+    actual: Boolean(shipmentAttributes.pod_ata_at),
+    date: formatDate(
+      shipmentAttributes.pod_ata_at || shipmentAttributes.pod_eta_at,
+      stringValue(shipmentAttributes.pod_timezone),
+    ),
+    location: podLocationId ? (locations.get(podLocationId) ?? null) : null,
+  };
+  const pol = polEvent ? routePoint(polEvent) : fallbackPol;
+  const pod = podEvent ? routePoint(podEvent) : fallbackPod;
+  const prepol = prepolEvent
+    ? routePoint(prepolEvent)
+    : { actual: null, date: null, location: pol.location };
+  const postpod = postpodEvent ? routePoint(postpodEvent) : { ...pod };
+  const metadataStatus = statuses.includes('IN_TRANSIT')
     ? 'IN_TRANSIT'
-    : containerStatuses.includes('DELIVERED')
+    : statuses.length > 0 && statuses.every((status) => status === 'DELIVERED')
       ? 'DELIVERED'
-      : 'UNKNOWN';
+      : statuses.includes('PLANNED')
+        ? 'PLANNED'
+        : 'UNKNOWN';
 
   const locationList = locationResources.map((resource) => {
     const attributes = attrs(resource);
@@ -329,7 +755,6 @@ export function mapTrackingPayload(payload: TrackingPayload): SeaRatesEnvelope {
       timezone: stringValue(attributes.time_zone),
     };
   });
-
   const facilityList = facilityResources.map((resource) => {
     const attributes = attrs(resource);
     const port = byId.get(relatedId(resource, 'port') || '');
@@ -347,7 +772,6 @@ export function mapTrackingPayload(payload: TrackingPayload): SeaRatesEnvelope {
       lng: null,
     };
   });
-
   const vesselList = vesselResources.map((resource) => {
     const attributes = attrs(resource);
     return {
@@ -359,7 +783,6 @@ export function mapTrackingPayload(payload: TrackingPayload): SeaRatesEnvelope {
       flag: null,
     };
   });
-
   if (
     vesselList.length === 0 &&
     stringValue(shipmentAttributes.pod_vessel_name)
@@ -374,48 +797,17 @@ export function mapTrackingPayload(payload: TrackingPayload): SeaRatesEnvelope {
     });
   }
 
-  const containers = containerResources.map((resource) => {
-    const attributes = attrs(resource);
-    const eventDocument = payload.eventsByContainerId.get(resource.id);
-    const eventResources = Array.isArray(eventDocument?.data)
-      ? eventDocument.data
-      : [];
-    const events = eventResources
-      .map((event, index) =>
-        mapEvent(event, index + 1, { facilities, locations, vessels }),
-      )
-      .filter((event): event is SeaRatesEvent => event !== null)
-      .sort((left, right) => (left.date || '').localeCompare(right.date || ''))
-      .map((event, index) => ({ ...event, order_id: index + 1 }));
-    const equipmentDetails = equipment(attributes);
-    return {
-      number: stringValue(attributes.number),
-      iso_code: equipmentDetails.isoCode,
-      size_type: equipmentDetails.sizeType,
-      status: seaRatesStatus(attributes.current_status),
-      is_status_from_sealine: true,
-      events_mirrored: false,
-      events,
-    };
-  });
-
-  const polId = relatedId(payload.shipment, 'port_of_lading');
-  const podId = relatedId(payload.shipment, 'port_of_discharge');
-  const destinationId = relatedId(payload.shipment, 'destination');
-
   return {
     status: 'success',
     message: 'OK',
     data: {
       metadata: {
         type: payload.requestedType,
-        number:
-          stringValue(shipmentAttributes.bill_of_lading_number) ||
-          payload.requestedNumber,
+        number: payload.requestedNumber,
         sealine: stringValue(shipmentAttributes.shipping_line_scac),
         sealine_name: stringValue(shipmentAttributes.shipping_line_name),
-        status: overallStatus,
-        is_status_from_sealine: true,
+        status: metadataStatus,
+        is_status_from_sealine: false,
         from_cache: true,
         updated_at: formatDate(
           shipmentAttributes.line_tracking_last_succeeded_at,
@@ -427,42 +819,16 @@ export function mapTrackingPayload(payload: TrackingPayload): SeaRatesEnvelope {
       locations: locationList,
       facilities: facilityList,
       route: {
-        prepol: {
-          location: polId ? (locations.get(polId) ?? null) : null,
-          date: formatDate(
-            shipmentAttributes.pol_atd_at || shipmentAttributes.pol_etd_at,
-          ),
-          actual: Boolean(shipmentAttributes.pol_atd_at),
-        },
-        pol: {
-          location: polId ? (locations.get(polId) ?? null) : null,
-          date: formatDate(
-            shipmentAttributes.pol_atd_at || shipmentAttributes.pol_etd_at,
-          ),
-          actual: Boolean(shipmentAttributes.pol_atd_at),
-        },
+        prepol,
+        pol,
         pod: {
-          location: podId ? (locations.get(podId) ?? null) : null,
-          date: formatDate(
-            shipmentAttributes.pod_ata_at || shipmentAttributes.pod_eta_at,
+          ...pod,
+          predictive_eta: formatDate(
+            shipmentAttributes.pod_eta_at,
+            stringValue(shipmentAttributes.pod_timezone),
           ),
-          actual: Boolean(shipmentAttributes.pod_ata_at),
-          predictive_eta: null,
         },
-        postpod: {
-          location: destinationId
-            ? (locations.get(destinationId) ?? null)
-            : null,
-          date: formatDate(
-            shipmentAttributes.destination_ata_at ||
-              shipmentAttributes.destination_eta_at,
-          ),
-          actual: shipmentAttributes.destination_ata_at
-            ? true
-            : shipmentAttributes.destination_eta_at
-              ? false
-              : null,
-        },
+        postpod,
       },
       vessels: vesselList,
       containers,
@@ -470,45 +836,26 @@ export function mapTrackingPayload(payload: TrackingPayload): SeaRatesEnvelope {
   };
 }
 
-export function emptyTrackingEnvelope(
-  number: string,
-  type?: TrackingType,
-  sealine?: string,
+export function noTrackingInfoEnvelope(): SeaRatesEnvelope {
+  return { status: 'error', message: 'NO_TRACKING_INFO', data: {} };
+}
+
+export function toContainerEnvelope(
+  envelope: SeaRatesEnvelope,
 ): SeaRatesEnvelope {
-  return {
-    status: 'success',
-    message: 'SEALINE_HASNT_PROVIDE_INFO',
-    data: {
-      metadata: {
-        type: defaultType(number, type),
-        number,
-        sealine: sealine || null,
-        sealine_name: null,
-        status: 'UNKNOWN',
-        is_status_from_sealine: false,
-        from_cache: false,
-        updated_at: null,
-        cache_expires: null,
-        api_calls: null,
-        unique_shipments: null,
-      },
-      locations: [],
-      facilities: [],
-      route: {
-        prepol: { location: null, date: null, actual: null },
-        pol: { location: null, date: null, actual: null },
-        pod: {
-          location: null,
-          date: null,
-          actual: null,
-          predictive_eta: null,
-        },
-        postpod: { location: null, date: null, actual: null },
-      },
-      vessels: [],
-      containers: [],
-    },
-  };
+  if (
+    envelope.status !== 'success' ||
+    !envelope.data ||
+    typeof envelope.data !== 'object' ||
+    Array.isArray(envelope.data)
+  ) {
+    return envelope;
+  }
+  const data = envelope.data;
+  const containers = Array.isArray(data.containers) ? data.containers : [];
+  const singular = { ...data, container: containers[0] ?? null };
+  delete singular.containers;
+  return { ...envelope, data: singular };
 }
 
 export function mapShippingLines(document: JsonApiDocument): SeaRatesEnvelope {

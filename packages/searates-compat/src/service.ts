@@ -5,9 +5,9 @@ import {
   type Terminal49ClientConfig,
 } from './client.js';
 import {
-  emptyTrackingEnvelope,
   mapShippingLines,
   mapTrackingPayload,
+  noTrackingInfoEnvelope,
 } from './mapping.js';
 import type {
   JsonApiDocument,
@@ -24,6 +24,7 @@ export interface GatewayConfig {
   fetchImpl?: typeof fetch;
   pollIntervalMs?: number;
   pollTimeoutMs?: number;
+  requestTimeoutMs?: number;
   serviceApiToken?: string;
 }
 
@@ -107,25 +108,35 @@ export class SeaRatesCompatibilityGateway {
           if (resolution.failedReason === 'invalid_number') {
             return errorEnvelope('WRONG_NUMBER');
           }
-          return emptyTrackingEnvelope(query.number, type, query.sealine);
+          return noTrackingInfoEnvelope();
         }
         if (resolution.state === 'pending') {
-          return emptyTrackingEnvelope(query.number, type, query.sealine);
+          return noTrackingInfoEnvelope();
         }
         shipmentDocument = await client.shipment(resolution.shipmentId);
       }
 
-      const shipment = shipmentFrom(shipmentDocument);
+      let shipment = shipmentFrom(shipmentDocument);
       if (!shipment) {
-        return emptyTrackingEnvelope(query.number, type, query.sealine);
+        return noTrackingInfoEnvelope();
       }
       let containers = containerResources(shipmentDocument);
 
       if (query.forceUpdate && containers.length > 0) {
-        await Promise.all(
-          containers.map((container) => client.refreshContainer(container.id)),
+        if (containers.length > 10) {
+          return errorEnvelope('API_KEY_RATE_LIMIT');
+        }
+        for (const container of containers) {
+          await client.refreshContainer(container.id);
+        }
+        const refreshedDocument = await client.waitForShipmentUpdate(
+          shipment.id,
+          shipmentDocument,
         );
-        shipmentDocument = await client.shipment(shipment.id);
+        if (!refreshedDocument) return noTrackingInfoEnvelope();
+        shipmentDocument = refreshedDocument;
+        shipment = shipmentFrom(shipmentDocument);
+        if (!shipment) return noTrackingInfoEnvelope();
         containers = containerResources(shipmentDocument);
       }
 
@@ -207,6 +218,7 @@ export class SeaRatesCompatibilityGateway {
       fetchImpl: this.config.fetchImpl,
       pollIntervalMs: this.config.pollIntervalMs,
       pollTimeoutMs: this.config.pollTimeoutMs,
+      requestTimeoutMs: this.config.requestTimeoutMs,
     };
     return new Terminal49PublicClient(clientConfig);
   }

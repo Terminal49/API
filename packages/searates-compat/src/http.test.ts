@@ -1,6 +1,10 @@
 import type { IncomingMessage } from 'node:http';
 import { describe, expect, it } from 'vite-plus/test';
-import { createTrackingHandler } from './http.js';
+import {
+  createContainerHandler,
+  createReferenceHandler,
+  createTrackingHandler,
+} from './http.js';
 import { SeaRatesCompatibilityGateway } from './service.js';
 import type { SeaRatesEnvelope, TrackingQuery, TrackingType } from './types.js';
 
@@ -80,6 +84,45 @@ describe('GET /tracking contract', () => {
       route: true,
       sealine: 'MSCU',
       type: 'CT' satisfies TrackingType,
+    });
+  });
+
+  it('forces CT and returns singular data.container on /container', async () => {
+    const gateway = new CapturingGateway();
+    const handler = createContainerHandler(gateway);
+    const output = response();
+    await handler(
+      request('/container?api_key=gateway-key&number=MSCU1234567&type=BL'),
+      output.response,
+    );
+
+    expect(gateway.query?.type).toBe('CT');
+    expect(output.body).toEqual({
+      status: 'success',
+      message: 'OK',
+      data: { container: null },
+    });
+  });
+
+  it('allows BL/BK but rejects CT on /reference', async () => {
+    const gateway = new CapturingGateway();
+    const handler = createReferenceHandler(gateway);
+    const booking = response();
+    await handler(
+      request('/reference?api_key=gateway-key&number=BOOKING1&type=BK'),
+      booking.response,
+    );
+    expect(gateway.query?.type).toBe('BK');
+
+    const container = response();
+    await handler(
+      request('/reference?api_key=gateway-key&number=MSCU1234567&type=CT'),
+      container.response,
+    );
+    expect(container.body).toEqual({
+      status: 'error',
+      message: 'WRONG_TYPE',
+      data: {},
     });
   });
 
