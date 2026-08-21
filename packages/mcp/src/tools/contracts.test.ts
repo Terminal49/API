@@ -1088,7 +1088,7 @@ describe('MCP tool contracts', () => {
         port: undefined,
         carrier: 'MAEU',
         updatedAfter: undefined,
-        includeContainers: undefined,
+        includeContainers: false,
       },
       { format: 'mapped', page: 2, pageSize: 25 },
     );
@@ -1227,7 +1227,7 @@ describe('MCP tool contracts', () => {
         'filter[status]': 'failed',
         'filter[request_type]': 'manual',
       },
-      { format: 'mapped', page: undefined, pageSize: undefined },
+      { format: 'mapped', page: undefined, pageSize: 25 },
     );
     expect(result.items).toHaveLength(1);
   });
@@ -1251,7 +1251,7 @@ describe('MCP tool contracts', () => {
 
     expect(list).toHaveBeenCalledWith(
       { 'filter[status]': 'failed' },
-      { format: 'mapped', page: undefined, pageSize: undefined },
+      { format: 'mapped', page: undefined, pageSize: 25 },
     );
   });
 
