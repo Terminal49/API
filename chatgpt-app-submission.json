@@ -147,11 +147,11 @@
       "expected_output_url": null
     },
     {
-      "description": "List actively tracked shipments without nested containers.",
-      "user_prompt": "Show the first 10 shipments where shipping-line tracking has not stopped. Do not include nested containers.",
+      "description": "List the 10 most recently updated shipments without nested containers.",
+      "user_prompt": "Show my 10 most recently updated shipments. Don’t include nested containers.",
       "file_attachment_urls": null,
       "tools_triggered": "list_shipments",
-      "expected_output": "Returns up to 10 shipments matching tracking_stopped=false without nested container relationships, with pagination details.",
+      "expected_output": "Returns up to 10 of the most recently updated shipments with a page size of 10, include_containers=false, no carrier, status, or port filters, and no nested containers. Mentions pagination if present.",
       "expected_output_url": null
     },
     {
