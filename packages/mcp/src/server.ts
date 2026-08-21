@@ -15,7 +15,10 @@ import { executeTrackContainer } from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
 import { executeGetShipmentDetails } from './tools/get-shipment-details.js';
 import { executeGetContainerTransportEvents } from './tools/get-container-transport-events.js';
-import { executeGetSupportedShippingLines } from './tools/get-supported-shipping-lines.js';
+import {
+  executeGetSupportedShippingLines,
+  type ShippingLineRecord,
+} from './tools/get-supported-shipping-lines.js';
 import {
   executeGetContainerRoute,
   type FeatureNotEnabledResult,
@@ -350,8 +353,9 @@ const listPageSizeSchema = z
   .positive()
   .transform((value) => Math.min(value, MAX_LIST_PAGE_SIZE))
   .optional()
+  .default(25)
   .describe(
-    `Page size (1-${MAX_LIST_PAGE_SIZE}; values above ${MAX_LIST_PAGE_SIZE} are clamped)`,
+    `Page size (default 25; maximum ${MAX_LIST_PAGE_SIZE}; larger values are clamped)`,
   );
 
 function normalizeContract(contract: ResponseContract): ResponseContract {
@@ -423,6 +427,9 @@ function buildTrackContract(
   const hasTrackedContainer = Boolean((result as any)?.id);
   const isPending =
     Boolean((result as any)?.tracking_request_created) && !hasTrackedContainer;
+  const wasNotCreated =
+    (result as any)?.error === 'NotFound' &&
+    (result as any)?.tracking_request_created === false;
   const state = (result as any)?._metadata?.container_state || 'unknown';
   return {
     purpose: `Track ${args.number} and return the linked container view when possible.`,
@@ -433,7 +440,9 @@ function buildTrackContract(
     ],
     requires_more_data: isPending
       ? ['container UUID (once linking finishes)']
-      : [],
+      : wasNotCreated
+        ? ['a verified identifier and carrier SCAC']
+        : [],
     relevant_fields: [
       'tracking_request_created',
       'container_state',
@@ -442,11 +451,17 @@ function buildTrackContract(
     ],
     presentation_guidance: isPending
       ? 'Tracking request was created but container linking is not immediate. Mention this and provide next-check guidance.'
-      : `Use container state "${state}" to answer readiness, holds, and pickup timing.`,
+      : wasNotCreated
+        ? 'No tracking request was created. Ask the user to verify the identifier and carrier; do not describe this as pending.'
+        : `Use container state "${state}" to answer readiness, holds, and pickup timing.`,
     suggested_follow_ups: isPending
       ? ['list_tracking_requests', 'get_container']
-      : ['get_container_transport_events'],
-    suggested_tools: ['get_container', 'get_container_transport_events'],
+      : wasNotCreated
+        ? ['get_supported_shipping_lines', 'search_container']
+        : ['get_container_transport_events'],
+    suggested_tools: wasNotCreated
+      ? ['get_supported_shipping_lines', 'search_container']
+      : ['get_container', 'get_container_transport_events'],
   };
 }
 
@@ -1146,14 +1161,33 @@ function wrapToolWithContract<TArgs>(
 function createCarrierScacCompleter(
   client: Terminal49Client,
 ): (value: string | undefined) => Promise<string[]> {
+  let cachedLines: Promise<ShippingLineRecord[]> | undefined;
+
+  const loadLines = (): Promise<ShippingLineRecord[]> => {
+    if (!cachedLines) {
+      cachedLines = executeGetSupportedShippingLines({}, client)
+        .then((result) => result.shipping_lines)
+        .catch((error: unknown) => {
+          cachedLines = undefined;
+          throw error;
+        });
+    }
+    return cachedLines;
+  };
+
   return async (value: string | undefined): Promise<string[]> => {
     try {
-      const search = typeof value === 'string' ? value.trim() : '';
-      const { shipping_lines } = await executeGetSupportedShippingLines(
-        { search },
-        client,
-      );
-      return shipping_lines.slice(0, 100).map((line) => line.scac);
+      const search =
+        typeof value === 'string' ? value.trim().toLowerCase() : '';
+      const lines = await loadLines();
+      return lines
+        .filter((line) =>
+          [line.scac, line.name, line.short_name]
+            .filter((candidate): candidate is string => Boolean(candidate))
+            .some((candidate) => candidate.toLowerCase().includes(search)),
+        )
+        .slice(0, 100)
+        .map((line) => line.scac);
     } catch {
       return [];
     }
@@ -1205,8 +1239,7 @@ export function createTerminal49McpServer(
       title: 'Search Containers',
       description:
         'Search for containers, shipments, and tracking information by container number, ' +
-        'booking number, bill of lading, or reference number. ' +
-        'This is the fastest way to find container information. ' +
+        'booking number, bill of lading, or reference number. Returns matching private-account records. ' +
         'Examples: CAIU2885402, MAEU123456789, or any reference number.',
       annotations: {
         readOnlyHint: true,
@@ -1299,16 +1332,18 @@ export function createTerminal49McpServer(
           .describe('Optional reference numbers for matching'),
         intent: toolIntentSchema,
       }),
-      outputSchema: z.object({
-        error: z.string().optional(),
-        message: z.string().optional(),
-        id: z.string().optional(),
-        container_number: z.string().optional(),
-        status: z.string().optional(),
-        tracking_request_created: z.boolean().optional(),
-        infer_result: z.any().optional(),
-        _response_contract: responseContractSchema.optional(),
-      }),
+      outputSchema: z
+        .object({
+          error: z.string().optional(),
+          message: z.string().optional(),
+          id: z.string().optional(),
+          container_number: z.string().optional(),
+          status: z.string().optional(),
+          tracking_request_created: z.boolean().optional(),
+          infer_result: z.any().optional(),
+          _response_contract: responseContractSchema,
+        })
+        .passthrough(),
     },
     wrapToolWithContract(
       async ({
@@ -1345,8 +1380,7 @@ export function createTerminal49McpServer(
       title: 'Get Container Details',
       description:
         'Get container information with flexible data loading. Returns core container data (status, location, equipment, dates) ' +
-        'plus optional related data. Choose includes based on user question and container state. ' +
-        'Response includes metadata hints to guide follow-up queries.',
+        'plus optional shipment, terminal, or transport-event data. Transport events are excluded by default to keep snapshots compact.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1388,7 +1422,6 @@ export function createTerminal49McpServer(
       title: 'Get Shipment Details',
       description:
         'Get detailed shipment information including routing, BOL, containers, and port details. ' +
-        'Use this when user asks about a shipment (vs a specific container). ' +
         'Returns: Bill of Lading, shipping line, port details, vessel info, ETAs, container list.',
       annotations: {
         readOnlyHint: true,
@@ -1430,8 +1463,7 @@ export function createTerminal49McpServer(
       description:
         'Get detailed transport event timeline for a container. Returns all milestones and movements ' +
         '(vessel loaded, departed, arrived, discharged, rail movements, delivery). ' +
-        'Use this for questions about journey history, "what happened", timeline analysis, rail tracking. ' +
-        'More efficient than get_container with transport_events when you only need event data.',
+        'Provides journey history, timeline analysis, and rail tracking without loading the full container snapshot.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1463,8 +1495,7 @@ export function createTerminal49McpServer(
       title: 'Get Supported Shipping Lines',
       description:
         'Get list of shipping lines (carriers) supported by Terminal49 for container tracking. ' +
-        'Returns SCAC codes, full names, and common abbreviations. ' +
-        'Use this when user asks which carriers are supported or to validate a carrier name.',
+        'Returns SCAC codes, full names, and common abbreviations, with optional name or SCAC filtering.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1511,8 +1542,7 @@ export function createTerminal49McpServer(
       description:
         'Get detailed routing and vessel itinerary for a container including all ports, vessels, and ETAs. ' +
         'Shows complete multi-leg journey (origin → transshipment ports → destination). ' +
-        'NOTE: This is a paid feature and may not be available for all accounts. ' +
-        'Use for questions about routing, transshipments, or detailed vessel itinerary.',
+        'This paid feature may not be available for every account.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1613,8 +1643,9 @@ export function createTerminal49McpServer(
         include_containers: z
           .boolean()
           .optional()
+          .default(false)
           .describe(
-            'Include containers relationship in response. Default: true.',
+            'Include container relationships in each shipment. Default: false to keep list responses compact.',
           ),
         page: listPageSchema,
         page_size: listPageSizeSchema,

@@ -22,6 +22,7 @@ export async function executeListContainers(
 ): Promise<any> {
   const startTime = Date.now();
   const include = args.include?.trim() || undefined;
+  const pageSize = args.page_size ?? 25;
   logMcpEvent({
     event: 'tool.execute.start',
     tool: 'list_containers',
@@ -33,7 +34,7 @@ export async function executeListContainers(
       include: include,
     },
     page: args.page,
-    page_size: args.page_size,
+    page_size: pageSize,
     timestamp: new Date().toISOString(),
   });
 
@@ -51,7 +52,7 @@ export async function executeListContainers(
       {
         format: 'mapped',
         page: args.page,
-        pageSize: args.page_size,
+        pageSize,
       },
     );
 

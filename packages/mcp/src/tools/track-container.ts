@@ -3,7 +3,7 @@
  * Creates a tracking request for a container/BL/booking number and returns the container details
  */
 
-import { Terminal49Client } from '@terminal49/sdk';
+import { NotFoundError, Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
 import { executeGetContainer } from './get-container.js';
 import { executeSearchContainer } from './search-container.js';
@@ -115,6 +115,14 @@ function inferNumberTypeFromPattern(number: string): string | undefined {
 function parseValidationPointer(message: string): string | undefined {
   const pointerMatch = message.match(/\((\/data\/attributes\/[a-z_]+)\)/i);
   return pointerMatch?.[1];
+}
+
+function isNotFound(error: unknown): boolean {
+  return (
+    error instanceof NotFoundError ||
+    (error as { status?: number })?.status === 404 ||
+    (error as { name?: string })?.name === 'NotFoundError'
+  );
 }
 
 async function findExistingTrackedContainer(
@@ -307,6 +315,28 @@ export async function executeTrackContainer(
   } catch (error) {
     const duration = Date.now() - startTime;
     const message = (error as Error).message;
+
+    if (isNotFound(error)) {
+      logMcpEvent({
+        event: 'tracking_request.not_found',
+        number,
+        numberType: inferredNumberType,
+        scac: requestedScac || heuristicScac,
+        duration_ms: duration,
+        timestamp: new Date().toISOString(),
+      });
+      return {
+        error: 'NotFound',
+        message:
+          'No tracked container matched this number, and Terminal49 could not create a tracking request for it. Verify the number and carrier SCAC, then retry.',
+        tracking_request_created: false,
+        _metadata: {
+          presentation_guidance:
+            'Clearly state that no tracking request was created. Ask the user to verify the identifier and carrier; do not imply that tracking is pending.',
+          recommendations: ['get_supported_shipping_lines', 'search_container'],
+        },
+      };
+    }
 
     if (
       /Unable to infer/.test(message) ||

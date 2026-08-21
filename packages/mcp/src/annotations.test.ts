@@ -17,12 +17,12 @@ type ToolAnnotations = {
 
 function getRegisteredTools(): Record<
   string,
-  { annotations?: ToolAnnotations }
+  { title?: string; annotations?: ToolAnnotations }
 > {
   const server = createTerminal49McpServer('token');
   return (server as any)._registeredTools as Record<
     string,
-    { annotations?: ToolAnnotations }
+    { title?: string; annotations?: ToolAnnotations }
   >;
 }
 
@@ -88,6 +88,8 @@ describe('MCP tool annotations', () => {
     ).toBeGreaterThanOrEqual(allTools.length);
 
     for (const [name, tool] of Object.entries(tools)) {
+      expect(tool.title, `${name}.title`).toEqual(expect.any(String));
+      expect(tool.title?.trim().length, `${name}.title`).toBeGreaterThan(0);
       expect(tool.annotations, name).toBeDefined();
     }
   });

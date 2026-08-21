@@ -21,6 +21,8 @@ export async function executeListShipments(
   client: Terminal49Client,
 ): Promise<any> {
   const startTime = Date.now();
+  const includeContainers = args.include_containers ?? false;
+  const pageSize = args.page_size ?? 25;
   logMcpEvent({
     event: 'tool.execute.start',
     tool: 'list_shipments',
@@ -29,10 +31,10 @@ export async function executeListShipments(
       port: args.port,
       carrier: args.carrier,
       updated_after: args.updated_after,
-      include_containers: args.include_containers,
+      include_containers: includeContainers,
     },
     page: args.page,
-    page_size: args.page_size,
+    page_size: pageSize,
     timestamp: new Date().toISOString(),
   });
 
@@ -43,12 +45,12 @@ export async function executeListShipments(
         port: args.port,
         carrier: args.carrier,
         updatedAfter: args.updated_after,
-        includeContainers: args.include_containers,
+        includeContainers,
       },
       {
         format: 'mapped',
         page: args.page,
-        pageSize: args.page_size,
+        pageSize,
       },
     );
 

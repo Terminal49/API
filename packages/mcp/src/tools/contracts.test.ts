@@ -902,6 +902,32 @@ describe('MCP tool contracts', () => {
     });
   });
 
+  it('track_container distinguishes an uncreated request from a hard upstream failure', async () => {
+    const client = asClient({
+      search: vi.fn().mockResolvedValue({ data: [] }),
+      createTrackingRequestFromInfer: vi
+        .fn()
+        .mockRejectedValue(new NotFoundError('internal route not found')),
+    });
+
+    const result = await executeTrackContainer(
+      { number: 'CAIU1234567', scac: 'MAEU' },
+      client,
+    );
+
+    expect(result).toMatchObject({
+      error: 'NotFound',
+      tracking_request_created: false,
+      message: expect.stringContaining('could not create a tracking request'),
+      _metadata: {
+        presentation_guidance: expect.stringContaining(
+          'no tracking request was created',
+        ),
+      },
+    });
+    expect(JSON.stringify(result)).not.toContain('internal route');
+  });
+
   it('get_supported_shipping_lines filters response by search term', async () => {
     const shippingList = vi.fn().mockResolvedValue([
       { scac: 'MSCU', name: 'MSC', shortName: 'MSC' },
@@ -966,47 +992,48 @@ describe('MCP tool contracts', () => {
   });
 
   it('get_container_route returns route summary when route data exists', async () => {
+    const route = vi.fn().mockResolvedValue({
+      raw: {
+        data: {
+          id: 'route-1',
+          type: 'route',
+          attributes: {
+            created_at: '2025-01-01T00:00:00Z',
+            updated_at: '2025-01-02T00:00:00Z',
+          },
+          relationships: {
+            route_locations: {
+              data: [{ id: 'rl-1', type: 'route_location' }],
+            },
+          },
+        },
+        included: [
+          {
+            id: 'rl-1',
+            type: 'route_location',
+            attributes: {
+              inbound_mode: 'vessel',
+              outbound_mode: 'vessel',
+            },
+            relationships: {
+              port: { data: { id: 'port-1', type: 'port' } },
+            },
+          },
+          {
+            id: 'port-1',
+            type: 'port',
+            attributes: {
+              code: 'USLAX',
+              name: 'Los Angeles',
+            },
+          },
+        ],
+      },
+      mapped: { id: 'route-1' },
+    });
     const client = asClient({
       containers: {
-        route: vi.fn().mockResolvedValue({
-          raw: {
-            data: {
-              id: 'route-1',
-              type: 'route',
-              attributes: {
-                created_at: '2025-01-01T00:00:00Z',
-                updated_at: '2025-01-02T00:00:00Z',
-              },
-              relationships: {
-                route_locations: {
-                  data: [{ id: 'rl-1', type: 'route_location' }],
-                },
-              },
-            },
-            included: [
-              {
-                id: 'rl-1',
-                type: 'route_location',
-                attributes: {
-                  inbound_mode: 'vessel',
-                  outbound_mode: 'vessel',
-                },
-                relationships: {
-                  port: { data: { id: 'port-1', type: 'port' } },
-                },
-              },
-              {
-                id: 'port-1',
-                type: 'port',
-                attributes: {
-                  code: 'USLAX',
-                  name: 'Los Angeles',
-                },
-              },
-            ],
-          },
-          mapped: { id: 'route-1' },
-        }),
+        route,
       },
     });
 
@@ -1018,6 +1045,7 @@ describe('MCP tool contracts', () => {
     expect(result.route_id).toBe('route-1');
     expect(result.total_legs).toBe(1);
     expect(result.route_locations[0].port).toMatchObject({ code: 'USLAX' });
+    expect(route).toHaveBeenCalledWith('container-1', { format: 'raw' });
   });
 
   it('get_container_route returns feature-not-enabled contract instead of throwing', async () => {
@@ -1141,6 +1169,43 @@ describe('MCP tool contracts', () => {
       { format: 'mapped', page: 3, pageSize: 10 },
     );
     expect(result.items).toHaveLength(1);
+  });
+
+  it('list tools use compact defaults when pagination and relationships are omitted', async () => {
+    const containersList = vi.fn().mockResolvedValue({ items: [] });
+    const shipmentsList = vi.fn().mockResolvedValue({ items: [] });
+    const trackingRequestsList = vi.fn().mockResolvedValue({ items: [] });
+    const client = asClient({
+      containers: { list: containersList },
+      shipments: { list: shipmentsList },
+      trackingRequests: { list: trackingRequestsList },
+    });
+
+    await executeListContainers({}, client);
+    await executeListShipments({}, client);
+    await executeListTrackingRequests({}, client);
+
+    expect(containersList).toHaveBeenCalledWith(expect.any(Object), {
+      format: 'mapped',
+      page: undefined,
+      pageSize: 25,
+    });
+    expect(shipmentsList).toHaveBeenCalledWith(
+      expect.objectContaining({ includeContainers: false }),
+      {
+        format: 'mapped',
+        page: undefined,
+        pageSize: 25,
+      },
+    );
+    expect(trackingRequestsList).toHaveBeenCalledWith(
+      {},
+      {
+        format: 'mapped',
+        page: undefined,
+        pageSize: 25,
+      },
+    );
   });
 
   it('list_tracking_requests maps status and request_type args to filter keys', async () => {
