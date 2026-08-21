@@ -132,10 +132,10 @@
   "test_cases": [
     {
       "description": "Find a tracked container by container number.",
-      "user_prompt": "Find the synthetic review fixture container CAIU1234567 in my Terminal49 account and summarize its current status.",
+      "user_prompt": "Find TGBU8848518 in my connected Terminal49 account and summarize its current status.",
       "file_attachment_urls": null,
       "tools_triggered": "search_container",
-      "expected_output": "If the fixture exists in the connected account, returns matching container identifiers, status, shipping line, and available terminal information. Otherwise, clearly reports zero matches without inventing shipment data.",
+      "expected_output": "If the container exists, returns matching identifiers, status, shipping line (COSU), and available terminal information. Otherwise, clearly reports zero matches without inventing data.",
       "expected_output_url": null
     },
     {
@@ -164,10 +164,10 @@
     },
     {
       "description": "Create a tracking request for a container that is not already tracked.",
-      "user_prompt": "Track the synthetic review fixture container CAIU1234567 with carrier SCAC MAEU in my Terminal49 account.",
+      "user_prompt": "Track TGBU8848518 with carrier SCAC COSU in my Terminal49 account.",
       "file_attachment_urls": null,
       "tools_triggered": "track_container",
-      "expected_output": "Returns the existing matching container, creates a tracking request, or clearly reports that no request was created because the number/carrier could not be resolved. It must not claim the fixture exists or is pending unless the account response confirms that state.",
+      "expected_output": "Returns the existing matching container, creates a tracking request, or clearly reports that no request was created because the number/carrier could not be resolved. It must not claim the container exists unless the account response confirms it.",
       "expected_output_url": null
     }
   ],
