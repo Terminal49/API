@@ -6,7 +6,45 @@ description: "Map SeaRates tracking API fields, parameters, and errors to their 
 
 If you have the SeaRates tracking API in production, this page maps it onto Terminal49 field by field, so you can cut over without reverse-engineering our schema.
 
-There is no compatibility shim. You will change your request code and your response parsing. For most integrations that is an afternoon.
+You can migrate in either of two ways:
+
+- **Keep the SeaRates wire format:** point your existing client at the Terminal49 SeaRates compatibility gateway.
+- **Adopt the native Terminal49 API:** use the field mappings and webhook workflow in this guide.
+
+## Keep your existing SeaRates client
+
+The compatibility gateway accepts the SeaRates `api_key`, `number`, `sealine`, and `type` query parameters, then returns the SeaRates tracking envelope backed by Terminal49 data.
+
+Set your client's base URL to:
+
+```text
+https://migrate.terminal49.com/searates-api
+```
+
+The gateway provides:
+
+- `GET /tracking`
+- `GET /container` for the deprecated singular-container response
+- `GET /reference` for the deprecated Bill of Lading (BOL) and booking response
+- `GET /info/sealines`
+
+For example:
+
+```bash
+curl "https://migrate.terminal49.com/searates-api/tracking\
+?api_key=YOUR_T49_API_KEY\
+&number=MRKU9465770\
+&sealine=MAEU\
+&type=CT"
+```
+
+The compatibility deployment is separate from `mcp.terminal49.com`. If the custom domain is not available in your environment yet, use the Vercel deployment hostname with the same `/searates-api` path.
+
+<Note>
+  The gateway covers ocean container, BOL, and booking tracking only. It does not implement SeaRates rates, schedules, air, parcel, road, AIS, route geometry, or history products.
+</Note>
+
+Continue with the rest of this guide when you are ready to adopt Terminal49's native JSON:API and webhook model.
 
 ## Start in sixty seconds
 
