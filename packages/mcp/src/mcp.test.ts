@@ -637,7 +637,7 @@ describe('MCP server wiring', () => {
     {
       name: 'list_shipments',
       args: {
-        carrier: 'MAEU',
+        tracking_stopped: false,
         include_containers: true,
         page: 1,
         page_size: 10,
@@ -661,7 +661,7 @@ describe('MCP server wiring', () => {
           self: 'https://api.test/shipments?page[number]=1&page[size]=10',
         },
         meta: { total: 1 },
-        unsupportedFilters: ['carrier'],
+        unsupportedFilters: [],
       },
     },
   ])(

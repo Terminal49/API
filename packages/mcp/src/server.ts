@@ -161,10 +161,10 @@ const SUPPORTED_LIST_FILTERS_BY_ENTITY: Record<
   ListEntityType,
   readonly string[]
 > = {
-  container: ['status', 'port', 'carrier', 'updated_after'],
-  shipment: ['status', 'port', 'carrier', 'updated_after'],
+  container: [],
+  shipment: ['number', 'tracking_stopped'],
   tracking_request: ['status', 'filters'],
-  unknown: ['status', 'port', 'carrier', 'updated_after'],
+  unknown: [],
 };
 
 /**
@@ -847,13 +847,18 @@ function isProvided(value: unknown): boolean {
 function appliedFilterKeys(
   filters: Record<string, unknown> | undefined,
   entityType: ListEntityType,
+  unsupportedFilters: string[] | undefined,
 ): string[] {
   if (!filters) {
     return [];
   }
 
   const supported = SUPPORTED_LIST_FILTERS_BY_ENTITY[entityType];
+  const unsupported = new Set(unsupportedFilters ?? []);
   return supported.filter((key) => {
+    if (unsupported.has(key)) {
+      return false;
+    }
     if (key === 'filters') {
       // The raw pass-through bag can carry non-filter knobs like `include`
       // alongside (or instead of) real `filter[...]` keys; only the latter
@@ -943,15 +948,23 @@ export function buildListContract(
           ? buildTrackingRequestListDisplay()
           : undefined;
 
-  const applied = appliedFilterKeys(requestContext.filters, entityType);
+  const applied = appliedFilterKeys(
+    requestContext.filters,
+    entityType,
+    requestContext.unsupportedFilters,
+  );
   const dropped = droppedFilterKeys(
     requestContext.filters,
     requestContext.unsupportedFilters,
     entityType,
   );
   const isFiltered = applied.length > 0;
-  const supportedVocab =
-    SUPPORTED_LIST_FILTERS_BY_ENTITY[entityType].join(', ');
+  const supportedFilters = SUPPORTED_LIST_FILTERS_BY_ENTITY[entityType];
+  const supportedVocab = supportedFilters.join(', ');
+  const filterGuidance =
+    supportedFilters.length > 0
+      ? `a filter to scope this list (${supportedVocab})`
+      : 'server-side filters are not available for this list endpoint; use pagination and inspect returned rows';
 
   const rawTotal = Number(result?.meta?.total);
   const hasTotal = Number.isFinite(rawTotal);
@@ -963,17 +976,20 @@ export function buildListContract(
     : true;
 
   const canAnswer: string[] = ['count and paging state'];
+  canAnswer.unshift('records in the current page');
   if (isFiltered) {
     canAnswer.unshift('which records match the applied filters');
   }
 
   const requiresMoreData: string[] = [];
   if (!isFiltered) {
-    requiresMoreData.push(`a filter to scope this list (${supportedVocab})`);
+    requiresMoreData.push(filterGuidance);
   }
   if (dropped.length > 0) {
     requiresMoreData.push(
-      `unsupported filter(s) were ignored: ${dropped.join(', ')} — re-query using only ${supportedVocab}`,
+      supportedFilters.length > 0
+        ? `unsupported filter(s) were ignored: ${dropped.join(', ')} — re-query using only ${supportedVocab}`
+        : `unsupported filter(s) were ignored: ${dropped.join(', ')} — this endpoint has no server-side filters`,
     );
   }
   if (hasTotal && !totalIsReliable) {
@@ -1611,21 +1627,18 @@ export function createTerminal49McpServer(
     {
       title: 'List Shipments',
       description:
-        'List shipments with optional filters and pagination. ' +
-        'Use for queries like "show recent shipments" or "shipments for a carrier".',
+        'List shipments with pagination and supported filters for shipment number or tracking-stopped state.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
       inputSchema: z.object({
-        status: z.string().optional().describe('Filter by shipment status'),
-        port: z.string().optional().describe('Filter by POD port LOCODE'),
-        carrier: z.string().optional().describe('Filter by shipping line SCAC'),
-        updated_after: z
-          .string()
+        number: z.string().optional().describe('Filter by shipment number'),
+        tracking_stopped: z
+          .boolean()
           .optional()
-          .describe('Filter by updated_at (ISO8601) >= value'),
+          .describe('Filter by whether shipping-line tracking has stopped'),
         include_containers: z
           .boolean()
           .optional()
@@ -1661,21 +1674,13 @@ export function createTerminal49McpServer(
     {
       title: 'List Containers',
       description:
-        'List containers with optional filters and pagination. ' +
-        'Use for queries like "containers at port" or "latest updates".',
+        'List a paginated page of containers. The API does not expose server-side status, port, carrier, or update-time filters.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
       inputSchema: z.object({
-        status: z.string().optional().describe('Filter by container status'),
-        port: z.string().optional().describe('Filter by POD port LOCODE'),
-        carrier: z.string().optional().describe('Filter by shipping line SCAC'),
-        updated_after: z
-          .string()
-          .optional()
-          .describe('Filter by updated_at (ISO8601) >= value'),
         include: z
           .string()
           .optional()

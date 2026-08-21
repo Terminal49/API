@@ -374,9 +374,9 @@ function argumentsFor(toolName: ToolName): Record<string, unknown> {
     case 'get_supported_shipping_lines':
       return { search: 'ma' };
     case 'list_shipments':
-      return { carrier: 'MAEU', page: 1, page_size: 10 };
+      return { tracking_stopped: false, page: 1, page_size: 10 };
     case 'list_containers':
-      return { status: 'available_for_pickup', page: 1, page_size: 10 };
+      return { page: 1, page_size: 10 };
     case 'list_tracking_requests':
       return { status: 'succeeded', page: 1, page_size: 10 };
     default: {

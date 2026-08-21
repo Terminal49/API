@@ -139,19 +139,19 @@
       "expected_output_url": null
     },
     {
-      "description": "List recently updated containers with a bounded result set.",
-      "user_prompt": "Show the first 10 containers updated recently in my Terminal49 account.",
+      "description": "List a bounded page of containers.",
+      "user_prompt": "Show the first 10 containers in my Terminal49 account.",
       "file_attachment_urls": null,
       "tools_triggered": "list_containers",
-      "expected_output": "Returns up to 10 recent container records and clearly indicates any pagination or result limits.",
+      "expected_output": "Returns up to 10 container records, clearly labels the page as unfiltered, and indicates pagination or result limits.",
       "expected_output_url": null
     },
     {
-      "description": "List shipments filtered by carrier.",
-      "user_prompt": "Show my recent Maersk shipments and include their containers.",
+      "description": "List actively tracked shipments without nested containers.",
+      "user_prompt": "Show the first 10 shipments where shipping-line tracking has not stopped. Do not include nested containers.",
       "file_attachment_urls": null,
       "tools_triggered": "list_shipments",
-      "expected_output": "Returns shipments matching the carrier filter with available container relationships and pagination details.",
+      "expected_output": "Returns up to 10 shipments matching tracking_stopped=false without nested container relationships, with pagination details.",
       "expected_output_url": null
     },
     {
