@@ -15,6 +15,8 @@
     "build": "tsc",
     "test": "vp test",
     "test:coverage": "vp test --run --coverage",
+    "test:http-protocol": "node scripts/http-protocol-smoke.mjs",
+    "test:protocol": "node scripts/protocol-smoke.mjs",
     "lint": "vp lint src && vp fmt --check src",
     "format": "vp fmt --write src",
     "format:check": "vp fmt --check src",
@@ -25,14 +27,16 @@
     "eval:check": "tsc --noEmit -p tsconfig.eval.json"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "@posthog/mcp": "0.10.1",
+    "@modelcontextprotocol/node": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.0.0",
+    "@posthog/mcp": "^0.11.7",
     "@sentry/node": "^10.55.0",
     "@terminal49/sdk": "0.3.1",
     "posthog-node": "^5.0.0",
     "zod": "~4.3.6"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "^2.0.0",
     "@types/node": "^24.10.13",
     "@vitest/coverage-v8": "4.1.10",
     "tsx": "^4.22.4",

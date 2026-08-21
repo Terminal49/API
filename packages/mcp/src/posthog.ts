@@ -16,8 +16,7 @@
  *
  * @see https://posthog.com/docs/mcp-analytics/installation
  */
-
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import type { BeforeSendFn, UserIdentity } from '@posthog/mcp';
 // `PostHog` is imported from `@posthog/mcp`'s re-export rather than from
 // `posthog-node` directly, and deliberately so. `posthog-node` is a *peer*

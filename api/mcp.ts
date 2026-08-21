@@ -8,8 +8,11 @@
 import '../packages/mcp/src/instrument.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import {
+  createMcpHandler,
+  type McpHttpHandler,
+} from '@modelcontextprotocol/server';
+import { toNodeHandler } from '@modelcontextprotocol/node';
 import * as Sentry from '@sentry/node';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
 import { flushPostHogEvents } from '../packages/mcp/src/posthog.js';
@@ -37,7 +40,7 @@ function setCorsHeaders(res: ResponseLike): void {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, MCP-Protocol-Version, Mcp-Session-Id',
+    'Content-Type, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id',
   );
 }
 
@@ -385,8 +388,7 @@ export default async function handler(
     return;
   }
 
-  let server: McpServer | undefined;
-  let transport: StreamableHTTPServerTransport | undefined;
+  let mcpHandler: McpHttpHandler | undefined;
   let cleanupPromise: Promise<void> | null = null;
   let shouldFlushSentry = false;
 
@@ -399,21 +401,12 @@ export default async function handler(
       const cleanupErrors: string[] = [];
       logLifecycle('mcp.request.cleanup.start', requestId, { reason });
 
-      if (transport?.close) {
+      if (mcpHandler) {
         try {
-          await transport.close();
+          await mcpHandler.close();
         } catch (error) {
           const err = error as Error;
-          cleanupErrors.push(`transport.close: ${err.message}`);
-        }
-      }
-
-      if (server?.close) {
-        try {
-          await server.close();
-        } catch (error) {
-          const err = error as Error;
-          cleanupErrors.push(`server.close: ${err.message}`);
+          cleanupErrors.push(`handler.close: ${err.message}`);
         }
       }
 
@@ -552,15 +545,32 @@ export default async function handler(
 
     setCorsHeaders(res);
 
-    // Create MCP server and per-request transport.
-    server = createTerminal49McpServer(
-      resolvedTerminal49Auth.apiToken,
-      process.env.T49_API_BASE_URL,
-      resolvedTerminal49Auth.accountId,
+    const observeMcpError = (error: Error): void => {
+      captureMcpException(error);
+      shouldFlushSentry = true;
+      logLifecycle('mcp.request.error', requestId, {
+        error: error.name,
+        message: error.message,
+      });
+    };
+
+    // The v2 HTTP entry serves the 2026-07-28 per-request protocol and keeps
+    // the established stateless 2025-era path for older clients.
+    mcpHandler = createMcpHandler(
+      () =>
+        createTerminal49McpServer(
+          resolvedTerminal49Auth.apiToken,
+          process.env.T49_API_BASE_URL,
+          resolvedTerminal49Auth.accountId,
+        ),
+      {
+        legacy: 'stateless',
+        responseMode: 'json',
+        onerror: observeMcpError,
+      },
     );
-    transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: undefined, // Stateless mode
-      enableJsonResponse: true, // Return JSON instead of SSE
+    const nodeHandler = toNodeHandler(mcpHandler, {
+      onerror: observeMcpError,
     });
 
     // Clean up on response lifecycle and also in finally to guarantee closure.
@@ -571,9 +581,7 @@ export default async function handler(
       scheduleCleanup('response_finish');
     });
 
-    // Connect server to transport and handle request
-    await server.connect(transport);
-    await transport.handleRequest(req, res, req.body);
+    await nodeHandler(req, res, req.body);
     logLifecycle('mcp.request.complete', requestId, { reason: 'handled' });
   } catch (error) {
     const err = error as Error;

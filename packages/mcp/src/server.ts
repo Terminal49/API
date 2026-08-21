@@ -1,14 +1,13 @@
 /**
  * Terminal49 MCP Server
- * Implementation using @modelcontextprotocol/sdk with McpServer API
+ * Implementation using the MCP TypeScript SDK v2 McpServer API
  */
-
+import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import {
+  completable,
   McpServer,
   ResourceTemplate,
-} from '@modelcontextprotocol/sdk/server/mcp.js';
-import { completable } from '@modelcontextprotocol/sdk/server/completable.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+} from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
 import { executeGetContainer } from './tools/get-container.js';
@@ -37,7 +36,6 @@ import {
 import {
   instrumentMcpServerWithPostHog,
   registerPostHogExitHook,
-  shutdownPostHog,
 } from './posthog.js';
 import {
   captureMcpException,
@@ -1215,7 +1213,7 @@ export function createTerminal49McpServer(
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: {
+      inputSchema: z.object({
         query: z
           .string()
           .min(1)
@@ -1223,8 +1221,8 @@ export function createTerminal49McpServer(
             'Search query - can be a container number, booking number, BL number, or reference number',
           ),
         intent: toolIntentSchema,
-      },
-      outputSchema: {
+      }),
+      outputSchema: z.object({
         containers: z.array(
           z.object({
             id: z.string(),
@@ -1247,7 +1245,7 @@ export function createTerminal49McpServer(
         ),
         total_results: z.number(),
         _response_contract: responseContractSchema,
-      },
+      }),
     },
     wrapToolWithContract(
       async ({ query }) => executeSearchContainer({ query }, client),
@@ -1270,7 +1268,7 @@ export function createTerminal49McpServer(
         idempotentHint: false,
         openWorldHint: false,
       },
-      inputSchema: {
+      inputSchema: z.object({
         number: z
           .string()
           .optional()
@@ -1300,8 +1298,8 @@ export function createTerminal49McpServer(
           .optional()
           .describe('Optional reference numbers for matching'),
         intent: toolIntentSchema,
-      },
-      outputSchema: {
+      }),
+      outputSchema: z.object({
         error: z.string().optional(),
         message: z.string().optional(),
         id: z.string().optional(),
@@ -1310,7 +1308,7 @@ export function createTerminal49McpServer(
         tracking_request_created: z.boolean().optional(),
         infer_result: z.any().optional(),
         _response_contract: responseContractSchema.optional(),
-      },
+      }),
     },
     wrapToolWithContract(
       async ({
@@ -1354,7 +1352,7 @@ export function createTerminal49McpServer(
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: {
+      inputSchema: z.object({
         id: z
           .string()
           .uuid()
@@ -1370,7 +1368,7 @@ export function createTerminal49McpServer(
               '• transport_events: Full event history, rail tracking (heavy 50-100 events, use for journey/timeline questions)',
           ),
         intent: toolIntentSchema,
-      },
+      }),
       outputSchema: z
         .object({
           _response_contract: responseContractSchema,
@@ -1397,7 +1395,7 @@ export function createTerminal49McpServer(
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: {
+      inputSchema: z.object({
         id: z
           .string()
           .uuid()
@@ -1410,7 +1408,7 @@ export function createTerminal49McpServer(
             'Include list of containers in this shipment. Default: true',
           ),
         intent: toolIntentSchema,
-      },
+      }),
       outputSchema: z
         .object({
           _response_contract: responseContractSchema,
@@ -1439,13 +1437,13 @@ export function createTerminal49McpServer(
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: {
+      inputSchema: z.object({
         id: z
           .string()
           .uuid()
           .describe('The Terminal49 container ID (UUID format)'),
         intent: toolIntentSchema,
-      },
+      }),
       outputSchema: z
         .object({
           _response_contract: responseContractSchema,
@@ -1472,14 +1470,14 @@ export function createTerminal49McpServer(
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: {
+      inputSchema: z.object({
         search: z
           .string()
           .optional()
           .describe('Optional: Filter by carrier name or SCAC code'),
         intent: toolIntentSchema,
-      },
-      outputSchema: {
+      }),
+      outputSchema: z.object({
         total_lines: z.number(),
         shipping_lines: z.array(
           z.object({
@@ -1496,7 +1494,7 @@ export function createTerminal49McpServer(
           remediation: z.string().optional(),
         }),
         _response_contract: responseContractSchema,
-      },
+      }),
     },
     wrapToolWithContract(
       async ({ search }) =>
@@ -1520,13 +1518,13 @@ export function createTerminal49McpServer(
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: {
+      inputSchema: z.object({
         id: z
           .string()
           .uuid()
           .describe('The Terminal49 container ID (UUID format)'),
         intent: toolIntentSchema,
-      },
+      }),
       // Keep a single permissive schema because this tool can return either
       // route fields or feature-gating fields depending on account capability.
       outputSchema: z.object({
@@ -1604,7 +1602,7 @@ export function createTerminal49McpServer(
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: {
+      inputSchema: z.object({
         status: z.string().optional().describe('Filter by shipment status'),
         port: z.string().optional().describe('Filter by POD port LOCODE'),
         carrier: z.string().optional().describe('Filter by shipping line SCAC'),
@@ -1621,7 +1619,7 @@ export function createTerminal49McpServer(
         page: listPageSchema,
         page_size: listPageSizeSchema,
         intent: toolIntentSchema,
-      },
+      }),
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
         links: z.record(z.string(), z.string()).optional(),
@@ -1652,7 +1650,7 @@ export function createTerminal49McpServer(
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: {
+      inputSchema: z.object({
         status: z.string().optional().describe('Filter by container status'),
         port: z.string().optional().describe('Filter by POD port LOCODE'),
         carrier: z.string().optional().describe('Filter by shipping line SCAC'),
@@ -1669,7 +1667,7 @@ export function createTerminal49McpServer(
         page: listPageSchema,
         page_size: listPageSizeSchema,
         intent: toolIntentSchema,
-      },
+      }),
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
         links: z.record(z.string(), z.string()).optional(),
@@ -1704,7 +1702,7 @@ export function createTerminal49McpServer(
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: {
+      inputSchema: z.object({
         filters: z
           .record(z.string(), z.string())
           .optional()
@@ -1720,7 +1718,7 @@ export function createTerminal49McpServer(
         page: listPageSchema,
         page_size: listPageSizeSchema,
         intent: toolIntentSchema,
-      },
+      }),
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
         links: z.record(z.string(), z.string()).optional(),
@@ -1753,7 +1751,7 @@ export function createTerminal49McpServer(
       title: 'Track Container Shipment',
       description:
         'Quick container tracking workflow with carrier autocomplete',
-      argsSchema: {
+      argsSchema: z.object({
         container_number: z
           .string()
           .describe('Container number (e.g., CAIU1234567)'),
@@ -1767,7 +1765,7 @@ export function createTerminal49McpServer(
             .describe('Shipping line SCAC code (e.g., MAEU for Maersk)'),
           completeCarrierScac,
         ).optional(),
-      },
+      }),
     },
     async ({ container_number, carrier }) => ({
       messages: [
@@ -1790,9 +1788,9 @@ export function createTerminal49McpServer(
     {
       title: 'Check Demurrage Risk',
       description: 'Analyze demurrage/detention risk for a container',
-      argsSchema: {
+      argsSchema: z.object({
         container_id: z.string().uuid().describe('Terminal49 container UUID'),
-      },
+      }),
     },
     async ({ container_id }) => ({
       messages: [
@@ -1818,9 +1816,9 @@ export function createTerminal49McpServer(
     {
       title: 'Analyze Journey Delays',
       description: 'Identify delays and root causes in container journey',
-      argsSchema: {
+      argsSchema: z.object({
         container_id: z.string().uuid().describe('Terminal49 container UUID'),
-      },
+      }),
     },
     async ({ container_id }) => ({
       messages: [
@@ -1941,23 +1939,15 @@ export async function runStdioServer() {
     process.exit(1);
   }
 
-  const server = createTerminal49McpServer(apiToken, apiBaseUrl);
-  const transport = new StdioServerTransport();
-
   // Long-lived process: drain queued analytics on natural exit. No-ops (and
   // registers no listener at all) when PostHog is unconfigured.
   registerPostHogExitHook();
 
-  // The client closing stdin ends the session; flush before we lose the events.
-  transport.onclose = () => {
-    void shutdownPostHog();
-  };
-
   if (process.env.T49_MCP_STDIO_BANNER === '1') {
     console.error('Terminal49 MCP Server v1.0.0 running on stdio');
     console.error('Available: 10 tools | 3 prompts | 4 resources');
-    console.error('SDK: @modelcontextprotocol/sdk (McpServer API)');
+    console.error('SDK: @modelcontextprotocol/server v2 (McpServer API)');
   }
 
-  await server.connect(transport);
+  serveStdio(() => createTerminal49McpServer(apiToken, apiBaseUrl));
 }

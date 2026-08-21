@@ -53,7 +53,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization, MCP-Protocol-Version, Mcp-Session-Id"
+          "value": "Content-Type, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id"
         }
       ]
     },
@@ -70,7 +70,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization, MCP-Protocol-Version, Mcp-Session-Id"
+          "value": "Content-Type, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id"
         }
       ]
     }

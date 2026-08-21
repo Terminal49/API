@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 const mockState = vi.hoisted(() => ({
   servers: [] as any[],
-  transports: [] as any[],
+  handlers: [] as any[],
+  handlerOptions: [] as any[],
   serverCreateArgs: [] as Array<{
     apiToken: string;
     apiBaseUrl: string | undefined;
@@ -18,7 +19,6 @@ vi.mock('../src/server.js', () => ({
   createTerminal49McpServer: vi.fn(
     (apiToken: string, apiBaseUrl?: string, accountId?: string) => {
       const server = {
-        connect: vi.fn().mockResolvedValue(undefined),
         close: vi.fn().mockResolvedValue(undefined),
       };
 
@@ -29,24 +29,28 @@ vi.mock('../src/server.js', () => ({
   ),
 }));
 
-vi.mock('@modelcontextprotocol/sdk/server/streamableHttp.js', () => ({
-  StreamableHTTPServerTransport: class MockStreamableHTTPServerTransport {
-    handleRequest: ReturnType<typeof vi.fn>;
-    close: ReturnType<typeof vi.fn>;
+vi.mock('@modelcontextprotocol/server', () => ({
+  createMcpHandler: vi.fn((factory: () => unknown, options: unknown) => {
+    const handler = {
+      close: vi.fn().mockResolvedValue(undefined),
+      factory,
+    };
+    mockState.handlers.push(handler);
+    mockState.handlerOptions.push(options);
+    return handler;
+  }),
+}));
 
-    constructor() {
-      this.handleRequest = vi.fn(
-        async (req: unknown, res: unknown, body: unknown) => {
-          if (mockState.handleRequestImpl) {
-            await mockState.handleRequestImpl(req, res, body);
-          }
-        },
-      );
-      this.close = vi.fn().mockResolvedValue(undefined);
-
-      mockState.transports.push(this);
-    }
-  },
+vi.mock('@modelcontextprotocol/node', () => ({
+  toNodeHandler: vi.fn(
+    (handler: { factory: () => unknown }) =>
+      async (req: unknown, res: unknown, body: unknown) => {
+        handler.factory();
+        if (mockState.handleRequestImpl) {
+          await mockState.handleRequestImpl(req, res, body);
+        }
+      },
+  ),
 }));
 
 class MockResponse extends EventEmitter {
@@ -100,7 +104,8 @@ describe('api/mcp handler lifecycle', () => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();
     mockState.servers.length = 0;
-    mockState.transports.length = 0;
+    mockState.handlers.length = 0;
+    mockState.handlerOptions.length = 0;
     mockState.serverCreateArgs.length = 0;
     mockState.handleRequestImpl = undefined;
     delete process.env.T49_API_TOKEN;
@@ -117,7 +122,7 @@ describe('api/mcp handler lifecycle', () => {
     delete process.env.T49_MCP_ALLOWED_ORIGINS;
   });
 
-  it('closes transport and server after successful request handling', async () => {
+  it('serves both protocol eras and closes the handler after a request', async () => {
     const { default: handler } = await import('../../../api/mcp.ts');
     const req = createRequest();
     const res = new MockResponse();
@@ -125,16 +130,14 @@ describe('api/mcp handler lifecycle', () => {
     await handler(req as any, res as any);
 
     expect(mockState.servers).toHaveLength(1);
-    expect(mockState.transports).toHaveLength(1);
-
-    const server = mockState.servers[0];
-    const transport = mockState.transports[0];
+    expect(mockState.handlers).toHaveLength(1);
 
     expect(mockState.serverCreateArgs[0]?.apiToken).toBe('test-token');
-    expect(server.connect).toHaveBeenCalledWith(transport);
-    expect(transport.handleRequest).toHaveBeenCalledWith(req, res, req.body);
-    expect(transport.close).toHaveBeenCalledTimes(1);
-    expect(server.close).toHaveBeenCalledTimes(1);
+    expect(mockState.handlerOptions[0]).toMatchObject({
+      legacy: 'stateless',
+      responseMode: 'json',
+    });
+    expect(mockState.handlers[0].close).toHaveBeenCalledTimes(1);
   });
 
   it('returns 500 and still closes transport and server when handler throws', async () => {
@@ -157,10 +160,7 @@ describe('api/mcp handler lifecycle', () => {
     // DEV-10663: the internal error message must never leak to clients.
     expect((res.payload as any)?.error?.data).toBeUndefined();
 
-    const server = mockState.servers[0];
-    const transport = mockState.transports[0];
-    expect(transport.close).toHaveBeenCalledTimes(1);
-    expect(server.close).toHaveBeenCalledTimes(1);
+    expect(mockState.handlers[0].close).toHaveBeenCalledTimes(1);
   });
 
   it('runs cleanup only once when response closes before finally executes', async () => {
@@ -174,10 +174,7 @@ describe('api/mcp handler lifecycle', () => {
 
     await handler(req as any, res as any);
 
-    const server = mockState.servers[0];
-    const transport = mockState.transports[0];
-    expect(transport.close).toHaveBeenCalledTimes(1);
-    expect(server.close).toHaveBeenCalledTimes(1);
+    expect(mockState.handlers[0].close).toHaveBeenCalledTimes(1);
   });
 
   it('accepts Authorization header using Token scheme', async () => {
@@ -229,7 +226,7 @@ describe('api/mcp handler lifecycle', () => {
       error: 'Unauthorized',
     });
     expect(mockState.servers).toHaveLength(0);
-    expect(mockState.transports).toHaveLength(0);
+    expect(mockState.handlers).toHaveLength(0);
   });
 
   it('uses T49_API_TOKEN as upstream credential when Authorization is present', async () => {
@@ -447,7 +444,7 @@ describe('api/mcp handler lifecycle', () => {
       message: 'Invalid client credentials.',
     });
     expect(mockState.servers).toHaveLength(0);
-    expect(mockState.transports).toHaveLength(0);
+    expect(mockState.handlers).toHaveLength(0);
   });
 
   it('returns 500 when T49_API_TOKEN is set without T49_MCP_CLIENT_SECRET', async () => {
@@ -469,7 +466,7 @@ describe('api/mcp handler lifecycle', () => {
       error: 'Server misconfiguration',
     });
     expect(mockState.servers).toHaveLength(0);
-    expect(mockState.transports).toHaveLength(0);
+    expect(mockState.handlers).toHaveLength(0);
   });
 
   it('returns 401 when neither Authorization header nor T49_API_TOKEN is set', async () => {
@@ -488,6 +485,6 @@ describe('api/mcp handler lifecycle', () => {
       error: 'Unauthorized',
     });
     expect(mockState.servers).toHaveLength(0);
-    expect(mockState.transports).toHaveLength(0);
+    expect(mockState.handlers).toHaveLength(0);
   });
 });
