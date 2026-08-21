@@ -637,6 +637,54 @@ describe('all public tools over MCP client transport', () => {
     }
   });
 
+  it('track_container preserves an existing match when its details are temporarily unavailable', async () => {
+    sdk.search.mockResolvedValue({
+      data: [
+        {
+          id: CONTAINER_ID,
+          type: 'search_result',
+          attributes: {
+            entity_type: 'container',
+            number: 'CAIU1234567',
+            scac: 'MAEU',
+          },
+        },
+      ],
+    });
+    const notFound = new Error('internal container read failed');
+    notFound.name = 'NotFoundError';
+    sdk.containersGet.mockRejectedValue(notFound);
+    const { client, handler } = await connectClient();
+
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'CAIU1234567', scac: 'MAEU' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        error: 'ContainerUnavailable',
+        tracking_request_created: false,
+        container: { id: CONTAINER_ID },
+        message: expect.stringContaining('tracked container matched'),
+        _response_contract: {
+          requires_more_data: [
+            'the matched container details becoming available',
+          ],
+          presentation_guidance: expect.stringContaining(
+            'tracked container match exists',
+          ),
+        },
+      });
+      expect(sdk.createTrackingRequestFromInfer).not.toHaveBeenCalled();
+      expect(JSON.stringify(result)).not.toContain('internal container read');
+    } finally {
+      await client.close();
+      await handler.close();
+    }
+  });
+
   it.each(TOOL_NAMES)(
     '%s redacts upstream failure details over MCP client transport',
     async (toolName) => {

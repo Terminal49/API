@@ -198,10 +198,29 @@ export async function executeTrackContainer(
       client,
     );
     if (existingContainer?.id) {
-      const containerDetails = await executeGetContainer(
-        { id: existingContainer.id },
-        client,
-      );
+      let containerDetails: Awaited<ReturnType<typeof executeGetContainer>>;
+      try {
+        containerDetails = await executeGetContainer(
+          { id: existingContainer.id },
+          client,
+        );
+      } catch (error) {
+        if (!isNotFound(error)) {
+          throw error;
+        }
+        return {
+          error: 'ContainerUnavailable',
+          message:
+            'A tracked container matched this number, but its details are not available yet. Retry the container lookup shortly.',
+          tracking_request_created: false,
+          container: { id: existingContainer.id },
+          _metadata: {
+            presentation_guidance:
+              'State that the container match exists but its details are temporarily unavailable. Do not claim that a new tracking request was created.',
+            recommendations: ['get_container', 'search_container'],
+          },
+        };
+      }
       return {
         ...containerDetails,
         tracking_request_created: false,

@@ -427,6 +427,8 @@ function buildTrackContract(
   const wasNotCreated =
     (result as any)?.error === 'NotFound' &&
     (result as any)?.tracking_request_created === false;
+  const matchedButUnavailable =
+    (result as any)?.error === 'ContainerUnavailable';
   const state = (result as any)?._metadata?.container_state || 'unknown';
   return {
     purpose: `Track ${args.number} and return the linked container view when possible.`,
@@ -437,9 +439,11 @@ function buildTrackContract(
     ],
     requires_more_data: isPending
       ? ['container details becoming available after request linking']
-      : wasNotCreated
-        ? ['a verified identifier and carrier SCAC']
-        : [],
+      : matchedButUnavailable
+        ? ['the matched container details becoming available']
+        : wasNotCreated
+          ? ['a verified identifier and carrier SCAC']
+          : [],
     relevant_fields: [
       'tracking_request_created',
       'container_state',
@@ -448,14 +452,18 @@ function buildTrackContract(
     ],
     presentation_guidance: isPending
       ? 'Tracking request was created but container linking is not immediate. Mention this and provide next-check guidance.'
-      : wasNotCreated
-        ? 'No tracking request was created. Ask the user to verify the identifier and carrier; do not describe this as pending.'
-        : `Use container state "${state}" to answer readiness, holds, and pickup timing.`,
+      : matchedButUnavailable
+        ? 'A tracked container match exists, but its details are temporarily unavailable. Do not claim that a new tracking request was created.'
+        : wasNotCreated
+          ? 'No tracking request was created. Ask the user to verify the identifier and carrier; do not describe this as pending.'
+          : `Use container state "${state}" to answer readiness, holds, and pickup timing.`,
     suggested_follow_ups: isPending
       ? ['list_tracking_requests', 'get_container']
-      : wasNotCreated
-        ? ['get_supported_shipping_lines', 'search_container']
-        : ['get_container_transport_events'],
+      : matchedButUnavailable
+        ? ['get_container', 'search_container']
+        : wasNotCreated
+          ? ['get_supported_shipping_lines', 'search_container']
+          : ['get_container_transport_events'],
     suggested_tools: wasNotCreated
       ? ['get_supported_shipping_lines', 'search_container']
       : ['get_container', 'get_container_transport_events'],

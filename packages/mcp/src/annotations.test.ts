@@ -18,10 +18,12 @@ type ToolAnnotations = {
 
 type ChatGptSubmission = {
   $schema: string;
+  schema_version: number;
   app_info: {
     display_name: string;
     subtitle: string;
     description: string;
+    category: string;
   };
   tools: Record<
     string,
@@ -30,8 +32,22 @@ type ChatGptSubmission = {
       justifications: Record<string, string>;
     }
   >;
-  test_cases: Array<{ expected_output: string }>;
-  negative_test_cases: unknown[];
+  test_cases: Array<{
+    description: string;
+    user_prompt: string;
+    file_attachment_urls: string[] | null;
+    tools_triggered: string;
+    expected_output: string;
+    expected_output_url: string | null;
+  }>;
+  negative_test_cases: Array<{
+    description: string;
+    user_prompt: string;
+    file_attachment_urls: string[] | null;
+    tools_triggered: null;
+    expected_output: string;
+    expected_output_url: string | null;
+  }>;
 };
 
 type ClaudeSubmission = {
@@ -177,9 +193,11 @@ describe('MCP tool annotations', () => {
     expect(chatGpt.$schema).toBe(
       'https://developers.openai.com/apps-sdk/schemas/chatgpt-app-submission.v1.json',
     );
+    expect(chatGpt.schema_version).toBe(1);
     expect(chatGpt.app_info).toMatchObject({
       display_name: 'Terminal49',
       subtitle: 'Track ocean shipments',
+      category: 'BUSINESS',
     });
     expect(chatGpt.app_info.description).toContain('Terminal49 helps users');
     expect(chatGpt.test_cases).toHaveLength(5);
@@ -190,6 +208,22 @@ describe('MCP tool annotations', () => {
     expect(chatGpt.test_cases[4]?.expected_output).toContain(
       'no request was created',
     );
+    for (const testCase of chatGpt.test_cases) {
+      expect(testCase.description.trim()).not.toBe('');
+      expect(testCase.user_prompt.trim()).not.toBe('');
+      expect(testCase.tools_triggered).toBeTypeOf('string');
+      expect(testCase.expected_output.trim()).not.toBe('');
+      expect(testCase.file_attachment_urls).toBeNull();
+      expect(testCase.expected_output_url).toBeNull();
+    }
+    for (const testCase of chatGpt.negative_test_cases) {
+      expect(testCase.description.trim()).not.toBe('');
+      expect(testCase.user_prompt.trim()).not.toBe('');
+      expect(testCase.tools_triggered).toBeNull();
+      expect(testCase.expected_output.trim()).not.toBe('');
+      expect(testCase.file_attachment_urls).toBeNull();
+      expect(testCase.expected_output_url).toBeNull();
+    }
     expect(claude.server).toMatchObject({
       url: 'https://mcp.terminal49.com',
       transport: 'streamable-http',
