@@ -468,6 +468,38 @@ describe('all public tools over MCP client transport', () => {
     },
   );
 
+  it('track_container returns a validated uncreated state for a not-found response', async () => {
+    sdk.search.mockResolvedValue({ data: [] });
+    const notFound = new Error('internal route not found');
+    notFound.name = 'NotFoundError';
+    sdk.createTrackingRequestFromInfer.mockRejectedValue(notFound);
+    const { client, handler } = await connectClient();
+
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'CAIU1234567', scac: 'MAEU' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        error: 'NotFound',
+        tracking_request_created: false,
+        message: expect.stringContaining('could not create a tracking request'),
+        _response_contract: {
+          requires_more_data: ['a verified identifier and carrier SCAC'],
+          presentation_guidance: expect.stringContaining(
+            'No tracking request was created',
+          ),
+        },
+      });
+      expect(JSON.stringify(result)).not.toContain('internal route');
+    } finally {
+      await client.close();
+      await handler.close();
+    }
+  });
+
   it.each(TOOL_NAMES)(
     '%s redacts upstream failure details over MCP client transport',
     async (toolName) => {

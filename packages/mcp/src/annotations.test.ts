@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { createTerminal49McpServer } from './server.js';
 
@@ -13,6 +14,19 @@ type ToolAnnotations = {
   destructiveHint?: boolean;
   idempotentHint?: boolean;
   openWorldHint?: boolean;
+};
+
+type ChatGptSubmission = {
+  app_info: {
+    display_name: string;
+    subtitle: string;
+  };
+  tools: Record<string, { annotations: ToolAnnotations }>;
+};
+
+type ClaudeSubmission = {
+  server: { url: string; authentication: string };
+  listing: { name: string; tagline: string };
 };
 
 function getRegisteredTools(): Record<
@@ -92,5 +106,44 @@ describe('MCP tool annotations', () => {
       expect(tool.title?.trim().length, `${name}.title`).toBeGreaterThan(0);
       expect(tool.annotations, name).toBeDefined();
     }
+  });
+
+  it('keeps live annotations and locked store listings consistent', () => {
+    const tools = getRegisteredTools();
+    const chatGpt = JSON.parse(
+      readFileSync(
+        new URL('../../../chatgpt-app-submission.json', import.meta.url),
+        'utf8',
+      ),
+    ) as ChatGptSubmission;
+    const claude = JSON.parse(
+      readFileSync(
+        new URL('../../../claude-connector-submission.json', import.meta.url),
+        'utf8',
+      ),
+    ) as ClaudeSubmission;
+
+    expect(Object.keys(chatGpt.tools).sort()).toEqual(
+      Object.keys(tools).sort(),
+    );
+    for (const [name, tool] of Object.entries(tools)) {
+      expect(chatGpt.tools[name]?.annotations, name).toMatchObject(
+        tool.annotations ?? {},
+      );
+    }
+
+    expect(chatGpt.app_info).toMatchObject({
+      display_name: 'Terminal49',
+      subtitle: 'Track ocean shipments',
+    });
+    expect(claude.server).toMatchObject({
+      url: 'https://mcp.terminal49.com',
+      authentication: 'oauth',
+    });
+    expect(claude.listing).toMatchObject({
+      name: 'Terminal49',
+      tagline: 'Track ocean shipments',
+    });
+    expect(claude.listing.tagline.length).toBeLessThanOrEqual(55);
   });
 });
