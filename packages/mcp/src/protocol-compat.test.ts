@@ -6,13 +6,26 @@ import { createMcpHandler } from '@modelcontextprotocol/server';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { createTerminal49McpServer } from './server.js';
 
+const LEGACY_PROTOCOL_VERSIONS = [
+  '2025-11-25',
+  '2025-06-18',
+  '2025-03-26',
+  '2024-11-05',
+  '2024-10-07',
+] as const;
+
 const openConnections: Array<{
   client: Client;
   handler: ReturnType<typeof createMcpHandler>;
 }> = [];
 
 async function connectClient(
-  options: { era: 'modern' } | { era: 'legacy'; protocolVersion: '2025-11-25' },
+  options:
+    | { era: 'modern' }
+    | {
+        era: 'legacy';
+        protocolVersion: (typeof LEGACY_PROTOCOL_VERSIONS)[number];
+      },
 ): Promise<Client> {
   const handler = createMcpHandler(
     () => createTerminal49McpServer('test-token', 'https://api.test'),
@@ -51,10 +64,10 @@ afterEach(async () => {
 describe('MCP protocol compatibility', () => {
   it.each([
     { era: 'modern' as const, protocolVersion: '2026-07-28' },
-    {
+    ...LEGACY_PROTOCOL_VERSIONS.map((protocolVersion) => ({
       era: 'legacy' as const,
-      protocolVersion: '2025-11-25' as const,
-    },
+      protocolVersion,
+    })),
   ])(
     'lists the complete server surface over $protocolVersion',
     async ({ era, protocolVersion }) => {

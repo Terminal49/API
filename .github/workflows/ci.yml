@@ -118,3 +118,34 @@ jobs:
         run: npm run lint --workspace @terminal49/mcp
       - name: Check API gateway (Vite+ and anti-slop)
         run: npm run lint:api
+
+  mcp-protocol-compat:
+    name: MCP protocol ${{ matrix.protocol-version }}
+    runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        protocol-version:
+          - '2026-07-28'
+          - '2025-11-25'
+          - '2025-06-18'
+          - '2025-03-26'
+          - '2024-11-05'
+          - '2024-10-07'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install workspace dependencies
+        run: npm ci
+      - name: Build SDK dependency
+        run: npm run build --workspace @terminal49/sdk
+      - name: Build MCP server
+        run: npm run build --workspace @terminal49/mcp
+      - name: POST protocol handshake to built MCP server
+        env:
+          MCP_PROTOCOL_VERSION: ${{ matrix.protocol-version }}
+        run: npm run test:protocol --workspace @terminal49/mcp
