@@ -95,6 +95,8 @@ Only track_container changes Terminal49 account records: it creates a tracking r
 
 Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.
 
+Read terminal49://docs/mcp-query-guidance before answering scoped list questions. list_containers and list_shipments do not apply status, port, carrier, or updated_after filters; never claim that a returned page was filtered by one of them, and treat a non-empty unsupportedFilters array as an explicit warning that the page is unscoped by those inputs.
+
 Tool results carry a _response_contract with presentation and follow-up hints; treat it as steering for you, not content to show the user.`;
 
 type ResponseDisplayColumn = {
@@ -149,22 +151,15 @@ export const LIST_DISPLAY_COLUMNS_URI = listDisplayColumnsResource.uri;
  * reported back to the agent as a dropped filter so it never claims a false
  * worklist. `page`, `page_size`, `include`, `include_containers` and `intent`
  * are transport/shape knobs, not scoping filters, and are ignored here.
- *
- * `request_type` is intentionally excluded for `tracking_request`: the
- * `GET /tracking_requests` OpenAPI source of truth does not define
- * `filter[request_type]`, so a caller-supplied `request_type` cannot actually
- * scope the list even though `executeListTrackingRequests` forwards it. It
- * falls through to `droppedFilterKeys` instead, so the contract reports it as
- * ignored rather than claiming it applied.
  */
 const SUPPORTED_LIST_FILTERS_BY_ENTITY: Record<
   ListEntityType,
   readonly string[]
 > = {
-  container: ['status', 'port', 'carrier', 'updated_after'],
-  shipment: ['status', 'port', 'carrier', 'updated_after'],
-  tracking_request: ['status', 'filters'],
-  unknown: ['status', 'port', 'carrier', 'updated_after'],
+  container: [],
+  shipment: ['number', 'tracking_stopped'],
+  tracking_request: ['status', 'request_type', 'filters'],
+  unknown: [],
 };
 
 /**
@@ -176,6 +171,7 @@ const SUPPORTED_LIST_FILTERS_BY_ENTITY: Record<
 const REAL_TRACKING_REQUEST_FILTER_KEYS = new Set([
   'filter[request_number]',
   'filter[status]',
+  'filter[request_type]',
   'filter[scac]',
   'filter[created_at][start]',
   'filter[created_at][end]',
@@ -932,6 +928,10 @@ export function buildListContract(
   const isFiltered = applied.length > 0;
   const supportedVocab =
     SUPPORTED_LIST_FILTERS_BY_ENTITY[entityType].join(', ');
+  const scopeRequirement =
+    supportedVocab.length > 0
+      ? `a filter to scope this list (${supportedVocab})`
+      : 'no server-side scoping filters are available for this list; treat the returned page as unscoped';
 
   const rawTotal = Number(result?.meta?.total);
   const hasTotal = Number.isFinite(rawTotal);
@@ -949,11 +949,13 @@ export function buildListContract(
 
   const requiresMoreData: string[] = [];
   if (!isFiltered) {
-    requiresMoreData.push(`a filter to scope this list (${supportedVocab})`);
+    requiresMoreData.push(scopeRequirement);
   }
   if (dropped.length > 0) {
     requiresMoreData.push(
-      `unsupported filter(s) were ignored: ${dropped.join(', ')} — re-query using only ${supportedVocab}`,
+      supportedVocab.length > 0
+        ? `unsupported filter(s) were ignored: ${dropped.join(', ')} — re-query using only ${supportedVocab}`
+        : `unsupported filter(s) were ignored: ${dropped.join(', ')} — this list has no server-side scoping filters`,
     );
   }
   if (hasTotal && !totalIsReliable) {
@@ -1204,10 +1206,9 @@ export function createTerminal49McpServer(
     {
       title: 'Search Containers',
       description:
-        'Search for containers, shipments, and tracking information by container number, ' +
-        'booking number, bill of lading, or reference number. ' +
-        'This is the fastest way to find container information. ' +
-        'Examples: CAIU2885402, MAEU123456789, or any reference number.',
+        'Resolve a known container number, booking number, Bill of Lading (BOL), or customer reference into Terminal49 container and shipment UUIDs. ' +
+        'Use this for identifier lookup; use list tools only to page through account records. ' +
+        'A container number is an ISO 6346 equipment identifier (normally four letters plus seven digits, including the check digit); BOL and booking numbers identify shipments.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1218,7 +1219,7 @@ export function createTerminal49McpServer(
           .string()
           .min(1)
           .describe(
-            'Search query - can be a container number, booking number, BL number, or reference number',
+            'Exact or partial identifier: ISO 6346 container number (for example CAIU1234567), shipment BOL, booking number, or customer reference. This is not a carrier, port, or free-text fleet filter.',
           ),
         intent: toolIntentSchema,
       }),
@@ -1260,6 +1261,7 @@ export function createTerminal49McpServer(
       title: 'Track Container',
       description:
         'Track a container, bill of lading, or booking number. ' +
+        'Container numbers are ISO 6346 equipment identifiers; BOL and booking numbers identify shipments. ' +
         'Uses inference to choose the carrier/type when possible, creates a tracking request, ' +
         'and returns detailed container information.',
       annotations: {
@@ -1272,7 +1274,9 @@ export function createTerminal49McpServer(
         number: z
           .string()
           .optional()
-          .describe('Container, bill of lading, or booking number to track'),
+          .describe(
+            'ISO 6346 container number (normally four letters plus seven digits), Bill of Lading (BOL), or booking number to track',
+          ),
         numberType: z
           .string()
           .optional()
@@ -1291,7 +1295,7 @@ export function createTerminal49McpServer(
           .string()
           .optional()
           .describe(
-            'Optional SCAC code of the shipping line (e.g., MAEU for Maersk)',
+            'Optional four-letter carrier SCAC (for example MAEU), never a carrier name. Resolve names such as Maersk or Ocean Network Express with get_supported_shipping_lines first.',
           ),
         refNumbers: z
           .array(z.string())
@@ -1464,7 +1468,7 @@ export function createTerminal49McpServer(
       description:
         'Get list of shipping lines (carriers) supported by Terminal49 for container tracking. ' +
         'Returns SCAC codes, full names, and common abbreviations. ' +
-        'Use this when user asks which carriers are supported or to validate a carrier name.',
+        'Use this to resolve a name such as Maersk or Ocean Network Express to its four-letter SCAC before any carrier-scoped call; never pass the carrier name as a SCAC.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1474,7 +1478,9 @@ export function createTerminal49McpServer(
         search: z
           .string()
           .optional()
-          .describe('Optional: Filter by carrier name or SCAC code'),
+          .describe(
+            'Carrier name, abbreviation, or four-letter SCAC to resolve (for example Maersk or MAEU)',
+          ),
         intent: toolIntentSchema,
       }),
       outputSchema: z.object({
@@ -1595,21 +1601,32 @@ export function createTerminal49McpServer(
     {
       title: 'List Shipments',
       description:
-        'List shipments with optional filters and pagination. ' +
-        'Use for queries like "show recent shipments" or "shipments for a carrier".',
+        'Page through account shipments, optionally filtering by the original tracking-request number or whether tracking is stopped. ' +
+        'This tool cannot server-filter by status, POL/POD port, carrier SCAC/name, or update time. Use search_container for a known container, BOL, booking, or reference identifier.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
       inputSchema: z.object({
-        status: z.string().optional().describe('Filter by shipment status'),
-        port: z.string().optional().describe('Filter by POD port LOCODE'),
-        carrier: z.string().optional().describe('Filter by shipping line SCAC'),
-        updated_after: z
+        number: z
           .string()
           .optional()
-          .describe('Filter by updated_at (ISO8601) >= value'),
+          .describe(
+            'Filter by the original tracking request number, normally a Bill of Lading (BOL) or booking number. This does not match ISO 6346 container numbers; use search_container for those.',
+          ),
+        tracking_stopped: z
+          .boolean()
+          .optional()
+          .describe(
+            'Filter by tracking state: true means Terminal49 stopped polling the shipping line; false means tracking is active. Maps to filter[tracking_stopped].',
+          ),
+        include: z
+          .string()
+          .optional()
+          .describe(
+            'Comma-separated relationships to side-load: containers, pod_terminal, port_of_lading, port_of_discharge, destination, destination_terminal. POL is port of lading (origin); POD is port of discharge (destination). Include changes row shape, not result scope.',
+          ),
         include_containers: z
           .boolean()
           .optional()
@@ -1644,26 +1661,19 @@ export function createTerminal49McpServer(
     {
       title: 'List Containers',
       description:
-        'List containers with optional filters and pagination. ' +
-        'Use for queries like "containers at port" or "latest updates".',
+        'Page through account containers with optional related records. ' +
+        'This endpoint has no server-side status, port, carrier, or update-time filters: a SCAC such as MAEU, UN/LOCODE such as USLAX (not "Los Angeles"), POL/POD, or date cannot scope this list. Use search_container for a known container, BOL, booking, or reference identifier.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
       inputSchema: z.object({
-        status: z.string().optional().describe('Filter by container status'),
-        port: z.string().optional().describe('Filter by POD port LOCODE'),
-        carrier: z.string().optional().describe('Filter by shipping line SCAC'),
-        updated_after: z
-          .string()
-          .optional()
-          .describe('Filter by updated_at (ISO8601) >= value'),
         include: z
           .string()
           .optional()
           .describe(
-            'Comma-separated include list (e.g., shipment,pod_terminal)',
+            'Comma-separated relationships to side-load: shipment, pod_terminal, pickup_facility, transport_events. shipment adds BOL/booking and carrier context; pod_terminal adds POD terminal data; transport_events adds the heavy milestone timeline. Include changes row shape, not result scope.',
           ),
         page: listPageSchema,
         page_size: listPageSizeSchema,
@@ -1698,7 +1708,7 @@ export function createTerminal49McpServer(
       title: 'List Tracking Requests',
       description:
         'List tracking requests with optional filters and pagination. ' +
-        'Useful for monitoring recent tracking activity.',
+        'Use status or request_type for server-side filtering. Request type distinguishes an ISO 6346 container number from shipment-level BOL and booking identifiers.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1708,15 +1718,21 @@ export function createTerminal49McpServer(
         filters: z
           .record(z.string(), z.string())
           .optional()
-          .describe('Raw query filters (e.g., filter[status]=succeeded)'),
+          .describe(
+            'Advanced raw query filters. Prefer the typed status and request_type arguments. SCAC values must be four-letter codes resolved with get_supported_shipping_lines, not carrier names.',
+          ),
         status: z
-          .string()
+          .enum(['created', 'pending', 'failed'])
           .optional()
-          .describe('Filter by request status (mapped to filter[status])'),
+          .describe(
+            'Tracking request status: created, pending, or failed. Maps to filter[status].',
+          ),
         request_type: z
-          .string()
+          .enum(['bill_of_lading', 'booking_number', 'container'])
           .optional()
-          .describe('Filter by request type (mapped to filter[request_type])'),
+          .describe(
+            'Identifier type: bill_of_lading, booking_number, or container. Maps to filter[request_type].',
+          ),
         page: listPageSchema,
         page_size: listPageSizeSchema,
         intent: toolIntentSchema,

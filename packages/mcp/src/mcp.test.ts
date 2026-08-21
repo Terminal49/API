@@ -9,6 +9,7 @@ import {
   createTerminal49McpServer,
   TERMINAL49_SERVER_INSTRUCTIONS,
 } from './server.js';
+import { readQueryGuidanceResource } from './resources/query-guidance.js';
 
 vi.mock('@sentry/node', () => ({
   captureException: vi.fn(),
@@ -394,6 +395,37 @@ describe('MCP server wiring', () => {
     ).not.toThrow();
   });
 
+  it('list input schemas advertise only API-supported filters', () => {
+    const server = createTerminal49McpServer('token');
+    const tools = (server as any)._registeredTools as Record<
+      string,
+      { inputSchema: unknown }
+    >;
+    const droppedFilters = ['status', 'port', 'carrier', 'updated_after'];
+
+    for (const toolName of ['list_containers', 'list_shipments']) {
+      for (const filter of droppedFilters) {
+        expect(
+          _objectSchemaHasProperty(tools[toolName]?.inputSchema, filter),
+          `${toolName}.${filter}`,
+        ).toBe(false);
+      }
+    }
+
+    expect(
+      _objectSchemaHasProperty(tools.list_shipments.inputSchema, 'number'),
+    ).toBe(true);
+    expect(
+      _objectSchemaHasProperty(
+        tools.list_shipments.inputSchema,
+        'tracking_stopped',
+      ),
+    ).toBe(true);
+    expect(
+      _objectSchemaHasProperty(tools.list_shipments.inputSchema, 'include'),
+    ).toBe(true);
+  });
+
   it('tools include _response_contract in output schemas', () => {
     const server = createTerminal49McpServer('token');
     const tools = (server as any)._registeredTools as Record<
@@ -503,7 +535,25 @@ describe('MCP server wiring', () => {
     expect(instructions).toMatch(/LFD/);
     expect(instructions).toMatch(/search_container/);
     expect(instructions).toMatch(/track_container/);
+    expect(instructions).toMatch(
+      /do not apply status, port, carrier, or updated_after filters/,
+    );
     expect(instructions.length).toBeGreaterThan(400);
+  });
+
+  it('query guidance does not advertise unsupported list filters', () => {
+    const guidance = readQueryGuidanceResource();
+
+    expect(guidance).not.toContain(
+      'Supported list filters: status, port, carrier, updated_after',
+    );
+    expect(guidance).toContain(
+      'has no server-side status, port, carrier, or updated-after filter',
+    );
+    expect(guidance).toContain(
+      'cannot currently be server-filtered with these list tools',
+    );
+    expect(guidance).toContain('non-empty `unsupportedFilters`');
   });
 
   it('returns carrier SCAC completion values over MCP', async () => {
@@ -622,7 +672,7 @@ describe('MCP server wiring', () => {
     {
       name: 'list_shipments',
       args: {
-        carrier: 'MAEU',
+        number: 'MAEU123456789',
         include_containers: true,
         page: 1,
         page_size: 10,
@@ -646,7 +696,7 @@ describe('MCP server wiring', () => {
           self: 'https://api.test/shipments?page[number]=1&page[size]=10',
         },
         meta: { total: 1 },
-        unsupportedFilters: ['carrier'],
+        unsupportedFilters: [],
       },
     },
   ])(

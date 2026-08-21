@@ -7,10 +7,6 @@ import { Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
 
 export interface ListContainersArgs {
-  status?: string;
-  port?: string;
-  carrier?: string;
-  updated_after?: string;
   include?: string;
   page?: number;
   page_size?: number;
@@ -26,10 +22,6 @@ export async function executeListContainers(
     event: 'tool.execute.start',
     tool: 'list_containers',
     filters: {
-      status: args.status,
-      port: args.port,
-      carrier: args.carrier,
-      updated_after: args.updated_after,
       include: include,
     },
     page: args.page,
@@ -40,10 +32,6 @@ export async function executeListContainers(
   try {
     const result = await client.containers.list(
       {
-        status: args.status,
-        port: args.port,
-        carrier: args.carrier,
-        updatedAfter: args.updated_after,
         include: include
           ? (include.split(',').map((s) => s.trim()) as any)
           : undefined,
