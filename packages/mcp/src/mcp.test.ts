@@ -20,15 +20,17 @@ vi.mock('@sentry/node', () => ({
 // Stubbed Terminal49Client so server tools can be exercised end-to-end without
 // hitting the live API. Tests configure these mocks per-case. `vi.hoisted`
 // is required because vi.mock factories are hoisted above normal declarations.
-const { shippingLinesList, containersList } = vi.hoisted(() => ({
+const { shippingLinesList, containersList, shipmentsList } = vi.hoisted(() => ({
   shippingLinesList: vi.fn(),
   containersList: vi.fn(),
+  shipmentsList: vi.fn(),
 }));
 
 vi.mock('@terminal49/sdk', () => ({
   Terminal49Client: class Terminal49Client {
     shippingLines = { list: shippingLinesList };
     containers = { list: containersList };
+    shipments = { list: shipmentsList };
   },
   FeatureNotEnabledError: class FeatureNotEnabledError extends Error {},
   NotFoundError: class NotFoundError extends Error {},
@@ -37,6 +39,7 @@ vi.mock('@terminal49/sdk', () => ({
 beforeEach(() => {
   shippingLinesList.mockReset();
   containersList.mockReset();
+  shipmentsList.mockReset();
 });
 
 function _hasResponseContract(schema: unknown): boolean {
@@ -298,6 +301,29 @@ function _objectSchemaHasProperty(schema: unknown, property: string): boolean {
 class MockTransport {
   start = vi.fn();
   close = vi.fn();
+}
+
+async function connectClientForToolCall() {
+  const handler = createMcpHandler(
+    () => createTerminal49McpServer('token', 'https://api.test'),
+    {
+      legacy: 'stateless',
+      responseMode: 'json',
+    },
+  );
+  const client = new Client(
+    { name: 'terminal49-tool-output-test', version: '1.0.0' },
+    { versionNegotiation: { mode: { pin: '2026-07-28' } } },
+  );
+  const transport = new StreamableHTTPClientTransport(
+    new URL('https://mcp.test/mcp'),
+    {
+      fetch: (url, init) => handler.fetch(new Request(url, init)),
+    },
+  );
+
+  await client.connect(transport);
+  return { client, handler };
 }
 
 describe('MCP server wiring', () => {
@@ -568,6 +594,92 @@ describe('MCP server wiring', () => {
       expect(link.uri).toMatch(/^terminal49:\/\/container\/[0-9a-f-]{36}$/);
     }
   });
+
+  it.each([
+    {
+      name: 'list_containers',
+      args: { page: 1, page_size: 10 },
+      listMock: containersList,
+      payload: {
+        items: [
+          {
+            id: '11111111-1111-1111-1111-111111111111',
+            number: 'CAIU1234567',
+            currentStatus: 'available',
+            terminals: {
+              podTerminal: { name: 'APM Los Angeles', firmsCode: 'Y123' },
+            },
+          },
+        ],
+        links: {
+          self: 'https://api.test/containers?page[number]=1&page[size]=10',
+          next: 'https://api.test/containers?page[number]=2&page[size]=10',
+        },
+        meta: { total: 42 },
+        unsupportedFilters: [],
+      },
+    },
+    {
+      name: 'list_shipments',
+      args: {
+        carrier: 'MAEU',
+        include_containers: true,
+        page: 1,
+        page_size: 10,
+      },
+      listMock: shipmentsList,
+      payload: {
+        items: [
+          {
+            id: '22222222-2222-2222-2222-222222222222',
+            billOfLading: 'MAEU123456789',
+            shippingLineScac: 'MAEU',
+            containers: [
+              {
+                id: '11111111-1111-1111-1111-111111111111',
+                number: 'CAIU1234567',
+              },
+            ],
+          },
+        ],
+        links: {
+          self: 'https://api.test/shipments?page[number]=1&page[size]=10',
+        },
+        meta: { total: 1 },
+        unsupportedFilters: ['carrier'],
+      },
+    },
+  ])(
+    '$name structured content validates with mapped list sidecars',
+    async ({ name, args, listMock, payload }) => {
+      listMock.mockResolvedValue(payload);
+      const { client, handler } = await connectClientForToolCall();
+
+      try {
+        const result = await client.callTool({ name, arguments: args });
+
+        expect(result.structuredContent).toMatchObject({
+          ...payload,
+          _response_contract: {
+            purpose: expect.any(String),
+            presentation_guidance: expect.any(String),
+            suggested_tools: expect.any(Array),
+          },
+        });
+        expect(
+          result.content.some(
+            (block) =>
+              block.type === 'text' &&
+              block.annotations?.audience?.includes('assistant') &&
+              block.text.includes('_agent_steering'),
+          ),
+        ).toBe(true);
+      } finally {
+        await client.close();
+        await handler.close();
+      }
+    },
+  );
 
   it('marks steering-only content with audience:[assistant] and keeps the answer user-visible', async () => {
     containersList.mockResolvedValue({ items: [], links: {}, meta: {} });
