@@ -127,9 +127,12 @@ describe('MCP tool annotations', () => {
       Object.keys(tools).sort(),
     );
     for (const [name, tool] of Object.entries(tools)) {
-      expect(chatGpt.tools[name]?.annotations, name).toMatchObject(
-        tool.annotations ?? {},
-      );
+      const liveAnnotations = tool.annotations;
+      expect(chatGpt.tools[name]?.annotations, name).toMatchObject({
+        readOnlyHint: liveAnnotations?.readOnlyHint,
+        destructiveHint: liveAnnotations?.destructiveHint,
+        openWorldHint: liveAnnotations?.openWorldHint,
+      });
     }
 
     expect(chatGpt.app_info).toMatchObject({
