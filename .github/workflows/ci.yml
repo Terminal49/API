@@ -178,22 +178,23 @@ jobs:
       - name: Wait for this commit's Vercel preview
         env:
           GH_TOKEN: ${{ github.token }}
+          PREVIEW_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           state=pending
           for attempt in {1..60}; do
-            state="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status" \
+            state="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${PREVIEW_SHA}/status" \
               --jq '[.statuses[] | select(.context == "Vercel")][0].state // "pending"')"
             if [[ "$state" == "success" ]]; then
               break
             fi
             if [[ "$state" == "failure" || "$state" == "error" ]]; then
-              echo "Vercel preview failed for ${GITHUB_SHA}"
+              echo "Vercel preview failed for ${PREVIEW_SHA}"
               exit 1
             fi
             sleep 10
           done
           if [[ "$state" != "success" ]]; then
-            echo "Timed out waiting for Vercel preview for ${GITHUB_SHA}"
+            echo "Timed out waiting for Vercel preview for ${PREVIEW_SHA}"
             exit 1
           fi
       - name: Resolve Vercel preview endpoint
