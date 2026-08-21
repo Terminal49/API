@@ -46,7 +46,7 @@ export interface TrackingQuery {
   type?: TrackingType;
 }
 
-export interface SeaRatesEvent {
+export interface SeaRatesEvent extends JsonObject {
   actual: boolean;
   date: string | null;
   description: string;

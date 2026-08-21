@@ -853,7 +853,10 @@ export function toContainerEnvelope(
   }
   const data = envelope.data;
   const containers = Array.isArray(data.containers) ? data.containers : [];
-  const singular = { ...data, container: containers[0] ?? null };
+  const singular: JsonObject = {
+    ...data,
+    container: containers[0] ?? null,
+  };
   delete singular.containers;
   return { ...envelope, data: singular };
 }

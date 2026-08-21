@@ -107,7 +107,10 @@ describe('SeaRates compatibility gateway', () => {
               {
                 id: 'request-1',
                 type: 'tracking_request',
-                attributes: { status: 'pending' },
+                attributes: {
+                  request_type: 'bill_of_lading',
+                  status: 'pending',
+                },
                 relationships: { tracked_object: { data: null } },
               },
             ],

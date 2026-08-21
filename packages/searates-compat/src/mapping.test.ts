@@ -3,6 +3,7 @@ import { shipmentFixture, shippingLinesFixture } from './__fixtures__/t49.js';
 import { mapShippingLines, mapTrackingPayload } from './mapping.js';
 import type {
   JsonApiResource,
+  SeaRatesEvent,
   SeaRatesEventCode,
   TrackingPayload,
   TrackingType,
@@ -112,7 +113,9 @@ function responseData(result: ReturnType<typeof mapTrackingPayload>) {
   return result.data;
 }
 
-function eventsFrom(result: ReturnType<typeof mapTrackingPayload>) {
+function eventsFrom(
+  result: ReturnType<typeof mapTrackingPayload>,
+): SeaRatesEvent[] {
   const data = responseData(result);
   const containers = data.containers;
   if (!Array.isArray(containers) || !containers[0]) {
@@ -127,7 +130,9 @@ function eventsFrom(result: ReturnType<typeof mapTrackingPayload>) {
   ) {
     throw new Error('Expected mapped event array');
   }
-  return container.events;
+  // SAFETY: Every event is produced by mapTrackingPayload and the shape above
+  // verifies that this value is the mapped event array.
+  return container.events as SeaRatesEvent[];
 }
 
 describe('SeaRates positional event mapping', () => {
