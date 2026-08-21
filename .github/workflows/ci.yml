@@ -182,7 +182,6 @@ jobs:
             echo "::notice::Skipping authenticated preview smoke because MCP_EVAL_TOKEN is unavailable"
           fi
       - uses: actions/checkout@v4
-        if: steps.credential.outputs.available == 'true'
       - uses: actions/setup-node@v6
         if: steps.credential.outputs.available == 'true'
         with:
@@ -193,7 +192,6 @@ jobs:
         if: steps.credential.outputs.available == 'true'
         run: npm ci
       - name: Wait for this commit's Vercel preview
-        if: steps.credential.outputs.available == 'true'
         id: vercel
         env:
           GH_TOKEN: ${{ github.token }}
@@ -224,7 +222,6 @@ jobs:
           fi
           echo "inspector-url=${inspector_url}" >> "$GITHUB_OUTPUT"
       - name: Resolve Vercel preview endpoint
-        if: steps.credential.outputs.available == 'true'
         id: preview
         env:
           GH_TOKEN: ${{ github.token }}
@@ -238,7 +235,20 @@ jobs:
             echo "Could not resolve a Vercel preview URL for ${VERCEL_INSPECTOR_URL}"
             exit 1
           fi
+          echo "origin=${preview_url}" >> "$GITHUB_OUTPUT"
           echo "endpoint=${preview_url}/mcp" >> "$GITHUB_OUTPUT"
+      - name: Verify authorization server advertises refresh support
+        if: matrix.protocol-version == '2026-07-28'
+        env:
+          PREVIEW_ORIGIN: ${{ steps.preview.outputs.origin }}
+        run: |
+          curl --fail --silent --show-error --location --max-time 30 \
+            "${PREVIEW_ORIGIN}/.well-known/oauth-authorization-server" \
+            | jq --exit-status '
+                (.grant_types_supported // [] | index("refresh_token")) != null
+                and
+                (.scopes_supported // [] | index("offline_access")) != null
+              ' > /dev/null
       - name: POST handshake and tools/list to Vercel preview
         if: steps.credential.outputs.available == 'true'
         env:
@@ -247,7 +257,6 @@ jobs:
           MCP_PROTOCOL_VERSION: ${{ matrix.protocol-version }}
         run: npm run test:http-protocol --workspace @terminal49/mcp
       - name: Verify preview still belongs to this commit
-        if: steps.credential.outputs.available == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}

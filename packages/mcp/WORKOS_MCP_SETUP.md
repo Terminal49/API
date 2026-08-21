@@ -61,17 +61,27 @@ In the WorkOS environment referenced by `WORKOS_AUTHORIZATION_SERVER_URL`:
 
 ## 3. Smoke tests
 
+### Automated metadata smoke
+
 ```sh
 ISSUER="<WORKOS_AUTHORIZATION_SERVER_URL>"
 
-# AS metadata: 200 with registration_endpoint + S256
-curl -s "$ISSUER/.well-known/oauth-authorization-server" \
-  | jq '{registration_endpoint, code_challenge_methods_supported}'
+# AS metadata: 200 with registration_endpoint, S256, and refresh support
+curl --fail --silent --show-error --location \
+  "$ISSUER/.well-known/oauth-authorization-server" \
+  | jq --exit-status '
+      .registration_endpoint != null
+      and (.code_challenge_methods_supported // [] | index("S256")) != null
+      and (.grant_types_supported // [] | index("refresh_token")) != null
+      and (.scopes_supported // [] | index("offline_access")) != null
+    ' > /dev/null
 
-# DCR is open: expect 201 + client_id
-curl -s -X POST "$ISSUER/oauth2/register" \
+# DCR is open: expect 201 + client_id. A refresh-capable client must register
+# both authorization_code and refresh_token.
+curl --fail --silent --show-error -X POST "$ISSUER/oauth2/register" \
   -H 'Content-Type: application/json' \
-  -d '{"client_name":"smoke","redirect_uris":["https://example.com/cb"],"grant_types":["authorization_code"],"response_types":["code"]}'
+  -d '{"client_name":"smoke","redirect_uris":["https://example.com/cb"],"grant_types":["authorization_code","refresh_token"],"response_types":["code"],"token_endpoint_auth_method":"none"}' \
+  | jq --exit-status '.client_id != null' > /dev/null
 
 # PRM: resource + authorization_servers
 curl -s https://mcp.terminal49.com/.well-known/oauth-protected-resource | jq
@@ -84,6 +94,36 @@ curl -si -X POST https://mcp.terminal49.com/mcp \
 # After an OAuth flow, decode the access token and confirm:
 #   aud == https://mcp.terminal49.com
 ```
+
+CI follows the preview deployment's authorization-server metadata redirect and
+fails if `grant_types_supported` omits `refresh_token` or `scopes_supported`
+omits `offline_access`. These capabilities belong in the WorkOS authorization
+server metadata, not the Terminal49 Protected Resource Metadata (PRM).
+
+### Human refresh smoke
+
+Refresh requires a real user authorization. Do not store a user password in CI.
+Run the local [OAuth test client](./OAUTH_TEST_CLIENT.md), which requests
+`openid profile email offline_access` and registers both
+`authorization_code` and `refresh_token` grant types.
+
+1. Click **Authorize** and complete the WorkOS sign-in.
+2. In the redacted token output, confirm the response contains a
+   `refresh_token` and the access token `aud` is
+   `https://mcp.terminal49.com`.
+3. Click **Refresh**. The client posts `grant_type=refresh_token`, the current
+   refresh token, and `resource=https://mcp.terminal49.com` to the discovered
+   token endpoint using the same registered client.
+4. Confirm the refreshed response contains a new `access_token` whose `aud`
+   is still `https://mcp.terminal49.com`.
+5. Click **Tools List** and confirm `tools/list` succeeds with the refreshed
+   bearer token.
+6. If WorkOS returns a replacement `refresh_token`, retain it for the next
+   refresh. The local test client does this automatically; it keeps the
+   previous refresh token only when the response omits a replacement.
+
+The test client redacts tokens and client secrets in its browser output. Do not
+copy credentials into CI output, shared shell history, or issue comments.
 
 ## 4. Per-client notes
 
