@@ -3,7 +3,7 @@
  * Creates a tracking request for a container/BL/booking number and returns the container details
  */
 
-import { Terminal49Client } from '@terminal49/sdk';
+import { NotFoundError, Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
 import { executeGetContainer } from './get-container.js';
 import { executeSearchContainer } from './search-container.js';
@@ -117,6 +117,14 @@ function parseValidationPointer(message: string): string | undefined {
   return pointerMatch?.[1];
 }
 
+function isNotFound(error: unknown): boolean {
+  return (
+    error instanceof NotFoundError ||
+    (error as { status?: number })?.status === 404 ||
+    (error as { name?: string })?.name === 'NotFoundError'
+  );
+}
+
 async function findExistingTrackedContainer(
   number: string,
   client: Terminal49Client,
@@ -190,10 +198,29 @@ export async function executeTrackContainer(
       client,
     );
     if (existingContainer?.id) {
-      const containerDetails = await executeGetContainer(
-        { id: existingContainer.id },
-        client,
-      );
+      let containerDetails: Awaited<ReturnType<typeof executeGetContainer>>;
+      try {
+        containerDetails = await executeGetContainer(
+          { id: existingContainer.id },
+          client,
+        );
+      } catch (error) {
+        if (!isNotFound(error)) {
+          throw error;
+        }
+        return {
+          error: 'ContainerUnavailable',
+          message:
+            'A tracked container matched this number, but its details are not available yet. Retry the container lookup shortly.',
+          tracking_request_created: false,
+          container: { id: existingContainer.id },
+          _metadata: {
+            presentation_guidance:
+              'State that the container match exists but its details are temporarily unavailable. Do not claim that a new tracking request was created.',
+            recommendations: ['get_container', 'search_container'],
+          },
+        };
+      }
       return {
         ...containerDetails,
         tracking_request_created: false,
@@ -283,11 +310,33 @@ export async function executeTrackContainer(
       timestamp: new Date().toISOString(),
     });
 
-    // Step 2: Get full container details using the ID
-    const containerDetails = await executeGetContainer(
-      { id: containerId },
-      client,
-    );
+    // Step 2: Get full container details using the ID. A newly-created request
+    // can expose its relationship before the container read model is available.
+    // Preserve the successful write state instead of misreporting the request as
+    // uncreated when that follow-up read briefly returns 404.
+    let containerDetails: Awaited<ReturnType<typeof executeGetContainer>>;
+    try {
+      containerDetails = await executeGetContainer({ id: containerId }, client);
+    } catch (error) {
+      if (!isNotFound(error)) {
+        throw error;
+      }
+      return {
+        tracking_request_created: true,
+        infer_result: infer,
+        tracking_request: {
+          request_number: number,
+          number_type: inferredNumberType,
+          scac: requestedScac || heuristicScac,
+          container_id: containerId,
+        },
+        _metadata: {
+          presentation_guidance:
+            'Tracking request was created and linked, but container details are not available yet. Poll list_tracking_requests or retry shortly.',
+          recommendations: ['list_tracking_requests', 'get_container'],
+        },
+      };
+    }
 
     const duration = Date.now() - startTime;
     logMcpEvent({
@@ -307,6 +356,28 @@ export async function executeTrackContainer(
   } catch (error) {
     const duration = Date.now() - startTime;
     const message = (error as Error).message;
+
+    if (isNotFound(error)) {
+      logMcpEvent({
+        event: 'tracking_request.not_found',
+        number,
+        numberType: inferredNumberType,
+        scac: requestedScac || heuristicScac,
+        duration_ms: duration,
+        timestamp: new Date().toISOString(),
+      });
+      return {
+        error: 'NotFound',
+        message:
+          'No tracked container matched this number, and Terminal49 could not create a tracking request for it. Verify the number and carrier SCAC, then retry.',
+        tracking_request_created: false,
+        _metadata: {
+          presentation_guidance:
+            'Clearly state that no tracking request was created. Ask the user to verify the identifier and carrier; do not imply that tracking is pending.',
+          recommendations: ['get_supported_shipping_lines', 'search_container'],
+        },
+      };
+    }
 
     if (
       /Unable to infer/.test(message) ||

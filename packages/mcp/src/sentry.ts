@@ -94,7 +94,14 @@ export function instrumentMcpServer<TServer extends McpServer>(
 
 export function captureMcpException(error: unknown): void {
   if (Sentry.isInitialized()) {
-    Sentry.captureException(error);
+    const safeError = new Error(
+      'The Terminal49 upstream request could not be completed.',
+    );
+    const name = error instanceof Error ? error.name : 'Error';
+    safeError.name = /^[A-Za-z][A-Za-z0-9_.:-]{0,63}$/.test(name)
+      ? name
+      : 'Error';
+    Sentry.captureException(safeError);
   }
 }
 

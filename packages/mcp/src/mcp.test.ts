@@ -20,14 +20,18 @@ vi.mock('@sentry/node', () => ({
 // Stubbed Terminal49Client so server tools can be exercised end-to-end without
 // hitting the live API. Tests configure these mocks per-case. `vi.hoisted`
 // is required because vi.mock factories are hoisted above normal declarations.
-const { shippingLinesList, containersList, shipmentsList } = vi.hoisted(() => ({
-  shippingLinesList: vi.fn(),
-  containersList: vi.fn(),
-  shipmentsList: vi.fn(),
-}));
+const { search, shippingLinesList, containersList, shipmentsList } = vi.hoisted(
+  () => ({
+    search: vi.fn(),
+    shippingLinesList: vi.fn(),
+    containersList: vi.fn(),
+    shipmentsList: vi.fn(),
+  }),
+);
 
 vi.mock('@terminal49/sdk', () => ({
   Terminal49Client: class Terminal49Client {
+    search = search;
     shippingLines = { list: shippingLinesList };
     containers = { list: containersList };
     shipments = { list: shipmentsList };
@@ -37,6 +41,7 @@ vi.mock('@terminal49/sdk', () => ({
 }));
 
 beforeEach(() => {
+  search.mockReset();
   shippingLinesList.mockReset();
   containersList.mockReset();
   shipmentsList.mockReset();
@@ -476,14 +481,24 @@ describe('MCP server wiring', () => {
   it('captures handled tool errors when Sentry is initialized', async () => {
     const Sentry = await import('@sentry/node');
     vi.mocked(Sentry.isInitialized).mockReturnValue(true);
+    search.mockRejectedValue(
+      new Error(
+        'upstream failed at https://internal.example/v2?token=secret-token',
+      ),
+    );
 
     const server = createTerminal49McpServer('token');
     const searchTool = (server as any)._registeredTools.search_container;
 
-    const result = await searchTool.handler({ query: '   ' });
+    const result = await searchTool.handler({ query: 'CAIU1234567' });
 
     expect(result.isError).toBe(true);
     expect(Sentry.captureException).toHaveBeenCalledWith(expect.any(Error));
+    const captured = vi.mocked(Sentry.captureException).mock.calls[0]?.[0];
+    expect(captured).toBeInstanceOf(Error);
+    expect((captured as Error).message).not.toContain('internal.example');
+    expect((captured as Error).message).not.toContain('secret-token');
+    expect((captured as Error).message).toContain('could not be completed');
     expect(Sentry.flush).toHaveBeenCalledWith(2000);
   });
 
@@ -622,7 +637,7 @@ describe('MCP server wiring', () => {
     {
       name: 'list_shipments',
       args: {
-        carrier: 'MAEU',
+        tracking_stopped: false,
         include_containers: true,
         page: 1,
         page_size: 10,
@@ -646,7 +661,7 @@ describe('MCP server wiring', () => {
           self: 'https://api.test/shipments?page[number]=1&page[size]=10',
         },
         meta: { total: 1 },
-        unsupportedFilters: ['carrier'],
+        unsupportedFilters: [],
       },
     },
   ])(

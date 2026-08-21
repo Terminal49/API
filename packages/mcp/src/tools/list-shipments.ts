@@ -7,10 +7,8 @@ import { Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
 
 export interface ListShipmentsArgs {
-  status?: string;
-  port?: string;
-  carrier?: string;
-  updated_after?: string;
+  number?: string;
+  tracking_stopped?: boolean;
   include_containers?: boolean;
   page?: number;
   page_size?: number;
@@ -21,34 +19,32 @@ export async function executeListShipments(
   client: Terminal49Client,
 ): Promise<any> {
   const startTime = Date.now();
+  const includeContainers = args.include_containers ?? false;
+  const pageSize = args.page_size ?? 25;
   logMcpEvent({
     event: 'tool.execute.start',
     tool: 'list_shipments',
     filters: {
-      status: args.status,
-      port: args.port,
-      carrier: args.carrier,
-      updated_after: args.updated_after,
-      include_containers: args.include_containers,
+      number: args.number,
+      tracking_stopped: args.tracking_stopped,
+      include_containers: includeContainers,
     },
     page: args.page,
-    page_size: args.page_size,
+    page_size: pageSize,
     timestamp: new Date().toISOString(),
   });
 
   try {
     const result = await client.shipments.list(
       {
-        status: args.status,
-        port: args.port,
-        carrier: args.carrier,
-        updatedAfter: args.updated_after,
-        includeContainers: args.include_containers,
+        number: args.number,
+        trackingStopped: args.tracking_stopped,
+        includeContainers,
       },
       {
         format: 'mapped',
         page: args.page,
-        pageSize: args.page_size,
+        pageSize,
       },
     );
 

@@ -19,12 +19,13 @@ export async function executeListTrackingRequests(
   client: Terminal49Client,
 ): Promise<any> {
   const startTime = Date.now();
+  const pageSize = args.page_size ?? 25;
   logMcpEvent({
     event: 'tool.execute.start',
     tool: 'list_tracking_requests',
     filters: args.filters,
     page: args.page,
-    page_size: args.page_size,
+    page_size: pageSize,
     timestamp: new Date().toISOString(),
   });
 
@@ -48,7 +49,7 @@ export async function executeListTrackingRequests(
     const result = await client.trackingRequests.list(filters, {
       format: 'mapped',
       page: args.page,
-      pageSize: args.page_size,
+      pageSize,
     });
 
     const duration = Date.now() - startTime;

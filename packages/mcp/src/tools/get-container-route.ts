@@ -63,7 +63,9 @@ export async function executeGetContainerRoute(
   });
 
   try {
-    const result = await client.containers.route(args.id, { format: 'both' });
+    // The handler builds a curated route response entirely from JSON:API data;
+    // requesting the mapped representation as well only duplicates SDK work.
+    const result = await client.containers.route(args.id, { format: 'raw' });
     const raw = (result as any)?.raw ?? result;
     const duration = Date.now() - startTime;
 
