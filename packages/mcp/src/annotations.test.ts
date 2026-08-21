@@ -27,10 +27,7 @@ function getRegisteredTools(): Record<
 }
 
 describe('MCP tool annotations', () => {
-  // ChatGPT app submission requires readOnlyHint: false for all tools that emit
-  // operational logs (which all Terminal49 tools do) and openWorldHint: false
-  // since they only interact with the user's private Terminal49 account.
-  const allTools = [
+  const readTools = [
     'search_container',
     'get_container',
     'get_container_route',
@@ -40,32 +37,39 @@ describe('MCP tool annotations', () => {
     'list_containers',
     'list_shipments',
     'list_tracking_requests',
-    'track_container',
   ];
+  const allTools = [...readTools, 'track_container'];
 
-  it('marks all tools with conservative ChatGPT submission annotations', () => {
+  it('marks fetch-only tools as read-only', () => {
+    const tools = getRegisteredTools();
+
+    for (const name of readTools) {
+      const annotations = tools[name]?.annotations;
+      expect(annotations, name).toBeDefined();
+      expect(annotations?.readOnlyHint, `${name}.readOnlyHint`).toBe(true);
+    }
+  });
+
+  it('marks track_container as a non-idempotent write', () => {
+    const tools = getRegisteredTools();
+    const annotations = tools.track_container?.annotations;
+
+    expect(annotations).toBeDefined();
+    expect(annotations?.readOnlyHint).toBe(false);
+    expect(annotations?.idempotentHint).toBe(false);
+  });
+
+  it('marks every tool as private-account-only and non-destructive', () => {
     const tools = getRegisteredTools();
 
     for (const name of allTools) {
       const annotations = tools[name]?.annotations;
       expect(annotations, name).toBeDefined();
-      // All tools emit redacted operational logs, so readOnlyHint is false.
-      expect(annotations?.readOnlyHint, `${name}.readOnlyHint`).toBe(false);
-      // All tools interact only with private Terminal49 accounts, not third-party systems.
       expect(annotations?.openWorldHint, `${name}.openWorldHint`).toBe(false);
-      // No tool deletes or overwrites data irreversibly.
       expect(annotations?.destructiveHint, `${name}.destructiveHint`).toBe(
         false,
       );
     }
-  });
-
-  it('marks track_container as non-idempotent', () => {
-    const tools = getRegisteredTools();
-    const annotations = tools.track_container?.annotations;
-
-    expect(annotations).toBeDefined();
-    expect(annotations?.idempotentHint).toBe(false);
   });
 
   it('annotates every registered tool', () => {

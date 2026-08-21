@@ -10,12 +10,12 @@
   "tools": {
     "search_container": {
       "annotations": {
-        "readOnlyHint": false,
+        "readOnlyHint": true,
         "openWorldHint": false,
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Searches the user's Terminal49 account without modifying records, but emits redacted operational logs.",
+        "read_only_justification": "Searches the user's Terminal49 account without modifying records.",
         "open_world_justification": "Does not publish content or change public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
@@ -34,96 +34,96 @@
     },
     "get_container": {
       "annotations": {
-        "readOnlyHint": false,
+        "readOnlyHint": true,
         "openWorldHint": false,
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Retrieves container details without changing the container, but emits redacted operational logs.",
+        "read_only_justification": "Retrieves container details without changing the container.",
         "open_world_justification": "Does not publish content or change public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
     },
     "get_shipment_details": {
       "annotations": {
-        "readOnlyHint": false,
+        "readOnlyHint": true,
         "openWorldHint": false,
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Retrieves shipment details without modifying records, but emits redacted operational logs.",
+        "read_only_justification": "Retrieves shipment details without modifying records.",
         "open_world_justification": "Does not publish content or change public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
     },
     "get_container_transport_events": {
       "annotations": {
-        "readOnlyHint": false,
+        "readOnlyHint": true,
         "openWorldHint": false,
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Retrieves the transport-event timeline without changing it, but emits redacted operational logs.",
+        "read_only_justification": "Retrieves the transport-event timeline without changing it.",
         "open_world_justification": "Does not publish content or change public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
     },
     "get_supported_shipping_lines": {
       "annotations": {
-        "readOnlyHint": false,
+        "readOnlyHint": true,
         "openWorldHint": false,
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Retrieves the supported shipping-line catalog without modifying data, but emits redacted operational logs.",
+        "read_only_justification": "Retrieves the supported shipping-line catalog without modifying data.",
         "open_world_justification": "Reads a closed reference catalog and does not change any external system.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
     },
     "get_container_route": {
       "annotations": {
-        "readOnlyHint": false,
+        "readOnlyHint": true,
         "openWorldHint": false,
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Retrieves route and vessel data without modifying it, but emits redacted operational logs.",
+        "read_only_justification": "Retrieves route and vessel data without modifying it.",
         "open_world_justification": "Does not publish content or change public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
     },
     "list_shipments": {
       "annotations": {
-        "readOnlyHint": false,
+        "readOnlyHint": true,
         "openWorldHint": false,
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Lists shipments without modifying them, but emits redacted operational logs.",
+        "read_only_justification": "Lists shipments without modifying them.",
         "open_world_justification": "Does not publish content or change public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
     },
     "list_containers": {
       "annotations": {
-        "readOnlyHint": false,
+        "readOnlyHint": true,
         "openWorldHint": false,
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Lists containers without modifying them, but emits redacted operational logs.",
+        "read_only_justification": "Lists containers without modifying them.",
         "open_world_justification": "Does not publish content or change public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
     },
     "list_tracking_requests": {
       "annotations": {
-        "readOnlyHint": false,
+        "readOnlyHint": true,
         "openWorldHint": false,
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Lists tracking requests without changing their state, but emits redacted operational logs.",
+        "read_only_justification": "Lists tracking requests without changing their state.",
         "open_world_justification": "Does not publish content or change public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
