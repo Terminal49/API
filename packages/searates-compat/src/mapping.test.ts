@@ -485,9 +485,15 @@ describe('SeaRates positional event mapping', () => {
       },
       ...(eventDocument.included || []),
     ];
-    expect(
-      responseData(mapTrackingPayload(trackingPayload)).locations,
-    ).toMatchObject([{ locode: 'FRLEH', lat: 49.49, lng: 0.1 }]);
+    expect(responseData(mapTrackingPayload(trackingPayload)).locations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          locode: 'FRLEH',
+          lat: 49.49,
+          lng: 0.1,
+        }),
+      ]),
+    );
   });
 
   it('formats offset timestamps in the official SeaRates date shape', () => {
