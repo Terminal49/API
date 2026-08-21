@@ -38,7 +38,7 @@ export function readQueryGuidanceResource(): string {
     '- `list_containers` supports pagination and `include`; it has no server-side status, port, carrier, or updated-after filter.',
     '- `list_shipments` supports pagination, `include`, exact original tracking-request `number` (normally a BOL or booking number, not a container number), and `tracking_stopped`.',
     '- Requests such as "containers at USLAX", "Maersk fleet", or "recently updated containers/shipments" cannot currently be server-filtered with these list tools. Say so plainly; do not claim the returned page matches that scope.',
-    '- If a list result has a non-empty `unsupportedFilters` array, those filters were not applied. Treat the page as unscoped unless another supported filter was applied, and disclose the limitation.',
+    '- If a list result has a non-empty `unsupportedFilters` array, those filters were not applied. Treat the page as unscoped and disclose the limitation.',
     '- `include` only changes related data in each row. It never narrows the result set.',
     '',
     '## Client-side operational analysis',

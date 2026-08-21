@@ -1339,6 +1339,27 @@ describe('MCP tool contracts', () => {
     );
   });
 
+  it('buildListContract treats partially applied filters as unscoped', () => {
+    const contract = buildListContract(
+      {
+        items: [{ id: 's1' }],
+        meta: { total: 1 },
+        unsupportedFilters: ['carrier'],
+      },
+      'shipment',
+      {
+        filters: { number: 'MAEU123456789', carrier: 'MAEU' },
+        unsupportedFilters: ['carrier'],
+      },
+    );
+
+    expect(contract.dropped_filters).toEqual(['carrier']);
+    expect(contract.can_answer).not.toContain(
+      'which records match the applied filters',
+    );
+    expect(contract.presentation_guidance).toContain('results are unscoped');
+  });
+
   it('buildListContract does not surface an implausibly large total as the worklist size', () => {
     const contract = buildListContract(
       { items: [{ id: 'c1' }, { id: 'c2' }], meta: { total: 250000 } },

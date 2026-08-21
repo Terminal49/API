@@ -95,7 +95,7 @@ Only track_container changes Terminal49 account records: it creates a tracking r
 
 Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.
 
-Read terminal49://docs/mcp-query-guidance before answering scoped list questions. list_containers and list_shipments do not apply status, port, carrier, or updated_after filters; never claim that a returned page was filtered by one of them, and treat a non-empty unsupportedFilters array as an explicit warning that the page is unscoped by those inputs.
+Read terminal49://docs/mcp-query-guidance before answering scoped list questions. list_containers and list_shipments do not apply status, port, carrier, or updated_after filters; never claim that a returned page was filtered by one of them, and treat any non-empty unsupportedFilters array as an explicit warning that the page is unscoped.
 
 Tool results carry a _response_contract with presentation and follow-up hints; treat it as steering for you, not content to show the user.`;
 
@@ -925,7 +925,10 @@ export function buildListContract(
     requestContext.unsupportedFilters,
     entityType,
   );
-  const isFiltered = applied.length > 0;
+  // A partially applied request is not the worklist the caller asked for.
+  // Even when one supported filter was applied, any dropped filter makes the
+  // page unscoped for presentation purposes.
+  const isFiltered = applied.length > 0 && dropped.length === 0;
   const supportedVocab =
     SUPPORTED_LIST_FILTERS_BY_ENTITY[entityType].join(', ');
   const scopeRequirement =
