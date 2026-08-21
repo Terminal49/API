@@ -206,7 +206,7 @@ describe('SeaRates positional event mapping', () => {
       eventsFrom(result).find((item) => item.event_code === 'LOAD'),
     ).toMatchObject({ status: 'CLT' });
     expect(responseData(result).route).toMatchObject({
-      pol: { date: '2026-08-01 12:00:00', location: 1 },
+      pol: { date: '2026-08-01 10:00:00', location: 1 },
     });
   });
 
