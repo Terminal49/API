@@ -268,3 +268,31 @@ jobs:
             echo "Vercel preview changed while the smoke test was running"
             exit 1
           fi
+
+  migrate:
+    runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install workspace dependencies
+        run: npm ci
+      - name: Build compatibility package
+        run: npm run build --workspace @terminal49/searates-compat
+      - name: Build migrate application
+        run: npm run build --workspace @terminal49/migrate-app
+      - name: Type-check compatibility package and migrate application
+        run: |
+          npm run type-check --workspace @terminal49/searates-compat
+          npm run type-check --workspace @terminal49/migrate-app
+      - name: Test compatibility package and migrate configuration
+        run: |
+          npm run test --workspace @terminal49/searates-compat
+          npm run test --workspace @terminal49/migrate-app
+      - name: Check compatibility package and migrate handlers
+        run: |
+          npm run lint --workspace @terminal49/searates-compat
+          npm run lint --workspace @terminal49/migrate-app

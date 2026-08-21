@@ -4,12 +4,13 @@
   "private": true,
   "description": "Terminal49 API with MCP Server",
   "workspaces": [
+    "apps/*",
     "packages/*",
     "sdks/*"
   ],
   "type": "module",
   "scripts": {
-    "build": "npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp && npm run build --workspace @terminal49/cli",
+    "build": "npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp && npm run build --workspace @terminal49/searates-compat && npm run build --workspace @terminal49/migrate-app && npm run build --workspace @terminal49/cli",
     "check": "npm run lint:api && npm run lint --workspaces && npm run type-check --workspaces",
     "format": "vp fmt --write api && npm run format --workspaces",
     "lint:api": "vp lint api && vp fmt --check api",
