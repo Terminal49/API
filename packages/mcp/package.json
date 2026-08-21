@@ -25,8 +25,10 @@
     "eval:check": "tsc --noEmit -p tsconfig.eval.json"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "@posthog/mcp": "0.10.1",
+    "@modelcontextprotocol/client": "^2.0.0",
+    "@modelcontextprotocol/node": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.0.0",
+    "@posthog/mcp": "^0.11.7",
     "@sentry/node": "^10.55.0",
     "@terminal49/sdk": "0.3.1",
     "posthog-node": "^5.0.0",

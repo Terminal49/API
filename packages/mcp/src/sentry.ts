@@ -1,4 +1,4 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import * as Sentry from '@sentry/node';
 
 type Environment = NodeJS.ProcessEnv;

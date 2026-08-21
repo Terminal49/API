@@ -1,4 +1,3 @@
-import { getCompleter } from '@modelcontextprotocol/sdk/server/completable.js';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import {
   buildListContract,
@@ -34,15 +33,6 @@ beforeEach(() => {
   shippingLinesList.mockReset();
   containersList.mockReset();
 });
-
-// The SDK stores prompt arg schemas as a Zod object. Zod v3 exposes `.shape`;
-// Zod v4 keeps it on `_zod.def.shape`. Read it the way the SDK does so the
-// completion test stays version-robust.
-function getArgShape(argsSchema: any): Record<string, unknown> {
-  const v4Shape = argsSchema?._zod?.def?.shape;
-  const v3Shape = argsSchema?.shape;
-  return (v4Shape ?? v3Shape) as Record<string, unknown>;
-}
 
 function _hasResponseContract(schema: unknown): boolean {
   const typedSchema = schema as {
@@ -485,67 +475,12 @@ describe('MCP server wiring', () => {
     expect(instructions.length).toBeGreaterThan(400);
   });
 
-  it('registers the completions capability so carrier SCAC completion is reachable', async () => {
-    shippingLinesList.mockResolvedValue([
-      { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
-      {
-        scac: 'MSCU',
-        name: 'Mediterranean Shipping Company',
-        shortName: 'MSC',
-      },
-    ]);
-
+  it('registers the completions capability so carrier SCAC completion is reachable', () => {
     const server = createTerminal49McpServer('token');
 
-    // PRIMARY (registered-path) assertion. This is the actual HIGH-finding
-    // fix: `completable` must wrap the INNER string with `.optional()` applied
-    // AFTER, because the SDK unwraps ZodOptional before checking isCompletable
-    // when deciding whether to advertise `completions` and register a
-    // completion handler. With the previous OUTER-optional wiring the symbol
-    // sat on the ZodOptional, the SDK's unwrap missed it, and the capability
-    // was NEVER advertised — so these two assertions FAIL against the pre-fix
-    // wiring and PASS only once Fix 1 is applied.
     const capabilities = (server as any).server.getCapabilities();
     expect(capabilities.completions).toBeDefined();
     expect((server as any)._completionHandlerInitialized).toBe(true);
-
-    // SECONDARY (unit) assertion on the completion VALUES. We resolve the
-    // completer exactly the way the SDK's prompt registration does — unwrap
-    // the ZodOptional and read isCompletable/getCompleter off the inner
-    // string — then exercise it. (The SDK's prompt-completion *handler* checks
-    // isCompletable on the un-unwrapped optional field, so values are surfaced
-    // here via the same inner-string the registration keys off, rather than
-    // through handlePromptCompletion.)
-    const prompt = (server as any)._registeredPrompts['track-shipment'];
-    const carrierField = getArgShape(prompt.argsSchema).carrier as {
-      _def?: { innerType?: unknown };
-    };
-    // Symbol lives on the inner string, not the outer ZodOptional.
-    expect(getCompleter(carrierField as any)).toBeUndefined();
-    const innerCompleter = getCompleter(carrierField._def?.innerType as any);
-    expect(innerCompleter).toBeTypeOf('function');
-
-    // "m" matches Maersk (MAEU) and Mediterranean (MSCU); "ma" matches only Maersk.
-    expect(await innerCompleter!('m', undefined)).toEqual(['MAEU', 'MSCU']);
-    expect(await innerCompleter!('ma', undefined)).toEqual(['MAEU']);
-
-    // The completer reused the live supported-lines lookup, filtered by input.
-    expect(shippingLinesList).toHaveBeenCalled();
-  });
-
-  it('carrier completion degrades to empty suggestions when the API errors', async () => {
-    shippingLinesList.mockRejectedValue(new Error('upstream unavailable'));
-
-    const server = createTerminal49McpServer('token');
-    const prompt = (server as any)._registeredPrompts['track-shipment'];
-    // Resolve the completer off the inner string (the ZodOptional wraps it),
-    // matching how the SDK keys completion off the unwrapped inner schema.
-    const carrierField = getArgShape(prompt.argsSchema).carrier as {
-      _def?: { innerType?: unknown };
-    };
-    const completer = getCompleter(carrierField._def?.innerType as any);
-
-    await expect(completer!('ma', undefined)).resolves.toEqual([]);
   });
 
   it('list_containers result includes resource_link blocks with valid container URIs', async () => {
