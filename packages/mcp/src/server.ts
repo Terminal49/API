@@ -91,7 +91,7 @@ export const TERMINAL49_SERVER_INSTRUCTIONS = `Terminal49 tracks ocean container
 
 Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered).
 
-Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number. The other tools fetch data, but every tool emits redacted operational logs and therefore declares readOnlyHint false under the submission rubric.
+Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools operate within the user's private Terminal49 account and none delete or overwrite data.
 
 Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.
 
@@ -1209,7 +1209,7 @@ export function createTerminal49McpServer(
         'This is the fastest way to find container information. ' +
         'Examples: CAIU2885402, MAEU123456789, or any reference number.',
       annotations: {
-        readOnlyHint: false,
+        readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
@@ -1348,7 +1348,7 @@ export function createTerminal49McpServer(
         'plus optional related data. Choose includes based on user question and container state. ' +
         'Response includes metadata hints to guide follow-up queries.',
       annotations: {
-        readOnlyHint: false,
+        readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
@@ -1391,7 +1391,7 @@ export function createTerminal49McpServer(
         'Use this when user asks about a shipment (vs a specific container). ' +
         'Returns: Bill of Lading, shipping line, port details, vessel info, ETAs, container list.',
       annotations: {
-        readOnlyHint: false,
+        readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
@@ -1433,7 +1433,7 @@ export function createTerminal49McpServer(
         'Use this for questions about journey history, "what happened", timeline analysis, rail tracking. ' +
         'More efficient than get_container with transport_events when you only need event data.',
       annotations: {
-        readOnlyHint: false,
+        readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
@@ -1466,7 +1466,7 @@ export function createTerminal49McpServer(
         'Returns SCAC codes, full names, and common abbreviations. ' +
         'Use this when user asks which carriers are supported or to validate a carrier name.',
       annotations: {
-        readOnlyHint: false,
+        readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
@@ -1514,7 +1514,7 @@ export function createTerminal49McpServer(
         'NOTE: This is a paid feature and may not be available for all accounts. ' +
         'Use for questions about routing, transshipments, or detailed vessel itinerary.',
       annotations: {
-        readOnlyHint: false,
+        readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
@@ -1598,7 +1598,7 @@ export function createTerminal49McpServer(
         'List shipments with optional filters and pagination. ' +
         'Use for queries like "show recent shipments" or "shipments for a carrier".',
       annotations: {
-        readOnlyHint: false,
+        readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
@@ -1646,7 +1646,7 @@ export function createTerminal49McpServer(
         'List containers with optional filters and pagination. ' +
         'Use for queries like "containers at port" or "latest updates".',
       annotations: {
-        readOnlyHint: false,
+        readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
@@ -1698,7 +1698,7 @@ export function createTerminal49McpServer(
         'List tracking requests with optional filters and pagination. ' +
         'Useful for monitoring recent tracking activity.',
       annotations: {
-        readOnlyHint: false,
+        readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },

@@ -94,7 +94,7 @@ describe('MCP protocol compatibility', () => {
 
       for (const tool of tools) {
         expect(tool.annotations).toMatchObject({
-          readOnlyHint: false,
+          readOnlyHint: tool.name !== 'track_container',
           destructiveHint: false,
           openWorldHint: false,
         });
