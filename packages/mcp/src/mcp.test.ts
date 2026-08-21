@@ -1,3 +1,8 @@
+import {
+  Client,
+  StreamableHTTPClientTransport,
+} from '@modelcontextprotocol/client';
+import { createMcpHandler } from '@modelcontextprotocol/server';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import {
   buildListContract,
@@ -475,12 +480,59 @@ describe('MCP server wiring', () => {
     expect(instructions.length).toBeGreaterThan(400);
   });
 
-  it('registers the completions capability so carrier SCAC completion is reachable', () => {
-    const server = createTerminal49McpServer('token');
+  it('returns carrier SCAC completion values over MCP', async () => {
+    shippingLinesList.mockResolvedValue([
+      { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
+      {
+        scac: 'MSCU',
+        name: 'Mediterranean Shipping Company',
+        shortName: 'MSC',
+      },
+    ]);
 
-    const capabilities = (server as any).server.getCapabilities();
-    expect(capabilities.completions).toBeDefined();
-    expect((server as any)._completionHandlerInitialized).toBe(true);
+    const handler = createMcpHandler(
+      () => createTerminal49McpServer('token', 'https://api.test'),
+      {
+        legacy: 'stateless',
+        responseMode: 'json',
+      },
+    );
+    const client = new Client(
+      { name: 'terminal49-completion-test', version: '1.0.0' },
+      { versionNegotiation: { mode: { pin: '2026-07-28' } } },
+    );
+    const transport = new StreamableHTTPClientTransport(
+      new URL('https://mcp.test/mcp'),
+      {
+        fetch: (url, init) => handler.fetch(new Request(url, init)),
+      },
+    );
+
+    try {
+      await client.connect(transport);
+
+      const broadMatch = await client.complete({
+        ref: { type: 'ref/prompt', name: 'track-shipment' },
+        argument: { name: 'carrier', value: 'm' },
+      });
+      expect(broadMatch.completion.values).toEqual(['MAEU', 'MSCU']);
+
+      const narrowMatch = await client.complete({
+        ref: { type: 'ref/prompt', name: 'track-shipment' },
+        argument: { name: 'carrier', value: 'ma' },
+      });
+      expect(narrowMatch.completion.values).toEqual(['MAEU']);
+
+      shippingLinesList.mockRejectedValue(new Error('upstream unavailable'));
+      const degraded = await client.complete({
+        ref: { type: 'ref/prompt', name: 'track-shipment' },
+        argument: { name: 'carrier', value: 'ma' },
+      });
+      expect(degraded.completion.values).toEqual([]);
+    } finally {
+      await client.close();
+      await handler.close();
+    }
   });
 
   it('list_containers result includes resource_link blocks with valid container URIs', async () => {
