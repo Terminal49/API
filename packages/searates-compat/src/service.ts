@@ -56,6 +56,26 @@ function containerResources(document: JsonApiDocument): JsonApiResource[] {
   );
 }
 
+function normalizeNumber(value: unknown): string {
+  return typeof value === 'string'
+    ? value.replace(/\s+/g, '').toUpperCase()
+    : '';
+}
+
+function requestedContainers(
+  resources: JsonApiResource[],
+  type: TrackingType,
+  number: string,
+): JsonApiResource[] {
+  return type === 'CT'
+    ? resources.filter(
+        (resource) =>
+          normalizeNumber(resource.attributes?.number) ===
+          normalizeNumber(number),
+      )
+    : resources;
+}
+
 function upstreamErrorMessage(error: Terminal49ApiError): string {
   if (error.status === 401) return 'API_KEY_WRONG';
   if (error.status === 403) return 'API_KEY_ACCESS_DENIED';
@@ -120,7 +140,14 @@ export class SeaRatesCompatibilityGateway {
       if (!shipment) {
         return noTrackingInfoEnvelope();
       }
-      let containers = containerResources(shipmentDocument);
+      let containers = requestedContainers(
+        containerResources(shipmentDocument),
+        type,
+        query.number,
+      );
+      if (type === 'CT' && containers.length === 0) {
+        return noTrackingInfoEnvelope();
+      }
 
       if (query.forceUpdate && containers.length > 0) {
         if (containers.length > 10) {
@@ -137,7 +164,14 @@ export class SeaRatesCompatibilityGateway {
         shipmentDocument = refreshedDocument;
         shipment = shipmentFrom(shipmentDocument);
         if (!shipment) return noTrackingInfoEnvelope();
-        containers = containerResources(shipmentDocument);
+        containers = requestedContainers(
+          containerResources(shipmentDocument),
+          type,
+          query.number,
+        );
+        if (type === 'CT' && containers.length === 0) {
+          return noTrackingInfoEnvelope();
+        }
       }
 
       const eventsByContainerId = new Map<string, JsonApiDocument>();

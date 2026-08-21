@@ -210,6 +210,36 @@ describe('SeaRates positional event mapping', () => {
     });
   });
 
+  it('keeps explicit transshipment events at hub milestones on truncated timelines', () => {
+    const result = mapTrackingPayload(
+      payload([
+        event(
+          'hub-load',
+          'container.transport.transshipment_loaded',
+          '2026-08-05T10:00:00Z',
+          'port-pod',
+        ),
+        event(
+          'hub-depart',
+          'container.transport.transshipment_departed',
+          '2026-08-06T10:00:00Z',
+          'port-pod',
+        ),
+        event(
+          'hub-arrive',
+          'container.transport.transshipment_arrived',
+          '2026-08-07T10:00:00Z',
+          'port-pod',
+        ),
+      ]),
+    );
+    expect(eventsFrom(result).map((item) => item.status)).toEqual([
+      'CLT',
+      'VDT',
+      'VAT',
+    ]);
+  });
+
   it('maps hub and last sea arrivals to VAT and VAD by order', () => {
     const result = mapTrackingPayload(
       payload([
@@ -434,6 +464,30 @@ describe('SeaRates positional event mapping', () => {
     expect(responseData(mapTrackingPayload(trackingPayload))).toMatchObject({
       containers: [{ number: 'MSCU1234567' }],
     });
+  });
+
+  it('merges sparse event includes without discarding richer port data', () => {
+    const trackingPayload = payload([
+      event(
+        'depart',
+        'container.transport.vessel_departed',
+        '2026-08-01T10:00:00Z',
+      ),
+    ]);
+    const eventDocument =
+      trackingPayload.eventsByContainerId.get('container-1');
+    if (!eventDocument) throw new Error('Expected event fixture document');
+    eventDocument.included = [
+      {
+        id: 'port-pol',
+        type: 'port',
+        attributes: { name: 'Le Havre' },
+      },
+      ...(eventDocument.included || []),
+    ];
+    expect(
+      responseData(mapTrackingPayload(trackingPayload)).locations,
+    ).toMatchObject([{ locode: 'FRLEH', lat: 49.49, lng: 0.1 }]);
   });
 
   it('formats offset timestamps in the official SeaRates date shape', () => {

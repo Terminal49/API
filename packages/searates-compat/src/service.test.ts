@@ -165,6 +165,63 @@ describe('SeaRates compatibility gateway', () => {
     expect(refreshCalls).toBe(0);
   });
 
+  it('fetches events only for the requested CT shipment member', async () => {
+    if (!shipmentFixture.data || Array.isArray(shipmentFixture.data)) {
+      throw new Error('Shipment fixture must contain one resource');
+    }
+    const sibling = {
+      id: 'container-sibling',
+      type: 'container',
+      attributes: {
+        number: 'TCLU7654321',
+        current_status: 'on_ship',
+      },
+    };
+    const shipmentDocument = {
+      ...shipmentFixture,
+      included: [sibling, ...(shipmentFixture.included || [])],
+    };
+    const eventContainerIds: string[] = [];
+    const gateway = new SeaRatesCompatibilityGateway({
+      fetchImpl: async (input) => {
+        const url = String(input);
+        if (url.includes('/containers?')) {
+          return response({
+            data: [
+              {
+                id: 'container-1',
+                type: 'container',
+                relationships: {
+                  shipment: {
+                    data: { id: 'shipment-1', type: 'shipment' },
+                  },
+                },
+              },
+            ],
+          });
+        }
+        if (url.includes('/shipments/shipment-1')) {
+          return response(shipmentDocument);
+        }
+        const eventMatch = url.match(/\/containers\/([^/]+)\/transport_events/);
+        if (eventMatch?.[1]) {
+          eventContainerIds.push(eventMatch[1]);
+          return response(eventsFixture);
+        }
+        throw new Error(`Unexpected fixture request: ${url}`);
+      },
+    });
+
+    await expect(
+      gateway.tracking('pass-through-key', {
+        ...query,
+        number: 'MSCU1234567',
+        type: 'CT',
+      }),
+    ).resolves.toMatchObject({ status: 'success', message: 'OK' });
+    expect(eventContainerIds).toEqual(['container-1']);
+  });
+
   it('does not serve the pre-refresh shipment when refresh stays unresolved', async () => {
     let refreshCalls = 0;
     let refreshAccepted = false;

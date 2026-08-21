@@ -133,9 +133,22 @@ function collectResources(payload: TrackingPayload): JsonApiResource[] {
   for (const resource of resources) {
     const key = `${resource.type}:${resource.id}`;
     const existing = unique.get(key);
-    if (!existing || Object.keys(attrs(resource)).length > 0) {
+    if (!existing) {
       unique.set(key, resource);
+      continue;
     }
+    unique.set(key, {
+      ...existing,
+      ...resource,
+      attributes: {
+        ...existing.attributes,
+        ...resource.attributes,
+      },
+      relationships: {
+        ...existing.relationships,
+        ...resource.relationships,
+      },
+    });
   }
   return [...unique.values()];
 }
@@ -403,6 +416,7 @@ function assignStatuses(events: EventDraft[]): void {
   const originLoad = seaEvents.find(
     (event, index) =>
       event.code === 'LOAD' &&
+      !/transshipment/.test(event.name) &&
       !seaEvents
         .slice(0, index)
         .some((earlier) =>
@@ -412,6 +426,7 @@ function assignStatuses(events: EventDraft[]): void {
   const originDeparture = seaEvents.find(
     (event, index) =>
       event.code === 'DEPA' &&
+      !/transshipment/.test(event.name) &&
       !seaEvents
         .slice(0, index)
         .some((earlier) =>
@@ -428,7 +443,12 @@ function assignStatuses(events: EventDraft[]): void {
     )[0];
   const lastSeaArrival = [...events]
     .reverse()
-    .find((event) => event.code === 'ARRI' && isSea(event));
+    .find(
+      (event) =>
+        event.code === 'ARRI' &&
+        isSea(event) &&
+        !/transshipment/.test(event.name),
+    );
   const finalSeaDischarge = [...events]
     .reverse()
     .find(
@@ -470,10 +490,18 @@ function assignStatuses(events: EventDraft[]): void {
       event.status = 'CDC';
     } else if (event.code === 'LOAD') {
       event.status =
-        event === originLoad ? 'CLL' : isSea(event) ? 'CLT' : 'LTS';
+        event === originLoad && !/transshipment/.test(event.name)
+          ? 'CLL'
+          : isSea(event)
+            ? 'CLT'
+            : 'LTS';
     } else if (event.code === 'DEPA') {
       event.status =
-        event === originDeparture ? 'VDL' : isSea(event) ? 'VDT' : 'LTS';
+        event === originDeparture && !/transshipment/.test(event.name)
+          ? 'VDL'
+          : isSea(event)
+            ? 'VDT'
+            : 'LTS';
     } else if (event.code === 'ARRI') {
       const laterSailing = events.some(
         (later) =>
@@ -490,7 +518,9 @@ function assignStatuses(events: EventDraft[]): void {
           firstSeaBoundary?.instant !== undefined &&
           event.instant < firstSeaBoundary.instant)
           ? 'LTS'
-          : event === lastSeaArrival && !laterSailing
+          : event === lastSeaArrival &&
+              !laterSailing &&
+              !/transshipment/.test(event.name)
             ? 'VAD'
             : 'VAT';
     } else if (event.code === 'DISC') {
