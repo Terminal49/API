@@ -25,7 +25,6 @@
     "eval:check": "tsc --noEmit -p tsconfig.eval.json"
   },
   "dependencies": {
-    "@modelcontextprotocol/client": "^2.0.0",
     "@modelcontextprotocol/node": "^2.0.0",
     "@modelcontextprotocol/server": "^2.0.0",
     "@posthog/mcp": "^0.11.7",
@@ -35,6 +34,7 @@
     "zod": "~4.3.6"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "^2.0.0",
     "@types/node": "^24.10.13",
     "@vitest/coverage-v8": "4.1.10",
     "tsx": "^4.22.4",
