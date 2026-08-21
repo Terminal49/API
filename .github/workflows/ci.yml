@@ -157,7 +157,10 @@ jobs:
 
   mcp-preview-protocol:
     name: MCP preview ${{ matrix.protocol-version }}
-    if: github.event_name == 'pull_request'
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
     needs: [mcp, mcp-protocol-compat]
     runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
     strategy:
@@ -167,15 +170,31 @@ jobs:
           - '2026-07-28'
           - '2025-11-25'
     steps:
+      - name: Check preview credential availability
+        id: credential
+        env:
+          MCP_EVAL_TOKEN: ${{ secrets.MCP_EVAL_TOKEN }}
+        run: |
+          if [[ -n "$MCP_EVAL_TOKEN" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping authenticated preview smoke because MCP_EVAL_TOKEN is unavailable"
+          fi
       - uses: actions/checkout@v4
+        if: steps.credential.outputs.available == 'true'
       - uses: actions/setup-node@v6
+        if: steps.credential.outputs.available == 'true'
         with:
           node-version: 24
           cache: 'npm'
           cache-dependency-path: package-lock.json
       - name: Install workspace dependencies
+        if: steps.credential.outputs.available == 'true'
         run: npm ci
       - name: Wait for this commit's Vercel preview
+        if: steps.credential.outputs.available == 'true'
+        id: vercel
         env:
           GH_TOKEN: ${{ github.token }}
           PREVIEW_SHA: ${{ github.event.pull_request.head.sha }}
@@ -197,23 +216,47 @@ jobs:
             echo "Timed out waiting for Vercel preview for ${PREVIEW_SHA}"
             exit 1
           fi
+          inspector_url="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${PREVIEW_SHA}/status" \
+            --jq '[.statuses[] | select(.context == "Vercel")][0].target_url // empty')"
+          if [[ -z "$inspector_url" ]]; then
+            echo "Vercel status for ${PREVIEW_SHA} has no deployment URL"
+            exit 1
+          fi
+          echo "inspector-url=${inspector_url}" >> "$GITHUB_OUTPUT"
       - name: Resolve Vercel preview endpoint
+        if: steps.credential.outputs.available == 'true'
         id: preview
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          VERCEL_INSPECTOR_URL: ${{ steps.vercel.outputs.inspector-url }}
         run: |
           preview_url="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
-            --paginate \
-            --jq '[.[] | select(.user.login == "vercel[bot]" or .user.login == "vercel")][-1].body | capture("\\[Preview\\]\\((?<url>https://[^)]+\\.vercel\\.app)\\)").url')"
+            --paginate --slurp | jq -r --arg inspector "$VERCEL_INSPECTOR_URL" \
+            'flatten | [.[] | select((.user.login == "vercel[bot]" or .user.login == "vercel") and (.body | contains($inspector)))][-1].body // "" | (try capture("\\[Preview\\]\\((?<url>https://[^)]+\\.vercel\\.app)\\)") catch {}) | .url // empty')"
           if [[ -z "$preview_url" ]]; then
-            echo "Could not resolve Vercel preview URL"
+            echo "Could not resolve a Vercel preview URL for ${VERCEL_INSPECTOR_URL}"
             exit 1
           fi
           echo "endpoint=${preview_url}/mcp" >> "$GITHUB_OUTPUT"
       - name: POST handshake and tools/list to Vercel preview
+        if: steps.credential.outputs.available == 'true'
         env:
           MCP_HTTP_ENDPOINT: ${{ steps.preview.outputs.endpoint }}
           MCP_HTTP_TOKEN: ${{ secrets.MCP_EVAL_TOKEN }}
           MCP_PROTOCOL_VERSION: ${{ matrix.protocol-version }}
         run: npm run test:http-protocol --workspace @terminal49/mcp
+      - name: Verify preview still belongs to this commit
+        if: steps.credential.outputs.available == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          VERCEL_INSPECTOR_URL: ${{ steps.vercel.outputs.inspector-url }}
+        run: |
+          matches="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+            --paginate --slurp | jq -r --arg inspector "$VERCEL_INSPECTOR_URL" \
+            'flatten | [.[] | select((.user.login == "vercel[bot]" or .user.login == "vercel") and (.body | contains($inspector)))] | length')"
+          if [[ "$matches" != "1" ]]; then
+            echo "Vercel preview changed while the smoke test was running"
+            exit 1
+          fi
