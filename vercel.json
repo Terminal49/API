@@ -12,9 +12,16 @@
     },
     "api/oauth-authorization-server.ts": {
       "maxDuration": 10
+    },
+    "api/openai-apps-challenge.ts": {
+      "maxDuration": 10
     }
   },
   "rewrites": [
+    {
+      "source": "/.well-known/openai-apps-challenge",
+      "destination": "/api/openai-apps-challenge"
+    },
     {
       "source": "/.well-known/oauth-protected-resource",
       "destination": "/api/oauth-protected-resource"

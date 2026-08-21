@@ -113,6 +113,63 @@ MCP uses published `@terminal49/sdk` by default, with optional local override fo
 
 ---
 
+## Store submission
+
+The public connector URL is `https://mcp.terminal49.com`. Store assets and
+submission metadata are checked in at the repository root:
+
+- `chatgpt-app-submission.json` — locked ChatGPT listing copy and review cases
+- `claude-connector-submission.json` — values to enter in Claude's submission portal
+- `server.json` — official MCP Registry metadata used for Copilot discovery
+- `public/store-icons/terminal49-{light,dark}.png` — 512×512 brand icons
+
+### Verify the domain for ChatGPT
+
+OpenAI generates a unique domain-verification token during submission. Add that
+exact value to the existing MCP Vercel project:
+
+```bash
+vercel env add OPENAI_APPS_CHALLENGE
+```
+
+After the project redeploys, verify that the well-known endpoint returns only
+the token you pasted:
+
+```bash
+curl --fail --silent \
+  https://mcp.terminal49.com/.well-known/openai-apps-challenge
+```
+
+Do not commit the token. The endpoint returns an empty `404` response while
+`OPENAI_APPS_CHALLENGE` is unset. Submit the connector and the values in
+`chatgpt-app-submission.json` through the
+[OpenAI plugin submission flow](https://developers.openai.com/plugins/deploy/submission).
+
+### Submit to Claude
+
+Use the [Claude Connectors Directory portal](https://claude.ai/admin-settings/directory/submissions/new)
+and enter the values in `claude-connector-submission.json`. Upload the light
+icon from `public/store-icons/terminal49-light.png`; the dark variant is
+available for clients that support theme-specific assets.
+
+### Publish for Copilot discovery
+
+GitHub's Copilot registry is a curated downstream discovery surface. Publish
+`server.json` to the official MCP Registry to make Terminal49 eligible for that
+surface:
+
+```bash
+mcp-publisher validate server.json
+mcp-publisher login github
+mcp-publisher publish server.json
+```
+
+The publisher must authenticate as an owner of the `Terminal49` GitHub
+organization because the registry name uses its `io.github.Terminal49`
+namespace.
+
+---
+
 ## 🛠️ Local Development
 
 ### Prerequisites
@@ -312,6 +369,7 @@ npm run lint
 |----------|----------|---------|-------------|
 | `T49_API_TOKEN` | ✅ Yes | - | Terminal49 API token |
 | `T49_API_BASE_URL` | No | `https://api.terminal49.com/v2` | API base URL |
+| `OPENAI_APPS_CHALLENGE` | Only for ChatGPT submission | - | Exact domain-verification token issued by the OpenAI submission portal |
 | `NODE_ENV` | No | `development` | Environment |
 | `LOG_LEVEL` | No | `info` | Logging level |
 | `REDACT_LOGS` | No | `true` | Redact tokens in logs |
