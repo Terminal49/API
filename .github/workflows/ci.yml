@@ -235,15 +235,14 @@ jobs:
             echo "Could not resolve a Vercel preview URL for ${VERCEL_INSPECTOR_URL}"
             exit 1
           fi
-          echo "origin=${preview_url}" >> "$GITHUB_OUTPUT"
           echo "endpoint=${preview_url}/mcp" >> "$GITHUB_OUTPUT"
       - name: Verify authorization server advertises refresh support
         if: matrix.protocol-version == '2026-07-28'
         env:
-          PREVIEW_ORIGIN: ${{ steps.preview.outputs.origin }}
+          AUTHORIZATION_SERVER_METADATA_URL: https://mcp.terminal49.com/.well-known/oauth-authorization-server
         run: |
           curl --fail --silent --show-error --location --max-time 30 \
-            "${PREVIEW_ORIGIN}/.well-known/oauth-authorization-server" \
+            "$AUTHORIZATION_SERVER_METADATA_URL" \
             | jq --exit-status '
                 (.grant_types_supported // [] | index("refresh_token")) != null
                 and
