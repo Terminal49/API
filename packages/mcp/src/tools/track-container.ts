@@ -291,11 +291,33 @@ export async function executeTrackContainer(
       timestamp: new Date().toISOString(),
     });
 
-    // Step 2: Get full container details using the ID
-    const containerDetails = await executeGetContainer(
-      { id: containerId },
-      client,
-    );
+    // Step 2: Get full container details using the ID. A newly-created request
+    // can expose its relationship before the container read model is available.
+    // Preserve the successful write state instead of misreporting the request as
+    // uncreated when that follow-up read briefly returns 404.
+    let containerDetails: Awaited<ReturnType<typeof executeGetContainer>>;
+    try {
+      containerDetails = await executeGetContainer({ id: containerId }, client);
+    } catch (error) {
+      if (!isNotFound(error)) {
+        throw error;
+      }
+      return {
+        tracking_request_created: true,
+        infer_result: infer,
+        tracking_request: {
+          request_number: number,
+          number_type: inferredNumberType,
+          scac: requestedScac || heuristicScac,
+          container_id: containerId,
+        },
+        _metadata: {
+          presentation_guidance:
+            'Tracking request was created and linked, but container details are not available yet. Poll list_tracking_requests or retry shortly.',
+          recommendations: ['list_tracking_requests', 'get_container'],
+        },
+      };
+    }
 
     const duration = Date.now() - startTime;
     logMcpEvent({

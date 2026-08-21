@@ -436,7 +436,7 @@ function buildTrackContract(
       'where to pull next (if container details are delayed)',
     ],
     requires_more_data: isPending
-      ? ['container UUID (once linking finishes)']
+      ? ['container details becoming available after request linking']
       : wasNotCreated
         ? ['a verified identifier and carrier SCAC']
         : [],

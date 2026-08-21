@@ -386,6 +386,100 @@ function argumentsFor(toolName: ToolName): Record<string, unknown> {
   }
 }
 
+function expectedOutputFor(toolName: ToolName): Record<string, unknown> {
+  switch (toolName) {
+    case 'search_container':
+      return {
+        total_results: 1,
+        containers: [
+          expect.objectContaining({
+            id: CONTAINER_ID,
+            container_number: 'CAIU1234567',
+            shipping_line: 'MAEU',
+          }),
+        ],
+      };
+    case 'track_container':
+      return {
+        container_number: 'CAIU1234567',
+        tracking_request_created: true,
+      };
+    case 'get_container':
+      return {
+        id: CONTAINER_ID,
+        container_number: 'CAIU1234567',
+        status: 'available_for_pickup',
+        shipment: expect.objectContaining({ id: SHIPMENT_ID, line: 'MAEU' }),
+      };
+    case 'get_shipment_details':
+      return {
+        id: SHIPMENT_ID,
+        bill_of_lading: 'MAEU123456789',
+        shipping_line: expect.objectContaining({ scac: 'MAEU' }),
+        containers: expect.objectContaining({ count: 1 }),
+      };
+    case 'get_container_transport_events':
+      return {
+        total_events: 2,
+        timeline: expect.arrayContaining([
+          expect.objectContaining({
+            event: 'container.transport.vessel_departed',
+          }),
+        ]),
+      };
+    case 'get_supported_shipping_lines':
+      return {
+        total_lines: 1,
+        shipping_lines: [
+          expect.objectContaining({ scac: 'MAEU', name: 'Maersk' }),
+        ],
+      };
+    case 'get_container_route':
+      return {
+        route_id: 'route-1',
+        total_legs: 1,
+        route_locations: [
+          expect.objectContaining({
+            port: expect.objectContaining({ code: 'USLAX' }),
+          }),
+        ],
+      };
+    case 'list_shipments':
+      return {
+        items: [
+          expect.objectContaining({
+            id: SHIPMENT_ID,
+            billOfLading: 'MAEU123456789',
+          }),
+        ],
+        unsupportedFilters: [],
+      };
+    case 'list_containers':
+      return {
+        items: [
+          expect.objectContaining({
+            id: CONTAINER_ID,
+            number: 'CAIU1234567',
+          }),
+        ],
+        unsupportedFilters: [],
+      };
+    case 'list_tracking_requests':
+      return {
+        items: [
+          expect.objectContaining({
+            requestNumber: 'CAIU1234567',
+            status: 'succeeded',
+          }),
+        ],
+      };
+    default: {
+      const exhaustive: never = toolName;
+      throw new Error(`Unhandled tool ${exhaustive}`);
+    }
+  }
+}
+
 function configureFailure(toolName: ToolName, error: Error): void {
   switch (toolName) {
     case 'search_container':
@@ -447,6 +541,7 @@ describe('all public tools over MCP client transport', () => {
 
         expect(result.isError).not.toBe(true);
         expect(result.structuredContent).toMatchObject({
+          ...expectedOutputFor(toolName),
           _response_contract: {
             purpose: expect.any(String),
             presentation_guidance: expect.any(String),
@@ -494,6 +589,48 @@ describe('all public tools over MCP client transport', () => {
         },
       });
       expect(JSON.stringify(result)).not.toContain('internal route');
+    } finally {
+      await client.close();
+      await handler.close();
+    }
+  });
+
+  it('track_container preserves a created request when its linked container is not readable yet', async () => {
+    sdk.search.mockResolvedValue({ data: [] });
+    sdk.createTrackingRequestFromInfer.mockResolvedValue({
+      infer: { inferred_type: 'container', selected_scac: 'MAEU' },
+      trackingRequest: {
+        included: [{ id: CONTAINER_ID, type: 'container' }],
+      },
+    });
+    const notFound = new Error('internal read model not ready');
+    notFound.name = 'NotFoundError';
+    sdk.containersGet.mockRejectedValue(notFound);
+    const { client, handler } = await connectClient();
+
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'CAIU1234567', scac: 'MAEU' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        tracking_request_created: true,
+        tracking_request: {
+          request_number: 'CAIU1234567',
+          container_id: CONTAINER_ID,
+        },
+        _response_contract: {
+          requires_more_data: [
+            'container details becoming available after request linking',
+          ],
+          presentation_guidance: expect.stringContaining(
+            'container linking is not immediate',
+          ),
+        },
+      });
+      expect(JSON.stringify(result)).not.toContain('internal read model');
     } finally {
       await client.close();
       await handler.close();
