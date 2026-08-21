@@ -15,6 +15,7 @@
     "build": "tsc",
     "test": "vp test",
     "test:coverage": "vp test --run --coverage",
+    "test:http-protocol": "node scripts/http-protocol-smoke.mjs",
     "test:protocol": "node scripts/protocol-smoke.mjs",
     "lint": "vp lint src && vp fmt --check src",
     "format": "vp fmt --write src",

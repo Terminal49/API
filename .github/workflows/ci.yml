@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main, master, feature/**]
 
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: read
+
 jobs:
   # Consumer compatibility: the standalone SDK lockfile on every supported
   # Node version, with no workspace tooling involved.
@@ -149,3 +154,66 @@ jobs:
         env:
           MCP_PROTOCOL_VERSION: ${{ matrix.protocol-version }}
         run: npm run test:protocol --workspace @terminal49/mcp
+
+  mcp-preview-protocol:
+    name: MCP preview ${{ matrix.protocol-version }}
+    if: github.event_name == 'pull_request'
+    needs: [mcp, mcp-protocol-compat]
+    runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        protocol-version:
+          - '2026-07-28'
+          - '2025-11-25'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install workspace dependencies
+        run: npm ci
+      - name: Wait for this commit's Vercel preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          state=pending
+          for attempt in {1..60}; do
+            state="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status" \
+              --jq '[.statuses[] | select(.context == "Vercel")][0].state // "pending"')"
+            if [[ "$state" == "success" ]]; then
+              break
+            fi
+            if [[ "$state" == "failure" || "$state" == "error" ]]; then
+              echo "Vercel preview failed for ${GITHUB_SHA}"
+              exit 1
+            fi
+            sleep 10
+          done
+          if [[ "$state" != "success" ]]; then
+            echo "Timed out waiting for Vercel preview for ${GITHUB_SHA}"
+            exit 1
+          fi
+      - name: Resolve Vercel preview endpoint
+        id: preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          comment="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+            --paginate \
+            --jq '[.[] | select(.user.login == "vercel[bot]" or .user.login == "vercel")][-1].body')"
+          if [[ "$comment" =~ \[Preview\]\((https://[^)]+\.vercel\.app)\) ]]; then
+            echo "endpoint=${BASH_REMATCH[1]}/mcp" >> "$GITHUB_OUTPUT"
+          else
+            echo "Could not resolve Vercel preview URL"
+            exit 1
+          fi
+      - name: POST handshake and tools/list to Vercel preview
+        env:
+          MCP_HTTP_ENDPOINT: ${{ steps.preview.outputs.endpoint }}
+          MCP_HTTP_TOKEN: ${{ secrets.MCP_EVAL_TOKEN }}
+          MCP_PROTOCOL_VERSION: ${{ matrix.protocol-version }}
+        run: npm run test:http-protocol --workspace @terminal49/mcp
