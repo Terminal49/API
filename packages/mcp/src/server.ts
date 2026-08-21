@@ -15,10 +15,7 @@ import { executeTrackContainer } from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
 import { executeGetShipmentDetails } from './tools/get-shipment-details.js';
 import { executeGetContainerTransportEvents } from './tools/get-container-transport-events.js';
-import {
-  executeGetSupportedShippingLines,
-  type ShippingLineRecord,
-} from './tools/get-supported-shipping-lines.js';
+import { executeGetSupportedShippingLines } from './tools/get-supported-shipping-lines.js';
 import {
   executeGetContainerRoute,
   type FeatureNotEnabledResult,
@@ -1161,33 +1158,14 @@ function wrapToolWithContract<TArgs>(
 function createCarrierScacCompleter(
   client: Terminal49Client,
 ): (value: string | undefined) => Promise<string[]> {
-  let cachedLines: Promise<ShippingLineRecord[]> | undefined;
-
-  const loadLines = (): Promise<ShippingLineRecord[]> => {
-    if (!cachedLines) {
-      cachedLines = executeGetSupportedShippingLines({}, client)
-        .then((result) => result.shipping_lines)
-        .catch((error: unknown) => {
-          cachedLines = undefined;
-          throw error;
-        });
-    }
-    return cachedLines;
-  };
-
   return async (value: string | undefined): Promise<string[]> => {
     try {
-      const search =
-        typeof value === 'string' ? value.trim().toLowerCase() : '';
-      const lines = await loadLines();
-      return lines
-        .filter((line) =>
-          [line.scac, line.name, line.short_name]
-            .filter((candidate): candidate is string => Boolean(candidate))
-            .some((candidate) => candidate.toLowerCase().includes(search)),
-        )
-        .slice(0, 100)
-        .map((line) => line.scac);
+      const search = typeof value === 'string' ? value.trim() : '';
+      const { shipping_lines } = await executeGetSupportedShippingLines(
+        { search },
+        client,
+      );
+      return shipping_lines.slice(0, 100).map((line) => line.scac);
     } catch {
       return [];
     }

@@ -507,16 +507,14 @@ describe('MCP server wiring', () => {
   });
 
   it('returns carrier SCAC completion values over MCP', async () => {
-    shippingLinesList
-      .mockRejectedValueOnce(new Error('upstream unavailable'))
-      .mockResolvedValue([
-        { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
-        {
-          scac: 'MSCU',
-          name: 'Mediterranean Shipping Company',
-          shortName: 'MSC',
-        },
-      ]);
+    shippingLinesList.mockResolvedValue([
+      { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
+      {
+        scac: 'MSCU',
+        name: 'Mediterranean Shipping Company',
+        shortName: 'MSC',
+      },
+    ]);
 
     const handler = createMcpHandler(
       () => createTerminal49McpServer('token', 'https://api.test'),
@@ -539,12 +537,6 @@ describe('MCP server wiring', () => {
     try {
       await client.connect(transport);
 
-      const degraded = await client.complete({
-        ref: { type: 'ref/prompt', name: 'track-shipment' },
-        argument: { name: 'carrier', value: 'ma' },
-      });
-      expect(degraded.completion.values).toEqual([]);
-
       const broadMatch = await client.complete({
         ref: { type: 'ref/prompt', name: 'track-shipment' },
         argument: { name: 'carrier', value: 'm' },
@@ -556,9 +548,13 @@ describe('MCP server wiring', () => {
         argument: { name: 'carrier', value: 'ma' },
       });
       expect(narrowMatch.completion.values).toEqual(['MAEU']);
-      // One retry after the failed load, then "m" and "ma" share the same
-      // per-server carrier catalog instead of issuing duplicate API requests.
-      expect(shippingLinesList).toHaveBeenCalledTimes(2);
+
+      shippingLinesList.mockRejectedValue(new Error('upstream unavailable'));
+      const degraded = await client.complete({
+        ref: { type: 'ref/prompt', name: 'track-shipment' },
+        argument: { name: 'carrier', value: 'ma' },
+      });
+      expect(degraded.completion.values).toEqual([]);
     } finally {
       await client.close();
       await handler.close();
