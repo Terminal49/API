@@ -5,6 +5,13 @@ All notable changes to `@terminal49/sdk` are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0](https://github.com/Terminal49/API/compare/sdk-v-v0.3.1...sdk-v-v0.4.0) (2026-08-22)
+
+
+### Features
+
+* **sdk:** publish the expanded client surface (terminals, vessels, webhooks, webhook notifications, mapTrackingRequest) that main has carried since 0.3.1, so the npm package matches the in-repo SDK the CLI and MCP server build against
+
 ## [0.3.1](https://github.com/Terminal49/API/compare/sdk-v-v0.3.0...sdk-v-v0.3.1) (2026-07-02)
 
 
