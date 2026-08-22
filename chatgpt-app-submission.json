@@ -3,7 +3,7 @@
   "schema_version": 1,
   "app_info": {
     "display_name": "Terminal49",
-    "subtitle": "Track ocean shipments",
+    "subtitle": "Track ocean shipments and containers",
     "description": "Terminal49 helps users find and monitor ocean shipments and containers, inspect routes and transport events, check supported shipping lines, and create new tracking requests through ChatGPT.",
     "category": "BUSINESS"
   },
