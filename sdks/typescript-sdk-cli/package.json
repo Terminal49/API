@@ -54,7 +54,7 @@
     "prepublishOnly": "npm run build && npm run lint && npm run test"
   },
   "dependencies": {
-    "@terminal49/sdk": "0.3.1",
+    "@terminal49/sdk": "0.4.0",
     "cli-table3": "^0.6.5",
     "commander": "^13.0.0"
   },
