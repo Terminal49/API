@@ -17,6 +17,7 @@ Some Terminal49 features require account enablement beyond standard API access.
 
 | Surface | Entitlement | How to request access | Non-entitled behavior |
 | --- | --- | --- | --- |
+| Read endpoints (`GET /v2/shipments`, `GET /v2/containers`, `GET /v2/tracking_requests/{id}`, and other GETs) | Full API access (paid plan or 7-day API trial) | Contact support@terminal49.com to enable the trial, or upgrade at [Pricing](/api-docs/useful-info/pricing) | `401 Unauthorized` with `You do not have permissions for using the API, except for creating tracking requests`. `POST /v2/tracking_requests` still works. |
 | Container Map GeoJSON API (`GET /v2/containers/{id}/map_geojson`) | Routing Data | Contact sales@terminal49.com | `403 Forbidden` with `Routing data feature is not enabled for this account` |
 | Vessel position and future-position endpoints | Routing Data / vessel positions | Contact sales@terminal49.com | `403 Forbidden` with `Routing data feature is not enabled for this account` |
 | MCP `get_container_route` tool | Routing Data | Contact sales@terminal49.com | The tool returns a feature-not-enabled response; use `get_container_transport_events` for historical milestones |
