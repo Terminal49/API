@@ -530,7 +530,7 @@ the source of truth for field mappings, event names, error codes, and behavior d
 
 # Plan (execute in order, one PR per step)
 
-## PR 1 -- Discovery and interface
+## PR 1 — Discovery and interface
 
 - Grep the repo for every GoComet call site. List them in the PR description.
 - Extract the GoComet client's public surface into an interface
@@ -538,7 +538,7 @@ the source of truth for field mappings, event names, error codes, and behavior d
   `getShipment(id)`, `refresh(id)`).
 - Make the existing GoComet client implement it. No behavior change.
 
-## PR 2 -- Terminal49 client
+## PR 2 — Terminal49 client
 
 - Add a `Terminal49Client` implementing the same `TrackingProvider` interface.
 - Auth via `T49_API_KEY` env var, header `Authorization: Token ${key}`.
@@ -557,7 +557,7 @@ the source of truth for field mappings, event names, error codes, and behavior d
   `FeatureNotEnabledError` (403 + feature flag response).
 - Add unit tests using recorded fixtures. Do not hit the live API in tests.
 
-## PR 3 -- Shadow mode
+## PR 3 — Shadow mode
 
 - Add a `ShadowProvider` that wraps both clients. On every read:
   - Call GoComet as the primary. Return its response.
@@ -567,7 +567,7 @@ the source of truth for field mappings, event names, error codes, and behavior d
 - Add a parity report script that aggregates shadow logs by SCAC and field.
 - Do NOT change what callers see. This step is observation only.
 
-## PR 4 -- Backfill script
+## PR 4 — Backfill script
 
 - Write a one-shot script that reads all active shipments from our database and calls
   `POST /tracking_requests` for each (one per BOL, booking, or container).
@@ -575,7 +575,7 @@ the source of truth for field mappings, event names, error codes, and behavior d
 - Rate-limit to respect Terminal49's limits (handle 429 with exponential backoff).
 - Idempotent: safe to re-run. Skip rows already backfilled.
 
-## PR 5 -- Webhook receiver (only if we picked the webhook path)
+## PR 5 — Webhook receiver (only if we picked the webhook path)
 
 - Add `POST /webhooks/terminal49` endpoint.
 - Verify HMAC signature using the shared secret from `T49_WEBHOOK_SECRET`. Reject on
@@ -592,14 +592,14 @@ the source of truth for field mappings, event names, error codes, and behavior d
 - If our firewall restricts inbound traffic, whitelist Terminal49 IPs from
   `GET /v2/webhooks/ips`.
 
-## PR 6 -- Cutover behind a flag
+## PR 6 — Cutover behind a flag
 
 - Add feature flag `TRACKING_PROVIDER` with values `gocomet` (default) and `terminal49`.
 - Route all reads through the flag. GoComet stays available as a fallback for one
   release cycle.
 - Flip staging to `terminal49`, verify parity report is clean, then flip production.
 
-## PR 7 -- Cleanup
+## PR 7 — Cleanup
 
 - Delete `GoCometClient`, its tests, its env vars, its dedupe cache, and any
   ISO-code parsing helpers Terminal49 makes redundant.
