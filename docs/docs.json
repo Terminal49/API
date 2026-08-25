@@ -158,6 +158,7 @@
               "api-docs/api-reference/documents/edit-a-document",
               "api-docs/api-reference/documents/delete-a-document",
               "api-docs/api-reference/documents/list-document-types",
+              "api-docs/api-reference/documents/get-a-document-type",
               "api-docs/api-reference/documents/get-a-document-download-url",
               "api-docs/api-reference/documents/re-extract-a-document",
               "api-docs/api-reference/documents/re-classify-a-document",

@@ -9412,7 +9412,7 @@
     "/documents/types": {
       "get": {
         "summary": "List document types",
-        "description": "Returns account-scoped allowed document types and labels.",
+        "description": "Returns the document types visible to the authenticated account. Each item includes thin catalog metadata and a detail URL for its extraction-field structure. The response does not include a schema payload, field counts, or derived field paths.",
         "tags": [
           "Documents"
         ],
@@ -9423,23 +9423,138 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "document_types": {
                       "type": "array",
                       "items": {
+                        "$ref": "#/components/schemas/document_type_list_item"
+                      }
+                    }
+                  },
+                  "required": [
+                    "document_types"
+                  ]
+                },
+                "examples": {
+                  "document_types": {
+                    "value": {
+                      "document_types": [
+                        {
+                          "code": "packing_list",
+                          "label": "Packing List",
+                          "description": "Itemized shipment contents with package counts, dimensions, weights, and marks.",
+                          "schema": {
+                            "id": "packing_list@2026-03-23",
+                            "version": "2026-03-23",
+                            "detail_url": "/v2/documents/types/packing_list"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
                         "type": "object",
+                        "additionalProperties": false,
                         "properties": {
-                          "code": {
-                            "type": "string"
-                          },
-                          "label": {
+                          "detail": {
                             "type": "string"
                           }
                         },
                         "required": [
-                          "code",
-                          "label"
+                          "detail"
                         ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "errors"
+                  ]
+                },
+                "examples": {
+                  "unauthorized": {
+                    "value": {
+                      "errors": [
+                        {
+                          "detail": "invalid API token"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-documents-types"
+      }
+    },
+    "/documents/types/{code}": {
+      "get": {
+        "summary": "Get a document type",
+        "description": "Returns one document type visible to the authenticated account and its sanitized extraction-field structure. The schema payload is for rendering extraction fields; it is not the versioned schema used to validate document representation payloads.",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "description": "Document type code from the list response.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "packing_list"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "document_type": {
+                      "$ref": "#/components/schemas/document_type_detail"
+                    }
+                  },
+                  "required": [
+                    "document_type"
+                  ]
+                },
+                "examples": {
+                  "document_type": {
+                    "value": {
+                      "document_type": {
+                        "code": "packing_list",
+                        "label": "Packing List",
+                        "description": "Itemized shipment contents with package counts, dimensions, weights, and marks.",
+                        "schema": {
+                          "id": "packing_list@2026-03-23",
+                          "version": "2026-03-23",
+                          "format": "json_schema",
+                          "payload": {
+                            "type": "object",
+                            "properties": {}
+                          }
+                        }
                       }
                     }
                   }
@@ -9453,12 +9568,84 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "errors": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/error"
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "detail": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "detail"
+                        ]
                       }
+                    }
+                  },
+                  "required": [
+                    "errors"
+                  ]
+                },
+                "examples": {
+                  "unauthorized": {
+                    "value": {
+                      "errors": [
+                        {
+                          "detail": "invalid API token"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "title"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "errors"
+                  ]
+                },
+                "examples": {
+                  "document_type_not_found": {
+                    "summary": "Document type is not visible to the account",
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "404",
+                          "title": "Not Found"
+                        }
+                      ]
                     }
                   }
                 }
@@ -9466,7 +9653,7 @@
             }
           }
         },
-        "operationId": "get-documents-types"
+        "operationId": "get-documents-types-code"
       }
     },
     "/documents/{id}": {
@@ -14615,7 +14802,7 @@
               "schema_payload": {
                 "type": "object",
                 "additionalProperties": true,
-                "description": "JSON Schema payload used to validate and describe extracted fields."
+                "description": "Versioned JSON Schema used to validate document_representation.payload. This is not the sanitized extraction-field structure returned by GET /documents/types/{code}."
               },
               "created_at": {
                 "type": "string",
@@ -15053,6 +15240,188 @@
         "required": [
           "id",
           "type"
+        ]
+      },
+      "document_type_list_item": {
+        "title": "Document type",
+        "type": "object",
+        "description": "Public catalog metadata for one document type visible to the authenticated account.",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Stable document type code."
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-readable document type label."
+          },
+          "description": {
+            "type": "string",
+            "description": "Public description of the document type."
+          },
+          "schema": {
+            "type": "object",
+            "description": "Metadata for the extraction-field structure available from the detail endpoint.",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Fully qualified extraction schema ID.",
+                "example": "packing_list@2026-03-23"
+              },
+              "version": {
+                "type": "string",
+                "description": "Extraction schema version.",
+                "example": "2026-03-23"
+              },
+              "detail_url": {
+                "type": "string",
+                "description": "Relative URL for the document type detail endpoint.",
+                "example": "/v2/documents/types/packing_list"
+              }
+            },
+            "required": [
+              "id",
+              "version",
+              "detail_url"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "description",
+          "schema"
+        ]
+      },
+      "sanitized_extraction_schema": {
+        "title": "Sanitized extraction-field schema",
+        "type": "object",
+        "description": "Recursive public-safe JSON Schema projection for rendering extraction fields. It includes only the structural keys retained by the sanitizer; internal extensions, prompts, instructions, titles, and descriptions are omitted.",
+        "additionalProperties": false,
+        "example": {
+          "type": "object",
+          "properties": {
+            "bill_of_lading_number": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "properties": {
+          "type": {
+            "description": "JSON Schema field type. It can be a string or an array of strings, such as [\"string\", \"null\"] for nullable fields in Wayfair schemas.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "format": {
+            "type": "string",
+            "description": "JSON Schema format, when available."
+          },
+          "enum": {
+            "type": "array",
+            "description": "Allowed field values, when available.",
+            "items": {}
+          },
+          "properties": {
+            "type": "object",
+            "description": "Nested object fields keyed by property name.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/sanitized_extraction_schema"
+            }
+          },
+          "items": {
+            "description": "Array item schema or tuple of item schemas.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/sanitized_extraction_schema"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/sanitized_extraction_schema"
+                }
+              }
+            ]
+          },
+          "required": {
+            "type": "array",
+            "description": "Required property names for an object field.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "document_type_detail": {
+        "title": "Document type detail",
+        "type": "object",
+        "description": "One public catalog item and its sanitized extraction-field structure.",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Stable document type code."
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-readable document type label."
+          },
+          "description": {
+            "type": "string",
+            "description": "Public description of the document type."
+          },
+          "schema": {
+            "type": "object",
+            "description": "Sanitized extraction-field schema metadata and structure.",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Fully qualified extraction schema ID.",
+                "example": "packing_list@2026-03-23"
+              },
+              "version": {
+                "type": "string",
+                "description": "Extraction schema version.",
+                "example": "2026-03-23"
+              },
+              "format": {
+                "type": "string",
+                "enum": [
+                  "json_schema"
+                ],
+                "description": "Format of the extraction-field structure."
+              },
+              "payload": {
+                "$ref": "#/components/schemas/sanitized_extraction_schema"
+              }
+            },
+            "required": [
+              "id",
+              "version",
+              "format",
+              "payload"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "description",
+          "schema"
         ]
       }
     },
