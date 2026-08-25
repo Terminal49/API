@@ -1,6 +1,6 @@
 ---
 title: "List document types"
-description: "List the document types visible to your Terminal49 account, including metadata and a link to each extraction-field structure."
+description: "List every document type allowed for your Terminal49 account, with public descriptions and schema links when available."
 openapi: "get /documents/types"
 ---
 
@@ -8,6 +8,6 @@ openapi: "get /documents/types"
   **Beta Feature** - This endpoint is currently in beta. The API is stable, but the schema and behavior may evolve based on feedback.
 </Info>
 
-Returns document types available to the authenticated account. Account permissions and catalog visibility can filter the results.
+Returns every document type allowed for the authenticated account so existing selectors and upload validation remain compatible.
 
-Each item contains thin metadata and `schema.detail_url` for retrieving its extraction-field structure on demand. The list does not include schema payloads, field counts, or derived field paths. See [Get a document type](/api-docs/api-reference/documents/get-a-document-type) for the detail response.
+Types included in the public catalog also contain a description and `schema.detail_url` for retrieving their extraction-field structure on demand. The list does not include schema payloads, field counts, or derived field paths. See [Get a document type](/api-docs/api-reference/documents/get-a-document-type) for the detail response.

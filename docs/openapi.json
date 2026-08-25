@@ -1315,7 +1315,7 @@
                           },
                           "auto_detect_vocc_scac": {
                             "type": "boolean",
-                            "description": "Set to `true` to have Terminal49 infer the carrier SCAC from `request_number` when `scac` is not supplied. Detection is asynchronous: the tracking request is created immediately (HTTP `201`) with `status: \"pending\"` and `scac: null`. If a carrier is inferred, the request transitions to `status: \"created\"` with the detected `scac` populated. If no supported carrier can be inferred, it transitions to `status: \"failed\"` with `failed_reason: \"scac_auto_detect_failed\"` and no shipment is created. Poll the tracking request or use webhooks to observe the outcome \u2014 the create response does not include the detected `scac`.",
+                            "description": "Set to `true` to have Terminal49 infer the carrier SCAC from `request_number` when `scac` is not supplied. Detection is asynchronous: the tracking request is created immediately (HTTP `201`) with `status: \"pending\"` and `scac: null`. If a carrier is inferred, the request transitions to `status: \"created\"` with the detected `scac` populated. If no supported carrier can be inferred, it transitions to `status: \"failed\"` with `failed_reason: \"scac_auto_detect_failed\"` and no shipment is created. Poll the tracking request or use webhooks to observe the outcome — the create response does not include the detected `scac`.",
                             "default": false,
                             "example": true
                           },
@@ -9412,7 +9412,7 @@
     "/documents/types": {
       "get": {
         "summary": "List document types",
-        "description": "Returns the document types visible to the authenticated account. Each item includes thin catalog metadata and a detail URL for its extraction-field structure. The response does not include a schema payload, field counts, or derived field paths.",
+        "description": "Returns every document type allowed for the authenticated account. Catalog-visible items also include a description and schema detail URL; option-only items contain just code and label. The response does not include a schema payload, field counts, or derived field paths.",
         "tags": [
           "Documents"
         ],
@@ -9449,6 +9449,10 @@
                             "version": "2026-03-23",
                             "detail_url": "/v2/documents/types/packing_list"
                           }
+                        },
+                        {
+                          "code": "unknown",
+                          "label": "Unknown"
                         }
                       ]
                     }
@@ -9506,7 +9510,7 @@
     "/documents/types/{code}": {
       "get": {
         "summary": "Get a document type",
-        "description": "Returns one document type visible to the authenticated account and its sanitized extraction-field structure. The schema payload is for rendering extraction fields; it is not the versioned schema used to validate document representation payloads.",
+        "description": "Returns one catalog-visible document type for the authenticated account and its sanitized extraction-field structure. Use this endpoint only for list items containing schema.detail_url; account-allowed option-only codes return 404. The schema payload is for rendering extraction fields; it is not the versioned schema used to validate document representation payloads.",
         "tags": [
           "Documents"
         ],
@@ -10940,7 +10944,7 @@
             }
           },
           "400": {
-            "description": "Bad request \u2014 missing required `query` parameter",
+            "description": "Bad request — missing required `query` parameter",
             "content": {
               "application/json": {
                 "schema": {
@@ -10970,7 +10974,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized \u2014 missing or invalid API token",
+            "description": "Unauthorized — missing or invalid API token",
             "content": {
               "application/json": {
                 "schema": {
@@ -12163,6 +12167,53 @@
         ],
         "x-examples": {}
       },
+      "user": {
+        "title": "User model",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "user"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "description": "User attributes included by the requested resource. Available fields depend on the endpoint and caller permissions.",
+            "additionalProperties": true,
+            "properties": {
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "email": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "email"
+              },
+              "company_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "attributes"
+        ]
+      },
       "error": {
         "title": "Error model",
         "type": "object",
@@ -13306,19 +13357,19 @@
                         "type": "string",
                         "format": "uuid"
                       },
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "tracking_request",
-                            "estimated_event",
-                            "transport_event",
-                            "container_updated_event",
-                            "document"
-                          ]
-                        }
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "tracking_request",
+                          "estimated_event",
+                          "transport_event",
+                          "container_updated_event",
+                          "document"
+                        ]
                       }
                     }
                   }
+                }
               }
             },
             "required": [
@@ -15245,7 +15296,7 @@
       "document_type_list_item": {
         "title": "Document type",
         "type": "object",
-        "description": "Public catalog metadata for one document type visible to the authenticated account.",
+        "description": "One document type allowed for the authenticated account. Public catalog metadata is present when a schema detail view is available.",
         "additionalProperties": false,
         "properties": {
           "code": {
@@ -15290,9 +15341,7 @@
         },
         "required": [
           "code",
-          "label",
-          "description",
-          "schema"
+          "label"
         ]
       },
       "sanitized_extraction_schema": {
