@@ -196,7 +196,7 @@ describe('MCP tool annotations', () => {
     expect(chatGpt.schema_version).toBe(1);
     expect(chatGpt.app_info).toMatchObject({
       display_name: 'Terminal49',
-      subtitle: 'Track ocean shipments',
+      subtitle: 'Track shipping containers',
       category: 'BUSINESS',
     });
     expect(chatGpt.app_info.description).toContain('Terminal49 helps users');
