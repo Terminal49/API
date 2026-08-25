@@ -37,7 +37,7 @@ Replace `YOUR_API_KEY` with the raw key value from the [developer portal](https:
 
 ### Restricted API access on Free plans
 
-Free-plan accounts can authenticate and create tracking requests, but read endpoints are gated. A valid key on a restricted account returns `401 Unauthorized` with `"You do not have permissions for using the API, except for creating tracking requests"` when you call any endpoint other than `POST /v2/tracking_requests`.
+Free-plan accounts can authenticate and create tracking requests, but read endpoints are gated. A valid key on a restricted account returns `401 Unauthorized` with `"You do not have permissions for using the API, except for creating tracking requests. All other permissions require a paid plan. See https://app.terminal49.com/settings/billing"` when you call any endpoint other than `POST /v2/tracking_requests`.
 
 To read tracking data (`GET /v2/shipments`, `GET /v2/containers`, `GET /v2/tracking_requests/{id}`, and other endpoints), your account needs full API access enabled. Full API access is not automatic on the Free plan. Contact [support@terminal49.com](mailto:support@terminal49.com) to enable a 7-day API trial, or see [Pricing](/api-docs/useful-info/pricing) for plans that include ongoing API read access.
 
