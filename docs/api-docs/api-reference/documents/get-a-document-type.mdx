@@ -1,0 +1,17 @@
+---
+title: "Get a document type"
+description: "Retrieve one account-visible document type and its sanitized extraction-field structure."
+openapi: "get /documents/types/{code}"
+---
+
+<Info>
+  **Beta Feature** - This endpoint is currently in beta. The API is stable, but the schema and behavior may evolve based on feedback.
+</Info>
+
+Returns one document type visible to the authenticated account. A code that is not in that account's catalog returns `404`.
+
+## Schema payload
+
+`schema.payload` is a sanitized structural projection for rendering the type's extraction fields. It can contain field types, formats, enum values, nested properties, array items, and required fields. A field type can be a string or an array of strings, such as `["string", "null"]`. Array `items` can be one schema or an array of schemas. It omits internal extensions, prompts, instructions, titles, and descriptions.
+
+This extraction-field structure does not validate `document_representation.payload`. For the versioned JSON Schema used to validate a document representation payload, use [Get a document schema](/api-docs/api-reference/document-schemas/get-a-document-schema).
