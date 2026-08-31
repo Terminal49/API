@@ -171,6 +171,12 @@ Resolve the IDs through the `terminal` resources serialized in `included`.
 The `container_updated_event` also has a `terminal` relationship that indicates where the data came from. Currently this is always the POD terminal; in the future it may be the final destination terminal or an off-dock location.
 </Note>
 
+### Milestone fields reverting to null
+
+Container milestone timestamps such as `pod_full_out_at` are derived from transport events. Terminal49 vets incoming events and can mark an event as invalid after publishing it, for example when a carrier or terminal retracts or corrects the data. When the source event is invalidated, the derived container field reverts, often back to `null`, and the change appears in a `container.updated` changeset as `[previous_value, null]`.
+
+To investigate why a field reverted, DataSync customers can query the [`transport_events` table](/datasync/table-properties/transport-events), which records `invalidated_at`, `invalidation_reason`, and `previous_version_id` for each event. These invalidation fields are not exposed on the API's transport events endpoint. If the invalidation reason is unclear, contact Terminal49 support with the affected container numbers.
+
 ## Related
 
 - [Event Catalog](/api-docs/webhooks/event-catalog) — canonical event names
