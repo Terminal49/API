@@ -20,8 +20,20 @@ The response includes an `original_event` field with the raw carrier event name,
 |---|---|---|
 | Status | Deprecated | Recommended |
 | Source | Carrier feed, mostly as-is | Vetted and normalized across carriers |
-| Includes estimated future events | Yes | No |
+| Estimated events | Any event type can be estimated, flagged by `attributes.estimated` | Only three normalized `estimated.*` event types (see below) |
 | Includes `original_event` | Yes | No |
 | Data quality | More events, less consistent normalization | Fewer events, higher confidence |
 
-Use `transport_events` for past milestones. Use `raw_events` only when you need the carrier's original event name or estimated future events that are not yet delivered as transport events.
+Use `transport_events` for past milestones. Use `raw_events` only when you need the carrier's original event name or estimated events that have no `transport_events` equivalent.
+
+## Estimated events
+
+In `raw_events`, any event type can carry an estimated timestamp. The `attributes.estimated` boolean is `true` when the timestamp is an estimate, so estimated feeder, rail, and transshipment events appear here.
+
+In `transport_events`, estimates are separate event types, and only three exist:
+
+- `container.transport.estimated.vessel_departed`
+- `container.transport.estimated.vessel_arrived`
+- `container.transport.estimated.arrived_at_inland_destination`
+
+There are no estimated equivalents for feeder, rail, or transshipment events in `transport_events`. If you need estimated timestamps for those milestones, `raw_events` is currently the only endpoint that provides them.

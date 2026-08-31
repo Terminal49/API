@@ -94,6 +94,10 @@ These events fire when an estimated departure or arrival time changes.
 | `container.transport.estimated.vessel_arrived` | ETA changed for vessel arrival at the port of discharge (container level). |
 | `container.transport.estimated.arrived_at_inland_destination` | ETA changed for the inland destination. Fires only for shipments with an inland rail leg. See the [Rail integration guide](/api-docs/in-depth-guides/rail-integration-guide). |
 
+<Note>
+These are the only estimated event types. There are no estimated equivalents for feeder, rail, or transshipment events. If you need estimated timestamps for those milestones, use the deprecated [raw events endpoint](/api-docs/api-reference/containers/get-a-containers-raw-events), which flags estimates with an `attributes.estimated` boolean on any event type.
+</Note>
+
 ## Container update events
 
 These events fire when container attributes change.

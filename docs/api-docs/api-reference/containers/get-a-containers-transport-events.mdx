@@ -20,6 +20,16 @@ The `attributes.event` field is one of a fixed set of normalized event names cov
 
 The `attributes.data_source` field indicates where the event originated: `shipping_line`, `terminal`, or `ais`.
 
+### Estimated event types
+
+Three estimated event types can appear in the response:
+
+- `container.transport.estimated.vessel_departed`
+- `container.transport.estimated.vessel_arrived`
+- `container.transport.estimated.arrived_at_inland_destination`
+
+These are the only estimated events in `transport_events`. Feeder, rail, and transshipment events exist only as actual milestones here. For estimated timestamps on those event types, use the deprecated [raw events endpoint](/api-docs/api-reference/containers/get-a-containers-raw-events), which flags estimates with an `attributes.estimated` boolean on any event type.
+
 ## Null locations and timezones
 
 Some events may have a `null` `location_locode` and `timezone` — most commonly on estimated events. See [Event Timestamps](/api-docs/in-depth-guides/event-timestamps) for details on how to interpret those timestamps.
