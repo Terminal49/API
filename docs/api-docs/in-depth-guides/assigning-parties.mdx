@@ -1,0 +1,159 @@
+---
+title: "Assign Shipper, Consignee, and Other Parties"
+description: "Set the shipper, consignee, freight forwarder, notify party, customs broker, or dray carrier on shipments and containers through the Terminal49 API."
+keywords:
+  - "Terminal49 API"
+  - "container tracking API"
+  - "shipment visibility"
+  - "developer guide"
+  - "party roles"
+  - "shipper"
+  - "consignee"
+  - "freight forwarder"
+---
+Use this guide to assign parties to your shipments from code instead of the dashboard bulk update.
+
+## How parties and roles work
+
+- A **party** is a company in your account, managed through [`/v2/parties`](/api-docs/api-reference/parties/list-parties).
+- A **party role** links one party to one shipment or container in one role.
+- Roles are a list, not a field. A shipment can carry two parties as `consignee`. To replace a party, remove its role and assign a new one.
+
+| Role | Shipment | Container |
+|------|----------|-----------|
+| `customer` | Yes, also at tracking request creation via `relationships.customer` | No |
+| `shipper` | Yes | No |
+| `consignee` | Yes | No |
+| `notify_party` | Yes | No |
+| `customs_broker` | Yes | No |
+| `freight_forwarder` | Yes | No |
+| `pickup_dray_carrier` | Yes | Yes |
+
+You need an API key. See [Start here](/api-docs/getting-started/start-here).
+
+## Find or create the party
+
+Search your parties by name:
+
+```bash
+curl -s "https://api.terminal49.com/v2/parties?query=ACME" \
+  -H "Authorization: Token YOUR_API_KEY"
+```
+
+If the party does not exist, [create it](/api-docs/api-reference/parties/create-a-party):
+
+```json Request
+{
+  "data": {
+    "type": "party",
+    "attributes": {
+      "company_name": "ACME LOGISTICS"
+    }
+  }
+}
+```
+
+Keep the returned `data.id`. It is the `PARTY_ID` below.
+
+## Get the shipment ID
+
+Roles are assigned on the shipment, so the shipment has to exist. A tracking request has a shipment once its `status` is `created`. Read the ID from the `tracked_object` relationship of [`GET /v2/tracking_requests/TRACKING_REQUEST_ID`](/api-docs/api-reference/tracking-requests/get-a-single-tracking-request), or from the `tracking_request.succeeded` webhook. See [Tracking Request Lifecycle](/api-docs/in-depth-guides/tracking-request-lifecycle).
+
+The customer is the exception: pass it in `relationships.customer` when creating the tracking request. See [Add a Customer to a Tracking Request](/api-docs/in-depth-guides/adding-customer).
+
+## Assign roles to the shipment
+
+Endpoint: **POST** - [https://api.terminal49.com/v2/shipments/SHIPMENT_ID/party_roles](/api-docs/api-reference/party-roles/assign-a-shipment-party-role)
+
+```json Request
+{
+  "data": {
+    "type": "party_role",
+    "attributes": {
+      "role": "shipper"
+    },
+    "relationships": {
+      "party": {
+        "data": {
+          "id": "PARTY_ID",
+          "type": "party"
+        }
+      }
+    }
+  }
+}
+```
+
+```json Response
+{
+  "data": {
+    "id": "PARTY_ROLE_ID",
+    "type": "party_role",
+    "attributes": {
+      "role": "shipper",
+      "roleable_type": "Shipment",
+      "roleable_id": "SHIPMENT_ID",
+      "created_at": "2026-09-01T14:02:11Z",
+      "updated_at": "2026-09-01T14:02:11Z"
+    },
+    "relationships": {
+      "party": {
+        "data": {
+          "id": "PARTY_ID",
+          "type": "party"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "PARTY_ID",
+      "type": "party",
+      "attributes": {
+        "company_name": "ACME LOGISTICS"
+      }
+    }
+  ]
+}
+```
+
+Send one request per role. Repeat with `"role": "consignee"` and `"role": "freight_forwarder"`.
+
+## Read the roles on the shipment
+
+Request the shipment with `flag[parties]=true` and include the parties:
+
+```bash
+curl -sg "https://api.terminal49.com/v2/shipments/SHIPMENT_ID?flag[parties]=true&include=party_roles.party" \
+  -H "Authorization: Token YOUR_API_KEY"
+```
+
+The shipment carries a `party_roles` relationship and the `included` array holds each `party_role` and its `party`. The same flag works on `GET /v2/shipments`. `-g` stops curl from treating the brackets in `flag[parties]` as a range.
+
+To list the roles alone, use [`GET /v2/shipments/SHIPMENT_ID/party_roles`](/api-docs/api-reference/party-roles/list-shipment-party-roles).
+
+## Replace a party
+
+To replace the consignee:
+
+1. List the roles and find the `party_role` with `"role": "consignee"`.
+2. **DELETE** [https://api.terminal49.com/v2/shipments/SHIPMENT_ID/party_roles/PARTY_ROLE_ID](/api-docs/api-reference/party-roles/remove-a-shipment-party-role). Returns `204`.
+3. **POST** the new consignee.
+
+## Assign a dray carrier to a container
+
+Containers accept one role, `pickup_dray_carrier`:
+
+Endpoint: **POST** - [https://api.terminal49.com/v2/containers/CONTAINER_ID/party_roles](/api-docs/api-reference/party-roles/assign-a-container-party-role)
+
+Read it back with [`GET /v2/containers/CONTAINER_ID/party_roles`](/api-docs/api-reference/party-roles/list-container-party-roles).
+
+## Errors
+
+| Status | Cause | Fix |
+|--------|-------|-----|
+| `401` | The party or the record belongs to another account | Use a party from `GET /v2/parties` and a shipment you created |
+| `404` | Unknown shipment, container, or party role ID | Check the ID |
+| `422` `Party has already been taken` | The same party already has this role on the record | Nothing to do, the role is set |
+| `422` `'x' is not a valid role` | Unknown role name | Use a role from the table above |
+| `422` `Role is not allowed for Cargo` | A role other than `pickup_dray_carrier` on a container | Assign it on the shipment instead |

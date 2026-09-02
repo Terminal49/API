@@ -1,0 +1,15 @@
+---
+title: List container party roles
+description: "List the parties assigned to a container in the Terminal49 API, with the role each party plays."
+og:title: List Container Party Roles | Terminal49 API Documentation
+og:description: List the parties assigned to a container in the Terminal49 API, with the role each party plays.
+openapi: get /containers/{container_id}/party_roles
+---
+
+Returns every party role on the container. The linked parties are returned in `included`.
+
+## Path parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `container_id` | Yes | The ID of the container |

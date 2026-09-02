@@ -602,7 +602,7 @@
             },
             "in": "query",
             "name": "number",
-            "description": "Search shipments by the original tracking `request_number` — typically a master bill of lading or booking number. This filter does **not** match container numbers; to look up a shipment by container number, use `GET /containers?filter[number]={container_number}` and include the related shipment via `include=shipment`."
+            "description": "Search shipments by the original tracking `request_number` \u2014 typically a master bill of lading or booking number. This filter does **not** match container numbers; to look up a shipment by container number, use `GET /containers?filter[number]={container_number}` and include the related shipment via `include=shipment`."
           },
           {
             "schema": {
@@ -611,6 +611,14 @@
             "in": "query",
             "name": "filter[tracking_stopped]",
             "description": "Filter shipments by whether they are still tracking or not"
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "flag[parties]",
+            "description": "Set to `true` to add the `party_roles` relationship to each shipment. Add `include=party_roles.party` to embed the roles and their parties."
           }
         ]
       }
@@ -956,6 +964,14 @@
             "in": "query",
             "name": "include",
             "description": "Comma delimited list of relations to include"
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "flag[parties]",
+            "description": "Set to `true` to add the `party_roles` relationship to each shipment. Add `include=party_roles.party` to embed the roles and their parties."
           }
         ]
       },
@@ -1159,10 +1175,7 @@
                             "data": null
                           },
                           "customer": {
-                            "data": {
-                              "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
-                              "type": "party"
-                            }
+                            "data": null
                           }
                         },
                         "links": {
@@ -1411,7 +1424,8 @@
                                   }
                                 }
                               }
-                            }
+                            },
+                            "description": "Party to assign as the customer. The response's `customer` relationship carries the party's linked account, or `null` when there is none."
                           }
                         }
                       },
@@ -7441,7 +7455,7 @@
     },
     "/parties": {
       "get": {
-        "description": "Get a list of parties",
+        "description": "Returns the parties in your account. A party is a company you assign to shipments, tracking requests, and containers through party roles (customer, shipper, consignee, notify party, customs broker, freight forwarder, dray carrier).",
         "operationId": "list-parties",
         "responses": {
           "200": {
@@ -7493,7 +7507,7 @@
         ]
       },
       "post": {
-        "description": "Creates a new party",
+        "description": "Creates a party. Use the returned `id` to set the `customer` relationship on a tracking request or to assign party roles.",
         "operationId": "post-party",
         "responses": {
           "201": {
@@ -8698,6 +8712,427 @@
         }
       }
     },
+    "/shipments/{shipment_id}/party_roles": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "shipment_id",
+          "in": "path",
+          "required": true,
+          "description": "Shipment ID"
+        }
+      ],
+      "get": {
+        "summary": "List shipment party roles",
+        "operationId": "get-shipments-party-roles",
+        "tags": [
+          "Parties"
+        ],
+        "description": "Returns the party roles attached to the shipment. Each role links one party to the record. The linked parties are returned in `included`.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/party_role"
+                      }
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/party"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
+                    }
+                  }
+                },
+                "examples": {
+                  "Party roles": {
+                    "value": {
+                      "data": [
+                        {
+                          "id": "1d0f2a0e-5c3b-4c7e-9a52-3b6f8d2e4a11",
+                          "type": "party_role",
+                          "attributes": {
+                            "role": "shipper",
+                            "roleable_type": "Shipment",
+                            "roleable_id": "8f0c6b1a-2d4e-4f7b-9c3a-5e6d7f8a9b0c",
+                            "created_at": "2026-09-01T14:02:11Z",
+                            "updated_at": "2026-09-01T14:02:11Z"
+                          },
+                          "relationships": {
+                            "party": {
+                              "data": {
+                                "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                                "type": "party"
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "included": [
+                        {
+                          "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                          "type": "party",
+                          "attributes": {
+                            "company_name": "ACME LOGISTICS",
+                            "nickname": "ACME"
+                          }
+                        }
+                      ],
+                      "links": {
+                        "self": "/v2/shipments/8f0c6b1a-2d4e-4f7b-9c3a-5e6d7f8a9b0c/party_roles"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Also returned when the record belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "summary": "Assign a shipment party role",
+        "operationId": "post-shipments-party-roles",
+        "tags": [
+          "Parties"
+        ],
+        "description": "Attaches a party to the shipment in the given role. Roles are additive: posting a second party with the same role keeps both. To replace a party, delete its role and create a new one. Posting the same party and role twice returns `422`.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes",
+                      "relationships"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "party_role"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "required": [
+                          "role"
+                        ],
+                        "properties": {
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "shipper",
+                              "consignee",
+                              "notify_party",
+                              "customs_broker",
+                              "customer",
+                              "freight_forwarder",
+                              "pickup_dray_carrier"
+                            ],
+                            "description": "Accepted values: `shipper`, `consignee`, `notify_party`, `customs_broker`, `customer`, `freight_forwarder`, `pickup_dray_carrier`."
+                          }
+                        }
+                      },
+                      "relationships": {
+                        "type": "object",
+                        "required": [
+                          "party"
+                        ],
+                        "properties": {
+                          "party": {
+                            "type": "object",
+                            "required": [
+                              "data"
+                            ],
+                            "properties": {
+                              "data": {
+                                "type": "object",
+                                "required": [
+                                  "id",
+                                  "type"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "description": "ID of a party in your account. See `GET /parties`."
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "party"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "type": "party_role",
+                  "attributes": {
+                    "role": "shipper"
+                  },
+                  "relationships": {
+                    "party": {
+                      "data": {
+                        "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                        "type": "party"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/party_role"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/party"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                },
+                "examples": {
+                  "Party role": {
+                    "value": {
+                      "data": {
+                        "id": "1d0f2a0e-5c3b-4c7e-9a52-3b6f8d2e4a11",
+                        "type": "party_role",
+                        "attributes": {
+                          "role": "shipper",
+                          "roleable_type": "Shipment",
+                          "roleable_id": "8f0c6b1a-2d4e-4f7b-9c3a-5e6d7f8a9b0c",
+                          "created_at": "2026-09-01T14:02:11Z",
+                          "updated_at": "2026-09-01T14:02:11Z"
+                        },
+                        "relationships": {
+                          "party": {
+                            "data": {
+                              "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                              "type": "party"
+                            }
+                          }
+                        }
+                      },
+                      "included": [
+                        {
+                          "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                          "type": "party",
+                          "attributes": {
+                            "company_name": "ACME LOGISTICS",
+                            "nickname": "ACME"
+                          }
+                        }
+                      ],
+                      "links": {
+                        "self": "/v2/shipments/8f0c6b1a-2d4e-4f7b-9c3a-5e6d7f8a9b0c/party_roles"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Also returned when the party or the record belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "Party from another account": {
+                    "value": {
+                      "errors": [
+                        {
+                          "detail": "You are not allowed to perform this action"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "Duplicate role": {
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "422",
+                          "source": {
+                            "pointer": ""
+                          },
+                          "title": "Unprocessable Entity",
+                          "detail": "Party has already been taken",
+                          "code": "taken"
+                        }
+                      ]
+                    }
+                  },
+                  "Unknown role": {
+                    "value": {
+                      "errors": [
+                        {
+                          "detail": "'owner' is not a valid role"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/shipments/{shipment_id}/party_roles/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "shipment_id",
+          "in": "path",
+          "required": true,
+          "description": "Shipment ID"
+        },
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Party role ID"
+        }
+      ],
+      "delete": {
+        "summary": "Remove a shipment party role",
+        "operationId": "delete-shipments-party-roles-id",
+        "tags": [
+          "Parties"
+        ],
+        "description": "Detaches the party from the shipment. The party itself is not deleted.",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized. Also returned when the record belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/containers/{container_id}/custom_fields": {
       "parameters": [
         {
@@ -8915,6 +9350,436 @@
         "responses": {
           "204": {
             "description": "No Content"
+          }
+        }
+      }
+    },
+    "/containers/{container_id}/party_roles": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "container_id",
+          "in": "path",
+          "required": true,
+          "description": "Container ID"
+        }
+      ],
+      "get": {
+        "summary": "List container party roles",
+        "operationId": "get-containers-party-roles",
+        "tags": [
+          "Parties"
+        ],
+        "description": "Returns the party roles attached to the container. Each role links one party to the record. The linked parties are returned in `included`.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/party_role"
+                      }
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/party"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/meta"
+                    }
+                  }
+                },
+                "examples": {
+                  "Party roles": {
+                    "value": {
+                      "data": [
+                        {
+                          "id": "1d0f2a0e-5c3b-4c7e-9a52-3b6f8d2e4a11",
+                          "type": "party_role",
+                          "attributes": {
+                            "role": "pickup_dray_carrier",
+                            "roleable_type": "Cargo",
+                            "roleable_id": "8f0c6b1a-2d4e-4f7b-9c3a-5e6d7f8a9b0c",
+                            "created_at": "2026-09-01T14:02:11Z",
+                            "updated_at": "2026-09-01T14:02:11Z"
+                          },
+                          "relationships": {
+                            "party": {
+                              "data": {
+                                "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                                "type": "party"
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "included": [
+                        {
+                          "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                          "type": "party",
+                          "attributes": {
+                            "company_name": "ACME LOGISTICS",
+                            "nickname": "ACME"
+                          }
+                        }
+                      ],
+                      "links": {
+                        "self": "/v2/containers/8f0c6b1a-2d4e-4f7b-9c3a-5e6d7f8a9b0c/party_roles"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Also returned when the record belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "summary": "Assign a container party role",
+        "operationId": "post-containers-party-roles",
+        "tags": [
+          "Parties"
+        ],
+        "description": "Attaches a party to the container in the given role. Roles are additive: posting a second party with the same role keeps both. To replace a party, delete its role and create a new one. Posting the same party and role twice returns `422`.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes",
+                      "relationships"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "party_role"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "required": [
+                          "role"
+                        ],
+                        "properties": {
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "pickup_dray_carrier"
+                            ],
+                            "description": "Only `pickup_dray_carrier` is accepted. Other values return `422`."
+                          }
+                        }
+                      },
+                      "relationships": {
+                        "type": "object",
+                        "required": [
+                          "party"
+                        ],
+                        "properties": {
+                          "party": {
+                            "type": "object",
+                            "required": [
+                              "data"
+                            ],
+                            "properties": {
+                              "data": {
+                                "type": "object",
+                                "required": [
+                                  "id",
+                                  "type"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "description": "ID of a party in your account. See `GET /parties`."
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "party"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "type": "party_role",
+                  "attributes": {
+                    "role": "pickup_dray_carrier"
+                  },
+                  "relationships": {
+                    "party": {
+                      "data": {
+                        "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                        "type": "party"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/party_role"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/party"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                },
+                "examples": {
+                  "Party role": {
+                    "value": {
+                      "data": {
+                        "id": "1d0f2a0e-5c3b-4c7e-9a52-3b6f8d2e4a11",
+                        "type": "party_role",
+                        "attributes": {
+                          "role": "pickup_dray_carrier",
+                          "roleable_type": "Cargo",
+                          "roleable_id": "8f0c6b1a-2d4e-4f7b-9c3a-5e6d7f8a9b0c",
+                          "created_at": "2026-09-01T14:02:11Z",
+                          "updated_at": "2026-09-01T14:02:11Z"
+                        },
+                        "relationships": {
+                          "party": {
+                            "data": {
+                              "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                              "type": "party"
+                            }
+                          }
+                        }
+                      },
+                      "included": [
+                        {
+                          "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                          "type": "party",
+                          "attributes": {
+                            "company_name": "ACME LOGISTICS",
+                            "nickname": "ACME"
+                          }
+                        }
+                      ],
+                      "links": {
+                        "self": "/v2/containers/8f0c6b1a-2d4e-4f7b-9c3a-5e6d7f8a9b0c/party_roles"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Also returned when the party or the record belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "Party from another account": {
+                    "value": {
+                      "errors": [
+                        {
+                          "detail": "You are not allowed to perform this action"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "Duplicate role": {
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "422",
+                          "source": {
+                            "pointer": ""
+                          },
+                          "title": "Unprocessable Entity",
+                          "detail": "Party has already been taken",
+                          "code": "taken"
+                        }
+                      ]
+                    }
+                  },
+                  "Unknown role": {
+                    "value": {
+                      "errors": [
+                        {
+                          "detail": "'owner' is not a valid role"
+                        }
+                      ]
+                    }
+                  },
+                  "Role not allowed on a container": {
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "422",
+                          "source": {
+                            "pointer": "/data/attributes/role"
+                          },
+                          "title": "Unprocessable Entity",
+                          "detail": "Role is not allowed for Cargo",
+                          "code": "is_not_allowed_for_cargo"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/containers/{container_id}/party_roles/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "container_id",
+          "in": "path",
+          "required": true,
+          "description": "Container ID"
+        },
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Party role ID"
+        }
+      ],
+      "delete": {
+        "summary": "Remove a container party role",
+        "operationId": "delete-containers-party-roles-id",
+        "tags": [
+          "Parties"
+        ],
+        "description": "Detaches the party from the container. The party itself is not deleted.",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized. Also returned when the record belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       }
@@ -12402,9 +13267,11 @@
               },
               "customer": {
                 "type": "object",
+                "description": "Account linked to the customer party, or `null` when the customer party has no linked account. Once the shipment exists, read the party through `GET /shipments/{shipment_id}/party_roles`.",
                 "properties": {
                   "data": {
                     "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
@@ -12413,7 +13280,7 @@
                       "type": {
                         "type": "string",
                         "enum": [
-                          "party"
+                          "account"
                         ]
                       }
                     }
@@ -13119,19 +13986,19 @@
                         "type": "string",
                         "format": "uuid"
                       },
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "tracking_request",
-                            "estimated_event",
-                            "transport_event",
-                            "container_updated_event",
-                            "document"
-                          ]
-                        }
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "tracking_request",
+                          "estimated_event",
+                          "transport_event",
+                          "container_updated_event",
+                          "document"
+                        ]
                       }
                     }
                   }
+                }
               }
             },
             "required": [
@@ -15054,6 +15921,86 @@
           "id",
           "type"
         ]
+      },
+      "party_role": {
+        "title": "Party role model",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "party_role"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": [
+                  "shipper",
+                  "consignee",
+                  "notify_party",
+                  "customs_broker",
+                  "customer",
+                  "freight_forwarder",
+                  "pickup_dray_carrier"
+                ],
+                "description": "Role the party plays on the record. Shipments accept every value. Containers accept only `pickup_dray_carrier`."
+              },
+              "roleable_type": {
+                "type": "string",
+                "enum": [
+                  "Shipment",
+                  "Cargo"
+                ],
+                "description": "Type of the record the role is attached to. `Cargo` is returned for containers."
+              },
+              "roleable_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "ID of the shipment, container, or tracking request."
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "party": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "party"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "securitySchemes": {
@@ -15119,6 +16066,9 @@
     },
     {
       "name": "Search"
+    },
+    {
+      "name": "Parties"
     }
   ],
   "security": [

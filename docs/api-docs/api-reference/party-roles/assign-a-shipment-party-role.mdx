@@ -1,0 +1,26 @@
+---
+title: Assign a shipment party role
+description: "Assign a party to a shipment in the Terminal49 API as shipper, consignee, freight forwarder, or another role."
+og:title: Assign a Shipment Party Role | Terminal49 API Documentation
+og:description: Assign a party to a shipment in the Terminal49 API as shipper, consignee, freight forwarder, or another role.
+openapi: post /shipments/{shipment_id}/party_roles
+---
+
+Attaches a party from your account to the shipment in one role.
+
+## Path parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `shipment_id` | Yes | The ID of the shipment |
+
+## Roles
+
+`shipper`, `consignee`, `notify_party`, `customs_broker`, `customer`, `freight_forwarder`, `pickup_dray_carrier`
+
+## Behavior
+
+- Roles are additive. Posting a second party with the same role keeps both
+- To replace a party, delete its role and create a new one
+- Posting the same party and role twice returns `422`
+- The party must belong to your account, otherwise the request returns `401`
