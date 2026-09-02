@@ -1,0 +1,15 @@
+---
+title: List shipment party roles
+description: "List the parties assigned to a shipment in the Terminal49 API, with the role each party plays."
+og:title: List Shipment Party Roles | Terminal49 API Documentation
+og:description: List the parties assigned to a shipment in the Terminal49 API, with the role each party plays.
+openapi: get /shipments/{shipment_id}/party_roles
+---
+
+Returns every party role on the shipment. The linked parties are returned in `included`.
+
+## Path parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `shipment_id` | Yes | The ID of the shipment |

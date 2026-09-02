@@ -41,7 +41,8 @@
               "api-docs/in-depth-guides/event-timestamps",
               "api-docs/in-depth-guides/holds-and-fees",
               "api-docs/in-depth-guides/auto-detect-carrier",
-              "api-docs/in-depth-guides/adding-customer"
+              "api-docs/in-depth-guides/adding-customer",
+              "api-docs/in-depth-guides/assigning-parties"
             ]
           },
           {
@@ -294,6 +295,21 @@
               "api-docs/api-reference/parties/create-a-party",
               "api-docs/api-reference/parties/get-a-party",
               "api-docs/api-reference/parties/edit-a-party"
+            ]
+          },
+          {
+            "group": "Party Roles",
+            "icon": "user-tag",
+            "pages": [
+              "api-docs/api-reference/party-roles/list-shipment-party-roles",
+              "api-docs/api-reference/party-roles/assign-a-shipment-party-role",
+              "api-docs/api-reference/party-roles/remove-a-shipment-party-role",
+              "api-docs/api-reference/party-roles/list-tracking-request-party-roles",
+              "api-docs/api-reference/party-roles/assign-a-tracking-request-party-role",
+              "api-docs/api-reference/party-roles/remove-a-tracking-request-party-role",
+              "api-docs/api-reference/party-roles/list-container-party-roles",
+              "api-docs/api-reference/party-roles/assign-a-container-party-role",
+              "api-docs/api-reference/party-roles/remove-a-container-party-role"
             ]
           }
         ]

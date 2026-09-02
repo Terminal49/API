@@ -1,0 +1,16 @@
+---
+title: Remove a tracking request party role
+description: "Remove a party role from a tracking request in the Terminal49 API. The party record is kept."
+og:title: Remove a Tracking Request Party Role | Terminal49 API Documentation
+og:description: Remove a party role from a tracking request in the Terminal49 API. The party record is kept.
+openapi: delete /tracking_requests/{tracking_request_id}/party_roles/{id}
+---
+
+Detaches the party from the tracking request. The party itself is not deleted.
+
+## Path parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `tracking_request_id` | Yes | The ID of the tracking request |
+| `id` | Yes | The ID of the party role, from the list endpoint |

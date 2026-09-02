@@ -10,6 +10,10 @@ keywords:
   - "party ID"
   - "tracking request"
 ---
+<Note>
+  This guide covers the `customer` role. For shipper, consignee, freight forwarder, notify party, customs broker, and dray carrier, see [Assign Shipper, Consignee, and Other Parties](/api-docs/in-depth-guides/assigning-parties).
+</Note>
+
 ## Why add a party to a tracking request?
 
 Adding a party to a tracking request associates customer information with the request. The customer is assigned to the shipment when it is created, just like reference numbers and tags. This helps you organize and manage your shipments more effectively.
@@ -63,7 +67,7 @@ After you get all the parties you would filter the parties by `company_name` to 
 
 ## Add a party to a tracking request
 
-To add a customer to a tracking request, include the party as a customer relationship when creating the request. **Note:** you cannot add a party to a tracking request that has already been created.
+To add a customer to a tracking request, include the party as a customer relationship when creating the request. This endpoint accepts the `customer` relationship only at creation. To add or change roles on an existing tracking request or shipment, including shipper and consignee, use [party roles](/api-docs/in-depth-guides/assigning-parties).
 
 Endpoint: **POST** - [https://api.terminal49.com/v2/tracking_requests](/api-docs/api-reference/tracking-requests/create-a-tracking-request)
 

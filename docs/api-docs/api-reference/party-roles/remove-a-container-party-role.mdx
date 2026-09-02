@@ -1,0 +1,16 @@
+---
+title: Remove a container party role
+description: "Remove a party role from a container in the Terminal49 API. The party record is kept."
+og:title: Remove a Container Party Role | Terminal49 API Documentation
+og:description: Remove a party role from a container in the Terminal49 API. The party record is kept.
+openapi: delete /containers/{container_id}/party_roles/{id}
+---
+
+Detaches the party from the container. The party itself is not deleted.
+
+## Path parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `container_id` | Yes | The ID of the container |
+| `id` | Yes | The ID of the party role, from the list endpoint |
