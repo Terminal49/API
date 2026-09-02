@@ -100,7 +100,7 @@ Endpoint: **POST** - [https://api.terminal49.com/v2/tracking_requests](/api-docs
 }
 ```
 
-The response carries the tracking request ID. Its `customer` relationship references the party's linked account and is `null` when the party has none, which is the case for parties created through this API. To read the assigned party, use [`GET /v2/tracking_requests/TRACKING_REQUEST_ID/party_roles`](/api-docs/api-reference/party-roles/list-tracking-request-party-roles).
+The response carries the tracking request ID. Its `customer` relationship references the party's linked account and is `null` when the party has none, which is the case for parties created through this API. Once the shipment exists, read the assigned party with [`GET /v2/shipments/SHIPMENT_ID/party_roles`](/api-docs/api-reference/party-roles/list-shipment-party-roles).
 
 ```json Response
 {
