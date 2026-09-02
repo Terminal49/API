@@ -1246,6 +1246,20 @@
                         }
                       ]
                     }
+                  },
+                  "Party from another account": {
+                    "value": {
+                      "errors": [
+                        {
+                          "status": "422",
+                          "source": {
+                            "pointer": "/data/relationships/shipper"
+                          },
+                          "title": "Unprocessable Entity",
+                          "detail": "Party must belong to your account"
+                        }
+                      ]
+                    }
                   }
                 }
               }
@@ -1426,6 +1440,156 @@
                               }
                             },
                             "description": "Party to assign as the customer. The response's `customer` relationship carries the party's linked account, or `null` when there is none."
+                          },
+                          "shipper": {
+                            "type": "object",
+                            "description": "Party to assign as the shipper. One party per role at creation. The role is copied to the shipment when it is created and can be read with `GET /shipments/{shipment_id}/party_roles`. The party must belong to your account.",
+                            "properties": {
+                              "data": {
+                                "type": "object",
+                                "required": [
+                                  "id",
+                                  "type"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "party"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "consignee": {
+                            "type": "object",
+                            "description": "Party to assign as the consignee. One party per role at creation. The role is copied to the shipment when it is created and can be read with `GET /shipments/{shipment_id}/party_roles`. The party must belong to your account.",
+                            "properties": {
+                              "data": {
+                                "type": "object",
+                                "required": [
+                                  "id",
+                                  "type"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "party"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "notify_party": {
+                            "type": "object",
+                            "description": "Party to assign as the notify party. One party per role at creation. The role is copied to the shipment when it is created and can be read with `GET /shipments/{shipment_id}/party_roles`. The party must belong to your account.",
+                            "properties": {
+                              "data": {
+                                "type": "object",
+                                "required": [
+                                  "id",
+                                  "type"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "party"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "customs_broker": {
+                            "type": "object",
+                            "description": "Party to assign as the customs broker. One party per role at creation. The role is copied to the shipment when it is created and can be read with `GET /shipments/{shipment_id}/party_roles`. The party must belong to your account.",
+                            "properties": {
+                              "data": {
+                                "type": "object",
+                                "required": [
+                                  "id",
+                                  "type"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "party"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "freight_forwarder": {
+                            "type": "object",
+                            "description": "Party to assign as the freight forwarder. One party per role at creation. The role is copied to the shipment when it is created and can be read with `GET /shipments/{shipment_id}/party_roles`. The party must belong to your account.",
+                            "properties": {
+                              "data": {
+                                "type": "object",
+                                "required": [
+                                  "id",
+                                  "type"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "party"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "pickup_dray_carrier": {
+                            "type": "object",
+                            "description": "Party to assign as the dray carrier. One party per role at creation. The role is copied to the shipment when it is created and can be read with `GET /shipments/{shipment_id}/party_roles`. The party must belong to your account.",
+                            "properties": {
+                              "data": {
+                                "type": "object",
+                                "required": [
+                                  "id",
+                                  "type"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "party"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
                           }
                         }
                       },
@@ -1492,6 +1656,18 @@
                         "customer": {
                           "data": {
                             "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
+                            "type": "party"
+                          }
+                        },
+                        "shipper": {
+                          "data": {
+                            "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                            "type": "party"
+                          }
+                        },
+                        "consignee": {
+                          "data": {
+                            "id": "1f4e9c2a-7b3d-4e8f-a6c5-2d9b8e7f6a10",
                             "type": "party"
                           }
                         }

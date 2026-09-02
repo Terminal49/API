@@ -19,15 +19,15 @@ Use this guide to assign parties to your shipments from code instead of the dash
 - A **party role** links one party to one shipment or container in one role.
 - Roles are a list, not a field. A shipment can carry two parties as `consignee`. To replace a party, remove its role and assign a new one.
 
-| Role | Shipment | Container |
-|------|----------|-----------|
-| `customer` | Yes, also at tracking request creation via `relationships.customer` | No |
-| `shipper` | Yes | No |
-| `consignee` | Yes | No |
-| `notify_party` | Yes | No |
-| `customs_broker` | Yes | No |
-| `freight_forwarder` | Yes | No |
-| `pickup_dray_carrier` | Yes | Yes |
+| Role | Tracking request creation | Shipment | Container |
+|------|---------------------------|----------|-----------|
+| `customer` | Yes | Yes | No |
+| `shipper` | Yes | Yes | No |
+| `consignee` | Yes | Yes | No |
+| `notify_party` | Yes | Yes | No |
+| `customs_broker` | Yes | Yes | No |
+| `freight_forwarder` | Yes | Yes | No |
+| `pickup_dray_carrier` | Yes | Yes | Yes |
 
 You need an API key. See [Start here](/api-docs/getting-started/start-here).
 
@@ -55,13 +55,36 @@ If the party does not exist, [create it](/api-docs/api-reference/parties/create-
 
 Keep the returned `data.id`. It is the `PARTY_ID` below.
 
-## Get the shipment ID
+## Assign roles when creating the tracking request
 
-Roles are assigned on the shipment, so the shipment has to exist. A tracking request has a shipment once its `status` is `created`. Read the ID from the `tracked_object` relationship of [`GET /v2/tracking_requests/TRACKING_REQUEST_ID`](/api-docs/api-reference/tracking-requests/get-a-single-tracking-request), or from the `tracking_request.succeeded` webhook. See [Tracking Request Lifecycle](/api-docs/in-depth-guides/tracking-request-lifecycle).
+Pass each party as a relationship named after its role. One party per role.
 
-The customer is the exception: pass it in `relationships.customer` when creating the tracking request. See [Add a Customer to a Tracking Request](/api-docs/in-depth-guides/adding-customer).
+Endpoint: **POST** - [https://api.terminal49.com/v2/tracking_requests](/api-docs/api-reference/tracking-requests/create-a-tracking-request)
 
-## Assign roles to the shipment
+```json Request
+{
+  "data": {
+    "type": "tracking_request",
+    "attributes": {
+      "request_type": "bill_of_lading",
+      "request_number": "MEDUFR030802",
+      "scac": "MSCU"
+    },
+    "relationships": {
+      "customer": { "data": { "id": "CUSTOMER_PARTY_ID", "type": "party" } },
+      "shipper": { "data": { "id": "SHIPPER_PARTY_ID", "type": "party" } },
+      "consignee": { "data": { "id": "CONSIGNEE_PARTY_ID", "type": "party" } },
+      "freight_forwarder": { "data": { "id": "FORWARDER_PARTY_ID", "type": "party" } }
+    }
+  }
+}
+```
+
+The roles are copied to the shipment when it is created. The tracking request response does not list them; read them on the shipment as shown below. A party from another account fails the whole request with `422` and a pointer to the relationship.
+
+## Assign roles to an existing shipment
+
+Use this for shipments that already exist, or to add a second party in the same role.
 
 Endpoint: **POST** - [https://api.terminal49.com/v2/shipments/SHIPMENT_ID/party_roles](/api-docs/api-reference/party-roles/assign-a-shipment-party-role)
 
