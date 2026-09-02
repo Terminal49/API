@@ -67,7 +67,7 @@ After you get all the parties you would filter the parties by `company_name` to 
 
 ## Add a party to a tracking request
 
-To add a customer to a tracking request, include the party as a customer relationship when creating the request. This endpoint accepts the `customer` relationship only at creation. To add or change roles on an existing tracking request or shipment, including shipper and consignee, use [party roles](/api-docs/in-depth-guides/assigning-parties).
+To add a customer to a tracking request, include the party as a customer relationship when creating the request. Shipper, consignee, and the other roles are passed the same way, as relationships named after the role. To change roles on an existing shipment, use [party roles](/api-docs/in-depth-guides/assigning-parties).
 
 Endpoint: **POST** - [https://api.terminal49.com/v2/tracking_requests](/api-docs/api-reference/tracking-requests/create-a-tracking-request)
 
