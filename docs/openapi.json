@@ -1175,10 +1175,7 @@
                             "data": null
                           },
                           "customer": {
-                            "data": {
-                              "id": "f7cb530a-9e60-412c-a5bc-205a2f34ba54",
-                              "type": "party"
-                            }
+                            "data": null
                           }
                         },
                         "links": {
@@ -1427,7 +1424,8 @@
                                   }
                                 }
                               }
-                            }
+                            },
+                            "description": "Party to assign as the customer. Written as a `customer` party role; the response's `customer` relationship carries the party's linked account, or `null` when there is none."
                           }
                         }
                       },
@@ -2697,6 +2695,27 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized. Also returned when the record belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       },
@@ -2983,6 +3002,24 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized. Also returned when the record belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Not Found"
@@ -9185,6 +9222,27 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized. Also returned when the record belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       },
@@ -9471,6 +9529,24 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized. Also returned when the record belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Not Found"
@@ -9788,6 +9864,27 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized. Also returned when the record belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       },
@@ -10083,6 +10180,24 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized. Also returned when the record belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Not Found"
@@ -13573,9 +13688,11 @@
               },
               "customer": {
                 "type": "object",
+                "description": "Account linked to the customer party, or `null` when the customer party has no linked account. To read the customer party itself, use `GET /tracking_requests/{id}/party_roles`.",
                 "properties": {
                   "data": {
                     "type": "object",
+                    "nullable": true,
                     "properties": {
                       "id": {
                         "type": "string",
@@ -13584,7 +13701,7 @@
                       "type": {
                         "type": "string",
                         "enum": [
-                          "party"
+                          "account"
                         ]
                       }
                     }

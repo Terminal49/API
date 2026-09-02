@@ -124,11 +124,11 @@ Send one request per role. Repeat with `"role": "consignee"` and `"role": "freig
 After the shipment is created, request it with `flag[parties]=true` and include the parties:
 
 ```bash
-curl -s "https://api.terminal49.com/v2/shipments/SHIPMENT_ID?flag[parties]=true&include=party_roles.party" \
+curl -sg "https://api.terminal49.com/v2/shipments/SHIPMENT_ID?flag[parties]=true&include=party_roles.party" \
   -H "Authorization: Token YOUR_API_KEY"
 ```
 
-The shipment carries a `party_roles` relationship and the `included` array holds each `party_role` and its `party`. The same flag works on `GET /v2/shipments`.
+The shipment carries a `party_roles` relationship and the `included` array holds each `party_role` and its `party`. The same flag works on `GET /v2/shipments`. `-g` stops curl from treating the brackets in `flag[parties]` as a range.
 
 To list the roles alone, use [`GET /v2/shipments/SHIPMENT_ID/party_roles`](/api-docs/api-reference/party-roles/list-shipment-party-roles).
 
