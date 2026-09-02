@@ -10,10 +10,16 @@ rss: true
   This page contains updates to **Terminal49 API** and **DataSync** only (not general product updates).
 </Info>
 
-<Update label="September 2, 2026" description="Party role endpoints documented: assign shipper, consignee, freight forwarder, and other roles on shipments and containers through the API" rss="September 2, 2026: Documented the party role endpoints for shipments and containers, plus the flag[parties] query parameter on shipments.">
+<Update label="September 2, 2026" description="Party roles accepted on tracking request creation, party role endpoints documented" rss="September 2, 2026: POST /v2/tracking_requests accepts shipper, consignee, notify_party, customs_broker, freight_forwarder, and pickup_dray_carrier relationships. Documented the party role endpoints for shipments and containers, plus the flag[parties] query parameter on shipments.">
+  ### Party roles on tracking request creation
+
+  `POST /v2/tracking_requests` accepts `shipper`, `consignee`, `notify_party`, `customs_broker`, `freight_forwarder`, and `pickup_dray_carrier` relationships next to `customer`. One party per role. The roles are copied to the shipment when it is created, and `PATCH /v2/tracking_requests/{id}/resubmit` carries them over to the new request.
+
+  ---
+
   ### Party role endpoints
 
-  The endpoints the dashboard uses to assign parties are now documented for API use. No API behavior changed.
+  The endpoints the dashboard uses to assign parties are now documented for API use.
 
   - `GET`, `POST /v2/shipments/{id}/party_roles` and `DELETE /v2/shipments/{id}/party_roles/{id}`
   - `GET`, `POST /v2/containers/{id}/party_roles` and `DELETE /v2/containers/{id}/party_roles/{id}` (`pickup_dray_carrier` only)
