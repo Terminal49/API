@@ -11,7 +11,7 @@ keywords:
   - "consignee"
   - "freight forwarder"
 ---
-Use this guide to assign parties to your shipments from code instead of the dashboard bulk update. It covers the whole flow: create the party, attach it to a tracking request, read it back on the shipment, and change it later.
+Use this guide to assign parties to your shipments from code instead of the dashboard bulk update.
 
 ## How parties and roles work
 
@@ -31,10 +31,7 @@ Use this guide to assign parties to your shipments from code instead of the dash
 
 Roles on a tracking request are copied to its shipment. This also happens when the shipment is created after the role was added, so you can set parties before the carrier responds.
 
-## Before you start
-
-- An API key. See [Start here](/api-docs/getting-started/start-here).
-- The ID of the party. See [Find or create the party](#find-or-create-the-party).
+You need an API key. See [Start here](/api-docs/getting-started/start-here).
 
 ## Find or create the party
 
@@ -124,7 +121,7 @@ Send one request per role. Repeat with `"role": "consignee"` and `"role": "freig
 
 ## Read the roles on the shipment
 
-Once the tracking request has a shipment, the roles are on the shipment. Request them with `flag[parties]=true` and include the parties:
+After the shipment is created, request it with `flag[parties]=true` and include the parties:
 
 ```bash
 curl -s "https://api.terminal49.com/v2/shipments/SHIPMENT_ID?flag[parties]=true&include=party_roles.party" \
