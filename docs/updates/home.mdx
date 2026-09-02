@@ -10,18 +10,6 @@ rss: true
   This page contains updates to **Terminal49 API** and **DataSync** only (not general product updates).
 </Info>
 
-<Update label="Unreleased" description="Shipper, consignee, and other party roles accepted when creating a tracking request" rss="Unreleased: POST /v2/tracking_requests accepts shipper, consignee, notify_party, customs_broker, freight_forwarder, and pickup_dray_carrier relationships.">
-  ### Party roles on tracking request creation
-
-  `POST /v2/tracking_requests` accepts `shipper`, `consignee`, `notify_party`, `customs_broker`, `freight_forwarder`, and `pickup_dray_carrier` relationships next to `customer`. One party per role. The roles are copied to the shipment when it is created.
-
-  No action required.
-
-  <Card title="Assign Shipper, Consignee, and Other Parties" icon="user-tag" href="/api-docs/in-depth-guides/assigning-parties">
-    Guide
-  </Card>
-</Update>
-
 <Update label="September 2, 2026" description="Party role endpoints documented: assign shipper, consignee, freight forwarder, and other roles on shipments and containers through the API" rss="September 2, 2026: Documented the party role endpoints for shipments and containers, plus the flag[parties] query parameter on shipments.">
   ### Party role endpoints
 
