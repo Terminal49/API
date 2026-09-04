@@ -1,0 +1,38 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "installCommand": "cd ../.. && npm ci",
+  "buildCommand": "cd ../.. && npm run build --workspace @terminal49/searates-compat && npm run build --workspace @terminal49/migrate-app",
+  "functions": {
+    "api/tracking.ts": {
+      "maxDuration": 30
+    },
+    "api/container.ts": {
+      "maxDuration": 30
+    },
+    "api/reference.ts": {
+      "maxDuration": 30
+    },
+    "api/info/sealines.ts": {
+      "maxDuration": 15
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/searates-api/tracking",
+      "destination": "/api/tracking"
+    },
+    {
+      "source": "/searates-api/container",
+      "destination": "/api/container"
+    },
+    {
+      "source": "/searates-api/reference",
+      "destination": "/api/reference"
+    },
+    {
+      "source": "/searates-api/info/sealines",
+      "destination": "/api/info/sealines"
+    }
+  ]
+}
