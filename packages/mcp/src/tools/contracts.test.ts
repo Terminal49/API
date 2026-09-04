@@ -13,10 +13,7 @@ import { executeListShipments } from './list-shipments.js';
 import { executeListTrackingRequests } from './list-tracking-requests.js';
 import { executeSearchContainer } from './search-container.js';
 import { executeTrackContainer } from './track-container.js';
-import {
-  buildListContract,
-  sanitizeTrackingRequestFilters,
-} from '../server.js';
+import { buildListContract } from '../server.js';
 
 function asClient(client: unknown): Terminal49Client {
   return client as Terminal49Client;
@@ -1099,9 +1096,9 @@ describe('MCP tool contracts', () => {
 
     const result = await executeListContainers(
       {
-        include: 'shipment,pod_terminal',
+        include: ['shipment', 'pod_terminal'],
         page: 1,
-        page_size: 50,
+        page_size: 25,
       },
       client,
     );
@@ -1110,7 +1107,7 @@ describe('MCP tool contracts', () => {
       {
         include: ['shipment', 'pod_terminal'],
       },
-      { format: 'mapped', page: 1, pageSize: 50 },
+      { format: 'mapped', page: 1, pageSize: 25 },
     );
     expect(result.items).toHaveLength(1);
   });
@@ -1121,7 +1118,7 @@ describe('MCP tool contracts', () => {
 
     const result = await executeListContainers(
       {
-        include: '   ',
+        include: undefined,
         page: 1,
         page_size: 10,
       },
@@ -1137,7 +1134,7 @@ describe('MCP tool contracts', () => {
     expect(result.items).toHaveLength(1);
   });
 
-  it('list_tracking_requests forwards filters and pagination to SDK', async () => {
+  it('list_tracking_requests forwards typed filters and pagination to SDK', async () => {
     const list = vi.fn().mockResolvedValue({ items: [{ id: 'tr-1' }] });
     const client = asClient({
       trackingRequests: { list },
@@ -1145,8 +1142,9 @@ describe('MCP tool contracts', () => {
 
     const result = await executeListTrackingRequests(
       {
-        filters: { 'filter[status]': 'failed' },
+        request_number: 'CAIU1234567',
         status: 'succeeded',
+        scac: 'MAEU',
         page: 3,
         page_size: 10,
       },
@@ -1154,7 +1152,11 @@ describe('MCP tool contracts', () => {
     );
 
     expect(list).toHaveBeenCalledWith(
-      { 'filter[status]': 'succeeded' },
+      {
+        'filter[request_number]': 'CAIU1234567',
+        'filter[status]': 'succeeded',
+        'filter[scac]': 'MAEU',
+      },
       { format: 'mapped', page: 3, pageSize: 10 },
     );
     expect(result.items).toHaveLength(1);
@@ -1197,7 +1199,38 @@ describe('MCP tool contracts', () => {
     );
   });
 
-  it('list_tracking_requests maps status and request_type args to filter keys', async () => {
+  it('list executors defensively clamp page sizes to 25', async () => {
+    const containersList = vi.fn().mockResolvedValue({ items: [] });
+    const shipmentsList = vi.fn().mockResolvedValue({ items: [] });
+    const trackingRequestsList = vi.fn().mockResolvedValue({ items: [] });
+    const client = asClient({
+      containers: { list: containersList },
+      shipments: { list: shipmentsList },
+      trackingRequests: { list: trackingRequestsList },
+    });
+
+    await executeListContainers({ page_size: 100 }, client);
+    await executeListShipments({ page_size: 100 }, client);
+    await executeListTrackingRequests({ page_size: 100 }, client);
+
+    expect(containersList).toHaveBeenCalledWith(expect.any(Object), {
+      format: 'mapped',
+      page: undefined,
+      pageSize: 25,
+    });
+    expect(shipmentsList).toHaveBeenCalledWith(expect.any(Object), {
+      format: 'mapped',
+      page: undefined,
+      pageSize: 25,
+    });
+    expect(trackingRequestsList).toHaveBeenCalledWith(expect.any(Object), {
+      format: 'mapped',
+      page: undefined,
+      pageSize: 25,
+    });
+  });
+
+  it('list_tracking_requests maps supported args to filter keys', async () => {
     const list = vi.fn().mockResolvedValue({ items: [{ id: 'tr-2' }] });
     const client = asClient({
       trackingRequests: { list },
@@ -1205,43 +1238,22 @@ describe('MCP tool contracts', () => {
 
     const result = await executeListTrackingRequests(
       {
+        request_number: 'MAEU123456789',
         status: 'failed',
-        request_type: 'manual',
+        scac: 'MAEU',
       },
       client,
     );
 
     expect(list).toHaveBeenCalledWith(
       {
+        'filter[request_number]': 'MAEU123456789',
         'filter[status]': 'failed',
-        'filter[request_type]': 'manual',
+        'filter[scac]': 'MAEU',
       },
       { format: 'mapped', page: undefined, pageSize: 25 },
     );
     expect(result.items).toHaveLength(1);
-  });
-
-  it('list_tracking_requests strips raw page[size]/page[number] from filters so the cap cannot be bypassed', async () => {
-    const list = vi.fn().mockResolvedValue({ items: [{ id: 'tr-3' }] });
-    const client = asClient({
-      trackingRequests: { list },
-    });
-
-    await executeListTrackingRequests(
-      {
-        filters: {
-          'filter[status]': 'failed',
-          'page[size]': '10000',
-          'page[number]': '5',
-        },
-      },
-      client,
-    );
-
-    expect(list).toHaveBeenCalledWith(
-      { 'filter[status]': 'failed' },
-      { format: 'mapped', page: undefined, pageSize: 25 },
-    );
   });
 
   it('buildListContract does not claim filter-match for an unfiltered firehose', () => {
@@ -1259,14 +1271,11 @@ describe('MCP tool contracts', () => {
     );
   });
 
-  it('buildListContract treats an empty raw filters object as unscoped', () => {
-    // tracking_request is the only entity whose supported vocabulary includes
-    // the raw `filters` pass-through; `{ filters: {} }` must not be mistaken for
-    // an applied filter, or the firehose total would be flagged reliable.
+  it('buildListContract treats an unfiltered tracking request page as unscoped', () => {
     const contract = buildListContract(
       { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
       'tracking_request',
-      { filters: { filters: {} } },
+      { filters: {} },
     );
 
     expect(contract.can_answer).not.toContain(
@@ -1280,42 +1289,16 @@ describe('MCP tool contracts', () => {
     ).toBe(true);
   });
 
-  it('buildListContract over sanitized tracking filters treats page-only filters as unscoped', () => {
-    // executeListTrackingRequests strips raw page[size]/page[number] before the
-    // SDK call, so the contract must judge scope against the same sanitized view.
-    // A `filters: { 'page[size]': '10000' }` request is unfiltered after
-    // sanitization and must not report applied filters or a reliable total.
-    const contract = buildListContract(
-      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
-      'tracking_request',
-      {
-        filters: sanitizeTrackingRequestFilters({
-          filters: { 'page[size]': '10000', 'page[number]': '5' },
-        }),
-      },
-    );
-
-    expect(contract.can_answer).not.toContain(
-      'which records match the applied filters',
-    );
-    expect(contract.total_is_reliable).toBe(false);
-    expect(
-      contract.requires_more_data.some((entry) =>
-        entry.startsWith('a filter to scope this list'),
-      ),
-    ).toBe(true);
-  });
-
-  it('buildListContract over sanitized tracking filters keeps a real filter scoped', () => {
-    // Sanitization must not strip genuine filters: a real filter alongside a raw
-    // pagination key still counts as a scoped, trustworthy result.
+  it('buildListContract treats typed tracking-request filters as scoped', () => {
     const contract = buildListContract(
       { items: [{ id: 't1' }], meta: { total: 5 } },
       'tracking_request',
       {
-        filters: sanitizeTrackingRequestFilters({
-          filters: { 'filter[status]': 'failed', 'page[size]': '10000' },
-        }),
+        filters: {
+          request_number: 'CAIU1234567',
+          status: 'failed',
+          scac: 'MAEU',
+        },
       },
     );
 
@@ -1323,48 +1306,6 @@ describe('MCP tool contracts', () => {
       'which records match the applied filters',
     );
     expect(contract.total_is_reliable).toBe(true);
-  });
-
-  it('buildListContract does not treat request_type as a scoping filter', () => {
-    // GET /tracking_requests has no filter[request_type] in the OpenAPI source
-    // of truth, so a bare request_type arg cannot actually scope the list even
-    // though executeListTrackingRequests forwards it; it must be reported as
-    // dropped, not as an applied filter over a reliable total.
-    const contract = buildListContract(
-      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
-      'tracking_request',
-      { filters: { request_type: 'manual' } },
-    );
-
-    expect(contract.can_answer).not.toContain(
-      'which records match the applied filters',
-    );
-    expect(contract.total_is_reliable).toBe(false);
-    expect(
-      contract.requires_more_data.some((entry) =>
-        entry.includes('unsupported filter(s) were ignored: request_type'),
-      ),
-    ).toBe(true);
-  });
-
-  it('buildListContract does not treat a raw filters bag of only non-filter knobs as scoped', () => {
-    // `include` is a legitimate raw query knob but not a `filter[...]` key, so
-    // `{ filters: { include: 'tracked_object' } }` must not read as scoped.
-    const contract = buildListContract(
-      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
-      'tracking_request',
-      { filters: { filters: { include: 'tracked_object' } } },
-    );
-
-    expect(contract.can_answer).not.toContain(
-      'which records match the applied filters',
-    );
-    expect(contract.total_is_reliable).toBe(false);
-    expect(
-      contract.requires_more_data.some((entry) =>
-        entry.startsWith('a filter to scope this list'),
-      ),
-    ).toBe(true);
   });
 
   it('buildListContract presentation guidance does not claim a single result when empty', () => {

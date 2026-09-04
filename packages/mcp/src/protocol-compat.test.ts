@@ -19,6 +19,19 @@ const openConnections: Array<{
   handler: ReturnType<typeof createMcpHandler>;
 }> = [];
 
+type AdvertisedProperty = {
+  type?: string;
+  maxLength?: number;
+  maximum?: number;
+  description?: string;
+  items?: { enum?: string[] };
+};
+
+type AdvertisedInputSchema = {
+  properties?: Record<string, AdvertisedProperty>;
+  additionalProperties?: boolean;
+};
+
 async function connectClient(
   options:
     | { era: 'modern' }
@@ -62,6 +75,49 @@ afterEach(async () => {
 });
 
 describe('MCP protocol compatibility', () => {
+  it('advertises bounded, identifier-only inputs in tools/list', async () => {
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const toolSchemas = new Map(
+      tools.map((tool) => [
+        tool.name,
+        tool.inputSchema as AdvertisedInputSchema,
+      ]),
+    );
+
+    expect(
+      toolSchemas.get('search_container')?.properties?.query,
+    ).toMatchObject({
+      maxLength: 128,
+      description: expect.stringMatching(/never pass conversation text/i),
+    });
+
+    for (const name of [
+      'list_shipments',
+      'list_containers',
+      'list_tracking_requests',
+    ]) {
+      expect(toolSchemas.get(name)?.properties?.page_size?.maximum, name).toBe(
+        25,
+      );
+      expect(toolSchemas.get(name)?.properties?.intent?.maxLength, name).toBe(
+        120,
+      );
+    }
+
+    const trackingRequestSchema = toolSchemas.get('list_tracking_requests');
+    expect(trackingRequestSchema?.properties).not.toHaveProperty('filters');
+    expect(trackingRequestSchema?.properties).not.toHaveProperty(
+      'request_type',
+    );
+    expect(trackingRequestSchema?.properties).toMatchObject({
+      request_number: { maxLength: 64 },
+      status: { type: 'string' },
+      scac: { minLength: 4, maxLength: 4 },
+    });
+    expect(trackingRequestSchema?.additionalProperties).toBe(false);
+  });
+
   it.each([
     { era: 'modern' as const, protocolVersion: '2026-07-28' },
     ...LEGACY_PROTOCOL_VERSIONS.map((protocolVersion) => ({
