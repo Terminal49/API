@@ -85,6 +85,13 @@ describe('MCP protocol compatibility', () => {
       ]),
     );
 
+    expect(tools).toHaveLength(10);
+    for (const tool of tools) {
+      expect(tool.inputSchema.properties, tool.name).not.toHaveProperty(
+        'intent',
+      );
+    }
+
     expect(
       toolSchemas.get('search_container')?.properties?.query,
     ).toMatchObject({
@@ -99,9 +106,6 @@ describe('MCP protocol compatibility', () => {
     ]) {
       expect(toolSchemas.get(name)?.properties?.page_size?.maximum, name).toBe(
         25,
-      );
-      expect(toolSchemas.get(name)?.properties?.intent?.maxLength, name).toBe(
-        120,
       );
     }
 

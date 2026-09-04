@@ -375,31 +375,41 @@ describe('MCP server wiring', () => {
     expect(resourceTemplates).toContain('container');
   });
 
-  it('tools accept optional MCP-only intent telemetry', () => {
+  it('does not advertise intent and strips it from legacy tool arguments', () => {
     const server = createTerminal49McpServer('token');
     const tools = (server as any)._registeredTools as Record<
       string,
-      { inputSchema: unknown }
+      { inputSchema: { parse: (value: unknown) => Record<string, unknown> } }
     >;
+    const id = '123e4567-e89b-12d3-a456-426614174000';
+    const legacyArgs: Record<string, Record<string, unknown>> = {
+      search_container: { query: 'CAIU1234567' },
+      track_container: { number: 'CAIU1234567' },
+      get_container: { id },
+      get_shipment_details: { id },
+      get_container_transport_events: { id },
+      get_supported_shipping_lines: { search: 'Maersk' },
+      get_container_route: { id },
+      list_shipments: {},
+      list_containers: {},
+      list_tracking_requests: {},
+    };
 
     for (const [name, tool] of Object.entries(tools)) {
       expect(_objectSchemaHasProperty(tool.inputSchema, 'intent'), name).toBe(
-        true,
+        false,
       );
+      expect(
+        tool.inputSchema.parse({
+          ...legacyArgs[name],
+          intent: 'legacy routing telemetry',
+        }),
+        name,
+      ).not.toHaveProperty('intent');
     }
-
-    expect(() =>
-      (
-        tools.get_supported_shipping_lines.inputSchema as {
-          parse: (value: unknown) => unknown;
-        }
-      ).parse({
-        intent: 'validate carrier before creating a tracking request',
-      }),
-    ).not.toThrow();
   });
 
-  it('bounds identifier and telemetry strings in tool input schemas', () => {
+  it('bounds identifier strings in tool input schemas', () => {
     const server = createTerminal49McpServer('token');
     const tools = (server as any)._registeredTools as Record<
       string,
@@ -422,12 +432,6 @@ describe('MCP server wiring', () => {
     ).toThrow();
     expect(() =>
       tools.list_shipments.inputSchema.parse({ number: 'S'.repeat(65) }),
-    ).toThrow();
-    expect(() =>
-      tools.search_container.inputSchema.parse({
-        query: 'CAIU1234567',
-        intent: 'I'.repeat(121),
-      }),
     ).toThrow();
   });
 
