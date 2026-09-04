@@ -399,6 +399,79 @@ describe('MCP server wiring', () => {
     ).not.toThrow();
   });
 
+  it('bounds identifier and telemetry strings in tool input schemas', () => {
+    const server = createTerminal49McpServer('token');
+    const tools = (server as any)._registeredTools as Record<
+      string,
+      { inputSchema: { parse: (value: unknown) => unknown } }
+    >;
+
+    expect(() =>
+      tools.search_container.inputSchema.parse({ query: 'R'.repeat(128) }),
+    ).not.toThrow();
+    expect(() =>
+      tools.search_container.inputSchema.parse({ query: 'R'.repeat(129) }),
+    ).toThrow();
+    expect(() =>
+      tools.track_container.inputSchema.parse({ number: 'N'.repeat(65) }),
+    ).toThrow();
+    expect(() =>
+      tools.get_supported_shipping_lines.inputSchema.parse({
+        search: 'C'.repeat(65),
+      }),
+    ).toThrow();
+    expect(() =>
+      tools.list_shipments.inputSchema.parse({ number: 'S'.repeat(65) }),
+    ).toThrow();
+    expect(() =>
+      tools.search_container.inputSchema.parse({
+        query: 'CAIU1234567',
+        intent: 'I'.repeat(121),
+      }),
+    ).toThrow();
+  });
+
+  it('advertises and enforces a maximum page size of 25', () => {
+    const server = createTerminal49McpServer('token');
+    const tools = (server as any)._registeredTools as Record<
+      string,
+      { inputSchema: { parse: (value: unknown) => Record<string, unknown> } }
+    >;
+
+    for (const name of [
+      'list_shipments',
+      'list_containers',
+      'list_tracking_requests',
+    ]) {
+      expect(tools[name]?.inputSchema.parse({ page_size: 25 })).toMatchObject({
+        page_size: 25,
+      });
+      expect(() => tools[name]?.inputSchema.parse({ page_size: 26 })).toThrow();
+    }
+  });
+
+  it('advertises only typed tracking-request filters', () => {
+    const server = createTerminal49McpServer('token');
+    const schema = (server as any)._registeredTools.list_tracking_requests
+      .inputSchema as { parse: (value: unknown) => Record<string, unknown> };
+
+    expect(
+      schema.parse({
+        request_number: 'CAIU1234567',
+        status: 'failed',
+        scac: 'MAEU',
+      }),
+    ).toMatchObject({
+      request_number: 'CAIU1234567',
+      status: 'failed',
+      scac: 'MAEU',
+    });
+    expect(() =>
+      schema.parse({ filters: { 'filter[status]': 'failed' } }),
+    ).toThrow();
+    expect(() => schema.parse({ scac: 'not a scac' })).toThrow();
+  });
+
   it('tools include _response_contract in output schemas', () => {
     const server = createTerminal49McpServer('token');
     const tools = (server as any)._registeredTools as Record<

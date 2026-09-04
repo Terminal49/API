@@ -6,6 +6,8 @@
 import { Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
 
+const MAX_PAGE_SIZE = 25;
+
 export interface ListShipmentsArgs {
   number?: string;
   tracking_stopped?: boolean;
@@ -20,7 +22,7 @@ export async function executeListShipments(
 ): Promise<any> {
   const startTime = Date.now();
   const includeContainers = args.include_containers ?? false;
-  const pageSize = args.page_size ?? 25;
+  const pageSize = Math.min(args.page_size ?? MAX_PAGE_SIZE, MAX_PAGE_SIZE);
   logMcpEvent({
     event: 'tool.execute.start',
     tool: 'list_shipments',

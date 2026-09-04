@@ -150,12 +150,9 @@ export const LIST_DISPLAY_COLUMNS_URI = listDisplayColumnsResource.uri;
  * worklist. `page`, `page_size`, `include`, `include_containers` and `intent`
  * are transport/shape knobs, not scoping filters, and are ignored here.
  *
- * `request_type` is intentionally excluded for `tracking_request`: the
- * `GET /tracking_requests` OpenAPI source of truth does not define
- * `filter[request_type]`, so a caller-supplied `request_type` cannot actually
- * scope the list even though `executeListTrackingRequests` forwards it. It
- * falls through to `droppedFilterKeys` instead, so the contract reports it as
- * ignored rather than claiming it applied.
+ * Tracking-request filters are explicit schema properties rather than an
+ * arbitrary query-string map, so callers cannot smuggle pagination or
+ * unrelated text through to the API.
  */
 const SUPPORTED_LIST_FILTERS_BY_ENTITY: Record<
   ListEntityType,
@@ -163,45 +160,9 @@ const SUPPORTED_LIST_FILTERS_BY_ENTITY: Record<
 > = {
   container: [],
   shipment: ['number', 'tracking_stopped'],
-  tracking_request: ['status', 'filters'],
+  tracking_request: ['request_number', 'status', 'scac'],
   unknown: [],
 };
-
-/**
- * Real `GET /tracking_requests` API filter keys (per the OpenAPI source of
- * truth), as they appear inside the raw `filters` pass-through bag. Only these
- * actually scope the list; other raw keys like `include` are legitimate
- * request knobs but must not be mistaken for a scoping filter.
- */
-const REAL_TRACKING_REQUEST_FILTER_KEYS = new Set([
-  'filter[request_number]',
-  'filter[status]',
-  'filter[scac]',
-  'filter[created_at][start]',
-  'filter[created_at][end]',
-  'filter[updated_at][start]',
-  'filter[updated_at][end]',
-]);
-
-/**
- * Whether the raw `filters` pass-through bag contains at least one key that
- * actually scopes the `list_tracking_requests` result. A bag containing only
- * non-filter knobs (e.g. `{ include: 'tracked_object' }`) must not be mistaken
- * for an applied filter, or an unscoped account list could be presented as
- * filtered.
- */
-function hasRealTrackingRequestFilterKey(rawFilters: unknown): boolean {
-  if (
-    !rawFilters ||
-    typeof rawFilters !== 'object' ||
-    Array.isArray(rawFilters)
-  ) {
-    return false;
-  }
-  return Object.keys(rawFilters as Record<string, unknown>).some((key) =>
-    REAL_TRACKING_REQUEST_FILTER_KEYS.has(key),
-  );
-}
 
 /** Non-filter knobs that must never be treated as scoping filters. */
 const NON_FILTER_LIST_ARGS = new Set([
@@ -326,14 +287,16 @@ const responseContractSchema = z.object({
 
 const toolIntentSchema = z
   .string()
-  .max(200)
+  .trim()
+  .min(1)
+  .max(120)
   .optional()
   .describe(
-    'Brief reason the agent is calling this tool. This is MCP-only telemetry for Sentry and is not forwarded to the Terminal49 API.',
+    'Short tool-routing reason only (maximum 120 characters). Never include the user message, conversation text, or conversation history. This is MCP-only telemetry and is not forwarded to the Terminal49 API.',
   );
 
 /** Hard ceiling for list page size. Keeps a single MCP response bounded. */
-const MAX_LIST_PAGE_SIZE = 100;
+const MAX_LIST_PAGE_SIZE = 25;
 
 const listPageSchema = z
   .number()
@@ -342,18 +305,14 @@ const listPageSchema = z
   .optional()
   .describe('Page number (1-based)');
 
-// Clamp page_size to the cap rather than rejecting, so an over-eager agent
-// gets a bounded page instead of a tool error.
 const listPageSizeSchema = z
   .number()
   .int()
   .positive()
-  .transform((value) => Math.min(value, MAX_LIST_PAGE_SIZE))
+  .max(MAX_LIST_PAGE_SIZE)
   .optional()
   .default(25)
-  .describe(
-    `Page size (default 25; maximum ${MAX_LIST_PAGE_SIZE}; larger values are clamped)`,
-  );
+  .describe(`Page size (default 25; maximum ${MAX_LIST_PAGE_SIZE})`);
 
 function normalizeContract(contract: ResponseContract): ResponseContract {
   return {
@@ -830,10 +789,9 @@ function isProvided(value: unknown): boolean {
   if (value === undefined || value === null || value === '') {
     return false;
   }
-  // An empty array or empty plain object scopes nothing — e.g. the raw
-  // `filters` pass-through arg serialized as `{ filters: {} }`. Treating it as
+  // An empty array or empty plain object scopes nothing. Treating it as
   // "provided" would mark an unfiltered firehose as the user's scoped worklist
-  // (and falsely trust meta.total), which is the dishonesty this contract avoids.
+  // and falsely trust meta.total.
   if (Array.isArray(value)) {
     return value.length > 0;
   }
@@ -858,12 +816,6 @@ function appliedFilterKeys(
   return supported.filter((key) => {
     if (unsupported.has(key)) {
       return false;
-    }
-    if (key === 'filters') {
-      // The raw pass-through bag can carry non-filter knobs like `include`
-      // alongside (or instead of) real `filter[...]` keys; only the latter
-      // actually scope the list.
-      return hasRealTrackingRequestFilterKey(filters[key]);
     }
     return isProvided(filters[key]);
   });
@@ -893,40 +845,6 @@ function droppedFilterKeys(
   });
 
   return [...new Set([...fromSdk, ...derived])];
-}
-
-/**
- * Raw API pagination keys a caller can smuggle through the `list_tracking_requests`
- * `filters` pass-through. They are pagination, not scoping, so they must be dropped
- * before both the SDK call and the contract's "is this filtered?" judgement.
- */
-const RAW_PAGINATION_FILTER_KEYS = ['page[size]', 'page[number]'] as const;
-
-/**
- * Mirror the sanitization `executeListTrackingRequests` applies before the SDK
- * call: strip raw pagination keys from the nested `filters` bag so the contract
- * evaluates the same scoped/unscoped picture the API actually saw. A `filters`
- * bag left empty after stripping is treated as unprovided by `isProvided`.
- */
-export function sanitizeTrackingRequestFilters(
-  args: Record<string, unknown> | undefined,
-): Record<string, unknown> | undefined {
-  if (!args || typeof args !== 'object') {
-    return args;
-  }
-  const rawFilters = (args as { filters?: unknown }).filters;
-  if (
-    !rawFilters ||
-    typeof rawFilters !== 'object' ||
-    Array.isArray(rawFilters)
-  ) {
-    return args;
-  }
-  const safeFilters = { ...(rawFilters as Record<string, unknown>) };
-  for (const key of RAW_PAGINATION_FILTER_KEYS) {
-    delete safeFilters[key];
-  }
-  return { ...args, filters: safeFilters };
 }
 
 export function buildListContract(
@@ -1242,7 +1160,8 @@ export function createTerminal49McpServer(
       description:
         'Search for containers, shipments, and tracking information by container number, ' +
         'booking number, bill of lading, or reference number. Returns matching private-account records. ' +
-        'Examples: CAIU2885402, MAEU123456789, or any reference number.',
+        'Pass exactly one identifier, never a user message or conversation history. ' +
+        'Examples: CAIU2885402, MAEU123456789, or a customer reference number.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1251,9 +1170,11 @@ export function createTerminal49McpServer(
       inputSchema: z.object({
         query: z
           .string()
+          .trim()
           .min(1)
+          .max(128)
           .describe(
-            'Search query - can be a container number, booking number, BL number, or reference number',
+            'One container number, booking number, Bill of Lading number, or customer reference (maximum 128 characters). Identifier only; never pass conversation text, a user message, or full history.',
           ),
         intent: toolIntentSchema,
       }),
@@ -1306,32 +1227,53 @@ export function createTerminal49McpServer(
       inputSchema: z.object({
         number: z
           .string()
+          .trim()
+          .min(1)
+          .max(64)
           .optional()
-          .describe('Container, bill of lading, or booking number to track'),
+          .describe(
+            'One container, Bill of Lading, or booking number (maximum 64 characters). Identifier only; never pass conversation text.',
+          ),
         numberType: z
-          .string()
+          .enum(['container', 'bill_of_lading', 'booking_number'])
           .optional()
           .describe(
             'Optional override: container | bill_of_lading | booking_number',
           ),
         containerNumber: z
           .string()
-          .optional()
-          .describe('Deprecated alias for number (container)'),
-        bookingNumber: z
-          .string()
-          .optional()
-          .describe('Deprecated alias for number (booking/BL)'),
-        scac: z
-          .string()
+          .trim()
+          .min(1)
+          .max(64)
           .optional()
           .describe(
-            'Optional SCAC code of the shipping line (e.g., MAEU for Maersk)',
+            'Deprecated alias for one container number (maximum 64 characters)',
+          ),
+        bookingNumber: z
+          .string()
+          .trim()
+          .min(1)
+          .max(64)
+          .optional()
+          .describe(
+            'Deprecated alias for one booking or Bill of Lading number (maximum 64 characters)',
+          ),
+        scac: z
+          .string()
+          .trim()
+          .length(4)
+          .regex(/^[A-Za-z]{4}$/)
+          .optional()
+          .describe(
+            'Optional four-letter shipping-line SCAC (e.g., MAEU for Maersk)',
           ),
         refNumbers: z
-          .array(z.string())
+          .array(z.string().trim().min(1).max(64))
+          .max(10)
           .optional()
-          .describe('Optional reference numbers for matching'),
+          .describe(
+            'Up to 10 reference-number identifiers, each at most 64 characters. Never pass conversation text.',
+          ),
         intent: toolIntentSchema,
       }),
       outputSchema: z
@@ -1506,8 +1448,13 @@ export function createTerminal49McpServer(
       inputSchema: z.object({
         search: z
           .string()
+          .trim()
+          .min(1)
+          .max(64)
           .optional()
-          .describe('Optional: Filter by carrier name or SCAC code'),
+          .describe(
+            'Optional carrier name or SCAC only (maximum 64 characters). Never pass a user message or conversation history.',
+          ),
         intent: toolIntentSchema,
       }),
       outputSchema: z.object({
@@ -1627,14 +1574,22 @@ export function createTerminal49McpServer(
     {
       title: 'List Shipments',
       description:
-        'List shipments with pagination and supported filters for shipment number or tracking-stopped state.',
+        'Return one intentionally requested page of shipments, optionally filtered by one shipment identifier or tracking-stopped state. Page size is capped at 25. Never pass conversation text into identifier fields.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
       inputSchema: z.object({
-        number: z.string().optional().describe('Filter by shipment number'),
+        number: z
+          .string()
+          .trim()
+          .min(1)
+          .max(64)
+          .optional()
+          .describe(
+            'One shipment, booking, or Bill of Lading identifier (maximum 64 characters). Never pass conversation text.',
+          ),
         tracking_stopped: z
           .boolean()
           .optional()
@@ -1674,7 +1629,7 @@ export function createTerminal49McpServer(
     {
       title: 'List Containers',
       description:
-        'List a paginated page of containers. The API does not expose server-side status, port, carrier, or update-time filters.',
+        'Return one intentionally requested page of containers, capped at 25 rows. The API does not expose server-side status, port, carrier, or update-time filters. Do not use this tool to pass or retrieve conversation text.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1682,10 +1637,11 @@ export function createTerminal49McpServer(
       },
       inputSchema: z.object({
         include: z
-          .string()
+          .array(z.enum(['shipment', 'pod_terminal']))
+          .max(2)
           .optional()
           .describe(
-            'Comma-separated include list (e.g., shipment,pod_terminal)',
+            'Optional related records to include: shipment and/or pod_terminal',
           ),
         page: listPageSchema,
         page_size: listPageSizeSchema,
@@ -1719,30 +1675,39 @@ export function createTerminal49McpServer(
     {
       title: 'List Tracking Requests',
       description:
-        'List tracking requests with optional filters and pagination. ' +
-        'Useful for monitoring recent tracking activity.',
+        'Return one intentionally requested page of tracking requests, optionally filtered by request identifier, status, or carrier SCAC. Page size is capped at 25. Identifier fields must never contain user messages or conversation history.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: z.object({
-        filters: z
-          .record(z.string(), z.string())
-          .optional()
-          .describe('Raw query filters (e.g., filter[status]=succeeded)'),
-        status: z
-          .string()
-          .optional()
-          .describe('Filter by request status (mapped to filter[status])'),
-        request_type: z
-          .string()
-          .optional()
-          .describe('Filter by request type (mapped to filter[request_type])'),
-        page: listPageSchema,
-        page_size: listPageSizeSchema,
-        intent: toolIntentSchema,
-      }),
+      inputSchema: z
+        .object({
+          request_number: z
+            .string()
+            .trim()
+            .min(1)
+            .max(64)
+            .optional()
+            .describe(
+              'One tracking request identifier (maximum 64 characters). Never pass conversation text.',
+            ),
+          status: z
+            .enum(['created', 'pending', 'succeeded', 'failed'])
+            .optional()
+            .describe('Filter by request status (mapped to filter[status])'),
+          scac: z
+            .string()
+            .trim()
+            .length(4)
+            .regex(/^[A-Za-z]{4}$/)
+            .optional()
+            .describe('Filter by one four-letter shipping-line SCAC'),
+          page: listPageSchema,
+          page_size: listPageSizeSchema,
+          intent: toolIntentSchema,
+        })
+        .strict(),
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
         links: z.record(z.string(), z.string()).optional(),
@@ -1754,13 +1719,7 @@ export function createTerminal49McpServer(
       async (args) => executeListTrackingRequests(args, client),
       (result, args) =>
         buildListContract(result as any, 'tracking_request', {
-          // `executeListTrackingRequests` strips raw pagination keys from the
-          // nested `filters` bag before the SDK call, so the contract must judge
-          // "is this scoped?" against the same sanitized view. Otherwise a
-          // `filters: { 'page[size]': '10000' }` request — which is unfiltered
-          // once those keys are dropped — would still read as a non-empty
-          // `filters` arg, falsely report applied filters, and trust meta.total.
-          filters: sanitizeTrackingRequestFilters(args),
+          filters: args,
           unsupportedFilters: (result as any)?.unsupportedFilters,
         }),
     ),

@@ -17,46 +17,6 @@ export interface TrackContainerArgs {
   refNumbers?: string[];
 }
 
-export const trackContainerTool = {
-  name: 'track_container',
-  description:
-    'Track a container, bill of lading, or booking number. ' +
-    'This will infer number type + carrier when possible, create a tracking request, ' +
-    'and return detailed container information. Optionally provide SCAC or reference numbers.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      number: {
-        type: 'string',
-        description: 'Container, bill of lading, or booking number to track',
-      },
-      numberType: {
-        type: 'string',
-        description:
-          'Optional override: container | bill_of_lading | booking_number',
-      },
-      containerNumber: {
-        type: 'string',
-        description: 'Deprecated alias for number (container number)',
-      },
-      bookingNumber: {
-        type: 'string',
-        description: 'Deprecated alias for number (booking/BL number)',
-      },
-      scac: {
-        type: 'string',
-        description:
-          'Optional SCAC code of the shipping line (e.g., MAEU for Maersk)',
-      },
-      refNumbers: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Optional reference numbers for matching',
-      },
-    },
-  },
-};
-
 function normalizeText(value: string | undefined): string | undefined {
   const text = value?.trim();
   if (!text) {

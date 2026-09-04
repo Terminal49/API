@@ -6,8 +6,10 @@
 import { Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
 
+const MAX_PAGE_SIZE = 25;
+
 export interface ListContainersArgs {
-  include?: string;
+  include?: Array<'shipment' | 'pod_terminal'>;
   page?: number;
   page_size?: number;
 }
@@ -17,8 +19,8 @@ export async function executeListContainers(
   client: Terminal49Client,
 ): Promise<any> {
   const startTime = Date.now();
-  const include = args.include?.trim() || undefined;
-  const pageSize = args.page_size ?? 25;
+  const include = args.include;
+  const pageSize = Math.min(args.page_size ?? MAX_PAGE_SIZE, MAX_PAGE_SIZE);
   logMcpEvent({
     event: 'tool.execute.start',
     tool: 'list_containers',
@@ -31,9 +33,7 @@ export async function executeListContainers(
   try {
     const result = await client.containers.list(
       {
-        include: include
-          ? (include.split(',').map((s) => s.trim()) as any)
-          : undefined,
+        include,
       },
       {
         format: 'mapped',
