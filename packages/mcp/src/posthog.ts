@@ -208,10 +208,8 @@ export function instrumentMcpServerWithPostHog<TServer extends McpServer>(
     instrument(server, client, {
       // Do NOT inject PostHog's `context` argument. It is a *required* addition
       // to every tool's advertised inputSchema, which would change this
-      // server's public MCP contract for all 10 tools. We also already expose
-      // our own optional `intent` argument (see `toolIntentSchema` in
-      // ./server.ts), and we intentionally do not forward it: it is a tool
-      // argument value and agents put container numbers in it.
+      // server's public MCP contract for all 10 tools. Tool telemetry must not
+      // add conversation-adjacent arguments to Terminal49 tool schemas.
       context: false,
       // Sentry is the error tracker. Suppress the `$exception` sibling event so
       // failures are not double-reported (and so error text never leaves).

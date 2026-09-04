@@ -147,8 +147,8 @@ export const LIST_DISPLAY_COLUMNS_URI = listDisplayColumnsResource.uri;
  * Filters the MCP list_* tools actually forward to the Terminal49 API, by
  * entity. Anything outside an entity's vocabulary cannot scope its list and is
  * reported back to the agent as a dropped filter so it never claims a false
- * worklist. `page`, `page_size`, `include`, `include_containers` and `intent`
- * are transport/shape knobs, not scoping filters, and are ignored here.
+ * worklist. `page`, `page_size`, `include`, and `include_containers` are
+ * transport/shape knobs, not scoping filters, and are ignored here.
  *
  * Tracking-request filters are explicit schema properties rather than an
  * arbitrary query-string map, so callers cannot smuggle pagination or
@@ -170,7 +170,6 @@ const NON_FILTER_LIST_ARGS = new Set([
   'page_size',
   'include',
   'include_containers',
-  'intent',
 ]);
 
 /**
@@ -285,16 +284,6 @@ const responseContractSchema = z.object({
   total_is_reliable: z.boolean().optional(),
 });
 
-const toolIntentSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .max(120)
-  .optional()
-  .describe(
-    'Short tool-routing reason only (maximum 120 characters). Never include the user message, conversation text, or conversation history. This is MCP-only telemetry and is not forwarded to the Terminal49 API.',
-  );
-
 /** Hard ceiling for list page size. Keeps a single MCP response bounded. */
 const MAX_LIST_PAGE_SIZE = 25;
 
@@ -313,6 +302,16 @@ const listPageSizeSchema = z
   .optional()
   .default(25)
   .describe(`Page size (default 25; maximum ${MAX_LIST_PAGE_SIZE})`);
+
+function stripLegacyIntent(value: unknown): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return value;
+  }
+
+  const args = { ...value } as Record<string, unknown>;
+  delete args.intent;
+  return args;
+}
 
 function normalizeContract(contract: ResponseContract): ResponseContract {
   return {
@@ -1176,7 +1175,6 @@ export function createTerminal49McpServer(
           .describe(
             'One container number, booking number, Bill of Lading number, or customer reference (maximum 128 characters). Identifier only; never pass conversation text, a user message, or full history.',
           ),
-        intent: toolIntentSchema,
       }),
       outputSchema: z.object({
         containers: z.array(
@@ -1274,7 +1272,6 @@ export function createTerminal49McpServer(
           .describe(
             'Up to 10 reference-number identifiers, each at most 64 characters. Never pass conversation text.',
           ),
-        intent: toolIntentSchema,
       }),
       outputSchema: z
         .object({
@@ -1345,7 +1342,6 @@ export function createTerminal49McpServer(
               '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
               '• transport_events: Full event history, rail tracking (heavy 50-100 events, use for journey/timeline questions)',
           ),
-        intent: toolIntentSchema,
       }),
       outputSchema: z
         .object({
@@ -1384,7 +1380,6 @@ export function createTerminal49McpServer(
           .describe(
             'Include list of containers in this shipment. Default: true',
           ),
-        intent: toolIntentSchema,
       }),
       outputSchema: z
         .object({
@@ -1418,7 +1413,6 @@ export function createTerminal49McpServer(
           .string()
           .uuid()
           .describe('The Terminal49 container ID (UUID format)'),
-        intent: toolIntentSchema,
       }),
       outputSchema: z
         .object({
@@ -1455,7 +1449,6 @@ export function createTerminal49McpServer(
           .describe(
             'Optional carrier name or SCAC only (maximum 64 characters). Never pass a user message or conversation history.',
           ),
-        intent: toolIntentSchema,
       }),
       outputSchema: z.object({
         total_lines: z.number(),
@@ -1502,7 +1495,6 @@ export function createTerminal49McpServer(
           .string()
           .uuid()
           .describe('The Terminal49 container ID (UUID format)'),
-        intent: toolIntentSchema,
       }),
       // Keep a single permissive schema because this tool can return either
       // route fields or feature-gating fields depending on account capability.
@@ -1603,7 +1595,6 @@ export function createTerminal49McpServer(
           ),
         page: listPageSchema,
         page_size: listPageSizeSchema,
-        intent: toolIntentSchema,
       }),
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
@@ -1645,7 +1636,6 @@ export function createTerminal49McpServer(
           ),
         page: listPageSchema,
         page_size: listPageSizeSchema,
-        intent: toolIntentSchema,
       }),
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
@@ -1681,33 +1671,35 @@ export function createTerminal49McpServer(
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: z
-        .object({
-          request_number: z
-            .string()
-            .trim()
-            .min(1)
-            .max(64)
-            .optional()
-            .describe(
-              'One tracking request identifier (maximum 64 characters). Never pass conversation text.',
-            ),
-          status: z
-            .enum(['created', 'pending', 'succeeded', 'failed'])
-            .optional()
-            .describe('Filter by request status (mapped to filter[status])'),
-          scac: z
-            .string()
-            .trim()
-            .length(4)
-            .regex(/^[A-Za-z]{4}$/)
-            .optional()
-            .describe('Filter by one four-letter shipping-line SCAC'),
-          page: listPageSchema,
-          page_size: listPageSizeSchema,
-          intent: toolIntentSchema,
-        })
-        .strict(),
+      inputSchema: z.preprocess(
+        stripLegacyIntent,
+        z
+          .object({
+            request_number: z
+              .string()
+              .trim()
+              .min(1)
+              .max(64)
+              .optional()
+              .describe(
+                'One tracking request identifier (maximum 64 characters). Never pass conversation text.',
+              ),
+            status: z
+              .enum(['created', 'pending', 'succeeded', 'failed'])
+              .optional()
+              .describe('Filter by request status (mapped to filter[status])'),
+            scac: z
+              .string()
+              .trim()
+              .length(4)
+              .regex(/^[A-Za-z]{4}$/)
+              .optional()
+              .describe('Filter by one four-letter shipping-line SCAC'),
+            page: listPageSchema,
+            page_size: listPageSizeSchema,
+          })
+          .strict(),
+      ),
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
         links: z.record(z.string(), z.string()).optional(),
