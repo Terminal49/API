@@ -96,6 +96,21 @@ For substantive documentation writing, use the repo-local skill at `skills/termi
 
 ---
 
+## Agent skills
+
+Read these before doing agent-driven work in this repository:
+
+- **[CONTEXT.md](CONTEXT.md)** — domain vocabulary and the boundaries between the
+  docs site, the MCP server + gateway, and the SDK. Read it before naming anything.
+- **[docs/adr/](docs/adr/)** — architecture decision records.
+- **[docs/agents/issue-tracker.md](docs/agents/issue-tracker.md)** — issues live in
+  **Linear** (Terminal49 workspace, `Dev` team), not GitHub Issues.
+- **[docs/agents/triage-labels.md](docs/agents/triage-labels.md)** — the five triage
+  labels and how to choose between `ready-for-agent` and `ready-for-human`.
+- **[docs/agents/domain.md](docs/agents/domain.md)** — how the domain docs are laid out.
+
+---
+
 ## Cursor Cloud specific instructions
 
 Standard commands live in **Build and Development Commands** above; the notes below are the non-obvious gotchas for this environment. The startup update script already runs `npm ci` at the repo root.
