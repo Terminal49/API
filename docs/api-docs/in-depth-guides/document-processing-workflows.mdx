@@ -19,12 +19,12 @@ The outcome is less manual re-keying, faster time-to-file, and fewer errors from
 
 Submit documents by emailing attachments to your account docs alias. Terminal49 then handles the rest: classify -\> extract -\> webhook result.
 
-## Coming Soon
+## Coming soon
 
 - **`email_submission.created` event:** a webhook fired immediately on email receipt, before classification and extraction complete.
 - **Action required flow:** documentation in progress.
 
-## Before You Start
+## Before you start
 
 Make sure you have the following in place before building:
 
@@ -39,7 +39,7 @@ Make sure you have the following in place before building:
     Your server needs a reachable HTTPS URL to receive webhook POST requests from Terminal49. For local development, use a tool like [ngrok](https://ngrok.com) to expose a local port.
   </Step>
   <Step title="Webhook subscription">
-    Register your endpoint and subscribe to `document_representation.created` and `document_representation.failed` (see [Subscribing to Events](#subscribing-to-events) below).
+    Register your endpoint and subscribe to `document_representation.created` and `document_representation.failed` (see [Subscribing to events](#subscribing-to-events) below).
   </Step>
 </Steps>
 
@@ -61,7 +61,7 @@ Authorization: Token YOUR_API_KEY
 
 To get your API key, go to **User > Developers > API Keys** (click your username in the bottom-left corner of the navigation). For more detail, see [Start Here](/api-docs/getting-started/start-here).
 
-## Subscribing to Events
+## Subscribing to events
 
 Register a webhook endpoint to receive document processing notifications:
 
@@ -91,7 +91,7 @@ You can also configure webhooks from the Terminal49 dashboard:
 3. To add a new endpoint, click **Create Webhook**, fill in your URL, and select the relevant events under **Document Events**.
 4. To update an existing endpoint, click into it and toggle on the document events you need.
 
-## Webhook Endpoint Requirements
+## Webhook endpoint requirements
 
 Your endpoint must meet the following requirements to reliably receive webhook notifications:
 
@@ -159,7 +159,7 @@ flowchart LR
   If the same file content has already been processed for your account, it is treated as a duplicate and ignored. No webhook is fired.
 </Note>
 
-## Webhooks You Should Handle
+## Webhooks you should handle
 
 A `document_representation` is the structured extraction result for a document. `document_representation.created` means extraction succeeded and structured data is available in the payload. `document_representation.failed` means Terminal49 could not produce an extraction result.
 
@@ -168,7 +168,7 @@ A `document_representation` is the structured extraction result for a document. 
 | `document_representation.created` | Extraction completed successfully | `document_type` is set; `payload` contains extracted fields |
 | `document_representation.failed` | Extraction did not complete | `document_type` is `"unknown"`; `last_document_representation` is `null` |
 
-## Webhook Payload Structure
+## Webhook payload structure
 
 Every document webhook follows the same envelope structure. The `payload` object inside `document_representation` contains the extracted fields and varies by document type. See [Document Types in Scope](#document-types-in-scope) for full examples.
 
@@ -368,7 +368,7 @@ If extraction fails, you will receive `document_representation.failed` instead. 
   `document_type: "unknown"` means Terminal49 could not classify or extract the document. Log the document `id` and `file_url` for investigation. If failures recur on the same document type, contact Terminal49 support.
 </Warning>
 
-## Document Types in Scope
+## Document types in scope
 
 The table below lists the document types Terminal49 currently classifies and extracts, along with the `document_type` value returned by the API.
 
@@ -390,7 +390,7 @@ Additional document types will be added in future phases.
   **Null fields are intentional.** A `null` value means Terminal49 looked for that field in the source document but did not find it. Treat `null` as "checked, not present" rather than "field not supported" or "not checked".
 </Info>
 
-### Draft House Bill of Lading: Full Webhook Payload
+### Draft House Bill of Lading: full webhook payload
 
 `schema_version: draft_house_bill_of_lading@2026-03-23`
 
@@ -520,7 +520,7 @@ Additional document types will be added in future phases.
 }
 ```
 
-### Final House Bill of Lading: Full Webhook Payload
+### Final House Bill of Lading: full webhook payload
 
 `schema_version: final_house_bill_of_lading@2026-03-23`
 
@@ -673,7 +673,7 @@ Additional document types will be added in future phases.
 }
 ```
 
-### ISF (Importer Security Filing): Full Webhook Payload
+### ISF (Importer Security Filing): full webhook payload
 
 `schema_version: importer_security_filing@2026-03-30`
 
@@ -798,7 +798,7 @@ Additional document types will be added in future phases.
 }
 ```
 
-### Master Bill of Lading: Full Webhook Payload
+### Master Bill of Lading: full webhook payload
 
 `schema_version: master_bill_of_lading@2026-03-23`
 
@@ -934,7 +934,7 @@ Additional document types will be added in future phases.
 }
 ```
 
-### Delivery Order: Full Webhook Payload
+### Delivery Order: full webhook payload
 
 `schema_version: dray_delivery_order@2026-03-30`
 
