@@ -113,6 +113,10 @@ These events fire when container attributes change.
 | `container.pickup_lfd_rail.changed` | The rail-carrier-reported Last Free Day (`import_deadlines.pickup_lfd_rail`) at the inland rail destination changed. Rail Plan only — see [Entitlements](/api-docs/useful-info/entitlements). |
 | `container.pickup_appointment.changed` | The pickup appointment changed. |
 
+<Note>
+There are no field-specific events for holds, fees, or availability, such as `container.holds_at_pod_terminal.changed`. Changes to `holds_at_pod_terminal`, `fees_at_pod_terminal`, and `available_for_pickup` are delivered through `container.updated`. Read the `changeset` in the payload to detect which fields changed. See [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
+</Note>
+
 ## Document processing events
 
 These events fire when document extraction completes for accounts using document processing.
