@@ -2,9 +2,9 @@
 
 A live, opt-in eval that exercises every registered Terminal49 MCP tool against a
 deployed gateway and scores each response on its **objective contract** — no LLM
-required. It answers: *do the tools work, return well-shaped data, handle errors
-sanely, respond quickly, and ship the `_agent_steering` guidance the server
-promises?*
+required. It answers: _do the tools work, return well-shaped data, handle errors
+sanely, respond quickly, and omit the runtime steering metadata removed from the
+public tool contract?_
 
 ## Run it
 
@@ -23,13 +23,13 @@ MCP_EVAL_ENDPOINT="http://localhost:4000/mcp" \
 MCP_EVAL_TOKEN="<key>" npm run eval --workspace @terminal49/mcp
 ```
 
-| Env var | Meaning | Default |
-| --- | --- | --- |
-| `MCP_EVAL_BEARER` | OAuth 2.1 access token → `Authorization: Bearer` | — |
-| `MCP_EVAL_TOKEN` | Terminal49 API key → `Authorization: Token` | — |
-| `MCP_EVAL_ENDPOINT` | Gateway `/mcp` URL | `https://mcp.terminal49.com/mcp` |
-| `MCP_EVAL_ENABLE_WRITE` | Opt in to the mutating `track_container` case | unset (skipped) |
-| `MCP_EVAL_ALLOW_SPARSE` | Allow detail cases to skip when the account has no data | unset (strict) |
+| Env var                 | Meaning                                                 | Default                          |
+| ----------------------- | ------------------------------------------------------- | -------------------------------- |
+| `MCP_EVAL_BEARER`       | OAuth 2.1 access token → `Authorization: Bearer`        | —                                |
+| `MCP_EVAL_TOKEN`        | Terminal49 API key → `Authorization: Token`             | —                                |
+| `MCP_EVAL_ENDPOINT`     | Gateway `/mcp` URL                                      | `https://mcp.terminal49.com/mcp` |
+| `MCP_EVAL_ENABLE_WRITE` | Opt in to the mutating `track_container` case           | unset (skipped)                  |
+| `MCP_EVAL_ALLOW_SPARSE` | Allow detail cases to skip when the account has no data | unset (strict)                   |
 
 > OAuth access tokens are short-lived (~5 min). For repeatable/CI runs, prefer a
 > `MCP_EVAL_TOKEN` API key — it does not expire.
@@ -51,9 +51,11 @@ all pass (`contractPass`) — a single failure fails the test:
 - primary payload parses as JSON and carries the required keys
 - per-tool shape predicates (e.g. `total_lines === shipping_lines.length`, id
   round-trips, `timeline` is an array)
-- an `_agent_steering` block is present and suggests follow-ups
+- removed runtime steering fields are absent from every JSON content block:
+  `_agent_steering`, `presentation_guidance`, `suggested_follow_ups`, and
+  `suggested_tools`
 
-**Latency** is a *soft* check: recorded in the score and the report, but a slow
+**Latency** is a _soft_ check: recorded in the score and the report, but a slow
 response alone never fails the suite.
 
 Negative cases assert error behavior: an unknown id and a missing required
@@ -88,7 +90,7 @@ Terminal49 API key** stored as the `MCP_EVAL_TOKEN` repo secret.
 ## Not covered here: subjective quality
 
 This suite grades the deterministic contract. It does **not** judge whether a
-tool's output makes an LLM agent *answer well* — that is a separate concern best
+tool's output makes an LLM agent _answer well_ — that is a separate concern best
 handled by an LLM-as-judge harness such as
 [`vitest-evals`](https://github.com/getsentry/vitest-evals), which runs an agent
 wired to this MCP server over realistic tasks and scores the transcript. That

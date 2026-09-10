@@ -41,23 +41,18 @@ export function formatScorecard(rows: EvalRow[], meta: EvalReportMeta): string {
   lines.push(`  endpoint: ${meta.endpoint}  (auth: ${meta.scheme})`);
   lines.push('═'.repeat(78));
   lines.push(
-    `  ${pad('TOOL', 32)}${pad('CASE', 16)}${pad('HTTP', 6)}${pad('ms', 7)}${pad('steer', 7)}SCORE`,
+    `  ${pad('TOOL', 32)}${pad('CASE', 16)}${pad('HTTP', 6)}${pad('ms', 7)}${pad('bytes', 7)}SCORE`,
   );
   lines.push('  ' + '─'.repeat(74));
 
   for (const row of rows) {
-    const steer = row.result.steering
-      ? 'yes'
-      : row.score.checks.some((c) => c.name.includes('steering'))
-        ? 'NO'
-        : '-';
     const flag = !row.score.contractPass
       ? ' ✗'
       : row.score.score >= 1
         ? ''
         : ' ~';
     lines.push(
-      `  ${pad(row.tool, 32)}${pad(row.testCase, 16)}${pad(String(row.result.http), 6)}${pad(String(row.result.latencyMs), 7)}${pad(steer, 7)}${pct(row.score.score)} (${row.score.passed}/${row.score.total})${flag}`,
+      `  ${pad(row.tool, 32)}${pad(row.testCase, 16)}${pad(String(row.result.http), 6)}${pad(String(row.result.latencyMs), 7)}${pad(String(row.result.bytes), 7)}${pct(row.score.score)} (${row.score.passed}/${row.score.total})${flag}`,
     );
     const failed = row.score.checks.filter((c) => !c.pass);
     for (const check of failed) {
@@ -106,7 +101,6 @@ export function writeReport(rows: EvalRow[], meta: EvalReportMeta): string {
       isError: row.result.isError,
       latencyMs: row.result.latencyMs,
       bytes: row.result.bytes,
-      hasSteering: row.result.steering !== undefined,
       score: row.score.score,
       contractPass: row.score.contractPass,
       checks: row.score.checks,

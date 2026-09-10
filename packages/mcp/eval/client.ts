@@ -27,8 +27,6 @@ export interface ParsedBlock {
   text: string;
   /** Parsed JSON payload, or undefined when the block is not JSON. */
   json: unknown;
-  /** True when the block is an `_agent_steering` guidance block. */
-  isSteering: boolean;
 }
 
 export interface ToolResult {
@@ -42,10 +40,8 @@ export interface ToolResult {
   bytes: number;
   /** Every text content block, JSON parsed where possible. */
   blocks: ParsedBlock[];
-  /** First non-steering JSON block: the tool's primary payload. */
+  /** First JSON block: the tool's primary payload. */
   payload: unknown;
-  /** The `_agent_steering` block, when present. */
-  steering: Record<string, unknown> | undefined;
   /** JSON-RPC error message, when the transport returned one. */
   errorMessage: string | undefined;
   /** All content blocks joined, for logging and error inspection. */
@@ -142,7 +138,6 @@ function parseBlocks(texts: string[]): ParsedBlock[] {
       index,
       text,
       json,
-      isSteering: isRecord(json) && json._agent_steering === true,
     };
   });
 }
@@ -231,10 +226,7 @@ export class EvalClient {
     const latencyMs = Date.now() - start;
     const texts = extractTextBlocks(body.result);
     const blocks = parseBlocks(texts);
-    const steeringBlock = blocks.find((block) => block.isSteering);
-    const payloadBlock = blocks.find(
-      (block) => !block.isSteering && block.json !== undefined,
-    );
+    const payloadBlock = blocks.find((block) => block.json !== undefined);
     const isError =
       (isRecord(body.result) && body.result.isError === true) ||
       Boolean(body.error);
@@ -245,10 +237,6 @@ export class EvalClient {
       bytes: texts.reduce((sum, text) => sum + text.length, 0),
       blocks,
       payload: payloadBlock?.json,
-      steering:
-        steeringBlock && isRecord(steeringBlock.json)
-          ? steeringBlock.json
-          : undefined,
       errorMessage: body.error?.message,
       rawText: texts.join('\n'),
     };
