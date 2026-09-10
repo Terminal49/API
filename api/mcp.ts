@@ -143,15 +143,21 @@ function resolveEndpointUrl(): string {
   return `${apiBaseUrl.replace(/\/+$/, '')}/connected-clients/resolve`;
 }
 
-type ResolveFailureKind = 'config' | 'invalid_token' | 'upstream';
+type ResolveFailureKind = 'config' | 'invalid_token' | 'forbidden' | 'upstream';
 
 class ConnectedClientResolveError extends Error {
   readonly kind: ResolveFailureKind;
+  readonly upstreamStatus?: number;
 
-  constructor(message: string, kind: ResolveFailureKind) {
+  constructor(
+    message: string,
+    kind: ResolveFailureKind,
+    upstreamStatus?: number,
+  ) {
     super(message);
     this.name = 'ConnectedClientResolveError';
     this.kind = kind;
+    this.upstreamStatus = upstreamStatus;
   }
 }
 
@@ -195,18 +201,21 @@ async function resolveConnectedClientToken(
   }
 
   if (!response.ok) {
-    // Only a token the resolver actively rejects (401/403) is a client auth
-    // failure. A 5xx / 429 / network error means the resolver is unavailable —
-    // surface that as retryable so clients don't discard a valid token and loop
-    // through re-authentication during a Terminal49 outage.
+    // A 401 means the credential itself is invalid. A 403 means WorkOS auth
+    // succeeded but Terminal49 denied account access (for example, a rollout
+    // gate); converting that to 401 makes clients discard a valid grant and
+    // loop through OAuth. Other failures are retryable upstream errors.
     const kind: ResolveFailureKind =
-      response.status === 401 || response.status === 403
+      response.status === 401
         ? 'invalid_token'
-        : 'upstream';
+        : response.status === 403
+          ? 'forbidden'
+          : 'upstream';
     throw new ConnectedClientResolveError(
       payload.error ||
         `Terminal49 connected client resolve failed with ${response.status}`,
       kind,
+      response.status,
     );
   }
 
@@ -476,12 +485,17 @@ export default async function handler(
         const err = error as Error;
         const kind: ResolveFailureKind =
           err instanceof ConnectedClientResolveError ? err.kind : 'upstream';
+        const upstreamStatus =
+          err instanceof ConnectedClientResolveError
+            ? err.upstreamStatus
+            : undefined;
         setCorsHeaders(res);
         // Keep the detailed reason in the server log (correlated by request_id);
         // return a generic, category-appropriate response so internals never leak.
         logLifecycle('mcp.request.complete', requestId, {
           reason: 'connected_client_resolve_failed',
           kind,
+          upstream_status: upstreamStatus,
           message: err.message,
         });
         if (kind === 'invalid_token') {
@@ -489,6 +503,11 @@ export default async function handler(
           res.status(401).json({
             error: 'Unauthorized',
             message: 'Invalid or expired token.',
+          });
+        } else if (kind === 'forbidden') {
+          res.status(403).json({
+            error: 'Forbidden',
+            message: 'Terminal49 access is not enabled for this account.',
           });
         } else if (kind === 'config') {
           res.status(500).json({

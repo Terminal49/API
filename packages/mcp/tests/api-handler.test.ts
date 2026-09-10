@@ -330,6 +330,41 @@ describe('api/mcp handler lifecycle', () => {
     expect(mockState.servers).toHaveLength(0);
   });
 
+  it('preserves account-level resolver denials as 403 without an OAuth challenge', async () => {
+    process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
+    process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
+    process.env.WORKOS_MCP_RESOURCE = 'https://mcp.test';
+    process.env.WORKOS_AUTHORIZATION_SERVER_URL = 'https://auth.workos.test';
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ error: 'rollout gate disabled' }), {
+            status: 403,
+          }),
+      ),
+    );
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Bearer valid-workos-mcp-token',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(403);
+    expect(res.payload).toEqual({
+      error: 'Forbidden',
+      message: 'Terminal49 access is not enabled for this account.',
+    });
+    expect(res.headers['WWW-Authenticate']).toBeUndefined();
+    expect(mockState.servers).toHaveLength(0);
+  });
+
   it('omits resource_metadata from the 401 challenge when WorkOS is not configured', async () => {
     // Token / client-secret deployment: no WORKOS_* env. Advertising OAuth
     // discovery would send clients to a PRM endpoint that 500s.
