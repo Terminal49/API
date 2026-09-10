@@ -1105,7 +1105,7 @@ export function createTerminal49McpServer(
             "Optional related data to include. Default: ['shipment'] covers most use cases. " +
               '• shipment: Routing, BOL, line, ref numbers (lightweight, always useful) ' +
               '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
-              '• transport_events: Full event history, rail tracking (heavy 50-100 events, use for journey/timeline questions)',
+              '• transport_events: Event summary (count, rail event count, and latest event); use get_container_transport_events for the full timeline',
           ),
       }),
       outputSchema: z.object({}).passthrough(),
