@@ -3,10 +3,9 @@
  *
  * These scorers do NOT use an LLM. They evaluate the objective contract of a
  * tool response: transport success, error semantics, payload shape, required
- * fields, latency budget, and the presence/usefulness of the `_agent_steering`
- * guidance block that this server attaches to every tool. Subjective
- * "is this a good answer" judging (LLM-as-judge over an agent transcript) is a
- * separate, optional layer — see eval/README.md.
+ * fields, latency budget, and the absence of removed runtime steering metadata.
+ * Subjective "is this a good answer" judging (LLM-as-judge over an agent
+ * transcript) is a separate, optional layer — see eval/README.md.
  */
 
 import { isRecord, type ToolResult } from './client.js';
@@ -44,11 +43,15 @@ export interface QualitySpec {
   predicates?: Predicate[];
   /** Negative test: expect an MCP tool error instead of a payload. */
   expectError?: boolean;
-  /** Require an `_agent_steering` block that suggests follow-ups. */
-  requireSteering?: boolean;
 }
 
 const DEFAULT_LATENCY_BUDGET_MS = 8000;
+const REMOVED_STEERING_FIELDS = new Set([
+  '_agent_steering',
+  'presentation_guidance',
+  'suggested_follow_ups',
+  'suggested_tools',
+]);
 
 export function scoreResult(
   result: ToolResult,
@@ -80,6 +83,14 @@ export function scoreResult(
     add('not a tool error', !result.isError, result.errorMessage);
     add('primary payload is JSON', result.payload !== undefined);
     add('non-empty response', result.bytes > 0, `${result.bytes}b`);
+    const removedFields = findRemovedSteeringFields(
+      result.blocks.map((block) => block.json),
+    );
+    add(
+      'removed steering metadata is absent',
+      removedFields.length === 0,
+      removedFields.length > 0 ? removedFields.join(', ') : undefined,
+    );
 
     for (const key of spec.requiredKeys ?? []) {
       add(
@@ -107,11 +118,6 @@ export function scoreResult(
     }
   }
 
-  if (spec.requireSteering) {
-    add('has _agent_steering block', result.steering !== undefined);
-    add('steering suggests follow-ups', steeringHasFollowUps(result.steering));
-  }
-
   // Latency is a soft signal: recorded and scored, but a slow response is not
   // a contract violation, so it never fails the suite on its own.
   add(
@@ -131,16 +137,24 @@ export function scoreResult(
   };
 }
 
-function steeringHasFollowUps(
-  steering: Record<string, unknown> | undefined,
-): boolean {
-  if (!steering) return false;
-  const followUps = steering.suggested_follow_ups;
-  const tools = steering.suggested_tools;
-  return (
-    (Array.isArray(followUps) && followUps.length > 0) ||
-    (Array.isArray(tools) && tools.length > 0)
-  );
+function findRemovedSteeringFields(values: unknown[]): string[] {
+  const found = new Set<string>();
+
+  function visit(value: unknown): void {
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item);
+      return;
+    }
+    if (!isRecord(value)) return;
+
+    for (const [key, nestedValue] of Object.entries(value)) {
+      if (REMOVED_STEERING_FIELDS.has(key)) found.add(key);
+      visit(nestedValue);
+    }
+  }
+
+  for (const value of values) visit(value);
+  return [...found].sort();
 }
 
 // ---- small typed helpers for writing predicates against `unknown` payloads ----

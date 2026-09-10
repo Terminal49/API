@@ -3,8 +3,8 @@
 A live, opt-in eval that exercises every registered Terminal49 MCP tool against a
 deployed gateway and scores each response on its **objective contract** — no LLM
 required. It answers: *do the tools work, return well-shaped data, handle errors
-sanely, respond quickly, and ship the `_agent_steering` guidance the server
-promises?*
+sanely, respond quickly, and omit the runtime steering metadata removed from the
+public tool contract?*
 
 ## Run it
 
@@ -51,7 +51,9 @@ all pass (`contractPass`) — a single failure fails the test:
 - primary payload parses as JSON and carries the required keys
 - per-tool shape predicates (e.g. `total_lines === shipping_lines.length`, id
   round-trips, `timeline` is an array)
-- an `_agent_steering` block is present and suggests follow-ups
+- removed runtime steering fields are absent from every JSON content block:
+  `_agent_steering`, `presentation_guidance`, `suggested_follow_ups`, and
+  `suggested_tools`
 
 **Latency** is a *soft* check: recorded in the score and the report, but a slow
 response alone never fails the suite.

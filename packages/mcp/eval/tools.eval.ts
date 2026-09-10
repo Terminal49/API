@@ -3,9 +3,9 @@
  *
  * Exercises every registered tool against a deployed gateway and scores each
  * response on its objective contract (shape, required fields, error semantics,
- * latency, and the `_agent_steering` guidance block). Read-only: the only
- * mutating tool, `track_container`, is driven with an already-tracked number so
- * it takes the idempotent search-match path and creates nothing.
+ * latency, and absence of removed steering metadata). Read-only: the only
+ * mutating tool, `track_container`, is driven with an already-tracked number
+ * so it takes the idempotent search-match path and creates nothing.
  *
  * Opt-in — the whole suite is skipped unless auth is configured:
  *   MCP_EVAL_BEARER=<oauth access token>   npm run eval --workspace @terminal49/mcp
@@ -164,7 +164,6 @@ if (!cfg) {
         { page_size: 5 },
         {
           requiredKeys: ['items'],
-          requireSteering: true,
           predicates: [
             { name: 'items is an array', test: (p) => hasArray(p, 'items') },
             {
@@ -185,7 +184,6 @@ if (!cfg) {
         { page_size: 5 },
         {
           requiredKeys: ['items'],
-          requireSteering: true,
           predicates: [
             { name: 'items is an array', test: (p) => hasArray(p, 'items') },
             {
@@ -209,7 +207,6 @@ if (!cfg) {
         { page_size: 5 },
         {
           requiredKeys: ['items'],
-          requireSteering: true,
           predicates: [
             { name: 'items is an array', test: (p) => hasArray(p, 'items') },
             {
@@ -235,7 +232,6 @@ if (!cfg) {
         {},
         {
           requiredKeys: ['total_lines', 'shipping_lines'],
-          requireSteering: true,
           predicates: [
             {
               name: 'shipping_lines is non-empty',
@@ -278,7 +274,6 @@ if (!cfg) {
         { id },
         {
           requiredKeys: ['id', 'container_number', 'status'],
-          requireSteering: true,
           predicates: [
             { name: 'id round-trips', test: (p) => readString(p, 'id') === id },
           ],
@@ -297,7 +292,6 @@ if (!cfg) {
         { id, include_containers: true },
         {
           requiredKeys: ['id', 'bill_of_lading', 'status'],
-          requireSteering: true,
           predicates: [
             { name: 'id round-trips', test: (p) => readString(p, 'id') === id },
           ],
@@ -317,7 +311,6 @@ if (!cfg) {
         { id: fixtures.containerId },
         {
           requiredKeys: ['total_events', 'timeline'],
-          requireSteering: true,
           predicates: [
             {
               name: 'timeline is an array',
@@ -338,7 +331,6 @@ if (!cfg) {
         'get_container_route',
         { id: fixtures.containerId },
         {
-          requireSteering: true,
           predicates: [
             {
               name: 'route payload or explained not-found',
@@ -356,10 +348,9 @@ if (!cfg) {
           ],
         },
       );
-      // Soft-error responses are still HTTP 200 with a JSON payload + steering.
+      // Soft-error responses are still HTTP 200 with a JSON payload.
       expect(result.http).toBe(200);
       expect(result.payload).toBeDefined();
-      expect(result.steering).toBeDefined();
       expect(score.contractPass).toBe(true);
     });
 
@@ -373,7 +364,6 @@ if (!cfg) {
         { query: number },
         {
           requiredKeys: ['containers', 'total_results'],
-          requireSteering: true,
           predicates: [
             {
               name: 'containers is an array',
@@ -404,7 +394,6 @@ if (!cfg) {
         { number: fixtures.containerNumber },
         {
           requiredKeys: ['tracking_request_created'],
-          requireSteering: true,
           predicates: [
             {
               name: 'no tracking request created',
@@ -455,7 +444,6 @@ if (!cfg) {
         { query: 'ZZZZ0000000ZZZZ' },
         {
           requiredKeys: ['containers', 'total_results'],
-          requireSteering: true,
           predicates: [
             {
               name: 'total_results is 0',
