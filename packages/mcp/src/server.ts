@@ -44,13 +44,6 @@ import {
 } from './sentry.js';
 import { logMcpEvent } from './logging.js';
 
-/**
- * MCP content-block annotations (per spec). `audience` lets a client decide who
- * a block is for: end "user", the "assistant" (model), or both. We tag
- * agent-steering payload (the response contract / metadata that exists only to
- * guide the model) as assistant-only so clients can hide it from end users,
- * while the human-readable answer stays unannotated (visible to everyone).
- */
 type ContentAnnotations = {
   audience?: Array<'user' | 'assistant'>;
   priority?: number;
@@ -74,15 +67,6 @@ type ResourceLinkContent = {
 type ToolContent = TextContent | ResourceLinkContent;
 
 /**
- * Annotation marking a content block as steering-only (assistant/model
- * audience). Clients that respect audience annotations can hide these blocks
- * from end users, since they carry tool-routing hints rather than answers.
- */
-const ASSISTANT_ONLY_ANNOTATION: ContentAnnotations = {
-  audience: ['assistant'],
-};
-
-/**
  * Server-level instructions (MCP `ServerOptions.instructions`). This is a
  * concise operating guide handed to the LLM at initialize time so it
  * understands the ocean-tracking domain and how to chain the tools.
@@ -93,9 +77,7 @@ Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and bookin
 
 Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools operate within the user's private Terminal49 account and none delete or overwrite data.
 
-Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.
-
-Tool results carry a _response_contract with presentation and follow-up hints; treat it as steering for you, not content to show the user.`;
+Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.`;
 
 type ResponseDisplayColumn = {
   key: string;
@@ -239,50 +221,41 @@ function hasMetadataError(
   return Boolean(metadata && typeof metadata.error === 'string');
 }
 
-const responseDisplayColumnSchema = z.object({
-  key: z.string(),
-  label: z.string(),
-  path: z.string().optional(),
-  description: z.string().optional(),
-  compute: z.string().optional(),
-});
+const METADATA_STEERING_FIELDS = new Set([
+  'presentation_guidance',
+  'recommendations',
+  'suggestions',
+  'suggested_follow_ups',
+  'suggested_tools',
+]);
 
-const responseDisplayColumnSetSchema = z.object({
-  intent: z.string(),
-  when_user_asks: z.array(z.string()),
-  columns: z.array(z.string()),
-});
+/**
+ * Defense in depth for tool executors that return factual `_metadata`.
+ * Runtime responses must not carry model instructions or tool-routing hints.
+ */
+function stripResponseSteering(value: unknown, inMetadata = false): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => stripResponseSteering(item, inMetadata));
+  }
+  if (!value || typeof value !== 'object') {
+    return value;
+  }
 
-const responseDisplaySchema = z.object({
-  preferred_format: z.enum(['table', 'list']),
-  table_when_rows_gte: z.number().int().positive(),
-  max_rows: z.number().int().positive(),
-  default_columns: z.array(z.string()),
-  sort: z.array(
-    z.object({
-      key: z.string(),
-      direction: z.enum(['asc', 'desc']),
-    }),
-  ),
-  empty_state: z.string(),
-  column_catalog_resource: z.string(),
-  column_catalog: z.array(responseDisplayColumnSchema).optional(),
-  column_sets: z.array(responseDisplayColumnSetSchema),
-  selection_strategy: z.string(),
-});
-
-const responseContractSchema = z.object({
-  purpose: z.string(),
-  can_answer: z.array(z.string()),
-  requires_more_data: z.array(z.string()),
-  relevant_fields: z.array(z.string()),
-  presentation_guidance: z.string(),
-  suggested_follow_ups: z.array(z.string()),
-  suggested_tools: z.array(z.string()),
-  display: responseDisplaySchema.optional(),
-  dropped_filters: z.array(z.string()).optional(),
-  total_is_reliable: z.boolean().optional(),
-});
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, nestedValue] of Object.entries(value)) {
+    if (key === '_agent_steering' || key === '_response_contract') {
+      continue;
+    }
+    if (inMetadata && METADATA_STEERING_FIELDS.has(key)) {
+      continue;
+    }
+    sanitized[key] = stripResponseSteering(
+      nestedValue,
+      key === '_metadata' || inMetadata,
+    );
+  }
+  return sanitized;
+}
 
 /** Hard ceiling for list page size. Keeps a single MCP response bounded. */
 const MAX_LIST_PAGE_SIZE = 25;
@@ -311,240 +284,6 @@ function stripLegacyIntent(value: unknown): unknown {
   const args = { ...value } as Record<string, unknown>;
   delete args.intent;
   return args;
-}
-
-function normalizeContract(contract: ResponseContract): ResponseContract {
-  return {
-    purpose: contract.purpose,
-    can_answer: contract.can_answer,
-    requires_more_data: contract.requires_more_data,
-    relevant_fields: contract.relevant_fields,
-    presentation_guidance: contract.presentation_guidance,
-    suggested_follow_ups: contract.suggested_follow_ups,
-    suggested_tools: contract.suggested_tools,
-    display: contract.display,
-    dropped_filters: contract.dropped_filters,
-    total_is_reliable: contract.total_is_reliable,
-  };
-}
-
-function attachResponseContract(
-  result: unknown,
-  contract: ResponseContract,
-): unknown {
-  if (!result || typeof result !== 'object' || Array.isArray(result)) {
-    return result;
-  }
-
-  return {
-    ...result,
-    _response_contract: normalizeContract(contract),
-  };
-}
-
-function buildSearchContract(
-  result: any,
-  args: { query: string },
-): ResponseContract {
-  const hasContainers =
-    result.total_results > 0 && (result.containers?.length ?? 0) > 0;
-  const hasShipments =
-    result.total_results > 0 && (result.shipments?.length ?? 0) > 0;
-
-  return {
-    purpose: `Resolve identifier ${args.query} into concrete container and shipment IDs.`,
-    can_answer: [
-      'container IDs and shipment references',
-      'carrier/scac hints for discovered items',
-      'what additional lookup step is needed',
-    ],
-    requires_more_data:
-      hasContainers || hasShipments
-        ? []
-        : ['A valid/refined identifier (container/BL/reference)'],
-    relevant_fields: ['containers', 'shipments', 'total_results'],
-    presentation_guidance:
-      hasContainers || hasShipments
-        ? 'Group matches by container and shipment. Ask for clarification only when multiple entities are strong candidates.'
-        : 'Ask for a clearer identifier and verify format before calling another tool.',
-    suggested_follow_ups: ['get_container', 'get_shipment_details'],
-    suggested_tools:
-      hasContainers || hasShipments
-        ? ['get_container', 'get_shipment_details']
-        : ['search_container'],
-  };
-}
-
-function buildTrackContract(
-  result: any,
-  args: { number: string },
-): ResponseContract {
-  const hasTrackedContainer = Boolean((result as any)?.id);
-  const isPending =
-    Boolean((result as any)?.tracking_request_created) && !hasTrackedContainer;
-  const wasNotCreated =
-    (result as any)?.error === 'NotFound' &&
-    (result as any)?.tracking_request_created === false;
-  const matchedButUnavailable =
-    (result as any)?.error === 'ContainerUnavailable';
-  const state = (result as any)?._metadata?.container_state || 'unknown';
-  return {
-    purpose: `Track ${args.number} and return the linked container view when possible.`,
-    can_answer: [
-      'tracking request creation state',
-      'basic container status and metadata',
-      'where to pull next (if container details are delayed)',
-    ],
-    requires_more_data: isPending
-      ? ['container details becoming available after request linking']
-      : matchedButUnavailable
-        ? ['the matched container details becoming available']
-        : wasNotCreated
-          ? ['a verified identifier and carrier SCAC']
-          : [],
-    relevant_fields: [
-      'tracking_request_created',
-      'container_state',
-      'id',
-      'status',
-    ],
-    presentation_guidance: isPending
-      ? 'Tracking request was created but container linking is not immediate. Mention this and provide next-check guidance.'
-      : matchedButUnavailable
-        ? 'A tracked container match exists, but its details are temporarily unavailable. Do not claim that a new tracking request was created.'
-        : wasNotCreated
-          ? 'No tracking request was created. Ask the user to verify the identifier and carrier; do not describe this as pending.'
-          : `Use container state "${state}" to answer readiness, holds, and pickup timing.`,
-    suggested_follow_ups: isPending
-      ? ['list_tracking_requests', 'get_container']
-      : matchedButUnavailable
-        ? ['get_container', 'search_container']
-        : wasNotCreated
-          ? ['get_supported_shipping_lines', 'search_container']
-          : ['get_container_transport_events'],
-    suggested_tools: wasNotCreated
-      ? ['get_supported_shipping_lines', 'search_container']
-      : ['get_container', 'get_container_transport_events'],
-  };
-}
-
-function buildTransportEventsContract(
-  result: any,
-  _args: { id: string },
-): ResponseContract {
-  const totalEvents = result.total_events ?? result.timeline?.length ?? 0;
-  return {
-    purpose:
-      'Summarize what happened and forecast next likely milestone for the container.',
-    can_answer: [
-      'journey timeline',
-      'major milestones',
-      'rail/transshipment context',
-    ],
-    requires_more_data:
-      totalEvents > 0
-        ? []
-        : ['recent container events becoming available from carrier feed'],
-    relevant_fields: ['timeline', 'event_categories', 'milestones'],
-    presentation_guidance:
-      totalEvents > 0
-        ? 'Render in chronological order. Prioritize milestones over minor terminal noise.'
-        : 'No events found yet; recommend checking base container context and retrying later.',
-    suggested_follow_ups: ['get_container', 'get_container_route'],
-    suggested_tools: ['get_container', 'get_container_route'],
-  };
-}
-
-function buildShippingLineContract(result: any): ResponseContract {
-  return {
-    purpose:
-      'Help user identify a supported SCAC before creating a track request.',
-    can_answer: [
-      'SCAC lookup',
-      'carrier aliases and names',
-      'supported carrier search',
-    ],
-    requires_more_data:
-      result.total_lines > 0 ? [] : ['additional query context'],
-    relevant_fields: ['shipping_lines', 'total_lines'],
-    presentation_guidance:
-      'Sort carriers alphabetically and show both SCAC and company names.',
-    suggested_follow_ups: ['track_container'],
-    suggested_tools: ['track_container'],
-  };
-}
-
-function buildRouteContract(
-  result: any,
-  _args: { id: string },
-): ResponseContract {
-  const available = Array.isArray(result.route_locations);
-  return {
-    purpose: 'Communicate container routing and vessel itinerary.',
-    can_answer: [
-      'transshipment structure',
-      'leg-by-leg ETD/ETA',
-      'carrier and vessel coverage',
-    ],
-    requires_more_data: available
-      ? []
-      : ['event timeline via get_container_transport_events'],
-    relevant_fields: ['route_locations', 'total_legs', 'alternative'],
-    presentation_guidance: available
-      ? 'Show origin → transshipments → destination. Emphasize missing legs and ETA changes.'
-      : 'This account has no route payload; switch to events and container snapshot.',
-    suggested_follow_ups: ['get_container_transport_events', 'get_container'],
-    suggested_tools: ['get_container_transport_events', 'get_container'],
-  };
-}
-
-function buildContainerContract(): ResponseContract {
-  return {
-    purpose: 'Provide current container snapshot and readiness context.',
-    can_answer: [
-      'status',
-      'location',
-      'pickup readiness',
-      'rail and shipment context',
-    ],
-    requires_more_data: ['holds, fees, and timeline by demand'],
-    relevant_fields: [
-      'id',
-      'container_number',
-      'status',
-      'pod_terminal',
-      'demurrage',
-    ],
-    presentation_guidance:
-      'Summarize state first, then call out LFD, holds, and fees if present. If terminal availability is unclear, suggest transport events.',
-    suggested_follow_ups: [
-      'get_container_transport_events',
-      'get_container_route',
-    ],
-    suggested_tools: ['get_container_transport_events', 'get_container_route'],
-  };
-}
-
-function buildShipmentContract(): ResponseContract {
-  return {
-    purpose:
-      'Explain shipment-level routing, container counts, and references.',
-    can_answer: ['shipment identifiers', 'routing summary', 'container list'],
-    requires_more_data: [
-      'container-level ETA confidence when only one terminal is visible',
-    ],
-    relevant_fields: [
-      'id',
-      'bill_of_lading',
-      'status',
-      'containers',
-      'routing',
-    ],
-    presentation_guidance:
-      'Group by shipment summary then container health signals (pickup ETA, pickup_lfd, holds).',
-    suggested_follow_ups: ['get_container', 'list_containers'],
-    suggested_tools: ['get_container', 'list_containers'],
-  };
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -953,30 +692,6 @@ export function buildListContract(
 }
 
 /**
- * Builds an assistant-only steering content block from a response contract.
- *
- * This surfaces the agent-steering hints (presentation guidance, suggested
- * follow-up tools) as a discrete content block annotated `audience:
- * ['assistant']`, so spec-aware clients can hide it from end users while still
- * delivering it to the model. The user-facing answer block (built by
- * buildContentPayload) is left unannotated and remains visible to everyone.
- */
-function buildSteeringContent(contract: ResponseContract): TextContent {
-  const steering = {
-    _agent_steering: true,
-    purpose: contract.purpose,
-    presentation_guidance: contract.presentation_guidance,
-    suggested_follow_ups: contract.suggested_follow_ups,
-    suggested_tools: contract.suggested_tools,
-  };
-  return {
-    type: 'text',
-    text: formatAsText(steering),
-    annotations: ASSISTANT_ONLY_ANNOTATION,
-  };
-}
-
-/**
  * The container resource template registered below. Resource-link content
  * blocks reference these URIs so large list payloads can be replaced by compact
  * links the client can resolve on demand (resources/read), reducing context.
@@ -1028,9 +743,9 @@ function buildListResourceLinks(
   return links;
 }
 
-function wrapToolWithContract<TArgs>(
+function wrapTool<TArgs>(
+  toolName: string,
   handler: (args: TArgs) => Promise<unknown>,
-  buildContract?: (result: unknown, args: TArgs) => ResponseContract,
   buildResourceLinks?: (result: unknown, args: TArgs) => ResourceLinkContent[],
 ): (args: TArgs) => Promise<{
   content: ToolContent[];
@@ -1040,21 +755,11 @@ function wrapToolWithContract<TArgs>(
   return async (args: TArgs) => {
     try {
       const result = await handler(args);
-      const contract = buildContract ? buildContract(result, args) : undefined;
-      const structuredContent = contract
-        ? attachResponseContract(result, contract)
-        : result;
-
-      const content: ToolContent[] = buildContentPayload(result);
+      const structuredContent = stripResponseSteering(result);
+      const content: ToolContent[] = buildContentPayload(structuredContent);
 
       if (buildResourceLinks) {
-        content.push(...buildResourceLinks(result, args));
-      }
-
-      // Steering metadata is appended as an assistant-only block so clients can
-      // hide it from end users; the answer block above stays user-visible.
-      if (contract) {
-        content.push(buildSteeringContent(contract));
+        content.push(...buildResourceLinks(structuredContent, args));
       }
 
       return {
@@ -1077,13 +782,78 @@ function wrapToolWithContract<TArgs>(
         content: [
           {
             type: 'text',
-            text: 'The Terminal49 request could not be completed. Please retry; if it persists, contact support.',
+            text: formatToolError(toolName, args, error),
           },
         ],
         isError: true,
       };
     }
   };
+}
+
+function formatToolError(
+  toolName: string,
+  args: unknown,
+  error: unknown,
+): string {
+  const input =
+    args && typeof args === 'object' ? (args as Record<string, unknown>) : {};
+  const id = typeof input.id === 'string' ? input.id : undefined;
+  const number =
+    typeof input.number === 'string'
+      ? input.number
+      : typeof input.containerNumber === 'string'
+        ? input.containerNumber
+        : typeof input.bookingNumber === 'string'
+          ? input.bookingNumber
+          : undefined;
+  const err = error as {
+    name?: string;
+    message?: string;
+    status?: number;
+    details?: unknown;
+  };
+  const errorText = `${err.message ?? ''} ${safeStringify(err.details)}`;
+
+  if (toolName === 'track_container') {
+    if (!number?.trim() || /number is required/i.test(errorText)) {
+      return 'number is required.';
+    }
+    if (
+      err.name === 'ContainerCheckDigitError' ||
+      /(?:iso\s*6346|check[-_\s]?digit)/i.test(errorText)
+    ) {
+      return `Container number ${number} fails the ISO 6346 check digit.`;
+    }
+  }
+
+  if (err.name === 'NotFoundError' || err.status === 404) {
+    switch (toolName) {
+      case 'get_container':
+      case 'get_container_transport_events':
+        return `No container found with id ${id ?? '(missing)'}.`;
+      case 'get_shipment_details':
+        return `No shipment found with id ${id ?? '(missing)'}.`;
+      case 'get_container_route':
+        return `No route found for container id ${id ?? '(missing)'}.`;
+      default:
+        return 'The requested Terminal49 record was not found.';
+    }
+  }
+
+  if (toolName === 'track_container' && err.name === 'ValidationError') {
+    return `Tracking identifier ${number} is invalid. Verify the identifier type and carrier SCAC.`;
+  }
+
+  return 'The Terminal49 request could not be completed. Contact support if the problem persists.';
+}
+
+function safeStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value) ?? '';
+  } catch {
+    return '';
+  }
 }
 
 /**
@@ -1159,6 +929,7 @@ export function createTerminal49McpServer(
       description:
         'Search for containers, shipments, and tracking information by container number, ' +
         'booking number, bill of lading, or reference number. Returns matching private-account records. ' +
+        'Use get_container or get_shipment_details with a returned UUID for a detailed snapshot. ' +
         'Pass exactly one identifier, never a user message or conversation history. ' +
         'Examples: CAIU2885402, MAEU123456789, or a customer reference number.',
       annotations: {
@@ -1198,12 +969,10 @@ export function createTerminal49McpServer(
           }),
         ),
         total_results: z.number(),
-        _response_contract: responseContractSchema,
       }),
     },
-    wrapToolWithContract(
-      async ({ query }) => executeSearchContainer({ query }, client),
-      (result, args) => buildSearchContract(result as any, args),
+    wrapTool('search_container', async ({ query }) =>
+      executeSearchContainer({ query }, client),
     ),
   );
 
@@ -1215,7 +984,8 @@ export function createTerminal49McpServer(
       description:
         'Track a container, bill of lading, or booking number. ' +
         'Uses inference to choose the carrier/type when possible, creates a tracking request, ' +
-        'and returns detailed container information.',
+        'and returns detailed container information. If a newly created request is still pending, ' +
+        'use list_tracking_requests to check its status.',
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -1228,7 +998,6 @@ export function createTerminal49McpServer(
           .trim()
           .min(1)
           .max(64)
-          .optional()
           .describe(
             'One container, Bill of Lading, or booking number (maximum 64 characters). Identifier only; never pass conversation text.',
           ),
@@ -1282,11 +1051,11 @@ export function createTerminal49McpServer(
           status: z.string().optional(),
           tracking_request_created: z.boolean().optional(),
           infer_result: z.any().optional(),
-          _response_contract: responseContractSchema,
         })
         .passthrough(),
     },
-    wrapToolWithContract(
+    wrapTool(
+      'track_container',
       async ({
         number,
         numberType,
@@ -1306,11 +1075,6 @@ export function createTerminal49McpServer(
           },
           client,
         ),
-      (result, args) =>
-        buildTrackContract(result as any, {
-          number:
-            args.number || args.containerNumber || args.bookingNumber || '',
-        }),
     ),
   );
 
@@ -1321,7 +1085,8 @@ export function createTerminal49McpServer(
       title: 'Get Container Details',
       description:
         'Get container information with flexible data loading. Returns core container data (status, location, equipment, dates) ' +
-        'plus optional shipment, terminal, or transport-event data. Transport events are excluded by default to keep snapshots compact.',
+        'plus optional shipment, terminal, or transport-event data. Transport events are excluded by default to keep snapshots compact. ' +
+        'Call get_container_transport_events for the complete milestone timeline.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1343,15 +1108,10 @@ export function createTerminal49McpServer(
               '• transport_events: Full event history, rail tracking (heavy 50-100 events, use for journey/timeline questions)',
           ),
       }),
-      outputSchema: z
-        .object({
-          _response_contract: responseContractSchema,
-        })
-        .passthrough(),
+      outputSchema: z.object({}).passthrough(),
     },
-    wrapToolWithContract(
-      async ({ id, include }) => executeGetContainer({ id, include }, client),
-      () => buildContainerContract(),
+    wrapTool('get_container', async ({ id, include }) =>
+      executeGetContainer({ id, include }, client),
     ),
   );
 
@@ -1362,7 +1122,8 @@ export function createTerminal49McpServer(
       title: 'Get Shipment Details',
       description:
         'Get detailed shipment information including routing, BOL, containers, and port details. ' +
-        'Returns: Bill of Lading, shipping line, port details, vessel info, ETAs, container list.',
+        'Returns: Bill of Lading, shipping line, port details, vessel info, ETAs, container list. ' +
+        'Use get_container with a returned container UUID for pickup availability, holds, fees, and last free day.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1381,16 +1142,10 @@ export function createTerminal49McpServer(
             'Include list of containers in this shipment. Default: true',
           ),
       }),
-      outputSchema: z
-        .object({
-          _response_contract: responseContractSchema,
-        })
-        .passthrough(),
+      outputSchema: z.object({}).passthrough(),
     },
-    wrapToolWithContract(
-      async ({ id, include_containers }) =>
-        executeGetShipmentDetails({ id, include_containers }, client),
-      () => buildShipmentContract(),
+    wrapTool('get_shipment_details', async ({ id, include_containers }) =>
+      executeGetShipmentDetails({ id, include_containers }, client),
     ),
   );
 
@@ -1414,15 +1169,10 @@ export function createTerminal49McpServer(
           .uuid()
           .describe('The Terminal49 container ID (UUID format)'),
       }),
-      outputSchema: z
-        .object({
-          _response_contract: responseContractSchema,
-        })
-        .passthrough(),
+      outputSchema: z.object({}).passthrough(),
     },
-    wrapToolWithContract(
-      async ({ id }) => executeGetContainerTransportEvents({ id }, client),
-      (result, args) => buildTransportEventsContract(result as any, args),
+    wrapTool('get_container_transport_events', async ({ id }) =>
+      executeGetContainerTransportEvents({ id }, client),
     ),
   );
 
@@ -1433,7 +1183,8 @@ export function createTerminal49McpServer(
       title: 'Get Supported Shipping Lines',
       description:
         'Get list of shipping lines (carriers) supported by Terminal49 for container tracking. ' +
-        'Returns SCAC codes, full names, and common abbreviations, with optional name or SCAC filtering.',
+        'Returns SCAC codes, full names, and common abbreviations, with optional name or SCAC filtering. ' +
+        'Pass the returned four-letter SCAC to track_container when carrier inference is ambiguous.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1461,18 +1212,10 @@ export function createTerminal49McpServer(
             notes: z.string().optional(),
           }),
         ),
-        _metadata: z.object({
-          presentation_guidance: z.string(),
-          error: z.string().optional(),
-          remediation: z.string().optional(),
-        }),
-        _response_contract: responseContractSchema,
       }),
     },
-    wrapToolWithContract(
-      async ({ search }) =>
-        executeGetSupportedShippingLines({ search }, client),
-      (result) => buildShippingLineContract(result as any),
+    wrapTool('get_supported_shipping_lines', async ({ search }) =>
+      executeGetSupportedShippingLines({ search }, client),
     ),
   );
 
@@ -1541,22 +1284,14 @@ export function createTerminal49McpServer(
           .optional(),
         created_at: z.string().nullable().optional(),
         updated_at: z.string().nullable().optional(),
-        _metadata: z
-          .object({
-            presentation_guidance: z.string().optional(),
-          })
-          .optional(),
-
         // Feature gating / errors
         error: z.string().optional(),
         message: z.string().optional(),
         alternative: z.string().optional(),
-        _response_contract: responseContractSchema.optional(),
       }),
     },
-    wrapToolWithContract(
-      async ({ id }) => executeGetContainerRoute({ id }, client),
-      (result, args) => buildRouteContract(result as any, args),
+    wrapTool('get_container_route', async ({ id }) =>
+      executeGetContainerRoute({ id }, client),
     ),
   );
 
@@ -1566,7 +1301,7 @@ export function createTerminal49McpServer(
     {
       title: 'List Shipments',
       description:
-        'Return one intentionally requested page of shipments, optionally filtered by one shipment identifier or tracking-stopped state. Page size is capped at 25. Never pass conversation text into identifier fields.',
+        'Return one intentionally requested page of shipments, optionally filtered by one shipment identifier or tracking-stopped state. Page size is capped at 25. Use get_shipment_details with a returned UUID for routing and container details. Never pass conversation text into identifier fields.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1601,16 +1336,10 @@ export function createTerminal49McpServer(
         links: z.record(z.string(), z.string()).optional(),
         meta: z.record(z.string(), z.any()).optional(),
         unsupportedFilters: z.array(z.string()),
-        _response_contract: responseContractSchema,
       }),
     },
-    wrapToolWithContract(
-      async (args) => executeListShipments(args, client),
-      (result, args) =>
-        buildListContract(result as any, 'shipment', {
-          filters: args,
-          unsupportedFilters: (result as any)?.unsupportedFilters,
-        }),
+    wrapTool('list_shipments', async (args) =>
+      executeListShipments(args, client),
     ),
   );
 
@@ -1620,7 +1349,7 @@ export function createTerminal49McpServer(
     {
       title: 'List Containers',
       description:
-        'Return one intentionally requested page of containers, capped at 25 rows. The API does not expose server-side status, port, carrier, or update-time filters. Do not use this tool to pass or retrieve conversation text.',
+        'Return one intentionally requested page of containers, capped at 25 rows. Use get_container with a returned UUID for a detailed snapshot. The API does not expose server-side status, port, carrier, or update-time filters. Do not use this tool to pass or retrieve conversation text.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1642,16 +1371,11 @@ export function createTerminal49McpServer(
         links: z.record(z.string(), z.string()).optional(),
         meta: z.record(z.string(), z.any()).optional(),
         unsupportedFilters: z.array(z.string()),
-        _response_contract: responseContractSchema,
       }),
     },
-    wrapToolWithContract(
+    wrapTool(
+      'list_containers',
       async (args) => executeListContainers(args, client),
-      (result, args) =>
-        buildListContract(result as any, 'container', {
-          filters: args,
-          unsupportedFilters: (result as any)?.unsupportedFilters,
-        }),
       // ResourceLinks: each container row becomes a compact link to the
       // registered terminal49://container/{id} resource, so the client can
       // resolve full details on demand instead of paying for them up front.
@@ -1665,7 +1389,7 @@ export function createTerminal49McpServer(
     {
       title: 'List Tracking Requests',
       description:
-        'Return one intentionally requested page of tracking requests, optionally filtered by request identifier, status, or carrier SCAC. Page size is capped at 25. Identifier fields must never contain user messages or conversation history.',
+        'Return one intentionally requested page of tracking requests, optionally filtered by request identifier, status, or carrier SCAC. Page size is capped at 25. For succeeded requests, use search_container to resolve the tracked identifier into container or shipment UUIDs. Identifier fields must never contain user messages or conversation history.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1704,16 +1428,10 @@ export function createTerminal49McpServer(
         items: z.array(z.record(z.string(), z.any())),
         links: z.record(z.string(), z.string()).optional(),
         meta: z.record(z.string(), z.any()).optional(),
-        _response_contract: responseContractSchema,
       }),
     },
-    wrapToolWithContract(
-      async (args) => executeListTrackingRequests(args, client),
-      (result, args) =>
-        buildListContract(result as any, 'tracking_request', {
-          filters: args,
-          unsupportedFilters: (result as any)?.unsupportedFilters,
-        }),
+    wrapTool('list_tracking_requests', async (args) =>
+      executeListTrackingRequests(args, client),
     ),
   );
 

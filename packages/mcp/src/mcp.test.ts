@@ -435,6 +435,16 @@ describe('MCP server wiring', () => {
     ).toThrow();
   });
 
+  it('requires number in the track_container input schema', () => {
+    const server = createTerminal49McpServer('token');
+    const schema = (server as any)._registeredTools.track_container
+      .inputSchema as { parse: (value: unknown) => unknown };
+
+    expect(() => schema.parse({})).toThrow();
+    expect(() => schema.parse({ containerNumber: 'CAIU2885402' })).toThrow();
+    expect(() => schema.parse({ number: 'CAIU2885402' })).not.toThrow();
+  });
+
   it('advertises and enforces a maximum page size of 25', () => {
     const server = createTerminal49McpServer('token');
     const tools = (server as any)._registeredTools as Record<
@@ -476,7 +486,7 @@ describe('MCP server wiring', () => {
     expect(() => schema.parse({ scac: 'not a scac' })).toThrow();
   });
 
-  it('tools include _response_contract in output schemas', () => {
+  it('tool output schemas do not advertise response steering', () => {
     const server = createTerminal49McpServer('token');
     const tools = (server as any)._registeredTools as Record<
       string,
@@ -499,11 +509,11 @@ describe('MCP server wiring', () => {
     for (const name of expectedToolSchemas) {
       const outputSchema = tools[name]?.outputSchema;
       const hasResponseContract = _hasResponseContract(outputSchema);
-      expect(hasResponseContract).toBe(true);
+      expect(hasResponseContract).toBe(false);
     }
   });
 
-  it('list tool contracts include display hints for table rendering', () => {
+  it('list tool output schemas do not advertise response display steering', () => {
     const server = createTerminal49McpServer('token');
     const tools = (server as any)._registeredTools as Record<
       string,
@@ -518,7 +528,7 @@ describe('MCP server wiring', () => {
 
     for (const name of listTools) {
       const outputSchema = tools[name]?.outputSchema;
-      expect(_hasDisplayHintsInResponseContract(outputSchema)).toBe(true);
+      expect(_hasDisplayHintsInResponseContract(outputSchema)).toBe(false);
     }
   });
 
@@ -750,22 +760,10 @@ describe('MCP server wiring', () => {
       try {
         const result = await client.callTool({ name, arguments: args });
 
-        expect(result.structuredContent).toMatchObject({
-          ...payload,
-          _response_contract: {
-            purpose: expect.any(String),
-            presentation_guidance: expect.any(String),
-            suggested_tools: expect.any(Array),
-          },
-        });
-        expect(
-          result.content.some(
-            (block) =>
-              block.type === 'text' &&
-              block.annotations?.audience?.includes('assistant') &&
-              block.text.includes('_agent_steering'),
-          ),
-        ).toBe(true);
+        expect(result.structuredContent).toMatchObject(payload);
+        expect(JSON.stringify(result)).not.toMatch(
+          /_agent_steering|_response_contract|presentation_guidance|suggested_follow_ups|suggested_tools/,
+        );
       } finally {
         await client.close();
         await handler.close();
@@ -773,7 +771,7 @@ describe('MCP server wiring', () => {
     },
   );
 
-  it('marks steering-only content with audience:[assistant] and keeps the answer user-visible', async () => {
+  it('returns data without assistant-only steering content', async () => {
     containersList.mockResolvedValue({ items: [], links: {}, meta: {} });
 
     const server = createTerminal49McpServer('token');
@@ -788,10 +786,10 @@ describe('MCP server wiring', () => {
         block.annotations.audience[0] === 'assistant',
     );
 
-    // Exactly one assistant-only steering block carrying the contract hints.
-    expect(steeringBlocks).toHaveLength(1);
-    expect(steeringBlocks[0].text).toContain('_agent_steering');
-    expect(steeringBlocks[0].text).toContain('presentation_guidance');
+    expect(steeringBlocks).toHaveLength(0);
+    expect(JSON.stringify(result)).not.toMatch(
+      /_agent_steering|_response_contract|presentation_guidance|suggested_follow_ups|suggested_tools/,
+    );
 
     // The first (answer) block is NOT annotated assistant-only, so it stays
     // visible to end users.

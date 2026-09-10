@@ -8,7 +8,6 @@ import { Terminal49Client } from '@terminal49/sdk';
 interface SupportedLinesResponse {
   total_lines: number;
   shipping_lines: ShippingLineRecord[];
-  _metadata: Record<string, string>;
 }
 
 export interface ShippingLineRecord {
@@ -49,11 +48,6 @@ export async function executeGetSupportedShippingLines(
   return {
     total_lines: filtered.length,
     shipping_lines: filtered,
-    _metadata: {
-      presentation_guidance: search
-        ? `User searched for "${args.search}". Present matching carriers clearly.`
-        : 'Present carriers alphabetically. Data sourced from Terminal49 shipping_lines API.',
-    },
   };
 }
 

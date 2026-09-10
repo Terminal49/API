@@ -8,7 +8,6 @@
 
 import { Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
-import { dayDeltaInZone } from '../lib/temporal.js';
 
 export interface GetShipmentArgs {
   id: string;
@@ -79,7 +78,7 @@ function formatShipmentResponse(
   // Extract containers if included
   const containerData = includeContainers
     ? extractContainers(relationships, included)
-    : `Call get_shipment_details with include_containers=true to fetch container list`;
+    : undefined;
 
   // Extract port/terminal info
   const portOfLading = included.find(
@@ -200,7 +199,6 @@ function formatShipmentResponse(
       includes_loaded: includeContainers
         ? ['containers', 'ports', 'terminals']
         : ['ports', 'terminals'],
-      presentation_guidance: getShipmentPresentationGuidance(status, shipment),
     },
   };
 }
@@ -245,40 +243,4 @@ function determineShipmentStatus(shipment: any): string {
   if (shipment.pol_atd_at) return 'in_transit';
   if (shipment.pol_etd_at) return 'awaiting_departure';
   return 'pending';
-}
-
-function getShipmentPresentationGuidance(
-  status: string,
-  shipment: any,
-): string {
-  switch (status) {
-    case 'pending':
-      return 'Shipment is being prepared. Focus on expected departure date and origin details.';
-
-    case 'awaiting_departure':
-      return 'Vessel has not yet departed. Emphasize ETD and vessel details.';
-
-    case 'in_transit': {
-      // Compute the day delta in the destination terminal's local time so the
-      // "ETA in N days" count never lands on the wrong calendar day (the classic
-      // UTC off-by-one near midnight).
-      const daysToArrival = dayDeltaInZone(
-        shipment.pod_eta_at,
-        shipment.pod_timezone,
-      );
-      if (daysToArrival !== null) {
-        return `Shipment is in transit. ETA in ${daysToArrival} days (destination-local). Focus on vessel name, route, and arrival timing.`;
-      }
-      return 'Shipment is in transit. Focus on vessel and expected arrival.';
-    }
-
-    case 'arrived_at_pod':
-      return 'Shipment has arrived at destination port. Focus on containers and their discharge/availability status.';
-
-    case 'delivered_to_destination':
-      return 'Shipment delivered to final destination. Provide summary of journey and container delivery status.';
-
-    default:
-      return 'Present shipment routing and status clearly.';
-  }
 }
