@@ -98,6 +98,9 @@ describe('MCP protocol compatibility', () => {
       maxLength: 128,
       description: expect.stringMatching(/never pass conversation text/i),
     });
+    expect(
+      toolSchemas.get('get_container')?.properties?.include?.description,
+    ).toMatch(/transport_events: Event summary.*get_container_transport_events/);
 
     for (const name of [
       'list_shipments',
