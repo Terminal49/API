@@ -192,6 +192,43 @@ describe('api/mcp handler lifecycle', () => {
     expect(mockState.serverCreateArgs[0]?.apiToken).toBe('token-scheme-value');
   });
 
+  it('forwards validated account context for a caller-owned credential', async () => {
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const accountId = 'f5e2f70e-2de8-4456-8596-db40e617b808';
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Token token-scheme-value',
+        'x-account-id': accountId,
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(mockState.serverCreateArgs[0]).toMatchObject({
+      apiToken: 'token-scheme-value',
+      accountId,
+    });
+  });
+
+  it('rejects malformed account context before constructing a server', async () => {
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Token token-scheme-value',
+        'x-account-id': 'not-an-account-id',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(400);
+    expect(mockState.servers).toHaveLength(0);
+  });
+
   it('allows requests without Host header when allow-list is not configured', async () => {
     const { default: handler } = await import('../../../api/mcp.ts');
     const req = createRequest({

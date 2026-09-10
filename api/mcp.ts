@@ -42,12 +42,14 @@ type ResponseLike = {
   on(event: 'close' | 'finish', listener: () => void): void;
 } & ServerResponse;
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function setCorsHeaders(res: ResponseLike): void {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id',
+    'Content-Type, Authorization, X-Account-ID, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id',
   );
 }
 
@@ -477,10 +479,26 @@ export default async function handler(
       return;
     }
 
+    const requestedAccountId =
+      resolvedAuth.scheme === 'Token'
+        ? getHeaderValue(req.headers['x-account-id'])
+        : undefined;
+    if (requestedAccountId && !UUID.test(requestedAccountId)) {
+      res.status(400).json({
+        error: 'Bad Request',
+        message: 'X-Account-ID must be a UUID.',
+      });
+      logLifecycle('mcp.request.complete', requestId, {
+        reason: 'invalid_account_id',
+      });
+      return;
+    }
+
     const configuredApiToken = process.env.T49_API_TOKEN?.trim();
     const configuredClientSecret = process.env.T49_MCP_CLIENT_SECRET?.trim();
     let resolvedTerminal49Auth: ResolvedTerminal49Auth = {
       apiToken: callerToken,
+      accountId: requestedAccountId,
       authSource: resolvedAuth.source ?? 'authorization',
     };
 
