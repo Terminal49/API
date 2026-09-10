@@ -28,7 +28,7 @@ type AdvertisedProperty = {
   default?: unknown;
   maxLength?: number;
   maxItems?: number;
-  minimum?: number;
+  exclusiveMinimum?: number;
   maximum?: number;
   description?: string;
   items?: { enum?: string[] };
@@ -226,14 +226,16 @@ describe('MCP protocol compatibility', () => {
         toolSchemas.get(name)?.properties?.page,
         `${name}.page`,
       ).toMatchObject({
-        minimum: 1,
+        type: 'integer',
+        exclusiveMinimum: 0,
       });
       expect(
         toolSchemas.get(name)?.properties?.page_size,
         `${name}.page_size`,
       ).toMatchObject({
         default: 25,
-        minimum: 1,
+        type: 'integer',
+        exclusiveMinimum: 0,
         maximum: 25,
       });
     }
