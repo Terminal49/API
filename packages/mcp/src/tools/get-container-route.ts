@@ -235,11 +235,5 @@ function formatRouteResponse(apiResponse: any): any {
     route_locations: routeLocations,
     created_at: route.created_at,
     updated_at: route.updated_at,
-    _metadata: {
-      presentation_guidance:
-        'Present route as a journey: Origin → [Transshipment Ports] → Destination. ' +
-        'For each leg, show vessel name, carrier, and ETD/ETA/ATD/ATA. ' +
-        'Highlight transshipment ports (where container changes vessels).',
-    },
   };
 }

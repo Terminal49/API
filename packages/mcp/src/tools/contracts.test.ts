@@ -221,11 +221,11 @@ describe('MCP tool contracts', () => {
     });
 
     const result = await executeTrackContainer(
-      { number: 'CAIU1234567', scac: 'MAEU' },
+      { number: 'CAIU2885402', scac: 'MAEU' },
       client,
     );
 
-    expect(createFromInfer).toHaveBeenCalledWith('CAIU1234567', {
+    expect(createFromInfer).toHaveBeenCalledWith('CAIU2885402', {
       scac: 'MAEU',
       numberType: undefined,
       refNumbers: undefined,
@@ -307,14 +307,14 @@ describe('MCP tool contracts', () => {
     });
 
     const result = await executeTrackContainer(
-      { number: 'MSCU1234567', numberType: 'container', scac: 'MSCU' },
+      { number: 'MSCU1234566', numberType: 'container', scac: 'MSCU' },
       client,
     );
 
     expect(createFromInfer).toHaveBeenCalledTimes(1);
     expect(createTrackingRequest).toHaveBeenCalledWith({
       requestType: 'container',
-      requestNumber: 'MSCU1234567',
+      requestNumber: 'MSCU1234566',
       scac: 'MSCU',
       refNumbers: undefined,
     });
@@ -893,10 +893,7 @@ describe('MCP tool contracts', () => {
       number_type: 'container',
       scac: 'TEMU',
     });
-    expect(result._metadata).toMatchObject({
-      presentation_guidance:
-        'Tracking request was created, but no container is linked yet. Poll list_tracking_requests or retry in a short while.',
-    });
+    expect(result._metadata).toBeUndefined();
   });
 
   it('track_container distinguishes an uncreated request from a hard upstream failure', async () => {
@@ -908,21 +905,28 @@ describe('MCP tool contracts', () => {
     });
 
     const result = await executeTrackContainer(
-      { number: 'CAIU1234567', scac: 'MAEU' },
+      { number: 'CAIU2885402', scac: 'MAEU' },
       client,
     );
 
     expect(result).toMatchObject({
       error: 'NotFound',
       tracking_request_created: false,
-      message: expect.stringContaining('could not create a tracking request'),
-      _metadata: {
-        presentation_guidance: expect.stringContaining(
-          'no tracking request was created',
-        ),
-      },
+      message: expect.stringContaining('No container found'),
     });
     expect(JSON.stringify(result)).not.toContain('internal route');
+  });
+
+  it('track_container rejects an invalid ISO 6346 check digit before calling the API', async () => {
+    const createFromInfer = vi.fn();
+    const client = asClient({
+      createTrackingRequestFromInfer: createFromInfer,
+    });
+
+    await expect(
+      executeTrackContainer({ number: 'CAIU1234567', scac: 'MAEU' }, client),
+    ).rejects.toThrow('fails the ISO 6346 check digit');
+    expect(createFromInfer).not.toHaveBeenCalled();
   });
 
   it('get_supported_shipping_lines filters response by search term', async () => {

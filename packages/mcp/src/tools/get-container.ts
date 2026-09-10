@@ -89,31 +89,21 @@ export interface ContainerStatus {
     name: string;
     firms_code: string;
   } | null;
-  events?:
-    | {
-        count: number;
-        latest_event?: {
-          event: string;
-          timestamp: string;
-          location?: string;
-        };
-        rail_events_count?: number;
-      }
-    | string;
+  events?: {
+    count: number;
+    latest_event?: {
+      event: string;
+      timestamp: string;
+      location?: string;
+    };
+    rail_events_count?: number;
+  };
   created_at: string;
   _metadata: {
     container_state: string;
     status_is_authoritative: boolean;
     derived_lifecycle: string;
     includes_loaded: string[];
-    can_answer: string[];
-    needs_more_data_for: string[];
-    relevant_for_current_state: string[];
-    presentation_guidance: string;
-    suggestions?: {
-      message?: string;
-      recommended_follow_up?: string | null;
-    };
   };
 }
 
@@ -206,7 +196,7 @@ function formatContainerResponse(
 
   const eventsData = includes.includes('transport_events')
     ? formatEventsData(transportEvents)
-    : `Call get_container with include=['transport_events'] to fetch ${transportEvents.length || '~50-100'} event records`;
+    : undefined;
 
   const podTimezone: string | null = container.pod_timezone ?? null;
   // Compute the LFD countdown in terminal-local days so "N days until LFD" never
@@ -228,13 +218,7 @@ function formatContainerResponse(
 
   const importDeadlines = container.import_deadlines || {};
 
-  const metadata = generateMetadata(
-    container,
-    statusResult,
-    demurrage,
-    podTimezone,
-    includes,
-  );
+  const metadata = generateMetadata(statusResult, includes);
 
   return {
     id: apiResponse.data?.id,
@@ -374,272 +358,16 @@ function formatEventsData(events: any[]): any {
   };
 }
 
-/**
- * Generate metadata hints to steer LLM decision-making. The derived lifecycle
- * is exposed here as non-authoritative steering metadata only — the headline
- * `status` above is the source of truth.
- */
 function generateMetadata(
-  container: any,
   statusResult: ContainerStatusResult,
-  demurrage: DemurrageEvaluation,
-  podTimezone: string | null,
   includes: string[],
 ): ContainerStatus['_metadata'] {
   const lifecycle = statusResult.derived_lifecycle;
-  const canAnswer: string[] = [
-    'container status',
-    'equipment details',
-    'basic timeline',
-  ];
-  const needsMoreDataFor: string[] = [];
-
-  if (includes.includes('shipment')) {
-    canAnswer.push(
-      'routing information',
-      'shipping line details',
-      'reference numbers',
-    );
-  }
-
-  if (includes.includes('pod_terminal')) {
-    canAnswer.push(
-      'availability status',
-      'demurrage/LFD',
-      'holds and fees',
-      'terminal location',
-    );
-  }
-
-  if (includes.includes('transport_events')) {
-    canAnswer.push(
-      'full journey timeline',
-      'milestone analysis',
-      'rail tracking details',
-      'event history',
-    );
-  } else {
-    needsMoreDataFor.push(
-      "journey timeline → include: ['transport_events']",
-      "milestone analysis → include: ['transport_events']",
-      "rail movement details → include: ['transport_events']",
-    );
-  }
-
-  const suggestions = generateSuggestions(
-    container,
-    lifecycle,
-    demurrage,
-    includes,
-  );
-  const relevantFields = getRelevantFieldsForState(lifecycle, container);
-  const presentationGuidance = getPresentationGuidance(
-    lifecycle,
-    container,
-    demurrage,
-  );
 
   return {
     container_state: lifecycle,
     status_is_authoritative: statusResult.status_source === 'current_status',
     derived_lifecycle: lifecycle,
     includes_loaded: includes,
-    can_answer: canAnswer,
-    needs_more_data_for: needsMoreDataFor,
-    relevant_for_current_state: relevantFields,
-    presentation_guidance: presentationGuidance,
-    suggestions,
   };
-}
-
-function generateSuggestions(
-  container: any,
-  state: string,
-  demurrage: DemurrageEvaluation,
-  includes: string[],
-): { message?: string; recommended_follow_up?: string | null } {
-  let message: string | undefined;
-  let recommendedFollowUp: string | null = null;
-
-  switch (state) {
-    case 'in_transit':
-      message =
-        'Container is still in transit. User may ask about vessel ETA or shipping route.';
-      break;
-
-    case 'arrived':
-      message =
-        'Container has arrived but not yet discharged. User may ask about discharge timing.';
-      break;
-
-    case 'at_terminal':
-    case 'available_for_pickup':
-      if (
-        Array.isArray(container.holds_at_pod_terminal) &&
-        container.holds_at_pod_terminal.length > 0
-      ) {
-        const holdTypes = container.holds_at_pod_terminal
-          .map((h: any) => h.name)
-          .join(', ');
-        message = `Container has holds: ${holdTypes}. User may ask about hold details or clearance timeline.`;
-      } else if (
-        container.holds_at_pod_terminal == null &&
-        includes.includes('pod_terminal')
-      ) {
-        message =
-          'Hold/fee/LFD data is not available for this container/terminal via the API response. ' +
-          'User may need to check terminal portal or customs/broker docs.';
-      } else if (demurrage.urgency_suppressed) {
-        message = `LFD urgency is unavailable: ${demurrage.suppression_reason}. Do not assert demurrage urgency from this data alone.`;
-      } else if (demurrage.days_until_lfd !== null) {
-        const days = demurrage.days_until_lfd;
-        if (demurrage.urgency === 'overdue') {
-          message = `Container is ${Math.abs(days)} days past LFD. User may ask about demurrage charges.`;
-        } else if (demurrage.urgency === 'imminent') {
-          message = `LFD is in ${days} days. Urgent pickup needed to avoid demurrage.`;
-        } else {
-          message = `Container available for pickup. LFD is in ${days} days.`;
-        }
-      }
-      break;
-
-    case 'on_rail':
-      message =
-        'Container is on rail transport. User may ask about rail carrier, destination ETA, or inland movement.';
-      if (!includes.includes('transport_events')) {
-        recommendedFollowUp = 'transport_events';
-      }
-      break;
-
-    case 'delivered':
-      message =
-        'Container has been delivered. User may ask about delivery details or empty return.';
-      if (!includes.includes('transport_events')) {
-        recommendedFollowUp = 'transport_events';
-      }
-      break;
-  }
-
-  return { message, recommended_follow_up: recommendedFollowUp };
-}
-
-function getRelevantFieldsForState(state: string, container: any): string[] {
-  switch (state) {
-    case 'in_transit':
-      return [
-        'shipment.pod_eta_at - When arriving at destination',
-        'shipment.pod_vessel_name - Current vessel',
-        'shipment.port_of_discharge_name - Destination port',
-        'shipment.pol_atd_at - When departed origin',
-      ];
-
-    case 'arrived':
-      return [
-        'location.pod_arrived_at - When vessel docked',
-        'location.pod_discharged_at - Discharge status (null = still on vessel)',
-        'pod_terminal.name - Which terminal',
-      ];
-
-    case 'at_terminal':
-    case 'available_for_pickup': {
-      const fields = [
-        'location.available_for_pickup - Ready to pick up?',
-        'demurrage.last_free_days - Per-channel LFDs (terminal/rail/line)',
-        'demurrage.holds_at_pod_terminal - Blocks pickup if present',
-        'location.current_location - Where in terminal yard',
-      ];
-      if (container.fees_at_pod_terminal?.length > 0) {
-        fields.push(
-          'demurrage.fees_at_pod_terminal - Storage/handling charges',
-        );
-      }
-      if (container.pickup_appointment_at) {
-        fields.push('demurrage.pickup_appointment_at - Scheduled pickup time');
-      }
-      return fields;
-    }
-
-    case 'on_rail':
-      return [
-        'rail.pod_rail_carrier - Rail carrier SCAC code',
-        'rail.destination_eta - When arriving inland destination',
-        'rail.pod_rail_departed_at - When left port',
-        'shipment.destination_name - Inland city',
-        'events - Rail milestones (if transport_events included)',
-      ];
-
-    case 'delivered':
-      return [
-        'location.pod_full_out_at - When picked up from terminal',
-        'Complete journey timeline - Helpful for delivered containers',
-        'empty_terminated_at - Empty return status (if applicable)',
-      ];
-
-    default:
-      return ['status', 'location', 'equipment'];
-  }
-}
-
-function getPresentationGuidance(
-  state: string,
-  container: any,
-  demurrage: DemurrageEvaluation,
-): string {
-  switch (state) {
-    case 'in_transit':
-      return 'Focus on ETA and vessel information. User wants to know WHEN it will arrive and WHERE it is now.';
-
-    case 'arrived':
-      return 'Explain vessel arrived but container not yet discharged. User wants to know WHEN discharge will happen.';
-
-    case 'at_terminal':
-    case 'available_for_pickup': {
-      if (container.holds_at_pod_terminal?.length > 0) {
-        const holdTypes = container.holds_at_pod_terminal
-          .map((h: any) => h.name)
-          .join(', ');
-        return `URGENT: Lead with holds (${holdTypes}) - they BLOCK pickup. Explain what each hold means and how to clear. Then mention LFD and location.`;
-      }
-
-      if (demurrage.urgency_suppressed) {
-        return `Availability/LFD data is not reliable here (${demurrage.suppression_reason}). State availability cautiously and do NOT assert demurrage urgency. Suggest verifying with the terminal directly.`;
-      }
-
-      if (
-        demurrage.urgency === 'overdue' &&
-        demurrage.days_until_lfd !== null
-      ) {
-        const fees = describeFees(demurrage);
-        return `Container is ${Math.abs(demurrage.days_until_lfd)} days past LFD.${fees} Emphasize that pickup is overdue; report only the fees the API returned (do not estimate a daily rate).`;
-      }
-
-      if (
-        demurrage.urgency === 'imminent' &&
-        demurrage.days_until_lfd !== null
-      ) {
-        return `Only ${demurrage.days_until_lfd} days until LFD. Pickup needed soon to avoid demurrage charges.`;
-      }
-
-      if (demurrage.days_until_lfd !== null) {
-        return `Lead with availability status. Mention LFD date and days remaining (${demurrage.days_until_lfd}). Include location if user picking up.`;
-      }
-
-      return 'State availability clearly. Mention location in terminal. Note any fees the API returned.';
-    }
-
-    case 'on_rail':
-      return 'Explain rail journey: Departed [port] on [date] via [carrier], heading to [city]. ETA: [date]. Emphasize destination and timing.';
-
-    case 'delivered':
-      return 'Confirm delivery completed with date/time. Optionally summarize full journey from origin to delivery.';
-
-    default:
-      return 'Present information clearly based on container lifecycle stage. Prioritize actionable details.';
-  }
-}
-
-function describeFees(demurrage: DemurrageEvaluation): string {
-  if (demurrage.total_amount == null) return '';
-  const currency = demurrage.currency_code ? ` ${demurrage.currency_code}` : '';
-  return ` Reported fees total ${demurrage.total_amount}${currency}.`;
 }

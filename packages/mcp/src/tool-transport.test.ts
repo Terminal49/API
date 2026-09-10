@@ -364,7 +364,7 @@ function argumentsFor(toolName: ToolName): Record<string, unknown> {
     case 'search_container':
       return { query: 'CAIU1234567' };
     case 'track_container':
-      return { number: 'CAIU1234567', scac: 'MAEU' };
+      return { number: 'CAIU2885402', scac: 'MAEU' };
     case 'get_container':
     case 'get_container_transport_events':
     case 'get_container_route':
@@ -540,22 +540,12 @@ describe('all public tools over MCP client transport', () => {
         });
 
         expect(result.isError).not.toBe(true);
-        expect(result.structuredContent).toMatchObject({
-          ...expectedOutputFor(toolName),
-          _response_contract: {
-            purpose: expect.any(String),
-            presentation_guidance: expect.any(String),
-            suggested_tools: expect.any(Array),
-          },
-        });
-        expect(
-          result.content.some(
-            (block) =>
-              block.type === 'text' &&
-              block.annotations?.audience?.includes('assistant') &&
-              block.text.includes('_agent_steering'),
-          ),
-        ).toBe(true);
+        expect(result.structuredContent).toMatchObject(
+          expectedOutputFor(toolName),
+        );
+        expect(JSON.stringify(result)).not.toMatch(
+          /_agent_steering|_response_contract|presentation_guidance|suggested_follow_ups|suggested_tools/,
+        );
       } finally {
         await client.close();
         await handler.close();
@@ -573,20 +563,14 @@ describe('all public tools over MCP client transport', () => {
     try {
       const result = await client.callTool({
         name: 'track_container',
-        arguments: { number: 'CAIU1234567', scac: 'MAEU' },
+        arguments: { number: 'CAIU2885402', scac: 'MAEU' },
       });
 
       expect(result.isError).not.toBe(true);
       expect(result.structuredContent).toMatchObject({
         error: 'NotFound',
         tracking_request_created: false,
-        message: expect.stringContaining('could not create a tracking request'),
-        _response_contract: {
-          requires_more_data: ['a verified identifier and carrier SCAC'],
-          presentation_guidance: expect.stringContaining(
-            'No tracking request was created',
-          ),
-        },
+        message: expect.stringContaining('No container found'),
       });
       expect(JSON.stringify(result)).not.toContain('internal route');
     } finally {
@@ -594,6 +578,73 @@ describe('all public tools over MCP client transport', () => {
       await handler.close();
     }
   });
+
+  it('track_container returns a specific ISO 6346 check-digit error', async () => {
+    const { client, handler } = await connectClient();
+
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'CAIU1234567', scac: 'MAEU' },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content).toEqual([
+        expect.objectContaining({
+          text: 'Container number CAIU1234567 fails the ISO 6346 check digit.',
+        }),
+      ]);
+      expect(sdk.createTrackingRequestFromInfer).not.toHaveBeenCalled();
+    } finally {
+      await client.close();
+      await handler.close();
+    }
+  });
+
+  it.each([
+    {
+      toolName: 'get_container' as const,
+      expected: `No container found with id ${CONTAINER_ID}.`,
+    },
+    {
+      toolName: 'get_shipment_details' as const,
+      expected: `No shipment found with id ${SHIPMENT_ID}.`,
+    },
+    {
+      toolName: 'get_container_transport_events' as const,
+      expected: `No container found with id ${CONTAINER_ID}.`,
+    },
+  ])(
+    '$toolName returns a specific not-found error',
+    async ({ toolName, expected }) => {
+      const notFound = new Error('private upstream not-found detail');
+      notFound.name = 'NotFoundError';
+      configureFailure(toolName, notFound);
+      if (toolName === 'get_container_transport_events') {
+        sdk.containersGet.mockRejectedValue(notFound);
+      }
+      const { client, handler } = await connectClient();
+
+      try {
+        const result = await client.callTool({
+          name: toolName,
+          arguments: argumentsFor(toolName),
+        });
+        const text = result.content
+          .filter((block) => block.type === 'text')
+          .map((block) => block.text)
+          .join('\n');
+
+        expect(result.isError).toBe(true);
+        expect(text).toBe(expected);
+        expect(text).not.toContain('retry');
+        expect(text).not.toContain('private upstream');
+      } finally {
+        await client.close();
+        await handler.close();
+      }
+    },
+  );
 
   it('track_container preserves a created request when its linked container is not readable yet', async () => {
     sdk.search.mockResolvedValue({ data: [] });
@@ -611,23 +662,15 @@ describe('all public tools over MCP client transport', () => {
     try {
       const result = await client.callTool({
         name: 'track_container',
-        arguments: { number: 'CAIU1234567', scac: 'MAEU' },
+        arguments: { number: 'CAIU2885402', scac: 'MAEU' },
       });
 
       expect(result.isError).not.toBe(true);
       expect(result.structuredContent).toMatchObject({
         tracking_request_created: true,
         tracking_request: {
-          request_number: 'CAIU1234567',
+          request_number: 'CAIU2885402',
           container_id: CONTAINER_ID,
-        },
-        _response_contract: {
-          requires_more_data: [
-            'container details becoming available after request linking',
-          ],
-          presentation_guidance: expect.stringContaining(
-            'container linking is not immediate',
-          ),
         },
       });
       expect(JSON.stringify(result)).not.toContain('internal read model');
@@ -645,7 +688,7 @@ describe('all public tools over MCP client transport', () => {
           type: 'search_result',
           attributes: {
             entity_type: 'container',
-            number: 'CAIU1234567',
+            number: 'CAIU2885402',
             scac: 'MAEU',
           },
         },
@@ -659,7 +702,7 @@ describe('all public tools over MCP client transport', () => {
     try {
       const result = await client.callTool({
         name: 'track_container',
-        arguments: { number: 'CAIU1234567', scac: 'MAEU' },
+        arguments: { number: 'CAIU2885402', scac: 'MAEU' },
       });
 
       expect(result.isError).not.toBe(true);
@@ -668,14 +711,6 @@ describe('all public tools over MCP client transport', () => {
         tracking_request_created: false,
         container: { id: CONTAINER_ID },
         message: expect.stringContaining('tracked container matched'),
-        _response_contract: {
-          requires_more_data: [
-            'the matched container details becoming available',
-          ],
-          presentation_guidance: expect.stringContaining(
-            'tracked container match exists',
-          ),
-        },
       });
       expect(sdk.createTrackingRequestFromInfer).not.toHaveBeenCalled();
       expect(JSON.stringify(result)).not.toContain('internal container read');

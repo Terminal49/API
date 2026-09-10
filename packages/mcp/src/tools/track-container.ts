@@ -9,7 +9,7 @@ import { executeGetContainer } from './get-container.js';
 import { executeSearchContainer } from './search-container.js';
 
 export interface TrackContainerArgs {
-  number?: string;
+  number: string;
   numberType?: string;
   containerNumber?: string;
   bookingNumber?: string;
@@ -72,6 +72,61 @@ function inferNumberTypeFromPattern(number: string): string | undefined {
   return undefined;
 }
 
+const ISO_6346_LETTER_VALUES: Record<string, number> = {
+  A: 10,
+  B: 12,
+  C: 13,
+  D: 14,
+  E: 15,
+  F: 16,
+  G: 17,
+  H: 18,
+  I: 19,
+  J: 20,
+  K: 21,
+  L: 23,
+  M: 24,
+  N: 25,
+  O: 26,
+  P: 27,
+  Q: 28,
+  R: 29,
+  S: 30,
+  T: 31,
+  U: 32,
+  V: 34,
+  W: 35,
+  X: 36,
+  Y: 37,
+  Z: 38,
+};
+
+class ContainerCheckDigitError extends Error {
+  constructor(number: string) {
+    super(`Container number ${number} fails the ISO 6346 check digit`);
+    this.name = 'ContainerCheckDigitError';
+  }
+}
+
+function hasValidIso6346CheckDigit(number: string): boolean {
+  if (!/^[A-Z]{4}\d{7}$/.test(number)) {
+    return true;
+  }
+
+  let sum = 0;
+  for (const [index, character] of [...number.slice(0, 10)].entries()) {
+    const value = /\d/.test(character)
+      ? Number(character)
+      : ISO_6346_LETTER_VALUES[character];
+    if (value === undefined) {
+      return false;
+    }
+    sum += value * 2 ** index;
+  }
+
+  return (sum % 11) % 10 === Number(number.at(-1));
+}
+
 function parseValidationPointer(message: string): string | undefined {
   const pointerMatch = message.match(/\((\/data\/attributes\/[a-z_]+)\)/i);
   return pointerMatch?.[1];
@@ -126,8 +181,11 @@ export async function executeTrackContainer(
   const number = normalizeTrackingNumber(
     args.number || args.containerNumber || args.bookingNumber || '',
   );
-  if (!number || number.trim() === '') {
-    throw new Error('Tracking number is required');
+  if (!number) {
+    throw new Error('number is required');
+  }
+  if (!hasValidIso6346CheckDigit(number)) {
+    throw new ContainerCheckDigitError(number);
   }
 
   const numberTypeOverride = normalizeNumberType(
@@ -174,11 +232,6 @@ export async function executeTrackContainer(
             'A tracked container matched this number, but its details are not available yet. Retry the container lookup shortly.',
           tracking_request_created: false,
           container: { id: existingContainer.id },
-          _metadata: {
-            presentation_guidance:
-              'State that the container match exists but its details are temporarily unavailable. Do not claim that a new tracking request was created.',
-            recommendations: ['get_container', 'search_container'],
-          },
         };
       }
       return {
@@ -255,11 +308,6 @@ export async function executeTrackContainer(
           number_type: inferredNumberType,
           scac: requestedScac || heuristicScac,
         },
-        _metadata: {
-          presentation_guidance:
-            'Tracking request was created, but no container is linked yet. Poll list_tracking_requests or retry in a short while.',
-          recommendations: ['list_tracking_requests', 'get_container'],
-        },
       };
     }
 
@@ -289,11 +337,6 @@ export async function executeTrackContainer(
           number_type: inferredNumberType,
           scac: requestedScac || heuristicScac,
           container_id: containerId,
-        },
-        _metadata: {
-          presentation_guidance:
-            'Tracking request was created and linked, but container details are not available yet. Poll list_tracking_requests or retry shortly.',
-          recommendations: ['list_tracking_requests', 'get_container'],
         },
       };
     }
@@ -328,14 +371,8 @@ export async function executeTrackContainer(
       });
       return {
         error: 'NotFound',
-        message:
-          'No tracked container matched this number, and Terminal49 could not create a tracking request for it. Verify the number and carrier SCAC, then retry.',
+        message: `No container found for identifier ${number}. Verify the number and carrier SCAC.`,
         tracking_request_created: false,
-        _metadata: {
-          presentation_guidance:
-            'Clearly state that no tracking request was created. Ask the user to verify the identifier and carrier; do not imply that tracking is pending.',
-          recommendations: ['get_supported_shipping_lines', 'search_container'],
-        },
       };
     }
 

@@ -219,13 +219,6 @@ function formatTransportEventsResponse(
 
   const metadata: Record<string, unknown> = {
     source: options.source,
-    presentation_guidance:
-      events.length > 0
-        ? 'Present events chronologically as a journey timeline. ' +
-          'Highlight key milestones: vessel loaded, departed, arrived, discharged, delivery. ' +
-          'For rail containers, emphasize rail movements.'
-        : 'This container exists but has no transport events yet. ' +
-          'Report an empty timeline (not an error) and use get_container for current status.',
   };
 
   if (options.containerFound !== undefined) {
