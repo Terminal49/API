@@ -234,7 +234,7 @@ Get detailed container information with flexible data loading. Choose what to in
 - `include` *(string[], optional)* – what to load:
   - `shipment` – routing, BOL, line, ref numbers (lightweight)
   - `pod_terminal` – terminal name, location (lightweight)
-  - `transport_events` – full event history (heavy, 50-100 events)
+  - `transport_events` – event count and latest event summary; use `get_container_transport_events` for the full timeline
 
 <Accordion title="Example MCP request">
 ```json
@@ -394,13 +394,14 @@ See [Entitlements and Paid Features](/api-docs/useful-info/entitlements) for the
 List shipments with optional filters and pagination.
 
 **Parameters**
-- `status`, `port`, `carrier`, `updated_after` *(string, optional)*
+- `number` *(string, optional)* – shipment, booking, or Bill of Lading identifier
+- `tracking_stopped` *(boolean, optional)* – filter by whether shipping-line tracking has stopped
 - `include_containers` *(boolean, optional)*
 - `page`, `page_size` *(number, optional)*
 
 **Good for**
 - "List recent shipments"
-- "Show in-transit shipments for MAEU"
+- "Find a shipment by booking or Bill of Lading number"
 
 **REST equivalent**: [GET /shipments](/api-docs/api-reference/shipments/list-shipments)
 
@@ -411,13 +412,12 @@ List shipments with optional filters and pagination.
 List containers with optional filters and pagination.
 
 **Parameters**
-- `status`, `port`, `carrier`, `updated_after` *(string, optional)*
-- `include` *(string, optional)* – comma-separated include list
+- `include` *(string[], optional)* – include `shipment`, `pod_terminal`, or both
 - `page`, `page_size` *(number, optional)*
 
 **Good for**
-- "List containers updated in the last 24h"
-- "Show containers at a specific POD port"
+- "List containers in my account"
+- "List containers with their shipment and POD terminal details"
 
 **REST equivalent**: [GET /containers](/api-docs/api-reference/containers/list-containers)
 
@@ -428,7 +428,9 @@ List containers with optional filters and pagination.
 List tracking requests with optional filters and pagination.
 
 **Parameters**
-- `filters` *(object, optional)* – raw query filters
+- `request_number` *(string, optional)* – tracking request identifier
+- `status` *(string, optional)* – `created`, `pending`, `succeeded`, or `failed`
+- `scac` *(string, optional)* – four-letter shipping line SCAC
 - `page`, `page_size` *(number, optional)*
 
 **Good for**
