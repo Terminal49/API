@@ -26,10 +26,17 @@ type RequestLike = {
   body?: unknown;
 } & IncomingMessage;
 
+type JsonResponse = {
+  error: string | { code: number; message: string };
+  message?: string;
+  jsonrpc?: string;
+  id?: string | number | null;
+};
+
 type ResponseLike = {
   headersSent: boolean;
   status(code: number): ResponseLike;
-  json(payload: unknown): void;
+  json(payload: JsonResponse): void;
   setHeader(name: string, value: string): void;
   end(): void;
   on(event: 'close' | 'finish', listener: () => void): void;
@@ -54,11 +61,15 @@ function getHeaderValue(
   return value;
 }
 
-function extractAuthorizationToken(authorizationHeader: string | undefined): {
+type AuthorizationToken = {
   scheme?: 'Bearer' | 'Token';
   token?: string;
   source?: 'authorization';
-} {
+};
+
+function extractAuthorizationToken(
+  authorizationHeader: string | undefined,
+): AuthorizationToken {
   if (authorizationHeader?.trim()) {
     const trimmed = authorizationHeader.trim();
     const authMatch = trimmed.match(/^(bearer|token)\s+(.+)$/i);
@@ -143,15 +154,21 @@ function resolveEndpointUrl(): string {
   return `${apiBaseUrl.replace(/\/+$/, '')}/connected-clients/resolve`;
 }
 
-type ResolveFailureKind = 'config' | 'invalid_token' | 'upstream';
+type ResolveFailureKind = 'config' | 'invalid_token' | 'forbidden' | 'upstream';
 
 class ConnectedClientResolveError extends Error {
   readonly kind: ResolveFailureKind;
+  readonly upstreamStatus?: number;
 
-  constructor(message: string, kind: ResolveFailureKind) {
+  constructor(
+    message: string,
+    kind: ResolveFailureKind,
+    upstreamStatus?: number,
+  ) {
     super(message);
     this.name = 'ConnectedClientResolveError';
     this.kind = kind;
+    this.upstreamStatus = upstreamStatus;
   }
 }
 
@@ -181,32 +198,37 @@ async function resolveConnectedClientToken(
       body: JSON.stringify({ access_token: token }),
     });
   } catch (error) {
+    const err = asError(error);
     throw new ConnectedClientResolveError(
-      `Terminal49 connected client resolve request failed: ${(error as Error).message}`,
+      `Terminal49 connected client resolve request failed: ${err.message}`,
       'upstream',
     );
   }
 
   let payload: ConnectedClientResolutionResponse = {};
   try {
+    // SAFETY: The fields read below are optional and validated before use.
     payload = (await response.json()) as ConnectedClientResolutionResponse;
   } catch {
     payload = {};
   }
 
   if (!response.ok) {
-    // Only a token the resolver actively rejects (401/403) is a client auth
-    // failure. A 5xx / 429 / network error means the resolver is unavailable —
-    // surface that as retryable so clients don't discard a valid token and loop
-    // through re-authentication during a Terminal49 outage.
+    // A 401 means the credential itself is invalid. A 403 means WorkOS auth
+    // succeeded but Terminal49 denied account access (for example, a rollout
+    // gate); converting that to 401 makes clients discard a valid grant and
+    // loop through OAuth. Other failures are retryable upstream errors.
     const kind: ResolveFailureKind =
-      response.status === 401 || response.status === 403
+      response.status === 401
         ? 'invalid_token'
-        : 'upstream';
+        : response.status === 403
+          ? 'forbidden'
+          : 'upstream';
     throw new ConnectedClientResolveError(
       payload.error ||
         `Terminal49 connected client resolve failed with ${response.status}`,
       kind,
+      response.status,
     );
   }
 
@@ -243,10 +265,16 @@ function buildRequestId(): string {
   return randomUUID();
 }
 
+function asError(cause: unknown): Error {
+  return cause instanceof Error ? cause : new Error(String(cause));
+}
+
+type LifecycleDetail = string | number | string[] | undefined;
+
 function logLifecycle(
   event: string,
   requestId: string,
-  details: Record<string, unknown> = {},
+  details: Record<string, LifecycleDetail> = {},
 ): void {
   logMcpEvent({
     event,
@@ -405,7 +433,7 @@ export default async function handler(
         try {
           await mcpHandler.close();
         } catch (error) {
-          const err = error as Error;
+          const err = asError(error);
           cleanupErrors.push(`handler.close: ${err.message}`);
         }
       }
@@ -473,15 +501,20 @@ export default async function handler(
           authSource: 'workos_mcp',
         };
       } catch (error) {
-        const err = error as Error;
+        const err = asError(error);
         const kind: ResolveFailureKind =
           err instanceof ConnectedClientResolveError ? err.kind : 'upstream';
+        const upstreamStatus =
+          err instanceof ConnectedClientResolveError
+            ? err.upstreamStatus
+            : undefined;
         setCorsHeaders(res);
         // Keep the detailed reason in the server log (correlated by request_id);
         // return a generic, category-appropriate response so internals never leak.
         logLifecycle('mcp.request.complete', requestId, {
           reason: 'connected_client_resolve_failed',
           kind,
+          upstream_status: upstreamStatus,
           message: err.message,
         });
         if (kind === 'invalid_token') {
@@ -489,6 +522,11 @@ export default async function handler(
           res.status(401).json({
             error: 'Unauthorized',
             message: 'Invalid or expired token.',
+          });
+        } else if (kind === 'forbidden') {
+          res.status(403).json({
+            error: 'Forbidden',
+            message: 'Terminal49 access is not enabled for this account.',
           });
         } else if (kind === 'config') {
           res.status(500).json({
@@ -584,8 +622,8 @@ export default async function handler(
     await nodeHandler(req, res, req.body);
     logLifecycle('mcp.request.complete', requestId, { reason: 'handled' });
   } catch (error) {
-    const err = error as Error;
-    captureMcpException(error);
+    const err = asError(error);
+    captureMcpException(err);
     shouldFlushSentry = true;
     logLifecycle('mcp.request.error', requestId, {
       error: err.name,
