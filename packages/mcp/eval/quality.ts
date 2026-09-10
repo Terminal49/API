@@ -48,6 +48,7 @@ export interface QualitySpec {
 const DEFAULT_LATENCY_BUDGET_MS = 8000;
 const REMOVED_STEERING_FIELDS = new Set([
   '_agent_steering',
+  '_response_contract',
   'presentation_guidance',
   'suggested_follow_ups',
   'suggested_tools',
