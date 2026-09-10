@@ -49,7 +49,7 @@ function setCorsHeaders(res: ResponseLike): void {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, X-Account-ID, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id',
+    'Content-Type, Authorization, X-Account-ID, X-T49-Credential-Type, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id',
   );
 }
 
@@ -483,6 +483,20 @@ export default async function handler(
       resolvedAuth.scheme === 'Token'
         ? getHeaderValue(req.headers['x-account-id'])
         : undefined;
+    const credentialType =
+      resolvedAuth.scheme === 'Token'
+        ? getHeaderValue(req.headers['x-t49-credential-type'])
+        : undefined;
+    if (credentialType && credentialType !== 'bearer') {
+      res.status(400).json({
+        error: 'Bad Request',
+        message: 'X-T49-Credential-Type is invalid.',
+      });
+      logLifecycle('mcp.request.complete', requestId, {
+        reason: 'invalid_credential_type',
+      });
+      return;
+    }
     if (requestedAccountId && !UUID.test(requestedAccountId)) {
       res.status(400).json({
         error: 'Bad Request',
@@ -493,11 +507,23 @@ export default async function handler(
       });
       return;
     }
+    if (credentialType === 'bearer' && !requestedAccountId) {
+      res.status(400).json({
+        error: 'Bad Request',
+        message:
+          'X-Account-ID is required for an account-scoped bearer credential.',
+      });
+      logLifecycle('mcp.request.complete', requestId, {
+        reason: 'missing_account_id',
+      });
+      return;
+    }
 
     const configuredApiToken = process.env.T49_API_TOKEN?.trim();
     const configuredClientSecret = process.env.T49_MCP_CLIENT_SECRET?.trim();
     let resolvedTerminal49Auth: ResolvedTerminal49Auth = {
-      apiToken: callerToken,
+      apiToken:
+        credentialType === 'bearer' ? `Bearer ${callerToken}` : callerToken,
       accountId: requestedAccountId,
       authSource: resolvedAuth.source ?? 'authorization',
     };
