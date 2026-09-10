@@ -109,7 +109,7 @@ class ContainerCheckDigitError extends Error {
 }
 
 function hasValidIso6346CheckDigit(number: string): boolean {
-  if (!/^[A-Z]{4}\d{7}$/.test(number)) {
+  if (!/^[A-Z]{3}[UJZ]\d{7}$/.test(number)) {
     return true;
   }
 
