@@ -100,7 +100,9 @@ describe('MCP protocol compatibility', () => {
     });
     expect(
       toolSchemas.get('get_container')?.properties?.include?.description,
-    ).toMatch(/transport_events: Event summary.*get_container_transport_events/);
+    ).toMatch(
+      /transport_events: Event summary.*get_container_transport_events/,
+    );
 
     for (const name of [
       'list_shipments',
