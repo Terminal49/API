@@ -238,14 +238,14 @@ describe('MCP protocol compatibility', () => {
       });
     }
 
-    expect(
-      toolSchemas.get('get_container')?.properties?.include,
-    ).toMatchObject({
-      default: ['shipment'],
-      items: {
-        enum: ['shipment', 'pod_terminal', 'transport_events'],
+    expect(toolSchemas.get('get_container')?.properties?.include).toMatchObject(
+      {
+        default: ['shipment'],
+        items: {
+          enum: ['shipment', 'pod_terminal', 'transport_events'],
+        },
       },
-    });
+    );
     expect(
       toolSchemas.get('list_containers')?.properties?.include,
     ).toMatchObject({

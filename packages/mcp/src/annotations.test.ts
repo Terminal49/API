@@ -163,10 +163,9 @@ describe('MCP tool annotations', () => {
       expect(tool.title, `${name}.title`).toEqual(expect.any(String));
       expect(tool.title?.trim().length, `${name}.title`).toBeGreaterThan(0);
       expect(tool.annotations, name).toBeDefined();
-      expect(
-        tool.annotations?.readOnlyHint,
-        `${name}.readOnlyHint`,
-      ).toBeTypeOf('boolean');
+      expect(tool.annotations?.readOnlyHint, `${name}.readOnlyHint`).toBeTypeOf(
+        'boolean',
+      );
       expect(
         tool.annotations?.destructiveHint,
         `${name}.destructiveHint`,
