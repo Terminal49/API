@@ -234,7 +234,9 @@ Get detailed container information with flexible data loading. Choose what to in
 - `include` *(string[], optional)* – what to load:
   - `shipment` – routing, BOL, line, ref numbers (lightweight)
   - `pod_terminal` – terminal name, location (lightweight)
-  - `transport_events` – event count and latest event summary; use `get_container_transport_events` for the full timeline
+  - `transport_events` – adds `events.count`, `events.rail_events_count`, and `events.latest_event`; use `get_container_transport_events` for the full timeline
+
+The response may also include `_metadata` with factual details such as `includes_loaded`.
 
 <Accordion title="Example MCP request">
 ```json
