@@ -118,6 +118,19 @@ describe('MCP tool annotations', () => {
     expect(annotations?.idempotentHint).toBe(false);
   });
 
+  it('advertises track_container as the only write and no destructive tools', () => {
+    const tools = getRegisteredTools();
+    const writeTools = Object.entries(tools)
+      .filter(([, tool]) => tool.annotations?.readOnlyHint === false)
+      .map(([name]) => name);
+    const destructiveTools = Object.entries(tools)
+      .filter(([, tool]) => tool.annotations?.destructiveHint === true)
+      .map(([name]) => name);
+
+    expect(writeTools).toEqual(['track_container']);
+    expect(destructiveTools).toEqual([]);
+  });
+
   it('marks every tool as private-account-only and non-destructive', () => {
     const tools = getRegisteredTools();
 
@@ -150,6 +163,13 @@ describe('MCP tool annotations', () => {
       expect(tool.title, `${name}.title`).toEqual(expect.any(String));
       expect(tool.title?.trim().length, `${name}.title`).toBeGreaterThan(0);
       expect(tool.annotations, name).toBeDefined();
+      expect(tool.annotations?.readOnlyHint, `${name}.readOnlyHint`).toBeTypeOf(
+        'boolean',
+      );
+      expect(
+        tool.annotations?.destructiveHint,
+        `${name}.destructiveHint`,
+      ).toBeTypeOf('boolean');
     }
   });
 

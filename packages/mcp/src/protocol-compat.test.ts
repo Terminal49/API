@@ -25,7 +25,10 @@ const openConnections: Array<{
 
 type AdvertisedProperty = {
   type?: string;
+  default?: unknown;
   maxLength?: number;
+  maxItems?: number;
+  exclusiveMinimum?: number;
   maximum?: number;
   description?: string;
   items?: { enum?: string[] };
@@ -173,10 +176,34 @@ describe('MCP protocol compatibility', () => {
 
     expect(tools).toHaveLength(10);
     for (const tool of tools) {
+      expect(tool.name.length, tool.name).toBeLessThanOrEqual(64);
       expect(tool.inputSchema.properties, tool.name).not.toHaveProperty(
         'intent',
       );
+      for (const propertyName of Object.keys(
+        tool.inputSchema.properties ?? {},
+      )) {
+        expect(propertyName, `${tool.name}.${propertyName}`).not.toMatch(
+          /(?:chat|conversation|history|memory|messages?)/i,
+        );
+      }
     }
+
+    const advertisedInstructions = [
+      TERMINAL49_SERVER_INSTRUCTIONS,
+      ...tools.flatMap((tool) => [
+        tool.description ?? '',
+        ...Object.values(
+          (tool.inputSchema as AdvertisedInputSchema).properties ?? {},
+        ).map((property) => property.description ?? ''),
+      ]),
+    ].join('\n');
+    expect(advertisedInstructions).not.toMatch(
+      /\b(?:send|provide|share|upload|attach)\b.{0,40}\b(?:chat|conversation) history\b/i,
+    );
+    expect(advertisedInstructions).not.toMatch(
+      /\b(?:send|provide|share|upload|attach)\b.{0,40}\buser memory\b/i,
+    );
 
     expect(
       toolSchemas.get('search_container')?.properties?.query,
@@ -195,10 +222,46 @@ describe('MCP protocol compatibility', () => {
       'list_containers',
       'list_tracking_requests',
     ]) {
-      expect(toolSchemas.get(name)?.properties?.page_size?.maximum, name).toBe(
-        25,
-      );
+      expect(
+        toolSchemas.get(name)?.properties?.page,
+        `${name}.page`,
+      ).toMatchObject({
+        type: 'integer',
+        exclusiveMinimum: 0,
+      });
+      expect(
+        toolSchemas.get(name)?.properties?.page_size,
+        `${name}.page_size`,
+      ).toMatchObject({
+        default: 25,
+        type: 'integer',
+        exclusiveMinimum: 0,
+        maximum: 25,
+      });
     }
+
+    expect(toolSchemas.get('get_container')?.properties?.include).toMatchObject(
+      {
+        default: ['shipment'],
+        items: {
+          enum: ['shipment', 'pod_terminal', 'transport_events'],
+        },
+      },
+    );
+    expect(
+      toolSchemas.get('list_containers')?.properties?.include,
+    ).toMatchObject({
+      items: {
+        enum: ['shipment', 'pod_terminal'],
+      },
+      maxItems: 2,
+    });
+    expect(
+      toolSchemas.get('get_shipment_details')?.properties?.include_containers,
+    ).toMatchObject({ default: true });
+    expect(
+      toolSchemas.get('list_shipments')?.properties?.include_containers,
+    ).toMatchObject({ default: false });
 
     const trackingRequestSchema = toolSchemas.get('list_tracking_requests');
     expect(trackingRequestSchema?.properties).not.toHaveProperty('filters');
