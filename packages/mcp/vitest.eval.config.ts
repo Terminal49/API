@@ -7,7 +7,7 @@ import { defineConfig } from 'vite-plus/test/config';
  */
 export default defineConfig({
   test: {
-    include: ['eval/**/*.eval.ts'],
+    include: ['eval/**/*.eval.ts', 'eval/**/*.test.ts'],
     testTimeout: 30_000,
     hookTimeout: 60_000,
     // One live backend — run serially to stay friendly to rate limits.

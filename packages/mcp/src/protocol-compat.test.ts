@@ -63,9 +63,7 @@ function documentedToolSection(toolName: string): string {
 
 function documentedParameters(toolName: string): string[] {
   return [
-    ...documentedToolSection(toolName).matchAll(
-      /^- `([^`]+)` \*\([^)]*\)\*/gm,
-    ),
+    ...documentedToolSection(toolName).matchAll(/^- `([^`]+)` \*\([^)]*\)\*/gm),
   ].map((match) => match[1]);
 }
 
