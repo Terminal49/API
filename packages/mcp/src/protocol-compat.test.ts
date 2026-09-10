@@ -3,8 +3,12 @@ import {
   StreamableHTTPClientTransport,
 } from '@modelcontextprotocol/client';
 import { createMcpHandler } from '@modelcontextprotocol/server';
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { createTerminal49McpServer } from './server.js';
+import {
+  createTerminal49McpServer,
+  TERMINAL49_SERVER_INSTRUCTIONS,
+} from './server.js';
 
 const LEGACY_PROTOCOL_VERSIONS = [
   '2025-11-25',
@@ -29,8 +33,39 @@ type AdvertisedProperty = {
 
 type AdvertisedInputSchema = {
   properties?: Record<string, AdvertisedProperty>;
+  required?: string[];
   additionalProperties?: boolean;
 };
+
+const DIRECTORY_FORBIDDEN_STEERING_FIELDS = [
+  '_agent_steering',
+  '_response_contract',
+  'presentation_guidance',
+  'suggested_follow_ups',
+  'suggested_tools',
+] as const;
+
+const MCP_DOCS = readFileSync(
+  new URL('../../../docs/mcp/home.mdx', import.meta.url),
+  'utf8',
+);
+
+function documentedToolSection(toolName: string): string {
+  const marker = `### \`${toolName}\``;
+  const start = MCP_DOCS.indexOf(marker);
+  if (start === -1) {
+    throw new Error(`Missing ${toolName} section in docs/mcp/home.mdx`);
+  }
+
+  const nextSection = MCP_DOCS.indexOf('\n---', start);
+  return MCP_DOCS.slice(start, nextSection === -1 ? undefined : nextSection);
+}
+
+function documentedParameters(toolName: string): string[] {
+  return [
+    ...documentedToolSection(toolName).matchAll(/^- `([^`]+)` \*\([^)]*\)\*/gm),
+  ].map((match) => match[1]);
+}
 
 async function connectClient(
   options:
@@ -75,6 +110,57 @@ afterEach(async () => {
 });
 
 describe('MCP protocol compatibility', () => {
+  it('keeps Directory-prohibited steering fields out of advertised instructions', async () => {
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const advertisedInstructions = JSON.stringify({
+      instructions: TERMINAL49_SERVER_INSTRUCTIONS,
+      tools,
+    });
+
+    for (const field of DIRECTORY_FORBIDDEN_STEERING_FIELDS) {
+      expect(advertisedInstructions).not.toContain(field);
+    }
+  });
+
+  it('keeps critical MCP docs aligned with tools/list', async () => {
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const toolSchemas = new Map(
+      tools.map((tool) => [
+        tool.name,
+        tool.inputSchema as AdvertisedInputSchema,
+      ]),
+    );
+
+    for (const toolName of [
+      'list_shipments',
+      'list_containers',
+      'list_tracking_requests',
+    ]) {
+      const advertised = Object.keys(
+        toolSchemas.get(toolName)?.properties ?? {},
+      ).sort();
+      expect(documentedParameters(toolName).sort(), toolName).toEqual(
+        advertised,
+      );
+    }
+
+    expect(toolSchemas.get('track_container')?.required).toContain('number');
+    expect(documentedToolSection('track_container')).toMatch(
+      /^- `number` \*\(string, required\)\*/m,
+    );
+
+    const transportEventsDescription =
+      toolSchemas.get('get_container')?.properties?.include?.description;
+    expect(transportEventsDescription).toMatch(
+      /transport_events: Event summary \(count, rail event count, and latest event\); use get_container_transport_events for the full timeline/,
+    );
+    expect(documentedToolSection('get_container')).toMatch(
+      /transport_events.*events\.count.*events\.rail_events_count.*events\.latest_event.*get_container_transport_events.*full timeline/,
+    );
+  });
+
   it('advertises bounded, identifier-only inputs in tools/list', async () => {
     const client = await connectClient({ era: 'modern' });
     const { tools } = await client.listTools();

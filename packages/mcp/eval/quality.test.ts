@@ -33,6 +33,7 @@ describe('scoreResult', () => {
       resultWithJson({
         nested: {
           _agent_steering: true,
+          _response_contract: { purpose: 'Shape the answer' },
           presentation_guidance: 'Present this result',
           suggested_follow_ups: ['Check another container'],
           suggested_tools: ['get_container'],
@@ -47,7 +48,7 @@ describe('scoreResult', () => {
     expect(score.contractPass).toBe(false);
     expect(check?.pass).toBe(false);
     expect(check?.detail).toBe(
-      '_agent_steering, presentation_guidance, suggested_follow_ups, suggested_tools',
+      '_agent_steering, _response_contract, presentation_guidance, suggested_follow_ups, suggested_tools',
     );
   });
 });

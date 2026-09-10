@@ -398,8 +398,9 @@ List shipments with optional filters and pagination.
 **Parameters**
 - `number` *(string, optional)* – shipment, booking, or Bill of Lading identifier
 - `tracking_stopped` *(boolean, optional)* – filter by whether shipping-line tracking has stopped
-- `include_containers` *(boolean, optional)*
-- `page`, `page_size` *(number, optional)*
+- `include_containers` *(boolean, optional)* – include container relationships (default: false)
+- `page` *(number, optional)* – page number, starting at 1
+- `page_size` *(number, optional)* – results per page (default: 25; maximum: 25)
 
 **Good for**
 - "List recent shipments"
@@ -415,7 +416,8 @@ List containers with optional filters and pagination.
 
 **Parameters**
 - `include` *(string[], optional)* – include `shipment`, `pod_terminal`, or both
-- `page`, `page_size` *(number, optional)*
+- `page` *(number, optional)* – page number, starting at 1
+- `page_size` *(number, optional)* – results per page (default: 25; maximum: 25)
 
 **Good for**
 - "List containers in my account"
@@ -433,7 +435,8 @@ List tracking requests with optional filters and pagination.
 - `request_number` *(string, optional)* – tracking request identifier
 - `status` *(string, optional)* – `created`, `pending`, `succeeded`, or `failed`
 - `scac` *(string, optional)* – four-letter shipping line SCAC
-- `page`, `page_size` *(number, optional)*
+- `page` *(number, optional)* – page number, starting at 1
+- `page_size` *(number, optional)* – results per page (default: 25; maximum: 25)
 
 **Good for**
 - "Show failed tracking requests"
