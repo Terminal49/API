@@ -524,7 +524,7 @@ export default async function handler(
     let resolvedTerminal49Auth: ResolvedTerminal49Auth = {
       apiToken:
         credentialType === 'bearer' ? `Bearer ${callerToken}` : callerToken,
-      accountId: requestedAccountId,
+      accountId: credentialType === 'bearer' ? requestedAccountId : undefined,
       authSource: resolvedAuth.source ?? 'authorization',
     };
 

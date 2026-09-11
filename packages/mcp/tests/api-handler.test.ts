@@ -192,6 +192,25 @@ describe('api/mcp handler lifecycle', () => {
     expect(mockState.serverCreateArgs[0]?.apiToken).toBe('token-scheme-value');
   });
 
+  it('does not forward account context from an ordinary API key', async () => {
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Token token-scheme-value',
+        'x-account-id': 'f5e2f70e-2de8-4456-8596-db40e617b808',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(mockState.serverCreateArgs[0]).toMatchObject({
+      apiToken: 'token-scheme-value',
+      accountId: undefined,
+    });
+  });
+
   it('forwards an account-scoped caller bearer without exposing it to OAuth resolution', async () => {
     const { default: handler } = await import('../../../api/mcp.ts');
     const accountId = 'f5e2f70e-2de8-4456-8596-db40e617b808';
