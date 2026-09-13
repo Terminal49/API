@@ -92,13 +92,8 @@ export class ContainerManager extends BaseManager {
   }
 
   async route(id: string, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.execute(() =>
-      this.transport.client.GET('/containers/{id}/route', {
-        params: {
-          path: { id },
-          query: { include: 'port,vessel,route_location' } as any,
-        },
-      }),
+    const raw = await this.transport.executeManual(
+      `${this.transport.baseUrl}/containers/${encodeURIComponent(id)}/route?include=port,vessel,route_location`,
     );
     return this.formatResult(raw, options?.format, mapRoute);
   }
