@@ -18,7 +18,6 @@ const DEFAULT_CONTAINER_INCLUDES = [
   'pod_terminal',
   'pickup_facility',
 ] as const satisfies readonly ContainerInclude[];
-const DEFAULT_ROUTE_INCLUDE = 'port,vessel,route_location';
 
 export class ContainerManager extends BaseManager {
   async get(
@@ -93,10 +92,8 @@ export class ContainerManager extends BaseManager {
   }
 
   async route(id: string, options?: CallOptions): Promise<any> {
-    const encodedId = encodeURIComponent(id);
-    const include = encodeURIComponent(DEFAULT_ROUTE_INCLUDE);
     const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/containers/${encodedId}/route?include=${include}`,
+      `${this.transport.baseUrl}/containers/${encodeURIComponent(id)}/route?include=port,vessel,route_location`,
     );
     return this.formatResult(raw, options?.format, mapRoute);
   }

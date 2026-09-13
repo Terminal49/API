@@ -761,10 +761,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Get a list of parties */
+        /** @description Returns the parties in your account. A party is a company you assign to shipments, tracking requests, and containers through party roles (customer, shipper, consignee, notify party, customs broker, freight forwarder, dray carrier). */
         get: operations["list-parties"];
         put?: never;
-        /** @description Creates a new party */
+        /** @description Creates a party. Use the returned `id` to set the `customer` relationship on a tracking request or to assign party roles. */
         post: operations["post-party"];
         delete?: never;
         options?: never;
@@ -941,6 +941,58 @@ export interface paths {
         patch: operations["patch-shipments-custom-fields-api-slug"];
         trace?: never;
     };
+    "/shipments/{shipment_id}/party_roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Shipment ID */
+                shipment_id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List shipment party roles
+         * @description Returns the party roles attached to the shipment. Each role links one party to the record. The linked parties are returned in `included`.
+         */
+        get: operations["get-shipments-party-roles"];
+        put?: never;
+        /**
+         * Assign a shipment party role
+         * @description Attaches a party to the shipment in the given role. Roles are additive: posting a second party with the same role keeps both. To replace a party, delete its role and create a new one. Posting the same party and role twice returns `422`.
+         */
+        post: operations["post-shipments-party-roles"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shipments/{shipment_id}/party_roles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Shipment ID */
+                shipment_id: string;
+                /** @description Party role ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a shipment party role
+         * @description Detaches the party from the shipment. The party itself is not deleted.
+         */
+        delete: operations["delete-shipments-party-roles-id"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/containers/{container_id}/custom_fields": {
         parameters: {
             query?: never;
@@ -983,6 +1035,58 @@ export interface paths {
         head?: never;
         /** Update a container custom field */
         patch: operations["patch-containers-custom-fields-api-slug"];
+        trace?: never;
+    };
+    "/containers/{container_id}/party_roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Container ID */
+                container_id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List container party roles
+         * @description Returns the party roles attached to the container. Each role links one party to the record. The linked parties are returned in `included`.
+         */
+        get: operations["get-containers-party-roles"];
+        put?: never;
+        /**
+         * Assign a container party role
+         * @description Attaches a party to the container in the given role. Roles are additive: posting a second party with the same role keeps both. To replace a party, delete its role and create a new one. Posting the same party and role twice returns `422`.
+         */
+        post: operations["post-containers-party-roles"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/containers/{container_id}/party_roles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Container ID */
+                container_id: string;
+                /** @description Party role ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a container party role
+         * @description Detaches the party from the container. The party itself is not deleted.
+         */
+        delete: operations["delete-containers-party-roles-id"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/parties/{id}": {
@@ -1676,13 +1780,8 @@ export interface components {
             id: string;
             /** @enum {string} */
             type: "user";
-            /** @description User attributes included by the requested resource. Available fields depend on the endpoint and caller permissions. */
+            /** @description User attributes. Available fields depend on the endpoint. */
             attributes: {
-                name?: string | null;
-                /** Format: email */
-                email?: string | null;
-                company_name?: string | null;
-            } & {
                 [key: string]: unknown;
             };
         };
@@ -1831,13 +1930,14 @@ export interface components {
                         type?: "shipment";
                     } | null;
                 };
+                /** @description Account linked to the customer party, or `null` when the customer party has no linked account. Once the shipment exists, read the party through `GET /shipments/{shipment_id}/party_roles`. */
                 customer?: {
                     data?: {
                         /** Format: uuid */
                         id?: string;
                         /** @enum {string} */
-                        type?: "party";
-                    };
+                        type?: "account";
+                    } | null;
                 };
             };
         };
@@ -2932,6 +3032,44 @@ export interface components {
                 };
             };
         };
+        /** Party role model */
+        party_role: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            type?: "party_role";
+            attributes?: {
+                /**
+                 * @description Role the party plays on the record. Shipments accept every value. Containers accept only `pickup_dray_carrier`.
+                 * @enum {string}
+                 */
+                role?: "shipper" | "consignee" | "notify_party" | "customs_broker" | "customer" | "freight_forwarder" | "pickup_dray_carrier";
+                /**
+                 * @description Type of the record the role is attached to. `Cargo` is returned for containers.
+                 * @enum {string}
+                 */
+                roleable_type?: "Shipment" | "Cargo";
+                /**
+                 * Format: uuid
+                 * @description ID of the shipment, container, or tracking request.
+                 */
+                roleable_id?: string;
+                /** Format: date-time */
+                created_at?: string;
+                /** Format: date-time */
+                updated_at?: string;
+            };
+            relationships?: {
+                party?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "party";
+                    };
+                };
+            };
+        };
         /**
          * Document type
          * @description One document type allowed for the authenticated account. Public catalog metadata is present when a schema detail view is available.
@@ -2978,7 +3116,7 @@ export interface components {
          *     }
          */
         sanitized_extraction_schema: {
-            /** @description JSON Schema field type. It can be a string or an array of strings, such as ["string", "null"] for nullable fields in Wayfair schemas. */
+            /** @description JSON Schema field type. It can be a string or an array of strings, such as ["string", "null"] for nullable fields. */
             type?: string | string[];
             /** @description JSON Schema format, when available. */
             format?: string;
@@ -3051,6 +3189,8 @@ export interface operations {
                 number?: string;
                 /** @description Filter shipments by whether they are still tracking or not */
                 "filter[tracking_stopped]"?: boolean;
+                /** @description Set to `true` to add the `party_roles` relationship to each shipment. Add `include=party_roles.party` to embed the roles and their parties. */
+                "flag[parties]"?: boolean;
             };
             header?: never;
             path?: never;
@@ -3090,6 +3230,8 @@ export interface operations {
             query?: {
                 /** @description Comma delimited list of relations to include */
                 include?: string;
+                /** @description Set to `true` to add the `party_roles` relationship to each shipment. Add `include=party_roles.party` to embed the roles and their parties. */
+                "flag[parties]"?: boolean;
             };
             header?: never;
             path: {
@@ -3354,12 +3496,67 @@ export interface operations {
                             };
                         };
                         relationships?: {
+                            /** @description Party to assign as the customer. The response's `customer` relationship carries the party's linked account, or `null` when there is none. */
                             customer?: {
                                 data?: {
                                     /** Format: uuid */
                                     id?: string;
                                     /** @enum {string} */
                                     type?: "party";
+                                };
+                            };
+                            /** @description Party to assign as the shipper. One party per role at creation. The role is copied to the shipment when it is created and can be read with `GET /shipments/{shipment_id}/party_roles`. The party must belong to your account. */
+                            shipper?: {
+                                data?: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** @enum {string} */
+                                    type: "party";
+                                };
+                            };
+                            /** @description Party to assign as the consignee. One party per role at creation. The role is copied to the shipment when it is created and can be read with `GET /shipments/{shipment_id}/party_roles`. The party must belong to your account. */
+                            consignee?: {
+                                data?: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** @enum {string} */
+                                    type: "party";
+                                };
+                            };
+                            /** @description Party to assign as the notify party. One party per role at creation. The role is copied to the shipment when it is created and can be read with `GET /shipments/{shipment_id}/party_roles`. The party must belong to your account. */
+                            notify_party?: {
+                                data?: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** @enum {string} */
+                                    type: "party";
+                                };
+                            };
+                            /** @description Party to assign as the customs broker. One party per role at creation. The role is copied to the shipment when it is created and can be read with `GET /shipments/{shipment_id}/party_roles`. The party must belong to your account. */
+                            customs_broker?: {
+                                data?: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** @enum {string} */
+                                    type: "party";
+                                };
+                            };
+                            /** @description Party to assign as the freight forwarder. One party per role at creation. The role is copied to the shipment when it is created and can be read with `GET /shipments/{shipment_id}/party_roles`. The party must belong to your account. */
+                            freight_forwarder?: {
+                                data?: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** @enum {string} */
+                                    type: "party";
+                                };
+                            };
+                            /** @description Party to assign as the dray carrier. One party per role at creation. The role is copied to the shipment when it is created and can be read with `GET /shipments/{shipment_id}/party_roles`. The party must belong to your account. */
+                            pickup_dray_carrier?: {
+                                data?: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** @enum {string} */
+                                    type: "party";
                                 };
                             };
                         };
@@ -5460,6 +5657,196 @@ export interface operations {
             };
         };
     };
+    "get-shipments-party-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Shipment ID */
+                shipment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["party_role"][];
+                        included?: components["schemas"]["party"][];
+                        links?: components["schemas"]["links"];
+                        meta?: components["schemas"]["meta"];
+                    };
+                };
+            };
+            /** @description Unauthorized. Also returned when the record belongs to another account. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "post-shipments-party-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Shipment ID */
+                shipment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                /**
+                 * @example {
+                 *       "data": {
+                 *         "type": "party_role",
+                 *         "attributes": {
+                 *           "role": "shipper"
+                 *         },
+                 *         "relationships": {
+                 *           "party": {
+                 *             "data": {
+                 *               "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                 *               "type": "party"
+                 *             }
+                 *           }
+                 *         }
+                 *       }
+                 *     }
+                 */
+                "application/json": {
+                    data: {
+                        /** @enum {string} */
+                        type: "party_role";
+                        attributes: {
+                            /**
+                             * @description Accepted values: `shipper`, `consignee`, `notify_party`, `customs_broker`, `customer`, `freight_forwarder`, `pickup_dray_carrier`.
+                             * @enum {string}
+                             */
+                            role: "shipper" | "consignee" | "notify_party" | "customs_broker" | "customer" | "freight_forwarder" | "pickup_dray_carrier";
+                        };
+                        relationships: {
+                            party: {
+                                data: {
+                                    /**
+                                     * Format: uuid
+                                     * @description ID of a party in your account. See `GET /parties`.
+                                     */
+                                    id: string;
+                                    /** @enum {string} */
+                                    type: "party";
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["party_role"];
+                        included?: components["schemas"]["party"][];
+                        links?: components["schemas"]["link-self"];
+                    };
+                };
+            };
+            /** @description Unauthorized. Also returned when the party or the record belongs to another account. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+        };
+    };
+    "delete-shipments-party-roles-id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Shipment ID */
+                shipment_id: string;
+                /** @description Party role ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized. Also returned when the record belongs to another account. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     "get-containers-custom-fields": {
         parameters: {
             query?: never;
@@ -5597,6 +5984,196 @@ export interface operations {
                         links?: components["schemas"]["link-self"];
                     };
                 };
+            };
+        };
+    };
+    "get-containers-party-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Container ID */
+                container_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["party_role"][];
+                        included?: components["schemas"]["party"][];
+                        links?: components["schemas"]["links"];
+                        meta?: components["schemas"]["meta"];
+                    };
+                };
+            };
+            /** @description Unauthorized. Also returned when the record belongs to another account. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "post-containers-party-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Container ID */
+                container_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                /**
+                 * @example {
+                 *       "data": {
+                 *         "type": "party_role",
+                 *         "attributes": {
+                 *           "role": "pickup_dray_carrier"
+                 *         },
+                 *         "relationships": {
+                 *           "party": {
+                 *             "data": {
+                 *               "id": "ba4cb904-827f-4038-8e31-1e92b3356218",
+                 *               "type": "party"
+                 *             }
+                 *           }
+                 *         }
+                 *       }
+                 *     }
+                 */
+                "application/json": {
+                    data: {
+                        /** @enum {string} */
+                        type: "party_role";
+                        attributes: {
+                            /**
+                             * @description Only `pickup_dray_carrier` is accepted. Other values return `422`.
+                             * @enum {string}
+                             */
+                            role: "pickup_dray_carrier";
+                        };
+                        relationships: {
+                            party: {
+                                data: {
+                                    /**
+                                     * Format: uuid
+                                     * @description ID of a party in your account. See `GET /parties`.
+                                     */
+                                    id: string;
+                                    /** @enum {string} */
+                                    type: "party";
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["party_role"];
+                        included?: components["schemas"]["party"][];
+                        links?: components["schemas"]["link-self"];
+                    };
+                };
+            };
+            /** @description Unauthorized. Also returned when the party or the record belongs to another account. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+        };
+    };
+    "delete-containers-party-roles-id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Container ID */
+                container_id: string;
+                /** @description Party role ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized. Also returned when the record belongs to another account. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -5835,9 +6412,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        errors: {
-                            detail: string;
-                        }[];
+                        errors?: components["schemas"]["error"][];
                     };
                 };
             };
@@ -5876,9 +6451,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        errors: {
-                            detail: string;
-                        }[];
+                        errors?: components["schemas"]["error"][];
                     };
                 };
             };
@@ -5889,10 +6462,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        errors: {
-                            status: string;
-                            title: string;
-                        }[];
+                        errors?: components["schemas"]["error"][];
                     };
                 };
             };
