@@ -38,6 +38,13 @@ This section lists exactly what is live in production, so you can verify coverag
   New carriers and terminals as they come online, and anything removed from the live set.
 </Card>
 
+## Getting the coverage list programmatically
+
+Coverage is documented on the pages linked above. There is no downloadable spreadsheet, Google Sheet, or Excel export of the carrier or terminal matrix. If you need a machine-readable list, query it from the API:
+
+- [`GET /shipping_lines`](/api-docs/api-reference/shipping-lines/shipping-lines) returns every ocean carrier enabled on your account, with SCAC and supported tracking number types.
+- [`GET /metro_areas/{unlocode_or_id}`](/api-docs/api-reference/metro-areas/get-a-metro-area-using-the-unlocode-or-the-id) returns terminal details for a given port.
+
 ## Data sources
 
 - **Ocean carriers (shipping lines / VOCCs):** bill of lading and booking details, vessel ETAs, containers, and transport milestones. See [ocean carriers](/coverage/ocean-carriers).

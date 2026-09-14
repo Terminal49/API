@@ -469,6 +469,10 @@ const totalAmount = lineItems.reduce((acc, f) => acc + f.amount, 0);
     Yes. The `holds_at_pod_terminal` and `fees_at_pod_terminal` fields report data regardless of whether the container is at a port terminal or an inland rail destination. The field names reference `pod_terminal` for historical reasons, but the same readiness logic applies in both scenarios.
   </Accordion>
 
+  <Accordion title="Can I pay a fee or request a last free day extension through the API?">
+    No. The Terminal49 API reports holds, fees, and last free day as read-only data. It does not expose payment endpoints and cannot request an LFD extension. Pay demurrage or terminal fees directly with the carrier or terminal, and request LFD extensions through the carrier or your freight forwarder. Once the terminal updates its records, the change flows back into `holds_at_pod_terminal`, `fees_at_pod_terminal`, and `pickup_lfd` on the next `container.updated` webhook.
+  </Accordion>
+
   <Accordion title="How do I calculate total fees without double-counting?">
     Some terminals report a `total` fee alongside individual line items. Filter it out before summing:
 
