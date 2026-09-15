@@ -17,14 +17,14 @@ mode: "wide"
 
 Terminal49 is a single Automated Container Tracking API for bills of lading, bookings, and container numbers. Behind it are direct integrations with ocean carriers, port terminal operators, and North American rail carriers, plus AIS vessel data — normalized into one data model so you integrate once and get every source.
 
-This section lists exactly what is live in production, so you can verify coverage for your lanes before you write a line of code. Coverage reflects production as of 14 August 2026; the [coverage changelog](/coverage/changelog) records additions and removals. Use [`GET /shipping_lines`](/api-docs/api-reference/shipping-lines/shipping-lines) for the current carrier list on your account.
+This section lists exactly what is live in production, so you can verify coverage for your lanes before you write a line of code. Terminal coverage reflects production as of 15 September 2026; the [coverage changelog](/coverage/changelog) records additions and removals. Use [`GET /shipping_lines`](/api-docs/api-reference/shipping-lines/shipping-lines) for the current carrier list on your account.
 
 <Columns cols={2}>
   <Card title="Ocean carriers" icon="ship" href="/coverage/ocean-carriers">
     Direct integrations with 36+ shipping lines (VOCCs). Filter by name, SCAC, or track-by type.
   </Card>
   <Card title="Ports & terminals" icon="warehouse" href="/coverage/terminals">
-    Global port and terminal mapping on every route, plus direct terminal integrations at 100+ terminals.
+    Global port and terminal mapping on every route, plus 136 direct terminal integrations.
   </Card>
   <Card title="Rail carriers" icon="train" href="/coverage/rail">
     All six North American Class I railroads that move containers, with inland milestones and LFD.
@@ -71,7 +71,7 @@ See [account-enabled carriers](/coverage/ocean-carriers#account-enabled-carriers
 Terminal49 maps origin, destination, transshipment, and inland ports and terminals globally on every route, and attributes carrier events — arrival, departure, loaded, discharged, transshipment — to the location where they occur. Direct terminal integrations add the operational answers on top: availability, holds, fees, and last free day, straight from the terminal operator.
 
 <Card title="Open the ports & terminals list" icon="warehouse" href="/coverage/terminals">
-  Global port and terminal mapping, plus 100+ directly integrated terminals with UN/LOCODE and FIRMS codes.
+  Global port and terminal mapping, plus 136 directly integrated terminals with UN/LOCODE and FIRMS codes.
 </Card>
 
 ## Rail carriers
