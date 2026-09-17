@@ -643,6 +643,10 @@ export default async function handler(
           resolvedTerminal49Auth.apiToken,
           process.env.T49_API_BASE_URL,
           resolvedTerminal49Auth.accountId,
+          {
+            transport: 'http',
+            authSource: resolvedTerminal49Auth.authSource,
+          },
         ),
       {
         legacy: 'stateless',

@@ -48,6 +48,7 @@ function lastInstrumentOptions() {
       event: string;
       properties: Record<string, unknown>;
     }) => unknown;
+    eventProperties: (request: unknown) => Record<string, unknown>;
   };
 }
 
@@ -182,6 +183,44 @@ describe('PostHog MCP analytics', () => {
 
       expect(lastInstrumentOptions().identify).toEqual({
         distinctId: 'acct_123',
+      });
+    });
+
+    it('stamps transport, auth source and account group on every event', async () => {
+      const posthog = await loadPostHogModule();
+      posthog.initializePostHogFromEnv({
+        POSTHOG_PROJECT_API_KEY: 'phc_test',
+      });
+      posthog.instrumentMcpServerWithPostHog(
+        fakeServer(),
+        { distinctId: 'acct_123', transport: 'http', authSource: 'workos_mcp' },
+        {},
+      );
+
+      expect(lastInstrumentOptions().eventProperties({})).toEqual({
+        mcp_server_name: 'terminal49-mcp',
+        mcp_server_version: '1.0.0',
+        mcp_transport: 'http',
+        mcp_auth_source: 'workos_mcp',
+        $groups: { account: 'acct_123' },
+      });
+    });
+
+    it('omits the account group and auth source when anonymous', async () => {
+      const posthog = await loadPostHogModule();
+      posthog.initializePostHogFromEnv({
+        POSTHOG_PROJECT_API_KEY: 'phc_test',
+      });
+      posthog.instrumentMcpServerWithPostHog(
+        fakeServer(),
+        { transport: 'stdio' },
+        {},
+      );
+
+      expect(lastInstrumentOptions().eventProperties({})).toEqual({
+        mcp_server_name: 'terminal49-mcp',
+        mcp_server_version: '1.0.0',
+        mcp_transport: 'stdio',
       });
     });
 
