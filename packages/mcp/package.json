@@ -29,7 +29,7 @@
   "dependencies": {
     "@modelcontextprotocol/node": "^2.0.0",
     "@modelcontextprotocol/server": "^2.0.0",
-    "@posthog/mcp": "^0.11.7",
+    "@posthog/mcp": "^0.16.3",
     "@sentry/node": "^10.55.0",
     "@terminal49/sdk": "0.4.0",
     "posthog-node": "^5.0.0",
