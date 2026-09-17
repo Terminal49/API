@@ -35,7 +35,11 @@ import {
 } from './resources/list-display.js';
 import {
   instrumentMcpServerWithPostHog,
+  type McpAuthSource,
+  type McpTransportKind,
   registerPostHogExitHook,
+  SERVER_NAME,
+  SERVER_VERSION,
 } from './posthog.js';
 import {
   captureMcpException,
@@ -883,10 +887,16 @@ function createCarrierScacCompleter(
   };
 }
 
+export interface Terminal49McpServerTelemetry {
+  transport?: McpTransportKind;
+  authSource?: McpAuthSource;
+}
+
 export function createTerminal49McpServer(
   apiToken: string,
   apiBaseUrl?: string,
   accountId?: string,
+  telemetry: Terminal49McpServerTelemetry = {},
 ): McpServer {
   const client = new Terminal49Client({
     apiToken,
@@ -906,8 +916,8 @@ export function createTerminal49McpServer(
     instrumentMcpServer(
       new McpServer(
         {
-          name: 'terminal49-mcp',
-          version: '1.0.0',
+          name: SERVER_NAME,
+          version: SERVER_VERSION,
         },
         {
           instructions: TERMINAL49_SERVER_INSTRUCTIONS,
@@ -916,7 +926,7 @@ export function createTerminal49McpServer(
     ),
     // Groups the stateless HTTP path's events per account instead of minting an
     // anonymous person per request.
-    { distinctId: accountId },
+    { distinctId: accountId, ...telemetry },
   );
 
   // ==================== TOOLS ====================
@@ -1642,5 +1652,9 @@ export async function runStdioServer() {
     console.error('SDK: @modelcontextprotocol/server v2 (McpServer API)');
   }
 
-  serveStdio(() => createTerminal49McpServer(apiToken, apiBaseUrl));
+  serveStdio(() =>
+    createTerminal49McpServer(apiToken, apiBaseUrl, undefined, {
+      transport: 'stdio',
+    }),
+  );
 }
