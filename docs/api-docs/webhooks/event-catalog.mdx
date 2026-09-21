@@ -117,6 +117,17 @@ These events fire when container attributes change.
 There are no field-specific events for holds, fees, or availability, such as `container.holds_at_pod_terminal.changed`. Changes to `holds_at_pod_terminal`, `fees_at_pod_terminal`, and `available_for_pickup` are delivered through `container.updated`. Read the `changeset` in the payload to detect which fields changed. See [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
 </Note>
 
+## Changes that do not fire webhooks
+
+Some updates you can make through the API do not have a corresponding webhook event. Poll the affected resource or reconcile in your handler when you need to react to them.
+
+| Change | How to observe |
+|--------|----------------|
+| Editing a tracking request's `ref_numbers` (reference numbers) through [Edit a tracking request](/api-docs/api-reference/tracking-requests/edit-a-tracking-request) | Fetch the tracking request with [Get a tracking request](/api-docs/api-reference/tracking-requests/get-a-single-tracking-request) or search with the `q` query parameter on [List tracking requests](/api-docs/api-reference/tracking-requests/list-tracking-requests). |
+| Creating, updating, or deleting custom field values on tracking requests, shipments, or containers | Read them back with [List tracking request custom fields](/api-docs/api-reference/tracking-requests/list-tracking-request-custom-fields), [List shipment custom fields](/api-docs/api-reference/shipments/list-shipment-custom-fields), or [List container custom fields](/api-docs/api-reference/containers/list-container-custom-fields). |
+
+Custom field values are also not embedded in webhook notification payloads. The `included` array carries the shipment, container, tracking request, and transport event records described in [Webhook Payloads](/api-docs/webhooks/payloads), but not their custom fields — fetch custom fields separately when you need them in your handler.
+
 ## Document processing events
 
 These events fire when document extraction completes for accounts using document processing.
