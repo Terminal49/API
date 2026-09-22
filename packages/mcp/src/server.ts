@@ -1676,7 +1676,7 @@ export async function runStdioServer() {
 
   if (process.env.T49_MCP_STDIO_BANNER === '1') {
     console.error('Terminal49 MCP Server v1.0.0 running on stdio');
-    console.error('Available: 10 tools | 3 prompts | 4 resources');
+    console.error('Available: 11 tools | 3 prompts | 4 resources');
     console.error('SDK: @modelcontextprotocol/server v2 (McpServer API)');
   }
 
