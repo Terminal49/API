@@ -96,6 +96,7 @@ describe('MCP tool annotations', () => {
     'list_containers',
     'list_shipments',
     'list_tracking_requests',
+    'query',
   ];
   const allTools = [...readTools, 'track_container'];
 

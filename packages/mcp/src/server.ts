@@ -23,6 +23,7 @@ import {
 import { executeListShipments } from './tools/list-shipments.js';
 import { executeListContainers } from './tools/list-containers.js';
 import { executeListTrackingRequests } from './tools/list-tracking-requests.js';
+import { executeQuery } from './tools/query.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
 import {
@@ -81,7 +82,7 @@ Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and bookin
 
 Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools operate within the user's private Terminal49 account and none delete or overwrite data.
 
-Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.`;
+Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use query for account-wide counts, filtered worklists, and aggregates. Read terminal49://docs/mcp-query-guidance for the account-scoped assistant view schema. Use list_containers / list_shipments / list_tracking_requests for simple paginated lists.`;
 
 type ResponseDisplayColumn = {
   key: string;
@@ -1442,6 +1443,33 @@ export function createTerminal49McpServer(
     },
     wrapTool('list_tracking_requests', async (args) =>
       executeListTrackingRequests(args, client),
+    ),
+  );
+
+  server.registerTool(
+    'query',
+    {
+      title: 'Query Shipping Data',
+      description:
+        'Run one read-only PostgreSQL SELECT against account-scoped assistant_* views. Use for counts, filtered worklists, and aggregates. Read terminal49://docs/mcp-query-guidance for view names and examples. Results are capped at 500 rows.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z
+        .object({
+          sql: z
+            .string()
+            .trim()
+            .min(1)
+            .max(8000)
+            .describe('One PostgreSQL SELECT using assistant_* views'),
+        })
+        .strip(),
+    },
+    wrapTool('query', async ({ sql }) =>
+      executeQuery(sql, apiToken, apiBaseUrl, accountId),
     ),
   );
 

@@ -350,7 +350,7 @@ describe('MCP server wiring', () => {
     );
     const prompts = Object.keys((server as any)._registeredPrompts || {});
 
-    expect(tools).toHaveLength(10);
+    expect(tools).toHaveLength(11);
     expect(tools).toContain('search_container');
     expect(tools).toContain('track_container');
     expect(tools).toContain('get_container');
@@ -393,6 +393,7 @@ describe('MCP server wiring', () => {
       list_shipments: {},
       list_containers: {},
       list_tracking_requests: {},
+      query: { sql: 'SELECT count(*) FROM assistant_containers' },
     };
 
     for (const [name, tool] of Object.entries(tools)) {
