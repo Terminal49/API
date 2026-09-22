@@ -23,6 +23,7 @@ import {
 import { executeListShipments } from './tools/list-shipments.js';
 import { executeListContainers } from './tools/list-containers.js';
 import { executeListTrackingRequests } from './tools/list-tracking-requests.js';
+import { executeQuery } from './tools/query.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
 import {
@@ -79,7 +80,7 @@ export const TERMINAL49_SERVER_INSTRUCTIONS = `Terminal49 tracks ocean container
 
 Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered).
 
-Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools operate within the user's private Terminal49 account and none delete or overwrite data.
+Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools operate within the user's private Terminal49 account and none delete or overwrite data. Use query for authenticated Rails v2 GET endpoints beyond the specialized tools. Query accepts a relative endpoint path and optional query parameters; Rails determines which records the caller may read. Paginate large lists and do not claim that one page covers the whole account.
 
 Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.`;
 
@@ -1442,6 +1443,43 @@ export function createTerminal49McpServer(
     },
     wrapTool('list_tracking_requests', async (args) =>
       executeListTrackingRequests(args, client),
+    ),
+  );
+
+  server.registerTool(
+    'query',
+    {
+      title: 'Query Terminal49 API',
+      description:
+        'Read any Rails v2 GET endpoint the authenticated caller can access. Pass an API-relative path such as /documents, /shipments/{id}, or /containers/{id}/transport_events, with query parameters separately. Rails enforces account and user permissions. Paginate lists; a page is not an account-wide result. This tool cannot create, update, or delete records.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.preprocess(
+        stripLegacyIntent,
+        z
+          .object({
+            path: z
+              .string()
+              .min(2)
+              .max(300)
+              .describe(
+                'Rails v2 path beginning with /, without /v2, origin, query string, or fragment.',
+              ),
+            params: z
+              .record(z.string(), z.union([z.string(), z.array(z.string())]))
+              .optional()
+              .describe(
+                'Optional Rails query parameters, such as page[number], page[size], filter[status], or include.',
+              ),
+          })
+          .strict(),
+      ),
+    },
+    wrapTool('query', async (args) =>
+      executeQuery(args, { apiToken, accountId, apiBaseUrl }),
     ),
   );
 

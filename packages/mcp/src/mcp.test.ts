@@ -350,7 +350,7 @@ describe('MCP server wiring', () => {
     );
     const prompts = Object.keys((server as any)._registeredPrompts || {});
 
-    expect(tools).toHaveLength(10);
+    expect(tools).toHaveLength(11);
     expect(tools).toContain('search_container');
     expect(tools).toContain('track_container');
     expect(tools).toContain('get_container');
@@ -361,6 +361,7 @@ describe('MCP server wiring', () => {
     expect(tools).toContain('list_shipments');
     expect(tools).toContain('list_containers');
     expect(tools).toContain('list_tracking_requests');
+    expect(tools).toContain('query');
 
     expect(prompts).toHaveLength(3);
     expect(prompts).toContain('track-shipment');
@@ -393,6 +394,7 @@ describe('MCP server wiring', () => {
       list_shipments: {},
       list_containers: {},
       list_tracking_requests: {},
+      query: { path: '/containers' },
     };
 
     for (const [name, tool] of Object.entries(tools)) {

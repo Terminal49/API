@@ -127,6 +127,18 @@
         "open_world_justification": "Does not publish content or change public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
+    },
+    "query": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads an existing Rails API endpoint with the authenticated caller credentials and does not modify records.",
+        "open_world_justification": "Does not publish content or change public or third-party systems.",
+        "destructive_justification": "Only sends GET requests and cannot delete or overwrite records."
+      }
     }
   },
   "test_cases": [
@@ -148,7 +160,7 @@
     },
     {
       "description": "List the 10 most recently updated shipments without nested containers.",
-      "user_prompt": "Show my 10 most recently updated shipments. Don’t include nested containers.",
+      "user_prompt": "Show my 10 most recently updated shipments. Don\u2019t include nested containers.",
       "file_attachment_urls": null,
       "tools_triggered": "list_shipments",
       "expected_output": "Returns up to 10 of the most recently updated shipments with a page size of 10, include_containers=false, no carrier, status, or port filters, and no nested containers. Mentions pagination if present.",

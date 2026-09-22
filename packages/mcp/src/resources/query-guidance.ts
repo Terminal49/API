@@ -15,6 +15,7 @@ export function readQueryGuidanceResource(): string {
     '# Terminal49 MCP Query Guidance',
     '',
     'Use this document to map user questions to the right tool sequence, plus output expectations.',
+    'For other authenticated Rails v2 data, use query with an API-relative GET path and separate query parameters. Rails authorizes each request. Follow pagination links; one page is not a complete account-wide answer.',
     '',
     '## Intent → Tool Mapping',
     '',

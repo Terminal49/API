@@ -51,6 +51,12 @@ Need test container numbers? See [Test Numbers](/api-docs/useful-info/test-numbe
 
 For the full walkthrough (including local stdio dev, deployment, and SDK examples), see [MCP Server Quickstart](/api-docs/in-depth-guides/mcp).
 
+## Query other Terminal49 data
+
+The `query` tool reads Rails v2 API endpoints with the same account and user credentials used by the other MCP tools. For example, use `path: "/documents"` with `params: {"page[size]": "10"}` to request a page of documents, or `path: "/containers/CONTAINER_ID/transport_events"` for a container timeline. The path begins after `/v2`; pass query parameters separately.
+
+`query` only sends GET requests. Rails decides which endpoints and records the signed-in caller can access. Results include the Rails response and pagination links. Follow those links when a question needs more than one page, and request smaller pages when a response exceeds the tool's size limit.
+
 ---
 
 ## Transports
