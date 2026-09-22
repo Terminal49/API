@@ -27,6 +27,23 @@ describe('query', () => {
     }
   });
 
+  it('serializes Rails array arrival bounds as repeated bracketed query keys', () => {
+    const url = buildQueryUrl('https://api.example.com/v2', {
+      path: '/containers',
+      params: {
+        'filter[pod_code]': 'USLAX',
+        'filter[arrival][]': ['>=2026-09-21', '<=2026-09-27'],
+        sort: 'arrival',
+        'page[size]': '25',
+      },
+    });
+    expect(url.searchParams.getAll('filter[arrival][]')).toEqual([
+      '>=2026-09-21',
+      '<=2026-09-27',
+    ]);
+    expect(url.searchParams.get('filter[pod_code]')).toBe('USLAX');
+  });
+
   it('forwards delegated authorization and preserves Rails pagination metadata', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       new Response(

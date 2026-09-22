@@ -82,6 +82,8 @@ Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and bookin
 
 Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools operate within the user's private Terminal49 account and none delete or overwrite data. Use query for authenticated Rails v2 GET endpoints beyond the specialized tools. Query accepts a relative endpoint path and optional query parameters; Rails determines which records the caller may read. Paginate large lists and do not claim that one page covers the whole account.
 
+For "containers arriving in LA this week", call query with path "/containers" and params {"filter[pod_code]":"USLAX","filter[arrival][]":[">=START_DATE","<=END_DATE"],"sort":"arrival","page[size]":"25"}, replacing the dates with the chosen calendar window. Include USLGB only if the user means the wider LA/Long Beach port complex. State the date window and timezone, distinguish upcoming ETA from actual arrival in the returned rows, and follow pagination links before claiming a complete result. The specialized list_containers tool does not forward these filters.
+
 Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.`;
 
 type ResponseDisplayColumn = {

@@ -57,6 +57,8 @@ The `query` tool reads Rails v2 API endpoints with the same account and user cre
 
 `query` only sends GET requests. Rails decides which endpoints and records the signed-in caller can access. Results include the Rails response and pagination links. Follow those links when a question needs more than one page, and request smaller pages when a response exceeds the tool's size limit.
 
+For containers arriving in Los Angeles during a chosen week, request `/containers` with `filter[pod_code]=USLAX`, two `filter[arrival][]` bounds (`>=START_DATE` and `<=END_DATE`), `sort=arrival`, and `page[size]=25`. Include `USLGB` only when you mean the wider Los Angeles/Long Beach port complex. State the dates used, separate upcoming ETAs from recorded arrivals, and follow additional pages before describing the result as complete.
+
 ---
 
 ## Transports
