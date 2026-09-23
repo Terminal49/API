@@ -16,7 +16,11 @@ import {
   evaluateDemurrageUrgency,
 } from '../lib/demurrage.js';
 import { logMcpEvent } from '../logging.js';
-import { dayDeltaInZone, formatInZone } from '../lib/temporal.js';
+import {
+  dayDeltaInZone,
+  formatInZone,
+  localCalendarDate,
+} from '../lib/temporal.js';
 
 export type ContainerInclude = 'shipment' | 'pod_terminal' | 'transport_events';
 
@@ -51,7 +55,10 @@ export interface ContainerStatus {
     pod_timezone: string | null;
   };
   demurrage: {
+    /** Account-visible POD deadline selected by Rails; never an inland deadline. */
     pickup_lfd: string | null;
+    pickup_lfd_source: string | null;
+    pickup_lfd_local_date: string | null;
     pickup_lfd_local: string;
     /** Per-channel LFDs from import_deadlines (terminal/rail/line). */
     last_free_days: {
@@ -204,10 +211,18 @@ function formatContainerResponse(
   // same count into the urgency classifier — otherwise `urgency` (raw UTC delta)
   // and the displayed `days_until_lfd` (terminal-local) could disagree at a
   // threshold (e.g. 3 vs 4 days).
-  const localDaysUntilLfd = dayDeltaInZone(container.pickup_lfd, podTimezone);
+  // An absent/withheld unified deadline is unknown. Falling back to the legacy
+  // field would reintroduce different selection rules (and possibly an inland LFD).
+  const importDeadlines = container.import_deadlines || {};
+  const podDeadline = importDeadlines.pod?.unified;
+  const pickupLfd = podDeadline?.current_value ?? null;
+  const pickupLfdSource = pickupLfd
+    ? (podDeadline?.current_selection ?? null)
+    : null;
+  const localDaysUntilLfd = dayDeltaInZone(pickupLfd, podTimezone);
   const demurrage: DemurrageEvaluation = evaluateDemurrageUrgency({
     fees_at_pod_terminal: container.fees_at_pod_terminal,
-    pickup_lfd: container.pickup_lfd ?? null,
+    pickup_lfd: pickupLfd,
     terminal_checked_at: container.terminal_checked_at ?? null,
     // line_tracking_stopped_* lives on the SHIPMENT, not the container, so we
     // read it from the sideloaded shipment. When the shipment isn't included we
@@ -215,8 +230,6 @@ function formatContainerResponse(
     tracking_stopped: isTrackingStopped(shipment),
     days_until_lfd: localDaysUntilLfd,
   });
-
-  const importDeadlines = container.import_deadlines || {};
 
   const metadata = generateMetadata(statusResult, includes);
 
@@ -250,8 +263,10 @@ function formatContainerResponse(
       pod_timezone: podTimezone,
     },
     demurrage: {
-      pickup_lfd: container.pickup_lfd ?? null,
-      pickup_lfd_local: formatInZone(container.pickup_lfd, podTimezone),
+      pickup_lfd: pickupLfd,
+      pickup_lfd_source: pickupLfdSource,
+      pickup_lfd_local_date: localCalendarDate(pickupLfd, podTimezone),
+      pickup_lfd_local: formatInZone(pickupLfd, podTimezone),
       last_free_days: {
         terminal: importDeadlines.pickup_lfd_terminal ?? null,
         rail: importDeadlines.pickup_lfd_rail ?? null,
