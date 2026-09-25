@@ -16,7 +16,13 @@ const ignorePatterns = [
   '.pi/**',
   '.roo/**',
   '.windsurf/**',
-  'docs/sdk/reference/**',
+  '**/*.json',
+  '**/*.md',
+  '**/*.mdx',
+  '**/*.yaml',
+  '**/*.yml',
+  'Terminal49-API.postman_collection.json',
+  'docs/**',
   'sdks/typescript-sdk/src/generated/**',
   'tools/oxlint/anti-slop/**',
 ];
@@ -64,9 +70,9 @@ export default defineConfig({
       'anti-slop/no-unsafe-dictionary-type': 'warn',
       'anti-slop/require-safety-comment-for-type-assertion': 'warn',
     },
-    // Type-aware linting stays off deliberately: tsc runs separately (root
-    // tsconfig + per-package type-check scripts), and tsgolint cannot resolve
-    // workspace dependencies such as @terminal49/sdk before they are built.
+    // Vite+ tsgolint currently applies the root TypeScript context to workspace
+    // files and loses each package's Node types. The root `check` task builds
+    // SDK declarations, then runs the authoritative TypeScript checks.
     options: { typeAware: false, typeCheck: false },
   },
 });

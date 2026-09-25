@@ -37,7 +37,10 @@ if (source === 'local') {
   console.log('Setting MCP SDK source to local workspace build...');
   run(`npm ci --prefix "${sdkDir}"`, repoDir);
   run(`npm run --prefix "${sdkDir}" build`, repoDir);
-  run(`npm install --prefix "${mcpDir}" --no-package-lock --no-save "${sdkDir}"`, repoDir);
+  run(
+    `npm install --prefix "${mcpDir}" --no-package-lock --no-save "${sdkDir}"`,
+    repoDir,
+  );
   console.log(`Using local SDK from ${sdkDir}`);
 } else {
   console.log(`Setting MCP SDK source to published package ${sdkSemver}...`);
