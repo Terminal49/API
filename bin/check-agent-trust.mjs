@@ -14,6 +14,10 @@ function sorted(values) {
   return [...values].sort((left, right) => left.localeCompare(right));
 }
 
+function normalizedVersion(version) {
+  return version.replace(/^=/, '');
+}
+
 function assertEqual(label, actual, expected) {
   const actualJson = JSON.stringify(sorted(actual));
   const expectedJson = JSON.stringify(sorted(expected));
@@ -115,7 +119,7 @@ function checkToolchain() {
   }
   if (
     rootPackage.devDependencies['@oxlint/plugins'] !==
-    expected['@oxlint/plugins']
+    normalizedVersion(expected['@oxlint/plugins'])
   ) {
     throw new Error('@oxlint/plugins is not coupled to vite-plus.');
   }
