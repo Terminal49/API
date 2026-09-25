@@ -26,6 +26,10 @@ jobs:
         run: npm ci
       - name: Check root and every workspace
         run: npx vp run check
+      - name: Test every workspace
+        run: npx vp run test
+      - name: Build every workspace
+        run: npx vp run build
 
   # Consumer compatibility: the standalone SDK lockfile on every supported
   # Node version, with no workspace tooling involved.

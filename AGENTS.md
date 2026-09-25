@@ -64,9 +64,9 @@ For substantive documentation writing, use the repo-local skill at `skills/termi
 
 ### Code (npm workspaces)
 - Install: `vp install` at the root (`npm ci` remains the frozen CI and Vercel install command).
-- Check everything: `vp run check`. This runs root `vp check`, the API gateway typecheck, and every workspace `type-check` script. Vite+ tsgolint is intentionally disabled until it respects the monorepo's per-package Node types; do not remove the recursive `tsc` checks.
+- Check everything: `vp run check`. This runs root `vp check`, builds the SDK types needed by its dependents, then runs the API gateway and every workspace's authoritative TypeScript check. Vite+ tsgolint is intentionally disabled until it respects the monorepo's per-package Node types; do not remove the `tsc` checks or the SDK-first ordering.
 - Test everything: `vp run test` (recursive Vite+/Vitest package tests). Target one package with `vp run --filter @terminal49/mcp test`.
-- Build everything: `vp run build` (dependency-ordered workspace builds). The publishable packages continue to use `tsc`; do not switch them to `vp pack` without comparing package contents and updating both npm publish workflows.
+- Build everything: `vp run build`. The root task explicitly builds SDK → MCP → CLI because recursive Vite+ tasks run concurrently and cold builds need SDK declarations first. The publishable packages continue to use `tsc`; do not switch them to `vp pack` without comparing package contents and updating both npm publish workflows.
 - Format code: `vp run format`. Root Oxfmt excludes docs, generated files, and package metadata so Mintlify and generated artifacts keep their existing formatting.
 - **Shared Vite+ configuration:** Oxlint, Oxfmt, Vitest, and recursive tasks all resolve through the root `vite.config.ts`. Do not add workspace-level lint/format config. Package-level Vitest config is supported. The vendored plugin is in `tools/oxlint/anti-slop/` (see its README for local modifications to re-apply when re-vendoring).
 - **Toolchain version coupling** (root `package.json`): the `vite` override alias (`npm:@voidzero-dev/vite-plus-core`), the exact `vitest` pin, the `@vitest/coverage-v8` devDeps in workspaces, and `@oxlint/plugins` must all move in lockstep with the `vite-plus` version — do not bump any of them independently.
@@ -103,7 +103,7 @@ For substantive documentation writing, use the repo-local skill at `skills/termi
 Standard commands live in **Build and Development Commands** above; the notes below are the non-obvious gotchas for this environment. The startup update script already runs `npm ci` at the repo root.
 
 ### Node version
-- The repo requires **Node 24** (`engines: 24.x`, `.tool-versions` pins `24.4.1`). The VM's baseline `node` on `PATH` (`/exec-daemon/node`) is **v22**; a login-shell hook selects nvm's Node 24, so **run commands from a login shell** (fresh terminals get Node 24). If `node -v` shows v22, run `nvm use 24` first — building/testing on v22 is untested here.
+- The repo requires **Node 24.11+** (`engines: 24.x`, `.tool-versions` pins `24.11.0`) because that is Vite+ 0.3.3's Node 24 floor. The VM's baseline `node` on `PATH` (`/exec-daemon/node`) is **v22**; a login-shell hook selects nvm's Node 24, so **run commands from a login shell**. If `node -v` shows v22, run `nvm use 24` first.
 
 ### Products & how to run them (nothing here is a long-running backend — MCP/SDK are clients of the external Terminal49 API at `https://api.terminal49.com/v2`)
 - **SDK** (`@terminal49/sdk`): unit tests are fixture-based and need no network/token (`npm run test --workspace @terminal49/sdk -- --run`). `smoke`/`example` scripts hit the live API and need `T49_API_TOKEN`.

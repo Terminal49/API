@@ -9,8 +9,8 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "vp run -r build",
-    "check": "vp check && npm run type-check:api && vp run -r type-check",
+    "build": "npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp && npm run build --workspace @terminal49/cli",
+    "check": "vp check && npm run build --workspace @terminal49/sdk && npm run type-check:api && vp run -r type-check",
     "format": "vp fmt --write api packages sdks",
     "lint:api": "vp lint api && vp fmt --check api",
     "test": "vp run -r test",
@@ -26,7 +26,7 @@
     "@oxlint/plugins": "1.79.0",
     "@types/node": "^24.10.13",
     "dotenv": "^17.3.1",
-    "vite-plus": "0.3.2"
+    "vite-plus": "0.3.3"
   },
   "overrides": {
     "@mintlify/previewing": {
@@ -70,7 +70,7 @@
       }
     },
     "uuid": "^11.1.1",
-    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.2",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3",
     "vitest": "4.1.11"
   },
   "engines": {

@@ -71,8 +71,8 @@ export default defineConfig({
       'anti-slop/require-safety-comment-for-type-assertion': 'warn',
     },
     // Vite+ tsgolint currently applies the root TypeScript context to workspace
-    // files and loses each package's Node types. The root `check` task follows
-    // `vp check` with every package's authoritative `tsc --noEmit` script.
+    // files and loses each package's Node types. The root `check` task builds
+    // SDK declarations, then runs the authoritative TypeScript checks.
     options: { typeAware: false, typeCheck: false },
   },
 });
