@@ -503,6 +503,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/containers/{id}/route": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get a container's route
+         * @description Get the route and route locations for a container. This feature may not be enabled for every account.
+         */
+        get: operations["get-containers-id-route"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/containers/{id}/map_geojson": {
         parameters: {
             query?: never;
@@ -4360,6 +4382,45 @@ export interface operations {
                         meta?: components["schemas"]["meta"];
                     };
                 };
+            };
+        };
+    };
+    "get-containers-id-route": {
+        parameters: {
+            query?: {
+                /** @description Comma-delimited relations to include */
+                include?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: {
+                            [key: string]: unknown;
+                        };
+                        included?: {
+                            [key: string]: unknown;
+                        }[];
+                    };
+                };
+            };
+            /** @description Routing data is not enabled for this account */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

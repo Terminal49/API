@@ -6488,6 +6488,65 @@
         ]
       }
     },
+    "/containers/{id}/route": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get a container's route",
+        "description": "Get the route and route locations for a container. This feature may not be enabled for every account.",
+        "tags": [
+          "Containers"
+        ],
+        "operationId": "get-containers-id-route",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "include",
+            "description": "Comma-delimited relations to include"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Routing data is not enabled for this account"
+          }
+        }
+      }
+    },
     "/containers/{id}/map_geojson": {
       "parameters": [
         {
