@@ -1,0 +1,72 @@
+{
+  "updateNote": "Update this file in the same change that adds, removes, or renames an MCP tool, SDK package export, or non-generated SDK/MCP docs route.",
+  "mcpTools": [
+    {
+      "name": "search_container",
+      "implementation": "packages/mcp/src/tools/search-container.ts"
+    },
+    {
+      "name": "track_container",
+      "implementation": "packages/mcp/src/tools/track-container.ts"
+    },
+    {
+      "name": "get_container",
+      "implementation": "packages/mcp/src/tools/get-container.ts"
+    },
+    {
+      "name": "get_shipment_details",
+      "implementation": "packages/mcp/src/tools/get-shipment-details.ts"
+    },
+    {
+      "name": "get_container_transport_events",
+      "implementation": "packages/mcp/src/tools/get-container-transport-events.ts"
+    },
+    {
+      "name": "get_supported_shipping_lines",
+      "implementation": "packages/mcp/src/tools/get-supported-shipping-lines.ts"
+    },
+    {
+      "name": "get_container_route",
+      "implementation": "packages/mcp/src/tools/get-container-route.ts"
+    },
+    {
+      "name": "list_shipments",
+      "implementation": "packages/mcp/src/tools/list-shipments.ts"
+    },
+    {
+      "name": "list_containers",
+      "implementation": "packages/mcp/src/tools/list-containers.ts"
+    },
+    {
+      "name": "list_tracking_requests",
+      "implementation": "packages/mcp/src/tools/list-tracking-requests.ts"
+    }
+  ],
+  "sdkEntrypoints": [
+    {
+      "export": ".",
+      "source": "sdks/typescript-sdk/src/index.ts"
+    },
+    {
+      "export": "./client",
+      "source": "sdks/typescript-sdk/src/client.ts"
+    }
+  ],
+  "docsRoutes": [
+    "api-docs/in-depth-guides/mcp",
+    "mcp/home",
+    "mcp/setup/agent-plugins",
+    "mcp/setup/chatgpt",
+    "mcp/setup/claude",
+    "mcp/setup/claude-code",
+    "mcp/setup/cursor",
+    "mcp/setup/microsoft-copilot",
+    "mcp/setup/other-clients",
+    "mcp/setup/vs-code",
+    "sdk/error-handling",
+    "sdk/filtering-pagination",
+    "sdk/introduction",
+    "sdk/methods",
+    "sdk/quickstart"
+  ]
+}
