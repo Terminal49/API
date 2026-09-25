@@ -77,7 +77,7 @@ For substantive documentation writing, use the repo-local skill at `skills/termi
 
 - Read [`skills/agent-trust/SKILL.md`](skills/agent-trust/SKILL.md) before adding or changing an OpenAPI endpoint, npm package, MCP tool, SDK entrypoint, or SDK/MCP docs route.
 - Extend the repository through [`skills/agent-trust/references/paved-path.md`](skills/agent-trust/references/paved-path.md); do not create alternate registration, generation, or verification flows.
-- Keep [`skills/agent-trust/feature-map.json`](skills/agent-trust/feature-map.json) synchronized in the same change. CI rejects MCP tool, SDK export, and docs-route drift.
+- Keep [`skills/agent-trust/feature-map.json`](skills/agent-trust/feature-map.json) synchronized in the same commit. CI rejects MCP tool, SDK export, and docs-route drift.
 - Run `npm run agent-verify` before handoff. `npm run agent-verify:quick` is for iteration and is not the completion gate.
 - P-Stack is optional user tooling, not a repository dependency. Install it with `/add-plugin pstack`, then run `/setup-pstack` to choose a user-local model budget. Repository wiring is in [`skills/agent-trust/references/pstack.md`](skills/agent-trust/references/pstack.md).
 

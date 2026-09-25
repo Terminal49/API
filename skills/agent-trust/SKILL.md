@@ -12,8 +12,8 @@ same command CI runs.
 
 1. Read [the paved path](references/paved-path.md) for the surface you are
    changing.
-2. Read [the feature map](feature-map.json) to find the owning implementation,
-   package entrypoint, and docs route.
+2. Read [the feature map](feature-map.json) to confirm the registered MCP
+   tools, SDK exports, and docs routes, and to find an existing tool's source.
 3. Keep generated files generated. Change `docs/openapi.json` before SDK types,
    Postman, or SDK reference output.
 

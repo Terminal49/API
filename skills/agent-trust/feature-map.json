@@ -1,5 +1,5 @@
 {
-  "updateNote": "Update this file in the same change that adds, removes, or renames an MCP tool, SDK package export, or non-generated SDK/MCP docs route.",
+  "updateNote": "Update this file in the same commit that adds, removes, or renames an MCP tool, SDK package export, or non-generated SDK/MCP docs route.",
   "mcpTools": [
     {
       "name": "search_container",
