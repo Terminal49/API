@@ -60,17 +60,25 @@ function routeForLink(filePath, linkTarget) {
   const hashIdx = linkTarget.indexOf('#');
   const targetPath = hashIdx >= 0 ? linkTarget.slice(0, hashIdx) : linkTarget;
   const hash = hashIdx >= 0 ? linkTarget.slice(hashIdx + 1) : '';
-  const currentDir = path.relative(outputDir, path.dirname(filePath)).split(path.sep).join(path.posix.sep);
-  const resolved = path.posix.normalize(path.posix.join(currentDir, targetPath));
+  const currentDir = path
+    .relative(outputDir, path.dirname(filePath))
+    .split(path.sep)
+    .join(path.posix.sep);
+  const resolved = path.posix.normalize(
+    path.posix.join(currentDir, targetPath),
+  );
   const withoutExt = resolved.replace(/\.mdx$/, '').replace(/\/index$/, '');
   const route = withoutExt ? `${routePrefix}/${withoutExt}` : routePrefix;
   return hash ? `${route}#${hash}` : route;
 }
 
 function rewriteMdxLinks(content, filePath) {
-  return content.replace(/\]\((?!https?:|mailto:|#)([^)]+?\.mdx(?:#[^)]+)?)\)/g, (_match, target) => {
-    return `](${routeForLink(filePath, target)})`;
-  });
+  return content.replace(
+    /\]\((?!https?:|mailto:|#)([^)]+?\.mdx(?:#[^)]+)?)\)/g,
+    (_match, target) => {
+      return `](${routeForLink(filePath, target)})`;
+    },
+  );
 }
 
 function stripFrontmatter(content) {

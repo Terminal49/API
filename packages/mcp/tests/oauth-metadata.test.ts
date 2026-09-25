@@ -95,7 +95,10 @@ describe('api/oauth-protected-resource (RFC 9728 PRM)', () => {
     process.env.WORKOS_MCP_RESOURCE = 'https://mcp.terminal49.com';
     const res = new MockResponse();
 
-    protectedResourceHandler(createRequest('GET', { host: 'preview.vercel.app' }) as never, res as never);
+    protectedResourceHandler(
+      createRequest('GET', { host: 'preview.vercel.app' }) as never,
+      res as never,
+    );
 
     expect(payloadOf(res).resource).toBe('https://mcp.terminal49.com');
   });
@@ -118,7 +121,10 @@ describe('api/oauth-protected-resource (RFC 9728 PRM)', () => {
     protectedResourceHandler(createRequest('GET') as never, res as never);
 
     expect(res.statusCode).toBe(200);
-    expect(payloadOf(res).scopes_supported).toEqual(['mcp:tools', 'mcp:resources']);
+    expect(payloadOf(res).scopes_supported).toEqual([
+      'mcp:tools',
+      'mcp:resources',
+    ]);
   });
 
   it('omits scopes_supported when the env value is only separators/whitespace', () => {
@@ -138,7 +144,9 @@ describe('api/oauth-protected-resource (RFC 9728 PRM)', () => {
     protectedResourceHandler(createRequest('GET') as never, res as never);
 
     expect(res.statusCode).toBe(200);
-    expect(payloadOf(res).authorization_servers).toEqual(['https://issuer.workos.test']);
+    expect(payloadOf(res).authorization_servers).toEqual([
+      'https://issuer.workos.test',
+    ]);
   });
 
   it('returns 500 when no authorization server is configured', () => {

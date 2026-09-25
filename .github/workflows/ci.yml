@@ -12,6 +12,21 @@ permissions:
   statuses: read
 
 jobs:
+  toolchain:
+    name: Vite+ monorepo check
+    runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install workspace dependencies
+        run: npm ci
+      - name: Check root and every workspace
+        run: npx vp run check
+
   # Consumer compatibility: the standalone SDK lockfile on every supported
   # Node version, with no workspace tooling involved.
   sdk:
