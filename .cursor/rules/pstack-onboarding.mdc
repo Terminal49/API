@@ -1,0 +1,14 @@
+---
+description: Repository-local P-Stack routing
+alwaysApply: true
+---
+
+# P-Stack
+
+For non-trivial Terminal49/API work, use the installed P-Stack plugin's
+`/poteto-mode` workflow when available. Use `/how` for unfamiliar subsystems,
+the repository's `npm run agent-verify` for proof, and `/reflect` to turn
+durable lessons into executable guards.
+
+Model and reasoning-budget choices belong in the user-local file created by
+`/setup-pstack`; never commit personal model slugs.
