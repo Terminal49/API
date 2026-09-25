@@ -1792,6 +1792,69 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** Route model */
+        route: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            type: "route";
+            attributes: {
+                /** Format: date-time */
+                created_at?: string | null;
+                /** Format: date-time */
+                updated_at?: string | null;
+            };
+            relationships?: {
+                route_locations?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "route_location";
+                    }[];
+                };
+            };
+        };
+        /** Route location model */
+        route_location: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            type: "route_location";
+            attributes: {
+                inbound_scac?: string | null;
+                inbound_mode?: string | null;
+                /** Format: date-time */
+                inbound_eta_at?: string | null;
+                /** Format: date-time */
+                inbound_ata_at?: string | null;
+                inbound_voyage_number?: string | null;
+                outbound_scac?: string | null;
+                outbound_mode?: string | null;
+                /** Format: date-time */
+                outbound_etd_at?: string | null;
+                /** Format: date-time */
+                outbound_atd_at?: string | null;
+                outbound_voyage_number?: string | null;
+                /** Format: date-time */
+                created_at?: string | null;
+                /** Format: date-time */
+                updated_at?: string | null;
+            };
+            relationships?: {
+                [key: string]: {
+                    data?: ({
+                        /** Format: uuid */
+                        id: string;
+                        type: string;
+                    } | {
+                        /** Format: uuid */
+                        id: string;
+                        type: string;
+                    }[]) | null;
+                };
+            };
+        };
         /** Error model */
         error: {
             detail?: string | null;
@@ -4406,12 +4469,8 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data?: {
-                            [key: string]: unknown;
-                        };
-                        included?: {
-                            [key: string]: unknown;
-                        }[];
+                        data?: components["schemas"]["route"];
+                        included?: (components["schemas"]["route_location"] | components["schemas"]["port"] | components["schemas"]["vessel"] | components["schemas"]["shipment"])[];
                     };
                 };
             };
@@ -4420,7 +4479,11 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
             };
         };
     };

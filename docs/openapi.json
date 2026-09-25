@@ -6526,14 +6526,25 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "type": "object",
-                      "additionalProperties": true
+                      "$ref": "#/components/schemas/route"
                     },
                     "included": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "additionalProperties": true
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/route_location"
+                          },
+                          {
+                            "$ref": "#/components/schemas/port"
+                          },
+                          {
+                            "$ref": "#/components/schemas/vessel"
+                          },
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          }
+                        ]
                       }
                     }
                   }
@@ -6542,7 +6553,22 @@
             }
           },
           "403": {
-            "description": "Routing data is not enabled for this account"
+            "description": "Routing data is not enabled for this account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -13095,6 +13121,204 @@
           "attributes": {
             "type": "object",
             "additionalProperties": true
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "attributes"
+        ],
+        "x-examples": {}
+      },
+      "route": {
+        "title": "Route model",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "route"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "route_locations": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "route_location"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "attributes"
+        ],
+        "x-examples": {}
+      },
+      "route_location": {
+        "title": "Route location model",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "route_location"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "inbound_scac": {
+                "type": "string",
+                "nullable": true
+              },
+              "inbound_mode": {
+                "type": "string",
+                "nullable": true
+              },
+              "inbound_eta_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "inbound_ata_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "inbound_voyage_number": {
+                "type": "string",
+                "nullable": true
+              },
+              "outbound_scac": {
+                "type": "string",
+                "nullable": true
+              },
+              "outbound_mode": {
+                "type": "string",
+                "nullable": true
+              },
+              "outbound_etd_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "outbound_atd_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "outbound_voyage_number": {
+                "type": "string",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "nullable": true,
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "type": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "required": [
