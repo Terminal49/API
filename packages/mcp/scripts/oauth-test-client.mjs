@@ -26,15 +26,21 @@ const settings = {
     ),
   ),
   callbackPath: stringEnv('MCP_OAUTH_CALLBACK_PATH', DEFAULT_CALLBACK_PATH),
-  resourceUrl: trimTrailingSlash(stringEnv('MCP_OAUTH_RESOURCE_URL', DEFAULT_RESOURCE_URL)),
+  resourceUrl: trimTrailingSlash(
+    stringEnv('MCP_OAUTH_RESOURCE_URL', DEFAULT_RESOURCE_URL),
+  ),
   // Resource (audience) stays the bare origin; the MCP calls go to the /mcp
   // route. Defaulting the endpoint to the origin would POST to `/`, which works
   // only via the root rewrite — be explicit so the test client targets /mcp.
-  mcpEndpointUrl: trimTrailingSlash(stringEnv(
-    'MCP_OAUTH_MCP_ENDPOINT_URL',
-    `${trimTrailingSlash(stringEnv('MCP_OAUTH_RESOURCE_URL', DEFAULT_RESOURCE_URL))}/mcp`,
-  )),
-  protectedResourceMetadataUrl: optionalEnv('MCP_OAUTH_PROTECTED_RESOURCE_METADATA_URL'),
+  mcpEndpointUrl: trimTrailingSlash(
+    stringEnv(
+      'MCP_OAUTH_MCP_ENDPOINT_URL',
+      `${trimTrailingSlash(stringEnv('MCP_OAUTH_RESOURCE_URL', DEFAULT_RESOURCE_URL))}/mcp`,
+    ),
+  ),
+  protectedResourceMetadataUrl: optionalEnv(
+    'MCP_OAUTH_PROTECTED_RESOURCE_METADATA_URL',
+  ),
   authorizationServerUrl: optionalEnv('MCP_OAUTH_AUTHORIZATION_SERVER_URL'),
   scope: stringEnv('MCP_OAUTH_SCOPE', DEFAULT_SCOPE),
   clientName: stringEnv('MCP_OAUTH_CLIENT_NAME', DEFAULT_CLIENT_NAME),
@@ -43,7 +49,10 @@ const settings = {
   clientAuthMethod: optionalEnv('MCP_OAUTH_CLIENT_AUTH_METHOD'),
   dynamicRegistration: booleanEnv('MCP_OAUTH_DYNAMIC_REGISTRATION', true),
   registerEveryRun: booleanEnv('MCP_OAUTH_REGISTER_EVERY_RUN', false),
-  mcpProtocolVersion: stringEnv('MCP_PROTOCOL_VERSION', DEFAULT_MCP_PROTOCOL_VERSION),
+  mcpProtocolVersion: stringEnv(
+    'MCP_PROTOCOL_VERSION',
+    DEFAULT_MCP_PROTOCOL_VERSION,
+  ),
 };
 
 function optionalEnv(name) {
@@ -121,7 +130,8 @@ function parseCookies(header) {
 function getSession(req, res) {
   const cookies = parseCookies(req.headers.cookie);
   const existingId = cookies[SESSION_COOKIE];
-  const sessionId = existingId && sessions.has(existingId) ? existingId : randomUrlToken(24);
+  const sessionId =
+    existingId && sessions.has(existingId) ? existingId : randomUrlToken(24);
 
   if (!sessions.has(sessionId)) {
     sessions.set(sessionId, {
@@ -225,7 +235,9 @@ async function fetchJson(url, label, options = {}) {
   }
 
   if (!response.ok) {
-    const error = new Error(`${label} request failed with HTTP ${response.status}`);
+    const error = new Error(
+      `${label} request failed with HTTP ${response.status}`,
+    );
     error.statusCode = response.status;
     error.payload = payload;
     throw error;
@@ -244,7 +256,9 @@ async function discoverOAuthMetadata() {
     resourceMetadata.authorization_servers?.[0];
 
   if (!authorizationServer) {
-    throw new Error('Protected resource metadata did not include authorization_servers.');
+    throw new Error(
+      'Protected resource metadata did not include authorization_servers.',
+    );
   }
 
   const authServerMetadataUrl = `${trimTrailingSlash(authorizationServer)}/.well-known/oauth-authorization-server`;
@@ -285,7 +299,8 @@ async function resolveOAuthClient(discovery) {
     };
   }
 
-  const registrationEndpoint = discovery.authorizationServerMetadata.registration_endpoint;
+  const registrationEndpoint =
+    discovery.authorizationServerMetadata.registration_endpoint;
   if (!settings.dynamicRegistration || !registrationEndpoint) {
     throw new Error(
       [
@@ -297,7 +312,8 @@ async function resolveOAuthClient(discovery) {
   }
 
   const cacheKey = [
-    discovery.authorizationServerMetadata.issuer ?? discovery.authorizationServer,
+    discovery.authorizationServerMetadata.issuer ??
+      discovery.authorizationServer,
     callbackUrl(),
     settings.resourceUrl,
     settings.scope,
@@ -325,14 +341,18 @@ async function resolveOAuthClient(discovery) {
   }
 
   if (!response.ok) {
-    const error = new Error(`Dynamic Client Registration failed with HTTP ${response.status}`);
+    const error = new Error(
+      `Dynamic Client Registration failed with HTTP ${response.status}`,
+    );
     error.statusCode = response.status;
     error.payload = registrationResponse;
     throw error;
   }
 
   if (!registrationResponse.client_id) {
-    throw new Error('Dynamic Client Registration response did not include client_id.');
+    throw new Error(
+      'Dynamic Client Registration response did not include client_id.',
+    );
   }
 
   const client = {
@@ -353,7 +373,9 @@ async function resolveOAuthClient(discovery) {
 function authorizationUrl(discovery, client, state, codeChallenge) {
   const endpoint = discovery.authorizationServerMetadata.authorization_endpoint;
   if (!endpoint) {
-    throw new Error('Authorization server metadata did not include authorization_endpoint.');
+    throw new Error(
+      'Authorization server metadata did not include authorization_endpoint.',
+    );
   }
 
   const url = new URL(endpoint);
@@ -368,10 +390,17 @@ function authorizationUrl(discovery, client, state, codeChallenge) {
   return url.toString();
 }
 
-async function exchangeAuthorizationCode(discovery, client, code, codeVerifier) {
+async function exchangeAuthorizationCode(
+  discovery,
+  client,
+  code,
+  codeVerifier,
+) {
   const endpoint = discovery.authorizationServerMetadata.token_endpoint;
   if (!endpoint) {
-    throw new Error('Authorization server metadata did not include token_endpoint.');
+    throw new Error(
+      'Authorization server metadata did not include token_endpoint.',
+    );
   }
 
   const body = new URLSearchParams({
@@ -404,7 +433,9 @@ async function exchangeAuthorizationCode(discovery, client, code, codeVerifier) 
   }
 
   if (!response.ok) {
-    const error = new Error(`Token exchange failed with HTTP ${response.status}`);
+    const error = new Error(
+      `Token exchange failed with HTTP ${response.status}`,
+    );
     error.statusCode = response.status;
     error.payload = payload;
     throw error;
@@ -447,7 +478,9 @@ async function refreshToken(discovery, client, tokenResponse) {
   }
 
   if (!response.ok) {
-    const error = new Error(`Refresh token exchange failed with HTTP ${response.status}`);
+    const error = new Error(
+      `Refresh token exchange failed with HTTP ${response.status}`,
+    );
     error.statusCode = response.status;
     error.payload = payload;
     throw error;
@@ -463,11 +496,15 @@ function applyClientAuthentication(headers, body, client) {
   }
 
   if (!client.client_secret) {
-    throw new Error(`Client authentication method ${method} requires a client_secret.`);
+    throw new Error(
+      `Client authentication method ${method} requires a client_secret.`,
+    );
   }
 
   if (method === 'client_secret_basic') {
-    const credentials = Buffer.from(`${client.client_id}:${client.client_secret}`).toString('base64');
+    const credentials = Buffer.from(
+      `${client.client_id}:${client.client_secret}`,
+    ).toString('base64');
     headers.Authorization = `Basic ${credentials}`;
     return;
   }
@@ -477,7 +514,9 @@ function applyClientAuthentication(headers, body, client) {
     return;
   }
 
-  throw new Error(`Unsupported token endpoint authentication method: ${method}`);
+  throw new Error(
+    `Unsupported token endpoint authentication method: ${method}`,
+  );
 }
 
 function decodeJwtPayload(token) {
@@ -486,7 +525,9 @@ function decodeJwtPayload(token) {
   }
 
   try {
-    return JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'));
+    return JSON.parse(
+      Buffer.from(token.split('.')[1], 'base64url').toString('utf8'),
+    );
   } catch {
     return undefined;
   }
@@ -840,13 +881,19 @@ function page(session) {
 
         <div class="panel wide">
           <h2>Output</h2>
-          <pre id="output">${escapeHtml(JSON.stringify({
-            settings: visibleSettings(),
-            client: redactedClient(session.client),
-            token: redactedTokenResponse(session.tokenResponse),
-            token_payload: tokenPayload,
-            last_error: session.lastError,
-          }, null, 2))}</pre>
+          <pre id="output">${escapeHtml(
+            JSON.stringify(
+              {
+                settings: visibleSettings(),
+                client: redactedClient(session.client),
+                token: redactedTokenResponse(session.tokenResponse),
+                token_payload: tokenPayload,
+                last_error: session.lastError,
+              },
+              null,
+              2,
+            ),
+          )}</pre>
         </div>
       </section>
     </main>
@@ -967,9 +1014,14 @@ async function handleCallback(url, res, session) {
     throw new Error('OAuth state expired.');
   }
 
-  const discovery = session.discovery ?? await discoverOAuthMetadata();
-  const client = session.client ?? await resolveOAuthClient(discovery);
-  const tokenResponse = await exchangeAuthorizationCode(discovery, client, code, pending.codeVerifier);
+  const discovery = session.discovery ?? (await discoverOAuthMetadata());
+  const client = session.client ?? (await resolveOAuthClient(discovery));
+  const tokenResponse = await exchangeAuthorizationCode(
+    discovery,
+    client,
+    code,
+    pending.codeVerifier,
+  );
 
   session.discovery = discovery;
   session.client = client;
@@ -979,16 +1031,21 @@ async function handleCallback(url, res, session) {
 }
 
 async function handleRefresh(res, session) {
-  const discovery = session.discovery ?? await discoverOAuthMetadata();
-  const client = session.client ?? await resolveOAuthClient(discovery);
-  const tokenResponse = await refreshToken(discovery, client, session.tokenResponse);
+  const discovery = session.discovery ?? (await discoverOAuthMetadata());
+  const client = session.client ?? (await resolveOAuthClient(discovery));
+  const tokenResponse = await refreshToken(
+    discovery,
+    client,
+    session.tokenResponse,
+  );
 
   session.discovery = discovery;
   session.client = client;
   session.tokenResponse = {
     ...session.tokenResponse,
     ...tokenResponse,
-    refresh_token: tokenResponse.refresh_token ?? session.tokenResponse?.refresh_token,
+    refresh_token:
+      tokenResponse.refresh_token ?? session.tokenResponse?.refresh_token,
   };
   sendJson(res, 200, {
     token: redactedTokenResponse(session.tokenResponse),
@@ -1073,7 +1130,9 @@ async function route(req, res) {
       payload: error.payload,
     };
     session.lastError = payload;
-    console.error(JSON.stringify({ event: 'oauth_test_client.error', ...payload }));
+    console.error(
+      JSON.stringify({ event: 'oauth_test_client.error', ...payload }),
+    );
 
     if (req.headers.accept?.includes('text/html')) {
       session.messages.push(error.message);
