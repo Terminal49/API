@@ -9,7 +9,10 @@
   ],
   "type": "module",
   "scripts": {
+    "agent-verify": "node bin/agent-verify.mjs",
+    "agent-verify:quick": "node bin/agent-verify.mjs --quick",
     "build": "npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp && npm run build --workspace @terminal49/cli",
+    "check:agent-trust": "node bin/check-agent-trust.mjs && node bin/check-openapi-types.mjs",
     "check": "vp check && npm run build --workspace @terminal49/sdk && npm run type-check:api && vp run -r type-check",
     "format": "vp fmt --write api packages sdks",
     "lint:api": "vp lint api && vp fmt --check api",
