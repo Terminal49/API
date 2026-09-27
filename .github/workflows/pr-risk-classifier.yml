@@ -1,0 +1,118 @@
+name: PR Risk Classifier
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled, unlabeled, ready_for_review]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: pr-risk-classifier-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  classify:
+    name: Classify path risk
+    runs-on: ${{ (startsWith(vars.CI_RUNNER_SMALL, 'blacksmith-') && vars.CI_RUNNER_SMALL) || 'blacksmith-2vcpu-ubuntu-2404' }}
+    steps:
+      # pull_request_target has write permissions. Only execute the trusted
+      # default-branch classifier, never code from the pull request.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Collect changed paths
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('node:fs');
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              per_page: 100,
+            });
+            fs.writeFileSync(
+              '/tmp/pr-files.json',
+              JSON.stringify(files.map((file) => file.filename)),
+            );
+
+      - name: Classify changed paths
+        id: risk
+        run: node scripts/ci/classify-pr-risk.mjs --json /tmp/pr-files.json --github-output >> "$GITHUB_OUTPUT"
+
+      - name: Apply the authoritative path label
+        uses: actions/github-script@v8
+        env:
+          CLASSIFIED_RISK: ${{ steps.risk.outputs.risk }}
+        with:
+          script: |
+            const definitions = {
+              low: {
+                color: '2DA44E',
+                description: 'Path policy: low-risk documentation-only change',
+              },
+              medium: {
+                color: 'BF8700',
+                description: 'Path policy: human review required',
+              },
+              high: {
+                color: 'CF222E',
+                description: 'Path policy: current-head write approval required',
+              },
+            };
+            for (const [risk, definition] of Object.entries(definitions)) {
+              const name = `risk:${risk}`;
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                  ...definition,
+                });
+              }
+            }
+
+            const current = context.payload.pull_request.labels.map(
+              (label) => label.name,
+            );
+            const classified = process.env.CLASSIFIED_RISK;
+            const target = current.includes('risk:high') ? 'high' : classified;
+            const allRiskLabels = Object.keys(definitions).map(
+              (risk) => `risk:${risk}`,
+            );
+
+            for (const label of allRiskLabels) {
+              if (label === `risk:${target}` || !current.includes(label)) continue;
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: label,
+              });
+            }
+            if (!current.includes(`risk:${target}`)) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: [`risk:${target}`],
+              });
+            }
+
+            core.notice(
+              target === classified
+                ? `Applied risk:${target}`
+                : `Preserved the existing risk:high promotion (path result: risk:${classified})`,
+            );
