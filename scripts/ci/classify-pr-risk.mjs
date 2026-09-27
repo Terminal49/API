@@ -20,6 +20,15 @@ const SDK_PUBLIC_SURFACE_FILES = new Set([
   'sdks/typescript-sdk/src/index.ts',
 ]);
 
+const SDK_PUBLIC_SURFACE_PREFIXES = [
+  'sdks/typescript-sdk/src/client/jsonapi.',
+  'sdks/typescript-sdk/src/client/managers/',
+  'sdks/typescript-sdk/src/client/mappers.',
+  'sdks/typescript-sdk/src/client/transport.',
+  'sdks/typescript-sdk/src/generated/',
+  'sdks/typescript-sdk/src/types/',
+];
+
 const AGENT_TRUST_FILES = new Set([
   '.cursor/rules/agent-trust.mdc',
   'bin/agent-verify.mjs',
@@ -41,6 +50,7 @@ export function classifyPath(filePath) {
     path.startsWith('skills/agent-trust/') ||
     ROOT_HIGH_RISK_FILES.has(path) ||
     SDK_PUBLIC_SURFACE_FILES.has(path) ||
+    SDK_PUBLIC_SURFACE_PREFIXES.some((prefix) => path.startsWith(prefix)) ||
     AGENT_TRUST_FILES.has(path) ||
     path === 'docs/openapi.json'
   ) {
@@ -86,7 +96,10 @@ async function readPaths(args) {
       throw new Error('--json requires a file path');
     }
     const value = JSON.parse(await readFile(jsonPath, 'utf8'));
-    if (!Array.isArray(value) || value.some((path) => typeof path !== 'string')) {
+    if (
+      !Array.isArray(value) ||
+      value.some((path) => typeof path !== 'string')
+    ) {
       throw new Error('The JSON input must be an array of file paths');
     }
     return value;

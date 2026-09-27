@@ -1,14 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import {
-  classifyPath,
-  classifyPaths,
-} from './classify-pr-risk.mjs';
-import {
-  heuristicShadowRisk,
-  mapJevScore,
-} from './score-shadow-risk.mjs';
+import { classifyPath, classifyPaths } from './classify-pr-risk.mjs';
+import { heuristicShadowRisk, mapJevScore } from './score-shadow-risk.mjs';
 
 test('classifies repository control planes and public runtime surfaces as high', () => {
   const highRiskPaths = [
@@ -20,6 +14,9 @@ test('classifies repository control planes and public runtime surfaces as high',
     'packages/mcp/src/server.ts',
     'sdks/typescript-sdk/package.json',
     'sdks/typescript-sdk/src/index.ts',
+    'sdks/typescript-sdk/src/generated/terminal49.ts',
+    'sdks/typescript-sdk/src/types/models.ts',
+    'sdks/typescript-sdk/src/client/managers/containers.ts',
     'scripts/ci/classify-pr-risk.mjs',
     'skills/agent-trust/feature-map.json',
     'bin/agent-verify.mjs',
@@ -33,14 +30,20 @@ test('classifies repository control planes and public runtime surfaces as high',
 });
 
 test('classifies pure docs as low but capability docs conservatively', () => {
-  assert.equal(classifyPath('docs/api-docs/in-depth-guides/routing.mdx'), 'low');
+  assert.equal(
+    classifyPath('docs/api-docs/in-depth-guides/routing.mdx'),
+    'low',
+  );
   assert.equal(classifyPath('docs/updates/home.mdx'), 'low');
   assert.equal(classifyPath('docs/mcp/home.mdx'), 'medium');
   assert.equal(classifyPath('docs/sdk/quickstart.mdx'), 'medium');
 });
 
 test('classifies unrecognized paths as medium', () => {
-  assert.equal(classifyPath('sdks/typescript-sdk/src/client/query.ts'), 'medium');
+  assert.equal(
+    classifyPath('sdks/typescript-sdk/src/client/query.ts'),
+    'medium',
+  );
   assert.equal(classifyPath('README.md'), 'medium');
   assert.equal(classifyPath('packages/new-package/src/index.ts'), 'medium');
 });
