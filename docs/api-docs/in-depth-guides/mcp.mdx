@@ -219,8 +219,8 @@ T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio 2>&1 | head -20
 |------|-------------|------------|
 | `search_container` | Find containers by number, BL, booking, or ref | `query: string` |
 | `track_container` | Start tracking a container | `number`, `numberType?`, `scac?`, `refNumbers?` |
-| `get_container` | Get container with optional includes | `id: uuid`, `include?: ['shipment', 'pod_terminal', 'transport_events']` |
-| `get_shipment_details` | Get shipment and containers | `id: uuid`, `include_containers?: boolean` |
+| `get_container` | Get container with optional includes | `id: uuid`, `include?: ['shipment', 'pod_terminal', 'transport_events', 'custom_fields']` |
+| `get_shipment_details` | Get shipment and containers | `id: uuid`, `include_containers?: boolean`, `include_custom_fields?: boolean` |
 | `get_container_transport_events` | Get event timeline | `id: uuid` |
 | `get_supported_shipping_lines` | List carriers with SCAC codes | `search?: string` |
 | `get_container_route` | Get multi-leg routing (paid feature) | `id: uuid` |

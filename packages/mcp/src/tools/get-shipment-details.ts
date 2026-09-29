@@ -8,10 +8,12 @@
 
 import { Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
+import { type CustomFieldsResult, loadCustomFields } from './custom-fields.js';
 
 export interface GetShipmentArgs {
   id: string;
   include_containers?: boolean;
+  include_custom_fields?: boolean;
 }
 
 export async function executeGetShipmentDetails(
@@ -32,9 +34,15 @@ export async function executeGetShipmentDetails(
 
   try {
     const includeContainers = args.include_containers !== false;
-    const result = await client.shipments.get(args.id, includeContainers, {
-      format: 'raw',
-    });
+    const includeCustomFields = args.include_custom_fields === true;
+    const [result, customFields] = await Promise.all([
+      client.shipments.get(args.id, includeContainers, { format: 'raw' }),
+      includeCustomFields
+        ? loadCustomFields(() =>
+            client.shipments.customFields(args.id, { format: 'mapped' }),
+          )
+        : Promise.resolve(null),
+    ]);
     const raw = (result as any)?.raw ?? result;
     const duration = Date.now() - startTime;
 
@@ -46,7 +54,7 @@ export async function executeGetShipmentDetails(
       timestamp: new Date().toISOString(),
     });
 
-    return formatShipmentResponse(raw, includeContainers);
+    return formatShipmentResponse(raw, includeContainers, customFields);
   } catch (error) {
     const duration = Date.now() - startTime;
 
@@ -67,6 +75,7 @@ export async function executeGetShipmentDetails(
 function formatShipmentResponse(
   apiResponse: any,
   includeContainers: boolean,
+  customFields: CustomFieldsResult | null,
 ): any {
   const shipment = apiResponse.data?.attributes || {};
   const relationships = apiResponse.data?.relationships || {};
@@ -186,6 +195,10 @@ function formatShipmentResponse(
       voyage_number: shipment.pod_voyage_number,
     },
     containers: containerData,
+    custom_fields: customFields?.custom_fields ?? null,
+    ...(customFields?.custom_fields_note
+      ? { custom_fields_note: customFields.custom_fields_note }
+      : {}),
     tracking: {
       line_tracking_last_attempted_at: shipment.line_tracking_last_attempted_at,
       line_tracking_last_succeeded_at: shipment.line_tracking_last_succeeded_at,
@@ -196,9 +209,12 @@ function formatShipmentResponse(
     created_at: shipment.created_at,
     _metadata: {
       shipment_status: status,
-      includes_loaded: includeContainers
-        ? ['containers', 'ports', 'terminals']
-        : ['ports', 'terminals'],
+      includes_loaded: [
+        ...(includeContainers ? ['containers'] : []),
+        'ports',
+        'terminals',
+        ...(customFields ? ['custom_fields'] : []),
+      ],
     },
   };
 }
