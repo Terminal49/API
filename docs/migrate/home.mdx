@@ -64,7 +64,7 @@ If you have ever had to explain a demurrage invoice to a customer, you already u
 
 <Steps>
   <Step title="Self-serve an API key">
-    Create an account at [app.terminal49.com](https://app.terminal49.com) and generate a key at [app.terminal49.com/developers/api-keys](https://app.terminal49.com/developers/api-keys). The free plan tracks up to 10 active containers, enough for a parity test. Creating tracking requests through the API is immediate; to read tracking data back through the API, ask us to enable the free 7-day API trial (same 10-container limit) via in-app chat or support@terminal49.com.
+    Create an account at [app.terminal49.com](https://app.terminal49.com) and generate a key under [Developers → API Keys](https://app.terminal49.com/developers/api-keys). The free plan lets you create tracking requests through the API for up to 10 active containers. To read and export tracking data and use webhooks, open [Developers](https://app.terminal49.com/developers) and click **Start trial**. The trial lasts 7 days and keeps the same 10-container limit.
   </Step>
   <Step title="Register tracking requests once">
     `POST /v2/tracking_requests` per BOL, booking, or container. We poll the carrier, terminal, and rail sources on your behalf.
