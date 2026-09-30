@@ -235,6 +235,7 @@ Get detailed container information with flexible data loading. Choose what to in
   - `shipment` – routing, BOL, line, ref numbers (lightweight)
   - `pod_terminal` – terminal name, location (lightweight)
   - `transport_events` – adds `events.count`, `events.rail_events_count`, and `events.latest_event`; use `get_container_transport_events` for the full timeline
+  - `custom_fields` – account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)
 
 The response may also include `_metadata` with factual details such as `includes_loaded`.
 
@@ -344,6 +345,7 @@ Get shipment-level information including routing, BOL, and all containers.
 **Parameters**
 - `id` *(uuid, required)* – Terminal49 shipment UUID
 - `include_containers` *(boolean, optional)* – include container list (default: true)
+- `include_custom_fields` *(boolean, optional)* – include account-defined custom fields such as PO number or project manager (default: false; needs a signed-in user, not an API key)
 
 **Good for**
 - "Tell me about this shipment"
