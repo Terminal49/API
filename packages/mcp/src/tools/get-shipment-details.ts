@@ -213,7 +213,9 @@ function formatShipmentResponse(
         ...(includeContainers ? ['containers'] : []),
         'ports',
         'terminals',
-        ...(customFields ? ['custom_fields'] : []),
+        ...(Array.isArray(customFields?.custom_fields)
+          ? ['custom_fields']
+          : []),
       ],
     },
   };

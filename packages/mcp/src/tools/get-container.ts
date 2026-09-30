@@ -240,7 +240,14 @@ function formatContainerResponse(
 
   const importDeadlines = container.import_deadlines || {};
 
-  const metadata = generateMetadata(statusResult, includes);
+  const metadata = generateMetadata(
+    statusResult,
+    includes.filter(
+      (include) =>
+        include !== 'custom_fields' ||
+        Array.isArray(customFields?.custom_fields),
+    ),
+  );
 
   return {
     id: apiResponse.data?.id,

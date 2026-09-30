@@ -7,6 +7,12 @@
  * failing the whole tool call.
  */
 
+import {
+  AuthenticationError,
+  AuthorizationError,
+  FeatureNotEnabledError,
+} from '@terminal49/sdk';
+
 export interface CustomFieldValue {
   name: string | null;
   slug: string;
@@ -21,7 +27,10 @@ export interface CustomFieldsResult {
 }
 
 export const CUSTOM_FIELDS_AUTH_NOTE =
-  'Custom fields need a signed-in Terminal49 user (OAuth). This connector is using an API key, which cannot read them.';
+  'The custom fields request was not authorized. Check the connector sign-in and account permissions. Custom fields require a signed-in Terminal49 user (OAuth).';
+
+export const CUSTOM_FIELDS_FEATURE_NOTE =
+  'Custom fields are not enabled for this account.';
 
 export function formatCustomFields(mapped: unknown): CustomFieldValue[] {
   if (!Array.isArray(mapped)) return [];
@@ -43,7 +52,16 @@ export async function loadCustomFields(
   try {
     return { custom_fields: formatCustomFields(await load()) };
   } catch (error) {
-    if (isAuthError(error)) {
+    if (error instanceof FeatureNotEnabledError) {
+      return {
+        custom_fields: null,
+        custom_fields_note: CUSTOM_FIELDS_FEATURE_NOTE,
+      };
+    }
+    if (
+      error instanceof AuthenticationError ||
+      error instanceof AuthorizationError
+    ) {
       return {
         custom_fields: null,
         custom_fields_note: CUSTOM_FIELDS_AUTH_NOTE,
@@ -51,15 +69,4 @@ export async function loadCustomFields(
     }
     throw error;
   }
-}
-
-function isAuthError(error: unknown): boolean {
-  const candidate = error as { name?: string; status?: number } | null;
-  if (!candidate) return false;
-  if (candidate.status === 401 || candidate.status === 403) return true;
-  return (
-    candidate.name === 'AuthenticationError' ||
-    candidate.name === 'AuthorizationError' ||
-    candidate.name === 'FeatureNotEnabledError'
-  );
 }

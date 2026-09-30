@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 import {
+  AuthenticationError,
+  AuthorizationError,
+  FeatureNotEnabledError,
+} from '@terminal49/sdk';
+import {
   CUSTOM_FIELDS_AUTH_NOTE,
+  CUSTOM_FIELDS_FEATURE_NOTE,
   formatCustomFields,
   loadCustomFields,
 } from './custom-fields.js';
@@ -47,12 +53,23 @@ const shipmentDoc = {
   included: [],
 };
 
-function authError(): Error {
-  const error = new Error('unauthorized') as Error & { status: number };
-  error.name = 'AuthenticationError';
-  error.status = 401;
-  return error;
-}
+const deniedRequests = [
+  {
+    reason: 'invalid or expired credentials',
+    error: new AuthenticationError('Invalid or missing API token'),
+    note: CUSTOM_FIELDS_AUTH_NOTE,
+  },
+  {
+    reason: 'insufficient permissions',
+    error: new AuthorizationError('Access forbidden'),
+    note: CUSTOM_FIELDS_AUTH_NOTE,
+  },
+  {
+    reason: 'a disabled feature',
+    error: new FeatureNotEnabledError('Feature not enabled'),
+    note: CUSTOM_FIELDS_FEATURE_NOTE,
+  },
+];
 
 function fakeClient(customFields: () => Promise<unknown>) {
   return {
@@ -89,14 +106,18 @@ describe('formatCustomFields', () => {
 });
 
 describe('loadCustomFields', () => {
-  it('turns an auth failure into a note instead of an error', async () => {
-    await expect(
-      loadCustomFields(() => Promise.reject(authError())),
-    ).resolves.toEqual({
-      custom_fields: null,
-      custom_fields_note: CUSTOM_FIELDS_AUTH_NOTE,
-    });
-  });
+  it.each(deniedRequests)(
+    'reports $reason without claiming an API-key credential',
+    async ({ error, note }) => {
+      const result = await loadCustomFields(() => Promise.reject(error));
+
+      expect(result).toEqual({
+        custom_fields: null,
+        custom_fields_note: note,
+      });
+      expect(result.custom_fields_note).not.toContain('API key');
+    },
+  );
 
   it('rethrows other failures', async () => {
     await expect(
@@ -141,16 +162,34 @@ describe('get_container custom fields', () => {
     expect(result._metadata.includes_loaded).not.toContain('custom_fields');
   });
 
-  it('reports an API-key credential as a note', async () => {
-    const client = fakeClient(() => Promise.reject(authError()));
+  it.each(deniedRequests)(
+    'keeps container details after $reason without marking fields loaded',
+    async ({ error, note }) => {
+      const client = fakeClient(() => Promise.reject(error));
 
+      const result = await executeGetContainer(
+        { id: 'c-1', include: ['custom_fields'] },
+        client,
+      );
+
+      expect(result.container_number).toBe('CAIU1234567');
+      expect(result.custom_fields).toBeNull();
+      expect(result.custom_fields_note).toBe(note);
+      expect(result._metadata.includes_loaded).toEqual([
+        'shipment',
+        'pod_terminal',
+      ]);
+    },
+  );
+
+  it('marks an empty custom fields response as loaded', async () => {
     const result = await executeGetContainer(
       { id: 'c-1', include: ['custom_fields'] },
-      client,
+      fakeClient(() => Promise.resolve([])),
     );
 
-    expect(result.custom_fields).toBeNull();
-    expect(result.custom_fields_note).toBe(CUSTOM_FIELDS_AUTH_NOTE);
+    expect(result.custom_fields).toEqual([]);
+    expect(result._metadata.includes_loaded).toContain('custom_fields');
   });
 });
 
@@ -187,5 +226,34 @@ describe('get_shipment_details custom fields', () => {
       'ports',
       'terminals',
     ]);
+  });
+
+  it.each(deniedRequests)(
+    'keeps shipment details after $reason without marking fields loaded',
+    async ({ error, note }) => {
+      const result = await executeGetShipmentDetails(
+        { id: 's-1', include_custom_fields: true },
+        fakeClient(() => Promise.reject(error)),
+      );
+
+      expect(result.bill_of_lading).toBe('MAEU123456789');
+      expect(result.custom_fields).toBeNull();
+      expect(result.custom_fields_note).toBe(note);
+      expect(result._metadata.includes_loaded).toEqual([
+        'containers',
+        'ports',
+        'terminals',
+      ]);
+    },
+  );
+
+  it('marks an empty custom fields response as loaded', async () => {
+    const result = await executeGetShipmentDetails(
+      { id: 's-1', include_custom_fields: true },
+      fakeClient(() => Promise.resolve([])),
+    );
+
+    expect(result.custom_fields).toEqual([]);
+    expect(result._metadata.includes_loaded).toContain('custom_fields');
   });
 });
