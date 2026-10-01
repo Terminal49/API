@@ -1512,7 +1512,10 @@ export function createTerminal49McpServer(
       }),
     },
     wrapTool('search_docs', async ({ query, limit }) =>
-      executeSearchDocs({ query, limit }),
+      executeSearchDocs(
+        { query, limit },
+        { assistantApiKey: process.env.MINTLIFY_ASSISTANT_API_KEY },
+      ),
     ),
   );
 
