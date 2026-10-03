@@ -8,6 +8,18 @@
     "category": "BUSINESS"
   },
   "tools": {
+    "query": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Runs a bounded read-only query over the user's account-scoped shipping views.",
+        "open_world_justification": "Reads private Terminal49 account data without changing external systems.",
+        "destructive_justification": "Does not delete or overwrite data."
+      }
+    },
     "search_container": {
       "annotations": {
         "readOnlyHint": true,
