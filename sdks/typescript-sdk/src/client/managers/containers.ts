@@ -1,3 +1,5 @@
+import type { ContainerListFilters } from '../../generated/list-filters.js';
+import { serializeListQuery } from '../filter-validation.js';
 import type { Container } from '../../types/models.js';
 import type {
   CallOptions,
@@ -14,6 +16,7 @@ import {
 import {
   applyTypedPagination,
   buildContainerListQuery,
+  MAX_CONTAINER_PAGE_SIZE,
   normalizeInclude,
 } from '../query.js';
 import { BaseManager } from './base.js';
@@ -54,24 +57,19 @@ export class ContainerManager extends BaseManager {
   }
 
   async list(
-    filters: {
-      status?: string;
-      port?: string;
-      carrier?: string;
-      updatedAfter?: string;
-      include?: IncludeParam<ContainerInclude>;
-    } = {},
+    filters: ContainerListFilters = {},
     options?: ListOptions,
   ): Promise<any> {
     const { query, unsupportedFilters } = buildContainerListQuery(
       filters,
       DEFAULT_CONTAINER_INCLUDES,
     );
-    applyTypedPagination(query, options);
+    applyTypedPagination(query, options, MAX_CONTAINER_PAGE_SIZE);
 
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/containers', {
         params: { query },
+        querySerializer: serializeListQuery,
       }),
     );
     return this.formatResult(raw, options?.format, (doc) => ({
@@ -104,8 +102,11 @@ export class ContainerManager extends BaseManager {
   }
 
   async route(id: string, options?: CallOptions): Promise<any> {
+    // The route path is absent from current OpenAPI, although this SDK already
+    // supports it. Keep the existing client/middleware path while regenerating
+    // types from the actual source, rather than hand-editing generated types.
     const raw = await this.transport.execute(() =>
-      this.transport.client.GET('/containers/{id}/route', {
+      this.transport.client.GET('/containers/{id}/route' as any, {
         params: {
           path: { id },
           query: { include: 'port,vessel,route_location' } as any,
