@@ -24,6 +24,7 @@ import { executeListShipments } from './tools/list-shipments.js';
 import { executeListContainers } from './tools/list-containers.js';
 import { executeListTrackingRequests } from './tools/list-tracking-requests.js';
 import { executeQuery } from './tools/query.js';
+import { executeSearchDocs } from './tools/search-docs.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
 import {
@@ -80,9 +81,9 @@ export const TERMINAL49_SERVER_INSTRUCTIONS = `Terminal49 tracks ocean container
 
 Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered); custom fields = account-defined fields (PO number, project manager, etc.) on containers and shipments, loaded with get_container include ['custom_fields'] or get_shipment_details include_custom_fields.
 
-Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools operate within the user's private Terminal49 account and none delete or overwrite data.
+Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete or overwrite data.
 
-Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use query for account-wide counts, filtered worklists, and aggregates. Read terminal49://docs/mcp-query-guidance for the account-scoped assistant view schema. Use list_containers / list_shipments / list_tracking_requests for simple paginated lists.`;
+Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use query for account-wide counts, filtered worklists, and aggregates. Read terminal49://docs/mcp-query-guidance for the account-scoped assistant view schema. Use list_containers / list_shipments / list_tracking_requests for simple paginated lists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links.`;
 
 type ResponseDisplayColumn = {
   key: string;
@@ -1490,6 +1491,59 @@ export function createTerminal49McpServer(
     },
     wrapTool('query', async ({ sql }) =>
       executeQuery(sql, apiToken, apiBaseUrl, accountId),
+    ),
+  );
+
+  // Tool 12: Search Docs
+  server.registerTool(
+    'search_docs',
+    {
+      title: 'Search Terminal49 Docs',
+      description:
+        'Search the public Terminal49 documentation (terminal49.com/docs): API guides, webhooks, ' +
+        'container statuses, holds and last free day rules, DataSync, the SDK, and this MCP server. ' +
+        'Returns matching sections with title, link, and an excerpt. Use it for how-to and definition ' +
+        'questions, not for account data, and cite the links in the answer.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: true,
+      },
+      inputSchema: z.object({
+        query: z
+          .string()
+          .trim()
+          .min(1)
+          .max(256)
+          .describe(
+            'A short documentation search query (maximum 256 characters), e.g. "webhook retries".',
+          ),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(10)
+          .optional()
+          .describe('Maximum results to return (1-10, default 5).'),
+      }),
+      outputSchema: z.object({
+        query: z.string(),
+        total_results: z.number(),
+        results: z.array(
+          z.object({
+            title: z.string(),
+            url: z.string(),
+            page: z.string(),
+            content: z.string(),
+          }),
+        ),
+      }),
+    },
+    wrapTool('search_docs', async ({ query, limit }) =>
+      executeSearchDocs(
+        { query, limit },
+        { assistantApiKey: process.env.MINTLIFY_ASSISTANT_API_KEY },
+      ),
     ),
   );
 
