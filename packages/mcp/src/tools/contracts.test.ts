@@ -1110,6 +1110,7 @@ describe('MCP tool contracts', () => {
 
     expect(list).toHaveBeenCalledWith(
       {
+        actively_tracked: true,
         include: ['shipment', 'pod_terminal'],
       },
       { format: 'mapped', page: 1, pageSize: 25 },
@@ -1132,6 +1133,7 @@ describe('MCP tool contracts', () => {
 
     expect(list).toHaveBeenCalledWith(
       {
+        actively_tracked: true,
         include: undefined,
       },
       { format: 'mapped', page: 1, pageSize: 10 },

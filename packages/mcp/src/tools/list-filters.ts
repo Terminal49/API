@@ -46,6 +46,12 @@ export const shipmentListInputSchema = z.strictObject({
       'All confirmed public shipment filters. Supply a filter here or at the top level, never both. Different filters combine with AND; consult each field for array semantics. IDs must come from account-visible resources.',
     )
     .optional(),
+  include_stopped_tracking: z
+    .boolean()
+    .describe(
+      'Default false: like the dashboard, results include only records whose tracking is still active. Set true for history questions (pickups, dwell or arrivals over a past period) or when the user asks about stopped tracking. Ignored when actively_tracked is set.',
+    )
+    .default(false),
   sort: shipmentSortSchema,
   include_containers: z
     .boolean()
@@ -73,6 +79,12 @@ export const containerListInputSchema = z.strictObject({
       'All confirmed public container filters. Supply a filter here or at the top level, never both. Different filters combine with AND; consult each field for array semantics. Dynamic IDs and carrier codes must come from visible resources.',
     )
     .optional(),
+  include_stopped_tracking: z
+    .boolean()
+    .describe(
+      'Default false: like the dashboard, results include only records whose tracking is still active. Set true for history questions (pickups, dwell or arrivals over a past period) or when the user asks about stopped tracking. Ignored when actively_tracked is set.',
+    )
+    .default(false),
   sort: containerSortSchema,
   include: z
     .array(z.enum(['shipment', 'pod_terminal']))
@@ -103,13 +115,25 @@ function canonicalFilters(
   }
   return result;
 }
+// The dashboard always limits worklists to actively tracked records, so the
+// list tools do too unless the caller sets actively_tracked or asks for history.
+function withTrackingDefault(
+  filters: Record<string, unknown>,
+  includeStopped: boolean | undefined,
+): Record<string, unknown> {
+  if (
+    filters.actively_tracked !== undefined ||
+    filters.tracking_stopped !== undefined ||
+    includeStopped
+  )
+    return filters;
+  return { ...filters, actively_tracked: true };
+}
 export function getShipmentFilters(
   args: ListShipmentsArgs,
 ): ShipmentListFilters {
-  const filters = canonicalFilters(
-    shipmentListInputSchema.parse(args),
-    SHIPMENT_FILTER_KEYS,
-  );
+  const parsed = shipmentListInputSchema.parse(args);
+  const filters = canonicalFilters(parsed, SHIPMENT_FILTER_KEYS);
   if (filters.tag !== undefined && filters.tags !== undefined) {
     throw new ValidationError(
       'Invalid list filter "tag": tag and tags are aliases; supply only one.',
@@ -117,14 +141,18 @@ export function getShipmentFilters(
       { filter: 'tag' },
     );
   }
-  return filters as ShipmentListFilters;
+  return withTrackingDefault(
+    filters,
+    parsed.include_stopped_tracking,
+  ) as ShipmentListFilters;
 }
 export function getContainerFilters(
   args: ListContainersArgs,
 ): ContainerListFilters {
-  return canonicalFilters(
-    containerListInputSchema.parse(args),
-    CONTAINER_FILTER_KEYS,
+  const parsed = containerListInputSchema.parse(args);
+  return withTrackingDefault(
+    canonicalFilters(parsed, CONTAINER_FILTER_KEYS),
+    parsed.include_stopped_tracking,
   ) as ContainerListFilters;
 }
 
