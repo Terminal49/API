@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { existsSync, globSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -26,19 +27,6 @@ function assertEqual(label, actual, expected) {
       `${label} drifted.\nExpected: ${expectedJson}\nActual:   ${actualJson}`,
     );
   }
-}
-
-function collectFiles(directory) {
-  const files = [];
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...collectFiles(path));
-    } else {
-      files.push(path);
-    }
-  }
-  return files;
 }
 
 function collectStrings(value) {
@@ -147,11 +135,12 @@ function checkToolchain() {
   const rootPackage = readJson('package.json');
   const vitePlusPackage = readJson('node_modules/vite-plus/package.json');
   const expected = vitePlusPackage.dependencies;
-  const workspaces = [
-    'packages/mcp/package.json',
-    'sdks/typescript-sdk/package.json',
-    'sdks/typescript-sdk-cli/package.json',
-  ];
+  const workspaces = sorted(
+    globSync(
+      rootPackage.workspaces.map((workspace) => `${workspace}/package.json`),
+      { cwd: root },
+    ),
+  );
 
   if (rootPackage.devDependencies['vite-plus'] !== vitePlusPackage.version) {
     throw new Error(
@@ -188,10 +177,25 @@ function checkToolchain() {
 }
 
 function checkConfigOwnership() {
-  const nestedConfigs = ['packages', 'sdks']
-    .flatMap((directory) => collectFiles(resolve(root, directory)))
-    .filter((path) => /(?:^|\/)vite\.config\.[cm]?[jt]s$/.test(path))
-    .map((path) => relative(root, path));
+  const sourceFiles = execFileSync(
+    'git',
+    [
+      'ls-files',
+      '-z',
+      '--cached',
+      '--others',
+      '--exclude-standard',
+      '--',
+      'packages',
+      'sdks',
+    ],
+    { cwd: root, encoding: 'utf8' },
+  ).split('\0');
+  const nestedConfigs = sorted(
+    sourceFiles.filter((path) =>
+      /(?:^|\/)vite\.config\.[cm]?[jt]s$/.test(path),
+    ),
+  );
   if (nestedConfigs.length > 0) {
     throw new Error(
       `Workspace Vite configs are not allowed: ${nestedConfigs.join(', ')}`,
