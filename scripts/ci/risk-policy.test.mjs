@@ -127,3 +127,58 @@ test('publicly re-exported SDK errors have high risk and explicit ownership', as
   );
   assert.ok(owners.split('\n').some((line) => line.startsWith(`/${path} `)));
 });
+
+test('shadow labels converge from current GitHub state rather than queued event labels', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const source = await readFile(
+    new URL('../../.github/workflows/shadow-risk.yml', import.meta.url),
+    'utf8',
+  );
+  const step = source.split(
+    '- name: Apply shadow label and sticky comparison',
+  )[1];
+  const block = step
+    .split('          script: |\n')[1]
+    .split('\n      - name:')[0];
+  const script = block
+    .split('\n')
+    .map((line) => (line.startsWith('            ') ? line.slice(12) : line))
+    .join('\n');
+  const changes = [];
+  const github = {
+    paginate: async (endpoint) =>
+      endpoint === 'labels' ? [{ name: 'risk-shadow:high' }] : [],
+    rest: {
+      issues: {
+        getLabel: async () => ({}),
+        listLabelsOnIssue: 'labels',
+        listComments: 'comments',
+        removeLabel: async (args) => changes.push(['remove', args.name]),
+        addLabels: async (args) => changes.push(['add', args.labels]),
+        createComment: async () => ({}),
+      },
+    },
+  };
+  const context = {
+    repo: { owner: 'Terminal49', repo: 'API' },
+    payload: {
+      pull_request: { number: 10, labels: [{ name: 'risk-shadow:low' }] },
+    },
+  };
+  const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+  await new AsyncFunction('github', 'context', 'process', script)(
+    github,
+    context,
+    {
+      env: {
+        SHADOW_RISK: 'low',
+        PATH_RISK: 'low',
+        SHADOW_SOURCE: 'heuristic fallback',
+      },
+    },
+  );
+  assert.deepEqual(changes, [
+    ['remove', 'risk-shadow:high'],
+    ['add', ['risk-shadow:low']],
+  ]);
+});

@@ -134,7 +134,15 @@ jobs:
             }
 
             const pull = context.payload.pull_request;
-            const labels = pull.labels.map((label) => label.name);
+            const labels = (await github.paginate(
+              github.rest.issues.listLabelsOnIssue,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pull.number,
+                per_page: 100,
+              },
+            )).map((label) => label.name);
             for (const risk of Object.keys(definitions)) {
               const label = `risk-shadow:${risk}`;
               if (risk === shadow || !labels.includes(label)) continue;
