@@ -1,3 +1,8 @@
+---
+title: "Install the PR trust policy safely"
+description: "Install advisory policy, configure native reviews, and verify the merge boundary."
+---
+
 # Install the PR trust policy safely
 
 Use this guide to install the advisory policy and retain human review as the

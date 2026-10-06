@@ -1,3 +1,8 @@
+---
+title: "Verify the policy on GitHub before activation"
+description: "Run controlled PR probes to verify source identity, approval revocation, and merge enforcement."
+---
+
 # Verify the policy on GitHub before activation
 
 Use this trial to test real GitHub behavior after the reviewed controller is
