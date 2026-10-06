@@ -114,7 +114,9 @@ function dateExpression(
   datetime: boolean,
 ): { operator: string; time?: number } {
   if (PRESENCE.has(expression)) return { operator: expression };
-  const match = /^(>=|<=|>|<|=)?(.+)$/.exec(expression)!;
+  const match = /^(>=|<=|>|<|=)?(.+)$/.exec(expression);
+  if (!match || match[0] !== expression)
+    invalid(key, 'expected a supported date expression without line breaks');
   const operator = match[1] || '=';
   const literals = datetime ? [match[2]] : match[2].split(',');
   if (literals.length > 1 && match[1])
@@ -222,6 +224,16 @@ function validateString(
       invalid(
         key,
         'arrays combine exact values with AND; use a comma-separated string for OR',
+      );
+  }
+}
+
+function validateLiteralScope(key: string, input: unknown): void {
+  for (const term of values(key, input).flatMap((v) => v.split(','))) {
+    if (!term.trim() || !/^[a-zA-Z0-9_\-.\s&]+$/.test(term))
+      invalid(
+        key,
+        'expected literal identifiers without operators or presence checks',
       );
   }
 }
@@ -355,8 +367,12 @@ export function buildFilterQuery(
           invalid(key, 'expected nonempty search text');
         if (
           entity === 'container' &&
-          !value.includes(',') &&
-          !/^(?:~|=)?[a-zA-Z0-9_\-.\s&]+$/.test(value)
+          value
+            .split(',')
+            .some(
+              (term) =>
+                !term.trim() || !/^(?:~|=)?[a-zA-Z0-9_\-.\s&]+$/.test(term),
+            )
         )
           invalid(
             key,
@@ -377,7 +393,7 @@ export function buildFilterQuery(
         if (
           !Array.isArray(value) ||
           value.length !== 2 ||
-          !value.every(
+          ![...value].every(
             (v) =>
               typeof v === 'string' && (validDay(v) || RELATIVE_DAY.test(v)),
           )
@@ -429,15 +445,8 @@ export function buildFilterQuery(
         }
         break;
       default:
-        if (
-          entity === 'shipment' &&
-          SHIPMENT_VALUE_SCOPES.has(key) &&
-          values(key, value).some((v) => v.startsWith('@'))
-        )
-          invalid(
-            key,
-            'presence checks are not supported by this identifier scope',
-          );
+        if (entity === 'shipment' && SHIPMENT_VALUE_SCOPES.has(key))
+          validateLiteralScope(key, value);
         if (key === 'search_by_owner_id' && Array.isArray(value))
           invalid(key, 'use comma-separated user IDs, not an array');
         validateString(

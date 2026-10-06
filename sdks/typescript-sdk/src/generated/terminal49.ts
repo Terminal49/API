@@ -1538,7 +1538,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            type: "account";
+            type: "container";
             attributes: {
                 number?: string;
                 ref_numbers?: string[];
@@ -3083,6 +3083,8 @@ export interface operations {
                  * @example containers,port_of_discharge
                  */
                 include?: string;
+                /** @description Set to `true` to add the `party_roles` relationship to each shipment. Add `include=party_roles.party` to embed the roles and their parties. */
+                "flag[parties]"?: boolean;
                 /**
                  * @description Compatibility alias for filter[number]. Exact shipment number, including punctuation; not a partial container-number search. Nested filter[number] takes precedence.
                  * @example TEST-BOL-1

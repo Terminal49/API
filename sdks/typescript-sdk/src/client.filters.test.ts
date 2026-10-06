@@ -92,6 +92,37 @@ describe('every confirmed filter reaches the API with its documented wire key', 
 });
 
 describe('request serialization and collection results', () => {
+  it('preserves valid comma searches without changing backend search semantics', async () => {
+    const { client, urls } = clientFixture();
+    await client.containers.list({
+      search_by_number: 'MSCU,~TCLU',
+      search_by_shipment_number: 'BOL1,BOL2',
+    });
+    expect(urls[0].searchParams.get('filter[search_by_number]')).toBe(
+      'MSCU,~TCLU',
+    );
+    expect(urls[0].searchParams.get('filter[search_by_shipment_number]')).toBe(
+      'BOL1,BOL2',
+    );
+  });
+  it('preserves literal shipment scope alternatives', async () => {
+    const { client, urls } = clientFixture();
+    await client.shipments.list({
+      pod_code: 'USLAX,USNYC',
+      pol_code: ['CNSHA', 'CNNGB'],
+      owner_id:
+        '00000000-0000-4000-8000-000000000001,00000000-0000-4000-8000-000000000002',
+    });
+    expect(urls[0].searchParams.get('filter[pod_code]')).toBe('USLAX,USNYC');
+    expect(urls[0].searchParams.getAll('filter[pol_code][]')).toEqual([
+      'CNSHA',
+      'CNNGB',
+    ]);
+    expect(urls[0].searchParams.get('filter[owner_id]')).toBe(
+      '00000000-0000-4000-8000-000000000001,00000000-0000-4000-8000-000000000002',
+    );
+  });
+
   it('preserves customer account/party ID AND terms without assuming distinct IDs cannot identify the same customer', async () => {
     const { client, urls } = clientFixture();
     const ids = [
@@ -262,6 +293,20 @@ describe('invalid queries fail before any network request', () => {
     ['inherited key', { constructor: 'not-a-filter' }],
     ['invalid identifier', { customer_id: 'not-a-uuid' }],
     ['invalid text search', { search_by_number: '>2026-10-05' }],
+    ['comparison in comma search', { search_by_number: 'MSCU,>2026-10-05' }],
+    ['empty comma search term', { search_by_number: 'MSCU,' }],
+    ['unsupported comma search punctuation', { search_by_ids: 'MSCU,A/B' }],
+    ['presence in comma search', { search_by_ref_numbers: 'REF,@exists' }],
+    ['sparse LFD range', { last_free_day_on: Array(2) }],
+    [
+      'missing first LFD date',
+      { last_free_day_on: Object.assign(Array(2), { 1: '2026-10-05' }) },
+    ],
+    [
+      'missing last LFD date',
+      { last_free_day_on: Object.assign(Array(2), { 0: '2026-10-01' }) },
+    ],
+    ['newline date expression', { created_at: '2026-10-01\n2026-10-02' }],
     ['invented status', { current_status: 'in_transit' }],
     ['string boolean', { has_holds: 'false' }],
     ['non-finite date', { created_at: '2026-02-30' }],
@@ -305,6 +350,7 @@ describe('invalid queries fail before any network request', () => {
     ['unsupported carrier', { carrier: 'MAEU' }],
     ['missing timestamp offset', { created_at: '2026-10-01T00:00:00' }],
     ['relative timestamp', { created_at: '>=3.days.ago' }],
+    ['trailing newline timestamp', { created_at: '2026-10-01T00:00:00Z\n' }],
     ['false arriving selector', { arriving_today: false }],
     [
       'conflicting tracking state',
@@ -336,6 +382,18 @@ describe('invalid queries fail before any network request', () => {
       },
     ],
     ['scope presence unsupported', { pod_code: '@exists' }],
+    ['scope equality unsupported', { pod_code: '=USLAX' }],
+    ['scope array equality unsupported', { pol_code: ['=USLAX', 'USNYC'] }],
+    ['scope comma presence unsupported', { pod_code: 'USLAX,@exists' }],
+    ['scope comma absence unsupported', { pol_code: 'USLAX,@not_exists' }],
+    [
+      'owner scope equality unsupported',
+      { owner_id: '=00000000-0000-4000-8000-000000000001' },
+    ],
+    [
+      'newline timestamp expression',
+      { created_at: '2026-10-01T00:00:00Z\n2026-10-02T00:00:00Z' },
+    ],
   ];
   for (const [name, filters] of invalidShipments)
     it(`shipment: ${name}`, async () => {
