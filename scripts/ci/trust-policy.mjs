@@ -87,7 +87,11 @@ export function evaluateVerification(snapshot) {
   if (
     workflow.path !== CI_WORKFLOW ||
     run.workflow_id !== workflow.id ||
-    run.path !== CI_WORKFLOW ||
+    !(
+      run.path === CI_WORKFLOW ||
+      (run.path?.startsWith(`${CI_WORKFLOW}@`) &&
+        run.path.length > CI_WORKFLOW.length + 1)
+    ) ||
     run.repository?.full_name !== snapshot.repository ||
     run.head_repository?.full_name !== snapshot.headRepository ||
     run.event !== 'pull_request' ||

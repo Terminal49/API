@@ -19,6 +19,7 @@
 /sdks/typescript-sdk/src/client.ts @dodeja @SylvainGravejat
 /sdks/typescript-sdk/src/index.ts @dodeja @SylvainGravejat
 /sdks/typescript-sdk/src/client/jsonapi.ts @dodeja @SylvainGravejat
+/sdks/typescript-sdk/src/client/errors.ts @dodeja @SylvainGravejat
 /sdks/typescript-sdk/src/client/managers/ @dodeja @SylvainGravejat
 /sdks/typescript-sdk/src/client/mappers.ts @dodeja @SylvainGravejat
 /sdks/typescript-sdk/src/client/transport.ts @dodeja @SylvainGravejat

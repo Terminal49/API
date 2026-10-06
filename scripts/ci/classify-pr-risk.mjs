@@ -21,6 +21,7 @@ const SDK_PUBLIC_SURFACE_FILES = new Set([
 
 const SDK_PUBLIC_SURFACE_PREFIXES = [
   'sdks/typescript-sdk/src/client/jsonapi.',
+  'sdks/typescript-sdk/src/client/errors.',
   'sdks/typescript-sdk/src/client/managers/',
   'sdks/typescript-sdk/src/client/mappers.',
   'sdks/typescript-sdk/src/client/transport.',

@@ -627,3 +627,18 @@ test('CI attempts with tied activity timestamps are ambiguous rather than succes
     /CI run attempt freshness is ambiguous/,
   );
 });
+
+test('CI workflow run paths may include the documented ref qualifier', () => {
+  for (const path of [
+    CI_WORKFLOW,
+    `${CI_WORKFLOW}@main`,
+    `${CI_WORKFLOW}@refs/pull/10/merge`,
+  ]) {
+    const value = snapshot();
+    value.ci.run.path = path;
+    assert.equal(evaluateTrust(value).verification.passed, true);
+  }
+  const value = snapshot();
+  value.ci.run.path = '.github/workflows/fake.yml@main';
+  assert.equal(evaluateTrust(value).verification.passed, false);
+});

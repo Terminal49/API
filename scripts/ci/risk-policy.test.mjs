@@ -116,3 +116,14 @@ test('heuristic shadow scoring stays independent and conservative', () => {
     'high',
   );
 });
+
+test('publicly re-exported SDK errors have high risk and explicit ownership', async () => {
+  const path = 'sdks/typescript-sdk/src/client/errors.ts';
+  assert.equal(classifyPath(path), 'high');
+  const { readFile } = await import('node:fs/promises');
+  const owners = await readFile(
+    new URL('../../.github/CODEOWNERS', import.meta.url),
+    'utf8',
+  );
+  assert.ok(owners.split('\n').some((line) => line.startsWith(`/${path} `)));
+});
