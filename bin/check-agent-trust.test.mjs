@@ -1,4 +1,15 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { checkSdkEntrypoints } from './check-agent-trust.mjs';
 
@@ -186,3 +197,167 @@ test('rejects SDK source names interpreted as URL encoding, fragments, or querie
     );
   }
 });
+
+function writeJson(repository, path, value) {
+  const destination = join(repository, path);
+  mkdirSync(dirname(destination), { recursive: true });
+  writeFileSync(destination, JSON.stringify(value));
+}
+
+function createGuardRepository(t) {
+  const repository = mkdtempSync(join(tmpdir(), 'agent-trust-guard-'));
+  t.after(() => rmSync(repository, { recursive: true, force: true }));
+  writeJson(repository, 'package.json', {
+    workspaces: ['packages/*', 'sdks/*'],
+    devDependencies: { 'vite-plus': '0.3.3', '@oxlint/plugins': '1.79.0' },
+    overrides: {
+      vite: 'npm:@voidzero-dev/vite-plus-core@0.3.3',
+      vitest: '4.1.11',
+    },
+  });
+  writeJson(repository, 'node_modules/vite-plus/package.json', {
+    version: '0.3.3',
+    dependencies: { '@oxlint/plugins': '=1.79.0', vitest: '4.1.11' },
+  });
+  for (const workspace of [
+    'packages/mcp',
+    'sdks/typescript-sdk',
+    'sdks/typescript-sdk-cli',
+  ]) {
+    writeJson(repository, `${workspace}/package.json`, {
+      devDependencies: {
+        'vite-plus': '0.3.3',
+        '@vitest/coverage-v8': '4.1.11',
+      },
+      exports: {},
+    });
+  }
+  writeJson(repository, 'skills/agent-trust/feature-map.json', {
+    mcpTools: [],
+    sdkEntrypoints: [],
+    docsRoutes: [],
+  });
+  writeJson(repository, 'docs/docs.json', { navigation: {} });
+  mkdirSync(join(repository, 'packages/mcp/src'), { recursive: true });
+  writeFileSync(join(repository, 'packages/mcp/src/server.ts'), '');
+  mkdirSync(join(repository, 'bin'));
+  copyFileSync(
+    new URL('./check-agent-trust.mjs', import.meta.url),
+    join(repository, 'bin/check-agent-trust.mjs'),
+  );
+  copyFileSync(
+    new URL('../.gitignore', import.meta.url),
+    join(repository, '.gitignore'),
+  );
+  const init = spawnSync('git', ['init', '--quiet'], {
+    cwd: repository,
+    encoding: 'utf8',
+  });
+  assert.equal(init.status, 0, init.stderr);
+  return repository;
+}
+
+function runGuard(repository) {
+  return spawnSync(process.execPath, ['bin/check-agent-trust.mjs'], {
+    cwd: repository,
+    encoding: 'utf8',
+  });
+}
+
+test('accepts a new workspace with coupled toolchain versions', (t) => {
+  const repository = createGuardRepository(t);
+  writeJson(repository, 'packages/new-workspace/package.json', {
+    devDependencies: { 'vite-plus': '0.3.3', '@vitest/coverage-v8': '4.1.11' },
+  });
+
+  const result = runGuard(repository);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /PASS agent trust guards/);
+});
+
+for (const [dependency, version, failure] of [
+  [
+    'vite-plus',
+    '0.3.2',
+    /packages\/new-workspace\/package\.json has a mismatched vite-plus version/,
+  ],
+  [
+    '@vitest/coverage-v8',
+    '4.1.10',
+    /packages\/new-workspace\/package\.json has a mismatched Vitest coverage version/,
+  ],
+]) {
+  test(`rejects ${dependency} version drift in a newly added workspace`, (t) => {
+    const repository = createGuardRepository(t);
+    writeJson(repository, 'packages/new-workspace/package.json', {
+      devDependencies: {
+        'vite-plus': '0.3.3',
+        '@vitest/coverage-v8': '4.1.11',
+        [dependency]: version,
+      },
+    });
+
+    const result = runGuard(repository);
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stderr, failure);
+  });
+}
+
+test('discovers workspace globs from the root manifest', (t) => {
+  const repository = createGuardRepository(t);
+  const rootPackage = JSON.parse(
+    readFileSync(join(repository, 'package.json'), 'utf8'),
+  );
+  rootPackage.workspaces.push('extensions/*');
+  writeJson(repository, 'package.json', rootPackage);
+  writeJson(repository, 'extensions/new-workspace/package.json', {
+    devDependencies: { 'vite-plus': '0.3.2', '@vitest/coverage-v8': '4.1.11' },
+  });
+
+  const result = runGuard(repository);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(
+    result.stderr,
+    /extensions\/new-workspace\/package\.json has a mismatched vite-plus version/,
+  );
+});
+
+test('ignores third-party and build-output Vite configs excluded by Git', (t) => {
+  const repository = createGuardRepository(t);
+  for (const path of [
+    'packages/mcp/node_modules/third-party/vite.config.ts',
+    'sdks/typescript-sdk/node_modules/third-party/vite.config.js',
+    'packages/mcp/dist/vite.config.mjs',
+    'sdks/typescript-sdk/dist/vite.config.cjs',
+  ]) {
+    const destination = join(repository, path);
+    mkdirSync(dirname(destination), { recursive: true });
+    writeFileSync(destination, 'export default {};');
+  }
+
+  const result = runGuard(repository);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /PASS agent trust guards/);
+});
+
+for (const tracked of [false, true]) {
+  test(`rejects ${tracked ? 'tracked' : 'untracked'} workspace source Vite config`, (t) => {
+    const repository = createGuardRepository(t);
+    const path = 'packages/mcp/vite.config.ts';
+    writeFileSync(join(repository, path), 'export default {};');
+    if (tracked) {
+      const added = spawnSync('git', ['add', path], {
+        cwd: repository,
+        encoding: 'utf8',
+      });
+      assert.equal(added.status, 0, added.stderr);
+    }
+
+    const result = runGuard(repository);
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(
+      result.stderr,
+      /Workspace Vite configs are not allowed: packages\/mcp\/vite\.config\.ts/,
+    );
+  });
+}
