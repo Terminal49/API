@@ -2,7 +2,7 @@
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, globSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -131,16 +131,22 @@ function checkFeatureMap() {
   }
 }
 
+function workspaceManifests() {
+  return sorted(
+    globSync(
+      readJson('package.json').workspaces.map(
+        (workspace) => `${workspace}/package.json`,
+      ),
+      { cwd: root },
+    ),
+  );
+}
+
 function checkToolchain() {
   const rootPackage = readJson('package.json');
   const vitePlusPackage = readJson('node_modules/vite-plus/package.json');
   const expected = vitePlusPackage.dependencies;
-  const workspaces = sorted(
-    globSync(
-      rootPackage.workspaces.map((workspace) => `${workspace}/package.json`),
-      { cwd: root },
-    ),
-  );
+  const workspaces = workspaceManifests();
 
   if (rootPackage.devDependencies['vite-plus'] !== vitePlusPackage.version) {
     throw new Error(
@@ -164,9 +170,11 @@ function checkToolchain() {
   }
 
   const workspaceNames = [];
+  const workspacePackages = [];
   for (const workspacePath of workspaces) {
     const workspace = readJson(workspacePath);
     workspaceNames.push(workspace.name);
+    workspacePackages.push(workspace);
     if (workspace.devDependencies['vite-plus'] !== vitePlusPackage.version) {
       throw new Error(`${workspacePath} has a mismatched vite-plus version.`);
     }
@@ -189,6 +197,27 @@ function checkToolchain() {
       return target;
     });
   assertEqual('Workspace build inventory', buildTargets, workspaceNames);
+  const buildPosition = new Map(
+    buildTargets.map((name, position) => [name, position]),
+  );
+  for (const workspace of workspacePackages) {
+    const dependencies = {
+      ...workspace.dependencies,
+      ...workspace.devDependencies,
+      ...workspace.optionalDependencies,
+      ...workspace.peerDependencies,
+    };
+    for (const dependency of Object.keys(dependencies)) {
+      if (
+        buildPosition.has(dependency) &&
+        buildPosition.get(dependency) >= buildPosition.get(workspace.name)
+      ) {
+        throw new Error(
+          `Root build must build ${dependency} before ${workspace.name}`,
+        );
+      }
+    }
+  }
 }
 
 function checkConfigOwnership() {
@@ -201,8 +230,7 @@ function checkConfigOwnership() {
       '--others',
       '--exclude-standard',
       '--',
-      'packages',
-      'sdks',
+      ...workspaceManifests().map(dirname),
     ],
     { cwd: root, encoding: 'utf8' },
   ).split('\0');
