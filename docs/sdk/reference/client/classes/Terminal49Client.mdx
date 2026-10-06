@@ -773,12 +773,7 @@ List containers with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\>; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
-| `filters.carrier?` | `string` |
-| `filters.include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
-| `filters.port?` | `string` |
-| `filters.status?` | `string` |
-| `filters.updatedAfter?` | `string` |
+| `filters` | [`ContainerListFilters`](/sdk/reference/types/filters/interfaces/ContainerListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
@@ -870,13 +865,7 @@ List shipments with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\>; `includeContainers?`: `boolean`; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
-| `filters.carrier?` | `string` |
-| `filters.include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\> |
-| `filters.includeContainers?` | `boolean` |
-| `filters.port?` | `string` |
-| `filters.status?` | `string` |
-| `filters.updatedAfter?` | `string` |
+| `filters` | [`ShipmentListFilters`](/sdk/reference/types/filters/interfaces/ShipmentListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns

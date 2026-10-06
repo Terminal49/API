@@ -515,8 +515,8 @@
               }
             }
           },
-          "422": {
-            "description": "Unprocessable Entity",
+          "400": {
+            "description": "Malformed supported filter value, operator, range, or strict boolean. The error identifies the invalid parameter where available.",
             "content": {
               "application/json": {
                 "schema": {
@@ -529,55 +529,35 @@
                       }
                     }
                   }
-                },
-                "examples": {
-                  "Errors": {
-                    "value": {
-                      "error": [
-                        {
-                          "title": "Invalid arrival_date_from",
-                          "detail": "filter['arrival_from'] must be in the format 'YYYY-MM-DD' and a valid date"
-                        },
-                        {
-                          "title": "Invalid arrival_date_to",
-                          "detail": "filter['arrival_from'] must be in the format 'YYYY-MM-DD' and a valid date"
-                        },
-                        {
-                          "title": "Invalid port_of_lading",
-                          "detail": "port_of_discharge must be an array of 5 character UN/LOCODEs"
-                        },
-                        {
-                          "title": "Invalid port_of_discharge",
-                          "detail": "port_of_discharge must be an array of 5 character UN/LOCODEs"
-                        }
-                      ]
-                    }
-                  }
                 }
               }
             }
           }
         },
         "operationId": "get-shipments",
-        "description": "Returns a list of your shipments. The shipments are returned sorted by creation date, with the most recent shipments appearing first.\n\nThis api will return all shipments associated with the account. Shipments created via the `tracking_request` API aswell as the ones added via the dashboard will be retuned via this endpoint. ",
+        "description": "Returns shipments visible to your account. Default order: newest creation first. Filters combine with AND; multi-value behavior is parameter-specific. Unknown filter names are ignored by the API. See the filter reference for exact values, operators, implicit scopes, and usage limitations.",
         "parameters": [
           {
             "schema": {
               "type": "integer",
-              "default": 1
+              "default": 1,
+              "minimum": 1
             },
             "in": "query",
             "name": "page[number]",
-            "description": "\n"
+            "description": "\n",
+            "example": 1
           },
           {
             "schema": {
               "type": "integer",
-              "default": 30
+              "default": 30,
+              "minimum": 1
             },
             "in": "query",
             "name": "page[size]",
-            "description": "\n"
+            "description": "Records per page. Default 30.",
+            "example": 30
           },
           {
             "schema": {
@@ -585,8 +565,9 @@
             },
             "in": "query",
             "name": "q",
-            "description": "\nSearch shipments by master bill of lading, reference number, or container number.",
-            "deprecated": true
+            "description": "Deprecated compatibility alias for filter[q]. Nested filter[q] takes precedence. A blank top-level q returns 400. No sunset date is documented.",
+            "deprecated": true,
+            "example": "EXAMPLE_VALUE"
           },
           {
             "schema": {
@@ -594,7 +575,8 @@
             },
             "in": "query",
             "name": "include",
-            "description": "Comma delimited list of relations to include"
+            "description": "Comma delimited list of relations to include",
+            "example": "containers,port_of_discharge"
           },
           {
             "schema": {
@@ -602,23 +584,540 @@
             },
             "in": "query",
             "name": "number",
-            "description": "Search shipments by the original tracking `request_number` \u2014 typically a master bill of lading or booking number. This filter does **not** match container numbers; to look up a shipment by container number, use `GET /containers?filter[number]={container_number}` and include the related shipment via `include=shipment`."
+            "description": "Compatibility alias for filter[number]. Exact shipment number, including punctuation; not a partial container-number search. Nested filter[number] takes precedence.",
+            "example": "TEST-BOL-1"
           },
           {
+            "in": "query",
+            "name": "tracking_stopped",
+            "description": "Compatibility alias for filter[tracking_stopped]. Nested filter takes precedence.",
             "schema": {
               "type": "boolean"
             },
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "description": "Supported values: created_at, -created_at, pod_arrival, -pod_arrival, tracking_stopped_at, -tracking_stopped_at. Both created_at tokens sort newest first for compatibility. Unknown values fall back to newest creation first.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "-created_at"
+          },
+          {
+            "in": "query",
+            "name": "filter[q]",
+            "description": "Prefix text search across shipment numbers, reference numbers, and linked container identifiers. Use search text, not comparison expressions.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "search",
+            "x-t49-filter-key": "q",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[number]",
+            "description": "Exact number match. Shipment arrays mean OR; container arrays of exact numbers mean AND. Use comma-separated container numbers for OR. Shipment scalar commas are literal.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "exact",
+            "x-t49-filter-key": "number",
+            "example": "TEST-BOL-1"
+          },
+          {
+            "in": "query",
+            "name": "filter[number][]",
+            "description": "Bracketed array form of filter[number]. Exact number match. Shipment arrays mean OR; container arrays of exact numbers mean AND. Use comma-separated container numbers for OR. Shipment scalar commas are literal.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "TEST-BOL-1"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[created_at]",
+            "description": "Creation date. Use an ISO 8601 date-time with Z or a timezone offset; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Relative dates and comma-separated timestamps are not accepted. Use @exists or @not_exists for presence.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "datetime",
+            "x-t49-filter-key": "created_at",
+            "example": ">=2026-10-01T00:00:00Z"
+          },
+          {
+            "in": "query",
+            "name": "filter[created_at][]",
+            "description": "Bracketed array form of filter[created_at]. Creation date. Use an ISO 8601 date-time with Z or a timezone offset; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Relative dates and comma-separated timestamps are not accepted. Use @exists or @not_exists for presence.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01T00:00:00Z",
+              "<=2026-10-07T23:59:59Z"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[actively_tracked]",
+            "description": "true selects shipments with tracking not stopped; false selects stopped tracking. Applies via the related shipment for containers.",
+            "schema": {
+              "type": "boolean"
+            },
+            "x-t49-filter-kind": "boolean",
+            "x-t49-filter-key": "actively_tracked",
+            "example": true
+          },
+          {
             "in": "query",
             "name": "filter[tracking_stopped]",
-            "description": "Filter shipments by whether they are still tracking or not"
-          },
-          {
+            "description": "true selects stopped tracking; false selects tracking not stopped. Combines with other filters using AND.",
             "schema": {
               "type": "boolean"
             },
+            "x-t49-filter-kind": "boolean",
+            "x-t49-filter-key": "tracking_stopped",
+            "example": true
+          },
+          {
             "in": "query",
-            "name": "flag[parties]",
-            "description": "Set to `true` to add the `party_roles` relationship to each shipment. Add `include=party_roles.party` to embed the roles and their parties."
+            "name": "filter[voyage_status]",
+            "description": "arrived means actual POD arrival is present; on_ship means a voyage exists and actual POD arrival is absent. It is not a general shipment lifecycle status.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "arrived",
+                "on_ship"
+              ]
+            },
+            "x-t49-filter-kind": "voyage",
+            "x-t49-filter-key": "voyage_status",
+            "example": "on_ship"
+          },
+          {
+            "in": "query",
+            "name": "filter[arriving_today]",
+            "description": "true selects shipments with POD or destination estimated/actual arrival today in the API server day. false does not narrow the list. The SDK accepts only true.",
+            "schema": {
+              "type": "boolean"
+            },
+            "x-t49-filter-kind": "selector",
+            "x-t49-filter-key": "arriving_today",
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_ata_at]",
+            "description": "Actual POD arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pod_ata_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_ata_at][]",
+            "description": "Bracketed array form of filter[pod_ata_at]. Actual POD arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_arrival]",
+            "description": "POD arrival date: actual arrival takes precedence over estimated arrival. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pod_arrival",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_arrival][]",
+            "description": "Bracketed array form of filter[pod_arrival]. POD arrival date: actual arrival takes precedence over estimated arrival. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_code]",
+            "description": "Port of discharge UN/LOCODE. Use exact literals, comma-separated values, or arrays with OR semantics. Presence checks and comparison/search operators do not apply to this scope.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "pod_code",
+            "example": "USLAX"
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_code][]",
+            "description": "Bracketed array form of filter[pod_code]. Port of discharge UN/LOCODE. Use exact literals, comma-separated values, or arrays with OR semantics. Presence checks and comparison/search operators do not apply to this scope.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "USLAX"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_eta_changed_at]",
+            "description": "Meaningful change in the POD-local ETA date, comparing the current ETA with its historical baseline. Requires a lower ISO 8601 timestamp bound (=, >, or >=); an optional upper bound must be later. Applies only to active, unarrived shipments with an ETA. Not a raw updated_at filter; a future lower bound is not guaranteed to produce no matches.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "datetime",
+            "x-t49-filter-key": "pod_eta_changed_at",
+            "example": ">=2026-10-01T00:00:00Z"
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_eta_changed_at][]",
+            "description": "Bracketed array form of filter[pod_eta_changed_at]. Meaningful change in the POD-local ETA date, comparing the current ETA with its historical baseline. Requires a lower ISO 8601 timestamp bound (=, >, or >=); an optional upper bound must be later. Applies only to active, unarrived shipments with an ETA. Not a raw updated_at filter; a future lower bound is not guaranteed to produce no matches.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01T00:00:00Z",
+              "<=2026-10-07T23:59:59Z"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_terminal_id]",
+            "description": "Port of discharge terminal ID. Obtain it from the related terminal resource. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean OR for this shipment terminal filter. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "pod_terminal_id",
+            "example": "00000000-0000-4000-8000-000000000001"
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_terminal_id][]",
+            "description": "Bracketed array form of filter[pod_terminal_id]. Port of discharge terminal ID. Obtain it from the related terminal resource. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean OR for this shipment terminal filter. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_code]",
+            "description": "Port of lading UN/LOCODE. Use exact literals, comma-separated values, or arrays with OR semantics. Presence checks and comparison/search operators do not apply to this scope.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "pol_code",
+            "example": "CNSHA"
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_code][]",
+            "description": "Bracketed array form of filter[pol_code]. Port of lading UN/LOCODE. Use exact literals, comma-separated values, or arrays with OR semantics. Presence checks and comparison/search operators do not apply to this scope.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "CNSHA"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[owner_id]",
+            "description": "User ID associated with a shipment container. Accepts one ID, comma-separated IDs, or arrays with OR semantics. Use exact literals, comma-separated values, or arrays with OR semantics. Presence checks and comparison/search operators do not apply to this scope.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "owner_id",
+            "example": "00000000-0000-4000-8000-000000000001"
+          },
+          {
+            "in": "query",
+            "name": "filter[owner_id][]",
+            "description": "Bracketed array form of filter[owner_id]. User ID associated with a shipment container. Accepts one ID, comma-separated IDs, or arrays with OR semantics. Use exact literals, comma-separated values, or arrays with OR semantics. Presence checks and comparison/search operators do not apply to this scope.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[creator_id]",
+            "description": "Shipment creator account ID. Comma-separated IDs mean OR; arrays of distinct IDs mean AND and return no matches. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "creator_id",
+            "example": "00000000-0000-4000-8000-000000000001"
+          },
+          {
+            "in": "query",
+            "name": "filter[creator_id][]",
+            "description": "Bracketed array form of filter[creator_id]. Shipment creator account ID. Comma-separated IDs mean OR; arrays of distinct IDs mean AND and return no matches. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[customer_id]",
+            "description": "Customer account ID or customer party ID. Falls back to the shipment creator when no customer party role exists. Presence checks refer to the customer party role. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "customer_id",
+            "example": "00000000-0000-4000-8000-000000000001"
+          },
+          {
+            "in": "query",
+            "name": "filter[customer_id][]",
+            "description": "Bracketed array form of filter[customer_id]. Customer account ID or customer party ID. Falls back to the shipment creator when no customer party role exists. Presence checks refer to the customer party role. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[product]",
+            "description": "Prefix text search of an associated product name or SKU.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "search",
+            "x-t49-filter-key": "product",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[party_id]",
+            "description": "Party ID match. Accepts a scalar, comma-separated IDs, an array (OR), or an object with value and operator (any or all). Values must come from parties visible to your account.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "party",
+            "x-t49-filter-key": "party_id",
+            "example": "00000000-0000-4000-8000-000000000001"
+          },
+          {
+            "in": "query",
+            "name": "filter[party_id][value]",
+            "description": "Party IDs for object-form matching. Supply exact authorized IDs; comma-separated IDs use OR unless operator=all.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "00000000-0000-4000-8000-000000000001"
+          },
+          {
+            "in": "query",
+            "name": "filter[party_id][value][]",
+            "description": "Repeated party IDs for object-form any/all matching. Requires actual party UUIDs.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[party_id][operator]",
+            "description": "Object-form party matching; requires value. any is the default; all requires every party on the same shipment.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "any",
+                "all"
+              ]
+            },
+            "example": "all"
+          },
+          {
+            "in": "query",
+            "name": "filter[party_id][]",
+            "description": "Bracketed array form of filter[party_id]. Party ID match. Accepts a scalar, comma-separated IDs, an array (OR), or an object with value and operator (any or all). Values must come from parties visible to your account.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[tags]",
+            "description": "Account-scoped shipment tags. Comma-separated names or arrays match ANY tag by default.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "tags",
+            "x-t49-filter-key": "tags",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[tags][]",
+            "description": "Bracketed array form of filter[tags]. Account-scoped shipment tags. Comma-separated names or arrays match ANY tag by default.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "EXAMPLE_VALUE"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[tags_and]",
+            "description": "With tags, true requires ALL tags; false or absent means ANY. Has no effect without tags. The SDK requires tags (or shipment tag) when this modifier is supplied.",
+            "schema": {
+              "type": "boolean"
+            },
+            "x-t49-filter-kind": "boolean",
+            "x-t49-filter-key": "tags_and",
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "filter[tag]",
+            "description": "Alias for tags. When both are present, tag takes precedence. Uses the requesting account tag names.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "tags",
+            "x-t49-filter-key": "tag",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[tag][]",
+            "description": "Bracketed array form of filter[tag]. Alias for tags. When both are present, tag takes precedence. Uses the requesting account tag names.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "EXAMPLE_VALUE"
+            ]
           }
         ]
       }
@@ -5420,27 +5919,50 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Malformed supported filter value, operator, range, or strict boolean. The error identifies the invalid parameter where available.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "operationId": "get-containers",
-        "description": "Returns a list of container. The containers are returned sorted by creation date, with the most recently refreshed containers appearing first.\n\nThis API will return all containers associated with the account.",
+        "description": "Returns containers visible to your account. Default order: most recent status refresh first. Filters combine with AND; multi-value behavior is parameter-specific. Unknown filter names are ignored by the API. See the filter reference for exact values, operators, implicit scopes, and usage limitations.",
         "parameters": [
           {
             "schema": {
               "type": "integer",
-              "default": 1
+              "default": 1,
+              "minimum": 1
             },
             "in": "query",
-            "name": "page[number]"
+            "name": "page[number]",
+            "example": 1
           },
           {
             "schema": {
               "type": "integer",
-              "default": 30
+              "default": 30,
+              "minimum": 1,
+              "maximum": 50
             },
             "in": "query",
             "name": "page[size]",
-            "description": ""
+            "description": "Records per page. Default 30. Values above 50 are capped at 50.",
+            "example": 30
           },
           {
             "schema": {
@@ -5448,7 +5970,1515 @@
             },
             "in": "query",
             "name": "include",
-            "description": "Comma delimited list of relations to include"
+            "description": "Comma delimited list of relations to include",
+            "example": "shipment,pod_terminal"
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "description": "Default -last_status_refresh_at. Prefix a supported field with - for descending order; use comma-separated fields (up to three). Supported fields: arrival, created_at, updated_at, shipment_number, destination_ata_at, destination_eta_at, empty_terminated_at, final_destination_full_out_at, last_status_refresh_at, picked_up_at, delivered_at, delivery_appointment_at, pickup_lfd, pickup_lfd_line_on, pickup_lfd_line_effective_on, pickup_lfd_line_ind_effective_on, pickup_lfd_line_ind_on, ind_lfd, pickup_lfd_rail_on, pickup_lfd_rail_effective_on, pickup_lfd_terminal_on, pickup_lfd_terminal_effective_on, pod_arrived_at, pod_discharged_at, pod_eta_at, inland_destination_rail_unloaded_at, inland_destination_eta_at, inland_destination_ata_at, pod_rail_loaded_at, pol_full_in_at, empty_out_at, pol_vessel_loaded_at, pol_vessel_departed_at. attention_priority is a standalone priority sort. Invalid tokens are ignored; all-invalid input falls back to the default. LFD sorts may be scoped by account entitlements and settings.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "pickup_lfd"
+          },
+          {
+            "in": "query",
+            "name": "filter[number]",
+            "description": "Exact number match. Shipment arrays mean OR; container arrays of exact numbers mean AND. Use comma-separated container numbers for OR. Shipment scalar commas are literal. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "number",
+            "example": "CAIU1234567"
+          },
+          {
+            "in": "query",
+            "name": "filter[number][]",
+            "description": "Bracketed array form of filter[number]. Exact number match. Shipment arrays mean OR; container arrays of exact numbers mean AND. Use comma-separated container numbers for OR. Shipment scalar commas are literal. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "CAIU1234567"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pol]",
+            "description": "Port of lading name (including raw routing data when no port relationship exists). Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "pol",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[pol][]",
+            "description": "Bracketed array form of filter[pol]. Port of lading name (including raw routing data when no port relationship exists). Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "EXAMPLE_VALUE"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pod]",
+            "description": "Port of discharge name (including raw routing data when no port relationship exists). Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "pod",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[pod][]",
+            "description": "Bracketed array form of filter[pod]. Port of discharge name (including raw routing data when no port relationship exists). Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "EXAMPLE_VALUE"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[destination]",
+            "description": "Destination name, including raw routing data when no port relationship exists. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "destination",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[destination][]",
+            "description": "Bracketed array form of filter[destination]. Destination name, including raw routing data when no port relationship exists. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "EXAMPLE_VALUE"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_code]",
+            "description": "Port of lading UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "pol_code",
+            "example": "CNSHA"
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_code][]",
+            "description": "Bracketed array form of filter[pol_code]. Port of lading UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "CNSHA"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_code]",
+            "description": "Port of discharge UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "pod_code",
+            "example": "USLAX"
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_code][]",
+            "description": "Bracketed array form of filter[pod_code]. Port of discharge UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "USLAX"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[destination_code]",
+            "description": "Destination UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "destination_code",
+            "example": "USLAX"
+          },
+          {
+            "in": "query",
+            "name": "filter[destination_code][]",
+            "description": "Bracketed array form of filter[destination_code]. Destination UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "USLAX"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[shipping_line_scac]",
+            "description": "Shipping line Standard Carrier Alpha Code (SCAC). Obtain valid values from GET /shipping_lines; preserve their exact codes. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "shipping_line_scac",
+            "example": "MAEU"
+          },
+          {
+            "in": "query",
+            "name": "filter[shipping_line_scac][]",
+            "description": "Bracketed array form of filter[shipping_line_scac]. Shipping line Standard Carrier Alpha Code (SCAC). Obtain valid values from GET /shipping_lines; preserve their exact codes. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "MAEU"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[customer_id]",
+            "description": "Customer account ID or customer party ID. Falls back to the shipment creator when no customer party role exists. Presence checks refer to the customer party role. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "customer_id",
+            "example": "00000000-0000-4000-8000-000000000001"
+          },
+          {
+            "in": "query",
+            "name": "filter[customer_id][]",
+            "description": "Bracketed array form of filter[customer_id]. Customer account ID or customer party ID. Falls back to the shipment creator when no customer party role exists. Presence checks refer to the customer party role. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[customer_name]",
+            "description": "Exact, case-sensitive customer company name. Prefer customer_id for names containing punctuation rejected by the string parser. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "customer_name",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[customer_name][]",
+            "description": "Bracketed array form of filter[customer_name]. Exact, case-sensitive customer company name. Prefer customer_id for names containing punctuation rejected by the string parser. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "EXAMPLE_VALUE"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[vessel_name]",
+            "description": "Exact vessel name. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "vessel_name",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[vessel_name][]",
+            "description": "Bracketed array form of filter[vessel_name]. Exact vessel name. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "EXAMPLE_VALUE"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_terminal_id]",
+            "description": "Port of discharge terminal ID. Obtain it from the related terminal resource. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "pod_terminal_id",
+            "example": "00000000-0000-4000-8000-000000000001"
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_terminal_id][]",
+            "description": "Bracketed array form of filter[pod_terminal_id]. Port of discharge terminal ID. Obtain it from the related terminal resource. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[current_status]",
+            "description": "Container status. Known values: new, on_ship, available, not_available, grounded, on_rail, picked_up, off_dock, delivered, dropped, loaded, empty_returned, awaiting_inland_transfer. Unknown values return no matches in the API; the SDK rejects them. Comma-separated states mean OR; arrays mean AND.",
+            "schema": {
+              "type": "string",
+              "description": "One known state, comma-separated known states, or a presence expression."
+            },
+            "x-t49-filter-kind": "status",
+            "x-t49-filter-key": "current_status",
+            "x-t49-values": [
+              "new",
+              "on_ship",
+              "available",
+              "not_available",
+              "grounded",
+              "on_rail",
+              "picked_up",
+              "off_dock",
+              "delivered",
+              "dropped",
+              "loaded",
+              "empty_returned",
+              "awaiting_inland_transfer"
+            ],
+            "example": "available"
+          },
+          {
+            "in": "query",
+            "name": "filter[current_status][]",
+            "description": "Bracketed array form of filter[current_status]. Container status. Known values: new, on_ship, available, not_available, grounded, on_rail, picked_up, off_dock, delivered, dropped, loaded, empty_returned, awaiting_inland_transfer. Unknown values return no matches in the API; the SDK rejects them. Comma-separated states mean OR; arrays mean AND.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "new",
+                  "on_ship",
+                  "available",
+                  "not_available",
+                  "grounded",
+                  "on_rail",
+                  "picked_up",
+                  "off_dock",
+                  "delivered",
+                  "dropped",
+                  "loaded",
+                  "empty_returned",
+                  "awaiting_inland_transfer"
+                ]
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "available"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[has_fees]",
+            "description": "true requires nonempty terminal fees; false requires an explicitly empty terminal fee array. Unreported/null fees match neither branch.",
+            "schema": {
+              "type": "boolean"
+            },
+            "x-t49-filter-kind": "boolean",
+            "x-t49-filter-key": "has_fees",
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "filter[has_demurrage_fees]",
+            "description": "true requires a terminal demurrage fee; false selects terminal records without a demurrage fee. Missing terminal data can be excluded.",
+            "schema": {
+              "type": "boolean"
+            },
+            "x-t49-filter-kind": "boolean",
+            "x-t49-filter-key": "has_demurrage_fees",
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "filter[has_fees_or_holds]",
+            "description": "true requires fees OR holds; false requires both arrays to be explicitly empty. Missing terminal data can be excluded.",
+            "schema": {
+              "type": "boolean"
+            },
+            "x-t49-filter-kind": "boolean",
+            "x-t49-filter-key": "has_fees_or_holds",
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "filter[requires_attention]",
+            "description": "true selects attention-marked, overdue pickup, or approaching-LFD containers. false selects containers whose stored attention value is false or null; it is not the exact complement of true.",
+            "schema": {
+              "type": "boolean"
+            },
+            "x-t49-filter-kind": "boolean",
+            "x-t49-filter-key": "requires_attention",
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "filter[eta_changed_in_last_24h]",
+            "description": "Selects containers with estimated-event changes in the last 24 hours. Both true and false apply the positive selector in the API. The SDK accepts only true.",
+            "schema": {
+              "type": "boolean"
+            },
+            "x-t49-filter-kind": "selector",
+            "x-t49-filter-key": "eta_changed_in_last_24h",
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "filter[eta_changed_in_past_3_days]",
+            "description": "Selects containers with estimated-event changes in the past three days. Both true and false apply the positive selector in the API. The SDK accepts only true.",
+            "schema": {
+              "type": "boolean"
+            },
+            "x-t49-filter-kind": "selector",
+            "x-t49-filter-key": "eta_changed_in_past_3_days",
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "filter[has_holds]",
+            "description": "true requires nonempty terminal holds; false requires an explicitly empty holds array. Unreported/null holds match neither branch.",
+            "schema": {
+              "type": "boolean"
+            },
+            "x-t49-filter-kind": "boolean",
+            "x-t49-filter-key": "has_holds",
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "filter[actively_tracked]",
+            "description": "true selects shipments with tracking not stopped; false selects stopped tracking. Applies via the related shipment for containers.",
+            "schema": {
+              "type": "boolean"
+            },
+            "x-t49-filter-kind": "boolean",
+            "x-t49-filter-key": "actively_tracked",
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "filter[search_by_ids]",
+            "description": "Prefix text search of container and linked shipment identifiers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "search",
+            "x-t49-filter-key": "search_by_ids",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[search_by_number]",
+            "description": "Prefix text search of container numbers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "search",
+            "x-t49-filter-key": "search_by_number",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[search_by_shipment_number]",
+            "description": "Prefix text search of shipment numbers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "search",
+            "x-t49-filter-key": "search_by_shipment_number",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[search_by_shipment_ref_numbers]",
+            "description": "Prefix text search of shipment reference numbers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "search",
+            "x-t49-filter-key": "search_by_shipment_ref_numbers",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[search_by_ref_numbers]",
+            "description": "Prefix text search of container reference numbers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "search",
+            "x-t49-filter-key": "search_by_ref_numbers",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[search_by_owner_id]",
+            "description": "User IDs associated with containers. Use one ID or comma-separated user IDs; bracketed arrays are not supported by this scope. Presence and search operators do not apply.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "search_by_owner_id",
+            "example": "00000000-0000-4000-8000-000000000001"
+          },
+          {
+            "in": "query",
+            "name": "filter[delivered_at]",
+            "description": "Delivery date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "delivered_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[delivered_at][]",
+            "description": "Bracketed array form of filter[delivered_at]. Delivery date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_discharged_at]",
+            "description": "POD discharge date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pod_discharged_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_discharged_at][]",
+            "description": "Bracketed array form of filter[pod_discharged_at]. POD discharge date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_arrived_at]",
+            "description": "Container POD arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pod_arrived_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_arrived_at][]",
+            "description": "Bracketed array form of filter[pod_arrived_at]. Container POD arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_etd_at]",
+            "description": "Estimated port of lading departure date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pol_etd_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_etd_at][]",
+            "description": "Bracketed array form of filter[pol_etd_at]. Estimated port of lading departure date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_atd_at]",
+            "description": "Actual port of lading departure date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pol_atd_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_atd_at][]",
+            "description": "Bracketed array form of filter[pol_atd_at]. Actual port of lading departure date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[empty_out_at]",
+            "description": "Empty equipment out date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "empty_out_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[empty_out_at][]",
+            "description": "Bracketed array form of filter[empty_out_at]. Empty equipment out date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_full_in_at]",
+            "description": "Full equipment in at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pol_full_in_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_full_in_at][]",
+            "description": "Bracketed array form of filter[pol_full_in_at]. Full equipment in at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_vessel_loaded_at]",
+            "description": "Vessel loading at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pol_vessel_loaded_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_vessel_loaded_at][]",
+            "description": "Bracketed array form of filter[pol_vessel_loaded_at]. Vessel loading at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_vessel_departed_at]",
+            "description": "Vessel departure at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pol_vessel_departed_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pol_vessel_departed_at][]",
+            "description": "Bracketed array form of filter[pol_vessel_departed_at]. Vessel departure at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[arrival]",
+            "description": "POD arrival date: actual arrival takes precedence over estimated arrival. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "arrival",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[arrival][]",
+            "description": "Bracketed array form of filter[arrival]. POD arrival date: actual arrival takes precedence over estimated arrival. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[picked_up_at]",
+            "description": "Pickup date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "picked_up_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[picked_up_at][]",
+            "description": "Bracketed array form of filter[picked_up_at]. Pickup date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[empty_returned_at]",
+            "description": "Empty return date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "empty_returned_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[empty_returned_at][]",
+            "description": "Bracketed array form of filter[empty_returned_at]. Empty return date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[created_at]",
+            "description": "Creation date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "created_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[created_at][]",
+            "description": "Bracketed array form of filter[created_at]. Creation date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[updated_at]",
+            "description": "Last record update date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "updated_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[updated_at][]",
+            "description": "Bracketed array form of filter[updated_at]. Last record update date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[last_free_day_on][]",
+            "description": "Inclusive two-date range, encoded as filter[last_free_day_on][]=FROM and filter[last_free_day_on][]=TO, without operators. Requires both dates. Also restricts to available/not_available/off_dock containers, tracking not stopped, and destination absent or the same as POD. Use pickup_lfd for general comparisons.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "x-t49-filter-kind": "range",
+            "x-t49-filter-key": "last_free_day_on",
+            "style": "form",
+            "explode": true,
+            "example": [
+              "2026-10-01",
+              "2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[inland_destination_rail_unloaded_at]",
+            "description": "Inland rail unloading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "inland_destination_rail_unloaded_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[inland_destination_rail_unloaded_at][]",
+            "description": "Bracketed array form of filter[inland_destination_rail_unloaded_at]. Inland rail unloading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[final_destination_full_out_at]",
+            "description": "Final destination full out date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "final_destination_full_out_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[final_destination_full_out_at][]",
+            "description": "Bracketed array form of filter[final_destination_full_out_at]. Final destination full out date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[inland_destination_eta_at]",
+            "description": "Estimated inland destination arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "inland_destination_eta_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[inland_destination_eta_at][]",
+            "description": "Bracketed array form of filter[inland_destination_eta_at]. Estimated inland destination arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[inland_destination_ata_at]",
+            "description": "Actual inland destination arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "inland_destination_ata_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[inland_destination_ata_at][]",
+            "description": "Bracketed array form of filter[inland_destination_ata_at]. Actual inland destination arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_rail_departed_at]",
+            "description": "Rail departure from POD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pod_rail_departed_at",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pod_rail_departed_at][]",
+            "description": "Bracketed array form of filter[pod_rail_departed_at]. Rail departure from POD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pickup_lfd]",
+            "description": "Pickup last free day (LFD) date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pickup_lfd",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pickup_lfd][]",
+            "description": "Bracketed array form of filter[pickup_lfd]. Pickup last free day (LFD) date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pickup_lfd_rail_on]",
+            "description": "Reported rail pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pickup_lfd_rail_on",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pickup_lfd_rail_on][]",
+            "description": "Bracketed array form of filter[pickup_lfd_rail_on]. Reported rail pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pickup_lfd_terminal_on]",
+            "description": "Reported terminal pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pickup_lfd_terminal_on",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pickup_lfd_terminal_on][]",
+            "description": "Bracketed array form of filter[pickup_lfd_terminal_on]. Reported terminal pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pickup_lfd_line_on]",
+            "description": "Reported shipping-line pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pickup_lfd_line_on",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pickup_lfd_line_on][]",
+            "description": "Bracketed array form of filter[pickup_lfd_line_on]. Reported shipping-line pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pickup_lfd_terminal_effective_on]",
+            "description": "Terminal pickup LFD. Calculated values are used only when enabled and visible for the account/carrier; otherwise reported values are used. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pickup_lfd_terminal_effective_on",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pickup_lfd_terminal_effective_on][]",
+            "description": "Bracketed array form of filter[pickup_lfd_terminal_effective_on]. Terminal pickup LFD. Calculated values are used only when enabled and visible for the account/carrier; otherwise reported values are used. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[pickup_lfd_line_effective_on]",
+            "description": "Shipping-line pickup LFD. Calculated values are used only when enabled and visible for the account/carrier; otherwise reported values are used. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "date",
+            "x-t49-filter-key": "pickup_lfd_line_effective_on",
+            "example": ">=2026-10-01"
+          },
+          {
+            "in": "query",
+            "name": "filter[pickup_lfd_line_effective_on][]",
+            "description": "Bracketed array form of filter[pickup_lfd_line_effective_on]. Shipping-line pickup LFD. Calculated values are used only when enabled and visible for the account/carrier; otherwise reported values are used. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              ">=2026-10-01",
+              "<=2026-10-07"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[tags]",
+            "description": "Account-scoped shipment tags. Comma-separated names or arrays match ANY tag by default.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "tags",
+            "x-t49-filter-key": "tags",
+            "example": "EXAMPLE_VALUE"
+          },
+          {
+            "in": "query",
+            "name": "filter[tags][]",
+            "description": "Bracketed array form of filter[tags]. Account-scoped shipment tags. Comma-separated names or arrays match ANY tag by default.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "EXAMPLE_VALUE"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[tags_and]",
+            "description": "With tags, true requires ALL tags; false or absent means ANY. Has no effect without tags. The SDK requires tags (or shipment tag) when this modifier is supplied.",
+            "schema": {
+              "type": "boolean"
+            },
+            "x-t49-filter-kind": "boolean",
+            "x-t49-filter-key": "tags_and",
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "filter[parties]",
+            "description": "Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "shipper": {
+                  "type": "string",
+                  "description": "A party UUID, comma-separated UUIDs, or a supported presence expression."
+                },
+                "consignee": {
+                  "type": "string",
+                  "description": "A party UUID, comma-separated UUIDs, or a supported presence expression."
+                },
+                "notify_party": {
+                  "type": "string",
+                  "description": "A party UUID, comma-separated UUIDs, or a supported presence expression."
+                },
+                "customs_broker": {
+                  "type": "string",
+                  "description": "A party UUID, comma-separated UUIDs, or a supported presence expression."
+                },
+                "customer": {
+                  "type": "string",
+                  "description": "A party UUID, comma-separated UUIDs, or a supported presence expression."
+                },
+                "freight_forwarder": {
+                  "type": "string",
+                  "description": "A party UUID, comma-separated UUIDs, or a supported presence expression."
+                },
+                "pickup_dray_carrier": {
+                  "type": "string",
+                  "description": "A party UUID, comma-separated UUIDs, or a supported presence expression."
+                }
+              },
+              "additionalProperties": false
+            },
+            "style": "deepObject",
+            "explode": true,
+            "x-t49-filter-kind": "parties",
+            "x-t49-filter-key": "parties",
+            "example": {
+              "shipper": "00000000-0000-4000-8000-000000000001"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter[parties][shipper][]",
+            "description": "Array alternative for the shipper role. Party IDs use OR within this role.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[parties][consignee][]",
+            "description": "Array alternative for the consignee role. Party IDs use OR within this role.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[parties][notify_party][]",
+            "description": "Array alternative for the notify_party role. Party IDs use OR within this role.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[parties][customs_broker][]",
+            "description": "Array alternative for the customs_broker role. Party IDs use OR within this role.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[parties][customer][]",
+            "description": "Array alternative for the customer role. Party IDs use OR within this role.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[parties][freight_forwarder][]",
+            "description": "Array alternative for the freight_forwarder role. Party IDs use OR within this role.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "filter[parties][pickup_dray_carrier][]",
+            "description": "Array alternative for the pickup_dray_carrier role. Party IDs use OR within this role.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "style": "form",
+            "explode": true,
+            "example": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
           }
         ]
       },
@@ -16177,6 +18207,25 @@
                 }
               }
             }
+          }
+        }
+      },
+      "user": {
+        "description": "Related JSON:API user resource. Returned attributes depend on the relationship and caller permissions.",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "user"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": true
           }
         }
       }

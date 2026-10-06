@@ -1,7 +1,7 @@
 ---
 title: "Terminal49 SDK Filtering and Pagination"
 sidebarTitle: "Filtering & Pagination"
-description: "Query shipments and containers with status, date, and carrier filters, and paginate large result sets using the Terminal49 TypeScript SDK."
+description: "Use canonical, validated shipment and container filters, explicit date bounds, party matching, and bounded pagination in the TypeScript SDK."
 keywords:
   - "Terminal49 SDK"
   - "TypeScript SDK"
@@ -10,92 +10,126 @@ keywords:
   - "shipments"
   - "containers"
 ---
-## Filtering shipments
 
-Pass filter parameters to narrow results:
+List managers, convenience methods (`listShipments` and `listContainers`), and iterators share the same filter types. Canonical names match API keys without the `filter[...]` wrapper. The [complete filter reference](/api-docs/api-reference/list-filters) lists every supported field, finite value set, and interaction. Types are generated from OpenAPI.
+
+## Filter shipments
 
 ```typescript
-const shipments = await client.shipments.list({
-  status: 'in_transit',
-  port: 'USLAX',
-  carrier: 'MAEU',
-  updatedAfter: '2025-01-01T00:00:00Z',
+import { Terminal49Client, type ShipmentListFilters } from '@terminal49/sdk';
+
+const client = new Terminal49Client({ apiToken: 'YOUR_API_KEY' });
+const shipmentFilters: ShipmentListFilters = {
+  tracking_stopped: false,
+  pod_code: 'USLAX',
+  pod_arrival: ['>=2026-10-01', '<=2026-10-07'],
+  sort: 'pod_arrival',
+  includeContainers: false,
+};
+const shipments = await client.shipments.list(shipmentFilters, {
+  format: 'mapped', page: 1, pageSize: 30,
 });
 ```
 
-Available shipment filters:
+`tracking_stopped=false` selects tracking not stopped. `voyage_status` accepts only `arrived` or `on_ship`; it is not a general shipment lifecycle field. Use `created_at` with timezone-bearing ISO 8601 timestamps to query shipment creation time. Shipment lists have no `updated_at` filter.
 
-| Filter | Type | Description |
-|--------|------|-------------|
-| `status` | string | Shipment status (for example `in_transit` or `delivered`) |
-| `port` | string | UN/LOCODE for port of discharge |
-| `carrier` | string | SCAC code (for example `MAEU`, `HLCU`) |
-| `updatedAfter` | ISO 8601 | Only shipments updated after this timestamp |
-| `includeContainers` | boolean | Set to `false` to omit containers from the included relationships |
-
-## Filtering containers
+## Filter containers
 
 ```typescript
-const containers = await client.containers.list({
-  status: 'discharged',
-  port: 'USLAX',
-  carrier: 'MAEU',
-  updatedAfter: '2025-01-01T00:00:00Z',
-  include: 'shipment,pod_terminal',
+import { type ContainerListFilters } from '@terminal49/sdk';
+
+const containerFilters: ContainerListFilters = {
+  current_status: 'available,not_available,off_dock',
+  shipping_line_scac: 'MAEU',
+  pod_code: 'USLAX',
+  has_holds: true,
+  pickup_lfd: ['>=2026-10-01', '<=2026-10-07'],
+  sort: 'pickup_lfd',
+};
+const containers = await client.containers.list(containerFilters, {
+  format: 'mapped', page: 1, pageSize: 50,
 });
 ```
 
-Available container filters:
+Fields combine with AND. The comma-separated status alternatives use OR; the date bounds use AND. `current_status` values include `on_ship`, `available`, `not_available`, and the other [documented states](/api-docs/api-reference/list-filters#finite-vocabularies). `in_transit`, `discharged`, and `available_for_pickup` are not valid codes.
 
-| Filter | Type | Description |
-|--------|------|-------------|
-| `status` | string | Container status |
-| `port` | string | UN/LOCODE for port of discharge |
-| `carrier` | string | SCAC code |
-| `updatedAfter` | ISO 8601 | Only containers updated after this timestamp |
-| `include` | string | Comma-delimited list of related resources to include |
+## Arrays, dates, and nested values
 
-<Note>
-For list endpoints, avoid heavy `include` usage for performance. When you need deep relationships, prefer single-resource endpoints like `containers.get` or `shipments.get`.
-</Note>
+The SDK serializes arrays with `[]` and nested objects with bracketed names, matching the API parser. Generic string arrays combine with AND; use comma-separated literals for OR. Shipment `number` arrays, shipment port/owner/terminal arrays, party IDs, and tags use the exceptions documented in the reference.
+
+```typescript
+// Shipment exact numbers: OR. Commas in a scalar number are literal.
+await client.shipments.list({ number: ['TEST-BOL-1', 'TEST-BOL-2'] });
+
+// Containers: comma-separated exact alternatives use OR.
+await client.containers.list({ number: 'CAIU1234567,TEST1234567' });
+
+// Require both party IDs on a shipment. Replace placeholders with real IDs.
+await client.shipments.list({
+  party_id: { value: ['PARTY_ID_1', 'PARTY_ID_2'], operator: 'all' },
+});
+
+// Require a shipper relationship and absence of a container pickup carrier.
+await client.containers.list({
+  parties: { shipper: '@exists', pickup_dray_carrier: '@not_exists' },
+});
+```
+
+Shipment `created_at` and `pod_eta_changed_at` require timestamps with Z or timezone offsets. Container date fields, including `updated_at`, require dates. Relative date values (`today`, `N.days.ago`, `N.days.from_now`) are supported only on date filters and use the API's day context. Explicit dates make the query reproducible in the API's date context. Date filters do not convert the stored timestamp to the port timezone; for a local port day, query overlapping stored dates and refine returned timestamps using pod_timezone after processing the relevant pages.
+
+`last_free_day_on` requires exactly two plain dates, without comparison operators: `['2026-10-01', '2026-10-07']`. It adds status, destination, and tracking constraints; use `pickup_lfd` for general deadline comparisons.
+
+`pod_eta_changed_at` requires a lower timestamp bound and applies only to active, unarrived shipments. It detects a meaningful local ETA-date change against historical data, so it is not interchangeable with a simple updated timestamp filter.
+
+## Validation and limitations
+
+Invalid queries throw `ValidationError` before a network request. This applies to JavaScript callers as well as TypeScript: unknown filter keys, invalid finite values, malformed bounds, unsupported sorts, and proven contradictory scopes produce an error naming the field and expected shape. The SDK does not fetch extra data merely to check ID existence or account entitlement; obtain IDs, port codes, and SCACs from authorized API results.
+
+```typescript
+import { ValidationError } from '@terminal49/sdk';
+
+try {
+  await client.containers.list({ pickup_lfd: ['>=2026-10-07', '<=2026-10-01'] });
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error(error.message); // identifies reversed pickup_lfd bounds
+  }
+}
+```
+
+The SDK accepts only `true` for `arriving_today`, `eta_changed_in_last_24h`, and `eta_changed_in_past_3_days`. Their false values do not disable filtering reliably in the API. Omit a selector to disable it. Unknown terminal hold/fee data does not satisfy a false exception selector; do not add true/false result counts to infer total coverage.
+
+Container `pod_eta_at` and `pod_ata_at` currently return server errors in deployed verification. Dynamic custom-field slugs currently leave the verification account's list unfiltered. These inputs are [excluded from supported filtering](/api-docs/api-reference/list-filters#currently-unavailable-container-filters); JavaScript callers receive an actionable SDK error. Dynamic party-role filters are supported.
+
+## Migrate legacy arguments
+
+| Previous SDK argument | Current behavior and replacement |
+| --- | --- |
+| Container `status` | Deprecated exact alias of `current_status`; validates the documented codes. |
+| `port` | Deprecated exact alias of `pod_code` on both collections. |
+| Container `carrier` | Deprecated exact alias of `shipping_line_scac`. |
+| Shipment `trackingStopped` | Deprecated exact alias of `tracking_stopped`; false is preserved. |
+| Shipment `status` | Rejected. Select `voyage_status` only when the question concerns voyage arrival. |
+| Shipment `carrier` | Rejected. Query containers using `shipping_line_scac` when equipment by carrier answers the question. |
+| `updatedAfter` | Rejected. Container `updated_at` uses dates, not timestamp cutoffs. Shipment lists have no equivalent update filter. |
+
+Aliases and canonical fields with different values conflict and are rejected. Previously unsupported arguments could be omitted silently; they now fail with migration guidance. A successful mapped response retains `unsupportedFilters: []` for compatibility, because invalid queries fail before I/O. Raw responses remain the original API document.
 
 ## Pagination
 
-List methods accept pagination options with `page` and `pageSize` (page numbers are 1-based):
+List calls fetch one page. Page numbers start at 1. Container page sizes cap at 50; shipment list requests use the SDK's conservative cap of 100. The API default is 30 when `pageSize` is omitted. Use `meta.total` as the filtered collection total, and `links.next` to identify remaining pages. Mark an answer based on fetched rows as partial while more pages remain.
 
 ```typescript
-const page1 = await client.shipments.list({}, {
-  page: 1,
-  pageSize: 25,
-  format: 'mapped',
+const first = await client.containers.list(containerFilters, {
+  page: 1, pageSize: 50, format: 'mapped',
 });
 
-const page2 = await client.shipments.list({}, {
-  page: 2,
-  pageSize: 25,
-  format: 'mapped',
-});
+// Iterate with the same filters, while bounding total work.
+for await (const container of client.containers.iterate(containerFilters, {
+  pageSize: 50, maxPages: 5, maxRows: 200,
+})) {
+  // Process this container. A cap can stop iteration before all matches are read.
+}
 ```
 
-When using `format: 'mapped'`, list results include `items`, `links`, and `meta`. When using `format: 'raw'`, these live in the JSON:API response.
-
-## Common patterns
-
-### Recently updated shipments
-
-```typescript
-const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-const updated = await client.shipments.list({
-  updatedAfter: oneDayAgo,
-});
-```
-
-### In-transit containers at a specific port
-
-```typescript
-const containers = await client.containers.list({
-  status: 'in_transit',
-  port: 'USLAX',
-});
-```
+`format: 'mapped'` exposes `items`, `links`, and `meta`. `format: 'raw'` exposes the original JSON:API `data`, `links`, and `meta`. `format: 'both'` returns `{ raw, mapped }`. Large `include` sets expand payloads; use the detail endpoints for deep relationships when the list question does not need them.
