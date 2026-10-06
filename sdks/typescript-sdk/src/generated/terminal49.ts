@@ -1564,7 +1564,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            type: "account";
+            type: "container";
             attributes: {
                 number?: string;
                 ref_numbers?: string[];
@@ -1842,6 +1842,47 @@ export interface components {
                 updated_at?: string | null;
             };
             relationships?: {
+                route?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "route";
+                    };
+                };
+                location?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "port" | "terminal";
+                    } | null;
+                };
+                inbound_vessel?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "vessel";
+                    } | null;
+                };
+                outbound_vessel?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "vessel";
+                    } | null;
+                };
+                facility?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "port" | "terminal";
+                    } | null;
+                };
+            } & {
                 [key: string]: {
                     data?: ({
                         /** Format: uuid */
