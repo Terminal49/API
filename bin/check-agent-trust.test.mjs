@@ -6,12 +6,18 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { checkSdkEntrypoints } from './check-agent-trust.mjs';
+
+const sdkRequire = createRequire(
+  new URL('../sdks/typescript-sdk/package.json', import.meta.url),
+);
 
 const sdkEntrypoints = [
   { export: '.', source: 'sdks/typescript-sdk/src/index.ts' },
@@ -219,6 +225,12 @@ function createGuardRepository(t) {
       vitest: '4.1.11',
     },
   });
+  mkdirSync(join(repository, 'node_modules'), { recursive: true });
+  symlinkSync(
+    dirname(sdkRequire.resolve('typescript/package.json')),
+    join(repository, 'node_modules/typescript'),
+    'dir',
+  );
   writeJson(repository, 'node_modules/vite-plus/package.json', {
     version: '0.3.3',
     dependencies: { '@oxlint/plugins': '=1.79.0', vitest: '4.1.11' },
@@ -442,3 +454,17 @@ test('unsupported nonliteral MCP registration cannot silently escape the feature
     /MCP registrations require supported literal tool names/,
   );
 });
+
+for (const call of [
+  "server.registerTool /* comment */ ('new_tool', {});",
+  "server . registerTool('new_tool', {});",
+  "server['registerTool']('new_tool', {});",
+]) {
+  test(`syntax-aware inventory detects an unlisted tool in ${call}`, (t) => {
+    const repository = createGuardRepository(t);
+    writeFileSync(join(repository, 'packages/mcp/src/server.ts'), call);
+    const result = runGuard(repository);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /MCP feature map drifted/);
+  });
+}
