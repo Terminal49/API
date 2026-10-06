@@ -23,7 +23,8 @@ generation path.
    root; package-level Vitest configuration is allowed.
 3. Add workspace dependencies normally so npm and Vite+ can see the dependency
    graph. If generated declarations are required, preserve explicit build
-   ordering in the root task.
+   ordering in the root task. Add every workspace to its ordered
+   `npm run build --workspace NAME` sequence; the guard rejects omissions.
 4. Update the root lockfile only. A standalone lockfile is allowed solely for a
    package whose consumer-compatibility CI installs it outside the workspace.
 5. Add the package to CI and run `npm run agent-verify`.

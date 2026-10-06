@@ -209,6 +209,10 @@ function createGuardRepository(t) {
   t.after(() => rmSync(repository, { recursive: true, force: true }));
   writeJson(repository, 'package.json', {
     workspaces: ['packages/*', 'sdks/*'],
+    scripts: {
+      build:
+        'npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp && npm run build --workspace @terminal49/cli',
+    },
     devDependencies: { 'vite-plus': '0.3.3', '@oxlint/plugins': '1.79.0' },
     overrides: {
       vite: 'npm:@voidzero-dev/vite-plus-core@0.3.3',
@@ -225,6 +229,12 @@ function createGuardRepository(t) {
     'sdks/typescript-sdk-cli',
   ]) {
     writeJson(repository, `${workspace}/package.json`, {
+      name:
+        workspace === 'packages/mcp'
+          ? '@terminal49/mcp'
+          : workspace === 'sdks/typescript-sdk'
+            ? '@terminal49/sdk'
+            : '@terminal49/cli',
       devDependencies: {
         'vite-plus': '0.3.3',
         '@vitest/coverage-v8': '4.1.11',
@@ -266,7 +276,14 @@ function runGuard(repository) {
 
 test('accepts a new workspace with coupled toolchain versions', (t) => {
   const repository = createGuardRepository(t);
+  const rootPackage = JSON.parse(
+    readFileSync(join(repository, 'package.json'), 'utf8'),
+  );
+  rootPackage.scripts.build +=
+    ' && npm run build --workspace @terminal49/new-workspace';
+  writeJson(repository, 'package.json', rootPackage);
   writeJson(repository, 'packages/new-workspace/package.json', {
+    name: '@terminal49/new-workspace',
     devDependencies: { 'vite-plus': '0.3.3', '@vitest/coverage-v8': '4.1.11' },
   });
 
@@ -361,3 +378,14 @@ for (const tracked of [false, true]) {
     );
   });
 }
+
+test('a coupled new workspace must be represented in the ordered build task', (t) => {
+  const repository = createGuardRepository(t);
+  writeJson(repository, 'packages/new-workspace/package.json', {
+    name: '@terminal49/new-workspace',
+    devDependencies: { 'vite-plus': '0.3.3', '@vitest/coverage-v8': '4.1.11' },
+  });
+  const result = runGuard(repository);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Workspace build inventory drifted/);
+});
