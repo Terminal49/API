@@ -12,23 +12,28 @@
       "extra-files": [
         {
           "type": "json",
-          "path": "package-lock.json",
+          "path": "/package-lock.json",
           "jsonpath": "$.packages['sdks/typescript-sdk'].version"
         },
         {
           "type": "json",
-          "path": "packages/mcp/package.json",
+          "path": "/packages/mcp/package.json",
           "jsonpath": "$.dependencies['@terminal49/sdk']"
         },
         {
           "type": "json",
-          "path": "package-lock.json",
+          "path": "/package-lock.json",
           "jsonpath": "$.packages['packages/mcp'].dependencies['@terminal49/sdk']"
         },
         {
           "type": "json",
-          "path": "sdks/typescript-sdk-cli/package.json",
+          "path": "/sdks/typescript-sdk-cli/package.json",
           "jsonpath": "$.dependencies['@terminal49/sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$.packages['sdks/typescript-sdk-cli'].dependencies['@terminal49/sdk']"
         }
       ]
     },
@@ -39,7 +44,14 @@
       "bump-minor-pre-major": true,
       "tag-separator": "-",
       "include-component-in-tag": true,
-      "component": "cli-v"
+      "component": "cli-v",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$.packages['sdks/typescript-sdk-cli'].version"
+        }
+      ]
     }
   }
 }

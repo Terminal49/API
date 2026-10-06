@@ -173,3 +173,14 @@ export interface TrackingRequest {
   container?: Container | null;
   [key: string]: any;
 }
+
+/** Account-defined custom field value on a container, shipment, or tracking request. */
+export interface CustomField {
+  id: string;
+  slug: string;
+  name?: string;
+  value: unknown;
+  displayValue?: string | null;
+  dataType?: string;
+  updatedAt?: string | null;
+}

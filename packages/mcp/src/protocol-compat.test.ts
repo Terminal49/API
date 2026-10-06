@@ -244,7 +244,12 @@ describe('MCP protocol compatibility', () => {
       {
         default: ['shipment'],
         items: {
-          enum: ['shipment', 'pod_terminal', 'transport_events'],
+          enum: [
+            'shipment',
+            'pod_terminal',
+            'transport_events',
+            'custom_fields',
+          ],
         },
       },
     );
