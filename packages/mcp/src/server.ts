@@ -157,6 +157,7 @@ const NON_FILTER_LIST_ARGS = new Set([
   'page_size',
   'include',
   'include_containers',
+  'include_stopped_tracking',
   'sort',
   'advanced_filters',
   'intent',
@@ -620,14 +621,16 @@ export function buildListContract(
         SUPPORTED_LIST_FILTERS_BY_ENTITY[entityType].includes(key),
     ),
   );
+  // The actively-tracked default is not a caller scope, so it never makes a list count as filtered.
+  const callerArgs = { ...supportedArgs, include_stopped_tracking: true };
   const normalizedFilters: Record<string, unknown> =
     entityType === 'container'
       ? {
-          ...getContainerFilters(containerListInputSchema.parse(supportedArgs)),
+          ...getContainerFilters(containerListInputSchema.parse(callerArgs)),
         }
       : entityType === 'shipment'
         ? {
-            ...getShipmentFilters(shipmentListInputSchema.parse(supportedArgs)),
+            ...getShipmentFilters(shipmentListInputSchema.parse(callerArgs)),
           }
         : supportedArgs;
   const applied = appliedFilterKeys(
@@ -1392,7 +1395,9 @@ export function createTerminal49McpServer(
     {
       title: 'List Shipments',
       description:
-        'Return one requested page of shipments using common filters or advanced_filters for the confirmed public API catalog. Page size is capped at 25. Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_shipment_details with a returned UUID for routing and container details. Never pass conversation text into identifier fields.',
+        'Return one requested page of shipments using common filters or advanced_filters for the confirmed public API catalog. Page size is capped at 25. ' +
+        'Like the dashboard, only actively tracked shipments are returned unless include_stopped_tracking is true (use it for history over a past period). Report meta.total for the requested set. ' +
+        'Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_shipment_details with a returned UUID for routing and container details. Never pass conversation text into identifier fields.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1418,7 +1423,11 @@ export function createTerminal49McpServer(
     {
       title: 'List Containers',
       description:
-        'Return one requested page of containers using common status, port, carrier, milestone, hold and fee filters, or advanced_filters for the confirmed public API catalog. Page size is capped at 25. Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_container with a returned UUID for a detailed snapshot. Do not pass conversation text into filters.',
+        'Return one requested page of containers using common status, port, carrier, milestone, hold and fee filters, or advanced_filters for the confirmed public API catalog. Page size is capped at 25. ' +
+        'Like the dashboard, only actively tracked containers are returned unless include_stopped_tracking is true (use it for history such as pickups or dwell over a past period). ' +
+        'Use the dashboard definitions and report meta.total for that set before any narrowing: ready for pickup = current_status available; at risk of demurrage or needs attention = requires_attention true with sort attention_priority (the Containers at Risk view); discharged but not picked up = current_status available,not_available,grounded,awaiting_inland_transfer. ' +
+        'Add extra conditions such as LFD windows, fees or holds only when the user asks, and present them as a subset of that total. ' +
+        'Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_container with a returned UUID for a detailed snapshot. Do not pass conversation text into filters.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
