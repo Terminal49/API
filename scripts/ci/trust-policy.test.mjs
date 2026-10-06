@@ -150,7 +150,10 @@ test('capability guides and policy documentation require review', () => {
     const result = assertBlocked(snapshot(path), 'approval is missing');
     assert.equal(result.risk, 'medium', path);
   }
-  assert.equal(evaluateTrust(snapshot('skills/agent-trust/references/risk-gates.md')).risk, 'high');
+  assert.equal(
+    evaluateTrust(snapshot('skills/agent-trust/references/risk-gates.md')).risk,
+    'high',
+  );
 });
 
 test('medium and high require a current-head nonauthor human writer', () => {
