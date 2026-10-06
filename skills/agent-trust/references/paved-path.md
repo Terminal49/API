@@ -58,3 +58,10 @@ requires the package export's `default` and `types` targets to match.
 Additional export conditions require an explicit verifier update.
 `npm run test:agent-trust` exercises valid mappings and export redirections.
 The full `npm run agent-verify` command runs these tests before workspace tests.
+
+## Review and merge policy
+
+Repository maintainers use [the trust-policy installation guide](risk-gates.md)
+and [the GitHub verification trial](risk-gates-trial.md) before changing merge
+protection. These guides describe advisory behavior and the separate native
+review requirements.
