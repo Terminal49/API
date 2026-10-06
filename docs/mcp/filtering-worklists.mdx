@@ -22,7 +22,7 @@ Resolve a carrier name with `get_supported_shipping_lines` and use its Standard 
 
 Common filters appear directly in each tool's schema. The strict `advanced_filters` object contains all confirmed filters for that endpoint. Its descriptions specify operators and valid values. The [complete API filter reference](/api-docs/api-reference/list-filters) covers both catalogs.
 
-Supply a filter in one location. Repeating a filter at the top level and in `advanced_filters` is an error, even when the values match. Put `sort`, pagination, and include options at the top level.
+Supply a filter in one location. Repeating a filter at the top level and in `advanced_filters` is an error, even when the values match. Shipment `tag` and `tags` are aliases; supply only one. Put `sort`, pagination, and include options at the top level.
 
 For example, call `list_containers` with these arguments to select actively tracked containers that are available at the Port of Discharge (POD) in Los Angeles and have reported holds:
 
