@@ -29,7 +29,7 @@ jobs:
       - name: Generate Postman Collection
         run: |
           echo "Generating Postman collection from OpenAPI spec..."
-          openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,enableOptionalParameters=false
+          openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,enableOptionalParameters=false,parametersResolution=Example
 
       - name: Test Postman generation
         run: node --test tools/postman-generation.test.mjs
