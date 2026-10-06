@@ -395,18 +395,33 @@ See [Entitlements and Paid Features](/api-docs/useful-info/entitlements) for the
 
 ### `list_shipments`
 
-List shipments with optional filters and pagination.
+Return one page of shipments with verified API filters. Common inputs include exact shipment `number`, `tracking_stopped`, `actively_tracked`, `voyage_status`, `pod_code`, `pol_code`, `pod_arrival`, `created_at`, and `tags`.
+
+Use the typed `advanced_filters` object for the full shipment filter catalog. Use `sort` for server ordering, `include_containers` for container relationships, and `page` and `page_size` for pagination. Container relationships default to excluded. Pages default to 25 rows and cannot exceed 25.
 
 **Parameters**
-- `number` *(string, optional)* – shipment, booking, or Bill of Lading identifier
-- `tracking_stopped` *(boolean, optional)* – filter by whether shipping-line tracking has stopped
-- `include_containers` *(boolean, optional)* – include container relationships (default: false)
-- `page` *(number, optional)* – page number, starting at 1
-- `page_size` *(number, optional)* – results per page (default: 25; maximum: 25)
+
+- `number` *(string or string[], optional)* - exact shipment number. Arrays match any supplied number.
+- `tracking_stopped` *(boolean, optional)* - shipping-line tracking stopped state.
+- `actively_tracked` *(boolean, optional)* - active tracking state.
+- `voyage_status` *(string, optional)* - `arrived` or `on_ship`.
+- `pod_code` *(string or string[], optional)* - Port of Discharge UN/LOCODE.
+- `pol_code` *(string or string[], optional)* - Port of Lading UN/LOCODE.
+- `pod_arrival` *(string or string[], optional)* - arrival date expressions or bounds.
+- `created_at` *(string or string[], optional)* - creation timestamps with a timezone offset.
+- `tags` *(string or string[], optional)* - account shipment tags.
+- `advanced_filters` *(object, optional)* - complete typed shipment filter catalog.
+- `sort` *(string, optional)* - supported server sort token or tokens.
+- `include_containers` *(boolean, optional)* - include related containers. Default false.
+- `page` *(number, optional)* - page number, starting at 1.
+- `page_size` *(number, optional)* - page size. Default 25, maximum 25.
 
 **Good for**
-- "List recent shipments"
-- "Find a shipment by booking or Bill of Lading number"
+
+- "Show actively tracked shipments arriving at Los Angeles this week."
+- "Find shipments by an exact Bill of Lading number."
+
+[Filter usage, values, and pagination](/mcp/filtering-worklists) explains the inputs and result metadata.
 
 **REST equivalent**: [GET /shipments](/api-docs/api-reference/shipments/list-shipments)
 
@@ -414,16 +429,36 @@ List shipments with optional filters and pagination.
 
 ### `list_containers`
 
-List containers with optional filters and pagination.
+Return one page of containers with verified API filters. Common inputs include `number`, `current_status`, `pod_code`, `pol_code`, `shipping_line_scac`, `has_holds`, `has_fees`, `requires_attention`, `actively_tracked`, `arrival`, `pickup_lfd`, and `tags`.
+
+Use the typed `advanced_filters` object for the full container filter catalog. Use `sort` for server ordering and `include` to add `shipment`, `pod_terminal`, or both. Pages default to 25 rows and cannot exceed 25.
 
 **Parameters**
-- `include` *(string[], optional)* – include `shipment`, `pod_terminal`, or both
-- `page` *(number, optional)* – page number, starting at 1
-- `page_size` *(number, optional)* – results per page (default: 25; maximum: 25)
+
+- `number` *(string or string[], optional)* - exact container number. Comma-separated numbers match any; arrays require all.
+- `current_status` *(string or string[], optional)* - container status from the schema's finite vocabulary.
+- `pod_code` *(string or string[], optional)* - Port of Discharge UN/LOCODE.
+- `pol_code` *(string or string[], optional)* - Port of Lading UN/LOCODE.
+- `shipping_line_scac` *(string or string[], optional)* - carrier Standard Carrier Alpha Code.
+- `has_holds` *(boolean, optional)* - reported terminal hold state.
+- `has_fees` *(boolean, optional)* - reported terminal fees.
+- `requires_attention` *(boolean, optional)* - attention selection. False is not the exact complement of true.
+- `actively_tracked` *(boolean, optional)* - related shipment tracking state.
+- `arrival` *(string or string[], optional)* - arrival date expressions or bounds.
+- `pickup_lfd` *(string or string[], optional)* - pickup Last Free Day date expressions or bounds.
+- `tags` *(string or string[], optional)* - related shipment tags.
+- `advanced_filters` *(object, optional)* - complete typed container filter catalog.
+- `sort` *(string, optional)* - supported server sort token or tokens.
+- `include` *(string[], optional)* - `shipment`, `pod_terminal`, or both.
+- `page` *(number, optional)* - page number, starting at 1.
+- `page_size` *(number, optional)* - page size. Default 25, maximum 25.
 
 **Good for**
-- "List containers in my account"
-- "List containers with their shipment and POD terminal details"
+
+- "Show available containers at Los Angeles with reported terminal holds."
+- "List actively tracked containers approaching their pickup Last Free Day."
+
+[Filter usage, values, and pagination](/mcp/filtering-worklists) explains the inputs and result metadata.
 
 **REST equivalent**: [GET /containers](/api-docs/api-reference/containers/list-containers)
 
