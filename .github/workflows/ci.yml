@@ -4,7 +4,6 @@ on:
   push:
     branches: [main, master, feature/**]
   pull_request:
-    branches: [main, master, feature/**, cursor/vite-plus-toolchain-cdbd]
 
 permissions:
   contents: read
@@ -24,12 +23,8 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install workspace dependencies
         run: npm ci
-      - name: Check root and every workspace
-        run: npx vp run check
-      - name: Test every workspace
-        run: npx vp run test
-      - name: Build every workspace
-        run: npx vp run build
+      - name: Verify agent paved path
+        run: npm run agent-verify
 
   # Consumer compatibility: the standalone SDK lockfile on every supported
   # Node version, with no workspace tooling involved.
