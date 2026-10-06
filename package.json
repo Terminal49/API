@@ -16,8 +16,8 @@
     "check": "vp check && npm run build --workspace @terminal49/sdk && npm run type-check:api && vp run -r type-check",
     "format": "vp fmt --write api packages sdks",
     "lint:api": "vp lint api && vp fmt --check api",
-    "test:risk-policy": "node --test scripts/ci/risk-policy.test.mjs",
-    "test": "npm run test:agent-trust && vp run -r test",
+    "test:risk-policy": "node --test scripts/ci/*.test.mjs",
+    "test": "npm run test:agent-trust && npm run test:risk-policy && vp run -r test",
     "test:agent-trust": "node --test bin/check-agent-trust.test.mjs",
     "type-check:api": "tsc --noEmit -p tsconfig.json",
     "sdk:docs": "npm run docs --workspace @terminal49/sdk"

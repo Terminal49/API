@@ -1,3 +1,5 @@
+* @dodeja @SylvainGravejat
+
 # High-risk control planes and release inputs
 /.github/ @dodeja @SylvainGravejat
 /package.json @dodeja @SylvainGravejat
@@ -29,4 +31,13 @@
 /.cursor/rules/agent-trust.mdc @dodeja @SylvainGravejat
 /bin/agent-verify.mjs @dodeja @SylvainGravejat
 /bin/check-agent-trust.mjs @dodeja @SylvainGravejat
+/bin/check-agent-trust.test.mjs @dodeja @SylvainGravejat
 /bin/check-openapi-types.mjs @dodeja @SylvainGravejat
+
+# Capability guides require human review
+/docs/mcp/ @dodeja @SylvainGravejat
+/docs/sdk/ @dodeja @SylvainGravejat
+/docs/api-docs/in-depth-guides/mcp.mdx @dodeja @SylvainGravejat
+/docs/api-docs/getting-started/sdk-quickstart.mdx @dodeja @SylvainGravejat
+/docs/risk-gates.md @dodeja @SylvainGravejat
+/docs/risk-gates-trial.md @dodeja @SylvainGravejat

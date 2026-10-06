@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
 import { readFile } from 'node:fs/promises';
-import { pathToFileURL } from 'node:url';
 
-import { classifyPaths } from './classify-pr-risk.mjs';
+import { classifyFiles } from './classify-pr-risk.mjs';
 
 const JEV_ENDPOINT = 'https://jevtypesafeai.com/api/v1/decide';
 const MAX_STATE_LENGTH = 60_000;
@@ -27,7 +26,11 @@ export function heuristicShadowRisk(pr) {
   const text = [
     pr.title ?? '',
     pr.body ?? '',
-    ...files.flatMap((file) => [file.filename ?? '', file.patch ?? '']),
+    ...files.flatMap((file) => [
+      file.filename ?? '',
+      file.previous_filename ?? '',
+      file.patch ?? '',
+    ]),
   ].join('\n');
   const changedLines = files.reduce(
     (total, file) => total + (file.additions ?? 0) + (file.deletions ?? 0),
@@ -48,6 +51,7 @@ export function heuristicShadowRisk(pr) {
 function buildState(pr) {
   const files = (pr.files ?? []).map((file) => ({
     path: file.filename,
+    previousPath: file.previous_filename,
     additions: file.additions,
     deletions: file.deletions,
     patch: file.patch,
@@ -120,16 +124,14 @@ async function main() {
 
   const pr = JSON.parse(await readFile(inputPath, 'utf8'));
   const result = await scoreShadowRisk(pr, process.env.JEV_API_KEY);
-  const pathRisk = classifyPaths(
-    (pr.files ?? []).map((file) => file.filename),
-  ).risk;
+  const pathRisk = classifyFiles(pr.files, pr.changedFiles).risk;
 
   process.stdout.write(`shadow-risk=${result.risk}\n`);
   process.stdout.write(`source=${result.source}\n`);
   process.stdout.write(`path-risk=${pathRisk}\n`);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+if (import.meta.main) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;

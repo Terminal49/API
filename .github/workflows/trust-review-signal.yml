@@ -1,0 +1,14 @@
+name: Trust Review Signal
+
+on:
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+
+permissions: {}
+
+jobs:
+  signal:
+    name: Advisory review refresh signal
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'Review changed. The default-branch controller reads current evidence.'

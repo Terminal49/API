@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { readFile } from 'node:fs/promises';
-import { pathToFileURL } from 'node:url';
 
 const LEVEL = { low: 0, medium: 1, high: 2 };
 
@@ -29,10 +28,16 @@ const SDK_PUBLIC_SURFACE_PREFIXES = [
   'sdks/typescript-sdk/src/types/',
 ];
 
+const CAPABILITY_GUIDES = new Set([
+  'docs/api-docs/in-depth-guides/mcp.mdx',
+  'docs/api-docs/getting-started/sdk-quickstart.mdx',
+]);
+
 const AGENT_TRUST_FILES = new Set([
   '.cursor/rules/agent-trust.mdc',
   'bin/agent-verify.mjs',
   'bin/check-agent-trust.mjs',
+  'bin/check-agent-trust.test.mjs',
   'bin/check-openapi-types.mjs',
 ]);
 
@@ -52,7 +57,9 @@ export function classifyPath(filePath) {
     SDK_PUBLIC_SURFACE_FILES.has(path) ||
     SDK_PUBLIC_SURFACE_PREFIXES.some((prefix) => path.startsWith(prefix)) ||
     AGENT_TRUST_FILES.has(path) ||
-    path === 'docs/openapi.json'
+    path === 'docs/openapi.json' ||
+    path === 'docs/risk-gates.md' ||
+    path === 'docs/risk-gates-trial.md'
   ) {
     return 'high';
   }
@@ -60,12 +67,67 @@ export function classifyPath(filePath) {
   if (
     path.startsWith('docs/') &&
     !path.startsWith('docs/mcp/') &&
-    !path.startsWith('docs/sdk/')
+    !path.startsWith('docs/sdk/') &&
+    !CAPABILITY_GUIDES.has(path)
   ) {
     return 'low';
   }
 
   return 'medium';
+}
+
+export function classifyFiles(files, expectedCount) {
+  if (
+    !Array.isArray(files) ||
+    !Number.isInteger(expectedCount) ||
+    expectedCount < 1 ||
+    expectedCount >= 3000 ||
+    files.length !== expectedCount
+  ) {
+    throw new Error(
+      'Changed-file evidence is empty, incomplete, or reaches the REST limit',
+    );
+  }
+  const paths = [];
+  const seen = new Set();
+  const validPath = (path) =>
+    typeof path === 'string' &&
+    path.length > 0 &&
+    !path.startsWith('/') &&
+    !path.includes('\\') &&
+    !path.split('/').some((part) => ['', '.', '..'].includes(part)) &&
+    !/[\x00-\x1f\x7f]/.test(path);
+  for (const file of files) {
+    if (
+      !validPath(file.filename) ||
+      seen.has(file.filename) ||
+      ![
+        'added',
+        'removed',
+        'modified',
+        'renamed',
+        'copied',
+        'changed',
+        'unchanged',
+      ].includes(file.status)
+    ) {
+      throw new Error(
+        'Changed-file evidence contains an invalid or duplicate record',
+      );
+    }
+    seen.add(file.filename);
+    paths.push(file.filename);
+    if (file.status === 'renamed' || file.status === 'copied') {
+      if (
+        !validPath(file.previous_filename) ||
+        file.previous_filename === file.filename
+      ) {
+        throw new Error('Changed-file evidence lacks a valid rename source');
+      }
+      paths.push(file.previous_filename);
+    }
+  }
+  return classifyPaths([...new Set(paths)]);
 }
 
 export function classifyPaths(filePaths) {
@@ -121,7 +183,7 @@ async function main() {
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+if (import.meta.main) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;

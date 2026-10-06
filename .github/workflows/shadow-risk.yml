@@ -11,21 +11,34 @@ permissions:
 
 concurrency:
   group: shadow-risk-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   shadow:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     name: Jev shadow comparison (non-blocking)
     runs-on: ${{ (startsWith(vars.CI_RUNNER_SMALL, 'blacksmith-') && vars.CI_RUNNER_SMALL) || 'blacksmith-2vcpu-ubuntu-2404' }}
     steps:
-      # Never run pull-request code in a pull_request_target workflow.
-      - uses: actions/checkout@v4
+      - name: Resolve trusted default-branch commit
+        id: trusted
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          script: |
+            const { data } = await github.rest.git.getRef({
+              ...context.repo,
+              ref: `heads/${context.payload.repository.default_branch}`,
+            });
+            core.setOutput('sha', data.object.sha);
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ steps.trusted.outputs.sha }}
           persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 24
 
       - name: Collect pull request context
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
           script: |
             const fs = require('node:fs');
@@ -35,14 +48,25 @@ jobs:
               pull_number: context.issue.number,
               per_page: 100,
             });
-            const pull = context.payload.pull_request;
+            const { data: pull } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: context.issue.number,
+            });
+            const { pathToFileURL } = require('node:url');
+            const { classifyFiles } = await import(pathToFileURL(
+              `${process.env.GITHUB_WORKSPACE}/scripts/ci/classify-pr-risk.mjs`,
+            ).href);
+            classifyFiles(files, pull.changed_files);
             fs.writeFileSync(
               '/tmp/shadow-input.json',
               JSON.stringify({
                 title: pull.title,
                 body: pull.body,
+                changedFiles: pull.changed_files,
                 files: files.map((file) => ({
                   filename: file.filename,
+                  previous_filename: file.previous_filename,
+                  status: file.status,
                   additions: file.additions,
                   deletions: file.deletions,
                   patch: file.patch,
@@ -59,7 +83,7 @@ jobs:
 
       - name: Apply shadow label and sticky comparison
         continue-on-error: true
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         env:
           SHADOW_RISK: ${{ steps.score.outputs.shadow-risk }}
           SHADOW_SOURCE: ${{ steps.score.outputs.source }}
@@ -138,7 +162,7 @@ jobs:
 
             | Signal | Result | Authority |
             | --- | --- | --- |
-            | Path classifier | \`risk:${path}\` | **Merge-policy source of truth** |
+            | Path classifier | \`risk:${path}\` | Deterministic advisory policy |
             | ${source} | \`risk-shadow:${shadow}\` | Shadow only |
 
             Calibration result: **${comparison}**.
@@ -154,7 +178,7 @@ jobs:
               },
             );
             const existing = comments.find((comment) =>
-              comment.body?.includes(marker),
+              comment.user?.login === 'github-actions[bot]' && comment.body?.includes(marker),
             );
             if (existing) {
               await github.rest.issues.updateComment({
