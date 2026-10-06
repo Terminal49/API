@@ -1471,7 +1471,7 @@ export function createTerminal49McpServer(
     {
       title: 'Query Shipping Data',
       description:
-        'Run one read-only PostgreSQL SELECT against account-scoped assistant_* views. Use for counts, filtered worklists, and aggregates. Read terminal49://docs/mcp-query-guidance for view names and examples. Results are capped at 500 rows.',
+        'Run one read-only PostgreSQL SELECT against account-scoped assistant_* views. Use for counts, filtered worklists, and aggregates. Read terminal49://docs/mcp-query-guidance for view names and examples. The backend selects the response size. Returned rows may be a preview: row_count can exceed rows.length, and total_count may be unknown. Preserve result metadata and do not present a preview as a complete worklist.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,

@@ -3,6 +3,7 @@ import {
   StreamableHTTPClientTransport,
 } from '@modelcontextprotocol/client';
 import { createMcpHandler } from '@modelcontextprotocol/server';
+import type { QueryResult } from './tools/query.js';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import {
   buildListContract,
@@ -801,4 +802,79 @@ describe('MCP server wiring', () => {
       answerAudience === undefined || answerAudience.includes('user'),
     ).toBe(true);
   });
+});
+
+describe('query backend response compatibility', () => {
+  const legacy = {
+    columns: ['container_number'],
+    rows: [['HLCU1234568']],
+    row_count: 1,
+    truncated: false,
+    row_limit: 500,
+  } satisfies QueryResult;
+  const persisted = {
+    ...legacy,
+    result_id: '123e4567-e89b-12d3-a456-426614174000',
+    expires_at: '2026-10-07T12:00:00Z',
+    column_types: ['character varying'],
+    preview_row_count: 1,
+  } satisfies QueryResult;
+
+  it.each([
+    { name: 'legacy response without persisted fields', payload: legacy },
+    {
+      name: 'sample of an untruncated stored result',
+      payload: { ...persisted, row_count: 50, total_count: 50 },
+    },
+    {
+      name: 'truncated stored result with a known total',
+      payload: {
+        ...persisted,
+        row_count: 500,
+        total_count: 1234,
+        truncated: true,
+      },
+    },
+    {
+      name: 'truncated stored result with an unknown total',
+      payload: {
+        ...persisted,
+        row_count: 500,
+        total_count: null,
+        truncated: true,
+      },
+    },
+  ])(
+    '$name preserves the whole response in text and structured content',
+    async ({ payload }) => {
+      const fetch = vi.fn().mockResolvedValue(Response.json(payload));
+      vi.stubGlobal('fetch', fetch);
+      const { client, handler } = await connectClientForToolCall();
+      try {
+        const { tools } = await client.listTools();
+        const tool = tools.find((item) => item.name === 'query');
+        expect(Object.keys(tool?.inputSchema.properties ?? {})).toEqual([
+          'sql',
+        ]);
+        const sql = 'SELECT container_number FROM assistant_containers';
+        const result = await client.callTool({
+          name: 'query',
+          arguments: { sql },
+        });
+        expect(result.structuredContent).toEqual(payload);
+        const text = result.content?.find((item) => item.type === 'text');
+        expect(text?.type).toBe('text');
+        if (text?.type !== 'text') throw new Error('Expected query JSON text');
+        expect(JSON.parse(text.text)).toEqual(payload);
+        expect(fetch).toHaveBeenCalledWith(
+          expect.any(URL),
+          expect.objectContaining({ body: JSON.stringify({ sql }) }),
+        );
+      } finally {
+        await client.close();
+        await handler.close();
+        vi.unstubAllGlobals();
+      }
+    },
+  );
 });

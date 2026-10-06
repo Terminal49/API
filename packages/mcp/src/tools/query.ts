@@ -1,7 +1,16 @@
 export type QueryResult = {
   columns: string[];
+  /** Backend-selected rows; persisted responses may contain only a preview. */
   rows: unknown[][];
+  /** Rows stored by the backend, which may exceed the returned preview. */
   row_count: number;
+  /** Optional persisted-result metadata; older backends omit these fields. */
+  result_id?: string;
+  expires_at?: string;
+  column_types?: string[];
+  preview_row_count?: number;
+  /** Rows matching the SQL before the backend cap; null means unknown. */
+  total_count?: number | null;
   truncated: boolean;
   row_limit: number;
 };
