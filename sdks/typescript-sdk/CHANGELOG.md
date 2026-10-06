@@ -5,6 +5,13 @@ All notable changes to `@terminal49/sdk` are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0](https://github.com/Terminal49/API/compare/sdk-v-v0.4.0...sdk-v-v0.5.0) (2026-09-30)
+
+
+### Features
+
+* **mcp:** expose custom fields in get_container and get_shipment_details ([#386](https://github.com/Terminal49/API/issues/386)) ([1ef620c](https://github.com/Terminal49/API/commit/1ef620ca895626b21482ff6906f6030f8bdcab1e))
+
 ## [0.4.0](https://github.com/Terminal49/API/compare/sdk-v-v0.3.1...sdk-v-v0.4.0) (2026-08-22)
 
 
