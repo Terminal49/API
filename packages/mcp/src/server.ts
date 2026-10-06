@@ -22,6 +22,15 @@ import {
 } from './tools/get-container-route.js';
 import { executeListShipments } from './tools/list-shipments.js';
 import { executeListContainers } from './tools/list-containers.js';
+import {
+  shipmentListInputSchema,
+  containerListInputSchema,
+  getShipmentFilters,
+  getContainerFilters,
+  SHIPMENT_FILTER_KEYS,
+  CONTAINER_FILTER_KEYS,
+  listResponseMetadataSchema,
+} from './tools/list-filters.js';
 import { executeListTrackingRequests } from './tools/list-tracking-requests.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { readContainerResource } from './resources/container.js';
@@ -125,28 +134,19 @@ type ResponseContract = {
   // List-only honesty signals. Optional so non-list contracts stay unchanged.
   dropped_filters?: string[];
   total_is_reliable?: boolean;
+  applied_filters?: Record<string, unknown>;
+  pagination_state?: 'partial_page' | 'last_page' | 'unknown';
 };
 
 /** Resource URI for the one-time list display column catalog. */
 export const LIST_DISPLAY_COLUMNS_URI = listDisplayColumnsResource.uri;
 
-/**
- * Filters the MCP list_* tools actually forward to the Terminal49 API, by
- * entity. Anything outside an entity's vocabulary cannot scope its list and is
- * reported back to the agent as a dropped filter so it never claims a false
- * worklist. `page`, `page_size`, `include`, and `include_containers` are
- * transport/shape knobs, not scoping filters, and are ignored here.
- *
- * Tracking-request filters are explicit schema properties rather than an
- * arbitrary query-string map, so callers cannot smuggle pagination or
- * unrelated text through to the API.
- */
 const SUPPORTED_LIST_FILTERS_BY_ENTITY: Record<
   ListEntityType,
   readonly string[]
 > = {
-  container: [],
-  shipment: ['number', 'tracking_stopped'],
+  container: CONTAINER_FILTER_KEYS,
+  shipment: SHIPMENT_FILTER_KEYS,
   tracking_request: ['request_number', 'status', 'scac'],
   unknown: [],
 };
@@ -157,6 +157,9 @@ const NON_FILTER_LIST_ARGS = new Set([
   'page_size',
   'include',
   'include_containers',
+  'sort',
+  'advanced_filters',
+  'intent',
 ]);
 
 /**
@@ -609,8 +612,26 @@ export function buildListContract(
           ? buildTrackingRequestListDisplay()
           : undefined;
 
+  const args = requestContext.filters ?? {};
+  const supportedArgs = Object.fromEntries(
+    Object.entries(args).filter(
+      ([key]) =>
+        NON_FILTER_LIST_ARGS.has(key) ||
+        SUPPORTED_LIST_FILTERS_BY_ENTITY[entityType].includes(key),
+    ),
+  );
+  const normalizedFilters: Record<string, unknown> =
+    entityType === 'container'
+      ? {
+          ...getContainerFilters(containerListInputSchema.parse(supportedArgs)),
+        }
+      : entityType === 'shipment'
+        ? {
+            ...getShipmentFilters(shipmentListInputSchema.parse(supportedArgs)),
+          }
+        : supportedArgs;
   const applied = appliedFilterKeys(
-    requestContext.filters,
+    normalizedFilters,
     entityType,
     requestContext.unsupportedFilters,
   );
@@ -620,6 +641,12 @@ export function buildListContract(
     entityType,
   );
   const isFiltered = applied.length > 0;
+  const links = result?.links;
+  const paginationState = links?.next
+    ? 'partial_page'
+    : links && Object.hasOwn(links, 'next')
+      ? 'last_page'
+      : 'unknown';
   const supportedFilters = SUPPORTED_LIST_FILTERS_BY_ENTITY[entityType];
   const supportedVocab = supportedFilters.join(', ');
   const filterGuidance =
@@ -658,13 +685,23 @@ export function buildListContract(
       'meta.total reflects the entire account, not a filtered worklist — apply a filter before quoting a total',
     );
   }
+  if (paginationState === 'partial_page') {
+    requiresMoreData.push(
+      'Results are partial. Continue with the same filters and sort and the next page from links.next before claiming a complete worklist.',
+    );
+  }
   if (count === 0) {
     requiresMoreData.push('alternative filters or tighter date ranges');
   }
 
   const presentationGuidance = [
+    paginationState === 'partial_page'
+      ? 'This response is a partial page; its row count is not the complete matching count.'
+      : paginationState === 'last_page'
+        ? 'This is the last page. Earlier pages may not have been retrieved; do not claim this page contains all matches.'
+        : 'Pagination completeness is unknown; do not claim all matches have been retrieved.',
     count === 0
-      ? 'No rows matched; surface the empty_state guidance rather than an empty table.'
+      ? 'No rows returned on this page; surface the empty_state guidance rather than an empty table.'
       : count === 1
         ? 'For a single result, provide a concise row summary. For multiple rows, render a markdown table.'
         : 'Render a markdown table using the response_contract display hints. Avoid dumping full nested records.',
@@ -693,6 +730,10 @@ export function buildListContract(
     display,
     dropped_filters: dropped.length > 0 ? dropped : undefined,
     total_is_reliable: hasTotal ? totalIsReliable : undefined,
+    applied_filters: Object.fromEntries(
+      applied.map((key) => [key, normalizedFilters[key]]),
+    ),
+    pagination_state: paginationState,
   };
 }
 
@@ -844,6 +885,25 @@ function formatToolError(
       default:
         return 'The requested Terminal49 record was not found.';
     }
+  }
+
+  if (
+    (toolName === 'list_shipments' || toolName === 'list_containers') &&
+    err.name === 'ValidationError'
+  ) {
+    const details = asRecord(err.details);
+    const keys: readonly string[] =
+      toolName === 'list_shipments'
+        ? SHIPMENT_FILTER_KEYS
+        : CONTAINER_FILTER_KEYS;
+    if (
+      typeof details.filter === 'string' &&
+      keys.includes(details.filter) &&
+      err.message?.startsWith(`Invalid list filter "${details.filter}": `)
+    ) {
+      return `${err.message} Use the filter values and operators documented in the tool schema.`;
+    }
+    return 'Invalid or unsupported list filter. Use the names, values, and operators documented in the tool schema.';
   }
 
   if (toolName === 'track_container' && err.name === 'ValidationError') {
@@ -1332,41 +1392,19 @@ export function createTerminal49McpServer(
     {
       title: 'List Shipments',
       description:
-        'Return one intentionally requested page of shipments, optionally filtered by one shipment identifier or tracking-stopped state. Page size is capped at 25. Use get_shipment_details with a returned UUID for routing and container details. Never pass conversation text into identifier fields.',
+        'Return one requested page of shipments using common filters or advanced_filters for the confirmed public API catalog. Page size is capped at 25. Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_shipment_details with a returned UUID for routing and container details. Never pass conversation text into identifier fields.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: z.object({
-        number: z
-          .string()
-          .trim()
-          .min(1)
-          .max(64)
-          .optional()
-          .describe(
-            'One shipment, booking, or Bill of Lading identifier (maximum 64 characters). Never pass conversation text.',
-          ),
-        tracking_stopped: z
-          .boolean()
-          .optional()
-          .describe('Filter by whether shipping-line tracking has stopped'),
-        include_containers: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe(
-            'Include container relationships in each shipment. Default: false to keep list responses compact.',
-          ),
-        page: listPageSchema,
-        page_size: listPageSizeSchema,
-      }),
+      inputSchema: z.preprocess(stripLegacyIntent, shipmentListInputSchema),
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
-        links: z.record(z.string(), z.string()).optional(),
+        links: z.record(z.string(), z.string().nullable()).optional(),
         meta: z.record(z.string(), z.any()).optional(),
         unsupportedFilters: z.array(z.string()),
+        _metadata: listResponseMetadataSchema,
       }),
     },
     wrapTool('list_shipments', async (args) =>
@@ -1380,28 +1418,19 @@ export function createTerminal49McpServer(
     {
       title: 'List Containers',
       description:
-        'Return one intentionally requested page of containers, capped at 25 rows. Use get_container with a returned UUID for a detailed snapshot. The API does not expose server-side status, port, carrier, or update-time filters. Do not use this tool to pass or retrieve conversation text.',
+        'Return one requested page of containers using common status, port, carrier, milestone, hold and fee filters, or advanced_filters for the confirmed public API catalog. Page size is capped at 25. Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_container with a returned UUID for a detailed snapshot. Do not pass conversation text into filters.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: z.object({
-        include: z
-          .array(z.enum(['shipment', 'pod_terminal']))
-          .max(2)
-          .optional()
-          .describe(
-            'Optional related records to include: shipment and/or pod_terminal',
-          ),
-        page: listPageSchema,
-        page_size: listPageSizeSchema,
-      }),
+      inputSchema: z.preprocess(stripLegacyIntent, containerListInputSchema),
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
-        links: z.record(z.string(), z.string()).optional(),
+        links: z.record(z.string(), z.string().nullable()).optional(),
         meta: z.record(z.string(), z.any()).optional(),
         unsupportedFilters: z.array(z.string()),
+        _metadata: listResponseMetadataSchema,
       }),
     },
     wrapTool(

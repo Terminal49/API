@@ -437,6 +437,72 @@ describe('MCP server wiring', () => {
     ).toThrow();
   });
 
+  it('advertises strict common and advanced list filters', () => {
+    const tools = (createTerminal49McpServer('token') as any)._registeredTools;
+    expect(
+      tools.list_containers.inputSchema.parse({
+        current_status: 'available',
+        advanced_filters: { picked_up_at: '@not_exists', has_holds: false },
+        sort: '-created_at',
+      }),
+    ).toMatchObject({
+      current_status: 'available',
+      advanced_filters: { picked_up_at: '@not_exists', has_holds: false },
+    });
+    expect(
+      tools.list_shipments.inputSchema.parse({
+        pod_code: 'USLAX',
+        advanced_filters: { actively_tracked: false },
+      }),
+    ).toMatchObject({ pod_code: 'USLAX' });
+    for (const name of ['list_containers', 'list_shipments']) {
+      expect(() =>
+        tools[name].inputSchema.parse({ nonexistent_filter: 'secret' }),
+      ).toThrow();
+      expect(() =>
+        tools[name].inputSchema.parse({
+          advanced_filters: { nonexistent_filter: 'secret' },
+        }),
+      ).toThrow();
+    }
+  });
+
+  it.each(['list_containers', 'list_shipments'])(
+    '%s returns actionable SDK validation errors without submitted values',
+    async (name) => {
+      const error = Object.assign(
+        new Error(
+          'Invalid list filter "pod_code": expected literal values, not comparison expressions',
+        ),
+        { name: 'ValidationError', details: { filter: 'pod_code' } },
+      );
+      (name === 'list_containers'
+        ? containersList
+        : shipmentsList
+      ).mockRejectedValue(error);
+      const result = await (
+        createTerminal49McpServer('token') as any
+      )._registeredTools[name].handler({ pod_code: '=PRIVATE_VALUE' });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('expected literal values');
+      expect(result.content[0].text).toContain('tool schema');
+      expect(result.content[0].text).not.toContain('PRIVATE_VALUE');
+    },
+  );
+
+  it('does not echo unknown SDK filter keys or upstream errors', async () => {
+    const error = Object.assign(
+      new Error('Invalid list filter "PRIVATE_VALUE": unknown filter'),
+      { name: 'ValidationError', details: { filter: 'PRIVATE_VALUE' } },
+    );
+    containersList.mockRejectedValue(error);
+    const result = await (
+      createTerminal49McpServer('token') as any
+    )._registeredTools.list_containers.handler({});
+    expect(result.content[0].text).toContain('unsupported list filter');
+    expect(result.content[0].text).not.toContain('PRIVATE_VALUE');
+  });
+
   it('requires number in the track_container input schema', () => {
     const server = createTerminal49McpServer('token');
     const schema = (server as any)._registeredTools.track_container

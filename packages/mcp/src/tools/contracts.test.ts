@@ -1086,7 +1086,8 @@ describe('MCP tool contracts', () => {
     expect(list).toHaveBeenCalledWith(
       {
         number: 'MAEU123456789',
-        trackingStopped: false,
+        tracking_stopped: false,
+        sort: undefined,
         includeContainers: false,
       },
       { format: 'mapped', page: 2, pageSize: 25 },
@@ -1268,11 +1269,11 @@ describe('MCP tool contracts', () => {
     );
 
     expect(contract.can_answer).not.toContain('which records match filters');
-    // The API exposes no server-side container filters, so the contract must
-    // tell the agent to paginate rather than invent a scoped worklist.
-    expect(contract.requires_more_data).toContain(
-      'server-side filters are not available for this list endpoint; use pagination and inspect returned rows',
-    );
+    expect(
+      contract.requires_more_data.some((entry) =>
+        entry.startsWith('a filter to scope this list'),
+      ),
+    ).toBe(true);
   });
 
   it('buildListContract treats an unfiltered tracking request page as unscoped', () => {
@@ -1377,6 +1378,70 @@ describe('MCP tool contracts', () => {
     );
 
     expect(contract.total_is_reliable).toBe(true);
+  });
+
+  it('buildListContract recognizes advanced filters and false-valued common filters', () => {
+    const contract = buildListContract(
+      {
+        items: [{ id: 'c1' }],
+        meta: { total: 1200 },
+        links: { next: '/containers?page[number]=2' },
+      },
+      'container',
+      {
+        filters: {
+          has_holds: false,
+          advanced_filters: { pod_code: 'USLAX', picked_up_at: '@not_exists' },
+          sort: '-number',
+        },
+      },
+    );
+    expect(contract.applied_filters).toEqual({
+      has_holds: false,
+      pod_code: 'USLAX',
+      picked_up_at: '@not_exists',
+    });
+    expect(contract.dropped_filters).toBeUndefined();
+    expect(contract.total_is_reliable).toBe(true);
+    expect(contract.pagination_state).toBe('partial_page');
+    expect(contract.requires_more_data.join(' ')).toContain(
+      'same filters and sort',
+    );
+    expect(contract.presentation_guidance).toContain('partial page');
+  });
+
+  it('buildListContract does not use shape or sort arguments to scope a list', () => {
+    const contract = buildListContract(
+      { items: [], meta: { total: 1200 } },
+      'container',
+      {
+        filters: {
+          include: ['shipment'],
+          page: 2,
+          page_size: 25,
+          sort: 'number',
+          advanced_filters: {},
+        },
+      },
+    );
+    expect(contract.applied_filters).toEqual({});
+    expect(contract.total_is_reliable).toBe(false);
+    expect(contract.pagination_state).toBe('unknown');
+  });
+
+  it('buildListContract distinguishes a last page from a fully retrieved worklist', () => {
+    const contract = buildListContract(
+      { items: [{ id: 's1' }], links: { next: null } },
+      'shipment',
+      {
+        filters: { advanced_filters: { actively_tracked: false } },
+      },
+    );
+    expect(contract.pagination_state).toBe('last_page');
+    expect(contract.presentation_guidance).toContain(
+      'Earlier pages may not have been retrieved',
+    );
+    expect(contract.applied_filters).toEqual({ actively_tracked: false });
   });
 
   it('buildListContract omits the heavy column_catalog from the per-call contract', () => {
