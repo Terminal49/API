@@ -1,5 +1,7 @@
 import { type Terminal49Client } from '@terminal49/sdk';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import { readContainerResource } from '../resources/container.js';
+import { formatInZone } from '../lib/temporal.js';
 import { executeGetContainer } from './get-container.js';
 
 async function getDeadline(
@@ -96,4 +98,58 @@ describe('get_container POD deadline', () => {
     expect(result.pickup_lfd_local_date).toBe('2026-09-21');
     expect(result.days_until_lfd).toBe(-2);
   });
+});
+
+describe('container resource and tool POD deadline parity', () => {
+  it.each([
+    ['2026-09-21T00:00:00Z', 'America/Los_Angeles'],
+    ['2026-09-23', 'America/Los_Angeles'],
+    ['2026-11-01T07:30:00Z', 'America/Los_Angeles'],
+    ['2026-09-21T00:00:00Z', null],
+    ['2026-09-21T00:00:00Z', 'invalid-zone'],
+    [null, 'America/Los_Angeles'],
+    [undefined, 'America/Los_Angeles'],
+  ])(
+    'renders the same selected %s deadline in %s without a legacy fallback',
+    async (value, timezone) => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-09-23T12:00:00Z'));
+      const data = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        attributes: {
+          number: 'HLCU1234568',
+          pickup_lfd: '2099-12-31',
+          pod_timezone: timezone,
+          terminal_checked_at: new Date().toISOString(),
+          import_deadlines:
+            value === undefined
+              ? {}
+              : {
+                  pod: {
+                    unified: {
+                      current_value: value,
+                      current_selection: 'facility_manual',
+                    },
+                  },
+                },
+        },
+      };
+      // SAFETY: Both read paths only use these container reads; fixture supplies raw JSON:API.
+      const client = {
+        getContainer: vi.fn().mockResolvedValue({ data }),
+        containers: { get: vi.fn().mockResolvedValue({ raw: { data } }) },
+      } as unknown as Terminal49Client;
+      const tool = await executeGetContainer({ id: data.id }, client);
+      const resource = await readContainerResource(
+        `t49:container/${data.id}`,
+        client,
+      );
+      expect(tool.demurrage.pickup_lfd).toBe(value ?? null);
+      expect(resource.text).toContain(
+        `**Last Free Day (LFD):** ${formatInZone(tool.demurrage.pickup_lfd, timezone)}`,
+      );
+      expect(resource.text).not.toContain('2099-12-31');
+      if (value == null) expect(tool.demurrage.urgency).toBe('unknown');
+    },
+  );
 });

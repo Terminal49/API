@@ -16,13 +16,25 @@ import {
   evaluateDemurrageUrgency,
 } from '../lib/demurrage.js';
 import { logMcpEvent } from '../logging.js';
+import { resolvePodDeadline } from '../lib/pod-deadline.js';
 import {
   dayDeltaInZone,
   formatInZone,
   localCalendarDate,
 } from '../lib/temporal.js';
+import {
+  type CustomFieldsResult,
+  type CustomFieldValue,
+  loadCustomFields,
+} from './custom-fields.js';
 
-export type ContainerInclude = 'shipment' | 'pod_terminal' | 'transport_events';
+export type ContainerInclude =
+  | 'shipment'
+  | 'pod_terminal'
+  | 'transport_events'
+  | 'custom_fields';
+
+type ApiContainerInclude = Exclude<ContainerInclude, 'custom_fields'>;
 
 /** The default sideloads. `include` augments — never replaces — these. */
 const DEFAULT_INCLUDES: ContainerInclude[] = ['shipment', 'pod_terminal'];
@@ -96,6 +108,8 @@ export interface ContainerStatus {
     name: string;
     firms_code: string;
   } | null;
+  custom_fields: CustomFieldValue[] | null;
+  custom_fields_note?: string;
   events?: {
     count: number;
     latest_event?: {
@@ -143,9 +157,17 @@ export async function executeGetContainer(
 
   try {
     const includes = resolveIncludes(args.include);
-    const result = await client.containers.get(args.id, includes, {
-      format: 'raw',
-    });
+    const apiIncludes = includes.filter(
+      (inc): inc is ApiContainerInclude => inc !== 'custom_fields',
+    );
+    const [result, customFields] = await Promise.all([
+      client.containers.get(args.id, apiIncludes, { format: 'raw' }),
+      includes.includes('custom_fields')
+        ? loadCustomFields(() =>
+            client.containers.customFields(args.id, { format: 'mapped' }),
+          )
+        : Promise.resolve(null),
+    ]);
     const raw = (result as any)?.raw ?? result;
 
     const duration = Date.now() - startTime;
@@ -158,7 +180,7 @@ export async function executeGetContainer(
       timestamp: new Date().toISOString(),
     });
 
-    return formatContainerResponse(raw, includes);
+    return formatContainerResponse(raw, includes, customFields);
   } catch (error) {
     const duration = Date.now() - startTime;
     logMcpEvent({
@@ -177,6 +199,7 @@ export async function executeGetContainer(
 function formatContainerResponse(
   apiResponse: any,
   includes: string[],
+  customFields: CustomFieldsResult | null,
 ): ContainerStatus {
   const container = apiResponse.data?.attributes || {};
   const relationships = apiResponse.data?.relationships || {};
@@ -214,11 +237,8 @@ function formatContainerResponse(
   // An absent/withheld unified deadline is unknown. Falling back to the legacy
   // field would reintroduce different selection rules (and possibly an inland LFD).
   const importDeadlines = container.import_deadlines || {};
-  const podDeadline = importDeadlines.pod?.unified;
-  const pickupLfd = podDeadline?.current_value ?? null;
-  const pickupLfdSource = pickupLfd
-    ? (podDeadline?.current_selection ?? null)
-    : null;
+  const { value: pickupLfd, source: pickupLfdSource } =
+    resolvePodDeadline(importDeadlines);
   const localDaysUntilLfd = dayDeltaInZone(pickupLfd, podTimezone);
   const demurrage: DemurrageEvaluation = evaluateDemurrageUrgency({
     fees_at_pod_terminal: container.fees_at_pod_terminal,
@@ -231,7 +251,14 @@ function formatContainerResponse(
     days_until_lfd: localDaysUntilLfd,
   });
 
-  const metadata = generateMetadata(statusResult, includes);
+  const metadata = generateMetadata(
+    statusResult,
+    includes.filter(
+      (include) =>
+        include !== 'custom_fields' ||
+        Array.isArray(customFields?.custom_fields),
+    ),
+  );
 
   return {
     id: apiResponse.data?.id,
@@ -307,6 +334,10 @@ function formatContainerResponse(
           firms_code: podTerminal.attributes?.firms_code,
         }
       : null,
+    custom_fields: customFields?.custom_fields ?? null,
+    ...(customFields?.custom_fields_note
+      ? { custom_fields_note: customFields.custom_fields_note }
+      : {}),
     events: eventsData,
     created_at: container.created_at,
     _metadata: metadata,
