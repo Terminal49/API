@@ -54,6 +54,51 @@ function collectStrings(value) {
   return [];
 }
 
+export function checkSdkEntrypoints(sdkEntrypoints, sdkExports) {
+  assertEqual(
+    'SDK entrypoint map',
+    sdkEntrypoints.map((entry) => entry.export),
+    Object.keys(sdkExports),
+  );
+  for (const entry of sdkEntrypoints) {
+    const sourcePath = entry.source.match(
+      /^sdks\/typescript-sdk\/src\/(.+)\.ts$/,
+    )?.[1];
+    if (
+      !sourcePath ||
+      entry.source.endsWith('.d.ts') ||
+      /[\\%#?]/.test(sourcePath) ||
+      sourcePath
+        .split('/')
+        .some((segment) =>
+          ['', '.', '..', 'node_modules'].includes(segment.toLowerCase()),
+        )
+    ) {
+      throw new Error(
+        'SDK entrypoint source must be a canonical .ts path under sdks/typescript-sdk/src',
+      );
+    }
+
+    const targets = {
+      types: `./dist/${sourcePath}.d.ts`,
+      default: `./dist/${sourcePath}.js`,
+    };
+    const packageExport = sdkExports[entry.export];
+    assertEqual(
+      `SDK export ${entry.export} conditions`,
+      Object.keys(packageExport),
+      Object.keys(targets),
+    );
+    for (const [condition, target] of Object.entries(targets)) {
+      if (packageExport[condition] !== target) {
+        throw new Error(
+          `SDK export ${entry.export} ${condition} must target ${target}; received ${packageExport[condition]}`,
+        );
+      }
+    }
+  }
+}
+
 function checkFeatureMap() {
   const featureMap = readJson('skills/agent-trust/feature-map.json');
   const serverSource = readFileSync(
@@ -76,11 +121,7 @@ function checkFeatureMap() {
   }
 
   const sdkPackage = readJson('sdks/typescript-sdk/package.json');
-  assertEqual(
-    'SDK entrypoint map',
-    featureMap.sdkEntrypoints.map((entry) => entry.export),
-    Object.keys(sdkPackage.exports),
-  );
+  checkSdkEntrypoints(featureMap.sdkEntrypoints, sdkPackage.exports);
   for (const entry of featureMap.sdkEntrypoints) {
     if (!existsSync(resolve(root, entry.source))) {
       throw new Error(`Missing SDK entrypoint source: ${entry.source}`);
@@ -158,14 +199,16 @@ function checkConfigOwnership() {
   }
 }
 
-try {
-  checkFeatureMap();
-  checkToolchain();
-  checkConfigOwnership();
-  console.log('PASS agent trust guards');
-} catch (error) {
-  console.error(
-    `FAIL agent trust guards: ${error instanceof Error ? error.message : String(error)}`,
-  );
-  process.exitCode = 1;
+if (import.meta.main) {
+  try {
+    checkFeatureMap();
+    checkToolchain();
+    checkConfigOwnership();
+    console.log('PASS agent trust guards');
+  } catch (error) {
+    console.error(
+      `FAIL agent trust guards: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    process.exitCode = 1;
+  }
 }

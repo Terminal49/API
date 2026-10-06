@@ -40,6 +40,10 @@
     {
       "name": "list_tracking_requests",
       "implementation": "packages/mcp/src/tools/list-tracking-requests.ts"
+    },
+    {
+      "name": "search_docs",
+      "implementation": "packages/mcp/src/tools/search-docs.ts"
     }
   ],
   "sdkEntrypoints": [
