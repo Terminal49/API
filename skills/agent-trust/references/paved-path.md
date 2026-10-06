@@ -47,3 +47,13 @@ generation path.
 Change `skills/agent-trust/feature-map.json` in the same commit as an MCP tool,
 SDK package export, or non-generated SDK/MCP navigation route. The verifier
 rejects drift in either direction.
+
+Each SDK entrypoint names its canonical `.ts` source under
+`sdks/typescript-sdk/src/`. Declaration files are not entrypoint sources.
+Sources cannot contain traversal or `node_modules` segments, backslashes,
+or URL-reserved `%`, `#`, or `?` characters.
+The verifier derives the JavaScript and declaration paths under `dist/` and
+requires the package export's `default` and `types` targets to match.
+Additional export conditions require an explicit verifier update.
+`npm run test:agent-trust` exercises valid mappings and export redirections.
+The full `npm run agent-verify` command runs these tests before workspace tests.
