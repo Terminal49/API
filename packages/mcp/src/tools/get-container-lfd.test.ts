@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { type Terminal49Client } from '@terminal49/sdk';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { readContainerResource } from '../resources/container.js';
@@ -150,6 +151,45 @@ describe('container resource and tool POD deadline parity', () => {
       );
       expect(resource.text).not.toContain('2099-12-31');
       if (value == null) expect(tool.demurrage.urgency).toBe('unknown');
+    },
+  );
+});
+
+describe('checked-in POD serializer contract projections', () => {
+  const fixtures = JSON.parse(
+    readFileSync(
+      new URL('./fixtures/pod-deadline-contract.json', import.meta.url),
+      'utf8',
+    ),
+  ) as Array<{
+    name: string;
+    expected: { value: string | null; source: string | null };
+    response: { data: { id: string; attributes: { pod_timezone: string } } };
+  }>;
+
+  it.each(fixtures)(
+    '$name uses the serialized account-visible selection in both reads',
+    async ({ response, expected }) => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-09-23T12:00:00Z'));
+      // SAFETY: Synthetic checked-in responses implement only the two reads exercised here.
+      const client = {
+        getContainer: vi.fn().mockResolvedValue(response),
+        containers: { get: vi.fn().mockResolvedValue({ raw: response }) },
+      } as unknown as Terminal49Client;
+      const tool = await executeGetContainer({ id: response.data.id }, client);
+      const resource = await readContainerResource(
+        `t49:container/${response.data.id}`,
+        client,
+      );
+      expect(tool.demurrage.pickup_lfd).toBe(expected.value);
+      expect(tool.demurrage.pickup_lfd_source).toBe(expected.source);
+      expect(resource.text).toContain(
+        `**Last Free Day (LFD):** ${formatInZone(expected.value, response.data.attributes.pod_timezone)}`,
+      );
+      expect(resource.text).not.toContain('2099-12-31');
+      if (expected.value === null)
+        expect(tool.demurrage.urgency).toBe('unknown');
     },
   );
 });
