@@ -580,6 +580,14 @@
           },
           {
             "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "flag[parties]",
+            "description": "Set to `true` to add the `party_roles` relationship to each shipment. Add `include=party_roles.party` to embed the roles and their parties."
+          },
+          {
+            "schema": {
               "type": "string"
             },
             "in": "query",
@@ -14508,7 +14516,7 @@
           "type": {
             "type": "string",
             "enum": [
-              "account"
+              "container"
             ]
           },
           "attributes": {
