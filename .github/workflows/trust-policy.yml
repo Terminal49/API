@@ -1,0 +1,64 @@
+name: Trust Policy Advisory
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled, unlabeled, ready_for_review, converted_to_draft, edited]
+  workflow_run:
+    workflows: [CI, Trust Review Signal]
+    types: [completed]
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+    inputs:
+      pull_number:
+        description: 'PR number; leave empty to reconcile all open PRs'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  checks: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: trust-policy-advisory
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    name: Advisory policy (never authorizes or merges)
+    if: >-
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      (github.event_name != 'pull_request_target' ||
+      github.event.pull_request.base.ref == github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Resolve trusted default-branch commit
+        id: trusted
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        with:
+          script: |
+            const { data } = await github.rest.git.getRef({
+              ...context.repo,
+              ref: `heads/${context.payload.repository.default_branch}`,
+            });
+            core.setOutput('sha', data.object.sha);
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ steps.trusted.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 24
+      - name: Reconcile fresh PR evidence
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        with:
+          script: |
+            const { pathToFileURL } = require('node:url');
+            const { reconcileEvent } = await import(pathToFileURL(
+              `${process.env.GITHUB_WORKSPACE}/scripts/ci/reconcile-trust.mjs`,
+            ).href);
+            await reconcileEvent({ github, context, core });

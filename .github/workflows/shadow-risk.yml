@@ -1,0 +1,209 @@
+name: Shadow Risk
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled, unlabeled, ready_for_review]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: shadow-risk-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  shadow:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    name: Jev shadow comparison (non-blocking)
+    runs-on: ${{ (startsWith(vars.CI_RUNNER_SMALL, 'blacksmith-') && vars.CI_RUNNER_SMALL) || 'blacksmith-2vcpu-ubuntu-2404' }}
+    steps:
+      - name: Resolve trusted default-branch commit
+        id: trusted
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        with:
+          script: |
+            const { data } = await github.rest.git.getRef({
+              ...context.repo,
+              ref: `heads/${context.payload.repository.default_branch}`,
+            });
+            core.setOutput('sha', data.object.sha);
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ steps.trusted.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 24
+
+      - name: Collect pull request context
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        with:
+          script: |
+            const fs = require('node:fs');
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              per_page: 100,
+            });
+            const { data: pull } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: context.issue.number,
+            });
+            const { pathToFileURL } = require('node:url');
+            const { classifyFiles } = await import(pathToFileURL(
+              `${process.env.GITHUB_WORKSPACE}/scripts/ci/classify-pr-risk.mjs`,
+            ).href);
+            classifyFiles(files, pull.changed_files);
+            fs.writeFileSync(
+              '/tmp/shadow-input.json',
+              JSON.stringify({
+                title: pull.title,
+                body: pull.body,
+                changedFiles: pull.changed_files,
+                files: files.map((file) => ({
+                  filename: file.filename,
+                  previous_filename: file.previous_filename,
+                  status: file.status,
+                  additions: file.additions,
+                  deletions: file.deletions,
+                  patch: file.patch,
+                })),
+              }),
+            );
+
+      - name: Score shadow risk
+        id: score
+        continue-on-error: true
+        env:
+          JEV_API_KEY: ${{ secrets.JEV_API_KEY }}
+        run: node scripts/ci/score-shadow-risk.mjs --json /tmp/shadow-input.json >> "$GITHUB_OUTPUT"
+
+      - name: Apply shadow label and sticky comparison
+        continue-on-error: true
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        env:
+          SHADOW_RISK: ${{ steps.score.outputs.shadow-risk }}
+          SHADOW_SOURCE: ${{ steps.score.outputs.source }}
+          PATH_RISK: ${{ steps.score.outputs.path-risk }}
+        with:
+          script: |
+            const validRisks = new Set(['low', 'medium', 'high']);
+            const shadow = validRisks.has(process.env.SHADOW_RISK)
+              ? process.env.SHADOW_RISK
+              : 'medium';
+            const path = validRisks.has(process.env.PATH_RISK)
+              ? process.env.PATH_RISK
+              : 'medium';
+            const source =
+              process.env.SHADOW_SOURCE || 'workflow heuristic fallback';
+            const definitions = {
+              low: {
+                color: 'A7F3D0',
+                description: 'Shadow-only risk signal: low',
+              },
+              medium: {
+                color: 'FDE68A',
+                description: 'Shadow-only risk signal: medium',
+              },
+              high: {
+                color: 'FCA5A5',
+                description: 'Shadow-only risk signal: high',
+              },
+            };
+
+            for (const [risk, definition] of Object.entries(definitions)) {
+              const name = `risk-shadow:${risk}`;
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                  ...definition,
+                });
+              }
+            }
+
+            const pull = context.payload.pull_request;
+            const labels = (await github.paginate(
+              github.rest.issues.listLabelsOnIssue,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pull.number,
+                per_page: 100,
+              },
+            )).map((label) => label.name);
+            for (const risk of Object.keys(definitions)) {
+              const label = `risk-shadow:${risk}`;
+              if (risk === shadow || !labels.includes(label)) continue;
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pull.number,
+                name: label,
+              });
+            }
+            if (!labels.includes(`risk-shadow:${shadow}`)) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pull.number,
+                labels: [`risk-shadow:${shadow}`],
+              });
+            }
+
+            const marker = '<!-- terminal49-shadow-risk -->';
+            const comparison =
+              path === shadow ? 'agreement' : `disagreement (${path} vs ${shadow})`;
+            const body = `${marker}
+            ### Shadow risk calibration
+
+            | Signal | Result | Authority |
+            | --- | --- | --- |
+            | Path classifier | \`risk:${path}\` | Deterministic advisory policy |
+            | ${source} | \`risk-shadow:${shadow}\` | Shadow only |
+
+            Calibration result: **${comparison}**.
+
+            Shadow risk never blocks or enables merge. Keep it in observation mode until roughly 50 pull requests have human-reviewed labels, then calibrate before considering any policy use.`;
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pull.number,
+                per_page: 100,
+              },
+            );
+            const existing = comments.find((comment) =>
+              comment.user?.login === 'github-actions[bot]' && comment.body?.includes(marker),
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pull.number,
+                body,
+              });
+            }
+
+      - name: Keep shadow scoring non-blocking
+        if: always()
+        run: echo "Shadow risk is observational and never gates merge."

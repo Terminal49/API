@@ -1,0 +1,44 @@
+* @dodeja @SylvainGravejat
+
+# High-risk control planes and release inputs
+/.github/ @dodeja @SylvainGravejat
+/package.json @dodeja @SylvainGravejat
+/package-lock.json @dodeja @SylvainGravejat
+/npm-shrinkwrap.json @dodeja @SylvainGravejat
+/tsconfig.json @dodeja @SylvainGravejat
+/vercel.json @dodeja @SylvainGravejat
+/vite.config.ts @dodeja @SylvainGravejat
+
+# Public API contract, MCP runtime, and OAuth gateway
+/docs/openapi.json @dodeja @SylvainGravejat
+/api/ @dodeja @SylvainGravejat
+/packages/mcp/ @dodeja @SylvainGravejat
+
+# TypeScript SDK package and public export surface
+/sdks/typescript-sdk/package.json @dodeja @SylvainGravejat
+/sdks/typescript-sdk/src/client.ts @dodeja @SylvainGravejat
+/sdks/typescript-sdk/src/index.ts @dodeja @SylvainGravejat
+/sdks/typescript-sdk/src/client/jsonapi.ts @dodeja @SylvainGravejat
+/sdks/typescript-sdk/src/client/errors.ts @dodeja @SylvainGravejat
+/sdks/typescript-sdk/src/client/managers/ @dodeja @SylvainGravejat
+/sdks/typescript-sdk/src/client/mappers.ts @dodeja @SylvainGravejat
+/sdks/typescript-sdk/src/client/transport.ts @dodeja @SylvainGravejat
+/sdks/typescript-sdk/src/generated/ @dodeja @SylvainGravejat
+/sdks/typescript-sdk/src/types/ @dodeja @SylvainGravejat
+
+# Risk policy and agent-trust verification
+/scripts/ci/ @dodeja @SylvainGravejat
+/skills/agent-trust/ @dodeja @SylvainGravejat
+/.cursor/rules/agent-trust.mdc @dodeja @SylvainGravejat
+/bin/agent-verify.mjs @dodeja @SylvainGravejat
+/bin/check-agent-trust.mjs @dodeja @SylvainGravejat
+/bin/check-agent-trust.test.mjs @dodeja @SylvainGravejat
+/bin/check-openapi-types.mjs @dodeja @SylvainGravejat
+
+# Capability guides require human review
+/docs/mcp/ @dodeja @SylvainGravejat
+/docs/sdk/ @dodeja @SylvainGravejat
+/docs/api-docs/in-depth-guides/mcp.mdx @dodeja @SylvainGravejat
+/docs/api-docs/getting-started/sdk-quickstart.mdx @dodeja @SylvainGravejat
+/docs/risk-gates.md @dodeja @SylvainGravejat
+/docs/risk-gates-trial.md @dodeja @SylvainGravejat
