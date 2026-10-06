@@ -47,7 +47,7 @@ Every reconciliation reads a fresh PR snapshot and evaluates these fields:
   agreement. Empty, duplicate, malformed, and 3,000-file-limit evidence blocks.
 - The complete review history and each human reviewer's current repository
   permission.
-- The actual CI workflow, most recently updated run and its current attempt, associated PR head and base,
+- The actual CI workflow, each exact current attempt and its start time, associated PR head and base,
   and each mandatory job's check identity and successful conclusion.
 
 The controller rereads that snapshot before writing a label or summary. A
@@ -73,7 +73,10 @@ a new head commit, permission loss, or later changes request revokes it. An
 unresolved writer's changes request blocks even when another writer approves.
 Medium and high risk never become agent merge candidates.
 
-CI evidence must have a completed `success` conclusion. Missing, pending,
+CI evidence must have a completed `success` conclusion. Any active current-head
+attempt blocks the candidate. Exact attempt start times determine ordering;
+completion updates cannot replace a newer attempt. Tied or missing starts block.
+ Missing, pending,
 skipped, neutral, stale, wrong-workflow, wrong-App, and duplicate job evidence
 blocks the candidate. Fork and Dependabot PRs use the offline CI jobs. Their
 credentialed preview jobs are not required because CI excludes them. A passing
