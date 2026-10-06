@@ -51,6 +51,7 @@ For substantive documentation writing, use the repo-local skill at `skills/termi
 - **Do not hand-edit generated files** unless explicitly asked:
   - `Terminal49-API.postman_collection.json` (from `docs/openapi.json`)
   - `sdks/typescript-sdk/src/generated/**` (from `docs/openapi.json` via `openapi-typescript`)
+  - `packages/mcp/src/generated/**` (filter schemas from `docs/openapi.json` via `npm run generate:filters --workspace @terminal49/mcp`)
   - `docs/sdk/reference/**` (generated SDK docs; CI checks they are up to date)
 
 ---

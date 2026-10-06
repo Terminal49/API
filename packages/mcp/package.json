@@ -24,7 +24,8 @@
     "mcp:stdio": "tsx src/index.ts",
     "sdk:setup": "node ./scripts/sdk-setup.mjs",
     "eval": "vp test run --config vitest.eval.config.ts",
-    "eval:check": "tsc --noEmit -p tsconfig.eval.json"
+    "eval:check": "tsc --noEmit -p tsconfig.eval.json",
+    "generate:filters": "node scripts/generate-list-filter-schemas.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "^2.0.0",
