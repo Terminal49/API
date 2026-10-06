@@ -19,7 +19,7 @@ description: "Reference index for the Terminal49 TypeScript SDK client module, l
 | [Terminal49Error](/sdk/reference/client/classes/Terminal49Error) | Base error for all Terminal49 API errors. Subclassed by status-specific errors. |
 | [TimeoutError](/sdk/reference/client/classes/TimeoutError) | Thrown when a request exceeds the configured request timeout and is aborted by the SDK. Has no HTTP status because no response was produced. |
 | [UpstreamError](/sdk/reference/client/classes/UpstreamError) | Thrown when the carrier or terminal upstream API is unavailable (HTTP 5xx). |
-| [ValidationError](/sdk/reference/client/classes/ValidationError) | Thrown when the request payload fails server-side validation (HTTP 400/422). |
+| [ValidationError](/sdk/reference/client/classes/ValidationError) | Thrown for invalid SDK filter inputs or server validation failures (HTTP 400/422). |
 
 ## Interfaces
 

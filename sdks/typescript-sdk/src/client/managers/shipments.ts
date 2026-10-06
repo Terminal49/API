@@ -1,3 +1,5 @@
+import type { ShipmentListFilters } from '../../generated/list-filters.js';
+import { serializeListQuery } from '../filter-validation.js';
 import type { Shipment } from '../../types/models.js';
 import type {
   CallOptions,
@@ -62,22 +64,11 @@ export class ShipmentManager extends BaseManager {
   }
 
   async list(
-    filters: {
-      status?: string;
-      port?: string;
-      carrier?: string;
-      updatedAfter?: string;
-      /** Filter shipments by whether they are still tracking. Maps to the supported `filter[tracking_stopped]`. */
-      trackingStopped?: boolean;
-      /** Search shipments by the original tracking `request_number`. */
-      number?: string;
-      includeContainers?: boolean;
-      include?: IncludeParam<ShipmentInclude>;
-    } = {},
+    filters: ShipmentListFilters = {},
     options?: ListOptions,
   ): Promise<any> {
     const defaultInclude =
-      filters.includeContainers === false
+      filters?.includeContainers === false
         ? SHIPMENT_INCLUDES_WITHOUT_CONTAINERS
         : DEFAULT_SHIPMENT_INCLUDES;
     const { query, unsupportedFilters } = buildShipmentListQuery(
@@ -89,6 +80,7 @@ export class ShipmentManager extends BaseManager {
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/shipments', {
         params: { query },
+        querySerializer: serializeListQuery,
       }),
     );
     return this.formatResult(raw, options?.format, (doc) => ({

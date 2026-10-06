@@ -1,3 +1,7 @@
+import type {
+  ShipmentListFilters,
+  ContainerListFilters,
+} from './generated/list-filters.js';
 import { Jsona } from 'jsona';
 import {
   AuthenticationError,
@@ -340,14 +344,7 @@ export class Terminal49Client {
 
   /** List shipments with optional filters and pagination. */
   async listShipments(
-    filters: {
-      status?: string;
-      port?: string;
-      carrier?: string;
-      updatedAfter?: string;
-      includeContainers?: boolean;
-      include?: IncludeParam<ShipmentInclude>;
-    } = {},
+    filters: ShipmentListFilters = {},
     options?: ListOptions,
   ): Promise<any> {
     return this.shipments.list(filters, options);
@@ -439,13 +436,7 @@ export class Terminal49Client {
 
   /** List containers with optional filters and pagination. */
   async listContainers(
-    filters: {
-      status?: string;
-      port?: string;
-      carrier?: string;
-      updatedAfter?: string;
-      include?: IncludeParam<ContainerInclude>;
-    } = {},
+    filters: ContainerListFilters = {},
     options?: ListOptions,
   ): Promise<any> {
     return this.containers.list(filters, options);

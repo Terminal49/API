@@ -26,7 +26,11 @@ function frontmatterFor(content) {
   return content.match(/^---\n([\s\S]*?)\n---\n/)?.[1];
 }
 
-const frontmatterByPath = {};
+// Retain the previous snapshot when an earlier TypeDoc run failed after cleaning.
+// Otherwise retrying that run would discard authored page metadata.
+const frontmatterByPath = fs.existsSync(frontmatterCachePath)
+  ? JSON.parse(fs.readFileSync(frontmatterCachePath, 'utf8'))
+  : {};
 for (const filePath of listMdxFiles(outputDir)) {
   const content = fs.readFileSync(filePath, 'utf8');
   const frontmatter = frontmatterFor(content);

@@ -108,7 +108,7 @@ description: "ContainerManager reference for the Terminal49 TypeScript SDK, used
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\>; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} \| `undefined` |
+| `filters` | [`ContainerListFilters`](/sdk/reference/types/filters/interfaces/ContainerListFilters) \| `undefined` |
 | `options?` | `Omit`\<[`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
 
 #### Returns
@@ -125,12 +125,7 @@ description: "ContainerManager reference for the Terminal49 TypeScript SDK, used
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | \{ `carrier?`: `string`; `include?`: [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\>; `port?`: `string`; `status?`: `string`; `updatedAfter?`: `string`; \} |
-| `filters.carrier?` | `string` |
-| `filters.include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
-| `filters.port?` | `string` |
-| `filters.status?` | `string` |
-| `filters.updatedAfter?` | `string` |
+| `filters` | [`ContainerListFilters`](/sdk/reference/types/filters/interfaces/ContainerListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns

@@ -1,0 +1,77 @@
+---
+title: "Filter Shipments and Containers"
+description: "Build precise list queries using valid filter values, date ranges, party matching, and explicit pagination."
+---
+
+Use a Terminal49 API key for an account with tracked shipments. Send it as `Authorization: Token YOUR_API_KEY`. Start with the [complete list filter reference](/api-docs/api-reference/list-filters) to choose the exact field and its value shape.
+
+## Choose the collection and milestone
+
+Use `/shipments` for voyage arrival, stopped tracking, ownership, or shipment tags. Use `/containers` for equipment status, terminal holds, fees, pickup deadlines, and container movement milestones. A container's `current_status` and a shipment's `voyage_status` have different vocabularies.
+
+For actual-or-estimated port of discharge (POD) arrival, use shipment `pod_arrival` or container `arrival`. For actual arrival only, use shipment `pod_ata_at`. Container `pod_arrived_at` describes the container arrival milestone; it is not interchangeable with voyage arrival. Review [event timestamps](/api-docs/in-depth-guides/event-timestamps) when choosing an estimated or actual milestone.
+
+## Find shipments arriving in a date window
+
+This query selects tracking-not-stopped shipments at one POD whose actual arrival, or ETA when no actual arrival exists, falls within the window. The bracketed array supplies two AND bounds.
+
+```bash
+curl --get 'https://api.terminal49.com/v2/shipments' \
+  --header 'Authorization: Token YOUR_API_KEY' \
+  --header 'Accept: application/vnd.api+json' \
+  --data-urlencode 'filter[tracking_stopped]=false' \
+  --data-urlencode 'filter[pod_code]=USLAX' \
+  --data-urlencode 'filter[pod_arrival][]=>=2026-10-01' \
+  --data-urlencode 'filter[pod_arrival][]=<=2026-10-07' \
+  --data-urlencode 'sort=pod_arrival' \
+  --data-urlencode 'page[size]=30'
+```
+
+Use an ISO 8601 timestamp with a timezone offset for shipment `created_at` and `pod_eta_changed_at`, such as `>=2026-10-01T00:00:00Z`. Container date filters, including `created_at` and `updated_at`, compare dates; a timestamp cutoff cannot be substituted for them without changing the question.
+
+`arriving_today=true` also checks destination arrival and uses the API server's day. It may not answer a POD-only question in the port's local calendar. Use explicit dates for a reproducible API-date question. Date filters compare the stored date component without converting to the port timezone. For a local port day, request the overlapping stored dates and refine returned timestamps with pod_timezone, processing every page needed for the answer.
+
+## Find containers with holds and upcoming deadlines
+
+```bash
+curl --get 'https://api.terminal49.com/v2/containers' \
+  --header 'Authorization: Token YOUR_API_KEY' \
+  --header 'Accept: application/vnd.api+json' \
+  --data-urlencode 'filter[pod_code]=USLAX' \
+  --data-urlencode 'filter[current_status]=available,not_available,off_dock' \
+  --data-urlencode 'filter[has_holds]=true' \
+  --data-urlencode 'filter[pickup_lfd][]=>=2026-10-01' \
+  --data-urlencode 'filter[pickup_lfd][]=<=2026-10-07' \
+  --data-urlencode 'sort=pickup_lfd' \
+  --data-urlencode 'page[size]=50'
+```
+
+The status alternatives use OR, while POD, holds, and the date range combine with AND. To return containers with fees **or** holds, replace `has_holds` with `has_fees_or_holds`; sending both selectors as true requires a hold as well as the combined exception condition.
+
+Use `pickup_lfd` for general deadline comparisons. `last_free_day_on` instead requires two plain dates and adds tracking, status, and destination constraints. Channel-specific reported LFDs and effective LFDs may select different populations; effective values depend on account and carrier eligibility for calculated data.
+
+## Use valid identifiers and text
+
+Take carrier Standard Carrier Alpha Codes (SCACs) from [shipping lines](/api-docs/api-reference/shipping-lines/shipping-lines). Obtain terminal IDs and port codes from included relationships, and [party IDs](/api-docs/api-reference/parties/list-parties) from your account's parties. Keep user ownership IDs separate from creator account IDs. Use your account's tag names, not a globally assumed tag list.
+
+Use `filter[number]` for an exact shipment or container number. A shipment scalar containing commas is one literal number; use `filter[number][]=NUMBER` to supply multiple shipment alternatives. For containers, comma-separated numbers use OR, while an array of different exact numbers uses AND and cannot match one container.
+
+Use shipment `q` or container `search_by_number`, `search_by_ids`, and the appropriate reference-number search for prefix text queries. The `~` search operator is not valid on generic exact string fields. If a company name contains punctuation the exact-string parser rejects, use `customer_id` instead.
+
+## Match parties
+
+To require both parties on the same shipment, use `filter[party_id][operator]=all` with `filter[party_id][value][]=PARTY_ID` repeated for each party. The default operator is `any`.
+
+For containers, supply party IDs under a role, such as `filter[parties][shipper]=PARTY_ID`. IDs within a role use OR; different roles combine with AND. `pickup_dray_carrier` checks the container's role, while the other documented roles can match a container or its shipment. Replace `PARTY_ID` with an ID returned to your account; the SDK does not perform extra lookup requests to validate its existence.
+
+## Avoid misleading results
+
+Consult the [reference's combination guidance](/api-docs/api-reference/list-filters#shipment-combinations-to-avoid) before mixing active/stopped state, arrival presence, and ETA-change selectors. Unknown API filter keys are ignored, and an HTTP 200 response can therefore contain an unfiltered account collection. The SDK validates keys and the known value grammar before making a request.
+
+Omit one-way selectors to disable them. Shipment `arriving_today=false` does not narrow the collection; container `eta_changed_in_* = false` still applies the positive selector. Missing terminal data is distinct from explicitly empty holds or fees, so false exception selectors do not cover every container outside the true result set.
+
+Treat container `pod_eta_at`, `pod_ata_at`, and dynamic custom-field list filtering as [currently unavailable](/api-docs/api-reference/list-filters#currently-unavailable-container-filters). Do not present those requests as scoped worklists.
+
+## Continue through pages
+
+Keep the same filter and sort parameters when requesting `page[number]=2` and subsequent pages. Container page sizes above 50 are capped by the API. `meta.total` describes the filtered collection; the returned `data` array contains only the current page. If `links.next` exists, a summary based on the rows fetched so far is partial. The SDK offers [bounded iteration](/sdk/filtering-pagination#pagination) for applications that need more rows.

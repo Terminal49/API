@@ -43,7 +43,7 @@ export class NotFoundError extends Terminal49Error {
   }
 }
 
-/** Thrown when the request payload fails server-side validation (HTTP 400/422). */
+/** Thrown for invalid SDK filter inputs or server validation failures (HTTP 400/422). */
 export class ValidationError extends Terminal49Error {
   constructor(message: string, status = 400, details?: unknown) {
     super(message, status, details);
