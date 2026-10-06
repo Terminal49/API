@@ -163,8 +163,10 @@ function checkToolchain() {
     throw new Error('Vite core override is not coupled to vite-plus.');
   }
 
+  const workspaceNames = [];
   for (const workspacePath of workspaces) {
     const workspace = readJson(workspacePath);
+    workspaceNames.push(workspace.name);
     if (workspace.devDependencies['vite-plus'] !== vitePlusPackage.version) {
       throw new Error(`${workspacePath} has a mismatched vite-plus version.`);
     }
@@ -174,6 +176,19 @@ function checkToolchain() {
       );
     }
   }
+  const buildTargets = (rootPackage.scripts?.build ?? '')
+    .split('&&')
+    .map((command) => {
+      const target = command
+        .trim()
+        .match(/^npm run build --workspace (\S+)$/)?.[1];
+      if (!target)
+        throw new Error(
+          'Root build must use ordered npm workspace build commands',
+        );
+      return target;
+    });
+  assertEqual('Workspace build inventory', buildTargets, workspaceNames);
 }
 
 function checkConfigOwnership() {
