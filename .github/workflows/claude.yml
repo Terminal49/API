@@ -144,7 +144,7 @@ jobs:
             Useful commands:
             - cd docs && mintlify dev
             - spectral lint --ruleset .spectral.mjs docs/openapi.json
-            - openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags
+            - openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,enableOptionalParameters=false
 
             If API behavior or schemas change, update docs/openapi.json first. Regenerate the Postman collection only when explicitly needed.
             You have no shell. File edits are limited to the checked-out repository and commits go through the GitHub API; when validation needs shell commands, report the exact commands for a maintainer to run."
