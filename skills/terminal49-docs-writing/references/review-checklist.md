@@ -40,7 +40,7 @@ node -e "JSON.parse(require('fs').readFileSync('docs/docs.json','utf8')); JSON.p
 If OpenAPI changed:
 
 ```bash
-openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags
+openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,parametersResolution=Example
 ```
 
 If local commands fail because tooling is missing or broken, report the exact blocker and which checks did pass.
