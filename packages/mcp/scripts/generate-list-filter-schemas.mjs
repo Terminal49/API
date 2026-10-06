@@ -58,7 +58,8 @@ for (const [entity, endpoint] of [
           throw new Error('Missing status values');
         const atom = `(?:${values.join('|')})`;
         const pattern = `^(?:@exists|@not_exists|=?${atom}(?:,=?${atom})*)$`;
-        schema = `z.union([z.string().regex(new RegExp(${JSON.stringify(pattern)})), z.array(z.enum(${JSON.stringify(values)})).min(1)])`;
+        const expression = `z.string().regex(new RegExp(${JSON.stringify(pattern)}))`;
+        schema = `z.union([${expression}, z.array(${expression}).min(1)])`;
         break;
       }
       case 'string':
@@ -76,7 +77,7 @@ for (const [entity, endpoint] of [
     }
     if (key === 'number' && entity === 'SHIPMENT')
       schema =
-        'z.union([z.string().min(1).max(64), z.array(z.string().min(1).max(64)).min(1)])';
+        'z.union([z.string().trim().min(1).max(64), z.array(z.string().trim().min(1).max(64)).min(1)])';
     lines.push(
       `${JSON.stringify(key)}: ${schema}.describe(${JSON.stringify(p.description)}).optional(),`,
     );
