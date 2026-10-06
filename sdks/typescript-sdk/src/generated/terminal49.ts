@@ -4470,7 +4470,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["route"];
-                        included?: (components["schemas"]["route_location"] | components["schemas"]["port"] | components["schemas"]["vessel"] | components["schemas"]["shipment"])[];
+                        included?: (components["schemas"]["route_location"] | components["schemas"]["port"] | components["schemas"]["terminal"] | components["schemas"]["vessel"] | components["schemas"]["shipment"])[];
                     };
                 };
             };

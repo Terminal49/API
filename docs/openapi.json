@@ -6539,6 +6539,9 @@
                             "$ref": "#/components/schemas/port"
                           },
                           {
+                            "$ref": "#/components/schemas/terminal"
+                          },
+                          {
                             "$ref": "#/components/schemas/vessel"
                           },
                           {
