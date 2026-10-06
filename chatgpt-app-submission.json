@@ -127,6 +127,18 @@
         "open_world_justification": "Does not publish content or change public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
+    },
+    "search_docs": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Searches public documentation without modifying data.",
+        "open_world_justification": "Queries the public Terminal49 documentation site hosted by Mintlify, an external read-only search service.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
     }
   },
   "test_cases": [

@@ -23,6 +23,7 @@ import {
 import { executeListShipments } from './tools/list-shipments.js';
 import { executeListContainers } from './tools/list-containers.js';
 import { executeListTrackingRequests } from './tools/list-tracking-requests.js';
+import { executeSearchDocs } from './tools/search-docs.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
 import {
@@ -77,11 +78,11 @@ type ToolContent = TextContent | ResourceLinkContent;
  */
 export const TERMINAL49_SERVER_INSTRUCTIONS = `Terminal49 tracks ocean containers and shipments live from carriers and terminals. Data is real-time from ocean carriers (by SCAC, e.g. MAEU = Maersk) and US/Canada terminals, so values change between calls.
 
-Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered).
+Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered); custom fields = account-defined fields (PO number, project manager, etc.) on containers and shipments, loaded with get_container include ['custom_fields'] or get_shipment_details include_custom_fields.
 
-Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools operate within the user's private Terminal49 account and none delete or overwrite data.
+Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete or overwrite data.
 
-Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.`;
+Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links.`;
 
 type ResponseDisplayColumn = {
   key: string;
@@ -1108,14 +1109,22 @@ export function createTerminal49McpServer(
           .uuid()
           .describe('The Terminal49 container ID (UUID format)'),
         include: z
-          .array(z.enum(['shipment', 'pod_terminal', 'transport_events']))
+          .array(
+            z.enum([
+              'shipment',
+              'pod_terminal',
+              'transport_events',
+              'custom_fields',
+            ]),
+          )
           .optional()
           .default(['shipment'])
           .describe(
             "Optional related data to include. Default: ['shipment'] covers most use cases. " +
               '• shipment: Routing, BOL, line, ref numbers (lightweight, always useful) ' +
               '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
-              '• transport_events: Event summary (count, rail event count, and latest event); use get_container_transport_events for the full timeline',
+              '• transport_events: Event summary (count, rail event count, and latest event); use get_container_transport_events for the full timeline ' +
+              '• custom_fields: Account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)',
           ),
       }),
       outputSchema: z.object({}).passthrough(),
@@ -1151,11 +1160,23 @@ export function createTerminal49McpServer(
           .describe(
             'Include list of containers in this shipment. Default: true',
           ),
+        include_custom_fields: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe(
+            'Include account-defined custom fields (e.g. PO number, project manager) set on this shipment. Needs a signed-in user, not an API key. Default: false',
+          ),
       }),
       outputSchema: z.object({}).passthrough(),
     },
-    wrapTool('get_shipment_details', async ({ id, include_containers }) =>
-      executeGetShipmentDetails({ id, include_containers }, client),
+    wrapTool(
+      'get_shipment_details',
+      async ({ id, include_containers, include_custom_fields }) =>
+        executeGetShipmentDetails(
+          { id, include_containers, include_custom_fields },
+          client,
+        ),
     ),
   );
 
@@ -1442,6 +1463,59 @@ export function createTerminal49McpServer(
     },
     wrapTool('list_tracking_requests', async (args) =>
       executeListTrackingRequests(args, client),
+    ),
+  );
+
+  // Tool 11: Search Docs
+  server.registerTool(
+    'search_docs',
+    {
+      title: 'Search Terminal49 Docs',
+      description:
+        'Search the public Terminal49 documentation (terminal49.com/docs): API guides, webhooks, ' +
+        'container statuses, holds and last free day rules, DataSync, the SDK, and this MCP server. ' +
+        'Returns matching sections with title, link, and an excerpt. Use it for how-to and definition ' +
+        'questions, not for account data, and cite the links in the answer.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: true,
+      },
+      inputSchema: z.object({
+        query: z
+          .string()
+          .trim()
+          .min(1)
+          .max(256)
+          .describe(
+            'A short documentation search query (maximum 256 characters), e.g. "webhook retries".',
+          ),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(10)
+          .optional()
+          .describe('Maximum results to return (1-10, default 5).'),
+      }),
+      outputSchema: z.object({
+        query: z.string(),
+        total_results: z.number(),
+        results: z.array(
+          z.object({
+            title: z.string(),
+            url: z.string(),
+            page: z.string(),
+            content: z.string(),
+          }),
+        ),
+      }),
+    },
+    wrapTool('search_docs', async ({ query, limit }) =>
+      executeSearchDocs(
+        { query, limit },
+        { assistantApiKey: process.env.MINTLIFY_ASSISTANT_API_KEY },
+      ),
     ),
   );
 
