@@ -174,7 +174,7 @@ describe('MCP protocol compatibility', () => {
       ]),
     );
 
-    expect(tools).toHaveLength(10);
+    expect(tools).toHaveLength(11);
     for (const tool of tools) {
       expect(tool.name.length, tool.name).toBeLessThanOrEqual(64);
       expect(tool.inputSchema.properties, tool.name).not.toHaveProperty(
@@ -244,7 +244,12 @@ describe('MCP protocol compatibility', () => {
       {
         default: ['shipment'],
         items: {
-          enum: ['shipment', 'pod_terminal', 'transport_events'],
+          enum: [
+            'shipment',
+            'pod_terminal',
+            'transport_events',
+            'custom_fields',
+          ],
         },
       },
     );
@@ -301,7 +306,7 @@ describe('MCP protocol compatibility', () => {
           client.listResourceTemplates(),
         ]);
 
-      expect(tools).toHaveLength(10);
+      expect(tools).toHaveLength(11);
       expect(prompts).toHaveLength(3);
       expect(resources).toHaveLength(3);
       expect(resourceTemplates).toHaveLength(1);
@@ -310,7 +315,7 @@ describe('MCP protocol compatibility', () => {
         expect(tool.annotations).toMatchObject({
           readOnlyHint: tool.name !== 'track_container',
           destructiveHint: false,
-          openWorldHint: false,
+          openWorldHint: tool.name === 'search_docs',
         });
       }
     },

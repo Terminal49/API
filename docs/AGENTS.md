@@ -40,7 +40,7 @@ For substantive documentation writing, use the repo-local skill at `../skills/te
 ## When updating API reference
 - If you change API behavior or schemas, update `docs/openapi.json` first.
 - Regenerate the Postman collection with:
-  `openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags`
+  `openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,enableOptionalParameters=false`
 
 ## MDX conventions
 - Every page must include frontmatter with a `title`.

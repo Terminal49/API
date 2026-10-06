@@ -1,0 +1,85 @@
+---
+title: "Filter shipment and container worklists"
+description: "Use verified MCP filters, choose valid values, and continue bounded shipment and container lists without losing the query."
+---
+
+Use `list_shipments` or `list_containers` to narrow results before requesting details. Both tools return one page with a maximum of 25 rows. They validate filter names and values before calling the API.
+
+## Choose an endpoint and filter
+
+| Intent | Tool | Inputs |
+| --- | --- | --- |
+| Voyage arrivals at a port | `list_shipments` | `pod_code`, `pod_arrival`, `voyage_status` |
+| Equipment pickup status | `list_containers` | `current_status`, `pod_code` |
+| Reported terminal holds or fees | `list_containers` | `has_holds`, `has_fees` |
+| Pickup Last Free Day (LFD) | `list_containers` | `pickup_lfd` |
+| Carrier selection | `list_containers` | `shipping_line_scac` |
+| Ownership, party roles, or other milestones | Either, as applicable | `advanced_filters` |
+
+Resolve a carrier name with `get_supported_shipping_lines` and use its Standard Carrier Alpha Code (SCAC). Obtain terminal, user, customer, and party identifiers from authorized records or account data. Do not invent UUIDs or assume a name is an ID. The tools do not perform automatic identifier lookups.
+
+## Use common inputs or advanced filters
+
+Common filters appear directly in each tool's schema. The strict `advanced_filters` object contains all confirmed filters for that endpoint. Its descriptions specify operators and valid values. The [complete API filter reference](/api-docs/api-reference/list-filters) covers both catalogs.
+
+Supply a filter in one location. Repeating a filter at the top level and in `advanced_filters` is an error, even when the values match. Shipment `tag` and `tags` are aliases; supply only one. Put `sort`, pagination, and include options at the top level.
+
+For example, call `list_containers` with these arguments to select actively tracked containers that are available at the Port of Discharge (POD) in Los Angeles and have reported holds:
+
+```json
+{
+  "current_status": "available",
+  "pod_code": "USLAX",
+  "has_holds": true,
+  "actively_tracked": true,
+  "sort": "pickup_lfd",
+  "page": 1,
+  "page_size": 25
+}
+```
+
+To select shipments by POD arrival date, call `list_shipments` with a pair of bounds. These dates illustrate the query syntax:
+
+```json
+{
+  "pod_code": "USLAX",
+  "actively_tracked": true,
+  "pod_arrival": [">=2026-10-01", "<=2026-10-07"],
+  "advanced_filters": {
+    "tags": "priority,expedite",
+    "tags_and": true
+  },
+  "page_size": 25
+}
+```
+
+Use your account's tag names. Comma-separated values and arrays have different semantics for some filters. For example, shipment number arrays mean OR, while exact container number arrays mean AND. Follow each filter description.
+
+## Choose valid values and combinations
+
+Container `current_status` and shipment `voyage_status` are different vocabularies. The tool schemas enumerate their accepted values. Use `voyage_status` values `arrived` or `on_ship` for shipments. Container states include `available`, `on_ship`, `on_rail`, `picked_up`, and `empty_returned`; use the schema for the full list.
+
+Date-only filters compare stored calendar dates. Shipment `created_at` and `pod_eta_changed_at` require timestamps with `Z` or a timezone offset. For a local-port date question, query overlapping dates and refine using returned timestamps and the port timezone. See [date precision and combinations](/api-docs/in-depth-guides/filtering-shipments-and-containers).
+
+Omit a one-way selector to disable it. `arriving_today`, `eta_changed_in_last_24h`, and `eta_changed_in_past_3_days` accept only `true`. Missing terminal data is different from an explicitly empty hold or fee array. A `false` hold or fee filter does not include every container outside the `true` result.
+
+Container `pod_eta_at`, `pod_ata_at`, and `custom_fields` filters remain unavailable because deployed API checks found errors or ineffective filtering. Reading custom-field values with detail tools is separate from filtering by them.
+
+Unknown names, invalid status values, malformed dates, duplicate inputs, and provably contradictory combinations return errors. Correct the arguments before retrying.
+
+## Continue with the same query
+
+Results include `items`, API `links` and `meta` when available, and factual `_metadata` about the request:
+
+| Field | Meaning |
+| --- | --- |
+| `applied_filters` | Canonical filters sent to the API |
+| `sort` | Requested ordering, when supplied |
+| `page` | Requested page, defaulting to 1 |
+| `page_size` | Effective page size, capped at 25 |
+| `has_more` | `true` if another page is linked, `false` for an explicit end, or `null` if pagination is unknown |
+| `next_page` | Next page number, when available from the API link |
+
+These fields are inside `_metadata`. If `has_more` is `true`, request `next_page` with the same filters, sort, and include options. Use the API next link to identify the page when a numeric `next_page` is unavailable. Each call retrieves one page.
+
+Report how many rows you retrieved and whether more pages remain. A page's row count is not the total worklist size. Reaching the last page does not prove that earlier pages were retrieved, and records can change between calls. Refine the query or ask whether to continue if the requested answer would require many pages.

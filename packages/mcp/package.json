@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "test": "vp test",
+    "test": "vp test run",
     "test:coverage": "vp test --run --coverage",
     "test:http-protocol": "node scripts/http-protocol-smoke.mjs",
     "test:protocol": "node scripts/protocol-smoke.mjs",
@@ -24,35 +24,36 @@
     "mcp:stdio": "tsx src/index.ts",
     "sdk:setup": "node ./scripts/sdk-setup.mjs",
     "eval": "vp test run --config vitest.eval.config.ts",
-    "eval:check": "tsc --noEmit -p tsconfig.eval.json"
+    "eval:check": "tsc --noEmit -p tsconfig.eval.json",
+    "generate:filters": "node scripts/generate-list-filter-schemas.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "^2.0.0",
     "@modelcontextprotocol/server": "^2.0.0",
     "@posthog/mcp": "^0.16.3",
     "@sentry/node": "^10.55.0",
-    "@terminal49/sdk": "0.4.0",
+    "@terminal49/sdk": "0.5.0",
     "posthog-node": "^5.0.0",
     "zod": "~4.3.6"
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.0.0",
     "@types/node": "^24.10.13",
-    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/coverage-v8": "4.1.11",
     "tsx": "^4.22.4",
     "typescript": "^5.6.3",
-    "vite-plus": "0.2.9"
+    "vite-plus": "0.3.3"
   },
   "overrides": {
     "@hono/node-server": "^1.19.14",
     "ajv": "^8.20.0",
     "express-rate-limit": "^8.5.2",
-    "fast-uri": "^3.1.2",
+    "fast-uri": "^3.1.8",
     "hono": "^4.12.16",
     "ip-address": "^10.1.1",
     "path-to-regexp": "^8.4.2",
     "picomatch": "^4.0.4",
-    "postcss": "^8.5.14",
+    "postcss": "^8.5.28",
     "qs": "^6.15.2",
     "rollup": "^4.60.4"
   },

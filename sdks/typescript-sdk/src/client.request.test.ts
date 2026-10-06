@@ -78,8 +78,10 @@ describe('Terminal49Client request building', () => {
     expect(result.mapped?.[0]?.scac).toBe('MAEU');
   });
 
-  it('builds listShipments include + pagination and omits unsupported filters', async () => {
+  it('builds shipment filters, include, and pagination through the convenience method', async () => {
     const search = buildSearchParams([
+      ['filter[tracking_stopped]', 'false'],
+      ['filter[pod_code]', 'USLAX'],
       [
         'include',
         'containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal',
@@ -87,43 +89,24 @@ describe('Terminal49Client request building', () => {
       ['page[number]', '2'],
       ['page[size]', '50'],
     ]);
-
     const { fetchImpl, calls } = createMockFetch({
       [`/shipments?${search}`]: () => jsonResponse({ data: [] }),
     });
-
     const client = new Terminal49Client({
       apiToken: 'token-123',
       apiBaseUrl: baseUrl,
       fetchImpl,
     });
-
     const result = await client.listShipments(
-      {
-        status: 'in_transit',
-        port: 'USLAX',
-        carrier: 'MAEU',
-        updatedAfter: '2024-01-01',
-      },
+      { tracking_stopped: false, pod_code: 'USLAX' },
       { page: 2, pageSize: 50, format: 'mapped' },
     );
-
     const params = calls[0].url.searchParams;
-    // The v2 API does not support these filter[*] keys, so the SDK omits them
-    // instead of sending no-op params.
-    expect(params.get('filter[status]')).toBeNull();
-    expect(params.get('filter[pod_locode]')).toBeNull();
-    expect(params.get('filter[line_scac]')).toBeNull();
-    expect(params.get('filter[updated_at]')).toBeNull();
+    expect(params.get('filter[tracking_stopped]')).toBe('false');
+    expect(params.get('filter[pod_code]')).toBe('USLAX');
     expect(params.get('page[number]')).toBe('2');
     expect(params.get('page[size]')).toBe('50');
-    // ...and reports them back so callers know they were dropped.
-    expect(result.unsupportedFilters).toEqual([
-      'status',
-      'port',
-      'carrier',
-      'updatedAfter',
-    ]);
+    expect(result.unsupportedFilters).toEqual([]);
   });
 
   it('removes containers from include when includeContainers=false', async () => {
@@ -164,74 +147,70 @@ describe('Terminal49Client request building', () => {
     });
 
     await client.listShipments({
-      status: 'in_transit',
       include: 'containers,pod_terminal',
     });
 
     const params = calls[0].url.searchParams;
     expect(params.get('include')).toBe('containers,pod_terminal');
-    // Unsupported filter is dropped rather than forwarded as a no-op.
     expect(params.get('filter[status]')).toBeNull();
   });
 
-  it('builds listContainers include + pagination and omits unsupported filters', async () => {
+  it('builds container filters, include, and pagination through the convenience method', async () => {
     const search = buildSearchParams([
+      ['filter[current_status]', 'available'],
       ['include', 'shipment,pod_terminal,transport_events'],
       ['page[number]', '3'],
       ['page[size]', '10'],
     ]);
-
     const { fetchImpl, calls } = createMockFetch({
       [`/containers?${search}`]: () => jsonResponse({ data: [] }),
     });
-
     const client = new Terminal49Client({
       apiToken: 'token-123',
       apiBaseUrl: baseUrl,
       fetchImpl,
     });
-
     const result = await client.listContainers(
       {
-        status: 'in_transit',
+        current_status: 'available',
         include: ['shipment', 'pod_terminal', 'transport_events'],
       },
       { page: 3, pageSize: 10, format: 'mapped' },
     );
-
-    const params = calls[0].url.searchParams;
-    expect(params.get('include')).toBe(
+    expect(calls[0].url.searchParams.get('filter[current_status]')).toBe(
+      'available',
+    );
+    expect(calls[0].url.searchParams.get('include')).toBe(
       'shipment,pod_terminal,transport_events',
     );
-    // `filter[status]` is unsupported on /containers, so it is omitted.
-    expect(params.get('filter[status]')).toBeNull();
-    expect(params.get('page[number]')).toBe('3');
-    expect(params.get('page[size]')).toBe('10');
-    expect(result.unsupportedFilters).toEqual(['status']);
+    expect(calls[0].url.searchParams.get('page[number]')).toBe('3');
+    expect(calls[0].url.searchParams.get('page[size]')).toBe('10');
+    expect(result.unsupportedFilters).toEqual([]);
   });
 
-  it('accepts comma-separated listContainers include strings', async () => {
-    const search = buildSearchParams([['include', 'shipment,pod_terminal']]);
-
+  it('accepts comma-separated listContainers include strings with a safe legacy status alias', async () => {
+    const search = buildSearchParams([
+      ['filter[current_status]', 'available'],
+      ['include', 'shipment,pod_terminal'],
+    ]);
     const { fetchImpl, calls } = createMockFetch({
       [`/containers?${search}`]: () => jsonResponse({ data: [] }),
     });
-
     const client = new Terminal49Client({
       apiToken: 'token-123',
       apiBaseUrl: baseUrl,
       fetchImpl,
     });
-
     await client.listContainers({
       status: 'available',
       include: 'shipment,pod_terminal',
     });
-
-    const params = calls[0].url.searchParams;
-    expect(params.get('include')).toBe('shipment,pod_terminal');
-    // Unsupported filter is dropped rather than forwarded as a no-op.
-    expect(params.get('filter[status]')).toBeNull();
+    expect(calls[0].url.searchParams.get('include')).toBe(
+      'shipment,pod_terminal',
+    );
+    expect(calls[0].url.searchParams.get('filter[current_status]')).toBe(
+      'available',
+    );
   });
 
   it('hits container raw events and refresh endpoints', async () => {

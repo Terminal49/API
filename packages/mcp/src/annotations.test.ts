@@ -109,6 +109,14 @@ describe('MCP tool annotations', () => {
     }
   });
 
+  it('marks search_docs as a read-only public lookup', () => {
+    const annotations = getRegisteredTools().search_docs?.annotations;
+
+    expect(annotations?.readOnlyHint).toBe(true);
+    expect(annotations?.destructiveHint).toBe(false);
+    expect(annotations?.openWorldHint).toBe(true);
+  });
+
   it('marks track_container as a non-idempotent write', () => {
     const tools = getRegisteredTools();
     const annotations = tools.track_container?.annotations;

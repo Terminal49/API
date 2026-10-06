@@ -83,6 +83,7 @@
             "pages": [
               "api-docs/in-depth-guides/rate-limiting",
               "api-docs/in-depth-guides/including-resources",
+              "api-docs/in-depth-guides/filtering-shipments-and-containers",
               "api-docs/in-depth-guides/quickstart",
               "api-docs/useful-info/pricing",
               "api-docs/useful-info/entitlements",
@@ -99,7 +100,8 @@
           {
             "group": " ",
             "pages": [
-              "api-docs/api-reference/introduction"
+              "api-docs/api-reference/introduction",
+              "api-docs/api-reference/list-filters"
             ]
           },
           {
@@ -467,6 +469,7 @@
               {
                 "group": "Options",
                 "pages": [
+                  "sdk/reference/types/filters/index",
                   "sdk/reference/types/options/index",
                   "sdk/reference/types/options/interfaces/CallOptions",
                   "sdk/reference/types/options/interfaces/ListOptions",
@@ -489,6 +492,7 @@
             "group": "MCP",
             "pages": [
               "mcp/home",
+              "mcp/filtering-worklists",
               "api-docs/in-depth-guides/mcp"
             ]
           },

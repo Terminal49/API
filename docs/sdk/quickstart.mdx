@@ -32,12 +32,12 @@ async function main() {
     scac: 'MSCU',
   });
 
-  // 2) List your shipments (mapped response)
+  // 2) List shipments created since a timestamp (one mapped page)
   const shipments = await client.shipments.list(
-    { updatedAfter: '2025-01-01T00:00:00Z' },
+    { created_at: '>=2026-10-01T00:00:00Z' },
     { format: 'mapped' },
   );
-  console.log(`Found ${shipments.items.length} shipments`);
+  console.log(`Fetched ${shipments.items.length} shipments on this page`);
 
   // 3) Get a specific container with related data (raw JSON:API)
   const containerId = 'your-container-uuid';

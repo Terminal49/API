@@ -1,6 +1,6 @@
 {
   "name": "@terminal49/sdk",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Terminal49 TypeScript SDK (JSON:API, openapi-fetch)",
   "repository": {
     "type": "git",
@@ -26,8 +26,8 @@
   "scripts": {
     "build": "tsc",
     "type-check": "tsc --noEmit",
-    "test": "vp test",
-    "generate:types": "openapi-typescript ../../docs/openapi.json -o src/generated/terminal49.ts",
+    "test": "vp test run",
+    "generate:types": "openapi-typescript ../../docs/openapi.json -o src/generated/terminal49.ts && node scripts/generate-filter-types.mjs",
     "docs": "npm run docs:clean && typedoc --options typedoc.json && node scripts/postprocess-generated-docs.mjs",
     "docs:clean": "node scripts/clean-generated-docs.mjs",
     "docs:mintlify": "npm run docs",
@@ -45,13 +45,13 @@
   },
   "devDependencies": {
     "@types/node": "^24.10.13",
-    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/coverage-v8": "4.1.11",
     "dotenv": "^17.3.1",
     "openapi-typescript": "^7.13.0",
     "typedoc": "^0.28.19",
     "typedoc-plugin-markdown": "^4.11.0",
     "typescript": "^5.6.3",
-    "vite-plus": "0.2.9"
+    "vite-plus": "0.3.3"
   },
   "overrides": {
     "brace-expansion": "5.0.6",
@@ -62,7 +62,7 @@
       "brace-expansion": "5.0.6"
     },
     "picomatch": "^4.0.4",
-    "postcss": "^8.5.14",
+    "postcss": "^8.5.28",
     "rollup": "^4.60.4",
     "typedoc": {
       "minimatch": {

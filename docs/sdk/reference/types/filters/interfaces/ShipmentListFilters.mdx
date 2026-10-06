@@ -1,0 +1,41 @@
+---
+title: "Interface: ShipmentListFilters"
+---
+
+# Interface: ShipmentListFilters
+
+Confirmed list filters; canonical names mirror API filter keys.
+
+## Properties
+
+| Property | Type | Description |
+| ------ | ------ | ------ |
+| <a id="property-actively_tracked"></a> `actively_tracked?` | `boolean` | true selects shipments with tracking not stopped; false selects stopped tracking. Applies via the related shipment for containers. |
+| <a id="property-arriving_today"></a> `arriving_today?` | `true` | true selects shipments with POD or destination estimated/actual arrival today in the API server day. false does not narrow the list. The SDK accepts only true. |
+| <a id="property-carrier"></a> ~~`carrier?`~~ | `string` | **Deprecated** Unsupported on shipments; use containers.shipping_line_scac. |
+| <a id="property-created_at"></a> `created_at?` | [`DateFilter`](/sdk/reference/types/filters/type-aliases/DateFilter) | Creation date. Use an ISO 8601 date-time with Z or a timezone offset; prefix with =, `<`, `<=`, `>`, or `>=`. Arrays combine bounds with AND. Relative dates and comma-separated timestamps are not accepted. Use `@exists` or `@not_exists` for presence. |
+| <a id="property-creator_id"></a> `creator_id?` | [`StringFilter`](/sdk/reference/types/filters/type-aliases/StringFilter) | Shipment creator account ID. Comma-separated IDs mean OR; arrays of distinct IDs mean AND and return no matches. Exact match by default; optional =, `@exists`, or `@not_exists`. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported. |
+| <a id="property-customer_id"></a> `customer_id?` | [`StringFilter`](/sdk/reference/types/filters/type-aliases/StringFilter) | Customer account ID or customer party ID. Falls back to the shipment creator when no customer party role exists. Presence checks refer to the customer party role. Exact match by default; optional =, `@exists`, or `@not_exists`. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported. |
+| <a id="property-include"></a> `include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ShipmentInclude`](/sdk/reference/types/options/type-aliases/ShipmentInclude)\> | - |
+| <a id="property-includecontainers"></a> `includeContainers?` | `boolean` | - |
+| <a id="property-number"></a> `number?` | [`StringFilter`](/sdk/reference/types/filters/type-aliases/StringFilter) | Exact number match. Shipment arrays mean OR; container arrays of exact numbers mean AND. Use comma-separated container numbers for OR. Shipment scalar commas are literal. |
+| <a id="property-owner_id"></a> `owner_id?` | [`StringFilter`](/sdk/reference/types/filters/type-aliases/StringFilter) | User ID associated with a shipment container. Accepts one ID, comma-separated IDs, or arrays with OR semantics. Use exact literals, comma-separated values, or arrays with OR semantics. Presence checks and comparison/search operators do not apply to this scope. |
+| <a id="property-party_id"></a> `party_id?` | [`PartyFilter`](/sdk/reference/types/filters/type-aliases/PartyFilter) | Party ID match. Accepts a scalar, comma-separated IDs, an array (OR), or an object with value and operator (any or all). Values must come from parties visible to your account. |
+| <a id="property-pod_arrival"></a> `pod_arrival?` | [`DateFilter`](/sdk/reference/types/filters/type-aliases/DateFilter) | POD arrival date: actual arrival takes precedence over estimated arrival. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, `<`, `<=`, `>`, or `>=`. Arrays combine bounds with AND. Comma-separated dates mean OR. Use `@exists` or `@not_exists` for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied. |
+| <a id="property-pod_ata_at"></a> `pod_ata_at?` | [`DateFilter`](/sdk/reference/types/filters/type-aliases/DateFilter) | Actual POD arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, `<`, `<=`, `>`, or `>=`. Arrays combine bounds with AND. Comma-separated dates mean OR. Use `@exists` or `@not_exists` for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied. |
+| <a id="property-pod_code"></a> `pod_code?` | [`StringFilter`](/sdk/reference/types/filters/type-aliases/StringFilter) | Port of discharge UN/LOCODE. Use exact literals, comma-separated values, or arrays with OR semantics. Presence checks and comparison/search operators do not apply to this scope. |
+| <a id="property-pod_eta_changed_at"></a> `pod_eta_changed_at?` | [`DateFilter`](/sdk/reference/types/filters/type-aliases/DateFilter) | Meaningful change in the POD-local ETA date, comparing the current ETA with its historical baseline. Requires a lower ISO 8601 timestamp bound (=, `>`, or `>=`); an optional upper bound must be later. Applies only to active, unarrived shipments with an ETA. Not a raw updated_at filter; a future lower bound is not guaranteed to produce no matches. |
+| <a id="property-pod_terminal_id"></a> `pod_terminal_id?` | [`StringFilter`](/sdk/reference/types/filters/type-aliases/StringFilter) | Port of discharge terminal ID. Obtain it from the related terminal resource. Exact match by default; optional =, `@exists`, or `@not_exists`. Comma-separated literals mean OR. Arrays mean OR for this shipment terminal filter. ~ is not supported. |
+| <a id="property-pol_code"></a> `pol_code?` | [`StringFilter`](/sdk/reference/types/filters/type-aliases/StringFilter) | Port of lading UN/LOCODE. Use exact literals, comma-separated values, or arrays with OR semantics. Presence checks and comparison/search operators do not apply to this scope. |
+| <a id="property-port"></a> ~~`port?`~~ | `string` | **Deprecated** Use pod_code. |
+| <a id="property-product"></a> `product?` | `string` | Prefix text search of an associated product name or SKU. |
+| <a id="property-q"></a> `q?` | `string` | Prefix text search across shipment numbers, reference numbers, and linked container identifiers. Use search text, not comparison expressions. |
+| <a id="property-sort"></a> `sort?` | `string` | Supported API sort token(s); validated before the request. |
+| <a id="property-status"></a> ~~`status?`~~ | `string` | **Deprecated** Unsupported. Use voyage_status for voyage arrival state. |
+| <a id="property-tag"></a> `tag?` | [`StringFilter`](/sdk/reference/types/filters/type-aliases/StringFilter) | Alias for tags. When both are present, tag takes precedence. Uses the requesting account tag names. |
+| <a id="property-tags"></a> `tags?` | [`StringFilter`](/sdk/reference/types/filters/type-aliases/StringFilter) | Account-scoped shipment tags. Comma-separated names or arrays match ANY tag by default. |
+| <a id="property-tags_and"></a> `tags_and?` | `boolean` | With tags, true requires ALL tags; false or absent means ANY. Has no effect without tags. The SDK requires tags (or shipment tag) when this modifier is supplied. |
+| <a id="property-tracking_stopped"></a> `tracking_stopped?` | `boolean` | true selects stopped tracking; false selects tracking not stopped. Combines with other filters using AND. |
+| <a id="property-trackingstopped"></a> ~~`trackingStopped?`~~ | `boolean` | **Deprecated** Use tracking_stopped. |
+| <a id="property-updatedafter"></a> ~~`updatedAfter?`~~ | `string` | **Deprecated** Timestamp semantics cannot be preserved by a date-only filter. |
+| <a id="property-voyage_status"></a> `voyage_status?` | `"on_ship"` \| `"arrived"` | arrived means actual POD arrival is present; on_ship means a voyage exists and actual POD arrival is absent. It is not a general shipment lifecycle status. |

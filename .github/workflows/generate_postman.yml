@@ -3,7 +3,9 @@ name: Generate Postman Collection
 on:
   push:
     paths:
-      - 'docs/openapi.json' # Only trigger on changes to this file
+      - 'docs/openapi.json'
+      - '.github/workflows/generate_postman.yml'
+      - 'tools/postman-generation.test.mjs'
 
 jobs:
   generate-postman-collection:
@@ -19,15 +21,18 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install openapi-to-postmanv2
-        run: npm install -g openapi-to-postmanv2
+        run: npm install -g openapi-to-postmanv2@6.3.0
 
       - name: Generate Postman Collection
         run: |
           echo "Generating Postman collection from OpenAPI spec..."
-          openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags
+          openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,enableOptionalParameters=false
+
+      - name: Test Postman generation
+        run: node --test tools/postman-generation.test.mjs
 
       - name: Commit changes
         id: commit
