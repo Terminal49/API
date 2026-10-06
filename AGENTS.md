@@ -60,7 +60,7 @@ For substantive documentation writing, use the repo-local skill at `skills/termi
 ### Docs
 - Preview locally: `cd docs && mintlify dev`
 - Lint the OpenAPI spec: `spectral lint --ruleset .spectral.mjs docs/openapi.json`
-- Regenerate Postman: `openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags`
+- Regenerate Postman: `openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,parametersResolution=Example`
 
 ### Code (npm workspaces)
 - Install: `vp install` at the root (`npm ci` remains the frozen CI and Vercel install command).
