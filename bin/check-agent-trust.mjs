@@ -94,8 +94,14 @@ function checkFeatureMap() {
     'utf8',
   );
   const registeredTools = [
-    ...serverSource.matchAll(/server\.registerTool\(\s*'([^']+)'/g),
+    ...serverSource.matchAll(/server\.registerTool\s*\(\s*'([^']+)'\s*,/g),
   ].map((match) => match[1]);
+  if (
+    [...serverSource.matchAll(/server\.registerTool\s*\(/g)].length !==
+    registeredTools.length
+  ) {
+    throw new Error('MCP registrations require supported literal tool names');
+  }
   assertEqual(
     'MCP feature map',
     featureMap.mcpTools.map((tool) => tool.name),

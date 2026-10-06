@@ -428,3 +428,17 @@ test('configuration ownership covers workspaces from an added root glob', (t) =>
   assert.equal(result.status, 1);
   assert.match(result.stderr, /extensions\/new-workspace\/vite.config.ts/);
 });
+
+test('unsupported nonliteral MCP registration cannot silently escape the feature map', (t) => {
+  const repository = createGuardRepository(t);
+  writeFileSync(
+    join(repository, 'packages/mcp/src/server.ts'),
+    'const toolName = "new_tool"; server.registerTool(toolName, {});',
+  );
+  const result = runGuard(repository);
+  assert.equal(result.status, 1);
+  assert.match(
+    result.stderr,
+    /MCP registrations require supported literal tool names/,
+  );
+});
