@@ -60,7 +60,7 @@ Search for bill of lading 123456789
 
 ---
 
-## 🛠️ Available Tools (10)
+## 🛠️ Available Tools (11)
 
 | Tool | Description |
 |------|-------------|
@@ -71,9 +71,12 @@ Search for bill of lading 123456789
 | `get_container_transport_events` | Get full event timeline |
 | `get_container_route` | Get vessel routing with ETAs |
 | `get_supported_shipping_lines` | List 40+ supported carriers |
-| `list_containers` | Browse all tracked containers |
-| `list_shipments` | Browse all shipments |
+| `list_containers` | Filter containers and return one page, capped at 25 |
+| `list_shipments` | Filter shipments and return one page, capped at 25 |
 | `list_tracking_requests` | Browse tracking requests |
+| `search_docs` | Search public Terminal49 documentation |
+
+See [filtering worklists](docs/mcp/filtering-worklists.mdx) for common inputs, typed advanced filters, and continuation metadata.
 
 ### 🎯 Workflow Prompts (3)
 
