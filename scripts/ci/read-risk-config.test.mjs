@@ -174,3 +174,42 @@ test('missing or malformed ruleset bypass evidence never establishes protection'
     assert.equal(assessConfiguration(value).nativeHumanReviewConfigured, false);
   }
 });
+
+test('configuration inspection consumes all effective branch-rule pages', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'risk-config-pages-'));
+  try {
+    const gh = join(dir, 'gh');
+    const rules = configuration().rules;
+    writeFileSync(
+      gh,
+      `#!/usr/bin/env node
+const endpoint = process.argv[3];
+if (endpoint.endsWith('/protection')) { process.stderr.write('HTTP 404'); process.exit(1); }
+if (endpoint.endsWith('/rules/branches/main')) {
+ const first = Array.from({length:30},()=>({type:'update'}));
+ const later = ${JSON.stringify(rules)};
+ const paginated = process.argv.includes('--paginate') && process.argv.includes('--slurp');
+ process.stdout.write(JSON.stringify(paginated ? [first,later] : first));
+} else process.stdout.write(JSON.stringify({default_branch:'main',allow_auto_merge:false}));
+`,
+    );
+    chmodSync(gh, 0o755);
+    const result = spawnSync(
+      process.execPath,
+      [
+        fileURLToPath(new URL('./read-risk-config.mjs', import.meta.url)),
+        'Terminal49/API',
+      ],
+      {
+        encoding: 'utf8',
+        env: { ...process.env, PATH: `${dir}:${process.env.PATH}` },
+      },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    const report = JSON.parse(result.stdout);
+    assert.equal(report.nativeHumanReviewConfigured, true);
+    assert.equal(report.effectiveRules.length, 32);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

@@ -103,14 +103,18 @@ export function assessConfiguration({
   };
 }
 
-function readApi(endpoint, optional = false) {
+function readApi(endpoint, optional = false, paginated = false) {
   try {
-    return JSON.parse(
-      execFileSync('gh', ['api', endpoint], {
+    const args = paginated
+      ? ['api', endpoint, '--paginate', '--slurp']
+      : ['api', endpoint];
+    const result = JSON.parse(
+      execFileSync('gh', args, {
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'pipe'],
       }),
     );
+    return paginated ? result.flat() : result;
   } catch (error) {
     if (optional && /HTTP 404/.test(error.stderr ?? '')) return null;
     throw new Error(`Unable to read GitHub configuration at ${endpoint}`);
@@ -123,7 +127,11 @@ function main() {
     throw new Error('Usage: read-risk-config.mjs OWNER/REPO');
   const repository = readApi(`repos/${repositoryName}`);
   const branch = encodeURIComponent(repository.default_branch);
-  const rules = readApi(`repos/${repositoryName}/rules/branches/${branch}`);
+  const rules = readApi(
+    `repos/${repositoryName}/rules/branches/${branch}`,
+    false,
+    true,
+  );
   const protection = readApi(
     `repos/${repositoryName}/branches/${branch}/protection`,
     true,
