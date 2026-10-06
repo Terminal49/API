@@ -5,7 +5,12 @@ import type {
   IncludeParam,
   ListOptions,
 } from '../../types/options.js';
-import { mapContainerList, mapRoute, mapTransportEvents } from '../mappers.js';
+import {
+  mapContainerList,
+  mapCustomFields,
+  mapRoute,
+  mapTransportEvents,
+} from '../mappers.js';
 import {
   applyTypedPagination,
   buildContainerListQuery,
@@ -39,6 +44,13 @@ export class ContainerManager extends BaseManager {
       }),
     );
     return this.formatResult(raw, options?.format);
+  }
+
+  async customFields(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      `${this.transport.baseUrl}/containers/${encodeURIComponent(id)}/custom_fields?include=definition`,
+    );
+    return this.formatResult(raw, options?.format, mapCustomFields);
   }
 
   async list(
@@ -103,14 +115,6 @@ export class ContainerManager extends BaseManager {
       this.transport.client.GET('/containers/{id}/map_geojson', {
         params: { path: { id } },
       }),
-    );
-    return this.formatResult(raw, options?.format);
-  }
-
-  async customFields(id: string, options?: CallOptions): Promise<any> {
-    const encodedId = encodeURIComponent(id);
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/containers/${encodedId}/custom_fields`,
     );
     return this.formatResult(raw, options?.format);
   }

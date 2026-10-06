@@ -88,7 +88,7 @@ Most clients connect with just the server URL and a browser sign-in — no API k
 
 - [Claude](/mcp/setup/claude) – claude.ai and Claude Desktop
 - [Claude Code](/mcp/setup/claude-code) – one `claude mcp add` command
-- [ChatGPT](/mcp/setup/chatgpt) – custom connector with Developer mode
+- [ChatGPT](/mcp/setup/chatgpt) – install from the ChatGPT Plugins Directory
 - [Cursor](/mcp/setup/cursor) – `mcp.json` or Cursor Settings → MCP
 - [Microsoft Copilot](/mcp/setup/microsoft-copilot) – Copilot Studio agent tools
 - [VS Code](/mcp/setup/vs-code) – GitHub Copilot agent mode
@@ -219,8 +219,8 @@ T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio 2>&1 | head -20
 |------|-------------|------------|
 | `search_container` | Find containers by number, BL, booking, or ref | `query: string` |
 | `track_container` | Start tracking a container | `number`, `numberType?`, `scac?`, `refNumbers?` |
-| `get_container` | Get container with optional includes | `id: uuid`, `include?: ['shipment', 'pod_terminal', 'transport_events']` |
-| `get_shipment_details` | Get shipment and containers | `id: uuid`, `include_containers?: boolean` |
+| `get_container` | Get container with optional includes | `id: uuid`, `include?: ['shipment', 'pod_terminal', 'transport_events', 'custom_fields']` |
+| `get_shipment_details` | Get shipment and containers | `id: uuid`, `include_containers?: boolean`, `include_custom_fields?: boolean` |
 | `get_container_transport_events` | Get event timeline | `id: uuid` |
 | `get_supported_shipping_lines` | List carriers with SCAC codes | `search?: string` |
 | `get_container_route` | Get multi-leg routing (paid feature) | `id: uuid` |

@@ -1636,9 +1636,15 @@ export interface components {
                 pod_rail_carrier_scac?: string | null;
                 /** @description The SCAC of the rail carrier for the delivery leg of the container's journey.(BETA) */
                 ind_rail_carrier_scac?: string | null;
-                /** Format: date-time */
+                /**
+                 * Format: date-time
+                 * @description Timestamp of the last time Terminal49 requested container tracking updates directly from the port-of-discharge terminal. Compare with `shipment_last_tracking_request_at`, which tracks shipment-level requests to the shipping line.
+                 */
                 pod_last_tracking_request_at?: string | null;
-                /** Format: date-time */
+                /**
+                 * Format: date-time
+                 * @description Timestamp of the last time Terminal49 requested shipment-level tracking updates from the shipping line for this container's shipment. Compare with `pod_last_tracking_request_at`, which tracks container-level requests made directly to the terminal.
+                 */
                 shipment_last_tracking_request_at?: string | null;
                 /** Format: date-time */
                 pod_rail_loaded_at?: string | null;

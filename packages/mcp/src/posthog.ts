@@ -46,6 +46,9 @@ type Environment = NodeJS.ProcessEnv;
  */
 const DEFAULT_POSTHOG_HOST = 'https://f.terminal49.com';
 
+export const SERVER_NAME = 'terminal49-mcp';
+export const SERVER_VERSION = '1.0.0';
+
 /**
  * Event properties stripped from every outgoing event.
  *
@@ -57,7 +60,8 @@ const DEFAULT_POSTHOG_HOST = 'https://f.terminal49.com';
  *
  * Everything genuinely useful for product analytics survives: `$mcp_tool_name`,
  * `$mcp_duration_ms`, `$mcp_is_error`, `$mcp_error_type`, `$mcp_client_name`,
- * `$mcp_client_version`, `$mcp_listed_tool_names`, `$session_id`.
+ * `$mcp_client_version`, `$mcp_listed_tool_names`, `$session_id`,
+ * `$mcp_protocol_version`.
  */
 const REDACTED_EVENT_PROPERTIES: readonly string[] = [
   PostHogMCPAnalyticsProperty.Parameters,
@@ -172,14 +176,54 @@ const redactSensitiveProperties: BeforeSendFn = (event) => {
   return event;
 };
 
+export type McpTransportKind = 'stdio' | 'http';
+
+/**
+ * How the HTTP gateway authenticated the caller. Mirrors `authSource` in
+ * `api/mcp.ts`; never a credential, only its category.
+ */
+export type McpAuthSource = 'workos_mcp' | 'environment' | 'authorization';
+
 export interface PostHogInstrumentationOptions {
   /**
    * Distinct id for the caller, so events from the stateless HTTP path group
    * into one person instead of one anonymous person per request. We pass the
    * resolved Terminal49 account id — an internal account identifier, never
-   * container or shipment data.
+   * container or shipment data. Also used as the `account` group key so
+   * PostHog group analytics can roll usage up per account.
    */
   distinctId?: string;
+  /** Which entry point served the request. */
+  transport?: McpTransportKind;
+  /** Auth category for the HTTP gateway path. */
+  authSource?: McpAuthSource;
+}
+
+/**
+ * Static, non-sensitive properties stamped on every auto-captured event so
+ * dashboards can split usage by entry point, auth mode and server release.
+ * Group analytics: `$groups.account` lets PostHog aggregate per Terminal49
+ * account rather than per person.
+ */
+function buildEventProperties(
+  options: PostHogInstrumentationOptions,
+): Record<string, unknown> {
+  const properties: Record<string, unknown> = {
+    mcp_server_name: SERVER_NAME,
+    mcp_server_version: SERVER_VERSION,
+  };
+
+  if (options.transport) {
+    properties.mcp_transport = options.transport;
+  }
+  if (options.authSource) {
+    properties.mcp_auth_source = options.authSource;
+  }
+  if (options.distinctId) {
+    properties.$groups = { account: options.distinctId };
+  }
+
+  return properties;
 }
 
 /**
@@ -203,6 +247,7 @@ export function instrumentMcpServerWithPostHog<TServer extends McpServer>(
   const identify: UserIdentity | undefined = options.distinctId
     ? { distinctId: options.distinctId }
     : undefined;
+  const eventProperties = buildEventProperties(options);
 
   try {
     instrument(server, client, {
@@ -221,6 +266,7 @@ export function instrumentMcpServerWithPostHog<TServer extends McpServer>(
         ? (message: string) => console.error(`[posthog-mcp] ${message}`)
         : undefined,
       beforeSend: redactSensitiveProperties,
+      eventProperties: () => eventProperties,
     });
   } catch {
     // Analytics instrumentation must never take the MCP server down.

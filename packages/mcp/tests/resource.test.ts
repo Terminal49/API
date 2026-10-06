@@ -18,7 +18,9 @@ function clearResourceEnv(): void {
   }
 }
 
-function req(host?: string | string[]): { headers: { host?: string | string[] } } {
+function req(host?: string | string[]): {
+  headers: { host?: string | string[] };
+} {
   return { headers: host === undefined ? {} : { host } };
 }
 
@@ -29,12 +31,16 @@ describe('resolveMcpResource', () => {
   describe('explicit configuration (staging / production)', () => {
     it('uses WORKOS_MCP_RESOURCE and ignores the Host header', () => {
       process.env.WORKOS_MCP_RESOURCE = 'https://mcp.terminal49.com';
-      expect(resolveMcpResource(req('attacker.example.com'))).toBe('https://mcp.terminal49.com');
+      expect(resolveMcpResource(req('attacker.example.com'))).toBe(
+        'https://mcp.terminal49.com',
+      );
     });
 
     it('falls back to T49_MCP_RESOURCE_URL when WORKOS_MCP_RESOURCE is unset', () => {
       process.env.T49_MCP_RESOURCE_URL = 'https://mcp.staging.terminal49.com';
-      expect(resolveMcpResource(req('whatever.host'))).toBe('https://mcp.staging.terminal49.com');
+      expect(resolveMcpResource(req('whatever.host'))).toBe(
+        'https://mcp.staging.terminal49.com',
+      );
     });
 
     it('prefers WORKOS_MCP_RESOURCE over T49_MCP_RESOURCE_URL', () => {
@@ -51,7 +57,9 @@ describe('resolveMcpResource', () => {
 
   describe('request-origin derivation (dev / preview, no config)', () => {
     it('derives https://{host} for a normal production-style host', () => {
-      expect(resolveMcpResource(req('mcp.terminal49.com'))).toBe('https://mcp.terminal49.com');
+      expect(resolveMcpResource(req('mcp.terminal49.com'))).toBe(
+        'https://mcp.terminal49.com',
+      );
     });
 
     it('derives https://{host} for a Vercel preview host', () => {
@@ -61,15 +69,21 @@ describe('resolveMcpResource', () => {
     });
 
     it('uses http for localhost', () => {
-      expect(resolveMcpResource(req('localhost:3000'))).toBe('http://localhost:3000');
+      expect(resolveMcpResource(req('localhost:3000'))).toBe(
+        'http://localhost:3000',
+      );
     });
 
     it('uses http for 127.0.0.1', () => {
-      expect(resolveMcpResource(req('127.0.0.1:8080'))).toBe('http://127.0.0.1:8080');
+      expect(resolveMcpResource(req('127.0.0.1:8080'))).toBe(
+        'http://127.0.0.1:8080',
+      );
     });
 
     it('reads the first value when Host is an array', () => {
-      expect(resolveMcpResource(req(['mcp.test', 'second.host']))).toBe('https://mcp.test');
+      expect(resolveMcpResource(req(['mcp.test', 'second.host']))).toBe(
+        'https://mcp.test',
+      );
     });
 
     it('falls back to the default when there is no Host header', () => {

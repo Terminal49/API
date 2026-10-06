@@ -35,7 +35,11 @@ import {
 } from './resources/list-display.js';
 import {
   instrumentMcpServerWithPostHog,
+  type McpAuthSource,
+  type McpTransportKind,
   registerPostHogExitHook,
+  SERVER_NAME,
+  SERVER_VERSION,
 } from './posthog.js';
 import {
   captureMcpException,
@@ -73,7 +77,7 @@ type ToolContent = TextContent | ResourceLinkContent;
  */
 export const TERMINAL49_SERVER_INSTRUCTIONS = `Terminal49 tracks ocean containers and shipments live from carriers and terminals. Data is real-time from ocean carriers (by SCAC, e.g. MAEU = Maersk) and US/Canada terminals, so values change between calls.
 
-Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered).
+Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered); custom fields = account-defined fields (PO number, project manager, etc.) on containers and shipments, loaded with get_container include ['custom_fields'] or get_shipment_details include_custom_fields.
 
 Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools operate within the user's private Terminal49 account and none delete or overwrite data.
 
@@ -883,10 +887,16 @@ function createCarrierScacCompleter(
   };
 }
 
+export interface Terminal49McpServerTelemetry {
+  transport?: McpTransportKind;
+  authSource?: McpAuthSource;
+}
+
 export function createTerminal49McpServer(
   apiToken: string,
   apiBaseUrl?: string,
   accountId?: string,
+  telemetry: Terminal49McpServerTelemetry = {},
 ): McpServer {
   const client = new Terminal49Client({
     apiToken,
@@ -906,8 +916,8 @@ export function createTerminal49McpServer(
     instrumentMcpServer(
       new McpServer(
         {
-          name: 'terminal49-mcp',
-          version: '1.0.0',
+          name: SERVER_NAME,
+          version: SERVER_VERSION,
         },
         {
           instructions: TERMINAL49_SERVER_INSTRUCTIONS,
@@ -916,7 +926,7 @@ export function createTerminal49McpServer(
     ),
     // Groups the stateless HTTP path's events per account instead of minting an
     // anonymous person per request.
-    { distinctId: accountId },
+    { distinctId: accountId, ...telemetry },
   );
 
   // ==================== TOOLS ====================
@@ -1098,14 +1108,22 @@ export function createTerminal49McpServer(
           .uuid()
           .describe('The Terminal49 container ID (UUID format)'),
         include: z
-          .array(z.enum(['shipment', 'pod_terminal', 'transport_events']))
+          .array(
+            z.enum([
+              'shipment',
+              'pod_terminal',
+              'transport_events',
+              'custom_fields',
+            ]),
+          )
           .optional()
           .default(['shipment'])
           .describe(
             "Optional related data to include. Default: ['shipment'] covers most use cases. " +
               '• shipment: Routing, BOL, line, ref numbers (lightweight, always useful) ' +
               '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
-              '• transport_events: Event summary (count, rail event count, and latest event); use get_container_transport_events for the full timeline',
+              '• transport_events: Event summary (count, rail event count, and latest event); use get_container_transport_events for the full timeline ' +
+              '• custom_fields: Account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)',
           ),
       }),
       outputSchema: z.object({}).passthrough(),
@@ -1141,11 +1159,23 @@ export function createTerminal49McpServer(
           .describe(
             'Include list of containers in this shipment. Default: true',
           ),
+        include_custom_fields: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe(
+            'Include account-defined custom fields (e.g. PO number, project manager) set on this shipment. Needs a signed-in user, not an API key. Default: false',
+          ),
       }),
       outputSchema: z.object({}).passthrough(),
     },
-    wrapTool('get_shipment_details', async ({ id, include_containers }) =>
-      executeGetShipmentDetails({ id, include_containers }, client),
+    wrapTool(
+      'get_shipment_details',
+      async ({ id, include_containers, include_custom_fields }) =>
+        executeGetShipmentDetails(
+          { id, include_containers, include_custom_fields },
+          client,
+        ),
     ),
   );
 
@@ -1642,5 +1672,9 @@ export async function runStdioServer() {
     console.error('SDK: @modelcontextprotocol/server v2 (McpServer API)');
   }
 
-  serveStdio(() => createTerminal49McpServer(apiToken, apiBaseUrl));
+  serveStdio(() =>
+    createTerminal49McpServer(apiToken, apiBaseUrl, undefined, {
+      transport: 'stdio',
+    }),
+  );
 }
