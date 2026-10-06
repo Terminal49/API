@@ -2,8 +2,14 @@
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, globSync, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+const sdkRequire = createRequire(
+  new URL('../sdks/typescript-sdk/package.json', import.meta.url),
+);
+const ts = sdkRequire('typescript');
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
@@ -93,15 +99,45 @@ function checkFeatureMap() {
     resolve(root, 'packages/mcp/src/server.ts'),
     'utf8',
   );
-  const registeredTools = [
-    ...serverSource.matchAll(/server\.registerTool\s*\(\s*'([^']+)'\s*,/g),
-  ].map((match) => match[1]);
-  if (
-    [...serverSource.matchAll(/server\.registerTool\s*\(/g)].length !==
-    registeredTools.length
-  ) {
-    throw new Error('MCP registrations require supported literal tool names');
+  const registeredTools = [];
+  const sourceFile = ts.createSourceFile(
+    'server.ts',
+    serverSource,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
+  );
+  function visit(node) {
+    if (ts.isCallExpression(node)) {
+      const expression = node.expression;
+      const receiver =
+        ts.isPropertyAccessExpression(expression) ||
+        ts.isElementAccessExpression(expression)
+          ? expression.expression
+          : null;
+      const method = ts.isPropertyAccessExpression(expression)
+        ? expression.name.text
+        : ts.isElementAccessExpression(expression) &&
+            ts.isStringLiteralLike(expression.argumentExpression)
+          ? expression.argumentExpression.text
+          : null;
+      if (
+        receiver &&
+        ts.isIdentifier(receiver) &&
+        receiver.text === 'server' &&
+        method === 'registerTool'
+      ) {
+        const name = node.arguments[0];
+        if (!name || !ts.isStringLiteralLike(name))
+          throw new Error(
+            'MCP registrations require supported literal tool names',
+          );
+        registeredTools.push(name.text);
+      }
+    }
+    ts.forEachChild(node, visit);
   }
+  visit(sourceFile);
   assertEqual(
     'MCP feature map',
     featureMap.mcpTools.map((tool) => tool.name),
