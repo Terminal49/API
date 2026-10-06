@@ -106,10 +106,18 @@ function canonicalFilters(
 export function getShipmentFilters(
   args: ListShipmentsArgs,
 ): ShipmentListFilters {
-  return canonicalFilters(
+  const filters = canonicalFilters(
     shipmentListInputSchema.parse(args),
     SHIPMENT_FILTER_KEYS,
-  ) as ShipmentListFilters;
+  );
+  if (filters.tag !== undefined && filters.tags !== undefined) {
+    throw new ValidationError(
+      'Invalid list filter "tag": tag and tags are aliases; supply only one.',
+      400,
+      { filter: 'tag' },
+    );
+  }
+  return filters as ShipmentListFilters;
 }
 export function getContainerFilters(
   args: ListContainersArgs,

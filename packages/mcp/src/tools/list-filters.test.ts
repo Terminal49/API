@@ -219,3 +219,55 @@ describe('container number alternatives', () => {
     },
   );
 });
+
+describe('review regressions', () => {
+  it.each([
+    { tags: 'priority', advanced_filters: { tag: 'expedite' } },
+    { advanced_filters: { tags: 'priority', tag: 'expedite' } },
+  ])(
+    'rejects competing shipment tag aliases before API access',
+    async (args) => {
+      const { client, fetchImpl } = fakeClient();
+      await expect(executeListShipments(args, client)).rejects.toThrow(
+        'tag and tags',
+      );
+      expect(fetchImpl).not.toHaveBeenCalled();
+    },
+  );
+  it.each(['@exists', '@not_exists', 'available,on_ship', '=available'])(
+    'forwards supported status array expression %s',
+    async (status) => {
+      const { client, fetchImpl } = fakeClient();
+      await executeListContainers({ current_status: [status] }, client);
+      const request = fetchImpl.mock.calls[0][0];
+      const url = new URL(
+        request instanceof Request ? request.url : String(request),
+      );
+      expect(url.searchParams.getAll('filter[current_status][]')).toEqual([
+        status,
+      ]);
+    },
+  );
+  it.each([
+    { number: ' MAEU123456789 ' },
+    { advanced_filters: { number: ' MAEU123456789 ' } },
+    { number: [' MAEU123456789 '] },
+  ])(
+    'normalizes pasted shipment numbers in the request and metadata',
+    async (args) => {
+      const { client, fetchImpl } = fakeClient();
+      const result = await executeListShipments(args, client);
+      const request = fetchImpl.mock.calls[0][0];
+      const url = new URL(
+        request instanceof Request ? request.url : String(request),
+      );
+      expect(
+        url.searchParams.get('filter[number]') ??
+          url.searchParams.get('filter[number][]'),
+      ).toBe('MAEU123456789');
+      expect(result._metadata.applied_filters.number).toEqual(
+        Array.isArray(args.number) ? ['MAEU123456789'] : 'MAEU123456789',
+      );
+    },
+  );
+});

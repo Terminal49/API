@@ -33,8 +33,8 @@ export const shipmentFilterShape = {
     .optional(),
   number: z
     .union([
-      z.string().min(1).max(64),
-      z.array(z.string().min(1).max(64)).min(1),
+      z.string().trim().min(1).max(64),
+      z.array(z.string().trim().min(1).max(64)).min(1),
     ])
     .describe(
       'Exact number match. Shipment arrays mean OR; container arrays of exact numbers mean AND. Use comma-separated container numbers for OR. Shipment scalar commas are literal.',
@@ -309,21 +309,13 @@ export const containerFilterShape = {
         ),
       z
         .array(
-          z.enum([
-            'new',
-            'on_ship',
-            'available',
-            'not_available',
-            'grounded',
-            'on_rail',
-            'picked_up',
-            'off_dock',
-            'delivered',
-            'dropped',
-            'loaded',
-            'empty_returned',
-            'awaiting_inland_transfer',
-          ]),
+          z
+            .string()
+            .regex(
+              new RegExp(
+                '^(?:@exists|@not_exists|=?(?:new|on_ship|available|not_available|grounded|on_rail|picked_up|off_dock|delivered|dropped|loaded|empty_returned|awaiting_inland_transfer)(?:,=?(?:new|on_ship|available|not_available|grounded|on_rail|picked_up|off_dock|delivered|dropped|loaded|empty_returned|awaiting_inland_transfer))*)$',
+              ),
+            ),
         )
         .min(1),
     ])
