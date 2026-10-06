@@ -121,10 +121,11 @@ function restResult({
   path,
   metadata,
 }: z.infer<typeof restResultsSchema>[number]): DocsResult | null {
-  const url = path.startsWith('https://')
+  const candidate = path.startsWith('https://')
     ? path
     : `${DOCS_ORIGIN}/${path.replace(/^\/+/, '')}`;
-  if (!url.startsWith(DOCS_ORIGIN)) return null;
+  const url = docsUrl(candidate);
+  if (!url) return null;
   const heading = content.match(/^#+ (.+)$/m)?.[1]?.trim();
   return {
     title: metadata?.title || heading || path,
@@ -135,6 +136,7 @@ function restResult({
 }
 
 const rpcMessageSchema = z.object({
+  id: z.literal(1),
   result: z
     .object({
       content: z
@@ -146,14 +148,41 @@ const rpcMessageSchema = z.object({
   error: z.unknown().optional(),
 });
 
-// Mintlify answers as a single-event SSE stream; plain JSON is accepted too.
+// Preserve SSE event boundaries and ignore notifications or responses to other calls.
 function parseRpcMessage(body: string): z.infer<typeof rpcMessageSchema> {
-  const data = body
-    .split('\n')
-    .filter((line) => line.startsWith('data:'))
-    .map((line) => line.slice(5).trim())
-    .join('');
-  return rpcMessageSchema.parse(JSON.parse(data || body));
+  const events = body
+    .replace(/\r\n/g, '\n')
+    .split('\n\n')
+    .map((event) =>
+      event
+        .split('\n')
+        .filter((line) => line.startsWith('data:'))
+        .map((line) => line.slice(5).replace(/^ /, ''))
+        .join('\n'),
+    )
+    .filter(Boolean);
+  if (!events.length) return rpcMessageSchema.parse(JSON.parse(body));
+  for (const event of events) {
+    const message = rpcMessageSchema.safeParse(JSON.parse(event));
+    if (message.success) return message.data;
+  }
+  throw new Error('Documentation search returned no matching response.');
+}
+
+function docsUrl(candidate: string): string | null {
+  try {
+    const url = new URL(candidate);
+    if (
+      url.origin !== 'https://terminal49.com' ||
+      url.username ||
+      url.password ||
+      (url.pathname !== '/docs' && !url.pathname.startsWith('/docs/'))
+    )
+      return null;
+    return url.href;
+  } catch {
+    return null;
+  }
 }
 
 // Each result is "Title: …\nLink: …\nPage: …\nContent: …".
@@ -161,8 +190,9 @@ function parseResult(text: string): DocsResult | null {
   const field = (name: string) =>
     text.match(new RegExp(`^${name}: (.*)$`, 'm'))?.[1]?.trim();
   const title = field('Title');
-  const url = field('Link');
-  if (!title || !url?.startsWith(DOCS_ORIGIN)) return null;
+  const link = field('Link');
+  const url = link ? docsUrl(link) : null;
+  if (!title || !url) return null;
   const content = text.split(/^Content: /m)[1]?.trim() ?? '';
   return {
     title,

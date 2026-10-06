@@ -73,6 +73,62 @@ describe('executeSearchDocs', () => {
     });
   });
 
+  it('selects the matching response after SSE notifications and other responses', async () => {
+    const notification =
+      'data: {"jsonrpc":"2.0","method":"notifications/progress"}\r\n\r\n';
+    const unrelated =
+      'data: {"jsonrpc":"2.0","id":2,"result":{"content":[]}}\r\n\r\n';
+    const response = sse({
+      content: [
+        textResult(
+          'Guide',
+          'https://terminal49.com/docs/guide',
+          'guide',
+          'Content',
+        ),
+      ],
+    }).replace(/\n/g, '\r\n');
+    const fetchImpl = vi.fn(
+      async () => new Response(notification + unrelated + response),
+    );
+    const result = await executeSearchDocs(
+      { query: 'q' },
+      { fetchImpl: fetchImpl as typeof fetch },
+    );
+    expect(result.results.map((item) => item.title)).toEqual(['Guide']);
+  });
+
+  it.each([undefined, 'mint_dsc_test'])(
+    'filters normalized docs URL boundaries with key %s',
+    async (assistantApiKey) => {
+      const links = [
+        'https://terminal49.com/docs-other',
+        'https://terminal49.com/docs/../account',
+        'https://terminal49.com/docs/%2e%2e/account',
+        'https://example.com/docs/guide',
+        'https://terminal49.com/docs/guide',
+      ];
+      const fetchImpl = vi.fn(async () =>
+        assistantApiKey
+          ? Response.json(links.map((path) => ({ path, content: 'Content' })))
+          : new Response(
+              sse({
+                content: links.map((link) =>
+                  textResult('Guide', link, 'guide', 'Content'),
+                ),
+              }),
+            ),
+      );
+      const result = await executeSearchDocs(
+        { query: 'q' },
+        { assistantApiKey, fetchImpl: fetchImpl as typeof fetch },
+      );
+      expect(result.results.map((item) => item.url)).toEqual([
+        'https://terminal49.com/docs/guide',
+      ]);
+    },
+  );
+
   it('applies the limit and truncates long excerpts', async () => {
     const many = Array.from({ length: 4 }, (_, i) =>
       textResult(
@@ -169,7 +225,10 @@ describe('executeSearchDocs', () => {
 
     it('reports REST failures without upstream details', async () => {
       const fetchImpl = vi.fn(
-        async () => new Response('denied', { status: 401 }),
+        async () =>
+          new Response('denied: upstream-canary mint_dsc_test', {
+            status: 401,
+          }),
       );
 
       await expect(
@@ -180,7 +239,9 @@ describe('executeSearchDocs', () => {
             fetchImpl: fetchImpl as typeof fetch,
           },
         ),
-      ).rejects.toThrow('HTTP 401');
+      ).rejects.toMatchObject({
+        message: 'Documentation search failed (HTTP 401).',
+      });
     });
   });
 });
