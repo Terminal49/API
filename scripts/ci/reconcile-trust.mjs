@@ -81,10 +81,17 @@ export async function collectSnapshot(
       throw new Error('CI run attempt freshness is unavailable');
     }
   }
-  const run = [...runs.values()].sort(
-    (a, b) =>
-      Date.parse(b.updated_at) - Date.parse(a.updated_at) || b.id - a.id,
-  )[0];
+  const orderedRuns = [...runs.values()].sort(
+    (a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at),
+  );
+  const run = orderedRuns[0];
+  if (
+    run &&
+    orderedRuns[1] &&
+    Date.parse(run.updated_at) === Date.parse(orderedRuns[1].updated_at)
+  ) {
+    throw new Error('CI run attempt freshness is ambiguous');
+  }
   let ci = { workflow, run: null };
   if (run) {
     const { data: suite } = await github.rest.checks.getSuite({

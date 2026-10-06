@@ -70,8 +70,16 @@ export function assessConfiguration({
       'An advisory or retired Actions policy job is configured as authorization authority',
     );
   }
-  if (rulesets.some((ruleset) => ruleset.bypass_actors?.length > 0))
-    reasons.push('Applicable rulesets contain bypass actors');
+  if (
+    rulesets.some(
+      (ruleset) =>
+        !Array.isArray(ruleset.bypass_actors) ||
+        ruleset.bypass_actors.length > 0,
+    )
+  )
+    reasons.push(
+      'Applicable rulesets contain bypass actors or incomplete bypass evidence',
+    );
   const legacyBypass =
     protection?.required_pull_request_reviews?.bypass_pull_request_allowances;
   if (

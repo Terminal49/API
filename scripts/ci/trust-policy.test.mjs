@@ -426,6 +426,7 @@ test('latest pending CI run cannot fall back to earlier success without a PR ass
           {
             ...value.ci.run,
             id: 101,
+            updated_at: '2026-10-06T06:00:00Z',
             status: 'queued',
             conclusion: null,
             pull_requests: [],
@@ -596,4 +597,33 @@ test('controller consumes Octokit normalized paginated response arrays', async (
   });
   assert.equal(result.verification.passed, true);
   assert.equal(result.verification.runId, 100);
+});
+
+test('CI attempts with tied activity timestamps are ambiguous rather than successful', async () => {
+  const value = snapshot();
+  const { github, summary } = fakeGithub(value);
+  const paginate = github.paginate;
+  github.paginate = async (endpoint, args) =>
+    endpoint === 'runs'
+      ? [
+          value.ci.run,
+          {
+            ...value.ci.run,
+            id: 99,
+            run_attempt: 3,
+            status: 'queued',
+            conclusion: null,
+          },
+        ]
+      : paginate(endpoint, args);
+  await assert.rejects(
+    reconcilePull({
+      github,
+      summary,
+      repository: value.repository,
+      number: 10,
+      defaultBranch: 'main',
+    }),
+    /CI run attempt freshness is ambiguous/,
+  );
 });

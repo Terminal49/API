@@ -166,3 +166,11 @@ test('legacy user, team and App review bypasses never establish protection', () 
     assert.equal(assessConfiguration(value).nativeHumanReviewConfigured, false);
   }
 });
+
+test('missing or malformed ruleset bypass evidence never establishes protection', () => {
+  for (const ruleset of [{}, { bypass_actors: null }, { bypass_actors: {} }]) {
+    const value = configuration();
+    value.rulesets = [ruleset];
+    assert.equal(assessConfiguration(value).nativeHumanReviewConfigured, false);
+  }
+});
