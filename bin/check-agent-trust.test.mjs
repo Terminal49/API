@@ -239,6 +239,10 @@ function createGuardRepository(t) {
         'vite-plus': '0.3.3',
         '@vitest/coverage-v8': '4.1.11',
       },
+      dependencies:
+        workspace === 'sdks/typescript-sdk'
+          ? {}
+          : { '@terminal49/sdk': 'workspace:*' },
       exports: {},
     });
   }
@@ -388,4 +392,39 @@ test('a coupled new workspace must be represented in the ordered build task', (t
   const result = runGuard(repository);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Workspace build inventory drifted/);
+});
+
+test('ordered build inventory cannot place SDK after its workspace dependents', (t) => {
+  const repository = createGuardRepository(t);
+  const rootPackage = JSON.parse(
+    readFileSync(join(repository, 'package.json'), 'utf8'),
+  );
+  rootPackage.scripts.build =
+    'npm run build --workspace @terminal49/mcp && npm run build --workspace @terminal49/cli && npm run build --workspace @terminal49/sdk';
+  writeJson(repository, 'package.json', rootPackage);
+  const result = runGuard(repository);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /must build @terminal49\/sdk before/);
+});
+
+test('configuration ownership covers workspaces from an added root glob', (t) => {
+  const repository = createGuardRepository(t);
+  const rootPackage = JSON.parse(
+    readFileSync(join(repository, 'package.json'), 'utf8'),
+  );
+  rootPackage.workspaces.push('extensions/*');
+  rootPackage.scripts.build +=
+    ' && npm run build --workspace @terminal49/extension';
+  writeJson(repository, 'package.json', rootPackage);
+  writeJson(repository, 'extensions/new-workspace/package.json', {
+    name: '@terminal49/extension',
+    devDependencies: { 'vite-plus': '0.3.3', '@vitest/coverage-v8': '4.1.11' },
+  });
+  writeFileSync(
+    join(repository, 'extensions/new-workspace/vite.config.ts'),
+    'export default {};',
+  );
+  const result = runGuard(repository);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /extensions\/new-workspace\/vite.config.ts/);
 });
