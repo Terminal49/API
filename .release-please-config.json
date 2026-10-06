@@ -27,11 +27,6 @@
         },
         {
           "type": "json",
-          "path": "packages/mcp/package-lock.json",
-          "jsonpath": "$.packages[''].dependencies['@terminal49/sdk']"
-        },
-        {
-          "type": "json",
           "path": "sdks/typescript-sdk-cli/package.json",
           "jsonpath": "$.dependencies['@terminal49/sdk']"
         }

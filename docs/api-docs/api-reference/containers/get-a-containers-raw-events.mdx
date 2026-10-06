@@ -5,3 +5,35 @@ og:title: Access Raw Container Events | Terminal49 API Documentation
 og:description: Retrieve unprocessed raw event data for a container from the Terminal49 API. Includes carrier-reported milestone codes, timestamps, and location details.
 openapi: get /containers/{id}/raw_events
 ---
+
+<Warning>
+This endpoint is deprecated. For past milestone data, use [Get a container's transport events](/api-docs/api-reference/containers/get-a-containers-transport-events).
+</Warning>
+
+Returns past and estimated future milestones for a container as reported by the carrier. The `event` and `timestamp` attributes are normalized where possible; other attributes are passed through as-is. Not every value in `event` has a normalized name — container movement events are usually normalized, but exceptions occur.
+
+The response includes an `original_event` field with the raw carrier event name, which is not present on `transport_events`.
+
+## `raw_events` vs `transport_events`
+
+| | `raw_events` | `transport_events` |
+|---|---|---|
+| Status | Deprecated | Recommended |
+| Source | Carrier feed, mostly as-is | Vetted and normalized across carriers |
+| Estimated events | Any event type can be estimated, flagged by `attributes.estimated` | Only three normalized `estimated.*` event types (see below) |
+| Includes `original_event` | Yes | No |
+| Data quality | More events, less consistent normalization | Fewer events, higher confidence |
+
+Use `transport_events` for past milestones. Use `raw_events` only when you need the carrier's original event name or estimated events that have no `transport_events` equivalent.
+
+## Estimated events
+
+In `raw_events`, any event type can carry an estimated timestamp. The `attributes.estimated` boolean is `true` when the timestamp is an estimate, so estimated feeder, rail, and transshipment events appear here.
+
+In `transport_events`, estimates are separate event types, and only three exist:
+
+- `container.transport.estimated.vessel_departed`
+- `container.transport.estimated.vessel_arrived`
+- `container.transport.estimated.arrived_at_inland_destination`
+
+There are no estimated equivalents for feeder, rail, or transshipment events in `transport_events`. If you need estimated timestamps for those milestones, `raw_events` is currently the only endpoint that provides them.

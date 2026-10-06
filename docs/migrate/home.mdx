@@ -1,0 +1,248 @@
+---
+title: "Migrate to Terminal49"
+sidebarTitle: "Overview"
+description: "Migrate container tracking to Terminal49 from project44, FourKites, Vizion, ShipsGo, GoComet, Gnosis Freight, SeaRates, OpenTrack, or Beacon."
+---
+
+Terminal49 integrates directly with 36\+ ocean carriers and North American terminals. If you are running another provider today, these guides map your current integration onto ours, field by field, so you can cut over without reverse-engineering our schema.
+
+Every guide covers the same ground: authentication, request and response mapping, event and webhook equivalents, error handling, the gotchas that will bite you, and a migration checklist. Each one also carries a prompt you can hand to Claude Code, Codex, Cursor, or Copilot to run the migration side by side.
+
+## Why we care so much about terminal data
+
+We moved containers before we wrote any code.
+
+The company started because we were doing drayage for customers out of Oakland and Virginia. That meant refreshing terminal websites at six in the morning to find out if a box had cleared. It meant sending a driver for a container that turned out to be on a customs hold, and eating the trip. It meant finding out about a last free day the day after it passed.
+
+Nobody sells you demurrage. You just get a bill.
+
+So when we built the API, terminal data was not a feature we added later to look competitive. It was the entire reason. Holds, fees, last free day, whether the box can actually be picked up right now: that is the data that decides whether your week is expensive, and most tracking APIs still do not return it.
+
+If you have ever had to explain a demurrage invoice to a customer, you already understand why this page exists.
+
+## Pick your current provider
+
+<CardGroup cols={2}>
+  <Card title="SeaRates" icon="ship" href="/migrate/searates">
+    Poll-based ocean tracking. Move from `api_key` query params and custom JSON to JSON:API and webhooks.
+  </Card>
+
+  <Card title="project44" icon="network-wired" href="/migrate/project44">
+    Enterprise multi-modal visibility. Focus on the ocean shipments and swap in HMAC-signed webhooks.
+  </Card>
+
+  <Card title="FourKites" icon="truck" href="/migrate/fourkites">
+    Multi-modal visibility. Replace the ocean feed with direct carrier and terminal integrations.
+  </Card>
+
+  <Card title="Vizion" icon="eye" href="/migrate/vizion">
+    Reference IDs and webhook events. Map subscriptions onto tracking requests.
+  </Card>
+
+  <Card title="OpenTrack" icon="folder-open" href="/migrate/opentrack">
+    Ocean tracking API with a similar model. Mostly a rename of concepts you already know.
+  </Card>
+
+  <Card title="ShipsGo" icon="anchor" href="/migrate/shipsgo">
+    Ocean tracking and analytics. Swap the polling loop for webhooks and normalize event codes.
+  </Card>
+
+  <Card title="GoComet" icon="satellite" href="/migrate/gocomet">
+    Shipment-centric multi-modal tracking. Move to JSON:API and per-container events.
+  </Card>
+
+  <Card title="Beacon" icon="signal-stream" href="/migrate/beacon">
+    Supply chain visibility. Replace shipment-level polling with per-container webhooks.
+  </Card>
+
+  <Card title="Gnosis Freight" icon="container-storage" href="/migrate/gnosisfreight">
+    Container Lifecycle Management platform. Move MBL-based tracking and polling onto tracking requests and webhooks.
+  </Card>
+</CardGroup>
+
+## What every migration has in common
+
+<Steps>
+  <Step title="Self-serve an API key">
+    Create an account at [app.terminal49.com](https://app.terminal49.com) and generate a key under [Developers → API Keys](https://app.terminal49.com/developers/api-keys). The free plan lets you create tracking requests through the API for up to 10 active containers. To read and export tracking data and use webhooks, open [Developers](https://app.terminal49.com/developers) and click **Start trial**. The trial lasts 7 days and keeps the same 10-container limit.
+  </Step>
+  <Step title="Register tracking requests once">
+    `POST /v2/tracking_requests` per BOL, booking, or container. We poll the carrier, terminal, and rail sources on your behalf.
+  </Step>
+  <Step title="Receive updates via webhook">
+    Subscribe to the events you act on. 30\+ events, HMAC-signed, delivered as changes happen. Polling stays available if you prefer it.
+  </Step>
+  <Step title="Wire up the operational fields">
+    Holds, fees, last free day, release readiness. These are the reason to migrate rather than port like for like.
+  </Step>
+</Steps>
+
+<Note>
+  **Migration offer:** sign up now and the [Vessels API](/api-docs/api-reference/vessels/get-a-vessel-using-the-id) — vessel schedules, AIS positions, and projected routes — is free for your first month.
+</Note>
+
+## The fields that change how your week goes
+
+<CardGroup cols={2}>
+  <Card title="Terminal holds" icon="hand">
+    `holds_at_pod_terminal` lists what is actually blocking the box (`customs`, `freight`, `USDA`, `VACIS`, `TMF`) with status and the terminal's own description. Know before you dispatch a truck.
+  </Card>
+
+  <Card title="Terminal fees" icon="dollar-sign">
+    `fees_at_pod_terminal` returns type, amount, and currency for demurrage, exam, and dwell fees, straight from the terminal. The number on the invoice, before the invoice.
+  </Card>
+
+  <Card title="Last free day" icon="calendar-days">
+    `pickup_lfd`, broken out by shipping line, terminal, and rail, because they disagree and the difference is money. Each source has its own webhook event.
+  </Card>
+
+  <Card title="Release readiness" icon="circle-check">
+    `available_for_pickup` plus the holds array answers "can I actually pick this up right now?" in a single call.
+  </Card>
+</CardGroup>
+
+## We are building a network, not a data feed
+
+Visibility on its own does not move a container. The people who move it have to be able to see the same thing you do.
+
+That is why the dashboard is **free for truckers**. Your drayage partner should not need a license to see the last free day on a box they are picking up for you. And it is **free for small importers and exporters**: a company moving a handful of containers a month should not have to buy enterprise software to avoid a demurrage bill.
+
+We do not make money on those accounts. We make money when the whole chain runs better, because that is when the people with volume stay.
+
+Most tracking APIs sell one company a window into their own freight. We are trying to get everyone touching the container looking at the same record.
+
+## We are not stopping at North America
+
+Our terminal-level data (holds, fees, LFD, availability, FIRMS codes) is deepest across the US and Canada. That is honest, and if you are tracking Asia-to-Europe today it is a real limitation you should weigh. The [coverage pages](/coverage/home) tell you exactly which sources return which fields.
+
+But North America is where we started, not where we are stopping. Ocean carrier milestones already work globally. Terminal integrations outside North America are in progress right now, and the [coverage changelog](/coverage/changelog) is where they show up as they go live, not in a press release.
+
+The goal has never been a regional product. It is one common record for a container wherever it happens to be.
+
+## When something breaks, you get someone who has done the job
+
+Support is not a ticket queue that reads your message back to you.
+
+The people you reach have chased chassis, argued with terminals, and paid demurrage they did not see coming. When you say the terminal is showing something different from the carrier, you will not have to explain what that means.
+
+If a mapping in these guides is wrong or thin, tell us. We would rather fix the page than have you build around it.
+
+## The core API shape, once
+
+Wherever you are coming from, the request pattern is the same.
+
+```bash Create a tracking request
+curl -X POST https://api.terminal49.com/v2/tracking_requests \
+  -H "Content-Type: application/vnd.api+json" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -d '{
+    "data": {
+      "type": "tracking_request",
+      "attributes": {
+        "request_number": "YOUR_BOL_NUMBER",
+        "request_type": "bill_of_lading",
+        "scac": "MAEU"
+      }
+    }
+  }'
+```
+
+<Note>
+  We use `Authorization: Token <key>`, not `Bearer`. Content type is `application/vnd.api+json` (JSON:API). Responses include `data`, `relationships`, and an `included` array.
+</Note>
+
+## Migrate with an AI coding agent
+
+Every provider page carries a copyable prompt that walks an AI coding assistant — Claude Code, Codex, Cursor, Copilot, or any agent that can read your repo — through a **side-by-side migration**: stand up a Terminal49 client next to your current provider, shadow every call, diff the responses, and cut over only once parity is proven. The prompts are opinionated about small PRs and reference the mappings on each page, so give your agent the page URL as context.
+
+Coming from a provider we have not written up? Use the generic version below and fill in the provider name.
+
+```markdown Terminal49 side-by-side migration prompt (generic) expandable icon=robot wrap
+You are migrating this codebase from our current container tracking provider,
+[PROVIDER], to the Terminal49 API, side by side. Terminal49's documentation is at
+https://terminal49.com/docs — use the API reference and the migration guides under
+https://terminal49.com/docs/migrate/home as the source of truth for field mappings,
+event names, error codes, and behavior. Never invent Terminal49 fields, endpoints,
+or event names; if the docs do not confirm a mapping, ask me.
+
+# Repo context (fill this in before running)
+
+- [PROVIDER] client lives at: [path/to/client]
+- [PROVIDER] is called from: [list the call sites or "find them"]
+- Language and framework: [e.g. TypeScript + Node, Python + FastAPI, Ruby on Rails]
+- Storage for tracking state: [e.g. Postgres table `shipments`]
+- Current polling schedule: [e.g. cron every 2h]
+- Carrier mix (SCACs we track most): [e.g. MAEU, MSCU, CMDU, HLCU, ONEY]
+- Secret store: [e.g. AWS Secrets Manager, `.env`, Doppler]
+
+# Terminal49 facts (do not deviate)
+
+- Auth header is `Authorization: Token <key>` — not `Bearer`.
+- Content type is `application/vnd.api+json`; responses are JSON:API with `data`,
+  `relationships`, and an `included` array.
+- Base URL is `https://api.terminal49.com/v2`.
+- Tracking is asynchronous: `POST /tracking_requests` returns pending; data arrives via
+  `tracking_request.succeeded` / `tracking_request.failed` /
+  `tracking_request.awaiting_manifest` webhooks, or by polling `GET /v2/shipments`. Do not expect shipment data on creation.
+- Timestamps are UTC with a separate IANA `time_zone` field.
+- `holds_at_pod_terminal: []` and `fees_at_pod_terminal: []` are the normal state, not
+  missing data.
+- On `container.updated`, use the `changeset` instead of diffing state yourself.
+
+# Plan (one small, revertable PR per step)
+
+1. Discovery: find every [PROVIDER] call site; extract the client's public surface into
+   a `TrackingProvider` interface; make the existing client implement it.
+2. Terminal49 client: implement the same interface against Terminal49
+   (`createTrackingRequest`, `getShipment` with `include=containers`, `getContainer`).
+   Normalize responses to the shape existing callers expect. Map errors to typed
+   classes by HTTP status (401, 403, 400/422, 404, 429, 5xx). Unit tests on recorded
+   fixtures only.
+3. Shadow mode: wrap both clients; [PROVIDER] stays primary; fire-and-forget the same
+   lookup against Terminal49 and log structured diffs. Add a parity report aggregated
+   by SCAC and field. No caller-visible changes.
+4. Backfill: one-shot idempotent script that creates a tracking request per active BOL,
+   booking, or container and stores the returned IDs.
+5. Webhooks (preferred) or polling: HMAC-verified receiver, idempotent event storage
+   keyed by event ID, registered via `POST /v2/webhooks` for only the events we handle.
+6. Cutover behind a `TRACKING_PROVIDER` feature flag; [PROVIDER] stays as fallback for
+   one release cycle; flip staging first, verify the parity report, then production.
+7. Cleanup: delete the [PROVIDER] client, env vars, dependencies, and dedupe logic;
+   remove the shadow layer and the flag.
+
+# Definition of done
+
+- All call sites go through Terminal49; webhooks or polling live in production.
+- Parity report is clean for our top SCACs.
+- Holds (`holds_at_pod_terminal`), fees (`fees_at_pod_terminal`), last free day
+  (`pickup_lfd`), and `available_for_pickup` are wired into whichever downstream
+  system acts on them. They are the reason to migrate properly.
+- [PROVIDER] is gone from the repo.
+
+# Ask me before you
+
+- Choose webhooks vs polling.
+- Change any function signature existing callers use.
+- Add a dependency.
+- Touch anything outside the tracking integration.
+```
+
+## Start somewhere
+
+<CardGroup cols={2}>
+  <Card title="Coverage" icon="globe" href="/coverage/home">
+    Carriers, terminals, rail, and per-field availability, including the gaps
+  </Card>
+
+  <Card title="API reference" icon="code" href="/api-docs/api-reference/introduction">
+    Every endpoint, with request and response schemas
+  </Card>
+
+  <Card title="Test numbers" icon="flask" href="/api-docs/useful-info/test-numbers">
+    Simulate success and failure before you cut over
+  </Card>
+
+  <Card title="Send us your list" icon="comment" href="https://www.terminal49.com/demo">
+    Give us your active containers and BOLs and we will load them, so you skip the backfill
+  </Card>
+</CardGroup>

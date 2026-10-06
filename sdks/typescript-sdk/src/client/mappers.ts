@@ -1,5 +1,6 @@
 import type {
   Container,
+  CustomField,
   Route,
   Shipment,
   ShippingLine,
@@ -439,4 +440,30 @@ export function mapTrackingRequestList(doc: any): TrackingRequest[] {
   return doc.data.map((item: any) =>
     mapTrackingRequest({ data: item, included: doc.included || [] }),
   );
+}
+
+export function mapCustomFields(doc: any): CustomField[] {
+  const jsonapi = new JsonApiDocument(doc ?? {});
+  const rows = Array.isArray(doc?.data)
+    ? doc.data
+    : doc?.data
+      ? [doc.data]
+      : [];
+  return rows.map((row: any) => {
+    const attrs = row.attributes || {};
+    const definitionRef = row.relationships?.definition?.data;
+    const definition = definitionRef
+      ? jsonapi.getIncluded(definitionRef.type, definitionRef.id)
+      : undefined;
+    const definitionAttrs = definition?.attributes || {};
+    return {
+      id: row.id,
+      slug: attrs.api_slug ?? definitionAttrs.api_slug,
+      name: definitionAttrs.display_name,
+      value: attrs.value ?? null,
+      displayValue: attrs.display_value ?? null,
+      dataType: definitionAttrs.data_type,
+      updatedAt: attrs.updated_at ?? null,
+    };
+  });
 }

@@ -1,4 +1,8 @@
-import { getCompleter } from '@modelcontextprotocol/sdk/server/completable.js';
+import {
+  Client,
+  StreamableHTTPClientTransport,
+} from '@modelcontextprotocol/client';
+import { createMcpHandler } from '@modelcontextprotocol/server';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import {
   buildListContract,
@@ -16,33 +20,32 @@ vi.mock('@sentry/node', () => ({
 // Stubbed Terminal49Client so server tools can be exercised end-to-end without
 // hitting the live API. Tests configure these mocks per-case. `vi.hoisted`
 // is required because vi.mock factories are hoisted above normal declarations.
-const { shippingLinesList, containersList } = vi.hoisted(() => ({
-  shippingLinesList: vi.fn(),
-  containersList: vi.fn(),
-}));
+const { search, shippingLinesList, containersList, shipmentsList } = vi.hoisted(
+  () => ({
+    search: vi.fn(),
+    shippingLinesList: vi.fn(),
+    containersList: vi.fn(),
+    shipmentsList: vi.fn(),
+  }),
+);
 
 vi.mock('@terminal49/sdk', () => ({
   Terminal49Client: class Terminal49Client {
+    search = search;
     shippingLines = { list: shippingLinesList };
     containers = { list: containersList };
+    shipments = { list: shipmentsList };
   },
   FeatureNotEnabledError: class FeatureNotEnabledError extends Error {},
   NotFoundError: class NotFoundError extends Error {},
 }));
 
 beforeEach(() => {
+  search.mockReset();
   shippingLinesList.mockReset();
   containersList.mockReset();
+  shipmentsList.mockReset();
 });
-
-// The SDK stores prompt arg schemas as a Zod object. Zod v3 exposes `.shape`;
-// Zod v4 keeps it on `_zod.def.shape`. Read it the way the SDK does so the
-// completion test stays version-robust.
-function getArgShape(argsSchema: any): Record<string, unknown> {
-  const v4Shape = argsSchema?._zod?.def?.shape;
-  const v3Shape = argsSchema?.shape;
-  return (v4Shape ?? v3Shape) as Record<string, unknown>;
-}
 
 function _hasResponseContract(schema: unknown): boolean {
   const typedSchema = schema as {
@@ -305,6 +308,29 @@ class MockTransport {
   close = vi.fn();
 }
 
+async function connectClientForToolCall() {
+  const handler = createMcpHandler(
+    () => createTerminal49McpServer('token', 'https://api.test'),
+    {
+      legacy: 'stateless',
+      responseMode: 'json',
+    },
+  );
+  const client = new Client(
+    { name: 'terminal49-tool-output-test', version: '1.0.0' },
+    { versionNegotiation: { mode: { pin: '2026-07-28' } } },
+  );
+  const transport = new StreamableHTTPClientTransport(
+    new URL('https://mcp.test/mcp'),
+    {
+      fetch: (url, init) => handler.fetch(new Request(url, init)),
+    },
+  );
+
+  await client.connect(transport);
+  return { client, handler };
+}
+
 describe('MCP server wiring', () => {
   it('connects without throwing and registers MCP handlers', async () => {
     const server = createTerminal49McpServer('token', 'https://api.test');
@@ -349,31 +375,118 @@ describe('MCP server wiring', () => {
     expect(resourceTemplates).toContain('container');
   });
 
-  it('tools accept optional MCP-only intent telemetry', () => {
+  it('does not advertise intent and strips it from legacy tool arguments', () => {
     const server = createTerminal49McpServer('token');
     const tools = (server as any)._registeredTools as Record<
       string,
-      { inputSchema: unknown }
+      { inputSchema: { parse: (value: unknown) => Record<string, unknown> } }
     >;
+    const id = '123e4567-e89b-12d3-a456-426614174000';
+    const legacyArgs: Record<string, Record<string, unknown>> = {
+      search_container: { query: 'CAIU1234567' },
+      track_container: { number: 'CAIU1234567' },
+      get_container: { id },
+      get_shipment_details: { id },
+      get_container_transport_events: { id },
+      get_supported_shipping_lines: { search: 'Maersk' },
+      get_container_route: { id },
+      list_shipments: {},
+      list_containers: {},
+      list_tracking_requests: {},
+    };
 
     for (const [name, tool] of Object.entries(tools)) {
       expect(_objectSchemaHasProperty(tool.inputSchema, 'intent'), name).toBe(
-        true,
+        false,
       );
+      expect(
+        tool.inputSchema.parse({
+          ...legacyArgs[name],
+          intent: 'legacy routing telemetry',
+        }),
+        name,
+      ).not.toHaveProperty('intent');
     }
-
-    expect(() =>
-      (
-        tools.get_supported_shipping_lines.inputSchema as {
-          parse: (value: unknown) => unknown;
-        }
-      ).parse({
-        intent: 'validate carrier before creating a tracking request',
-      }),
-    ).not.toThrow();
   });
 
-  it('tools include _response_contract in output schemas', () => {
+  it('bounds identifier strings in tool input schemas', () => {
+    const server = createTerminal49McpServer('token');
+    const tools = (server as any)._registeredTools as Record<
+      string,
+      { inputSchema: { parse: (value: unknown) => unknown } }
+    >;
+
+    expect(() =>
+      tools.search_container.inputSchema.parse({ query: 'R'.repeat(128) }),
+    ).not.toThrow();
+    expect(() =>
+      tools.search_container.inputSchema.parse({ query: 'R'.repeat(129) }),
+    ).toThrow();
+    expect(() =>
+      tools.track_container.inputSchema.parse({ number: 'N'.repeat(65) }),
+    ).toThrow();
+    expect(() =>
+      tools.get_supported_shipping_lines.inputSchema.parse({
+        search: 'C'.repeat(65),
+      }),
+    ).toThrow();
+    expect(() =>
+      tools.list_shipments.inputSchema.parse({ number: 'S'.repeat(65) }),
+    ).toThrow();
+  });
+
+  it('requires number in the track_container input schema', () => {
+    const server = createTerminal49McpServer('token');
+    const schema = (server as any)._registeredTools.track_container
+      .inputSchema as { parse: (value: unknown) => unknown };
+
+    expect(() => schema.parse({})).toThrow();
+    expect(() => schema.parse({ containerNumber: 'CAIU2885402' })).toThrow();
+    expect(() => schema.parse({ number: 'CAIU2885402' })).not.toThrow();
+  });
+
+  it('advertises and enforces a maximum page size of 25', () => {
+    const server = createTerminal49McpServer('token');
+    const tools = (server as any)._registeredTools as Record<
+      string,
+      { inputSchema: { parse: (value: unknown) => Record<string, unknown> } }
+    >;
+
+    for (const name of [
+      'list_shipments',
+      'list_containers',
+      'list_tracking_requests',
+    ]) {
+      expect(tools[name]?.inputSchema.parse({ page_size: 25 })).toMatchObject({
+        page_size: 25,
+      });
+      expect(() => tools[name]?.inputSchema.parse({ page_size: 26 })).toThrow();
+    }
+  });
+
+  it('advertises only typed tracking-request filters', () => {
+    const server = createTerminal49McpServer('token');
+    const schema = (server as any)._registeredTools.list_tracking_requests
+      .inputSchema as { parse: (value: unknown) => Record<string, unknown> };
+
+    expect(
+      schema.parse({
+        request_number: 'CAIU1234567',
+        status: 'failed',
+        scac: 'MAEU',
+      }),
+    ).toMatchObject({
+      request_number: 'CAIU1234567',
+      status: 'failed',
+      scac: 'MAEU',
+    });
+    expect(() =>
+      schema.parse({ filters: { 'filter[status]': 'failed' } }),
+    ).toThrow();
+    expect(() => schema.parse({ scac: 'not a scac' })).toThrow();
+  });
+
+  it('tool output schemas do not advertise response steering', () => {
     const server = createTerminal49McpServer('token');
     const tools = (server as any)._registeredTools as Record<
       string,
@@ -396,11 +509,11 @@ describe('MCP server wiring', () => {
     for (const name of expectedToolSchemas) {
       const outputSchema = tools[name]?.outputSchema;
       const hasResponseContract = _hasResponseContract(outputSchema);
-      expect(hasResponseContract).toBe(true);
+      expect(hasResponseContract).toBe(false);
     }
   });
 
-  it('list tool contracts include display hints for table rendering', () => {
+  it('list tool output schemas do not advertise response display steering', () => {
     const server = createTerminal49McpServer('token');
     const tools = (server as any)._registeredTools as Record<
       string,
@@ -415,7 +528,7 @@ describe('MCP server wiring', () => {
 
     for (const name of listTools) {
       const outputSchema = tools[name]?.outputSchema;
-      expect(_hasDisplayHintsInResponseContract(outputSchema)).toBe(true);
+      expect(_hasDisplayHintsInResponseContract(outputSchema)).toBe(false);
     }
   });
 
@@ -455,14 +568,24 @@ describe('MCP server wiring', () => {
   it('captures handled tool errors when Sentry is initialized', async () => {
     const Sentry = await import('@sentry/node');
     vi.mocked(Sentry.isInitialized).mockReturnValue(true);
+    search.mockRejectedValue(
+      new Error(
+        'upstream failed at https://internal.example/v2?token=secret-token',
+      ),
+    );
 
     const server = createTerminal49McpServer('token');
     const searchTool = (server as any)._registeredTools.search_container;
 
-    const result = await searchTool.handler({ query: '   ' });
+    const result = await searchTool.handler({ query: 'CAIU1234567' });
 
     expect(result.isError).toBe(true);
     expect(Sentry.captureException).toHaveBeenCalledWith(expect.any(Error));
+    const captured = vi.mocked(Sentry.captureException).mock.calls[0]?.[0];
+    expect(captured).toBeInstanceOf(Error);
+    expect((captured as Error).message).not.toContain('internal.example');
+    expect((captured as Error).message).not.toContain('secret-token');
+    expect((captured as Error).message).toContain('could not be completed');
     expect(Sentry.flush).toHaveBeenCalledWith(2000);
   });
 
@@ -485,7 +608,7 @@ describe('MCP server wiring', () => {
     expect(instructions.length).toBeGreaterThan(400);
   });
 
-  it('registers the completions capability so carrier SCAC completion is reachable', async () => {
+  it('returns carrier SCAC completion values over MCP', async () => {
     shippingLinesList.mockResolvedValue([
       { scac: 'MAEU', name: 'Maersk', shortName: 'Maersk' },
       {
@@ -495,57 +618,49 @@ describe('MCP server wiring', () => {
       },
     ]);
 
-    const server = createTerminal49McpServer('token');
+    const handler = createMcpHandler(
+      () => createTerminal49McpServer('token', 'https://api.test'),
+      {
+        legacy: 'stateless',
+        responseMode: 'json',
+      },
+    );
+    const client = new Client(
+      { name: 'terminal49-completion-test', version: '1.0.0' },
+      { versionNegotiation: { mode: { pin: '2026-07-28' } } },
+    );
+    const transport = new StreamableHTTPClientTransport(
+      new URL('https://mcp.test/mcp'),
+      {
+        fetch: (url, init) => handler.fetch(new Request(url, init)),
+      },
+    );
 
-    // PRIMARY (registered-path) assertion. This is the actual HIGH-finding
-    // fix: `completable` must wrap the INNER string with `.optional()` applied
-    // AFTER, because the SDK unwraps ZodOptional before checking isCompletable
-    // when deciding whether to advertise `completions` and register a
-    // completion handler. With the previous OUTER-optional wiring the symbol
-    // sat on the ZodOptional, the SDK's unwrap missed it, and the capability
-    // was NEVER advertised — so these two assertions FAIL against the pre-fix
-    // wiring and PASS only once Fix 1 is applied.
-    const capabilities = (server as any).server.getCapabilities();
-    expect(capabilities.completions).toBeDefined();
-    expect((server as any)._completionHandlerInitialized).toBe(true);
+    try {
+      await client.connect(transport);
 
-    // SECONDARY (unit) assertion on the completion VALUES. We resolve the
-    // completer exactly the way the SDK's prompt registration does — unwrap
-    // the ZodOptional and read isCompletable/getCompleter off the inner
-    // string — then exercise it. (The SDK's prompt-completion *handler* checks
-    // isCompletable on the un-unwrapped optional field, so values are surfaced
-    // here via the same inner-string the registration keys off, rather than
-    // through handlePromptCompletion.)
-    const prompt = (server as any)._registeredPrompts['track-shipment'];
-    const carrierField = getArgShape(prompt.argsSchema).carrier as {
-      _def?: { innerType?: unknown };
-    };
-    // Symbol lives on the inner string, not the outer ZodOptional.
-    expect(getCompleter(carrierField as any)).toBeUndefined();
-    const innerCompleter = getCompleter(carrierField._def?.innerType as any);
-    expect(innerCompleter).toBeTypeOf('function');
+      const broadMatch = await client.complete({
+        ref: { type: 'ref/prompt', name: 'track-shipment' },
+        argument: { name: 'carrier', value: 'm' },
+      });
+      expect(broadMatch.completion.values).toEqual(['MAEU', 'MSCU']);
 
-    // "m" matches Maersk (MAEU) and Mediterranean (MSCU); "ma" matches only Maersk.
-    expect(await innerCompleter!('m', undefined)).toEqual(['MAEU', 'MSCU']);
-    expect(await innerCompleter!('ma', undefined)).toEqual(['MAEU']);
+      const narrowMatch = await client.complete({
+        ref: { type: 'ref/prompt', name: 'track-shipment' },
+        argument: { name: 'carrier', value: 'ma' },
+      });
+      expect(narrowMatch.completion.values).toEqual(['MAEU']);
 
-    // The completer reused the live supported-lines lookup, filtered by input.
-    expect(shippingLinesList).toHaveBeenCalled();
-  });
-
-  it('carrier completion degrades to empty suggestions when the API errors', async () => {
-    shippingLinesList.mockRejectedValue(new Error('upstream unavailable'));
-
-    const server = createTerminal49McpServer('token');
-    const prompt = (server as any)._registeredPrompts['track-shipment'];
-    // Resolve the completer off the inner string (the ZodOptional wraps it),
-    // matching how the SDK keys completion off the unwrapped inner schema.
-    const carrierField = getArgShape(prompt.argsSchema).carrier as {
-      _def?: { innerType?: unknown };
-    };
-    const completer = getCompleter(carrierField._def?.innerType as any);
-
-    await expect(completer!('ma', undefined)).resolves.toEqual([]);
+      shippingLinesList.mockRejectedValue(new Error('upstream unavailable'));
+      const degraded = await client.complete({
+        ref: { type: 'ref/prompt', name: 'track-shipment' },
+        argument: { name: 'carrier', value: 'ma' },
+      });
+      expect(degraded.completion.values).toEqual([]);
+    } finally {
+      await client.close();
+      await handler.close();
+    }
   });
 
   it('list_containers result includes resource_link blocks with valid container URIs', async () => {
@@ -582,7 +697,81 @@ describe('MCP server wiring', () => {
     }
   });
 
-  it('marks steering-only content with audience:[assistant] and keeps the answer user-visible', async () => {
+  it.each([
+    {
+      name: 'list_containers',
+      args: { page: 1, page_size: 10 },
+      listMock: containersList,
+      payload: {
+        items: [
+          {
+            id: '11111111-1111-1111-1111-111111111111',
+            number: 'CAIU1234567',
+            currentStatus: 'available',
+            terminals: {
+              podTerminal: { name: 'APM Los Angeles', firmsCode: 'Y123' },
+            },
+          },
+        ],
+        links: {
+          self: 'https://api.test/containers?page[number]=1&page[size]=10',
+          next: 'https://api.test/containers?page[number]=2&page[size]=10',
+        },
+        meta: { total: 42 },
+        unsupportedFilters: [],
+      },
+    },
+    {
+      name: 'list_shipments',
+      args: {
+        tracking_stopped: false,
+        include_containers: true,
+        page: 1,
+        page_size: 10,
+      },
+      listMock: shipmentsList,
+      payload: {
+        items: [
+          {
+            id: '22222222-2222-2222-2222-222222222222',
+            billOfLading: 'MAEU123456789',
+            shippingLineScac: 'MAEU',
+            containers: [
+              {
+                id: '11111111-1111-1111-1111-111111111111',
+                number: 'CAIU1234567',
+              },
+            ],
+          },
+        ],
+        links: {
+          self: 'https://api.test/shipments?page[number]=1&page[size]=10',
+        },
+        meta: { total: 1 },
+        unsupportedFilters: [],
+      },
+    },
+  ])(
+    '$name structured content validates with mapped list sidecars',
+    async ({ name, args, listMock, payload }) => {
+      listMock.mockResolvedValue(payload);
+      const { client, handler } = await connectClientForToolCall();
+
+      try {
+        const result = await client.callTool({ name, arguments: args });
+
+        expect(result.structuredContent).toMatchObject(payload);
+        expect(JSON.stringify(result)).not.toMatch(
+          /_agent_steering|_response_contract|presentation_guidance|suggested_follow_ups|suggested_tools/,
+        );
+      } finally {
+        await client.close();
+        await handler.close();
+      }
+    },
+  );
+
+  it('returns data without assistant-only steering content', async () => {
     containersList.mockResolvedValue({ items: [], links: {}, meta: {} });
 
     const server = createTerminal49McpServer('token');
@@ -597,10 +786,10 @@ describe('MCP server wiring', () => {
         block.annotations.audience[0] === 'assistant',
     );
 
-    // Exactly one assistant-only steering block carrying the contract hints.
-    expect(steeringBlocks).toHaveLength(1);
-    expect(steeringBlocks[0].text).toContain('_agent_steering');
-    expect(steeringBlocks[0].text).toContain('presentation_guidance');
+    expect(steeringBlocks).toHaveLength(0);
+    expect(JSON.stringify(result)).not.toMatch(
+      /_agent_steering|_response_contract|presentation_guidance|suggested_follow_ups|suggested_tools/,
+    );
 
     // The first (answer) block is NOT annotated assistant-only, so it stays
     // visible to end users.

@@ -15,13 +15,15 @@ Some Terminal49 features require account enablement beyond standard API access.
 
 ## Entitlement overview
 
-| Surface | Entitlement | How to request access | Non-entitled behavior |
+| Surface | Entitlement | How to get access | Non-entitled behavior |
 | --- | --- | --- | --- |
+| Read endpoints (`GET /v2/shipments`, `GET /v2/containers`, `GET /v2/tracking_requests/{id}`, and other GETs) | Full API access (paid plan or 7-day API trial) | Open [Developers](https://app.terminal49.com/developers) and click **Start trial** for 7 days with the same 10-active-container limit, or see [Pricing](/api-docs/useful-info/pricing) for ongoing access | `401 Unauthorized` with `You do not have permissions for using the API, except for creating tracking requests. All other permissions require a paid plan. See https://app.terminal49.com/settings/billing`. `POST /v2/tracking_requests` still works. |
 | Container Map GeoJSON API (`GET /v2/containers/{id}/map_geojson`) | Routing Data | Contact sales@terminal49.com | `403 Forbidden` with `Routing data feature is not enabled for this account` |
 | Vessel position and future-position endpoints | Routing Data / vessel positions | Contact sales@terminal49.com | `403 Forbidden` with `Routing data feature is not enabled for this account` |
 | MCP `get_container_route` tool | Routing Data | Contact sales@terminal49.com | The tool returns a feature-not-enabled response; use `get_container_transport_events` for historical milestones |
 | Terminal49 Map Embed | Publishable map API key | Contact support@terminal49.com | The browser embed cannot authenticate without a valid publishable key |
 | Tracking Widget Embed | Publishable widget API key | Contact support@terminal49.com | The browser widget cannot authenticate without a valid publishable key |
+| Container refresh (`PATCH /v2/containers/{id}/refresh`) | On-demand refresh | Contact sales@terminal49.com | `403 Forbidden`; the endpoint is also rate-limited to 10 requests per minute for entitled accounts |
 | Rail LFD data (`import_deadlines.pickup_lfd_rail` and the `container.pickup_lfd_rail.changed` webhook event) | Rail Plan | Contact sales@terminal49.com | `container.pickup_lfd_rail.changed` notifications are not delivered, and rail-carrier LFD updates are not surfaced on the container |
 
 ## Pricing

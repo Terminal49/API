@@ -3,58 +3,19 @@
  * Creates a tracking request for a container/BL/booking number and returns the container details
  */
 
-import { Terminal49Client } from '@terminal49/sdk';
+import { NotFoundError, Terminal49Client } from '@terminal49/sdk';
+import { logMcpEvent } from '../logging.js';
 import { executeGetContainer } from './get-container.js';
 import { executeSearchContainer } from './search-container.js';
 
 export interface TrackContainerArgs {
-  number?: string;
+  number: string;
   numberType?: string;
   containerNumber?: string;
   bookingNumber?: string;
   scac?: string;
   refNumbers?: string[];
 }
-
-export const trackContainerTool = {
-  name: 'track_container',
-  description:
-    'Track a container, bill of lading, or booking number. ' +
-    'This will infer number type + carrier when possible, create a tracking request, ' +
-    'and return detailed container information. Optionally provide SCAC or reference numbers.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      number: {
-        type: 'string',
-        description: 'Container, bill of lading, or booking number to track',
-      },
-      numberType: {
-        type: 'string',
-        description:
-          'Optional override: container | bill_of_lading | booking_number',
-      },
-      containerNumber: {
-        type: 'string',
-        description: 'Deprecated alias for number (container number)',
-      },
-      bookingNumber: {
-        type: 'string',
-        description: 'Deprecated alias for number (booking/BL number)',
-      },
-      scac: {
-        type: 'string',
-        description:
-          'Optional SCAC code of the shipping line (e.g., MAEU for Maersk)',
-      },
-      refNumbers: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Optional reference numbers for matching',
-      },
-    },
-  },
-};
 
 function normalizeText(value: string | undefined): string | undefined {
   const text = value?.trim();
@@ -111,9 +72,72 @@ function inferNumberTypeFromPattern(number: string): string | undefined {
   return undefined;
 }
 
+const ISO_6346_LETTER_VALUES: Record<string, number> = {
+  A: 10,
+  B: 12,
+  C: 13,
+  D: 14,
+  E: 15,
+  F: 16,
+  G: 17,
+  H: 18,
+  I: 19,
+  J: 20,
+  K: 21,
+  L: 23,
+  M: 24,
+  N: 25,
+  O: 26,
+  P: 27,
+  Q: 28,
+  R: 29,
+  S: 30,
+  T: 31,
+  U: 32,
+  V: 34,
+  W: 35,
+  X: 36,
+  Y: 37,
+  Z: 38,
+};
+
+class ContainerCheckDigitError extends Error {
+  constructor(number: string) {
+    super(`Container number ${number} fails the ISO 6346 check digit`);
+    this.name = 'ContainerCheckDigitError';
+  }
+}
+
+function hasValidIso6346CheckDigit(number: string): boolean {
+  if (!/^[A-Z]{3}[UJZ]\d{7}$/.test(number)) {
+    return true;
+  }
+
+  let sum = 0;
+  for (const [index, character] of [...number.slice(0, 10)].entries()) {
+    const value = /\d/.test(character)
+      ? Number(character)
+      : ISO_6346_LETTER_VALUES[character];
+    if (value === undefined) {
+      return false;
+    }
+    sum += value * 2 ** index;
+  }
+
+  return (sum % 11) % 10 === Number(number.at(-1));
+}
+
 function parseValidationPointer(message: string): string | undefined {
   const pointerMatch = message.match(/\((\/data\/attributes\/[a-z_]+)\)/i);
   return pointerMatch?.[1];
+}
+
+function isNotFound(error: unknown): boolean {
+  return (
+    error instanceof NotFoundError ||
+    (error as { status?: number })?.status === 404 ||
+    (error as { name?: string })?.name === 'NotFoundError'
+  );
 }
 
 async function findExistingTrackedContainer(
@@ -157,8 +181,11 @@ export async function executeTrackContainer(
   const number = normalizeTrackingNumber(
     args.number || args.containerNumber || args.bookingNumber || '',
   );
-  if (!number || number.trim() === '') {
-    throw new Error('Tracking number is required');
+  if (!number) {
+    throw new Error('number is required');
+  }
+  if (!hasValidIso6346CheckDigit(number)) {
+    throw new ContainerCheckDigitError(number);
   }
 
   const numberTypeOverride = normalizeNumberType(
@@ -175,15 +202,13 @@ export async function executeTrackContainer(
     numberTypeOverride || inferNumberTypeFromPattern(number);
 
   const startTime = Date.now();
-  console.error(
-    JSON.stringify({
-      event: 'tool.execute.start',
-      tool: 'track_container',
-      number,
-      scac: requestedScac || heuristicScac,
-      timestamp: new Date().toISOString(),
-    }),
-  );
+  logMcpEvent({
+    event: 'tool.execute.start',
+    tool: 'track_container',
+    number,
+    scac: requestedScac || heuristicScac,
+    timestamp: new Date().toISOString(),
+  });
 
   try {
     const existingContainer = await findExistingTrackedContainer(
@@ -191,10 +216,24 @@ export async function executeTrackContainer(
       client,
     );
     if (existingContainer?.id) {
-      const containerDetails = await executeGetContainer(
-        { id: existingContainer.id },
-        client,
-      );
+      let containerDetails: Awaited<ReturnType<typeof executeGetContainer>>;
+      try {
+        containerDetails = await executeGetContainer(
+          { id: existingContainer.id },
+          client,
+        );
+      } catch (error) {
+        if (!isNotFound(error)) {
+          throw error;
+        }
+        return {
+          error: 'ContainerUnavailable',
+          message:
+            'A tracked container matched this number, but its details are not available yet. Retry the container lookup shortly.',
+          tracking_request_created: false,
+          container: { id: existingContainer.id },
+        };
+      }
       return {
         ...containerDetails,
         tracking_request_created: false,
@@ -253,15 +292,13 @@ export async function executeTrackContainer(
     const containerId = extractContainerId(trackingRequest);
 
     if (!containerId) {
-      console.error(
-        JSON.stringify({
-          event: 'tracking_request.pending',
-          number,
-          numberType: numberTypeOverride,
-          scac: requestedScac || heuristicScac,
-          timestamp: new Date().toISOString(),
-        }),
-      );
+      logMcpEvent({
+        event: 'tracking_request.pending',
+        number,
+        numberType: numberTypeOverride,
+        scac: requestedScac || heuristicScac,
+        timestamp: new Date().toISOString(),
+      });
 
       return {
         tracking_request_created: true,
@@ -271,40 +308,48 @@ export async function executeTrackContainer(
           number_type: inferredNumberType,
           scac: requestedScac || heuristicScac,
         },
-        _metadata: {
-          presentation_guidance:
-            'Tracking request was created, but no container is linked yet. Poll list_tracking_requests or retry in a short while.',
-          recommendations: ['list_tracking_requests', 'get_container'],
+      };
+    }
+
+    logMcpEvent({
+      event: 'tracking_request.created',
+      number,
+      container_id: containerId,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Step 2: Get full container details using the ID. A newly-created request
+    // can expose its relationship before the container read model is available.
+    // Preserve the successful write state instead of misreporting the request as
+    // uncreated when that follow-up read briefly returns 404.
+    let containerDetails: Awaited<ReturnType<typeof executeGetContainer>>;
+    try {
+      containerDetails = await executeGetContainer({ id: containerId }, client);
+    } catch (error) {
+      if (!isNotFound(error)) {
+        throw error;
+      }
+      return {
+        tracking_request_created: true,
+        infer_result: infer,
+        tracking_request: {
+          request_number: number,
+          number_type: inferredNumberType,
+          scac: requestedScac || heuristicScac,
+          container_id: containerId,
         },
       };
     }
 
-    console.error(
-      JSON.stringify({
-        event: 'tracking_request.created',
-        number,
-        container_id: containerId,
-        timestamp: new Date().toISOString(),
-      }),
-    );
-
-    // Step 2: Get full container details using the ID
-    const containerDetails = await executeGetContainer(
-      { id: containerId },
-      client,
-    );
-
     const duration = Date.now() - startTime;
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.complete',
-        tool: 'track_container',
-        number,
-        container_id: containerId,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.complete',
+      tool: 'track_container',
+      number,
+      container_id: containerId,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
 
     return {
       ...containerDetails,
@@ -315,6 +360,22 @@ export async function executeTrackContainer(
     const duration = Date.now() - startTime;
     const message = (error as Error).message;
 
+    if (isNotFound(error)) {
+      logMcpEvent({
+        event: 'tracking_request.not_found',
+        number,
+        numberType: inferredNumberType,
+        scac: requestedScac || heuristicScac,
+        duration_ms: duration,
+        timestamp: new Date().toISOString(),
+      });
+      return {
+        error: 'NotFound',
+        message: `No container found for identifier ${number}. Verify the number and carrier SCAC.`,
+        tracking_request_created: false,
+      };
+    }
+
     if (
       /Unable to infer/.test(message) ||
       /SCAC/.test(message) ||
@@ -322,31 +383,27 @@ export async function executeTrackContainer(
       /request type/.test(message) ||
       /\/data\/attributes\/number/.test(message)
     ) {
-      console.error(
-        JSON.stringify({
-          event: 'tracking_request.hint',
-          number,
-          message,
-          timestamp: new Date().toISOString(),
-        }),
-      );
+      logMcpEvent({
+        event: 'tracking_request.hint',
+        number,
+        message,
+        timestamp: new Date().toISOString(),
+      });
       throw new Error(
         `${message}. Automatic inference is currently unavailable for this input. Provide numberType (` +
           'container | booking_number | bill_of_lading) and scac, or use search_container/get_container if it is already tracked.',
       );
     }
 
-    console.error(
-      JSON.stringify({
-        event: 'tool.execute.error',
-        tool: 'track_container',
-        number,
-        error: (error as Error).name,
-        message,
-        duration_ms: duration,
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    logMcpEvent({
+      event: 'tool.execute.error',
+      tool: 'track_container',
+      number,
+      error: (error as Error).name,
+      message,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
 
     throw error;
   }

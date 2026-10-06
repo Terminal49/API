@@ -41,7 +41,8 @@
               "api-docs/in-depth-guides/event-timestamps",
               "api-docs/in-depth-guides/holds-and-fees",
               "api-docs/in-depth-guides/auto-detect-carrier",
-              "api-docs/in-depth-guides/adding-customer"
+              "api-docs/in-depth-guides/adding-customer",
+              "api-docs/in-depth-guides/assigning-parties"
             ]
           },
           {
@@ -73,8 +74,7 @@
               "api-docs/in-depth-guides/terminal49-map",
               "api-docs/in-depth-guides/terminal49-widget",
               "api-docs/in-depth-guides/dashboard-deep-linking",
-              "api-docs/in-depth-guides/document-processing-workflows",
-              "api-docs/in-depth-guides/direct-upload-documents"
+              "api-docs/in-depth-guides/document-processing-workflows"
             ]
           },
           {
@@ -296,6 +296,18 @@
               "api-docs/api-reference/parties/get-a-party",
               "api-docs/api-reference/parties/edit-a-party"
             ]
+          },
+          {
+            "group": "Party Roles",
+            "icon": "user-tag",
+            "pages": [
+              "api-docs/api-reference/party-roles/list-shipment-party-roles",
+              "api-docs/api-reference/party-roles/assign-a-shipment-party-role",
+              "api-docs/api-reference/party-roles/remove-a-shipment-party-role",
+              "api-docs/api-reference/party-roles/list-container-party-roles",
+              "api-docs/api-reference/party-roles/assign-a-container-party-role",
+              "api-docs/api-reference/party-roles/remove-a-container-party-role"
+            ]
           }
         ]
       },
@@ -331,6 +343,33 @@
             "icon": "clock-rotate-left",
             "pages": [
               "coverage/changelog"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Migrate to T49",
+        "icon": "arrow-right-arrow-left",
+        "groups": [
+          {
+            "group": " ",
+            "pages": [
+              "migrate/home"
+            ]
+          },
+          {
+            "group": "Migration Guides",
+            "icon": "list-check",
+            "pages": [
+              "migrate/searates",
+              "migrate/project44",
+              "migrate/fourkites",
+              "migrate/gnosisfreight",
+              "migrate/vizion",
+              "migrate/opentrack",
+              "migrate/shipsgo",
+              "migrate/gocomet",
+              "migrate/beacon"
             ]
           }
         ]
@@ -593,6 +632,10 @@
     {
       "source": "/api-docs/useful-info/api-data-sources-availability",
       "destination": "/coverage/home"
+    },
+    {
+      "source": "/api-docs/getting-started/migrate-from-searates",
+      "destination": "/migrate/searates"
     }
   ],
   "contextual": {

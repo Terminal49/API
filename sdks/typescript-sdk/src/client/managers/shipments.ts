@@ -5,7 +5,7 @@ import type {
   ListOptions,
   ShipmentInclude,
 } from '../../types/options.js';
-import { mapShipment, mapShipmentList } from '../mappers.js';
+import { mapCustomFields, mapShipment, mapShipmentList } from '../mappers.js';
 import {
   applyTypedPagination,
   buildShipmentListQuery,
@@ -52,6 +52,13 @@ export class ShipmentManager extends BaseManager {
       }),
     );
     return this.formatResult(raw, options?.format, mapShipment);
+  }
+
+  async customFields(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      `${this.transport.baseUrl}/shipments/${encodeURIComponent(id)}/custom_fields?include=definition`,
+    );
+    return this.formatResult(raw, options?.format, mapCustomFields);
   }
 
   async list(
@@ -144,14 +151,6 @@ export class ShipmentManager extends BaseManager {
       }),
     );
     return this.formatResult(raw, options?.format, mapShipment);
-  }
-
-  async customFields(id: string, options?: CallOptions): Promise<any> {
-    const encodedId = encodeURIComponent(id);
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/shipments/${encodedId}/custom_fields`,
-    );
-    return this.formatResult(raw, options?.format);
   }
 
   async setCustomField(

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Terminal49/terminal49",
+  "title": "Terminal49",
+  "description": "Find and monitor ocean shipments and containers, and create new tracking requests.",
+  "version": "1.0.0",
+  "websiteUrl": "https://docs.terminal49.com/mcp/home",
+  "repository": {
+    "url": "https://github.com/Terminal49/API",
+    "source": "github",
+    "id": "246149830",
+    "subfolder": "packages/mcp"
+  },
+  "icons": [
+    {
+      "src": "https://mcp.terminal49.com/store-icons/terminal49-light.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "512x512"
+      ],
+      "theme": "light"
+    },
+    {
+      "src": "https://mcp.terminal49.com/store-icons/terminal49-dark.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "512x512"
+      ],
+      "theme": "dark"
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.terminal49.com"
+    }
+  ]
+}

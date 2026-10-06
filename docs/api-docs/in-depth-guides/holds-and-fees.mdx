@@ -106,6 +106,7 @@ When a hold is cleared, the object is removed from the array entirely. There is 
 | Hold name | Description | Who resolves it |
 |-----------|-------------|-----------------|
 | `freight` | Carrier freight charges unpaid | Shipping line or freight forwarder |
+| `line` | Carrier or steamship-line release pending | Shipping line |
 | `customs` | CBP hold — docs, exam, or inspection | Licensed customs broker |
 | `USDA` | USDA phytosanitary inspection | Customs broker or USDA compliance team |
 | `VACIS` | Non-intrusive X-ray / gamma-ray scan | Customs broker |
@@ -113,7 +114,7 @@ When a hold is cleared, the object is removed from the array entirely. There is 
 | `other` | Unmapped hold — check `description` | Terminal or broker |
 
 <Note>
-Hold names are case-sensitive. `USDA`, `VACIS`, and `TMF` are uppercase. `freight`, `customs`, and `other` are lowercase. Match values exactly in your code.
+Hold names are case-sensitive. `USDA`, `VACIS`, and `TMF` are uppercase. `freight`, `line`, `customs`, and `other` are lowercase. Match values exactly in your code.
 </Note>
 
 <AccordionGroup>
@@ -129,6 +130,20 @@ Hold names are case-sensitive. `USDA`, `VACIS`, and `TMF` are uppercase. `freigh
     ```
 
     **Who resolves it:** Contact the shipping line or your freight forwarder to confirm payment status.
+  </Accordion>
+
+  <Accordion title="line — Carrier release pending">
+    The terminal has not received or confirmed the ocean carrier's release for the container. Terminals may describe this as a line hold, bill of lading hold, carrier hold, or steamship-line release pending. This is distinct from a `freight` hold and does not by itself indicate unpaid freight charges.
+
+    ```json
+    {
+      "name": "line",
+      "status": "hold",
+      "description": "LINE HOLD"
+    }
+    ```
+
+    **Who resolves it:** Contact the shipping line to confirm that it has issued the container or bill of lading release to the terminal.
   </Accordion>
 
   <Accordion title="customs — CBP hold">
@@ -467,6 +482,10 @@ const totalAmount = lineItems.reduce((acc, f) => acc + f.amount, 0);
 
   <Accordion title="Do holds and fees apply at inland rail destinations?">
     Yes. The `holds_at_pod_terminal` and `fees_at_pod_terminal` fields report data regardless of whether the container is at a port terminal or an inland rail destination. The field names reference `pod_terminal` for historical reasons, but the same readiness logic applies in both scenarios.
+  </Accordion>
+
+  <Accordion title="Can I pay a fee or request a last free day extension through the API?">
+    No. The Terminal49 API reports holds, fees, and last free day as read-only data. It does not expose payment endpoints and cannot request an LFD extension. Pay demurrage or terminal fees directly with the carrier or terminal, and request LFD extensions through the carrier or your freight forwarder. Once the terminal updates its records, the change flows back into `holds_at_pod_terminal`, `fees_at_pod_terminal`, and `pickup_lfd` on the next `container.updated` webhook.
   </Accordion>
 
   <Accordion title="How do I calculate total fees without double-counting?">

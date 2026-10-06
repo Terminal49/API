@@ -1,12 +1,12 @@
 ---
 title: "Connect ChatGPT to Terminal49"
 sidebarTitle: "ChatGPT"
-description: "Add Terminal49 as a ChatGPT custom connector using OAuth 2.1 with Developer mode — no API key needed to query live shipment and container tracking data."
+description: "Install the Terminal49 plugin from the ChatGPT Plugins Directory to query live shipment and container tracking data — no API key needed."
 keywords:
   - "Terminal49 MCP server"
   - "ChatGPT connector"
+  - "ChatGPT plugin"
   - "ChatGPT MCP"
-  - "developer mode"
   - "OAuth"
   - "container tracking"
 ---
@@ -16,19 +16,37 @@ Connect ChatGPT to the Terminal49 MCP server so it can answer questions with liv
 **No API key required.** The Terminal49 MCP server supports OAuth 2.1. When you connect, ChatGPT opens a browser sign-in page. Log in with your Terminal49 credentials to finish.
 </Note>
 
-## Prerequisites
+## Install Terminal49 from the Plugins Directory
 
-- A paid ChatGPT plan. Custom MCP connectors require **Developer mode**, available on Plus, Pro, Business, Enterprise, and Edu plans. Free accounts cannot add custom connectors.
-- On Business, Enterprise, and Edu workspaces, an admin may need to enable Developer mode or approve the connector for the workspace.
+Terminal49 is an approved plugin in the [ChatGPT Plugins Directory](https://chatgpt.com/plugins/plugin_asdk_app_69f5795de4a48191a35dc5c448520676). Installing it from the directory needs no Developer mode and no manual server URL.
 
-## Add the connector
+<Steps>
+  <Step title="Open the Terminal49 listing">
+    Go to the [Terminal49 plugin in ChatGPT](https://chatgpt.com/plugins/plugin_asdk_app_69f5795de4a48191a35dc5c448520676), or open **Plugins** in the ChatGPT sidebar and search for `Terminal49`.
+  </Step>
+  <Step title="Install the plugin">
+    Select **Install plugin**. On Business, Enterprise, and Edu workspaces, an admin may need to enable the plugin for the workspace first.
+  </Step>
+  <Step title="Sign in to Terminal49">
+    When prompted to connect, ChatGPT opens the Terminal49 sign-in page in your browser. Log in and approve access to the account you want to use.
+  </Step>
+  <Step title="Use it in a chat">
+    In a new chat, select **Terminal49** from the tools menu or type `@Terminal49`, then ask:
+
+    > "Using Terminal49, search for container CAIU1234567 and summarize its status."
+  </Step>
+</Steps>
+
+## Use a custom connector instead
+
+If your workspace blocks directory plugins, add the server yourself with Developer mode. This requires a paid plan (Plus, Pro, Business, Enterprise, or Edu); free accounts cannot add custom connectors.
 
 <Steps>
   <Step title="Enable Developer mode">
     In ChatGPT, open **Settings**, find the connectors section (labeled **Connectors** or **Apps**, depending on your version), open **Advanced settings**, and turn on **Developer mode**.
   </Step>
   <Step title="Create the connector">
-    In the same connectors section, select **Create** (or **Add custom connector**). You can also [open the create-connector screen directly](https://chatgpt.com/plugins#settings/Connectors?create-connector=true&redirectAfter=%2Fplugins). Then enter:
+    In the same connectors section, select **Create** (or **Add custom connector**). Then enter:
 
     | Field | Value |
     | --- | --- |
@@ -38,11 +56,6 @@ Connect ChatGPT to the Terminal49 MCP server so it can answer questions with liv
   </Step>
   <Step title="Sign in to Terminal49">
     Save the connector. ChatGPT opens the Terminal49 sign-in page in your browser. Log in with your Terminal49 account and approve access.
-  </Step>
-  <Step title="Use it in a chat">
-    In a new chat, enable the **Terminal49** connector from the tools menu (with Developer mode active), then ask:
-
-    > "Using Terminal49, search for container CAIU1234567 and summarize its status."
   </Step>
 </Steps>
 
@@ -62,10 +75,11 @@ It should list tools such as `search_container`, `track_container`, and `get_con
 
 | Symptom | How to fix |
 |---------|------------|
-| No option to add a custom connector | Enable Developer mode; confirm your plan supports it, or ask your workspace admin |
+| Plugin not found in the directory | Search for `Terminal49` in **Plugins**; if your workspace hides it, ask your admin to enable it |
+| **Install plugin** is greyed out or says disabled by admin | Your workspace admin must enable the plugin in **Workspace settings → Plugins** |
 | Connector fails to create | Confirm the URL is exactly `https://mcp.terminal49.com` (no path) |
 | Sign-in window never opens | Pop-up blocked — allow pop-ups for chatgpt.com and retry |
-| `401 Unauthorized` after connecting | Remove and re-add the connector to refresh the OAuth token |
+| `401 Unauthorized` after connecting | Disconnect and reconnect Terminal49 to refresh the OAuth token |
 
 ## Related guides
 

@@ -20,7 +20,7 @@ Test numbers are deterministic request numbers for the Tracking Request API. Eac
 Test numbers do not simulate every milestone, ETA, LFD, or availability event. To test your webhook handler for a specific event payload, use the [Trigger Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) endpoint.
 
 ## Tracking request API 
-Shipments are created by making requests to the tracking request API. 
+You create shipments by making requests to the tracking request API. 
 When using the API , ensure that:
 - you set the test number in `request_number` attribute in the request body 
 - you set the `scac` attribute to `TEST` in the request body

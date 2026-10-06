@@ -13,10 +13,7 @@ import { executeListShipments } from './list-shipments.js';
 import { executeListTrackingRequests } from './list-tracking-requests.js';
 import { executeSearchContainer } from './search-container.js';
 import { executeTrackContainer } from './track-container.js';
-import {
-  buildListContract,
-  sanitizeTrackingRequestFilters,
-} from '../server.js';
+import { buildListContract } from '../server.js';
 
 function asClient(client: unknown): Terminal49Client {
   return client as Terminal49Client;
@@ -224,11 +221,11 @@ describe('MCP tool contracts', () => {
     });
 
     const result = await executeTrackContainer(
-      { number: 'CAIU1234567', scac: 'MAEU' },
+      { number: 'CAIU2885402', scac: 'MAEU' },
       client,
     );
 
-    expect(createFromInfer).toHaveBeenCalledWith('CAIU1234567', {
+    expect(createFromInfer).toHaveBeenCalledWith('CAIU2885402', {
       scac: 'MAEU',
       numberType: undefined,
       refNumbers: undefined,
@@ -310,14 +307,14 @@ describe('MCP tool contracts', () => {
     });
 
     const result = await executeTrackContainer(
-      { number: 'MSCU1234567', numberType: 'container', scac: 'MSCU' },
+      { number: 'MSCU1234566', numberType: 'container', scac: 'MSCU' },
       client,
     );
 
     expect(createFromInfer).toHaveBeenCalledTimes(1);
     expect(createTrackingRequest).toHaveBeenCalledWith({
       requestType: 'container',
-      requestNumber: 'MSCU1234567',
+      requestNumber: 'MSCU1234566',
       scac: 'MSCU',
       refNumbers: undefined,
     });
@@ -896,10 +893,40 @@ describe('MCP tool contracts', () => {
       number_type: 'container',
       scac: 'TEMU',
     });
-    expect(result._metadata).toMatchObject({
-      presentation_guidance:
-        'Tracking request was created, but no container is linked yet. Poll list_tracking_requests or retry in a short while.',
+    expect(result._metadata).toBeUndefined();
+  });
+
+  it('track_container distinguishes an uncreated request from a hard upstream failure', async () => {
+    const client = asClient({
+      search: vi.fn().mockResolvedValue({ data: [] }),
+      createTrackingRequestFromInfer: vi
+        .fn()
+        .mockRejectedValue(new NotFoundError('internal route not found')),
     });
+
+    const result = await executeTrackContainer(
+      { number: 'CAIU2885402', scac: 'MAEU' },
+      client,
+    );
+
+    expect(result).toMatchObject({
+      error: 'NotFound',
+      tracking_request_created: false,
+      message: expect.stringContaining('No container found'),
+    });
+    expect(JSON.stringify(result)).not.toContain('internal route');
+  });
+
+  it('track_container rejects an invalid ISO 6346 check digit before calling the API', async () => {
+    const createFromInfer = vi.fn();
+    const client = asClient({
+      createTrackingRequestFromInfer: createFromInfer,
+    });
+
+    await expect(
+      executeTrackContainer({ number: 'CAIU1234567', scac: 'MAEU' }, client),
+    ).rejects.toThrow('fails the ISO 6346 check digit');
+    expect(createFromInfer).not.toHaveBeenCalled();
   });
 
   it('get_supported_shipping_lines filters response by search term', async () => {
@@ -966,47 +993,48 @@ describe('MCP tool contracts', () => {
   });
 
   it('get_container_route returns route summary when route data exists', async () => {
+    const route = vi.fn().mockResolvedValue({
+      raw: {
+        data: {
+          id: 'route-1',
+          type: 'route',
+          attributes: {
+            created_at: '2025-01-01T00:00:00Z',
+            updated_at: '2025-01-02T00:00:00Z',
+          },
+          relationships: {
+            route_locations: {
+              data: [{ id: 'rl-1', type: 'route_location' }],
+            },
+          },
+        },
+        included: [
+          {
+            id: 'rl-1',
+            type: 'route_location',
+            attributes: {
+              inbound_mode: 'vessel',
+              outbound_mode: 'vessel',
+            },
+            relationships: {
+              port: { data: { id: 'port-1', type: 'port' } },
+            },
+          },
+          {
+            id: 'port-1',
+            type: 'port',
+            attributes: {
+              code: 'USLAX',
+              name: 'Los Angeles',
+            },
+          },
+        ],
+      },
+      mapped: { id: 'route-1' },
+    });
     const client = asClient({
       containers: {
-        route: vi.fn().mockResolvedValue({
-          raw: {
-            data: {
-              id: 'route-1',
-              type: 'route',
-              attributes: {
-                created_at: '2025-01-01T00:00:00Z',
-                updated_at: '2025-01-02T00:00:00Z',
-              },
-              relationships: {
-                route_locations: {
-                  data: [{ id: 'rl-1', type: 'route_location' }],
-                },
-              },
-            },
-            included: [
-              {
-                id: 'rl-1',
-                type: 'route_location',
-                attributes: {
-                  inbound_mode: 'vessel',
-                  outbound_mode: 'vessel',
-                },
-                relationships: {
-                  port: { data: { id: 'port-1', type: 'port' } },
-                },
-              },
-              {
-                id: 'port-1',
-                type: 'port',
-                attributes: {
-                  code: 'USLAX',
-                  name: 'Los Angeles',
-                },
-              },
-            ],
-          },
-          mapped: { id: 'route-1' },
-        }),
+        route,
       },
     });
 
@@ -1018,6 +1046,7 @@ describe('MCP tool contracts', () => {
     expect(result.route_id).toBe('route-1');
     expect(result.total_legs).toBe(1);
     expect(result.route_locations[0].port).toMatchObject({ code: 'USLAX' });
+    expect(route).toHaveBeenCalledWith('container-1', { format: 'raw' });
   });
 
   it('get_container_route returns feature-not-enabled contract instead of throwing', async () => {
@@ -1046,8 +1075,8 @@ describe('MCP tool contracts', () => {
 
     const result = await executeListShipments(
       {
-        status: 'in_transit',
-        carrier: 'MAEU',
+        number: 'MAEU123456789',
+        tracking_stopped: false,
         page: 2,
         page_size: 25,
       },
@@ -1056,11 +1085,9 @@ describe('MCP tool contracts', () => {
 
     expect(list).toHaveBeenCalledWith(
       {
-        status: 'in_transit',
-        port: undefined,
-        carrier: 'MAEU',
-        updatedAfter: undefined,
-        includeContainers: undefined,
+        number: 'MAEU123456789',
+        trackingStopped: false,
+        includeContainers: false,
       },
       { format: 'mapped', page: 2, pageSize: 25 },
     );
@@ -1073,23 +1100,18 @@ describe('MCP tool contracts', () => {
 
     const result = await executeListContainers(
       {
-        status: 'available_for_pickup',
-        include: 'shipment,pod_terminal',
+        include: ['shipment', 'pod_terminal'],
         page: 1,
-        page_size: 50,
+        page_size: 25,
       },
       client,
     );
 
     expect(list).toHaveBeenCalledWith(
       {
-        status: 'available_for_pickup',
-        port: undefined,
-        carrier: undefined,
-        updatedAfter: undefined,
         include: ['shipment', 'pod_terminal'],
       },
-      { format: 'mapped', page: 1, pageSize: 50 },
+      { format: 'mapped', page: 1, pageSize: 25 },
     );
     expect(result.items).toHaveLength(1);
   });
@@ -1100,7 +1122,7 @@ describe('MCP tool contracts', () => {
 
     const result = await executeListContainers(
       {
-        include: '   ',
+        include: undefined,
         page: 1,
         page_size: 10,
       },
@@ -1109,10 +1131,6 @@ describe('MCP tool contracts', () => {
 
     expect(list).toHaveBeenCalledWith(
       {
-        status: undefined,
-        port: undefined,
-        carrier: undefined,
-        updatedAfter: undefined,
         include: undefined,
       },
       { format: 'mapped', page: 1, pageSize: 10 },
@@ -1120,7 +1138,7 @@ describe('MCP tool contracts', () => {
     expect(result.items).toHaveLength(1);
   });
 
-  it('list_tracking_requests forwards filters and pagination to SDK', async () => {
+  it('list_tracking_requests forwards typed filters and pagination to SDK', async () => {
     const list = vi.fn().mockResolvedValue({ items: [{ id: 'tr-1' }] });
     const client = asClient({
       trackingRequests: { list },
@@ -1128,8 +1146,9 @@ describe('MCP tool contracts', () => {
 
     const result = await executeListTrackingRequests(
       {
-        filters: { 'filter[status]': 'failed' },
+        request_number: 'CAIU1234567',
         status: 'succeeded',
+        scac: 'MAEU',
         page: 3,
         page_size: 10,
       },
@@ -1137,13 +1156,85 @@ describe('MCP tool contracts', () => {
     );
 
     expect(list).toHaveBeenCalledWith(
-      { 'filter[status]': 'succeeded' },
+      {
+        'filter[request_number]': 'CAIU1234567',
+        'filter[status]': 'succeeded',
+        'filter[scac]': 'MAEU',
+      },
       { format: 'mapped', page: 3, pageSize: 10 },
     );
     expect(result.items).toHaveLength(1);
   });
 
-  it('list_tracking_requests maps status and request_type args to filter keys', async () => {
+  it('list tools use compact defaults when pagination and relationships are omitted', async () => {
+    const containersList = vi.fn().mockResolvedValue({ items: [] });
+    const shipmentsList = vi.fn().mockResolvedValue({ items: [] });
+    const trackingRequestsList = vi.fn().mockResolvedValue({ items: [] });
+    const client = asClient({
+      containers: { list: containersList },
+      shipments: { list: shipmentsList },
+      trackingRequests: { list: trackingRequestsList },
+    });
+
+    await executeListContainers({}, client);
+    await executeListShipments({}, client);
+    await executeListTrackingRequests({}, client);
+
+    expect(containersList).toHaveBeenCalledWith(expect.any(Object), {
+      format: 'mapped',
+      page: undefined,
+      pageSize: 25,
+    });
+    expect(shipmentsList).toHaveBeenCalledWith(
+      expect.objectContaining({ includeContainers: false }),
+      {
+        format: 'mapped',
+        page: undefined,
+        pageSize: 25,
+      },
+    );
+    expect(trackingRequestsList).toHaveBeenCalledWith(
+      {},
+      {
+        format: 'mapped',
+        page: undefined,
+        pageSize: 25,
+      },
+    );
+  });
+
+  it('list executors defensively clamp page sizes to 25', async () => {
+    const containersList = vi.fn().mockResolvedValue({ items: [] });
+    const shipmentsList = vi.fn().mockResolvedValue({ items: [] });
+    const trackingRequestsList = vi.fn().mockResolvedValue({ items: [] });
+    const client = asClient({
+      containers: { list: containersList },
+      shipments: { list: shipmentsList },
+      trackingRequests: { list: trackingRequestsList },
+    });
+
+    await executeListContainers({ page_size: 100 }, client);
+    await executeListShipments({ page_size: 100 }, client);
+    await executeListTrackingRequests({ page_size: 100 }, client);
+
+    expect(containersList).toHaveBeenCalledWith(expect.any(Object), {
+      format: 'mapped',
+      page: undefined,
+      pageSize: 25,
+    });
+    expect(shipmentsList).toHaveBeenCalledWith(expect.any(Object), {
+      format: 'mapped',
+      page: undefined,
+      pageSize: 25,
+    });
+    expect(trackingRequestsList).toHaveBeenCalledWith(expect.any(Object), {
+      format: 'mapped',
+      page: undefined,
+      pageSize: 25,
+    });
+  });
+
+  it('list_tracking_requests maps supported args to filter keys', async () => {
     const list = vi.fn().mockResolvedValue({ items: [{ id: 'tr-2' }] });
     const client = asClient({
       trackingRequests: { list },
@@ -1151,43 +1242,22 @@ describe('MCP tool contracts', () => {
 
     const result = await executeListTrackingRequests(
       {
+        request_number: 'MAEU123456789',
         status: 'failed',
-        request_type: 'manual',
+        scac: 'MAEU',
       },
       client,
     );
 
     expect(list).toHaveBeenCalledWith(
       {
+        'filter[request_number]': 'MAEU123456789',
         'filter[status]': 'failed',
-        'filter[request_type]': 'manual',
+        'filter[scac]': 'MAEU',
       },
-      { format: 'mapped', page: undefined, pageSize: undefined },
+      { format: 'mapped', page: undefined, pageSize: 25 },
     );
     expect(result.items).toHaveLength(1);
-  });
-
-  it('list_tracking_requests strips raw page[size]/page[number] from filters so the cap cannot be bypassed', async () => {
-    const list = vi.fn().mockResolvedValue({ items: [{ id: 'tr-3' }] });
-    const client = asClient({
-      trackingRequests: { list },
-    });
-
-    await executeListTrackingRequests(
-      {
-        filters: {
-          'filter[status]': 'failed',
-          'page[size]': '10000',
-          'page[number]': '5',
-        },
-      },
-      client,
-    );
-
-    expect(list).toHaveBeenCalledWith(
-      { 'filter[status]': 'failed' },
-      { format: 'mapped', page: undefined, pageSize: undefined },
-    );
   });
 
   it('buildListContract does not claim filter-match for an unfiltered firehose', () => {
@@ -1198,21 +1268,18 @@ describe('MCP tool contracts', () => {
     );
 
     expect(contract.can_answer).not.toContain('which records match filters');
-    // An unfiltered list cannot be presented as the user's filtered worklist;
-    // the agent must be told it needs a filter to answer scoped questions.
+    // The API exposes no server-side container filters, so the contract must
+    // tell the agent to paginate rather than invent a scoped worklist.
     expect(contract.requires_more_data).toContain(
-      'a filter to scope this list (status, port, carrier, updated_after)',
+      'server-side filters are not available for this list endpoint; use pagination and inspect returned rows',
     );
   });
 
-  it('buildListContract treats an empty raw filters object as unscoped', () => {
-    // tracking_request is the only entity whose supported vocabulary includes
-    // the raw `filters` pass-through; `{ filters: {} }` must not be mistaken for
-    // an applied filter, or the firehose total would be flagged reliable.
+  it('buildListContract treats an unfiltered tracking request page as unscoped', () => {
     const contract = buildListContract(
       { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
       'tracking_request',
-      { filters: { filters: {} } },
+      { filters: {} },
     );
 
     expect(contract.can_answer).not.toContain(
@@ -1226,42 +1293,16 @@ describe('MCP tool contracts', () => {
     ).toBe(true);
   });
 
-  it('buildListContract over sanitized tracking filters treats page-only filters as unscoped', () => {
-    // executeListTrackingRequests strips raw page[size]/page[number] before the
-    // SDK call, so the contract must judge scope against the same sanitized view.
-    // A `filters: { 'page[size]': '10000' }` request is unfiltered after
-    // sanitization and must not report applied filters or a reliable total.
-    const contract = buildListContract(
-      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
-      'tracking_request',
-      {
-        filters: sanitizeTrackingRequestFilters({
-          filters: { 'page[size]': '10000', 'page[number]': '5' },
-        }),
-      },
-    );
-
-    expect(contract.can_answer).not.toContain(
-      'which records match the applied filters',
-    );
-    expect(contract.total_is_reliable).toBe(false);
-    expect(
-      contract.requires_more_data.some((entry) =>
-        entry.startsWith('a filter to scope this list'),
-      ),
-    ).toBe(true);
-  });
-
-  it('buildListContract over sanitized tracking filters keeps a real filter scoped', () => {
-    // Sanitization must not strip genuine filters: a real filter alongside a raw
-    // pagination key still counts as a scoped, trustworthy result.
+  it('buildListContract treats typed tracking-request filters as scoped', () => {
     const contract = buildListContract(
       { items: [{ id: 't1' }], meta: { total: 5 } },
       'tracking_request',
       {
-        filters: sanitizeTrackingRequestFilters({
-          filters: { 'filter[status]': 'failed', 'page[size]': '10000' },
-        }),
+        filters: {
+          request_number: 'CAIU1234567',
+          status: 'failed',
+          scac: 'MAEU',
+        },
       },
     );
 
@@ -1269,48 +1310,6 @@ describe('MCP tool contracts', () => {
       'which records match the applied filters',
     );
     expect(contract.total_is_reliable).toBe(true);
-  });
-
-  it('buildListContract does not treat request_type as a scoping filter', () => {
-    // GET /tracking_requests has no filter[request_type] in the OpenAPI source
-    // of truth, so a bare request_type arg cannot actually scope the list even
-    // though executeListTrackingRequests forwards it; it must be reported as
-    // dropped, not as an applied filter over a reliable total.
-    const contract = buildListContract(
-      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
-      'tracking_request',
-      { filters: { request_type: 'manual' } },
-    );
-
-    expect(contract.can_answer).not.toContain(
-      'which records match the applied filters',
-    );
-    expect(contract.total_is_reliable).toBe(false);
-    expect(
-      contract.requires_more_data.some((entry) =>
-        entry.includes('unsupported filter(s) were ignored: request_type'),
-      ),
-    ).toBe(true);
-  });
-
-  it('buildListContract does not treat a raw filters bag of only non-filter knobs as scoped', () => {
-    // `include` is a legitimate raw query knob but not a `filter[...]` key, so
-    // `{ filters: { include: 'tracked_object' } }` must not read as scoped.
-    const contract = buildListContract(
-      { items: [{ id: 't1' }, { id: 't2' }], meta: { total: 250000 } },
-      'tracking_request',
-      { filters: { filters: { include: 'tracked_object' } } },
-    );
-
-    expect(contract.can_answer).not.toContain(
-      'which records match the applied filters',
-    );
-    expect(contract.total_is_reliable).toBe(false);
-    expect(
-      contract.requires_more_data.some((entry) =>
-        entry.startsWith('a filter to scope this list'),
-      ),
-    ).toBe(true);
   });
 
   it('buildListContract presentation guidance does not claim a single result when empty', () => {
@@ -1323,11 +1322,11 @@ describe('MCP tool contracts', () => {
     expect(contract.presentation_guidance).toContain('empty_state');
   });
 
-  it('buildListContract reports which records match when a filter was applied', () => {
+  it('buildListContract reports which shipments match a supported filter', () => {
     const contract = buildListContract(
-      { items: [{ id: 'c1' }], meta: { total: 1 } },
-      'container',
-      { filters: { status: 'available_for_pickup' } },
+      { items: [{ id: 's1' }], meta: { total: 1 } },
+      'shipment',
+      { filters: { number: 'MAEU123456789' } },
     );
 
     expect(contract.can_answer).toContain(
@@ -1335,20 +1334,25 @@ describe('MCP tool contracts', () => {
     );
   });
 
-  it('buildListContract echoes dropped/unsupported filters from the SDK', () => {
+  it('buildListContract never treats SDK-unsupported filters as applied', () => {
     const contract = buildListContract(
       {
         items: [{ id: 'c1' }],
         meta: { total: 1 },
-        unsupportedFilters: ['has_hold'],
       },
       'container',
-      { filters: { status: 'available_for_pickup', has_hold: true } },
+      {
+        filters: { status: 'available_for_pickup' },
+        unsupportedFilters: ['status'],
+      },
     );
 
-    expect(contract.dropped_filters).toEqual(['has_hold']);
+    expect(contract.can_answer).not.toContain(
+      'which records match the applied filters',
+    );
+    expect(contract.dropped_filters).toEqual(['status']);
     expect(
-      contract.requires_more_data.some((entry) => entry.includes('has_hold')),
+      contract.requires_more_data.some((entry) => entry.includes('status')),
     ).toBe(true);
   });
 
@@ -1367,9 +1371,9 @@ describe('MCP tool contracts', () => {
 
   it('buildListContract trusts a plausible total when a filter is applied', () => {
     const contract = buildListContract(
-      { items: [{ id: 'c1' }], meta: { total: 12 } },
-      'container',
-      { filters: { carrier: 'MAEU' } },
+      { items: [{ id: 's1' }], meta: { total: 12 } },
+      'shipment',
+      { filters: { tracking_stopped: false } },
     );
 
     expect(contract.total_is_reliable).toBe(true);
@@ -1379,7 +1383,7 @@ describe('MCP tool contracts', () => {
     const contract = buildListContract(
       { items: [{ id: 'c1' }], meta: { total: 1 } },
       'container',
-      { filters: { status: 'available_for_pickup' } },
+      { filters: {} },
     );
 
     expect(contract.display).toBeDefined();

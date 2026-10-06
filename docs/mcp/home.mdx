@@ -1,7 +1,7 @@
 ---
 title: "Terminal49 MCP Server"
 sidebarTitle: "MCP Overview"
-description: "Connect Claude, ChatGPT, Cursor, Copilot, or any MCP client to the Terminal49 MCP server to query live shipment tracking data with OAuth — no API key required."
+description: "Connect Claude, ChatGPT, Cursor, or any MCP client to the Terminal49 MCP server to query live shipment tracking data with OAuth sign-in and no API key."
 keywords:
   - "Terminal49 MCP server"
   - "AI container tracking"
@@ -22,7 +22,7 @@ Use the Terminal49 MCP server to let Claude, ChatGPT, Cursor, Microsoft Copilot,
   <Step title="Pick your MCP client">
     Follow the setup guide for your tool:
 
-    - [Claude](/mcp/setup/claude) (claude.ai, Claude Desktop)
+    - [Claude](/mcp/setup/claude) (claude.ai, Claude Desktop — [available in the Claude Directory](https://claude.ai/directory/connectors/terminal49))
     - [Claude Code](/mcp/setup/claude-code)
     - [ChatGPT](/mcp/setup/chatgpt)
     - [Cursor](/mcp/setup/cursor)
@@ -32,7 +32,7 @@ Use the Terminal49 MCP server to let Claude, ChatGPT, Cursor, Microsoft Copilot,
     - [Other MCP clients](/mcp/setup/other-clients)
   </Step>
   <Step title="Add the connector URL">
-    Point the client at `https://mcp.terminal49.com`. No API key needed.
+    For Claude, add Terminal49 from the [Claude Directory](https://claude.ai/directory/connectors/terminal49). For other clients, point the client at `https://mcp.terminal49.com`. No API key needed.
   </Step>
   <Step title="Sign in to Terminal49">
     The server supports OAuth 2.1: your client opens a browser window, you sign in with your Terminal49 credentials and approve access. That's it.
@@ -72,13 +72,13 @@ Connector URL: `https://mcp.terminal49.com`. It is the canonical OAuth resource 
 
 <CardGroup cols={3}>
   <Card title="Claude" href="/mcp/setup/claude">
-    claude.ai and Claude Desktop connectors
+    Add Terminal49 from the Claude Directory
   </Card>
   <Card title="Claude Code" href="/mcp/setup/claude-code">
     One `claude mcp add` command from your terminal
   </Card>
   <Card title="ChatGPT" href="/mcp/setup/chatgpt">
-    Custom connector with Developer mode
+    Install from the ChatGPT Plugins Directory
   </Card>
   <Card title="Cursor" href="/mcp/setup/cursor">
     `mcp.json` or Cursor Settings → MCP
@@ -234,7 +234,10 @@ Get detailed container information with flexible data loading. Choose what to in
 - `include` *(string[], optional)* – what to load:
   - `shipment` – routing, BOL, line, ref numbers (lightweight)
   - `pod_terminal` – terminal name, location (lightweight)
-  - `transport_events` – full event history (heavy, 50-100 events)
+  - `transport_events` – adds `events.count`, `events.rail_events_count`, and `events.latest_event`; use `get_container_transport_events` for the full timeline
+  - `custom_fields` – account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)
+
+The response may also include `_metadata` with factual details such as `includes_loaded`.
 
 <Accordion title="Example MCP request">
 ```json
@@ -342,6 +345,7 @@ Get shipment-level information including routing, BOL, and all containers.
 **Parameters**
 - `id` *(uuid, required)* – Terminal49 shipment UUID
 - `include_containers` *(boolean, optional)* – include container list (default: true)
+- `include_custom_fields` *(boolean, optional)* – include account-defined custom fields such as PO number or project manager (default: false; needs a signed-in user, not an API key)
 
 **Good for**
 - "Tell me about this shipment"
@@ -394,13 +398,15 @@ See [Entitlements and Paid Features](/api-docs/useful-info/entitlements) for the
 List shipments with optional filters and pagination.
 
 **Parameters**
-- `status`, `port`, `carrier`, `updated_after` *(string, optional)*
-- `include_containers` *(boolean, optional)*
-- `page`, `page_size` *(number, optional)*
+- `number` *(string, optional)* – shipment, booking, or Bill of Lading identifier
+- `tracking_stopped` *(boolean, optional)* – filter by whether shipping-line tracking has stopped
+- `include_containers` *(boolean, optional)* – include container relationships (default: false)
+- `page` *(number, optional)* – page number, starting at 1
+- `page_size` *(number, optional)* – results per page (default: 25; maximum: 25)
 
 **Good for**
 - "List recent shipments"
-- "Show in-transit shipments for MAEU"
+- "Find a shipment by booking or Bill of Lading number"
 
 **REST equivalent**: [GET /shipments](/api-docs/api-reference/shipments/list-shipments)
 
@@ -411,13 +417,13 @@ List shipments with optional filters and pagination.
 List containers with optional filters and pagination.
 
 **Parameters**
-- `status`, `port`, `carrier`, `updated_after` *(string, optional)*
-- `include` *(string, optional)* – comma-separated include list
-- `page`, `page_size` *(number, optional)*
+- `include` *(string[], optional)* – include `shipment`, `pod_terminal`, or both
+- `page` *(number, optional)* – page number, starting at 1
+- `page_size` *(number, optional)* – results per page (default: 25; maximum: 25)
 
 **Good for**
-- "List containers updated in the last 24h"
-- "Show containers at a specific POD port"
+- "List containers in my account"
+- "List containers with their shipment and POD terminal details"
 
 **REST equivalent**: [GET /containers](/api-docs/api-reference/containers/list-containers)
 
@@ -428,8 +434,11 @@ List containers with optional filters and pagination.
 List tracking requests with optional filters and pagination.
 
 **Parameters**
-- `filters` *(object, optional)* – raw query filters
-- `page`, `page_size` *(number, optional)*
+- `request_number` *(string, optional)* – tracking request identifier
+- `status` *(string, optional)* – `created`, `pending`, `succeeded`, or `failed`
+- `scac` *(string, optional)* – four-letter shipping line SCAC
+- `page` *(number, optional)* – page number, starting at 1
+- `page_size` *(number, optional)* – results per page (default: 25; maximum: 25)
 
 **Good for**
 - "Show failed tracking requests"

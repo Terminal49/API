@@ -1,14 +1,13 @@
 /**
  * Terminal49 MCP Server
- * Implementation using @modelcontextprotocol/sdk with McpServer API
+ * Implementation using the MCP TypeScript SDK v2 McpServer API
  */
-
+import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import {
+  completable,
   McpServer,
   ResourceTemplate,
-} from '@modelcontextprotocol/sdk/server/mcp.js';
-import { completable } from '@modelcontextprotocol/sdk/server/completable.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+} from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
 import { executeGetContainer } from './tools/get-container.js';
@@ -35,18 +34,20 @@ import {
   readListDisplayColumnsResource,
 } from './resources/list-display.js';
 import {
+  instrumentMcpServerWithPostHog,
+  type McpAuthSource,
+  type McpTransportKind,
+  registerPostHogExitHook,
+  SERVER_NAME,
+  SERVER_VERSION,
+} from './posthog.js';
+import {
   captureMcpException,
   flushMcpEvents,
   instrumentMcpServer,
 } from './sentry.js';
+import { logMcpEvent } from './logging.js';
 
-/**
- * MCP content-block annotations (per spec). `audience` lets a client decide who
- * a block is for: end "user", the "assistant" (model), or both. We tag
- * agent-steering payload (the response contract / metadata that exists only to
- * guide the model) as assistant-only so clients can hide it from end users,
- * while the human-readable answer stays unannotated (visible to everyone).
- */
 type ContentAnnotations = {
   audience?: Array<'user' | 'assistant'>;
   priority?: number;
@@ -70,28 +71,17 @@ type ResourceLinkContent = {
 type ToolContent = TextContent | ResourceLinkContent;
 
 /**
- * Annotation marking a content block as steering-only (assistant/model
- * audience). Clients that respect audience annotations can hide these blocks
- * from end users, since they carry tool-routing hints rather than answers.
- */
-const ASSISTANT_ONLY_ANNOTATION: ContentAnnotations = {
-  audience: ['assistant'],
-};
-
-/**
  * Server-level instructions (MCP `ServerOptions.instructions`). This is a
  * concise operating guide handed to the LLM at initialize time so it
  * understands the ocean-tracking domain and how to chain the tools.
  */
 export const TERMINAL49_SERVER_INSTRUCTIONS = `Terminal49 tracks ocean containers and shipments live from carriers and terminals. Data is real-time from ocean carriers (by SCAC, e.g. MAEU = Maersk) and US/Canada terminals, so values change between calls.
 
-Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered).
+Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered); custom fields = account-defined fields (PO number, project manager, etc.) on containers and shipments, loaded with get_container include ['custom_fields'] or get_shipment_details include_custom_fields.
 
-Tools are read-only EXCEPT track_container, the single write tool: it creates a tracking request to begin monitoring a number. Everything else only reads.
+Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools operate within the user's private Terminal49 account and none delete or overwrite data.
 
-Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.
-
-Tool results carry a _response_contract with presentation and follow-up hints; treat it as steering for you, not content to show the user.`;
+Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.`;
 
 type ResponseDisplayColumn = {
   key: string;
@@ -143,61 +133,22 @@ export const LIST_DISPLAY_COLUMNS_URI = listDisplayColumnsResource.uri;
  * Filters the MCP list_* tools actually forward to the Terminal49 API, by
  * entity. Anything outside an entity's vocabulary cannot scope its list and is
  * reported back to the agent as a dropped filter so it never claims a false
- * worklist. `page`, `page_size`, `include`, `include_containers` and `intent`
- * are transport/shape knobs, not scoping filters, and are ignored here.
+ * worklist. `page`, `page_size`, `include`, and `include_containers` are
+ * transport/shape knobs, not scoping filters, and are ignored here.
  *
- * `request_type` is intentionally excluded for `tracking_request`: the
- * `GET /tracking_requests` OpenAPI source of truth does not define
- * `filter[request_type]`, so a caller-supplied `request_type` cannot actually
- * scope the list even though `executeListTrackingRequests` forwards it. It
- * falls through to `droppedFilterKeys` instead, so the contract reports it as
- * ignored rather than claiming it applied.
+ * Tracking-request filters are explicit schema properties rather than an
+ * arbitrary query-string map, so callers cannot smuggle pagination or
+ * unrelated text through to the API.
  */
 const SUPPORTED_LIST_FILTERS_BY_ENTITY: Record<
   ListEntityType,
   readonly string[]
 > = {
-  container: ['status', 'port', 'carrier', 'updated_after'],
-  shipment: ['status', 'port', 'carrier', 'updated_after'],
-  tracking_request: ['status', 'filters'],
-  unknown: ['status', 'port', 'carrier', 'updated_after'],
+  container: [],
+  shipment: ['number', 'tracking_stopped'],
+  tracking_request: ['request_number', 'status', 'scac'],
+  unknown: [],
 };
-
-/**
- * Real `GET /tracking_requests` API filter keys (per the OpenAPI source of
- * truth), as they appear inside the raw `filters` pass-through bag. Only these
- * actually scope the list; other raw keys like `include` are legitimate
- * request knobs but must not be mistaken for a scoping filter.
- */
-const REAL_TRACKING_REQUEST_FILTER_KEYS = new Set([
-  'filter[request_number]',
-  'filter[status]',
-  'filter[scac]',
-  'filter[created_at][start]',
-  'filter[created_at][end]',
-  'filter[updated_at][start]',
-  'filter[updated_at][end]',
-]);
-
-/**
- * Whether the raw `filters` pass-through bag contains at least one key that
- * actually scopes the `list_tracking_requests` result. A bag containing only
- * non-filter knobs (e.g. `{ include: 'tracked_object' }`) must not be mistaken
- * for an applied filter, or an unscoped account list could be presented as
- * filtered.
- */
-function hasRealTrackingRequestFilterKey(rawFilters: unknown): boolean {
-  if (
-    !rawFilters ||
-    typeof rawFilters !== 'object' ||
-    Array.isArray(rawFilters)
-  ) {
-    return false;
-  }
-  return Object.keys(rawFilters as Record<string, unknown>).some((key) =>
-    REAL_TRACKING_REQUEST_FILTER_KEYS.has(key),
-  );
-}
 
 /** Non-filter knobs that must never be treated as scoping filters. */
 const NON_FILTER_LIST_ARGS = new Set([
@@ -205,7 +156,6 @@ const NON_FILTER_LIST_ARGS = new Set([
   'page_size',
   'include',
   'include_containers',
-  'intent',
 ]);
 
 /**
@@ -275,61 +225,44 @@ function hasMetadataError(
   return Boolean(metadata && typeof metadata.error === 'string');
 }
 
-const responseDisplayColumnSchema = z.object({
-  key: z.string(),
-  label: z.string(),
-  path: z.string().optional(),
-  description: z.string().optional(),
-  compute: z.string().optional(),
-});
+const METADATA_STEERING_FIELDS = new Set([
+  'presentation_guidance',
+  'recommendations',
+  'suggestions',
+  'suggested_follow_ups',
+  'suggested_tools',
+]);
 
-const responseDisplayColumnSetSchema = z.object({
-  intent: z.string(),
-  when_user_asks: z.array(z.string()),
-  columns: z.array(z.string()),
-});
+/**
+ * Defense in depth for tool executors that return factual `_metadata`.
+ * Runtime responses must not carry model instructions or tool-routing hints.
+ */
+function stripResponseSteering(value: unknown, inMetadata = false): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => stripResponseSteering(item, inMetadata));
+  }
+  if (!value || typeof value !== 'object') {
+    return value;
+  }
 
-const responseDisplaySchema = z.object({
-  preferred_format: z.enum(['table', 'list']),
-  table_when_rows_gte: z.number().int().positive(),
-  max_rows: z.number().int().positive(),
-  default_columns: z.array(z.string()),
-  sort: z.array(
-    z.object({
-      key: z.string(),
-      direction: z.enum(['asc', 'desc']),
-    }),
-  ),
-  empty_state: z.string(),
-  column_catalog_resource: z.string(),
-  column_catalog: z.array(responseDisplayColumnSchema).optional(),
-  column_sets: z.array(responseDisplayColumnSetSchema),
-  selection_strategy: z.string(),
-});
-
-const responseContractSchema = z.object({
-  purpose: z.string(),
-  can_answer: z.array(z.string()),
-  requires_more_data: z.array(z.string()),
-  relevant_fields: z.array(z.string()),
-  presentation_guidance: z.string(),
-  suggested_follow_ups: z.array(z.string()),
-  suggested_tools: z.array(z.string()),
-  display: responseDisplaySchema.optional(),
-  dropped_filters: z.array(z.string()).optional(),
-  total_is_reliable: z.boolean().optional(),
-});
-
-const toolIntentSchema = z
-  .string()
-  .max(200)
-  .optional()
-  .describe(
-    'Brief reason the agent is calling this tool. This is MCP-only telemetry for Sentry and is not forwarded to the Terminal49 API.',
-  );
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, nestedValue] of Object.entries(value)) {
+    if (key === '_agent_steering' || key === '_response_contract') {
+      continue;
+    }
+    if (inMetadata && METADATA_STEERING_FIELDS.has(key)) {
+      continue;
+    }
+    sanitized[key] = stripResponseSteering(
+      nestedValue,
+      key === '_metadata' || inMetadata,
+    );
+  }
+  return sanitized;
+}
 
 /** Hard ceiling for list page size. Keeps a single MCP response bounded. */
-const MAX_LIST_PAGE_SIZE = 100;
+const MAX_LIST_PAGE_SIZE = 25;
 
 const listPageSchema = z
   .number()
@@ -338,231 +271,23 @@ const listPageSchema = z
   .optional()
   .describe('Page number (1-based)');
 
-// Clamp page_size to the cap rather than rejecting, so an over-eager agent
-// gets a bounded page instead of a tool error.
 const listPageSizeSchema = z
   .number()
   .int()
   .positive()
-  .transform((value) => Math.min(value, MAX_LIST_PAGE_SIZE))
+  .max(MAX_LIST_PAGE_SIZE)
   .optional()
-  .describe(
-    `Page size (1-${MAX_LIST_PAGE_SIZE}; values above ${MAX_LIST_PAGE_SIZE} are clamped)`,
-  );
+  .default(25)
+  .describe(`Page size (default 25; maximum ${MAX_LIST_PAGE_SIZE})`);
 
-function normalizeContract(contract: ResponseContract): ResponseContract {
-  return {
-    purpose: contract.purpose,
-    can_answer: contract.can_answer,
-    requires_more_data: contract.requires_more_data,
-    relevant_fields: contract.relevant_fields,
-    presentation_guidance: contract.presentation_guidance,
-    suggested_follow_ups: contract.suggested_follow_ups,
-    suggested_tools: contract.suggested_tools,
-    display: contract.display,
-    dropped_filters: contract.dropped_filters,
-    total_is_reliable: contract.total_is_reliable,
-  };
-}
-
-function attachResponseContract(
-  result: unknown,
-  contract: ResponseContract,
-): unknown {
-  if (!result || typeof result !== 'object' || Array.isArray(result)) {
-    return result;
+function stripLegacyIntent(value: unknown): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return value;
   }
 
-  return {
-    ...result,
-    _response_contract: normalizeContract(contract),
-  };
-}
-
-function buildSearchContract(
-  result: any,
-  args: { query: string },
-): ResponseContract {
-  const hasContainers =
-    result.total_results > 0 && (result.containers?.length ?? 0) > 0;
-  const hasShipments =
-    result.total_results > 0 && (result.shipments?.length ?? 0) > 0;
-
-  return {
-    purpose: `Resolve identifier ${args.query} into concrete container and shipment IDs.`,
-    can_answer: [
-      'container IDs and shipment references',
-      'carrier/scac hints for discovered items',
-      'what additional lookup step is needed',
-    ],
-    requires_more_data:
-      hasContainers || hasShipments
-        ? []
-        : ['A valid/refined identifier (container/BL/reference)'],
-    relevant_fields: ['containers', 'shipments', 'total_results'],
-    presentation_guidance:
-      hasContainers || hasShipments
-        ? 'Group matches by container and shipment. Ask for clarification only when multiple entities are strong candidates.'
-        : 'Ask for a clearer identifier and verify format before calling another tool.',
-    suggested_follow_ups: ['get_container', 'get_shipment_details'],
-    suggested_tools:
-      hasContainers || hasShipments
-        ? ['get_container', 'get_shipment_details']
-        : ['search_container'],
-  };
-}
-
-function buildTrackContract(
-  result: any,
-  args: { number: string },
-): ResponseContract {
-  const hasTrackedContainer = Boolean((result as any)?.id);
-  const isPending =
-    Boolean((result as any)?.tracking_request_created) && !hasTrackedContainer;
-  const state = (result as any)?._metadata?.container_state || 'unknown';
-  return {
-    purpose: `Track ${args.number} and return the linked container view when possible.`,
-    can_answer: [
-      'tracking request creation state',
-      'basic container status and metadata',
-      'where to pull next (if container details are delayed)',
-    ],
-    requires_more_data: isPending
-      ? ['container UUID (once linking finishes)']
-      : [],
-    relevant_fields: [
-      'tracking_request_created',
-      'container_state',
-      'id',
-      'status',
-    ],
-    presentation_guidance: isPending
-      ? 'Tracking request was created but container linking is not immediate. Mention this and provide next-check guidance.'
-      : `Use container state "${state}" to answer readiness, holds, and pickup timing.`,
-    suggested_follow_ups: isPending
-      ? ['list_tracking_requests', 'get_container']
-      : ['get_container_transport_events'],
-    suggested_tools: ['get_container', 'get_container_transport_events'],
-  };
-}
-
-function buildTransportEventsContract(
-  result: any,
-  _args: { id: string },
-): ResponseContract {
-  const totalEvents = result.total_events ?? result.timeline?.length ?? 0;
-  return {
-    purpose:
-      'Summarize what happened and forecast next likely milestone for the container.',
-    can_answer: [
-      'journey timeline',
-      'major milestones',
-      'rail/transshipment context',
-    ],
-    requires_more_data:
-      totalEvents > 0
-        ? []
-        : ['recent container events becoming available from carrier feed'],
-    relevant_fields: ['timeline', 'event_categories', 'milestones'],
-    presentation_guidance:
-      totalEvents > 0
-        ? 'Render in chronological order. Prioritize milestones over minor terminal noise.'
-        : 'No events found yet; recommend checking base container context and retrying later.',
-    suggested_follow_ups: ['get_container', 'get_container_route'],
-    suggested_tools: ['get_container', 'get_container_route'],
-  };
-}
-
-function buildShippingLineContract(result: any): ResponseContract {
-  return {
-    purpose:
-      'Help user identify a supported SCAC before creating a track request.',
-    can_answer: [
-      'SCAC lookup',
-      'carrier aliases and names',
-      'supported carrier search',
-    ],
-    requires_more_data:
-      result.total_lines > 0 ? [] : ['additional query context'],
-    relevant_fields: ['shipping_lines', 'total_lines'],
-    presentation_guidance:
-      'Sort carriers alphabetically and show both SCAC and company names.',
-    suggested_follow_ups: ['track_container'],
-    suggested_tools: ['track_container'],
-  };
-}
-
-function buildRouteContract(
-  result: any,
-  _args: { id: string },
-): ResponseContract {
-  const available = Array.isArray(result.route_locations);
-  return {
-    purpose: 'Communicate container routing and vessel itinerary.',
-    can_answer: [
-      'transshipment structure',
-      'leg-by-leg ETD/ETA',
-      'carrier and vessel coverage',
-    ],
-    requires_more_data: available
-      ? []
-      : ['event timeline via get_container_transport_events'],
-    relevant_fields: ['route_locations', 'total_legs', 'alternative'],
-    presentation_guidance: available
-      ? 'Show origin → transshipments → destination. Emphasize missing legs and ETA changes.'
-      : 'This account has no route payload; switch to events and container snapshot.',
-    suggested_follow_ups: ['get_container_transport_events', 'get_container'],
-    suggested_tools: ['get_container_transport_events', 'get_container'],
-  };
-}
-
-function buildContainerContract(): ResponseContract {
-  return {
-    purpose: 'Provide current container snapshot and readiness context.',
-    can_answer: [
-      'status',
-      'location',
-      'pickup readiness',
-      'rail and shipment context',
-    ],
-    requires_more_data: ['holds, fees, and timeline by demand'],
-    relevant_fields: [
-      'id',
-      'container_number',
-      'status',
-      'pod_terminal',
-      'demurrage',
-    ],
-    presentation_guidance:
-      'Summarize state first, then call out LFD, holds, and fees if present. If terminal availability is unclear, suggest transport events.',
-    suggested_follow_ups: [
-      'get_container_transport_events',
-      'get_container_route',
-    ],
-    suggested_tools: ['get_container_transport_events', 'get_container_route'],
-  };
-}
-
-function buildShipmentContract(): ResponseContract {
-  return {
-    purpose:
-      'Explain shipment-level routing, container counts, and references.',
-    can_answer: ['shipment identifiers', 'routing summary', 'container list'],
-    requires_more_data: [
-      'container-level ETA confidence when only one terminal is visible',
-    ],
-    relevant_fields: [
-      'id',
-      'bill_of_lading',
-      'status',
-      'containers',
-      'routing',
-    ],
-    presentation_guidance:
-      'Group by shipment summary then container health signals (pickup ETA, pickup_lfd, holds).',
-    suggested_follow_ups: ['get_container', 'list_containers'],
-    suggested_tools: ['get_container', 'list_containers'],
-  };
+  const args = { ...value } as Record<string, unknown>;
+  delete args.intent;
+  return args;
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -806,10 +531,9 @@ function isProvided(value: unknown): boolean {
   if (value === undefined || value === null || value === '') {
     return false;
   }
-  // An empty array or empty plain object scopes nothing — e.g. the raw
-  // `filters` pass-through arg serialized as `{ filters: {} }`. Treating it as
+  // An empty array or empty plain object scopes nothing. Treating it as
   // "provided" would mark an unfiltered firehose as the user's scoped worklist
-  // (and falsely trust meta.total), which is the dishonesty this contract avoids.
+  // and falsely trust meta.total.
   if (Array.isArray(value)) {
     return value.length > 0;
   }
@@ -823,18 +547,17 @@ function isProvided(value: unknown): boolean {
 function appliedFilterKeys(
   filters: Record<string, unknown> | undefined,
   entityType: ListEntityType,
+  unsupportedFilters: string[] | undefined,
 ): string[] {
   if (!filters) {
     return [];
   }
 
   const supported = SUPPORTED_LIST_FILTERS_BY_ENTITY[entityType];
+  const unsupported = new Set(unsupportedFilters ?? []);
   return supported.filter((key) => {
-    if (key === 'filters') {
-      // The raw pass-through bag can carry non-filter knobs like `include`
-      // alongside (or instead of) real `filter[...]` keys; only the latter
-      // actually scope the list.
-      return hasRealTrackingRequestFilterKey(filters[key]);
+    if (unsupported.has(key)) {
+      return false;
     }
     return isProvided(filters[key]);
   });
@@ -866,40 +589,6 @@ function droppedFilterKeys(
   return [...new Set([...fromSdk, ...derived])];
 }
 
-/**
- * Raw API pagination keys a caller can smuggle through the `list_tracking_requests`
- * `filters` pass-through. They are pagination, not scoping, so they must be dropped
- * before both the SDK call and the contract's "is this filtered?" judgement.
- */
-const RAW_PAGINATION_FILTER_KEYS = ['page[size]', 'page[number]'] as const;
-
-/**
- * Mirror the sanitization `executeListTrackingRequests` applies before the SDK
- * call: strip raw pagination keys from the nested `filters` bag so the contract
- * evaluates the same scoped/unscoped picture the API actually saw. A `filters`
- * bag left empty after stripping is treated as unprovided by `isProvided`.
- */
-export function sanitizeTrackingRequestFilters(
-  args: Record<string, unknown> | undefined,
-): Record<string, unknown> | undefined {
-  if (!args || typeof args !== 'object') {
-    return args;
-  }
-  const rawFilters = (args as { filters?: unknown }).filters;
-  if (
-    !rawFilters ||
-    typeof rawFilters !== 'object' ||
-    Array.isArray(rawFilters)
-  ) {
-    return args;
-  }
-  const safeFilters = { ...(rawFilters as Record<string, unknown>) };
-  for (const key of RAW_PAGINATION_FILTER_KEYS) {
-    delete safeFilters[key];
-  }
-  return { ...args, filters: safeFilters };
-}
-
 export function buildListContract(
   result: any,
   entityTypeHint?: ListEntityType,
@@ -919,15 +608,23 @@ export function buildListContract(
           ? buildTrackingRequestListDisplay()
           : undefined;
 
-  const applied = appliedFilterKeys(requestContext.filters, entityType);
+  const applied = appliedFilterKeys(
+    requestContext.filters,
+    entityType,
+    requestContext.unsupportedFilters,
+  );
   const dropped = droppedFilterKeys(
     requestContext.filters,
     requestContext.unsupportedFilters,
     entityType,
   );
   const isFiltered = applied.length > 0;
-  const supportedVocab =
-    SUPPORTED_LIST_FILTERS_BY_ENTITY[entityType].join(', ');
+  const supportedFilters = SUPPORTED_LIST_FILTERS_BY_ENTITY[entityType];
+  const supportedVocab = supportedFilters.join(', ');
+  const filterGuidance =
+    supportedFilters.length > 0
+      ? `a filter to scope this list (${supportedVocab})`
+      : 'server-side filters are not available for this list endpoint; use pagination and inspect returned rows';
 
   const rawTotal = Number(result?.meta?.total);
   const hasTotal = Number.isFinite(rawTotal);
@@ -939,17 +636,20 @@ export function buildListContract(
     : true;
 
   const canAnswer: string[] = ['count and paging state'];
+  canAnswer.unshift('records in the current page');
   if (isFiltered) {
     canAnswer.unshift('which records match the applied filters');
   }
 
   const requiresMoreData: string[] = [];
   if (!isFiltered) {
-    requiresMoreData.push(`a filter to scope this list (${supportedVocab})`);
+    requiresMoreData.push(filterGuidance);
   }
   if (dropped.length > 0) {
     requiresMoreData.push(
-      `unsupported filter(s) were ignored: ${dropped.join(', ')} — re-query using only ${supportedVocab}`,
+      supportedFilters.length > 0
+        ? `unsupported filter(s) were ignored: ${dropped.join(', ')} — re-query using only ${supportedVocab}`
+        : `unsupported filter(s) were ignored: ${dropped.join(', ')} — this endpoint has no server-side filters`,
     );
   }
   if (hasTotal && !totalIsReliable) {
@@ -992,30 +692,6 @@ export function buildListContract(
     display,
     dropped_filters: dropped.length > 0 ? dropped : undefined,
     total_is_reliable: hasTotal ? totalIsReliable : undefined,
-  };
-}
-
-/**
- * Builds an assistant-only steering content block from a response contract.
- *
- * This surfaces the agent-steering hints (presentation guidance, suggested
- * follow-up tools) as a discrete content block annotated `audience:
- * ['assistant']`, so spec-aware clients can hide it from end users while still
- * delivering it to the model. The user-facing answer block (built by
- * buildContentPayload) is left unannotated and remains visible to everyone.
- */
-function buildSteeringContent(contract: ResponseContract): TextContent {
-  const steering = {
-    _agent_steering: true,
-    purpose: contract.purpose,
-    presentation_guidance: contract.presentation_guidance,
-    suggested_follow_ups: contract.suggested_follow_ups,
-    suggested_tools: contract.suggested_tools,
-  };
-  return {
-    type: 'text',
-    text: formatAsText(steering),
-    annotations: ASSISTANT_ONLY_ANNOTATION,
   };
 }
 
@@ -1071,9 +747,9 @@ function buildListResourceLinks(
   return links;
 }
 
-function wrapToolWithContract<TArgs>(
+function wrapTool<TArgs>(
+  toolName: string,
   handler: (args: TArgs) => Promise<unknown>,
-  buildContract?: (result: unknown, args: TArgs) => ResponseContract,
   buildResourceLinks?: (result: unknown, args: TArgs) => ResourceLinkContent[],
 ): (args: TArgs) => Promise<{
   content: ToolContent[];
@@ -1083,21 +759,11 @@ function wrapToolWithContract<TArgs>(
   return async (args: TArgs) => {
     try {
       const result = await handler(args);
-      const contract = buildContract ? buildContract(result, args) : undefined;
-      const structuredContent = contract
-        ? attachResponseContract(result, contract)
-        : result;
-
-      const content: ToolContent[] = buildContentPayload(result);
+      const structuredContent = stripResponseSteering(result);
+      const content: ToolContent[] = buildContentPayload(structuredContent);
 
       if (buildResourceLinks) {
-        content.push(...buildResourceLinks(result, args));
-      }
-
-      // Steering metadata is appended as an assistant-only block so clients can
-      // hide it from end users; the answer block above stays user-visible.
-      if (contract) {
-        content.push(buildSteeringContent(contract));
+        content.push(...buildResourceLinks(structuredContent, args));
       }
 
       return {
@@ -1110,25 +776,88 @@ function wrapToolWithContract<TArgs>(
       await flushMcpEvents();
       // Log the real error for operators; never echo internal messages (which
       // can contain upstream URLs, tokens, or stack detail) back to the client.
-      console.error(
-        JSON.stringify({
-          event: 'mcp.tool.error',
-          error: err.name,
-          message: err.message,
-          timestamp: new Date().toISOString(),
-        }),
-      );
+      logMcpEvent({
+        event: 'mcp.tool.error',
+        error: err.name,
+        message: err.message,
+        timestamp: new Date().toISOString(),
+      });
       return {
         content: [
           {
             type: 'text',
-            text: 'The Terminal49 request could not be completed. Please retry; if it persists, contact support.',
+            text: formatToolError(toolName, args, error),
           },
         ],
         isError: true,
       };
     }
   };
+}
+
+function formatToolError(
+  toolName: string,
+  args: unknown,
+  error: unknown,
+): string {
+  const input =
+    args && typeof args === 'object' ? (args as Record<string, unknown>) : {};
+  const id = typeof input.id === 'string' ? input.id : undefined;
+  const number =
+    typeof input.number === 'string'
+      ? input.number
+      : typeof input.containerNumber === 'string'
+        ? input.containerNumber
+        : typeof input.bookingNumber === 'string'
+          ? input.bookingNumber
+          : undefined;
+  const err = error as {
+    name?: string;
+    message?: string;
+    status?: number;
+    details?: unknown;
+  };
+  const errorText = `${err.message ?? ''} ${safeStringify(err.details)}`;
+
+  if (toolName === 'track_container') {
+    if (!number?.trim() || /number is required/i.test(errorText)) {
+      return 'number is required.';
+    }
+    if (
+      err.name === 'ContainerCheckDigitError' ||
+      /(?:iso\s*6346|check[-_\s]?digit)/i.test(errorText)
+    ) {
+      return `Container number ${number} fails the ISO 6346 check digit.`;
+    }
+  }
+
+  if (err.name === 'NotFoundError' || err.status === 404) {
+    switch (toolName) {
+      case 'get_container':
+      case 'get_container_transport_events':
+        return `No container found with id ${id ?? '(missing)'}.`;
+      case 'get_shipment_details':
+        return `No shipment found with id ${id ?? '(missing)'}.`;
+      case 'get_container_route':
+        return `No route found for container id ${id ?? '(missing)'}.`;
+      default:
+        return 'The requested Terminal49 record was not found.';
+    }
+  }
+
+  if (toolName === 'track_container' && err.name === 'ValidationError') {
+    return `Tracking identifier ${number} is invalid. Verify the identifier type and carrier SCAC.`;
+  }
+
+  return 'The Terminal49 request could not be completed. Contact support if the problem persists.';
+}
+
+function safeStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value) ?? '';
+  } catch {
+    return '';
+  }
 }
 
 /**
@@ -1158,10 +887,16 @@ function createCarrierScacCompleter(
   };
 }
 
+export interface Terminal49McpServerTelemetry {
+  transport?: McpTransportKind;
+  authSource?: McpAuthSource;
+}
+
 export function createTerminal49McpServer(
   apiToken: string,
   apiBaseUrl?: string,
   accountId?: string,
+  telemetry: Terminal49McpServerTelemetry = {},
 ): McpServer {
   const client = new Terminal49Client({
     apiToken,
@@ -1172,16 +907,26 @@ export function createTerminal49McpServer(
 
   const completeCarrierScac = createCarrierScacCompleter(client);
 
-  const server = instrumentMcpServer(
-    new McpServer(
-      {
-        name: 'terminal49-mcp',
-        version: '1.0.0',
-      },
-      {
-        instructions: TERMINAL49_SERVER_INSTRUCTIONS,
-      },
+  // Observability wrapping, outermost last. Sentry's wrapper returns a wrapped
+  // server; PostHog's `instrument()` patches request handlers in place and also
+  // proxies `_registeredTools`, so it is applied to the object the tools below
+  // are actually registered on and picks up every one of them. Both are no-ops
+  // when their respective env vars are unset.
+  const server = instrumentMcpServerWithPostHog(
+    instrumentMcpServer(
+      new McpServer(
+        {
+          name: SERVER_NAME,
+          version: SERVER_VERSION,
+        },
+        {
+          instructions: TERMINAL49_SERVER_INSTRUCTIONS,
+        },
+      ),
     ),
+    // Groups the stateless HTTP path's events per account instead of minting an
+    // anonymous person per request.
+    { distinctId: accountId, ...telemetry },
   );
 
   // ==================== TOOLS ====================
@@ -1193,20 +938,26 @@ export function createTerminal49McpServer(
       title: 'Search Containers',
       description:
         'Search for containers, shipments, and tracking information by container number, ' +
-        'booking number, bill of lading, or reference number. ' +
-        'This is the fastest way to find container information. ' +
-        'Examples: CAIU2885402, MAEU123456789, or any reference number.',
-      annotations: { readOnlyHint: true, openWorldHint: true },
-      inputSchema: {
+        'booking number, bill of lading, or reference number. Returns matching private-account records. ' +
+        'Use get_container or get_shipment_details with a returned UUID for a detailed snapshot. ' +
+        'Pass exactly one identifier, never a user message or conversation history. ' +
+        'Examples: CAIU2885402, MAEU123456789, or a customer reference number.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.object({
         query: z
           .string()
+          .trim()
           .min(1)
+          .max(128)
           .describe(
-            'Search query - can be a container number, booking number, BL number, or reference number',
+            'One container number, booking number, Bill of Lading number, or customer reference (maximum 128 characters). Identifier only; never pass conversation text, a user message, or full history.',
           ),
-        intent: toolIntentSchema,
-      },
-      outputSchema: {
+      }),
+      outputSchema: z.object({
         containers: z.array(
           z.object({
             id: z.string(),
@@ -1228,12 +979,10 @@ export function createTerminal49McpServer(
           }),
         ),
         total_results: z.number(),
-        _response_contract: responseContractSchema,
-      },
+      }),
     },
-    wrapToolWithContract(
-      async ({ query }) => executeSearchContainer({ query }, client),
-      (result, args) => buildSearchContract(result as any, args),
+    wrapTool('search_container', async ({ query }) =>
+      executeSearchContainer({ query }, client),
     ),
   );
 
@@ -1245,56 +994,78 @@ export function createTerminal49McpServer(
       description:
         'Track a container, bill of lading, or booking number. ' +
         'Uses inference to choose the carrier/type when possible, creates a tracking request, ' +
-        'and returns detailed container information.',
+        'and returns detailed container information. If a newly created request is still pending, ' +
+        'use list_tracking_requests to check its status.',
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: false,
-        openWorldHint: true,
+        openWorldHint: false,
       },
-      inputSchema: {
+      inputSchema: z.object({
         number: z
           .string()
-          .optional()
-          .describe('Container, bill of lading, or booking number to track'),
+          .trim()
+          .min(1)
+          .max(64)
+          .describe(
+            'One container, Bill of Lading, or booking number (maximum 64 characters). Identifier only; never pass conversation text.',
+          ),
         numberType: z
-          .string()
+          .enum(['container', 'bill_of_lading', 'booking_number'])
           .optional()
           .describe(
             'Optional override: container | bill_of_lading | booking_number',
           ),
         containerNumber: z
           .string()
-          .optional()
-          .describe('Deprecated alias for number (container)'),
-        bookingNumber: z
-          .string()
-          .optional()
-          .describe('Deprecated alias for number (booking/BL)'),
-        scac: z
-          .string()
+          .trim()
+          .min(1)
+          .max(64)
           .optional()
           .describe(
-            'Optional SCAC code of the shipping line (e.g., MAEU for Maersk)',
+            'Deprecated alias for one container number (maximum 64 characters)',
+          ),
+        bookingNumber: z
+          .string()
+          .trim()
+          .min(1)
+          .max(64)
+          .optional()
+          .describe(
+            'Deprecated alias for one booking or Bill of Lading number (maximum 64 characters)',
+          ),
+        scac: z
+          .string()
+          .trim()
+          .length(4)
+          .regex(/^[A-Za-z]{4}$/)
+          .optional()
+          .describe(
+            'Optional four-letter shipping-line SCAC (e.g., MAEU for Maersk)',
           ),
         refNumbers: z
-          .array(z.string())
+          .array(z.string().trim().min(1).max(64))
+          .max(10)
           .optional()
-          .describe('Optional reference numbers for matching'),
-        intent: toolIntentSchema,
-      },
-      outputSchema: {
-        error: z.string().optional(),
-        message: z.string().optional(),
-        id: z.string().optional(),
-        container_number: z.string().optional(),
-        status: z.string().optional(),
-        tracking_request_created: z.boolean().optional(),
-        infer_result: z.any().optional(),
-        _response_contract: responseContractSchema.optional(),
-      },
+          .describe(
+            'Up to 10 reference-number identifiers, each at most 64 characters. Never pass conversation text.',
+          ),
+      }),
+      outputSchema: z
+        .object({
+          error: z.string().optional(),
+          message: z.string().optional(),
+          id: z.string().optional(),
+          container_number: z.string().optional(),
+          status: z.string().optional(),
+          tracking_request_created: z.boolean().optional(),
+          infer_result: z.any().optional(),
+        })
+        .passthrough(),
     },
-    wrapToolWithContract(
+    wrapTool(
+      'track_container',
       async ({
         number,
         numberType,
@@ -1314,11 +1085,6 @@ export function createTerminal49McpServer(
           },
           client,
         ),
-      (result, args) =>
-        buildTrackContract(result as any, {
-          number:
-            args.number || args.containerNumber || args.bookingNumber || '',
-        }),
     ),
   );
 
@@ -1329,35 +1095,41 @@ export function createTerminal49McpServer(
       title: 'Get Container Details',
       description:
         'Get container information with flexible data loading. Returns core container data (status, location, equipment, dates) ' +
-        'plus optional related data. Choose includes based on user question and container state. ' +
-        'Response includes metadata hints to guide follow-up queries.',
-      annotations: { readOnlyHint: true, openWorldHint: true },
-      inputSchema: {
+        'plus optional shipment, terminal, or transport-event data. Transport events are excluded by default to keep snapshots compact. ' +
+        'Call get_container_transport_events for the complete milestone timeline.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.object({
         id: z
           .string()
           .uuid()
           .describe('The Terminal49 container ID (UUID format)'),
         include: z
-          .array(z.enum(['shipment', 'pod_terminal', 'transport_events']))
+          .array(
+            z.enum([
+              'shipment',
+              'pod_terminal',
+              'transport_events',
+              'custom_fields',
+            ]),
+          )
           .optional()
           .default(['shipment'])
           .describe(
             "Optional related data to include. Default: ['shipment'] covers most use cases. " +
               '• shipment: Routing, BOL, line, ref numbers (lightweight, always useful) ' +
               '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
-              '• transport_events: Full event history, rail tracking (heavy 50-100 events, use for journey/timeline questions)',
+              '• transport_events: Event summary (count, rail event count, and latest event); use get_container_transport_events for the full timeline ' +
+              '• custom_fields: Account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)',
           ),
-        intent: toolIntentSchema,
-      },
-      outputSchema: z
-        .object({
-          _response_contract: responseContractSchema,
-        })
-        .passthrough(),
+      }),
+      outputSchema: z.object({}).passthrough(),
     },
-    wrapToolWithContract(
-      async ({ id, include }) => executeGetContainer({ id, include }, client),
-      () => buildContainerContract(),
+    wrapTool('get_container', async ({ id, include }) =>
+      executeGetContainer({ id, include }, client),
     ),
   );
 
@@ -1368,10 +1140,14 @@ export function createTerminal49McpServer(
       title: 'Get Shipment Details',
       description:
         'Get detailed shipment information including routing, BOL, containers, and port details. ' +
-        'Use this when user asks about a shipment (vs a specific container). ' +
-        'Returns: Bill of Lading, shipping line, port details, vessel info, ETAs, container list.',
-      annotations: { readOnlyHint: true, openWorldHint: true },
-      inputSchema: {
+        'Returns: Bill of Lading, shipping line, port details, vessel info, ETAs, container list. ' +
+        'Use get_container with a returned container UUID for pickup availability, holds, fees, and last free day.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.object({
         id: z
           .string()
           .uuid()
@@ -1383,18 +1159,23 @@ export function createTerminal49McpServer(
           .describe(
             'Include list of containers in this shipment. Default: true',
           ),
-        intent: toolIntentSchema,
-      },
-      outputSchema: z
-        .object({
-          _response_contract: responseContractSchema,
-        })
-        .passthrough(),
+        include_custom_fields: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe(
+            'Include account-defined custom fields (e.g. PO number, project manager) set on this shipment. Needs a signed-in user, not an API key. Default: false',
+          ),
+      }),
+      outputSchema: z.object({}).passthrough(),
     },
-    wrapToolWithContract(
-      async ({ id, include_containers }) =>
-        executeGetShipmentDetails({ id, include_containers }, client),
-      () => buildShipmentContract(),
+    wrapTool(
+      'get_shipment_details',
+      async ({ id, include_containers, include_custom_fields }) =>
+        executeGetShipmentDetails(
+          { id, include_containers, include_custom_fields },
+          client,
+        ),
     ),
   );
 
@@ -1406,25 +1187,22 @@ export function createTerminal49McpServer(
       description:
         'Get detailed transport event timeline for a container. Returns all milestones and movements ' +
         '(vessel loaded, departed, arrived, discharged, rail movements, delivery). ' +
-        'Use this for questions about journey history, "what happened", timeline analysis, rail tracking. ' +
-        'More efficient than get_container with transport_events when you only need event data.',
-      annotations: { readOnlyHint: true, openWorldHint: true },
-      inputSchema: {
+        'Provides journey history, timeline analysis, and rail tracking without loading the full container snapshot.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.object({
         id: z
           .string()
           .uuid()
           .describe('The Terminal49 container ID (UUID format)'),
-        intent: toolIntentSchema,
-      },
-      outputSchema: z
-        .object({
-          _response_contract: responseContractSchema,
-        })
-        .passthrough(),
+      }),
+      outputSchema: z.object({}).passthrough(),
     },
-    wrapToolWithContract(
-      async ({ id }) => executeGetContainerTransportEvents({ id }, client),
-      (result, args) => buildTransportEventsContract(result as any, args),
+    wrapTool('get_container_transport_events', async ({ id }) =>
+      executeGetContainerTransportEvents({ id }, client),
     ),
   );
 
@@ -1435,17 +1213,25 @@ export function createTerminal49McpServer(
       title: 'Get Supported Shipping Lines',
       description:
         'Get list of shipping lines (carriers) supported by Terminal49 for container tracking. ' +
-        'Returns SCAC codes, full names, and common abbreviations. ' +
-        'Use this when user asks which carriers are supported or to validate a carrier name.',
-      annotations: { readOnlyHint: true, openWorldHint: false },
-      inputSchema: {
+        'Returns SCAC codes, full names, and common abbreviations, with optional name or SCAC filtering. ' +
+        'Pass the returned four-letter SCAC to track_container when carrier inference is ambiguous.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.object({
         search: z
           .string()
+          .trim()
+          .min(1)
+          .max(64)
           .optional()
-          .describe('Optional: Filter by carrier name or SCAC code'),
-        intent: toolIntentSchema,
-      },
-      outputSchema: {
+          .describe(
+            'Optional carrier name or SCAC only (maximum 64 characters). Never pass a user message or conversation history.',
+          ),
+      }),
+      outputSchema: z.object({
         total_lines: z.number(),
         shipping_lines: z.array(
           z.object({
@@ -1456,18 +1242,10 @@ export function createTerminal49McpServer(
             notes: z.string().optional(),
           }),
         ),
-        _metadata: z.object({
-          presentation_guidance: z.string(),
-          error: z.string().optional(),
-          remediation: z.string().optional(),
-        }),
-        _response_contract: responseContractSchema,
-      },
+      }),
     },
-    wrapToolWithContract(
-      async ({ search }) =>
-        executeGetSupportedShippingLines({ search }, client),
-      (result) => buildShippingLineContract(result as any),
+    wrapTool('get_supported_shipping_lines', async ({ search }) =>
+      executeGetSupportedShippingLines({ search }, client),
     ),
   );
 
@@ -1479,16 +1257,18 @@ export function createTerminal49McpServer(
       description:
         'Get detailed routing and vessel itinerary for a container including all ports, vessels, and ETAs. ' +
         'Shows complete multi-leg journey (origin → transshipment ports → destination). ' +
-        'NOTE: This is a paid feature and may not be available for all accounts. ' +
-        'Use for questions about routing, transshipments, or detailed vessel itinerary.',
-      annotations: { readOnlyHint: true, openWorldHint: true },
-      inputSchema: {
+        'This paid feature may not be available for every account.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.object({
         id: z
           .string()
           .uuid()
           .describe('The Terminal49 container ID (UUID format)'),
-        intent: toolIntentSchema,
-      },
+      }),
       // Keep a single permissive schema because this tool can return either
       // route fields or feature-gating fields depending on account capability.
       outputSchema: z.object({
@@ -1534,22 +1314,14 @@ export function createTerminal49McpServer(
           .optional(),
         created_at: z.string().nullable().optional(),
         updated_at: z.string().nullable().optional(),
-        _metadata: z
-          .object({
-            presentation_guidance: z.string().optional(),
-          })
-          .optional(),
-
         // Feature gating / errors
         error: z.string().optional(),
         message: z.string().optional(),
         alternative: z.string().optional(),
-        _response_contract: responseContractSchema.optional(),
       }),
     },
-    wrapToolWithContract(
-      async ({ id }) => executeGetContainerRoute({ id }, client),
-      (result, args) => buildRouteContract(result as any, args),
+    wrapTool('get_container_route', async ({ id }) =>
+      executeGetContainerRoute({ id }, client),
     ),
   );
 
@@ -1559,41 +1331,45 @@ export function createTerminal49McpServer(
     {
       title: 'List Shipments',
       description:
-        'List shipments with optional filters and pagination. ' +
-        'Use for queries like "show recent shipments" or "shipments for a carrier".',
-      annotations: { readOnlyHint: true, openWorldHint: true },
-      inputSchema: {
-        status: z.string().optional().describe('Filter by shipment status'),
-        port: z.string().optional().describe('Filter by POD port LOCODE'),
-        carrier: z.string().optional().describe('Filter by shipping line SCAC'),
-        updated_after: z
+        'Return one intentionally requested page of shipments, optionally filtered by one shipment identifier or tracking-stopped state. Page size is capped at 25. Use get_shipment_details with a returned UUID for routing and container details. Never pass conversation text into identifier fields.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.object({
+        number: z
           .string()
+          .trim()
+          .min(1)
+          .max(64)
           .optional()
-          .describe('Filter by updated_at (ISO8601) >= value'),
+          .describe(
+            'One shipment, booking, or Bill of Lading identifier (maximum 64 characters). Never pass conversation text.',
+          ),
+        tracking_stopped: z
+          .boolean()
+          .optional()
+          .describe('Filter by whether shipping-line tracking has stopped'),
         include_containers: z
           .boolean()
           .optional()
+          .default(false)
           .describe(
-            'Include containers relationship in response. Default: true.',
+            'Include container relationships in each shipment. Default: false to keep list responses compact.',
           ),
         page: listPageSchema,
         page_size: listPageSizeSchema,
-        intent: toolIntentSchema,
-      },
+      }),
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
         links: z.record(z.string(), z.string()).optional(),
         meta: z.record(z.string(), z.any()).optional(),
-        _response_contract: responseContractSchema,
+        unsupportedFilters: z.array(z.string()),
       }),
     },
-    wrapToolWithContract(
-      async (args) => executeListShipments(args, client),
-      (result, args) =>
-        buildListContract(result as any, 'shipment', {
-          filters: args,
-          unsupportedFilters: (result as any)?.unsupportedFilters,
-        }),
+    wrapTool('list_shipments', async (args) =>
+      executeListShipments(args, client),
     ),
   );
 
@@ -1603,41 +1379,33 @@ export function createTerminal49McpServer(
     {
       title: 'List Containers',
       description:
-        'List containers with optional filters and pagination. ' +
-        'Use for queries like "containers at port" or "latest updates".',
-      annotations: { readOnlyHint: true, openWorldHint: true },
-      inputSchema: {
-        status: z.string().optional().describe('Filter by container status'),
-        port: z.string().optional().describe('Filter by POD port LOCODE'),
-        carrier: z.string().optional().describe('Filter by shipping line SCAC'),
-        updated_after: z
-          .string()
-          .optional()
-          .describe('Filter by updated_at (ISO8601) >= value'),
+        'Return one intentionally requested page of containers, capped at 25 rows. Use get_container with a returned UUID for a detailed snapshot. The API does not expose server-side status, port, carrier, or update-time filters. Do not use this tool to pass or retrieve conversation text.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.object({
         include: z
-          .string()
+          .array(z.enum(['shipment', 'pod_terminal']))
+          .max(2)
           .optional()
           .describe(
-            'Comma-separated include list (e.g., shipment,pod_terminal)',
+            'Optional related records to include: shipment and/or pod_terminal',
           ),
         page: listPageSchema,
         page_size: listPageSizeSchema,
-        intent: toolIntentSchema,
-      },
+      }),
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
         links: z.record(z.string(), z.string()).optional(),
         meta: z.record(z.string(), z.any()).optional(),
-        _response_contract: responseContractSchema,
+        unsupportedFilters: z.array(z.string()),
       }),
     },
-    wrapToolWithContract(
+    wrapTool(
+      'list_containers',
       async (args) => executeListContainers(args, client),
-      (result, args) =>
-        buildListContract(result as any, 'container', {
-          filters: args,
-          unsupportedFilters: (result as any)?.unsupportedFilters,
-        }),
       // ResourceLinks: each container row becomes a compact link to the
       // registered terminal49://container/{id} resource, so the client can
       // resolve full details on demand instead of paying for them up front.
@@ -1651,46 +1419,49 @@ export function createTerminal49McpServer(
     {
       title: 'List Tracking Requests',
       description:
-        'List tracking requests with optional filters and pagination. ' +
-        'Useful for monitoring recent tracking activity.',
-      annotations: { readOnlyHint: true, openWorldHint: true },
-      inputSchema: {
-        filters: z
-          .record(z.string(), z.string())
-          .optional()
-          .describe('Raw query filters (e.g., filter[status]=succeeded)'),
-        status: z
-          .string()
-          .optional()
-          .describe('Filter by request status (mapped to filter[status])'),
-        request_type: z
-          .string()
-          .optional()
-          .describe('Filter by request type (mapped to filter[request_type])'),
-        page: listPageSchema,
-        page_size: listPageSizeSchema,
-        intent: toolIntentSchema,
+        'Return one intentionally requested page of tracking requests, optionally filtered by request identifier, status, or carrier SCAC. Page size is capped at 25. For succeeded requests, use search_container to resolve the tracked identifier into container or shipment UUIDs. Identifier fields must never contain user messages or conversation history.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
       },
+      inputSchema: z.preprocess(
+        stripLegacyIntent,
+        z
+          .object({
+            request_number: z
+              .string()
+              .trim()
+              .min(1)
+              .max(64)
+              .optional()
+              .describe(
+                'One tracking request identifier (maximum 64 characters). Never pass conversation text.',
+              ),
+            status: z
+              .enum(['created', 'pending', 'succeeded', 'failed'])
+              .optional()
+              .describe('Filter by request status (mapped to filter[status])'),
+            scac: z
+              .string()
+              .trim()
+              .length(4)
+              .regex(/^[A-Za-z]{4}$/)
+              .optional()
+              .describe('Filter by one four-letter shipping-line SCAC'),
+            page: listPageSchema,
+            page_size: listPageSizeSchema,
+          })
+          .strict(),
+      ),
       outputSchema: z.object({
         items: z.array(z.record(z.string(), z.any())),
         links: z.record(z.string(), z.string()).optional(),
         meta: z.record(z.string(), z.any()).optional(),
-        _response_contract: responseContractSchema,
       }),
     },
-    wrapToolWithContract(
-      async (args) => executeListTrackingRequests(args, client),
-      (result, args) =>
-        buildListContract(result as any, 'tracking_request', {
-          // `executeListTrackingRequests` strips raw pagination keys from the
-          // nested `filters` bag before the SDK call, so the contract must judge
-          // "is this scoped?" against the same sanitized view. Otherwise a
-          // `filters: { 'page[size]': '10000' }` request — which is unfiltered
-          // once those keys are dropped — would still read as a non-empty
-          // `filters` arg, falsely report applied filters, and trust meta.total.
-          filters: sanitizeTrackingRequestFilters(args),
-          unsupportedFilters: (result as any)?.unsupportedFilters,
-        }),
+    wrapTool('list_tracking_requests', async (args) =>
+      executeListTrackingRequests(args, client),
     ),
   );
 
@@ -1703,7 +1474,7 @@ export function createTerminal49McpServer(
       title: 'Track Container Shipment',
       description:
         'Quick container tracking workflow with carrier autocomplete',
-      argsSchema: {
+      argsSchema: z.object({
         container_number: z
           .string()
           .describe('Container number (e.g., CAIU1234567)'),
@@ -1717,7 +1488,7 @@ export function createTerminal49McpServer(
             .describe('Shipping line SCAC code (e.g., MAEU for Maersk)'),
           completeCarrierScac,
         ).optional(),
-      },
+      }),
     },
     async ({ container_number, carrier }) => ({
       messages: [
@@ -1740,9 +1511,9 @@ export function createTerminal49McpServer(
     {
       title: 'Check Demurrage Risk',
       description: 'Analyze demurrage/detention risk for a container',
-      argsSchema: {
+      argsSchema: z.object({
         container_id: z.string().uuid().describe('Terminal49 container UUID'),
-      },
+      }),
     },
     async ({ container_id }) => ({
       messages: [
@@ -1768,9 +1539,9 @@ export function createTerminal49McpServer(
     {
       title: 'Analyze Journey Delays',
       description: 'Identify delays and root causes in container journey',
-      argsSchema: {
+      argsSchema: z.object({
         container_id: z.string().uuid().describe('Terminal49 container UUID'),
-      },
+      }),
     },
     async ({ container_id }) => ({
       messages: [
@@ -1891,14 +1662,19 @@ export async function runStdioServer() {
     process.exit(1);
   }
 
-  const server = createTerminal49McpServer(apiToken, apiBaseUrl);
-  const transport = new StdioServerTransport();
+  // Long-lived process: drain queued analytics on natural exit. No-ops (and
+  // registers no listener at all) when PostHog is unconfigured.
+  registerPostHogExitHook();
 
   if (process.env.T49_MCP_STDIO_BANNER === '1') {
     console.error('Terminal49 MCP Server v1.0.0 running on stdio');
     console.error('Available: 10 tools | 3 prompts | 4 resources');
-    console.error('SDK: @modelcontextprotocol/sdk (McpServer API)');
+    console.error('SDK: @modelcontextprotocol/server v2 (McpServer API)');
   }
 
-  await server.connect(transport);
+  serveStdio(() =>
+    createTerminal49McpServer(apiToken, apiBaseUrl, undefined, {
+      transport: 'stdio',
+    }),
+  );
 }

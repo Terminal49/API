@@ -35,7 +35,7 @@ Install the **Terminal49** plugin from the [Terminal49/agent-plugins](https://gi
     claude plugin install terminal49@terminal49
     ```
 
-    The first time the Terminal49 tools are used, sign in through the browser OAuth flow. If you aren't prompted, run `/mcp`, select **terminal49**, and choose **Authenticate**.
+    The first time the Terminal49 tools are used, sign in through the browser OAuth flow. If you aren't prompted, run `/mcp`, select **terminal49**, then select **Authenticate**.
 
     Prefer adding the MCP server directly? See the [Claude Code guide](/mcp/setup/claude-code).
   </Tab>
@@ -82,7 +82,7 @@ It should use tools such as `search_container`, `track_container`, and `get_cont
 |---------|------------|
 | Marketplace add fails | Confirm the marketplace reference is exactly `Terminal49/agent-plugins` (in Cursor, the full URL `https://github.com/Terminal49/agent-plugins`) |
 | Plugin installed but tools missing | Restart the agent session so it reloads the plugin's MCP configuration |
-| Sign-in window never opens | Pop-up blocked or no default browser — allow pop-ups and retry the authenticate action (in Claude Code, run `/mcp` and choose **Authenticate**) |
+| Sign-in window never opens | Pop-up blocked or no default browser — allow pop-ups and retry the authenticate action (in Claude Code, run `/mcp` and select **Authenticate**) |
 | `401 Unauthorized` after connecting | Re-authenticate from your client's MCP settings to refresh the OAuth token |
 
 For plugin sources, the shared skill, and contribution guidelines, see the [repository README](https://github.com/Terminal49/agent-plugins#readme).

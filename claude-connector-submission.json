@@ -1,0 +1,39 @@
+{
+  "$comment": "Reference values for the Claude Connectors Directory portal. Claude does not publish an upload schema for remote connector listings.",
+  "submission_url": "https://claude.ai/admin-settings/directory/submissions/new",
+  "server": {
+    "url": "https://mcp.terminal49.com",
+    "transport": "streamable-http",
+    "url_type": "universal",
+    "authentication": "oauth"
+  },
+  "listing": {
+    "name": "Terminal49",
+    "tagline": "Track ocean shipments",
+    "description": "Terminal49 helps users find and monitor ocean shipments and containers, inspect routes and transport events, check supported shipping lines, and create new tracking requests.",
+    "categories": [
+      "Business"
+    ],
+    "slug": "terminal49",
+    "documentation_url": "https://docs.terminal49.com/mcp/home",
+    "privacy_policy_url": "https://terminal49.com/privacy",
+    "terms_of_service_url": "https://terminal49.com/terms",
+    "support_email": "support@terminal49.com",
+    "icon": "public/store-icons/terminal49-light.png",
+    "icon_dark": "public/store-icons/terminal49-dark.png"
+  },
+  "company": {
+    "name": "Terminal49",
+    "website": "https://terminal49.com"
+  },
+  "capabilities": {
+    "reads_data": true,
+    "writes_data": true,
+    "primary_use_cases": [
+      "Find and monitor ocean shipments and containers",
+      "Inspect routes and transport events",
+      "Check supported shipping lines",
+      "Create new tracking requests"
+    ]
+  }
+}
