@@ -81,6 +81,14 @@ export function evaluateVerification(snapshot) {
   if (!ci?.run)
     return { passed: false, reasons: ['Current-head CI is missing'] };
   const { run, jobs, suite, workflow } = ci;
+  if (
+    typeof run.run_started_at !== 'string' ||
+    !Number.isFinite(Date.parse(run.run_started_at)) ||
+    !Array.isArray(ci.activeAttempts)
+  )
+    reasons.push('CI attempt start or active-attempt evidence is invalid');
+  else if (ci.activeAttempts.length > 0)
+    reasons.push('A current-head CI attempt is still active');
   const association = run.pull_requests?.find(
     (pull) => pull.number === snapshot.number,
   );

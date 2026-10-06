@@ -15,6 +15,7 @@ function snapshot(path = 'docs/updates/home.mdx') {
   const run = {
     id: 100,
     updated_at: '2026-10-06T05:00:00Z',
+    run_started_at: '2026-10-06T04:00:00Z',
     workflow_id: 7,
     path: CI_WORKFLOW,
     repository: { full_name: 'Terminal49/API' },
@@ -51,6 +52,7 @@ function snapshot(path = 'docs/updates/home.mdx') {
     ci: {
       workflow: { id: 7, path: CI_WORKFLOW },
       run,
+      activeAttempts: [],
       suite: { id: 11, app: APP, head_sha: MERGE },
       jobs: [
         ...CI_JOBS,
@@ -216,6 +218,12 @@ test('skipped, neutral, missing, stale and forged CI evidence all block', () => 
       v.ci.run.status = 'in_progress';
     },
     (v) => {
+      delete v.ci.run.run_started_at;
+    },
+    (v) => {
+      delete v.ci.activeAttempts;
+    },
+    (v) => {
       v.ci.run = null;
     },
     (v) => {
@@ -374,6 +382,13 @@ function fakeGithub(value, change = () => {}) {
       actions: {
         getWorkflow: async () => ({ data: value.ci.workflow }),
         listWorkflowRuns: marker('runs'),
+        getWorkflowRunAttempt: async ({ run_id, attempt_number }) => {
+          const run = (await github.paginate('runs')).find(
+            (item) => item.id === run_id && item.run_attempt === attempt_number,
+          );
+          if (!run) throw new Error('CI attempt is missing');
+          return { data: structuredClone(run) };
+        },
         listJobsForWorkflowRunAttempt: marker('jobs'),
       },
       checks: {
@@ -427,6 +442,7 @@ test('latest pending CI run cannot fall back to earlier success without a PR ass
             ...value.ci.run,
             id: 101,
             updated_at: '2026-10-06T06:00:00Z',
+            run_started_at: '2026-10-06T05:30:00Z',
             status: 'queued',
             conclusion: null,
             pull_requests: [],
@@ -460,6 +476,9 @@ test('head, review, permission or CI mutation during collection withholds candid
     },
     (v) => {
       v.ci.run.run_attempt = 3;
+    },
+    (v) => {
+      v.ci.run.run_started_at = '2026-10-06T06:00:00Z';
     },
   ]) {
     const value = snapshot();
@@ -559,6 +578,7 @@ test('an older CI run rerun recently cannot be replaced by an earlier success', 
             id: 99,
             run_attempt: 3,
             updated_at: '2026-10-06T06:00:00Z',
+            run_started_at: '2026-10-06T05:30:00Z',
             status: 'in_progress',
             conclusion: null,
           },
@@ -599,7 +619,7 @@ test('controller consumes Octokit normalized paginated response arrays', async (
   assert.equal(result.verification.runId, 100);
 });
 
-test('CI attempts with tied activity timestamps are ambiguous rather than successful', async () => {
+test('CI attempts with tied start timestamps are ambiguous rather than successful', async () => {
   const value = snapshot();
   const { github, summary } = fakeGithub(value);
   const paginate = github.paginate;
@@ -611,6 +631,7 @@ test('CI attempts with tied activity timestamps are ambiguous rather than succes
             ...value.ci.run,
             id: 99,
             run_attempt: 3,
+            updated_at: '2026-10-06T06:00:00Z',
             status: 'queued',
             conclusion: null,
           },
@@ -624,8 +645,170 @@ test('CI attempts with tied activity timestamps are ambiguous rather than succes
       number: 10,
       defaultBranch: 'main',
     }),
-    /CI run attempt freshness is ambiguous/,
+    /CI run attempt start is ambiguous/,
   );
+});
+
+test('an older CI completion cannot replace a newer pending or failed attempt', async () => {
+  for (const status of ['queued', 'completed']) {
+    const value = snapshot();
+    value.ci.run.updated_at = '2026-10-06T07:00:00Z';
+    const { github, summary } = fakeGithub(value);
+    const paginate = github.paginate;
+    github.paginate = async (endpoint, args) =>
+      endpoint === 'runs'
+        ? [
+            value.ci.run,
+            {
+              ...value.ci.run,
+              id: 101,
+              run_attempt: 1,
+              run_started_at: '2026-10-06T06:00:00Z',
+              updated_at: '2026-10-06T06:30:00Z',
+              status,
+              conclusion: status === 'completed' ? 'failure' : null,
+            },
+          ]
+        : paginate(endpoint, args);
+    const result = await reconcilePull({
+      github,
+      summary,
+      repository: value.repository,
+      number: 10,
+      defaultBranch: 'main',
+    });
+    assert.equal(result.verification.runId, 101);
+    assert.equal(result.candidate, false);
+    assert.equal(result.autoMergeEligible, false);
+    assert.ok(
+      result.reasons.some((reason) => reason.includes('CI run must complete')),
+    );
+  }
+});
+
+test('exact attempt timing overrides stale list timing for an old-ID rerun', async () => {
+  const value = snapshot();
+  value.ci.run.updated_at = '2026-10-06T07:00:00Z';
+  const { github, summary } = fakeGithub(value);
+  const paginate = github.paginate;
+  const rerun = {
+    ...value.ci.run,
+    id: 99,
+    run_attempt: 3,
+    run_started_at: '2026-10-06T03:00:00Z',
+    updated_at: '2026-10-06T03:30:00Z',
+    status: 'in_progress',
+    conclusion: null,
+  };
+  github.paginate = async (endpoint, args) =>
+    endpoint === 'runs' ? [value.ci.run, rerun] : paginate(endpoint, args);
+  const getAttempt = github.rest.actions.getWorkflowRunAttempt;
+  github.rest.actions.getWorkflowRunAttempt = async (args) => {
+    const response = await getAttempt(args);
+    if (args.run_id === rerun.id)
+      response.data.run_started_at = '2026-10-06T06:00:00Z';
+    return response;
+  };
+  const result = await reconcilePull({
+    github,
+    summary,
+    repository: value.repository,
+    number: 10,
+    defaultBranch: 'main',
+  });
+  assert.equal(result.verification.runId, 99);
+  assert.equal(result.verification.attempt, 3);
+  assert.equal(result.candidate, false);
+});
+
+test('an earlier active attempt blocks even after a later successful attempt', async () => {
+  const value = snapshot();
+  const { github, summary } = fakeGithub(value);
+  const paginate = github.paginate;
+  github.paginate = async (endpoint, args) =>
+    endpoint === 'runs'
+      ? [
+          value.ci.run,
+          {
+            ...value.ci.run,
+            id: 99,
+            run_started_at: '2026-10-06T03:00:00Z',
+            updated_at: '2026-10-06T03:30:00Z',
+            status: 'in_progress',
+            conclusion: null,
+          },
+        ]
+      : paginate(endpoint, args);
+  const result = await reconcilePull({
+    github,
+    summary,
+    repository: value.repository,
+    number: 10,
+    defaultBranch: 'main',
+  });
+  assert.equal(result.verification.runId, 100);
+  assert.equal(result.candidate, false);
+  assert.ok(result.reasons.some((reason) => reason.includes('still active')));
+});
+
+test('missing or invalid exact attempt starts fail closed', async () => {
+  for (const started of [undefined, '', 'invalid']) {
+    const value = snapshot();
+    const { github } = fakeGithub(value);
+    const getAttempt = github.rest.actions.getWorkflowRunAttempt;
+    github.rest.actions.getWorkflowRunAttempt = async (args) => {
+      const response = await getAttempt(args);
+      response.data.run_started_at = started;
+      return response;
+    };
+    await assert.rejects(
+      collectSnapshot(github, value.repository, 10, 'main'),
+      /CI run attempt start is unavailable/,
+    );
+  }
+});
+
+test('exact attempt responses must match the listed run identity', async () => {
+  for (const field of [
+    'id',
+    'run_attempt',
+    'workflow_id',
+    'head_sha',
+    'check_suite_id',
+  ]) {
+    const value = snapshot();
+    const { github } = fakeGithub(value);
+    const getAttempt = github.rest.actions.getWorkflowRunAttempt;
+    github.rest.actions.getWorkflowRunAttempt = async (args) => {
+      const response = await getAttempt(args);
+      response.data[field] = field === 'head_sha' ? BASE : 999;
+      return response;
+    };
+    await assert.rejects(
+      collectSnapshot(github, value.repository, 10, 'main'),
+      /CI run attempt identity changed during collection/,
+    );
+  }
+});
+
+test('tied completion timestamps do not obscure distinct attempt starts', async () => {
+  const value = snapshot();
+  const { github } = fakeGithub(value);
+  const paginate = github.paginate;
+  github.paginate = async (endpoint, args) =>
+    endpoint === 'runs'
+      ? [
+          value.ci.run,
+          {
+            ...value.ci.run,
+            id: 99,
+            run_started_at: '2026-10-06T03:00:00Z',
+          },
+        ]
+      : paginate(endpoint, args);
+  const collected = await collectSnapshot(github, value.repository, 10, 'main');
+  assert.equal(collected.ci.run.id, 100);
+  assert.equal(evaluateTrust(collected).candidate, true);
 });
 
 test('CI workflow run paths may include the documented ref qualifier', () => {

@@ -73,26 +73,60 @@ export async function collectSnapshot(
         per_page: 100,
       },
     )) {
+      if (runs.has(run.id) && runs.get(run.id).run_attempt !== run.run_attempt)
+        throw new Error('CI run attempt changed during collection');
       runs.set(run.id, run);
     }
   }
-  for (const run of runs.values()) {
-    if (!Number.isFinite(Date.parse(run.updated_at ?? ''))) {
-      throw new Error('CI run attempt freshness is unavailable');
-    }
+  const attempts = [];
+  for (const listed of runs.values()) {
+    if (
+      !Number.isSafeInteger(listed.id) ||
+      listed.id < 1 ||
+      !Number.isSafeInteger(listed.run_attempt) ||
+      listed.run_attempt < 1
+    )
+      throw new Error('CI run attempt identity is invalid');
+    const { data: attempt } = await github.rest.actions.getWorkflowRunAttempt({
+      ...params,
+      run_id: listed.id,
+      attempt_number: listed.run_attempt,
+    });
+    if (
+      attempt.id !== listed.id ||
+      attempt.run_attempt !== listed.run_attempt ||
+      attempt.workflow_id !== listed.workflow_id ||
+      attempt.head_sha !== listed.head_sha ||
+      attempt.check_suite_id !== listed.check_suite_id
+    )
+      throw new Error('CI run attempt identity changed during collection');
+    if (
+      typeof attempt.run_started_at !== 'string' ||
+      !Number.isFinite(Date.parse(attempt.run_started_at))
+    )
+      throw new Error('CI run attempt start is unavailable');
+    attempts.push(attempt);
   }
-  const orderedRuns = [...runs.values()].sort(
-    (a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at),
+  const orderedRuns = attempts.sort(
+    (a, b) => Date.parse(b.run_started_at) - Date.parse(a.run_started_at),
   );
   const run = orderedRuns[0];
-  if (
-    run &&
-    orderedRuns[1] &&
-    Date.parse(run.updated_at) === Date.parse(orderedRuns[1].updated_at)
-  ) {
-    throw new Error('CI run attempt freshness is ambiguous');
+  for (let index = 1; index < orderedRuns.length; index++) {
+    if (
+      Date.parse(orderedRuns[index - 1].run_started_at) ===
+      Date.parse(orderedRuns[index].run_started_at)
+    )
+      throw new Error('CI run attempt start is ambiguous');
   }
-  let ci = { workflow, run: null };
+  const activeAttempts = orderedRuns
+    .filter((attempt) => attempt.status !== 'completed')
+    .map((attempt) => ({
+      id: attempt.id,
+      run_attempt: attempt.run_attempt,
+      run_started_at: attempt.run_started_at,
+      status: attempt.status,
+    }));
+  let ci = { workflow, run: null, activeAttempts };
   if (run) {
     const { data: suite } = await github.rest.checks.getSuite({
       ...params,
@@ -126,6 +160,7 @@ export async function collectSnapshot(
     }
     ci = {
       workflow: { id: workflow.id, path: workflow.path },
+      activeAttempts,
       run: {
         id: run.id,
         workflow_id: run.workflow_id,
@@ -143,6 +178,7 @@ export async function collectSnapshot(
         status: run.status,
         conclusion: run.conclusion,
         run_attempt: run.run_attempt,
+        run_started_at: run.run_started_at,
       },
       suite: {
         id: suite.id,
