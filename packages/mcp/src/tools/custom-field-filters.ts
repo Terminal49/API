@@ -2,17 +2,21 @@
  * Resolve custom field filters written the way a user says them ("Sales Rep",
  * "incoterm") into the api_slug keys the API filters on.
  *
- * The API silently ignores an unknown slug and returns the unfiltered list, so
- * every key is checked against the account's definitions before the request.
- * Only text and enum fields filter on the deployed API (checked 2026-10-06);
- * number, boolean, and date fields are rejected instead of returning an
- * unscoped list that looks scoped.
+ * Names resolve against the account's own definitions
+ * (GET /accounts/:id/custom_field_definitions). The unscoped
+ * GET /custom_field_definitions lists templates, which the account may never
+ * have added, and the API silently ignores a slug the account doesn't define
+ * and returns the unfiltered list. So every key is checked first, and values
+ * are normalized to the shape each data type filters on.
  */
 
 import { Terminal49Client, ValidationError } from '@terminal49/sdk';
 
-const FILTERABLE_TYPES = new Set(['short_text', 'enum', 'enum_multi']);
+const TEXT_TYPES = new Set(['short_text', 'enum', 'enum_multi']);
+const DATE_TYPES = new Set(['date', 'datetime']);
 const PRESENCE = new Set(['@exists', '@not_exists']);
+const DATE_EXPRESSION = /^(>=|<=|>|<|=)?(\d{4}-\d{2}-\d{2})$/;
+const NUMBER_EXPRESSION = /^=?(-?\d+(?:\.\d+)?)$/;
 
 interface Definition {
   slug: string;
@@ -31,14 +35,40 @@ export interface ResolvedCustomFieldFilter {
 const normalize = (text: string) =>
   text.toLowerCase().replace(/[^a-z0-9]/g, '');
 
+function invalid(definition: Definition | string, reason: string): never {
+  const name = typeof definition === 'string' ? definition : definition.name;
+  throw new ValidationError(
+    `Invalid custom field filter "${name}": ${reason}`,
+    400,
+    {
+      filter: 'custom_fields',
+      field: typeof definition === 'string' ? definition : definition.slug,
+    },
+  );
+}
+
+// The API takes the account from the credential and ignores the id in the
+// path, but the route needs one. OAuth sessions carry it; an API key belongs to
+// exactly one account, which /accounts returns.
+async function accountId(client: Terminal49Client): Promise<string> {
+  if (client.accountId) return client.accountId;
+  const doc: any = await client.accounts.list({ pageSize: 2, format: 'raw' });
+  const accounts = Array.isArray(doc?.data) ? doc.data : [];
+  if (accounts.length === 1 && accounts[0]?.id) return String(accounts[0].id);
+  throw new ValidationError(
+    'Custom field filters need the account: sign in to a single Terminal49 account.',
+    400,
+    { filter: 'custom_fields' },
+  );
+}
+
 async function loadDefinitions(
   client: Terminal49Client,
 ): Promise<Definition[]> {
-  const doc: any = await client.customFieldDefinitions.list({
-    include: 'options',
-    pageSize: 100,
-    format: 'raw',
-  });
+  const doc: any = await client.customFieldDefinitions.listForAccount(
+    await accountId(client),
+    { include: 'options', pageSize: 100, format: 'raw' },
+  );
   const options = new Map<string, string>();
   for (const item of doc?.included ?? []) {
     if (item?.type === 'custom_field_option' && item.attributes?.value)
@@ -83,14 +113,45 @@ function enumValue(definition: Definition, value: string): string {
         (o) => o.toLowerCase() === term.toLowerCase(),
       );
       if (!option)
-        throw new ValidationError(
-          `Invalid custom field filter "${definition.name}": "${term}" is not an option. Options: ${definition.options.join(', ')}.`,
-          400,
-          { filter: 'custom_fields', field: definition.slug },
+        invalid(
+          definition,
+          `"${term}" is not an option. Options: ${definition.options.join(', ')}.`,
         );
       return option;
     })
     .join(',');
+}
+
+function filterValue(definition: Definition, raw: string): string {
+  const value = raw.trim();
+  if (PRESENCE.has(value)) return value;
+  const type = definition.dataType;
+  if (type === 'short_text') return value;
+  if (TEXT_TYPES.has(type)) return enumValue(definition, value);
+  if (type === 'boolean') {
+    const flag = value.toLowerCase();
+    if (['true', 'yes'].includes(flag)) return 'true';
+    if (['false', 'no'].includes(flag)) return 'false';
+    invalid(definition, 'expected true, false, @exists, or @not_exists.');
+  }
+  if (DATE_TYPES.has(type)) {
+    if (!DATE_EXPRESSION.test(value))
+      invalid(
+        definition,
+        'expected a date such as 2026-10-01, optionally prefixed with >=, <=, >, <, or =, or @exists / @not_exists.',
+      );
+    return value;
+  }
+  if (type === 'number' || type === 'decimal') {
+    const match = NUMBER_EXPRESSION.exec(value);
+    if (!match)
+      invalid(
+        definition,
+        'number fields filter by an exact number or @exists / @not_exists; comparisons are not supported by the API.',
+      );
+    return match[1];
+  }
+  invalid(definition, `${type} custom fields cannot be filtered.`);
 }
 
 export async function resolveCustomFieldFilters(
@@ -103,29 +164,16 @@ export async function resolveCustomFieldFilters(
   if (!requested || Object.keys(requested).length === 0)
     return { resolved: [] };
   const definitions = await loadDefinitions(client);
-  const filterable = definitions.filter((d) =>
-    FILTERABLE_TYPES.has(d.dataType),
-  );
   const customFields: Record<string, string> = {};
   const resolved: ResolvedCustomFieldFilter[] = [];
   for (const [field, raw] of Object.entries(requested)) {
     const definition = findDefinition(definitions, field);
     if (!definition)
-      throw new ValidationError(
-        `Invalid custom field filter "${field}": no custom field with that name. Filterable fields: ${filterable.map((d) => d.name).join(', ') || 'none'}.`,
-        400,
-        { filter: 'custom_fields', field },
+      invalid(
+        field,
+        `this account has no custom field with that name. Its fields: ${definitions.map((d) => d.name).join(', ') || 'none'}.`,
       );
-    if (!FILTERABLE_TYPES.has(definition.dataType))
-      throw new ValidationError(
-        `Invalid custom field filter "${definition.name}": ${definition.dataType} custom fields cannot be filtered yet. Read the field from container details instead.`,
-        400,
-        { filter: 'custom_fields', field: definition.slug },
-      );
-    const value =
-      definition.dataType === 'short_text'
-        ? raw.trim()
-        : enumValue(definition, raw);
+    const value = filterValue(definition, raw);
     customFields[definition.slug] = value;
     resolved.push({
       field: definition.name,

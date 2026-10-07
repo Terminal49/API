@@ -7491,12 +7491,12 @@
           {
             "in": "query",
             "name": "filter[custom_fields]",
-            "description": "Filter by account-defined custom fields, keyed by the field's api_slug from GET /custom_field_definitions. Supported for short_text, enum, and enum_multi fields: a value matches containers whose own or shipment custom field contains that text (case-sensitive substring); comma-separated values mean OR; @exists and @not_exists test presence. Different slugs combine with AND. Unknown slugs are ignored by the API, so resolve slugs from the account's definitions first. Number, boolean, and date fields did not filter in deployed checks on 2026-10-06.",
+            "description": "Filter by the account's own custom fields, keyed by api_slug from GET /accounts/{account_id}/custom_field_definitions (GET /custom_field_definitions lists templates, which an account may not have added). Text and enum values match containers whose own or shipment value contains the text (case-sensitive substring), with comma-separated values meaning OR; boolean fields take true or false; date and datetime fields take YYYY-MM-DD with an optional >=, <=, >, <, or = prefix; number fields take an exact number. Every type accepts @exists and @not_exists. Different slugs combine with AND. Slugs the account does not define are ignored by the API, so resolve them first.",
             "schema": {
               "type": "object",
               "additionalProperties": {
                 "type": "string",
-                "description": "Text to match, comma-separated alternatives, or @exists / @not_exists."
+                "description": "Text, true/false, a date expression, an exact number, comma-separated text alternatives, or @exists / @not_exists."
               }
             },
             "style": "deepObject",

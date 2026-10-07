@@ -452,3 +452,17 @@ describe('custom field filters', () => {
     );
   });
 });
+
+describe('account custom field definitions', () => {
+  it("lists the account's own definitions, not templates", async () => {
+    const { client, urls } = clientFixture();
+    await client.customFieldDefinitions.listForAccount('acct-1', {
+      include: 'options',
+      pageSize: 100,
+    });
+    expect(urls[0].pathname).toBe(
+      '/v2/accounts/acct-1/custom_field_definitions',
+    );
+    expect(urls[0].searchParams.get('include')).toBe('options');
+  });
+});

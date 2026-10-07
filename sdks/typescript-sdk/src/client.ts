@@ -104,6 +104,8 @@ export class Terminal49Client {
   private transport: Transport;
   private jsona: Jsona;
   private defaultFormat: ResponseFormat;
+  /** Account id sent as `x-account-id`, when configured. */
+  public readonly accountId?: string;
 
   public shipments: ShipmentManager;
   public containers: ContainerManager;
@@ -160,9 +162,19 @@ export class Terminal49Client {
     get: (id: string, options?: CallOptions) => this.getMetroArea(id, options),
   };
 
+  public accounts = {
+    list: (options?: ListOptions) => this.listAccounts(options),
+  };
+
   public customFieldDefinitions = {
+    /** Templates offered to every account, not the account's own fields. */
     list: (options?: ListOptions & { include?: 'options' }) =>
       this.listCustomFieldDefinitions(options),
+    /** The fields this account has defined; these are what list filters match. */
+    listForAccount: (
+      accountId: string,
+      options?: ListOptions & { include?: 'options' },
+    ) => this.listAccountCustomFieldDefinitions(accountId, options),
     get: (id: string, options?: CallOptions) =>
       this.getCustomFieldDefinition(id, options),
     create: (payload: Record<string, unknown>, options?: CallOptions) =>
@@ -216,6 +228,7 @@ export class Terminal49Client {
       throw new AuthenticationError('API token is required');
     }
 
+    this.accountId = config.accountId;
     const baseUrl = normalizeBaseUrl(config.apiBaseUrl);
     const defaultFormat = config.defaultFormat ?? 'raw';
     this.defaultFormat = defaultFormat;
@@ -626,7 +639,35 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
-  /** List custom field definitions; `include: 'options'` embeds enum options. */
+  /** List the accounts visible to this credential. */
+  async listAccounts(options?: ListOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint('/accounts', this.listQuery(options)),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /**
+   * List an account's own custom field definitions (the API scopes them to the
+   * authenticated account); `include: 'options'` embeds enum options.
+   */
+  async listAccountCustomFieldDefinitions(
+    accountId: string,
+    options?: ListOptions & { include?: 'options' },
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(
+        `/accounts/${encodeURIComponent(accountId)}/custom_field_definitions`,
+        { ...this.listQuery(options), include: options?.include },
+      ),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /**
+   * List custom field definition templates (not the account's own fields);
+   * `include: 'options'` embeds enum options.
+   */
   async listCustomFieldDefinitions(
     options?: ListOptions & { include?: 'options' },
   ): Promise<any> {

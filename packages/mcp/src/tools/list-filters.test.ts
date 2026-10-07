@@ -55,7 +55,11 @@ function fakeClient(links: unknown = { next: null }) {
       ),
   );
   return {
-    client: new Terminal49Client({ apiToken: 'TEST_KEY', fetchImpl }),
+    client: new Terminal49Client({
+      apiToken: 'TEST_KEY',
+      accountId: 'acct-1',
+      fetchImpl,
+    }),
     fetchImpl,
   };
 }

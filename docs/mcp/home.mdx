@@ -447,7 +447,7 @@ Use the typed `advanced_filters` object for the full container filter catalog. U
 - `arrival` *(string or string[], optional)* - arrival date expressions or bounds.
 - `pickup_lfd` *(string or string[], optional)* - pickup Last Free Day date expressions or bounds.
 - `tags` *(string or string[], optional)* - related shipment tags.
-- `custom_fields` *(object, optional)* - account-defined custom fields keyed by display name or `api_slug`, such as `{ "Sales Rep": "Jane" }` or `{ "Incoterm": "FOB" }`. Text matches by case-sensitive contains; enum values match an option case-insensitively; `@exists` and `@not_exists` test presence. Unknown names return an error listing the filterable fields. Text and enum fields only.
+- `custom_fields` *(object, optional)* - the account's own custom fields keyed by display name or `api_slug`, such as `{ "Sales Rep": "Jane" }`, `{ "Incoterm": "FOB" }`, `{ "Needs Refrigeration": "true" }`, or `{ "Planned Delivery Date": ">=2026-10-01" }`. Text matches by case-sensitive contains; enum values match an option case-insensitively; yes/no takes `true`/`false`; dates take an optional `>=`, `<=`, `>`, `<`, or `=`; numbers take an exact value; `@exists` and `@not_exists` test presence. Unknown names return an error listing the account's fields.
 - `advanced_filters` *(object, optional)* - complete typed container filter catalog.
 - `sort` *(string, optional)* - supported server sort token or tokens.
 - `include` *(string[], optional)* - `shipment`, `pod_terminal`, or both.

@@ -77,7 +77,7 @@ export const containerListInputSchema = z.strictObject({
       'expected at least one field',
     )
     .describe(
-      'Account-defined custom fields, keyed by display name (for example "Sales Rep") or api_slug. Text fields match containers whose own or shipment value contains the text (case-sensitive); enum values match an option, case-insensitively. Comma-separated values mean OR; @exists and @not_exists test presence. Different fields combine with AND. Unknown names return an error listing the filterable fields. Number, boolean, and date fields are not filterable yet.',
+      'The account\'s own custom fields, keyed by display name (for example "Sales Rep") or api_slug. Text fields match a value the container or its shipment contains (case-sensitive); enum values match an option, case-insensitively; comma-separated text values mean OR. Yes/no fields take true or false; date fields take YYYY-MM-DD with an optional >=, <=, >, <, or = prefix; number fields take an exact number. @exists and @not_exists test presence. Different fields combine with AND. Unknown names return an error listing the account\'s fields.',
     )
     .optional(),
   advanced_filters: z
