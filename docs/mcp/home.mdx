@@ -413,7 +413,7 @@ Use the typed `advanced_filters` object for the full shipment filter catalog. Us
 - `advanced_filters` *(object, optional)* - complete typed shipment filter catalog.
 - `sort` *(string, optional)* - supported server sort token or tokens.
 - `include_containers` *(boolean, optional)* - include related containers. Default false.
-- `include_stopped_tracking` *(boolean, optional)* - include records whose tracking stopped. Default false: like the dashboard, only actively tracked records are returned unless `actively_tracked` is set. Set true for history over a past period.
+- `include_stopped_tracking` *(boolean, optional)* - set true to include both active and stopped records for historical queries. Default false. Explicit tracking filters take precedence; use `actively_tracked: false` for stopped records only.
 - `page` *(number, optional)* - page number, starting at 1.
 - `page_size` *(number, optional)* - page size. Default 25, maximum 25.
 
@@ -451,7 +451,7 @@ Use the typed `advanced_filters` object for the full container filter catalog. U
 - `advanced_filters` *(object, optional)* - complete typed container filter catalog.
 - `sort` *(string, optional)* - supported server sort token or tokens.
 - `include` *(string[], optional)* - `shipment`, `pod_terminal`, or both.
-- `include_stopped_tracking` *(boolean, optional)* - include records whose tracking stopped. Default false: like the dashboard, only actively tracked records are returned unless `actively_tracked` is set. Set true for history over a past period.
+- `include_stopped_tracking` *(boolean, optional)* - set true to include both active and stopped records for historical queries. Default false. Explicit tracking filters take precedence; use `actively_tracked: false` for stopped records only.
 - `page` *(number, optional)* - page number, starting at 1.
 - `page_size` *(number, optional)* - page size. Default 25, maximum 25.
 
