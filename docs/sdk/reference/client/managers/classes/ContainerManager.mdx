@@ -218,3 +218,24 @@ description: "ContainerManager reference for the Terminal49 TypeScript SDK, used
 #### Returns
 
 `Promise`\<`any`\>
+
+***
+
+### summary()
+
+> **summary**(`groupBy`, `filters?`, `options?`): `Promise`\<`any`\>
+
+Count the containers `list` would return for the same filters, grouped by
+one dimension, in one request (`GET /containers/summary`).
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `groupBy` | [`ContainerSummaryGroupBy`](/sdk/reference/types/options/type-aliases/ContainerSummaryGroupBy) |
+| `filters` | [`ContainerListFilters`](/sdk/reference/types/filters/interfaces/ContainerListFilters) |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
