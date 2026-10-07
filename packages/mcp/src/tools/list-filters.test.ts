@@ -301,3 +301,35 @@ describe('actively tracked default', () => {
     ).toEqual({ current_status: 'picked_up' });
   });
 });
+
+describe('historical and stopped-only requests', () => {
+  for (const [name, execute] of [
+    ['containers', executeListContainers],
+    ['shipments', executeListShipments],
+  ] as const) {
+    it.each([
+      [{ include_stopped_tracking: true }, null],
+      [{ actively_tracked: false }, 'false'],
+      [{ include_stopped_tracking: true, actively_tracked: true }, 'true'],
+      [{ advanced_filters: { actively_tracked: false } }, 'false'],
+    ])(
+      `${name} preserves the requested tracking scope through the SDK: %j`,
+      async (args, expected) => {
+        const { client, fetchImpl } = fakeClient();
+        await execute(args, client);
+        const request = fetchImpl.mock.calls[0][0] as Request;
+        const url = new URL(request.url);
+        expect(url.searchParams.get('filter[actively_tracked]')).toBe(expected);
+        expect(url.searchParams.has('include_stopped_tracking')).toBe(false);
+      },
+    );
+  }
+  it('keeps stopped-only shipment queries when history is enabled', () => {
+    expect(
+      getShipmentFilters({
+        include_stopped_tracking: true,
+        tracking_stopped: true,
+      }),
+    ).toEqual({ tracking_stopped: true });
+  });
+});
