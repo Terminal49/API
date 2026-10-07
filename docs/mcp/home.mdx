@@ -413,7 +413,7 @@ Use the typed `advanced_filters` object for the full shipment filter catalog. Us
 - `advanced_filters` *(object, optional)* - complete typed shipment filter catalog.
 - `sort` *(string, optional)* - supported server sort token or tokens.
 - `include_containers` *(boolean, optional)* - include related containers. Default false.
-- `include_stopped_tracking` *(boolean, optional)* - include records whose tracking stopped. Default false: like the dashboard, only actively tracked records are returned unless `actively_tracked` is set. Set true for history over a past period.
+- `include_stopped_tracking` *(boolean, optional)* - set true to include both active and stopped records for historical queries. Default false. Explicit tracking filters take precedence; use `actively_tracked: false` for stopped records only.
 - `page` *(number, optional)* - page number, starting at 1.
 - `page_size` *(number, optional)* - page size. Default 25, maximum 25.
 
@@ -434,6 +434,8 @@ Return one page of containers with verified API filters. Common inputs include `
 
 Use the typed `advanced_filters` object for the full container filter catalog. Use `sort` for server ordering and `include` to add `shipment`, `pod_terminal`, or both. Pages default to 25 rows and cannot exceed 25.
 
+Compact rows retain the terminal check time, POD timezone, shipment ID, and active hold descriptions. Empty `holds` or `fees` arrays mean none were reported; omitted fields mean the data is unavailable.
+
 **Parameters**
 
 - `number` *(string or string[], optional)* - exact container number. Comma-separated numbers match any; arrays require all.
@@ -451,7 +453,7 @@ Use the typed `advanced_filters` object for the full container filter catalog. U
 - `advanced_filters` *(object, optional)* - complete typed container filter catalog.
 - `sort` *(string, optional)* - supported server sort token or tokens.
 - `include` *(string[], optional)* - `shipment`, `pod_terminal`, or both.
-- `include_stopped_tracking` *(boolean, optional)* - include records whose tracking stopped. Default false: like the dashboard, only actively tracked records are returned unless `actively_tracked` is set. Set true for history over a past period.
+- `include_stopped_tracking` *(boolean, optional)* - set true to include both active and stopped records for historical queries. Default false. Explicit tracking filters take precedence; use `actively_tracked: false` for stopped records only.
 - `view` *(string, optional)* - `compact` (default) returns number, status, availability, POD terminal, key dates, LFD, holds, fees and the shipment's BL, carrier and POD ETA; `full` returns every attribute.
 - `page` *(number, optional)* - page number, starting at 1.
 - `page_size` *(number, optional)* - page size. Default 25, maximum 25.

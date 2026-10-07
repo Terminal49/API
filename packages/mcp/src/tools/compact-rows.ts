@@ -16,16 +16,13 @@ const present = <T>(value: T | null | undefined): value is T =>
 
 function withoutEmpty<T extends Record<string, unknown>>(row: T): Partial<T> {
   return Object.fromEntries(
-    Object.entries(row).filter(
-      ([, value]) =>
-        present(value) && !(Array.isArray(value) && value.length === 0),
-    ),
+    Object.entries(row).filter(([, value]) => present(value)),
   ) as Partial<T>;
 }
 
 export function compactContainer(container: any) {
-  const holds: Hold[] = container?.demurrage?.holds ?? [];
-  const fees: Fee[] = container?.demurrage?.fees ?? [];
+  const holds: Hold[] | null | undefined = container?.demurrage?.holds;
+  const fees: Fee[] | null | undefined = container?.demurrage?.fees;
   const shipment = container?.shipment;
   return withoutEmpty({
     id: container?.id,
@@ -39,9 +36,11 @@ export function compactContainer(container: any) {
     pickup_lfd: container?.demurrage?.pickupLfd,
     pickup_appointment_at: container?.demurrage?.pickupAppointmentAt,
     holds: holds
-      .filter((hold) => hold?.status === 'hold')
-      .map((hold) => hold.name ?? hold.description ?? 'hold'),
-    fees: fees.map((fee) =>
+      ?.filter((hold) => hold?.status === 'hold')
+      .map((hold) =>
+        withoutEmpty({ name: hold.name, description: hold.description }),
+      ),
+    fees: fees?.map((fee) =>
       withoutEmpty({
         type: fee?.type,
         amount: fee?.amount,
@@ -50,6 +49,7 @@ export function compactContainer(container: any) {
     ),
     shipment: shipment
       ? withoutEmpty({
+          id: shipment.id,
           bill_of_lading: shipment.billOfLading,
           shipping_line_scac: shipment.shippingLineScac,
           port_of_discharge: shipment.portOfDischargeName,
@@ -58,6 +58,7 @@ export function compactContainer(container: any) {
           pod_ata_at: shipment.podAtaAt,
         })
       : undefined,
-    last_status_refresh_at: container?.lastStatusRefreshAt,
+    terminal_checked_at: container?.terminalCheckedAt,
+    pod_timezone: container?.podTimezone,
   });
 }
