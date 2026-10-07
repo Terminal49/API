@@ -89,8 +89,16 @@ export const containerListInputSchema = z.strictObject({
   include: z
     .array(z.enum(['shipment', 'pod_terminal']))
     .max(2)
-    .describe('Related resources included in this page.')
+    .describe(
+      'Related resources included in this page. Compact rows include both by default.',
+    )
     .optional(),
+  view: z
+    .enum(['compact', 'full'])
+    .describe(
+      'compact (default): number, status, availability, POD terminal, key dates, LFD, holds, fees and the shipment BL, carrier and POD ETA. full: every attribute, for fields compact rows omit.',
+    )
+    .default('compact'),
   ...paginationShape,
 });
 export type ListShipmentsArgs = z.input<typeof shipmentListInputSchema>;

@@ -768,7 +768,7 @@ describe('MCP server wiring', () => {
   it.each([
     {
       name: 'list_containers',
-      args: { page: 1, page_size: 10 },
+      args: { page: 1, page_size: 10, view: 'full' },
       listMock: containersList,
       payload: {
         items: [

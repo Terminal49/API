@@ -158,6 +158,7 @@ const NON_FILTER_LIST_ARGS = new Set([
   'include',
   'include_containers',
   'include_stopped_tracking',
+  'view',
   'sort',
   'advanced_filters',
   'intent',

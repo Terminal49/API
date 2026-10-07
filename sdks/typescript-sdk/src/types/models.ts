@@ -81,6 +81,11 @@ export interface Shipment {
   billOfLading?: string;
   shippingLineScac?: string;
   customerName?: string;
+  /** Set on the shipment summary embedded in a mapped container. */
+  portOfDischargeName?: string | null;
+  podVesselName?: string | null;
+  podEtaAt?: string | null;
+  podAtaAt?: string | null;
   ports?: {
     portOfLading?: {
       locode?: string | null;
