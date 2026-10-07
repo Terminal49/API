@@ -434,6 +434,8 @@ Return one page of containers with verified API filters. Common inputs include `
 
 Use the typed `advanced_filters` object for the full container filter catalog. Use `sort` for server ordering and `include` to add `shipment`, `pod_terminal`, or both. Pages default to 25 rows and cannot exceed 25.
 
+Compact rows retain the terminal check time, POD timezone, shipment ID, and active hold descriptions. Empty `holds` or `fees` arrays mean none were reported; omitted fields mean the data is unavailable.
+
 **Parameters**
 
 - `number` *(string or string[], optional)* - exact container number. Comma-separated numbers match any; arrays require all.
