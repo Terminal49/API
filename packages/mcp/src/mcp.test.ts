@@ -488,9 +488,9 @@ describe('MCP server wiring', () => {
         createTerminal49McpServer('token') as any
       )._registeredTools[name].handler({ pod_code: '=PRIVATE_VALUE' });
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('expected literal values');
-      expect(result.content[0].text).toContain('tool schema');
-      expect(result.content[0].text).not.toContain('PRIVATE_VALUE');
+      expect(result.content[0].text).toBe(
+        'Invalid list filter "pod_code": expected literal values, not comparison expressions. Use the filter values and operators documented in the tool schema.',
+      );
     },
   );
 
