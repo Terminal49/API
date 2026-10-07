@@ -47,3 +47,14 @@ for (const path of ['/shipments', '/containers']) {
     assert.equal(query.find(({ key }) => key === 'page[size]').value, '30');
   });
 }
+
+
+test('tracking request custom fields keep the correct related entity in generated examples', () => {
+  const item = requests(collection.item).find((candidate) => candidate.name === 'List tracking request custom fields');
+  assert.ok(item);
+  assert.ok(item.response.length);
+  for (const response of item.response) {
+    const body = JSON.parse(response.body);
+    assert.equal(body.data[0].relationships.entity.data.type, 'tracking_request');
+  }
+});

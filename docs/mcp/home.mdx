@@ -472,8 +472,11 @@ Find the companies on the account's shipments (customers, shippers, consignees, 
 
 **Parameters**
 
-- `search` *(string, optional)* - company name or the start of a word in it; case is ignored. Searched by the API (`GET /v2/parties?query=`).
-- `limit` *(number, optional)* - most parties to return. Default 25, maximum 50.
+- `search` *(string, optional)* - company-name substring; case is ignored. Searched by the API (`GET /v2/parties?query=`).
+- `limit` *(number, optional)* - most parties per page. Default 25, maximum 50.
+- `page` *(number, optional)* - page number, starting at 1.
+
+Follow `next_page` with the same `search` and `limit` until it is null. `truncated` means this response is only part of the matching set, including when earlier pages exist. Use returned `nickname` and `role_names` to distinguish companies; ask for clarification when the name or role remains ambiguous.
 
 **Good for**
 
