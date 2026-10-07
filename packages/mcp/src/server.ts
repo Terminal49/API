@@ -1463,7 +1463,7 @@ export function createTerminal49McpServer(
       title: 'List Parties',
       description:
         "Find the companies on this account's shipments (customers, shippers, consignees, customs brokers, freight forwarders, dray carriers) by name and return their IDs. " +
-        'Use it before list_containers when a question names a company, then filter with advanced_filters.parties keyed by role, for example { "customer": "<id>" }.',
+        'Search matches company-name substrings, ignoring case. Follow next_page with the same search and limit. Use nickname and role_names to distinguish matches, and ask the user when ambiguous. Use it before list_containers when a question names a company, then filter with advanced_filters.parties keyed by role, for example { "customer": "<id>" }.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1472,7 +1472,16 @@ export function createTerminal49McpServer(
       inputSchema: z.preprocess(stripLegacyIntent, listPartiesInputSchema),
       outputSchema: z.object({
         total_matched: z.number(),
-        parties: z.array(z.object({ id: z.string(), name: z.string() })),
+        parties: z.array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            nickname: z.string().optional(),
+            role_names: z.array(z.string()).optional(),
+          }),
+        ),
+        page: z.number().int().positive(),
+        next_page: z.number().int().positive().nullable(),
         truncated: z.boolean(),
         usage: z.string(),
       }),

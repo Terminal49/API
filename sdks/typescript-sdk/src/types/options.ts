@@ -28,8 +28,8 @@ export interface ListOptions extends CallOptions {
 /** Options for `parties.list`. */
 export interface PartyListOptions extends ListOptions {
   /**
-   * Search by company name: whole words and word prefixes, ignoring case
-   * ("blue" matches "Bluewave Home Goods").
+   * Search by company-name substring, ignoring case
+   * ("wave" matches "Bluewave Home Goods").
    */
   query?: string;
 }
