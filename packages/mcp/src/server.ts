@@ -1436,6 +1436,7 @@ export function createTerminal49McpServer(
         'Like the dashboard, only actively tracked containers are returned unless include_stopped_tracking is true (use it for history such as pickups or dwell over a past period). ' +
         'Use the dashboard definitions and report meta.total for that set before any narrowing: ready for pickup = current_status available; at risk of demurrage or needs attention = requires_attention true with sort attention_priority (the Containers at Risk view); discharged but not picked up = current_status available,not_available,grounded,awaiting_inland_transfer. ' +
         'Add extra conditions such as LFD windows, fees or holds only when the user asks, and present them as a subset of that total. ' +
+        'LFD in the next N days means containers still at the terminal: current_status available,not_available,grounded with pickup_lfd [">=today", "<=N.days.from_now"]; LFDs already past are separate (pickup_lfd "<today"). Arriving in the next N days: arrival [">=today", "<=N.days.from_now"]. "Next N days" includes today and day N; today is the API server\'s UTC date, so state the dates you used. ' +
         'Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_container with a returned UUID for a detailed snapshot. Do not pass conversation text into filters.',
       annotations: {
         readOnlyHint: true,
