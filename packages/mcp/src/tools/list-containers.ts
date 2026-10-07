@@ -5,6 +5,7 @@
 
 import { Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
+import { compactContainer } from './compact-rows.js';
 
 const MAX_PAGE_SIZE = 25;
 
@@ -26,7 +27,10 @@ export async function executeListContainers(
   });
   const filters = getContainerFilters(args);
   const startTime = Date.now();
-  const include = args.include;
+  const compact = args.view !== 'full';
+  // Compact rows show the POD terminal and the shipment's BL, carrier and ETA.
+  const include =
+    args.include ?? (compact ? ['shipment', 'pod_terminal'] : undefined);
   const pageSize = Math.min(args.page_size ?? MAX_PAGE_SIZE, MAX_PAGE_SIZE);
   logMcpEvent({
     event: 'tool.execute.start',
@@ -63,8 +67,13 @@ export async function executeListContainers(
       timestamp: new Date().toISOString(),
     });
 
+    const items =
+      compact && Array.isArray((result as any)?.items)
+        ? (result as any).items.map(compactContainer)
+        : (result as any)?.items;
     return {
       ...result,
+      items,
       _metadata: getListResponseMetadata(result, filters, args, pageSize),
     };
   } catch (error) {

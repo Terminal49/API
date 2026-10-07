@@ -23,6 +23,10 @@ import {
 import { executeListShipments } from './tools/list-shipments.js';
 import { executeListContainers } from './tools/list-containers.js';
 import {
+  executeSummarizeContainers,
+  summarizeContainersInputSchema,
+} from './tools/summarize-containers.js';
+import {
   shipmentListInputSchema,
   containerListInputSchema,
   getShipmentFilters,
@@ -157,6 +161,8 @@ const NON_FILTER_LIST_ARGS = new Set([
   'page_size',
   'include',
   'include_containers',
+  'include_stopped_tracking',
+  'view',
   'sort',
   'advanced_filters',
   'intent',
@@ -1448,6 +1454,40 @@ export function createTerminal49McpServer(
       // registered terminal49://container/{id} resource, so the client can
       // resolve full details on demand instead of paying for them up front.
       (result) => buildListResourceLinks(result, 'container'),
+    ),
+  );
+
+  // Tool 9b: Summarize Containers
+  server.registerTool(
+    'summarize_containers',
+    {
+      title: 'Summarize Containers',
+      description:
+        'Count containers grouped by POD terminal, status, shipping line, hold type, LFD date or arrival date, using the same filters as list_containers. ' +
+        'Use it for "how many" and "break down by" questions; use list_containers for "which ones". ' +
+        'Like the dashboard, only actively tracked containers are counted unless include_stopped_tracking is true. ' +
+        'Report the total, and say so when truncated is true.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.preprocess(
+        stripLegacyIntent,
+        summarizeContainersInputSchema,
+      ),
+      outputSchema: z.object({
+        total: z.number(),
+        counted: z.number(),
+        truncated: z.boolean(),
+        group_by: z.string(),
+        groups: z.array(z.object({ key: z.string(), count: z.number() })),
+        other_groups: z.number(),
+        applied_filters: z.record(z.string(), z.unknown()),
+      }),
+    },
+    wrapTool('summarize_containers', async (args) =>
+      executeSummarizeContainers(args, client),
     ),
   );
 
