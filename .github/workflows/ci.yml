@@ -139,7 +139,7 @@ jobs:
         run: npm run eval:check --workspace @terminal49/mcp
       - name: Test MCP
         run: npm run test --workspace @terminal49/mcp -- --run --coverage
-      - name: Eval MCP tools (live; skips without MCP_EVAL_TOKEN secret)
+      - name: Eval MCP tools against production (live; skips without MCP_EVAL_TOKEN secret)
         env:
           MCP_EVAL_TOKEN: ${{ secrets.MCP_EVAL_TOKEN }}
         run: npm run eval --workspace @terminal49/mcp
@@ -279,6 +279,12 @@ jobs:
           MCP_HTTP_TOKEN: ${{ secrets.MCP_EVAL_TOKEN }}
           MCP_PROTOCOL_VERSION: ${{ matrix.protocol-version }}
         run: npm run test:http-protocol --workspace @terminal49/mcp
+      - name: Eval MCP tools against Vercel preview
+        if: steps.credential.outputs.available == 'true' && matrix.protocol-version == '2026-07-28'
+        env:
+          MCP_EVAL_ENDPOINT: ${{ steps.preview.outputs.endpoint }}
+          MCP_EVAL_TOKEN: ${{ secrets.MCP_EVAL_TOKEN }}
+        run: npm run eval --workspace @terminal49/mcp
       - name: Verify preview still belongs to this commit
         env:
           GH_TOKEN: ${{ github.token }}
