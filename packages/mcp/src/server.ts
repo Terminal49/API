@@ -1065,9 +1065,10 @@ export function createTerminal49McpServer(
     {
       title: 'Track Container',
       description:
-        'Track a container, bill of lading, or booking number. ' +
-        'Uses inference to choose the carrier/type when possible, creates a tracking request, ' +
-        'and returns detailed container information. If a newly created request is still pending, ' +
+        "Start tracking a container, bill of lading, or booking number in the user's account. " +
+        'This creates a tracking request, so only call it when the user asks to track or add a number, and confirm with them first if your client does not ask for approval. ' +
+        'Never call it to look up a number: use search_container, and if the number is not found, say so and offer to track it. ' +
+        'Uses inference to choose the carrier/type when possible and returns detailed container information. If a newly created request is still pending, ' +
         'use list_tracking_requests to check its status.',
       annotations: {
         readOnlyHint: false,

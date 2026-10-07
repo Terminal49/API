@@ -194,7 +194,7 @@ Results include containers, shipments, and tracking requests that have no shipme
 
 ### `track_container`
 
-Start tracking a new container. Creates a tracking request and returns container details.
+Start tracking a new container, bill of lading, or booking number. Creates a tracking request in the account and returns container details. Call it only when the user asks to track a number, and confirm first when the client doesn't ask for approval; to look up a number, use `search_container`.
 
 **Parameters**
 - `number` *(string, required)* – container number, BL, or booking number
