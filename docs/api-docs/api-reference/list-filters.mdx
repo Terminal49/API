@@ -126,6 +126,7 @@ The API generally returns no matches for contradictory scopes. The SDK rejects t
 | `filter[tags]` | `tags` | Tag names / array | `"EXAMPLE_VALUE"` | Account-scoped shipment tags. Comma-separated names or arrays match ANY tag by default. |
 | `filter[tags_and]` | `tags_and` | Boolean | `true` | With tags, true requires ALL tags; false or absent means ANY. Has no effect without tags. The SDK requires tags (or shipment tag) when this modifier is supplied. |
 | `filter[parties]` | `parties` | Role-to-IDs object | `{"shipper":"00000000-0000-4000-8000-000000000001"}` | Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK. |
+| `filter[custom_fields]` | `custom_fields` | Slug-to-value object | `{"purchase_order_number":"@exists"}` | Filter by the account's own custom fields, keyed by api_slug from GET /accounts/&#123;account_id&#125;/custom_field_definitions (GET /custom_field_definitions lists templates, which an account may not have added). Text and enum values match containers whose own or shipment value contains the text (case-sensitive substring), with comma-separated values meaning OR; boolean fields take true or false; date and datetime fields take YYYY-MM-DD with an optional &gt;=, &lt;=, &gt;, &lt;, or = prefix; number fields take an exact number. Every type accepts @exists and @not_exists. Different slugs combine with AND. Slugs the account does not define are ignored by the API, so resolve them first. |
 
 ### Missing data and selectors
 
@@ -141,7 +142,8 @@ The following controller-defined inputs did not provide usable filtering in auth
 | --- | --- | --- |
 | `filter[pod_eta_at]` | Valid date and presence requests returned HTTP 500. | Use shipment POD-date filters; use container `arrival` when actual-or-estimated arrival is appropriate. |
 | `filter[pod_ata_at]` | Valid date and presence requests returned HTTP 500. | Use shipment `pod_ata_at`, or container `pod_arrived_at` when the container arrival milestone is appropriate. |
-| `filter[custom_fields][API_SLUG]` | Known account-defined slugs left results unfiltered in the verification account. | Read custom fields from authorized responses; do not claim a list has been scoped by this input. |
+
+Container `custom_fields` filtering uses the nested `filter[custom_fields][API_SLUG]` form; the dotted `filter[custom_fields.API_SLUG]` form is an unknown key and is ignored. Slugs must come from the account's own definitions (`GET /accounts/{account_id}/custom_field_definitions`): `GET /custom_field_definitions` lists templates, and a template slug the account never added is ignored, which leaves the list unfiltered. Verified on Sodor Steamworks 2026-10-07 for text, enum, boolean, and date fields; number comparisons such as `>=1` return HTTP 400, so number fields take exact values.
 
 These alternatives have different milestone semantics; choose the one matching the question. The SDK produces an actionable ValidationError for the unavailable inputs.
 

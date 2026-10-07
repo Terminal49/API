@@ -12,6 +12,7 @@ const RELATIVE_DAY = /^(?:today|\d+\.days?\.(?:ago|from_now))$/;
 const INSTANT =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 const PRESENCE = new Set(['@exists', '@not_exists']);
+const CUSTOM_FIELD_SLUG = /^[a-z0-9_]+$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SHIPMENT_OR_ARRAYS = new Set([
   'number',
@@ -324,11 +325,6 @@ export function buildFilterQuery(
         key,
         'currently returns HTTP 500 on the deployed API; use shipment POD-date filters or container arrival',
       );
-    if (entity === 'container' && key === 'custom_fields')
-      invalid(
-        key,
-        'known custom-field slugs are currently ignored by the deployed API; support is pending API verification',
-      );
     if (!Object.hasOwn(kinds, key))
       invalid(
         key,
@@ -426,6 +422,36 @@ export function buildFilterQuery(
           validateIds(key, value, false, false);
         }
         break;
+      case 'custom_fields':
+        if (
+          !value ||
+          Array.isArray(value) ||
+          typeof value !== 'object' ||
+          Object.keys(value).length === 0
+        )
+          invalid(
+            key,
+            'expected a nonempty object mapping a custom field api_slug to a value',
+          );
+        for (const [slug, text] of Object.entries(value)) {
+          if (!CUSTOM_FIELD_SLUG.test(slug))
+            invalid(
+              `${key}.${slug}`,
+              'expected an api_slug from GET /custom_field_definitions',
+            );
+          if (
+            typeof text !== 'string' ||
+            !text.trim() ||
+            text.length > 200 ||
+            /[\r\n]/.test(text) ||
+            (text.startsWith('@') && !PRESENCE.has(text))
+          )
+            invalid(
+              `${key}.${slug}`,
+              'expected text to match, comma-separated alternatives, @exists, or @not_exists',
+            );
+        }
+        break;
       case 'parties':
         if (
           !value ||
@@ -480,6 +506,9 @@ export function buildFilterQuery(
         query[`filter[party_id][${part}]${Array.isArray(item) ? '[]' : ''}`] =
           item;
       }
+    } else if (key === 'custom_fields') {
+      for (const [slug, text] of Object.entries(value as object))
+        query[`filter[custom_fields][${slug}]`] = text;
     } else if (key === 'parties') {
       const scalarRoles: Record<string, unknown> = {};
       for (const [role, ids] of Object.entries(value as object)) {

@@ -73,6 +73,8 @@ describe('every confirmed filter reaches the API with its documented wire key', 
           };
         if (kind === 'parties')
           value = { shipper: '00000000-0000-4000-8000-000000000001' };
+        if (kind === 'custom_fields')
+          value = { purchase_order_number: '@exists' };
         const filters: any = { [key]: value };
         if (key === 'tags_and') filters.tags = 'TESTTAG';
         await client[entity].list(filters);
@@ -332,7 +334,9 @@ describe('invalid queries fail before any network request', () => {
     ['ambiguous legacy timestamp', { updatedAfter: '2026-10-01T00:00:00Z' }],
     ['conflicting alias', { status: 'available', current_status: 'on_ship' }],
     ['broken deployed date filter', { pod_eta_at: '@exists' }],
-    ['ignored custom field', { custom_fields: { test_slug: '@exists' } }],
+    ['custom field display name', { custom_fields: { 'Sales Rep': 'Jane' } }],
+    ['custom field operator', { custom_fields: { incoterm: '@bogus' } }],
+    ['empty custom fields', { custom_fields: {} }],
   ];
   for (const [name, filters] of invalidContainers) {
     it(`container: ${name}`, async () => {
@@ -428,5 +432,37 @@ describe('builder defaults and generic page cap', () => {
     expect(clampPageSize(9999)).toBe(MAX_PAGE_SIZE);
     expect(clampPageSize(0)).toBe(1);
     expect(clampPageSize(undefined)).toBeUndefined();
+  });
+});
+
+describe('custom field filters', () => {
+  it('nests each api_slug under filter[custom_fields]', async () => {
+    const { client, urls } = clientFixture();
+    await client.containers.list({
+      custom_fields: { incoterm: 'FOB,CIF', purchase_order_number: '@exists' },
+    });
+    expect(urls[0].searchParams.get('filter[custom_fields][incoterm]')).toBe(
+      'FOB,CIF',
+    );
+    expect(
+      urls[0].searchParams.get('filter[custom_fields][purchase_order_number]'),
+    ).toBe('@exists');
+    expect(urls[0].searchParams.has('filter[custom_fields.incoterm]')).toBe(
+      false,
+    );
+  });
+});
+
+describe('account custom field definitions', () => {
+  it("lists the account's own definitions, not templates", async () => {
+    const { client, urls } = clientFixture();
+    await client.customFieldDefinitions.listForAccount('acct-1', {
+      include: 'options',
+      pageSize: 100,
+    });
+    expect(urls[0].pathname).toBe(
+      '/v2/accounts/acct-1/custom_field_definitions',
+    );
+    expect(urls[0].searchParams.get('include')).toBe('options');
   });
 });

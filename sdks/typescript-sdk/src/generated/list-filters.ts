@@ -148,7 +148,8 @@ export const CONTAINER_FILTER_KINDS = {
   "pickup_lfd_line_effective_on": "date",
   "tags": "tags",
   "tags_and": "boolean",
-  "parties": "parties"
+  "parties": "parties",
+  "custom_fields": "custom_fields"
 } as const;
 /** Confirmed list filters; canonical names mirror API filter keys. */
 export interface ContainerListFilters {
@@ -264,6 +265,8 @@ tags?: StringFilter;
 tags_and?: boolean;
 /** Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK. */
 parties?: Partial<Record<PartyRole, StringFilter>>;
+/** Filter by the account's own custom fields, keyed by api_slug from GET /accounts/{account_id}/custom_field_definitions (GET /custom_field_definitions lists templates, which an account may not have added). Text and enum values match containers whose own or shipment value contains the text (case-sensitive substring), with comma-separated values meaning OR; boolean fields take true or false; date and datetime fields take YYYY-MM-DD with an optional `>=`, `<=`, `>`, `<`, or = prefix; number fields take an exact number. Every type accepts `@exists` and `@not_exists`. Different slugs combine with AND. Slugs the account does not define are ignored by the API, so resolve them first. */
+custom_fields?: Record<string, string>;
 include?: IncludeParam<ContainerInclude>;
 /** Supported API sort token(s); validated before the request. */
 sort?: string;

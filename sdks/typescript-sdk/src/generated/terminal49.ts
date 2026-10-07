@@ -5126,6 +5126,15 @@ export interface operations {
                  *     ]
                  */
                 "filter[parties][pickup_dray_carrier][]"?: string[];
+                /**
+                 * @description Filter by the account's own custom fields, keyed by api_slug from GET /accounts/{account_id}/custom_field_definitions (GET /custom_field_definitions lists templates, which an account may not have added). Text and enum values match containers whose own or shipment value contains the text (case-sensitive substring), with comma-separated values meaning OR; boolean fields take true or false; date and datetime fields take YYYY-MM-DD with an optional >=, <=, >, <, or = prefix; number fields take an exact number. Every type accepts @exists and @not_exists. Different slugs combine with AND. Slugs the account does not define are ignored by the API, so resolve them first.
+                 * @example {
+                 *       "purchase_order_number": "@exists"
+                 *     }
+                 */
+                "filter[custom_fields]"?: {
+                    [key: string]: string;
+                };
             };
             header?: never;
             path?: never;

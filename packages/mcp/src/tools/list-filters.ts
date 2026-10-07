@@ -73,6 +73,19 @@ export const containerListInputSchema = z.strictObject({
   arrival: containerFilterShape.arrival,
   pickup_lfd: containerFilterShape.pickup_lfd,
   tags: containerFilterShape.tags,
+  custom_fields: z
+    .record(
+      z.string().trim().min(1).max(100),
+      z.string().trim().min(1).max(200),
+    )
+    .refine(
+      (value) => Object.keys(value).length > 0,
+      'expected at least one field',
+    )
+    .describe(
+      'The account\'s own custom fields, keyed by display name (for example "Sales Rep") or api_slug. Text fields match a value the container or its shipment contains (case-sensitive); enum values match an option, case-insensitively; comma-separated text values mean OR. Yes/no fields take true or false; date fields take YYYY-MM-DD with an optional >=, <=, >, <, or = prefix; number fields take an exact number. @exists and @not_exists test presence. Different fields combine with AND. Unknown names return an error listing the account\'s fields.',
+    )
+    .optional(),
   advanced_filters: z
     .strictObject(containerFilterShape)
     .describe(
@@ -180,6 +193,17 @@ export const listResponseMetadataSchema = z.strictObject({
       'True when the API provides a next link; false when it explicitly reports none; null when next-link information is missing.',
     ),
   next_page: z.number().int().min(1).optional(),
+  custom_fields: z
+    .array(
+      z.strictObject({
+        field: z.string(),
+        api_slug: z.string(),
+        data_type: z.string(),
+        value: z.string(),
+      }),
+    )
+    .describe('How each requested custom field name resolved to an API filter.')
+    .optional(),
 });
 
 export function getListResponseMetadata(

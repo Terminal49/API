@@ -52,6 +52,10 @@ for (const [entity, endpoint] of [
           .map((role) => `${JSON.stringify(role)}: ${scalarOrArray}.optional()`)
           .join(',')}})`;
         break;
+      case 'custom_fields':
+        schema =
+          'z.record(z.string().regex(/^[a-z0-9_]+$/), z.string().min(1).max(200))';
+        break;
       case 'status': {
         const values = p['x-t49-values'];
         if (!Array.isArray(values) || !values.length)

@@ -13,6 +13,7 @@ import {
   containerListInputSchema,
   getContainerFilters,
 } from './list-filters.js';
+import { resolveCustomFieldFilters } from './custom-field-filters.js';
 
 const PAGE_SIZE = 50;
 const CONCURRENCY = 6;
@@ -98,6 +99,12 @@ export async function executeSummarizeContainers(
   const filters = getContainerFilters(
     containerListInputSchema.parse(filterArgs),
   );
+  const customFields = await resolveCustomFieldFilters(
+    filters.custom_fields,
+    client,
+  );
+  if (customFields.custom_fields)
+    filters.custom_fields = customFields.custom_fields;
   const include = ['shipment', 'pod_terminal'];
   const startTime = Date.now();
   logMcpEvent({

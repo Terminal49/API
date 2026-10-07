@@ -7487,6 +7487,25 @@
             "example": [
               "00000000-0000-4000-8000-000000000001"
             ]
+          },
+          {
+            "in": "query",
+            "name": "filter[custom_fields]",
+            "description": "Filter by the account's own custom fields, keyed by api_slug from GET /accounts/{account_id}/custom_field_definitions (GET /custom_field_definitions lists templates, which an account may not have added). Text and enum values match containers whose own or shipment value contains the text (case-sensitive substring), with comma-separated values meaning OR; boolean fields take true or false; date and datetime fields take YYYY-MM-DD with an optional >=, <=, >, <, or = prefix; number fields take an exact number. Every type accepts @exists and @not_exists. Different slugs combine with AND. Slugs the account does not define are ignored by the API, so resolve them first.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "description": "Text, true/false, a date expression, an exact number, comma-separated text alternatives, or @exists / @not_exists."
+              }
+            },
+            "style": "deepObject",
+            "explode": true,
+            "x-t49-filter-kind": "custom_fields",
+            "x-t49-filter-key": "custom_fields",
+            "example": {
+              "purchase_order_number": "@exists"
+            }
           }
         ]
       },
