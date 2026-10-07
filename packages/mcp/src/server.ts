@@ -1400,7 +1400,7 @@ export function createTerminal49McpServer(
       title: 'List Shipments',
       description:
         'Return one requested page of shipments using common filters or advanced_filters for the confirmed public API catalog. Page size is capped at 25. ' +
-        'Like the dashboard, only actively tracked shipments are returned unless include_stopped_tracking is true (use it for history over a past period). Report meta.total for the requested set. ' +
+        'Like the dashboard, only actively tracked shipments are returned unless an explicit tracking filter is supplied. Set include_stopped_tracking: true for history across active and stopped records; use actively_tracked: false or tracking_stopped: true for stopped records only. Report meta.total for the requested set. ' +
         'Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_shipment_details with a returned UUID for routing and container details. Never pass conversation text into identifier fields.',
       annotations: {
         readOnlyHint: true,
@@ -1428,7 +1428,7 @@ export function createTerminal49McpServer(
       title: 'List Containers',
       description:
         'Return one requested page of containers using common status, port, carrier, milestone, hold and fee filters, or advanced_filters for the confirmed public API catalog. Page size is capped at 25. ' +
-        'Like the dashboard, only actively tracked containers are returned unless include_stopped_tracking is true (use it for history such as pickups or dwell over a past period). ' +
+        'Like the dashboard, only actively tracked containers are returned unless an explicit tracking filter is supplied. Set include_stopped_tracking: true for history across active and stopped records; use actively_tracked: false for stopped records only. ' +
         'Use the dashboard definitions and report meta.total for that set before any narrowing: ready for pickup = current_status available; at risk of demurrage or needs attention = requires_attention true with sort attention_priority (the Containers at Risk view); discharged but not picked up = current_status available,not_available,grounded,awaiting_inland_transfer. ' +
         'Add extra conditions such as LFD windows, fees or holds only when the user asks, and present them as a subset of that total. ' +
         'Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_container with a returned UUID for a detailed snapshot. Do not pass conversation text into filters.',

@@ -49,7 +49,7 @@ export const shipmentListInputSchema = z.strictObject({
   include_stopped_tracking: z
     .boolean()
     .describe(
-      'Default false: like the dashboard, results include only records whose tracking is still active. Set true for history questions (pickups, dwell or arrivals over a past period) or when the user asks about stopped tracking. Ignored when actively_tracked is set.',
+      'Default false: only actively tracked records. Set true to include both active and stopped records for history questions. For stopped records only, set actively_tracked: false. Explicit tracking filters take precedence.',
     )
     .default(false),
   sort: shipmentSortSchema,
@@ -82,7 +82,7 @@ export const containerListInputSchema = z.strictObject({
   include_stopped_tracking: z
     .boolean()
     .describe(
-      'Default false: like the dashboard, results include only records whose tracking is still active. Set true for history questions (pickups, dwell or arrivals over a past period) or when the user asks about stopped tracking. Ignored when actively_tracked is set.',
+      'Default false: only actively tracked records. Set true to include both active and stopped records for history questions. For stopped records only, set actively_tracked: false. Explicit tracking filters take precedence.',
     )
     .default(false),
   sort: containerSortSchema,
