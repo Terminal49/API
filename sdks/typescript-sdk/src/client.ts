@@ -161,7 +161,8 @@ export class Terminal49Client {
   };
 
   public customFieldDefinitions = {
-    list: (options?: ListOptions) => this.listCustomFieldDefinitions(options),
+    list: (options?: ListOptions & { include?: 'options' }) =>
+      this.listCustomFieldDefinitions(options),
     get: (id: string, options?: CallOptions) =>
       this.getCustomFieldDefinition(id, options),
     create: (payload: Record<string, unknown>, options?: CallOptions) =>
@@ -625,10 +626,15 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
-  /** List custom field definitions. */
-  async listCustomFieldDefinitions(options?: ListOptions): Promise<any> {
+  /** List custom field definitions; `include: 'options'` embeds enum options. */
+  async listCustomFieldDefinitions(
+    options?: ListOptions & { include?: 'options' },
+  ): Promise<any> {
     const raw = await this.transport.executeManual(
-      this.endpoint('/custom_field_definitions', this.listQuery(options)),
+      this.endpoint('/custom_field_definitions', {
+        ...this.listQuery(options),
+        include: options?.include,
+      }),
     );
     return this.formatResult(raw, options?.format);
   }

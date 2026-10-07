@@ -5126,6 +5126,15 @@ export interface operations {
                  *     ]
                  */
                 "filter[parties][pickup_dray_carrier][]"?: string[];
+                /**
+                 * @description Filter by account-defined custom fields, keyed by the field's api_slug from GET /custom_field_definitions. Supported for short_text, enum, and enum_multi fields: a value matches containers whose own or shipment custom field contains that text (case-sensitive substring); comma-separated values mean OR; @exists and @not_exists test presence. Different slugs combine with AND. Unknown slugs are ignored by the API, so resolve slugs from the account's definitions first. Number, boolean, and date fields did not filter in deployed checks on 2026-10-06.
+                 * @example {
+                 *       "purchase_order_number": "@exists"
+                 *     }
+                 */
+                "filter[custom_fields]"?: {
+                    [key: string]: string;
+                };
             };
             header?: never;
             path?: never;

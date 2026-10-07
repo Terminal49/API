@@ -23,13 +23,36 @@ const sourceFilters = (endpoint: string) =>
     (p: Record<string, unknown>) => p['x-t49-filter-kind'],
   );
 
+const CUSTOM_FIELD_DEFINITIONS = {
+  data: [
+    {
+      id: 'def-po',
+      type: 'custom_field_definition',
+      attributes: {
+        api_slug: 'purchase_order_number',
+        display_name: 'Purchase Order Number',
+        data_type: 'short_text',
+      },
+    },
+  ],
+};
+
 function fakeClient(links: unknown = { next: null }) {
   const fetchImpl = vi.fn(
-    async (_input: Parameters<typeof fetch>[0]) =>
-      new Response(JSON.stringify({ data: [], links, meta: { total: 100 } }), {
-        status: 200,
-        headers: { 'content-type': 'application/vnd.api+json' },
-      }),
+    async (input: Parameters<typeof fetch>[0]) =>
+      new Response(
+        JSON.stringify(
+          String((input as Request).url ?? input).includes(
+            '/custom_field_definitions',
+          )
+            ? CUSTOM_FIELD_DEFINITIONS
+            : { data: [], links, meta: { total: 100 } },
+        ),
+        {
+          status: 200,
+          headers: { 'content-type': 'application/vnd.api+json' },
+        },
+      ),
   );
   return {
     client: new Terminal49Client({ apiToken: 'TEST_KEY', fetchImpl }),
@@ -73,9 +96,11 @@ describe('confirmed list filter inputs', () => {
         const args = { advanced_filters: filters };
         expect((helper as any)(args)).toEqual(filters);
         await (execute as any)(args, client);
-        expect(fetchImpl).toHaveBeenCalledTimes(1);
+        expect(fetchImpl).toHaveBeenCalledTimes(
+          key === 'custom_fields' ? 2 : 1,
+        );
         const url = new URL(
-          (fetchImpl.mock.calls[0] as unknown as [Request])[0].url,
+          (fetchImpl.mock.calls.at(-1) as unknown as [Request])[0].url,
         );
         expect(
           [...url.searchParams.keys()].some(
@@ -160,7 +185,7 @@ describe('confirmed list filter inputs', () => {
     expect(result._metadata.has_more).toBe(false);
   });
   for (const args of [
-    { advanced_filters: { custom_fields: { foo: '@exists' } } },
+    { advanced_filters: { custom_fields: { 'Not A Slug': '@exists' } } },
     { advanced_filters: { pod_eta_at: 'today' } },
     { advanced_filters: { eta_changed_in_last_24h: false } },
     { advanced_filters: { parties: { invented_role: '@exists' } } },

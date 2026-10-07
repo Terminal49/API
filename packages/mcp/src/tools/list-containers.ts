@@ -9,6 +9,7 @@ import { logMcpEvent } from '../logging.js';
 const MAX_PAGE_SIZE = 25;
 
 export type { ListContainersArgs } from './list-filters.js';
+import { resolveCustomFieldFilters } from './custom-field-filters.js';
 import {
   containerListInputSchema,
   getContainerFilters,
@@ -25,6 +26,12 @@ export async function executeListContainers(
     page_size: Math.min(args.page_size ?? MAX_PAGE_SIZE, MAX_PAGE_SIZE),
   });
   const filters = getContainerFilters(args);
+  const customFields = await resolveCustomFieldFilters(
+    filters.custom_fields,
+    client,
+  );
+  if (customFields.custom_fields)
+    filters.custom_fields = customFields.custom_fields;
   const startTime = Date.now();
   const include = args.include;
   const pageSize = Math.min(args.page_size ?? MAX_PAGE_SIZE, MAX_PAGE_SIZE);
@@ -65,7 +72,12 @@ export async function executeListContainers(
 
     return {
       ...result,
-      _metadata: getListResponseMetadata(result, filters, args, pageSize),
+      _metadata: {
+        ...getListResponseMetadata(result, filters, args, pageSize),
+        ...(customFields.resolved.length
+          ? { custom_fields: customFields.resolved }
+          : {}),
+      },
     };
   } catch (error) {
     const duration = Date.now() - startTime;

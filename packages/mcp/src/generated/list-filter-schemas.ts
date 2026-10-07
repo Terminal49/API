@@ -224,6 +224,7 @@ export const CONTAINER_FILTER_KEYS = [
   'tags',
   'tags_and',
   'parties',
+  'custom_fields',
 ] as const;
 export const containerFilterShape = {
   number: z
@@ -607,6 +608,12 @@ export const containerFilterShape = {
     })
     .describe(
       'Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK.',
+    )
+    .optional(),
+  custom_fields: z
+    .record(z.string().regex(/^[a-z0-9_]+$/), z.string().min(1).max(200))
+    .describe(
+      "Filter by account-defined custom fields, keyed by the field's api_slug from GET /custom_field_definitions. Supported for short_text, enum, and enum_multi fields: a value matches containers whose own or shipment custom field contains that text (case-sensitive substring); comma-separated values mean OR; @exists and @not_exists test presence. Different slugs combine with AND. Unknown slugs are ignored by the API, so resolve slugs from the account's definitions first. Number, boolean, and date fields did not filter in deployed checks on 2026-10-06.",
     )
     .optional(),
 } as const;
