@@ -9714,6 +9714,14 @@
             "in": "query",
             "name": "page[size]",
             "description": ""
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "query",
+            "description": "Search parties by company name. Matches whole words and word prefixes, ignoring case (\"blue\" matches \"Bluewave Home Goods\")."
           }
         ],
         "tags": [

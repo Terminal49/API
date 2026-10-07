@@ -466,6 +466,22 @@ Use the typed `advanced_filters` object for the full container filter catalog. U
 
 ---
 
+### `list_parties`
+
+Find the companies on the account's shipments (customers, shippers, consignees, customs brokers, freight forwarders, dray carriers) by name and return their IDs. Pass an ID to `list_containers` through `advanced_filters.parties`, keyed by role, such as `{ "customer": "<id>" }`.
+
+**Parameters**
+
+- `search` *(string, optional)* - company name or the start of a word in it; case is ignored. Searched by the API (`GET /v2/parties?query=`).
+- `limit` *(number, optional)* - most parties to return. Default 25, maximum 50.
+
+**Good for**
+
+- "How many containers does Acme have at the terminal?" (find Acme, then filter by `customer`)
+- "Which containers is Ray Drayage picking up?" (find the carrier, then filter by `pickup_dray_carrier`)
+
+---
+
 ### `list_tracking_requests`
 
 List tracking requests with optional filters and pagination.

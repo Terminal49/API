@@ -32,6 +32,7 @@ import type {
   ContainerInclude,
   IncludeParam,
   ListOptions,
+  PartyListOptions,
   ResponseFormat,
   ShipmentInclude,
   TrackingRequestInclude,
@@ -152,7 +153,7 @@ export class Terminal49Client {
   };
 
   public parties = {
-    list: (options?: ListOptions) => this.listParties(options),
+    list: (options?: PartyListOptions) => this.listParties(options),
     get: (id: string, options?: CallOptions) => this.getParty(id, options),
   };
 
@@ -601,10 +602,13 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
-  /** List parties. */
-  async listParties(options?: ListOptions): Promise<any> {
+  /** List parties, optionally searching by company name (`query`). */
+  async listParties(options?: PartyListOptions): Promise<any> {
     const raw = await this.transport.executeManual(
-      this.endpoint('/parties', this.listQuery(options)),
+      this.endpoint('/parties', {
+        ...this.listQuery(options),
+        query: options?.query,
+      }),
     );
     return this.formatResult(raw, options?.format);
   }

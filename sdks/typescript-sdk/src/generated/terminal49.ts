@@ -5738,6 +5738,8 @@ export interface operations {
             query?: {
                 "page[number]"?: number;
                 "page[size]"?: number;
+                /** @description Search parties by company name. Matches whole words and word prefixes, ignoring case ("blue" matches "Bluewave Home Goods"). */
+                query?: string;
             };
             header?: never;
             path?: never;
