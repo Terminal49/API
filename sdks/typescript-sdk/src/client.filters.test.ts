@@ -467,3 +467,80 @@ describe('containers.summary', () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 });
+
+describe('container summary response contract', () => {
+  const valid = {
+    data: [],
+    meta: { total: 0, group_by: 'current_status', truncated: false },
+  };
+  it('keeps the documented summary filter contract identical to the list', () => {
+    const filters = spec.paths['/containers'].get.parameters.filter(
+      (p: any) => p['x-t49-filter-kind'],
+    );
+    expect(spec.paths['/containers/summary'].get.parameters.slice(1)).toEqual(
+      filters,
+    );
+  });
+  it.each(['raw', 'mapped', 'both'] as const)(
+    'accepts genuine zero totals in %s format',
+    async (format) => {
+      const { client } = clientFixture(valid);
+      const result = await client.containers.summary(
+        'current_status',
+        {},
+        { format },
+      );
+      if (format === 'raw') expect(result.meta.total).toBe(0);
+      if (format === 'mapped') expect(result.total).toBe(0);
+      if (format === 'both') expect(result.mapped.total).toBe(0);
+    },
+  );
+  it('accepts a null group key and truncated groups without changing the full total', async () => {
+    const { client } = clientFixture({
+      data: [{ key: null, label: null, count: 2 }],
+      meta: { total: 5, group_by: 'pod_terminal', truncated: true },
+    });
+    const result = await client.containers.summary(
+      'pod_terminal',
+      {},
+      { format: 'mapped' },
+    );
+    expect(result).toMatchObject({
+      total: 5,
+      truncated: true,
+      groups: [{ key: null, label: null, count: 2 }],
+    });
+  });
+  it.each([
+    {},
+    null,
+    { data: [] },
+    { meta: valid.meta },
+    { ...valid, data: {} },
+    { ...valid, meta: { ...valid.meta, total: '0' } },
+    { ...valid, meta: { ...valid.meta, total: -1 } },
+    { ...valid, meta: { ...valid.meta, total: 0.5 } },
+    { ...valid, meta: { ...valid.meta, group_by: 'pod_terminal' } },
+    { ...valid, meta: { ...valid.meta, truncated: undefined } },
+    { ...valid, data: [{ key: 'available', label: 'available', count: -1 }] },
+    { ...valid, data: [{ key: 'available', count: 0 }] },
+    { ...valid, data: [{ key: 'available', label: 'available', count: 1 }] },
+    { ...valid, meta: { ...valid.meta, total: 1 } },
+    { ...valid, data: [null] },
+    {
+      ...valid,
+      data: [
+        { key: null, label: null, count: 0 },
+        { key: null, label: null, count: 0 },
+      ],
+    },
+  ])(
+    'rejects malformed responses instead of producing a zero: %j',
+    async (body) => {
+      const { client } = clientFixture(body);
+      await expect(
+        client.containers.summary('current_status', {}, { format: 'mapped' }),
+      ).rejects.toThrow('Invalid container summary response');
+    },
+  );
+});

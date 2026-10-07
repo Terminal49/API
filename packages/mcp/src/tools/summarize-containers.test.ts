@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
+import { Terminal49Client } from '@terminal49/sdk';
 import { executeSummarizeContainers } from './summarize-containers.js';
 
 function fakeClient(summary: unknown) {
@@ -75,4 +76,14 @@ describe('summarize_containers', () => {
     ).rejects.toThrow();
     expect(summaryFn).not.toHaveBeenCalled();
   });
+});
+
+it('propagates malformed API responses through the real SDK instead of returning zero', async () => {
+  const client = new Terminal49Client({
+    apiToken: 'TEST_KEY',
+    fetchImpl: async () => new Response(JSON.stringify({ data: [] })),
+  });
+  await expect(
+    executeSummarizeContainers({ group_by: 'current_status' }, client),
+  ).rejects.toThrow('Invalid container summary response');
 });

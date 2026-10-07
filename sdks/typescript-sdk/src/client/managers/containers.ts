@@ -1,3 +1,5 @@
+import type { paths } from '../../generated/terminal49.js';
+import { UpstreamError } from '../errors.js';
 import type { ContainerListFilters } from '../../generated/list-filters.js';
 import { serializeListQuery } from '../filter-validation.js';
 import type { Container } from '../../types/models.js';
@@ -27,6 +29,53 @@ const DEFAULT_CONTAINER_INCLUDES = [
   'pod_terminal',
   'pickup_facility',
 ] as const satisfies readonly ContainerInclude[];
+
+type SummaryResponse =
+  paths['/containers/summary']['get']['responses'][200]['content']['application/json'];
+
+function parseSummaryResponse(
+  value: unknown,
+  groupBy: ContainerSummaryGroupBy,
+): SummaryResponse {
+  const invalid = () =>
+    new UpstreamError('Invalid container summary response', 502);
+  if (!value || typeof value !== 'object') throw invalid();
+  // SAFETY: treat the response as a partial shape only; every required field is checked below.
+  const doc = value as Partial<SummaryResponse>;
+  if (
+    !Array.isArray(doc.data) ||
+    !doc.meta ||
+    !Number.isSafeInteger(doc.meta.total) ||
+    doc.meta.total < 0 ||
+    doc.meta.group_by !== groupBy ||
+    typeof doc.meta.truncated !== 'boolean'
+  )
+    throw invalid();
+  const keys = new Set<string | null>();
+  let counted = 0;
+  for (const group of doc.data) {
+    if (
+      !group ||
+      typeof group !== 'object' ||
+      !(group.key === null || typeof group.key === 'string') ||
+      !(group.label === null || typeof group.label === 'string') ||
+      !Number.isSafeInteger(group.count) ||
+      group.count < 0 ||
+      keys.has(group.key)
+    )
+      throw invalid();
+    keys.add(group.key);
+    counted += group.count;
+  }
+  if (
+    !Number.isSafeInteger(counted) ||
+    counted > doc.meta.total ||
+    (!doc.meta.truncated && counted !== doc.meta.total)
+  )
+    throw invalid();
+  // SAFETY: the checks above establish all required response fields and their count invariants.
+  return doc as SummaryResponse;
+}
 
 export class ContainerManager extends BaseManager {
   async get(
@@ -92,17 +141,16 @@ export class ContainerManager extends BaseManager {
     delete (query as Record<string, unknown>).include;
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/containers/summary', {
-        // SAFETY: the summary endpoint accepts every list filter; OpenAPI
-        // documents only group_by, so the validated list query is widened here.
-        params: { query: { ...query, group_by: groupBy } as any },
+        params: { query: { ...query, group_by: groupBy } },
         querySerializer: serializeListQuery,
       }),
     );
-    return this.formatResult(raw, options?.format, (doc: any) => ({
-      groups: doc?.data ?? [],
-      total: doc?.meta?.total ?? 0,
-      groupBy: doc?.meta?.group_by ?? groupBy,
-      truncated: doc?.meta?.truncated ?? false,
+    const summary = parseSummaryResponse(raw, groupBy);
+    return this.formatResult(summary, options?.format, (doc) => ({
+      groups: doc.data,
+      total: doc.meta.total,
+      groupBy: doc.meta.group_by,
+      truncated: doc.meta.truncated,
     }));
   }
 

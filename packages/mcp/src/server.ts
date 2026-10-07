@@ -896,7 +896,9 @@ function formatToolError(
   }
 
   if (
-    (toolName === 'list_shipments' || toolName === 'list_containers') &&
+    (toolName === 'list_shipments' ||
+      toolName === 'list_containers' ||
+      toolName === 'summarize_containers') &&
     err.name === 'ValidationError'
   ) {
     const details = asRecord(err.details);
