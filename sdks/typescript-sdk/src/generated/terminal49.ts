@@ -2367,6 +2367,10 @@ export interface components {
             attributes: {
                 /** @description Company name */
                 company_name: string;
+                /** @description Optional name used to distinguish this company. */
+                nickname?: string | null;
+                /** @description Roles this party has held, such as customer or shipper; use as context when selecting a party filter. */
+                role_names?: string[];
             };
             /** @enum {string} */
             type?: "party";
@@ -3936,7 +3940,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data?: components["schemas"]["custom_field"][];
+                        data?: {
+                            id: components["schemas"]["custom_field"]["id"];
+                            type: components["schemas"]["custom_field"]["type"];
+                            attributes?: components["schemas"]["custom_field"]["attributes"];
+                            relationships?: {
+                                entity?: {
+                                    data?: {
+                                        /** @enum {string} */
+                                        type: "tracking_request";
+                                        /** Format: uuid */
+                                        id: string;
+                                    };
+                                };
+                                definition?: {
+                                    data?: {
+                                        /** @enum {string} */
+                                        type: "custom_field_definition";
+                                        /** Format: uuid */
+                                        id: string;
+                                    };
+                                };
+                            };
+                        }[];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
                     };
@@ -5738,7 +5764,7 @@ export interface operations {
             query?: {
                 "page[number]"?: number;
                 "page[size]"?: number;
-                /** @description Search parties by company name. Matches whole words and word prefixes, ignoring case ("blue" matches "Bluewave Home Goods"). */
+                /** @description Search parties by company-name substring, ignoring case ("wave" matches "Bluewave Home Goods"). */
                 query?: string;
             };
             header?: never;
