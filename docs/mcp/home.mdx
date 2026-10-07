@@ -484,6 +484,22 @@ Count containers grouped by one dimension, using the same filters as `list_conta
 
 ---
 
+### `list_parties`
+
+Find the companies on the account's shipments (customers, shippers, consignees, customs brokers, freight forwarders, dray carriers) by name and return their IDs. Pass an ID to `list_containers` or `summarize_containers` through `advanced_filters.parties`, keyed by role, such as `{ "customer": "<id>" }`.
+
+**Parameters**
+
+- `search` *(string, optional)* - company name or part of one; case and punctuation are ignored.
+- `limit` *(number, optional)* - most parties to return. Default 25, maximum 50.
+
+**Good for**
+
+- "How many containers does Acme have at the terminal?" (find Acme, then filter by `customer`)
+- "Which containers is Ray Drayage picking up?" (find the carrier, then filter by `pickup_dray_carrier`)
+
+---
+
 ### `list_tracking_requests`
 
 List tracking requests with optional filters and pagination.

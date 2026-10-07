@@ -174,7 +174,7 @@ describe('MCP protocol compatibility', () => {
       ]),
     );
 
-    expect(tools).toHaveLength(12);
+    expect(tools).toHaveLength(13);
     for (const tool of tools) {
       expect(tool.name.length, tool.name).toBeLessThanOrEqual(64);
       expect(tool.inputSchema.properties, tool.name).not.toHaveProperty(
@@ -306,7 +306,7 @@ describe('MCP protocol compatibility', () => {
           client.listResourceTemplates(),
         ]);
 
-      expect(tools).toHaveLength(12);
+      expect(tools).toHaveLength(13);
       expect(prompts).toHaveLength(3);
       expect(resources).toHaveLength(3);
       expect(resourceTemplates).toHaveLength(1);

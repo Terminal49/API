@@ -350,7 +350,7 @@ describe('MCP server wiring', () => {
     );
     const prompts = Object.keys((server as any)._registeredPrompts || {});
 
-    expect(tools).toHaveLength(12);
+    expect(tools).toHaveLength(13);
     expect(tools).toContain('search_container');
     expect(tools).toContain('track_container');
     expect(tools).toContain('get_container');
@@ -359,6 +359,7 @@ describe('MCP server wiring', () => {
     expect(tools).toContain('get_supported_shipping_lines');
     expect(tools).toContain('get_container_route');
     expect(tools).toContain('summarize_containers');
+    expect(tools).toContain('list_parties');
     expect(tools).toContain('list_shipments');
     expect(tools).toContain('list_containers');
     expect(tools).toContain('list_tracking_requests');
@@ -395,6 +396,7 @@ describe('MCP server wiring', () => {
       list_shipments: {},
       list_containers: {},
       summarize_containers: { group_by: 'pod_terminal' },
+      list_parties: { search: 'Acme' },
       list_tracking_requests: {},
       search_docs: { query: 'webhooks' },
     };
