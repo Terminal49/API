@@ -28,6 +28,20 @@ export interface SearchResult {
     shipping_line: string;
     container_count: number;
   }>;
+  /**
+   * Tracking requests that match but have no container or shipment yet, such
+   * as one that failed or is still pending. They explain why a number the user
+   * submitted is not showing.
+   */
+  tracking_requests: Array<{
+    id: string;
+    request_number: string;
+    shipping_line: string;
+    status: string;
+    failed_reason?: string;
+    created_at?: string;
+    updated_at?: string;
+  }>;
   total_results: number;
 }
 
@@ -83,6 +97,7 @@ export async function executeSearchContainer(
       total_results: formattedResult.total_results,
       containers_found: formattedResult.containers.length,
       shipments_found: formattedResult.shipments.length,
+      tracking_requests_found: formattedResult.tracking_requests.length,
       duration_ms: duration,
       timestamp: new Date().toISOString(),
     });
@@ -120,6 +135,7 @@ function formatSearchResponse(apiResponse: any): SearchResult {
 
   const containers: SearchResult['containers'] = [];
   const shipments: SearchResult['shipments'] = [];
+  const trackingRequests: SearchResult['tracking_requests'] = [];
 
   // Process main data - search API returns type="search_result"
   for (const item of data) {
@@ -134,6 +150,8 @@ function formatSearchResponse(apiResponse: any): SearchResult {
         containers.push(formatSearchResult(item));
       } else if (entityType === 'shipment') {
         shipments.push(formatSearchResultShipment(item));
+      } else if (entityType === 'tracking_request') {
+        trackingRequests.push(formatSearchResultTrackingRequest(item));
       }
     }
     // Legacy format support
@@ -163,7 +181,9 @@ function formatSearchResponse(apiResponse: any): SearchResult {
   return {
     containers,
     shipments,
-    total_results: containers.length + shipments.length,
+    tracking_requests: trackingRequests,
+    total_results:
+      containers.length + shipments.length + trackingRequests.length,
   };
 }
 
@@ -225,6 +245,22 @@ function formatSearchResultShipment(
     container_count: Number.isFinite(Number(attrs.containers_count))
       ? Number(attrs.containers_count)
       : 0,
+  };
+}
+
+function formatSearchResultTrackingRequest(
+  searchResult: any,
+): SearchResult['tracking_requests'][0] {
+  const attrs = searchResult.attributes || {};
+
+  return {
+    id: String(searchResult.id),
+    request_number: toText(attrs.number),
+    shipping_line: toText(attrs.scac),
+    status: toText(attrs.status, 'unknown'),
+    failed_reason: toTextOrUndefined(attrs.failed_reason),
+    created_at: toTextOrUndefined(attrs.created_at),
+    updated_at: toTextOrUndefined(attrs.updated_at),
   };
 }
 
