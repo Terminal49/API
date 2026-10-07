@@ -188,6 +188,7 @@ export const CONTAINER_FILTER_KEYS = [
   'eta_changed_in_last_24h',
   'eta_changed_in_past_3_days',
   'has_holds',
+  'hold_names',
   'actively_tracked',
   'search_by_ids',
   'search_by_number',
@@ -363,6 +364,12 @@ export const containerFilterShape = {
     .boolean()
     .describe(
       'true requires nonempty terminal holds; false requires an explicitly empty holds array. Unreported/null holds match neither branch.',
+    )
+    .optional(),
+  hold_names: z
+    .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+    .describe(
+      'Active terminal hold names (status hold; pending holds do not match), case-insensitive, such as freight, customs, USDA, or other. Comma-separated names mean ANY. Names come from terminal feeds, so read them from holds_at_pod_terminal rather than assuming a fixed list. Use has_holds for presence.',
     )
     .optional(),
   actively_tracked: z

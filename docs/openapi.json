@@ -6464,6 +6464,17 @@
           },
           {
             "in": "query",
+            "name": "filter[hold_names]",
+            "description": "Active terminal hold names (status hold; pending holds do not match), case-insensitive, such as freight, customs, USDA, or other. Comma-separated names mean ANY. Names come from terminal feeds, so read them from holds_at_pod_terminal rather than assuming a fixed list. Use has_holds for presence.",
+            "schema": {
+              "type": "string"
+            },
+            "x-t49-filter-kind": "string",
+            "x-t49-filter-key": "hold_names",
+            "example": "freight,customs"
+          },
+          {
+            "in": "query",
             "name": "filter[actively_tracked]",
             "description": "true selects shipments with tracking not stopped; false selects stopped tracking. Applies via the related shipment for containers.",
             "schema": {

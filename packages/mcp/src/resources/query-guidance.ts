@@ -42,7 +42,7 @@ export function readQueryGuidanceResource(): string {
     '  - "Which containers have been discharged but not picked up?"',
     '  - "Any holds on [X]?"',
     '- Primary tools: list_containers or list_shipments then get_container',
-    '- list_containers supports operational filters. For discharged but not picked up, use advanced_filters: { pod_discharged_at: "@exists", picked_up_at: "@not_exists" }. For terminal holds, use has_holds: true.',
+    '- list_containers supports operational filters. For discharged but not picked up, use advanced_filters: { pod_discharged_at: "@exists", picked_up_at: "@not_exists" }. For terminal holds, use has_holds: true; for one hold type, use hold_names (for example "freight" or "customs,USDA").',
     '- Verify returned milestones before describing pickup readiness. Missing terminal hold data is different from an explicitly empty holds array.',
     '',
     '### 4) Arrival / ETAs / delays',

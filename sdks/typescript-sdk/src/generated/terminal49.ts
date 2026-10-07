@@ -4671,6 +4671,11 @@ export interface operations {
                  */
                 "filter[has_holds]"?: boolean;
                 /**
+                 * @description Active terminal hold names (status hold; pending holds do not match), case-insensitive, such as freight, customs, USDA, or other. Comma-separated names mean ANY. Names come from terminal feeds, so read them from holds_at_pod_terminal rather than assuming a fixed list. Use has_holds for presence.
+                 * @example freight,customs
+                 */
+                "filter[hold_names]"?: string;
+                /**
                  * @description true selects shipments with tracking not stopped; false selects stopped tracking. Applies via the related shipment for containers.
                  * @example true
                  */

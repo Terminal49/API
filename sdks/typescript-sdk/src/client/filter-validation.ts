@@ -329,6 +329,14 @@ export function buildFilterQuery(
         key,
         'known custom-field slugs are currently ignored by the deployed API; support is pending API verification',
       );
+    if (
+      entity === 'container' &&
+      key === 'hold_names' &&
+      values(key, value).some((v) =>
+        v.split(',').some((name) => name.trim().startsWith('@')),
+      )
+    )
+      invalid(key, 'expected hold names; use has_holds for presence');
     if (!Object.hasOwn(kinds, key))
       invalid(
         key,
