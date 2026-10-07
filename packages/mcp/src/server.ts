@@ -901,7 +901,7 @@ function formatToolError(
       keys.includes(details.filter) &&
       err.message?.startsWith(`Invalid list filter "${details.filter}": `)
     ) {
-      return `${err.message} Use the filter values and operators documented in the tool schema.`;
+      return `${err.message.replace(/[.\s]*$/, '.')} Use the filter values and operators documented in the tool schema.`;
     }
     return 'Invalid or unsupported list filter. Use the names, values, and operators documented in the tool schema.';
   }
