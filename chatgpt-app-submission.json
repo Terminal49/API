@@ -139,6 +139,18 @@
         "open_world_justification": "Queries the public Terminal49 documentation site hosted by Mintlify, an external read-only search service.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
+    },
+    "summarize_containers": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Counts containers by a chosen dimension without modifying them.",
+        "open_world_justification": "Does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
     }
   },
   "test_cases": [

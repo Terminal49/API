@@ -430,3 +430,40 @@ describe('builder defaults and generic page cap', () => {
     expect(clampPageSize(undefined)).toBeUndefined();
   });
 });
+
+describe('containers.summary', () => {
+  it('sends group_by with the same validated filters as list', async () => {
+    const { client, urls } = clientFixture({
+      data: [{ key: 't1', label: 'APM Terminals', count: 3 }],
+      meta: { total: 3, group_by: 'pod_terminal', truncated: false },
+    });
+
+    const result = await client.containers.summary(
+      'pod_terminal',
+      { requires_attention: true, actively_tracked: true },
+      { format: 'mapped' },
+    );
+
+    const url = urls[0];
+    expect(url.pathname).toBe('/v2/containers/summary');
+    expect(url.searchParams.get('group_by')).toBe('pod_terminal');
+    expect(url.searchParams.get('filter[requires_attention]')).toBe('true');
+    expect(url.searchParams.get('filter[actively_tracked]')).toBe('true');
+    expect(url.searchParams.has('include')).toBe(false);
+    expect(url.searchParams.has('page[size]')).toBe(false);
+    expect(result).toEqual({
+      groups: [{ key: 't1', label: 'APM Terminals', count: 3 }],
+      total: 3,
+      groupBy: 'pod_terminal',
+      truncated: false,
+    });
+  });
+
+  it('rejects unknown filters before calling the API', async () => {
+    const { client, fetchImpl } = clientFixture();
+    await expect(
+      client.containers.summary('current_status', { made_up: true } as any),
+    ).rejects.toThrow(ValidationError);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});

@@ -25,6 +25,13 @@ export interface ListOptions extends CallOptions {
   maxRows?: number;
 }
 
+/** Dimensions `containers.summary` can count by. */
+export type ContainerSummaryGroupBy =
+  | 'current_status'
+  | 'pod_terminal'
+  | 'shipping_line'
+  | 'port_of_discharge';
+
 export type IncludeParam<TInclude extends string> =
   | readonly TInclude[]
   | string;

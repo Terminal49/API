@@ -7548,6 +7548,101 @@
         }
       }
     },
+    "/containers/summary": {
+      "get": {
+        "summary": "Summarize containers",
+        "description": "Counts the containers that `GET /containers` returns for the same filters, grouped by one dimension, in a single request. Accepts every `filter[...]` parameter of `GET /containers` (the same names and operators); pagination, sort, and include do not apply. Groups are ordered by count, most first, and capped at 200; `meta.truncated` is true when there are more.",
+        "operationId": "summarize-containers",
+        "tags": [
+          "Containers"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "current_status",
+                "pod_terminal",
+                "shipping_line",
+                "port_of_discharge"
+              ]
+            },
+            "in": "query",
+            "name": "group_by",
+            "required": true,
+            "description": "Dimension to count by. `pod_terminal` and `port_of_discharge` groups are keyed by ID and labeled by name; `shipping_line` groups are keyed by ID and labeled by SCAC; `current_status` groups are keyed and labeled by status."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "key",
+                          "label",
+                          "count"
+                        ],
+                        "properties": {
+                          "key": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Status, or the ID of the terminal, shipping line, or port. Null for containers without a value."
+                          },
+                          "label": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Display name for the key."
+                          },
+                          "count": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "required": [
+                        "total",
+                        "group_by",
+                        "truncated"
+                      ],
+                      "properties": {
+                        "total": {
+                          "type": "integer",
+                          "description": "Containers matching the filters."
+                        },
+                        "group_by": {
+                          "type": "string"
+                        },
+                        "truncated": {
+                          "type": "boolean",
+                          "description": "True when more than 200 groups exist; only the first 200 are returned."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown group_by, or an invalid filter."
+          }
+        }
+      }
+    },
     "/containers/{id}": {
       "parameters": [
         {

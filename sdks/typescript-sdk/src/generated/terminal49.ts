@@ -420,6 +420,26 @@ export interface paths {
         patch: operations["patch-containers-id"];
         trace?: never;
     };
+    "/containers/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Summarize containers
+         * @description Counts the containers that `GET /containers` returns for the same filters, grouped by one dimension, in a single request. Accepts every `filter[...]` parameter of `GET /containers` (the same names and operators); pagination, sort, and include do not apply. Groups are ordered by count, most first, and capped at 200; `meta.truncated` is true when there are more.
+         */
+        get: operations["summarize-containers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/containers/{id}": {
         parameters: {
             query?: never;
@@ -5189,6 +5209,51 @@ export interface operations {
                         data?: components["schemas"]["container"];
                     };
                 };
+            };
+        };
+    };
+    "summarize-containers": {
+        parameters: {
+            query: {
+                /** @description Dimension to count by. `pod_terminal` and `port_of_discharge` groups are keyed by ID and labeled by name; `shipping_line` groups are keyed by ID and labeled by SCAC; `current_status` groups are keyed and labeled by status. */
+                group_by: "current_status" | "pod_terminal" | "shipping_line" | "port_of_discharge";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @description Status, or the ID of the terminal, shipping line, or port. Null for containers without a value. */
+                            key: string | null;
+                            /** @description Display name for the key. */
+                            label: string | null;
+                            count: number;
+                        }[];
+                        meta: {
+                            /** @description Containers matching the filters. */
+                            total: number;
+                            group_by: string;
+                            /** @description True when more than 200 groups exist; only the first 200 are returned. */
+                            truncated: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description Unknown group_by, or an invalid filter. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -4,6 +4,7 @@ import type { Container } from '../../types/models.js';
 import type {
   CallOptions,
   ContainerInclude,
+  ContainerSummaryGroupBy,
   IncludeParam,
   ListOptions,
 } from '../../types/options.js';
@@ -75,6 +76,33 @@ export class ContainerManager extends BaseManager {
     return this.formatResult(raw, options?.format, (doc) => ({
       ...this.mapListResult(doc, mapContainerList),
       unsupportedFilters,
+    }));
+  }
+
+  /**
+   * Count the containers `list` would return for the same filters, grouped by
+   * one dimension, in one request (`GET /containers/summary`).
+   */
+  async summary(
+    groupBy: ContainerSummaryGroupBy,
+    filters: ContainerListFilters = {},
+    options?: CallOptions,
+  ): Promise<any> {
+    const { query } = buildContainerListQuery(filters);
+    delete (query as Record<string, unknown>).include;
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/containers/summary', {
+        // SAFETY: the summary endpoint accepts every list filter; OpenAPI
+        // documents only group_by, so the validated list query is widened here.
+        params: { query: { ...query, group_by: groupBy } as any },
+        querySerializer: serializeListQuery,
+      }),
+    );
+    return this.formatResult(raw, options?.format, (doc: any) => ({
+      groups: doc?.data ?? [],
+      total: doc?.meta?.total ?? 0,
+      groupBy: doc?.meta?.group_by ?? groupBy,
+      truncated: doc?.meta?.truncated ?? false,
     }));
   }
 
