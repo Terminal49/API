@@ -440,7 +440,8 @@ if (!cfg) {
                 name: 'has_more is true and next_page is 2 when meta.total > 2',
                 test: (p) =>
                   (listTotal(p) ?? 0) <= 2 ||
-                  (listMeta(p).has_more === true && listMeta(p).next_page === 2),
+                  (listMeta(p).has_more === true &&
+                    listMeta(p).next_page === 2),
                 detail: (p) =>
                   `total=${String(listTotal(p))} has_more=${String(listMeta(p).has_more)} next_page=${String(listMeta(p).next_page)}`,
               },
@@ -486,7 +487,9 @@ if (!cfg) {
       const shipment = listItems(sample.payload)
         .map((i) => i.shipment)
         .find(isRecord);
-      const scac = shipment ? readString(shipment, 'shippingLineScac') : undefined;
+      const scac = shipment
+        ? readString(shipment, 'shippingLineScac')
+        : undefined;
       if (!scac) return skip();
       const { score } = await evaluate(
         'list_containers',
@@ -503,7 +506,8 @@ if (!cfg) {
               test: (p) =>
                 listItems(p).every(
                   (i) =>
-                    isRecord(i.shipment) && i.shipment.shippingLineScac === scac,
+                    isRecord(i.shipment) &&
+                    i.shipment.shippingLineScac === scac,
                 ),
             },
             {
@@ -523,7 +527,9 @@ if (!cfg) {
     it('list_containers pickup_lfd filter finds the container its date came from', async ({
       skip,
     }) => {
-      const sample = await client.callTool('list_containers', { page_size: 25 });
+      const sample = await client.callTool('list_containers', {
+        page_size: 25,
+      });
       const withLfd = listItems(sample.payload).find(
         (i) =>
           typeof i.number === 'string' &&
