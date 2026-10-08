@@ -121,8 +121,11 @@ export async function executeSummarizeContainers(
     let total: number | null;
     let morePages: boolean;
     if (typeof first?.meta?.total === 'number') {
-      total = first.meta.total;
-      const pages = Math.ceil(Math.min(total, args.max_rows) / PAGE_SIZE);
+      const reportedTotal: number = first.meta.total;
+      total = reportedTotal;
+      const pages = Math.ceil(
+        Math.min(reportedTotal, args.max_rows) / PAGE_SIZE,
+      );
       for (let start = 2; start <= pages; start += CONCURRENCY) {
         const batch = await Promise.all(
           Array.from(
