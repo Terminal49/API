@@ -488,7 +488,7 @@ if (!cfg) {
         .map((i) => i.shipment)
         .find(isRecord);
       const scac = shipment
-        ? readString(shipment, 'shippingLineScac')
+        ? readString(shipment, 'shipping_line_scac')
         : undefined;
       if (!scac) return skip();
       const { score } = await evaluate(
@@ -507,7 +507,7 @@ if (!cfg) {
                 listItems(p).every(
                   (i) =>
                     isRecord(i.shipment) &&
-                    i.shipment.shippingLineScac === scac,
+                    i.shipment.shipping_line_scac === scac,
                 ),
             },
             {
@@ -531,13 +531,10 @@ if (!cfg) {
         page_size: 25,
       });
       const withLfd = listItems(sample.payload).find(
-        (i) =>
-          typeof i.number === 'string' &&
-          isRecord(i.demurrage) &&
-          typeof i.demurrage.pickupLfd === 'string',
+        (i) => typeof i.number === 'string' && typeof i.pickup_lfd === 'string',
       );
-      if (!withLfd || !isRecord(withLfd.demurrage)) return skip();
-      const lfd = String(withLfd.demurrage.pickupLfd).slice(0, 10);
+      if (!withLfd) return skip();
+      const lfd = String(withLfd.pickup_lfd).slice(0, 10);
       const { score } = await evaluate(
         'list_containers',
         { pickup_lfd: lfd, number: String(withLfd.number) },
