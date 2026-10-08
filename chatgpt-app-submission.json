@@ -179,7 +179,7 @@
       "user_prompt": "How many of my containers are in each status right now?",
       "file_attachment_urls": null,
       "tools_triggered": "summarize_containers",
-      "expected_output": "Returns counts of actively tracked containers grouped by current status, with the total, and states when the count is truncated.",
+      "expected_output": "Returns counts of actively tracked containers grouped by current status and states when the count is truncated. Reports the total when known; otherwise, explains that the total is unknown and reports how many containers were counted.",
       "expected_output_url": null
     },
     {
