@@ -5,6 +5,13 @@ All notable changes to `@terminal49/sdk` are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0](https://github.com/Terminal49/API/compare/sdk-v-v0.5.0...sdk-v-v0.6.0) (2026-10-08)
+
+
+### Features
+
+* **sdk:** complete verified shipment and container filters ([#396](https://github.com/Terminal49/API/issues/396)) ([659d6e6](https://github.com/Terminal49/API/commit/659d6e63c1ecb27eda9d93e3fe4d37250642a866))
+
 ## [0.5.0](https://github.com/Terminal49/API/compare/sdk-v-v0.4.0...sdk-v-v0.5.0) (2026-09-30)
 
 
