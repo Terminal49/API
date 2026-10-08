@@ -415,6 +415,37 @@ describe('MCP server wiring', () => {
     }
   });
 
+  it('summarize_containers returns a schema-valid uncounted total when pages remain', async () => {
+    containersList.mockImplementation(
+      async (_filters: unknown, options: { page: number }) => ({
+        items: Array.from({ length: 50 }, (_, i) => ({
+          id: `C${options.page}-${i}`,
+          terminals: { podTerminal: { name: 'APM' } },
+        })),
+        links: {
+          next: `https://api.example/v2/containers?page[number]=${options.page + 1}`,
+        },
+      }),
+    );
+    const server = createTerminal49McpServer('token');
+    const tool = (server as any)._registeredTools.summarize_containers;
+    const result = await tool.handler(
+      { group_by: 'pod_terminal', max_rows: 50 },
+      {},
+    );
+
+    expect(result.isError).toBeUndefined();
+    expect(result.structuredContent).toMatchObject({
+      total: null,
+      counted: 50,
+      truncated: true,
+      groups: [{ key: 'APM', count: 50 }],
+    });
+    expect(tool.outputSchema.safeParse(result.structuredContent).success).toBe(
+      true,
+    );
+  });
+
   it('bounds identifier strings in tool input schemas', () => {
     const server = createTerminal49McpServer('token');
     const tools = (server as any)._registeredTools as Record<
