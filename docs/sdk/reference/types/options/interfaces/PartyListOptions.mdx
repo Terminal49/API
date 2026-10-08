@@ -1,0 +1,22 @@
+---
+title: "Interface: PartyListOptions"
+---
+
+# Interface: PartyListOptions
+
+Options for `parties.list`.
+
+## Extends
+
+- [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions)
+
+## Properties
+
+| Property | Type | Description | Inherited from |
+| ------ | ------ | ------ | ------ |
+| <a id="property-format"></a> `format?` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | Override the client's default response format for this call. | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions).[`format`](/sdk/reference/types/options/interfaces/ListOptions#property-format) |
+| <a id="property-maxpages"></a> `maxPages?` | `number` | Maximum number of pages `iterate()` will fetch before stopping. Defaults to the manager's safety cap; raise it to walk past the default bound. | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions).[`maxPages`](/sdk/reference/types/options/interfaces/ListOptions#property-maxpages) |
+| <a id="property-maxrows"></a> `maxRows?` | `number` | Maximum number of rows `iterate()` will yield before stopping. Defaults to the manager's safety cap; raise it to walk past the default bound. | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions).[`maxRows`](/sdk/reference/types/options/interfaces/ListOptions#property-maxrows) |
+| <a id="property-page"></a> `page?` | `number` | 1-based page number. | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions).[`page`](/sdk/reference/types/options/interfaces/ListOptions#property-page) |
+| <a id="property-pagesize"></a> `pageSize?` | `number` | Number of records per page. | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions).[`pageSize`](/sdk/reference/types/options/interfaces/ListOptions#property-pagesize) |
+| <a id="property-query"></a> `query?` | `string` | Search by company-name substring, ignoring case ("wave" matches "Bluewave Home Goods"). | - |

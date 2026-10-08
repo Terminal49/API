@@ -24,6 +24,25 @@ describe('Terminal49Client request building', () => {
     expect(calls[0].url.toString()).toBe('https://api.test/v2/shipping_lines');
   });
 
+  it('searches parties by company name with query', async () => {
+    const { fetchImpl, calls } = createMockFetch({
+      '/parties?page[number]=2&page[size]=10&query=Blue Wave': () =>
+        jsonResponse({ data: [] }),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.parties.list({ query: 'Blue Wave', pageSize: 10, page: 2 });
+    const url = new URL(calls[0].url.toString());
+    expect(url.pathname).toBe('/v2/parties');
+    expect(url.searchParams.get('query')).toBe('Blue Wave');
+    expect(url.searchParams.get('page[number]')).toBe('2');
+    expect(url.searchParams.get('page[size]')).toBe('10');
+  });
+
   it('uses defaultFormat when no format override is provided', async () => {
     const { fetchImpl } = createMockFetch({
       '/shipping_lines': () =>

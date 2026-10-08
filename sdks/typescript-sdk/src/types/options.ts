@@ -25,6 +25,15 @@ export interface ListOptions extends CallOptions {
   maxRows?: number;
 }
 
+/** Options for `parties.list`. */
+export interface PartyListOptions extends ListOptions {
+  /**
+   * Search by company-name substring, ignoring case
+   * ("wave" matches "Bluewave Home Goods").
+   */
+  query?: string;
+}
+
 export type IncludeParam<TInclude extends string> =
   | readonly TInclude[]
   | string;

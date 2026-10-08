@@ -3097,7 +3097,75 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/custom_field"
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "type"
+                        ],
+                        "properties": {
+                          "id": {
+                            "$ref": "#/components/schemas/custom_field/properties/id"
+                          },
+                          "type": {
+                            "$ref": "#/components/schemas/custom_field/properties/type"
+                          },
+                          "attributes": {
+                            "$ref": "#/components/schemas/custom_field/properties/attributes"
+                          },
+                          "relationships": {
+                            "type": "object",
+                            "properties": {
+                              "entity": {
+                                "type": "object",
+                                "properties": {
+                                  "data": {
+                                    "type": "object",
+                                    "required": [
+                                      "type",
+                                      "id"
+                                    ],
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "tracking_request"
+                                        ]
+                                      },
+                                      "id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "definition": {
+                                "type": "object",
+                                "properties": {
+                                  "data": {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "custom_field_definition"
+                                        ]
+                                      },
+                                      "id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "id"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
                       }
                     },
                     "links": {
@@ -9714,6 +9782,14 @@
             "in": "query",
             "name": "page[size]",
             "description": ""
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "query",
+            "description": "Search parties by company-name substring, ignoring case (\"wave\" matches \"Bluewave Home Goods\")."
           }
         ],
         "tags": [
@@ -16663,6 +16739,18 @@
               "company_name": {
                 "type": "string",
                 "description": "Company name"
+              },
+              "nickname": {
+                "type": "string",
+                "nullable": true,
+                "description": "Optional name used to distinguish this company."
+              },
+              "role_names": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Roles this party has held, such as customer or shipper; use as context when selecting a party filter."
               }
             }
           },
