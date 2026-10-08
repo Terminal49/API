@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { compactContainer } from './compact-rows.js';
 import { executeSummarizeContainers } from './summarize-containers.js';
 
