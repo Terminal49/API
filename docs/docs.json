@@ -492,6 +492,7 @@
             "group": "MCP",
             "pages": [
               "mcp/home",
+              "mcp/filtering-worklists",
               "api-docs/in-depth-guides/mcp"
             ]
           },

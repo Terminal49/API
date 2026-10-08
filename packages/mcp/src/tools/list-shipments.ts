@@ -8,29 +8,31 @@ import { logMcpEvent } from '../logging.js';
 
 const MAX_PAGE_SIZE = 25;
 
-export interface ListShipmentsArgs {
-  number?: string;
-  tracking_stopped?: boolean;
-  include_containers?: boolean;
-  page?: number;
-  page_size?: number;
-}
+export type { ListShipmentsArgs } from './list-filters.js';
+import {
+  shipmentListInputSchema,
+  getShipmentFilters,
+  getListResponseMetadata,
+  type ListShipmentsArgs,
+} from './list-filters.js';
 
 export async function executeListShipments(
   args: ListShipmentsArgs,
   client: Terminal49Client,
 ): Promise<any> {
+  args = shipmentListInputSchema.parse({
+    ...args,
+    page_size: Math.min(args.page_size ?? MAX_PAGE_SIZE, MAX_PAGE_SIZE),
+  });
+  const filters = getShipmentFilters(args);
   const startTime = Date.now();
   const includeContainers = args.include_containers ?? false;
   const pageSize = Math.min(args.page_size ?? MAX_PAGE_SIZE, MAX_PAGE_SIZE);
   logMcpEvent({
     event: 'tool.execute.start',
     tool: 'list_shipments',
-    filters: {
-      number: args.number,
-      tracking_stopped: args.tracking_stopped,
-      include_containers: includeContainers,
-    },
+    filter_keys: Object.keys(filters),
+    include_containers: includeContainers,
     page: args.page,
     page_size: pageSize,
     timestamp: new Date().toISOString(),
@@ -39,8 +41,8 @@ export async function executeListShipments(
   try {
     const result = await client.shipments.list(
       {
-        number: args.number,
-        trackingStopped: args.tracking_stopped,
+        ...filters,
+        sort: args.sort,
         includeContainers,
       },
       {
@@ -61,14 +63,17 @@ export async function executeListShipments(
       timestamp: new Date().toISOString(),
     });
 
-    return result;
+    return {
+      ...result,
+      _metadata: getListResponseMetadata(result, filters, args, pageSize),
+    };
   } catch (error) {
     const duration = Date.now() - startTime;
     logMcpEvent({
       event: 'tool.execute.error',
       tool: 'list_shipments',
       error: (error as Error).name,
-      message: (error as Error).message,
+
       duration_ms: duration,
       timestamp: new Date().toISOString(),
     });

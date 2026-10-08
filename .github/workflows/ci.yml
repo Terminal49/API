@@ -124,6 +124,11 @@ jobs:
         run: npm ci
       - name: Build SDK (workspace dependency)
         run: npm run build --workspace @terminal49/sdk
+      - name: Verify generated MCP filter schemas
+        run: |
+          npm run generate:filters --workspace @terminal49/mcp
+          git diff --exit-code -- packages/mcp/src/generated
+          test -z "$(git status --porcelain -- packages/mcp/src/generated)"
       - name: Build MCP
         run: npm run build --workspace @terminal49/mcp
       - name: Type-check SDK + MCP
