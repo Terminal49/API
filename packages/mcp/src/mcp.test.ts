@@ -20,20 +20,25 @@ vi.mock('@sentry/node', () => ({
 // Stubbed Terminal49Client so server tools can be exercised end-to-end without
 // hitting the live API. Tests configure these mocks per-case. `vi.hoisted`
 // is required because vi.mock factories are hoisted above normal declarations.
-const { search, shippingLinesList, containersList, shipmentsList } = vi.hoisted(
-  () => ({
-    search: vi.fn(),
-    shippingLinesList: vi.fn(),
-    containersList: vi.fn(),
-    shipmentsList: vi.fn(),
-  }),
-);
+const {
+  search,
+  shippingLinesList,
+  containersList,
+  shipmentsList,
+  containersSummary,
+} = vi.hoisted(() => ({
+  search: vi.fn(),
+  shippingLinesList: vi.fn(),
+  containersList: vi.fn(),
+  containersSummary: vi.fn(),
+  shipmentsList: vi.fn(),
+}));
 
 vi.mock('@terminal49/sdk', () => ({
   Terminal49Client: class Terminal49Client {
     search = search;
     shippingLines = { list: shippingLinesList };
-    containers = { list: containersList };
+    containers = { list: containersList, summary: containersSummary };
     shipments = { list: shipmentsList };
   },
   FeatureNotEnabledError: class FeatureNotEnabledError extends Error {},
@@ -44,6 +49,7 @@ beforeEach(() => {
   search.mockReset();
   shippingLinesList.mockReset();
   containersList.mockReset();
+  containersSummary.mockReset();
   shipmentsList.mockReset();
 });
 
@@ -350,7 +356,7 @@ describe('MCP server wiring', () => {
     );
     const prompts = Object.keys((server as any)._registeredPrompts || {});
 
-    expect(tools).toHaveLength(11);
+    expect(tools).toHaveLength(12);
     expect(tools).toContain('search_container');
     expect(tools).toContain('track_container');
     expect(tools).toContain('get_container');
@@ -358,6 +364,7 @@ describe('MCP server wiring', () => {
     expect(tools).toContain('get_container_transport_events');
     expect(tools).toContain('get_supported_shipping_lines');
     expect(tools).toContain('get_container_route');
+    expect(tools).toContain('summarize_containers');
     expect(tools).toContain('list_shipments');
     expect(tools).toContain('list_containers');
     expect(tools).toContain('list_tracking_requests');
@@ -393,6 +400,7 @@ describe('MCP server wiring', () => {
       get_container_route: { id },
       list_shipments: {},
       list_containers: {},
+      summarize_containers: { group_by: 'pod_terminal' },
       list_tracking_requests: {},
       search_docs: { query: 'webhooks' },
     };
@@ -467,7 +475,7 @@ describe('MCP server wiring', () => {
     }
   });
 
-  it.each(['list_containers', 'list_shipments'])(
+  it.each(['list_containers', 'list_shipments', 'summarize_containers'])(
     '%s returns actionable SDK validation errors without submitted values',
     async (name) => {
       const error = Object.assign(
@@ -478,11 +486,18 @@ describe('MCP server wiring', () => {
       );
       (name === 'list_containers'
         ? containersList
-        : shipmentsList
+        : name === 'summarize_containers'
+          ? containersSummary
+          : shipmentsList
       ).mockRejectedValue(error);
       const result = await (
         createTerminal49McpServer('token') as any
-      )._registeredTools[name].handler({ pod_code: '=PRIVATE_VALUE' });
+      )._registeredTools[name].handler({
+        pod_code: '=PRIVATE_VALUE',
+        ...(name === 'summarize_containers'
+          ? { group_by: 'pod_terminal' }
+          : {}),
+      });
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('expected literal values');
       expect(result.content[0].text).toContain('tool schema');

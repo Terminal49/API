@@ -23,6 +23,10 @@ import {
 import { executeListShipments } from './tools/list-shipments.js';
 import { executeListContainers } from './tools/list-containers.js';
 import {
+  executeSummarizeContainers,
+  summarizeContainersInputSchema,
+} from './tools/summarize-containers.js';
+import {
   shipmentListInputSchema,
   containerListInputSchema,
   getShipmentFilters,
@@ -892,7 +896,9 @@ function formatToolError(
   }
 
   if (
-    (toolName === 'list_shipments' || toolName === 'list_containers') &&
+    (toolName === 'list_shipments' ||
+      toolName === 'list_containers' ||
+      toolName === 'summarize_containers') &&
     err.name === 'ValidationError'
   ) {
     const details = asRecord(err.details);
@@ -1450,6 +1456,44 @@ export function createTerminal49McpServer(
       // registered terminal49://container/{id} resource, so the client can
       // resolve full details on demand instead of paying for them up front.
       (result) => buildListResourceLinks(result, 'container'),
+    ),
+  );
+
+  // Tool 9b: Summarize Containers
+  server.registerTool(
+    'summarize_containers',
+    {
+      title: 'Summarize Containers',
+      description:
+        'Count containers grouped by POD terminal, status, shipping line or port of discharge, using the same filters as list_containers. ' +
+        'Use it for "how many" and "break down by" questions; use list_containers for "which ones". ' +
+        'Like the dashboard, only actively tracked containers are counted unless include_stopped_tracking is true. ' +
+        'Report the total, and say so when truncated is true (more than 200 groups).',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.preprocess(
+        stripLegacyIntent,
+        summarizeContainersInputSchema,
+      ),
+      outputSchema: z.object({
+        total: z.number(),
+        group_by: z.string(),
+        truncated: z.boolean(),
+        groups: z.array(
+          z.object({
+            key: z.string().nullable(),
+            label: z.string().nullable(),
+            count: z.number(),
+          }),
+        ),
+        applied_filters: z.record(z.string(), z.unknown()),
+      }),
+    },
+    wrapTool('summarize_containers', async (args) =>
+      executeSummarizeContainers(args, client),
     ),
   );
 

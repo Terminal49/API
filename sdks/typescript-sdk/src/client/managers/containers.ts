@@ -1,9 +1,12 @@
+import type { paths } from '../../generated/terminal49.js';
+import { UpstreamError } from '../errors.js';
 import type { ContainerListFilters } from '../../generated/list-filters.js';
 import { serializeListQuery } from '../filter-validation.js';
 import type { Container } from '../../types/models.js';
 import type {
   CallOptions,
   ContainerInclude,
+  ContainerSummaryGroupBy,
   IncludeParam,
   ListOptions,
 } from '../../types/options.js';
@@ -26,6 +29,53 @@ const DEFAULT_CONTAINER_INCLUDES = [
   'pod_terminal',
   'pickup_facility',
 ] as const satisfies readonly ContainerInclude[];
+
+type SummaryResponse =
+  paths['/containers/summary']['get']['responses'][200]['content']['application/json'];
+
+function parseSummaryResponse(
+  value: unknown,
+  groupBy: ContainerSummaryGroupBy,
+): SummaryResponse {
+  const invalid = () =>
+    new UpstreamError('Invalid container summary response', 502);
+  if (!value || typeof value !== 'object') throw invalid();
+  // SAFETY: treat the response as a partial shape only; every required field is checked below.
+  const doc = value as Partial<SummaryResponse>;
+  if (
+    !Array.isArray(doc.data) ||
+    !doc.meta ||
+    !Number.isSafeInteger(doc.meta.total) ||
+    doc.meta.total < 0 ||
+    doc.meta.group_by !== groupBy ||
+    typeof doc.meta.truncated !== 'boolean'
+  )
+    throw invalid();
+  const keys = new Set<string | null>();
+  let counted = 0;
+  for (const group of doc.data) {
+    if (
+      !group ||
+      typeof group !== 'object' ||
+      !(group.key === null || typeof group.key === 'string') ||
+      !(group.label === null || typeof group.label === 'string') ||
+      !Number.isSafeInteger(group.count) ||
+      group.count < 0 ||
+      keys.has(group.key)
+    )
+      throw invalid();
+    keys.add(group.key);
+    counted += group.count;
+  }
+  if (
+    !Number.isSafeInteger(counted) ||
+    counted > doc.meta.total ||
+    (!doc.meta.truncated && counted !== doc.meta.total)
+  )
+    throw invalid();
+  // SAFETY: the checks above establish all required response fields and their count invariants.
+  return doc as SummaryResponse;
+}
 
 export class ContainerManager extends BaseManager {
   async get(
@@ -75,6 +125,32 @@ export class ContainerManager extends BaseManager {
     return this.formatResult(raw, options?.format, (doc) => ({
       ...this.mapListResult(doc, mapContainerList),
       unsupportedFilters,
+    }));
+  }
+
+  /**
+   * Count the containers `list` would return for the same filters, grouped by
+   * one dimension, in one request (`GET /containers/summary`).
+   */
+  async summary(
+    groupBy: ContainerSummaryGroupBy,
+    filters: ContainerListFilters = {},
+    options?: CallOptions,
+  ): Promise<any> {
+    const { query } = buildContainerListQuery(filters);
+    delete (query as Record<string, unknown>).include;
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/containers/summary', {
+        params: { query: { ...query, group_by: groupBy } },
+        querySerializer: serializeListQuery,
+      }),
+    );
+    const summary = parseSummaryResponse(raw, groupBy);
+    return this.formatResult(summary, options?.format, (doc) => ({
+      groups: doc.data,
+      total: doc.meta.total,
+      groupBy: doc.meta.group_by,
+      truncated: doc.meta.truncated,
     }));
   }
 

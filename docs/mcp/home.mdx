@@ -469,6 +469,24 @@ Compact rows retain the terminal check time, POD timezone, shipment ID, and acti
 
 ---
 
+### `summarize_containers`
+
+Count containers grouped by one dimension, using the same filters as `list_containers`. Use it for "how many" and "break down by" questions; use `list_containers` for "which ones". Like the dashboard, only actively tracked containers are counted unless `include_stopped_tracking` is true.
+
+**Parameters**
+
+- The filters accepted by `list_containers` (including `advanced_filters` and `include_stopped_tracking`).
+- `group_by` *(string, required)* - `pod_terminal`, `current_status`, `shipping_line` or `port_of_discharge`.
+
+Counts come from `GET /v2/containers/summary` in one request. Groups are ordered by count and capped at 200; `truncated` is true when there are more.
+
+**Good for**
+
+- "How many containers are at risk at each terminal?"
+- "Break down the containers ready for pickup by shipping line."
+
+---
+
 ### `list_tracking_requests`
 
 List tracking requests with optional filters and pagination.
