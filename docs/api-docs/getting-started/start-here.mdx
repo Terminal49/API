@@ -44,6 +44,16 @@ Sign in to your Terminal49 account and go to the [developer portal](https://app.
   If you did not capture the full value, create a new key and copy it immediately. You can then delete the older key from the [developer portal](https://app.terminal49.com/developers/api-keys).
 </Warning>
 
+### Rotate your API key
+
+For security, the best practice is to rotate your API key every 90 days.
+
+To rotate a key:
+
+1. Create a new key in the [developer portal](https://app.terminal49.com/developers/api-keys) and copy the full value right away.
+2. Store the new key in your password manager or deployment secret manager, and update every integration that uses the old key.
+3. After your integrations work with the new key, remove the old key from the developer portal.
+
 ## Send the Authorization header
 
 The API uses a Token-prefixed API key in the `Authorization` header. Send it with every request:
