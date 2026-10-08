@@ -58,6 +58,7 @@ type ClaudeSubmission = {
     authentication: string;
   };
   listing: {
+    tool_names: string[];
     name: string;
     tagline: string;
     documentation_url: string;
@@ -228,14 +229,25 @@ describe('MCP tool annotations', () => {
       category: 'BUSINESS',
     });
     expect(chatGpt.app_info.description).toContain('Terminal49 helps users');
+    // Final directory review requires exactly 5 positive and 3 negative cases,
+    // although the import schema only declares minimums.
     expect(chatGpt.test_cases).toHaveLength(5);
     expect(chatGpt.negative_test_cases).toHaveLength(3);
-    expect(chatGpt.test_cases[0]?.expected_output).toContain(
+    const caseFor = (tool: string) =>
+      chatGpt.test_cases.find((testCase) => testCase.tools_triggered === tool);
+    expect(caseFor('search_container')?.expected_output).toContain(
       'Otherwise, clearly reports zero matches',
     );
-    expect(chatGpt.test_cases[4]?.expected_output).toContain(
+    expect(caseFor('track_container')?.expected_output).toContain(
       'no request was created',
     );
+    const triggered = new Set(
+      chatGpt.test_cases.flatMap((testCase) =>
+        testCase.tools_triggered.split(',').map((name) => name.trim()),
+      ),
+    );
+    expect(triggered).toContain('summarize_containers');
+    expect(triggered).toContain('list_parties');
     for (const testCase of chatGpt.test_cases) {
       expect(testCase.description.trim()).not.toBe('');
       expect(testCase.user_prompt.trim()).not.toBe('');
@@ -274,5 +286,8 @@ describe('MCP tool annotations', () => {
       writes_data: true,
     });
     expect(claude.capabilities.primary_use_cases.length).toBeGreaterThan(0);
+    // Tool names are listing details in the Claude directory; a new or
+    // renamed tool needs a listing edit in the developer portal.
+    expect(claude.listing.tool_names).toEqual(Object.keys(tools).sort());
   });
 });

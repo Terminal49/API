@@ -4,7 +4,7 @@
   "app_info": {
     "display_name": "Terminal49",
     "subtitle": "Track shipping containers",
-    "description": "Terminal49 helps users find and monitor ocean shipments and containers, inspect routes and transport events, check supported shipping lines, and create new tracking requests through ChatGPT.",
+    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, and create new tracking requests through ChatGPT.",
     "category": "BUSINESS"
   },
   "tools": {
@@ -175,27 +175,27 @@
       "expected_output_url": null
     },
     {
-      "description": "List a bounded page of containers.",
-      "user_prompt": "Show the first 10 containers in my Terminal49 account.",
+      "description": "Count containers by status.",
+      "user_prompt": "How many of my containers are in each status right now?",
       "file_attachment_urls": null,
-      "tools_triggered": "list_containers",
-      "expected_output": "Returns up to 10 container records, clearly labels the page as unfiltered, and indicates pagination or result limits.",
+      "tools_triggered": "summarize_containers",
+      "expected_output": "Returns counts of actively tracked containers grouped by current status and states when the count is truncated. Reports the total when known; otherwise, explains that the total is unknown and reports how many containers were counted.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Find a company and list its containers.",
+      "user_prompt": "Find the customer named Acme in my Terminal49 account and show their containers.",
+      "file_attachment_urls": null,
+      "tools_triggered": "list_parties, list_containers",
+      "expected_output": "Looks up matching companies and their IDs, then lists containers filtered to that customer. If no company matches, says so instead of listing unfiltered containers.",
       "expected_output_url": null
     },
     {
       "description": "List the 10 most recently updated shipments without nested containers.",
-      "user_prompt": "Show my 10 most recently updated shipments. Don\u2019t include nested containers.",
+      "user_prompt": "Show my 10 most recently updated shipments. Don’t include nested containers.",
       "file_attachment_urls": null,
       "tools_triggered": "list_shipments",
       "expected_output": "Returns up to 10 of the most recently updated shipments with a page size of 10, include_containers=false, no carrier, status, or port filters, and no nested containers. Mentions pagination if present.",
-      "expected_output_url": null
-    },
-    {
-      "description": "Check whether a shipping line is supported before tracking.",
-      "user_prompt": "Does Terminal49 support tracking containers for Ocean Network Express?",
-      "file_attachment_urls": null,
-      "tools_triggered": "get_supported_shipping_lines",
-      "expected_output": "Returns matching supported shipping lines with their SCAC codes and names.",
       "expected_output_url": null
     },
     {
