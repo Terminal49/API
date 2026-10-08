@@ -83,4 +83,29 @@ describe('list_parties', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(10);
     expect(result.truncated).toBe(true);
   });
+
+  it('reports truncation when the limit drops matches', async () => {
+    const { client } = fakeClient([
+      [
+        party('1', 'Ray Drayage East'),
+        party('2', 'Ray Drayage West'),
+        party('3', 'Ray Drayage North'),
+      ],
+    ]);
+    const result = await executeListParties(
+      { search: 'ray drayage', limit: 2 },
+      client,
+    );
+    expect(result.total_matched).toBe(3);
+    expect(result.parties).toHaveLength(2);
+    expect(result.truncated).toBe(true);
+  });
+
+  it('does not treat unrelated non-ASCII names as exact matches', async () => {
+    const { client } = fakeClient([
+      [party('1', '北京物流'), party('2', '上海物流')],
+    ]);
+    const result = await executeListParties({ search: '上海物流' }, client);
+    expect(result.parties.map((p) => p.id)).toEqual(['2']);
+  });
 });

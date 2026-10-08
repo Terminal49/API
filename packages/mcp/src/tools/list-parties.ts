@@ -47,16 +47,17 @@ export interface ListPartiesResult {
 }
 
 const normalize = (text: string) =>
-  text.toLowerCase().replace(/[^a-z0-9]/g, '');
+  text.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 
 function rank(name: string, search: string): number | null {
   const lower = name.toLowerCase();
   const term = search.toLowerCase();
-  if (lower === term || normalize(name) === normalize(search)) return 0;
+  const normalizedSearch = normalize(search);
+  if (lower === term) return 0;
+  if (normalizedSearch && normalize(name) === normalizedSearch) return 0;
   if (lower.startsWith(term)) return 1;
   if (lower.includes(term)) return 2;
-  if (normalize(search) && normalize(name).includes(normalize(search)))
-    return 3;
+  if (normalizedSearch && normalize(name).includes(normalizedSearch)) return 3;
   return null;
 }
 
@@ -96,7 +97,7 @@ export async function executeListParties(
   return {
     total_matched: matches.length,
     parties: matches.slice(0, limit),
-    truncated,
+    truncated: truncated || matches.length > limit,
     usage: `Filter containers by a party with list_containers or summarize_containers advanced_filters.parties, keyed by role: { "<role>": "<party id>" }. Roles: ${PARTY_ROLES.join(', ')}. Use @exists for "has any".`,
   };
 }
