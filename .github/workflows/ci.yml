@@ -140,6 +140,7 @@ jobs:
       - name: Test MCP
         run: npm run test --workspace @terminal49/mcp -- --run --coverage
       - name: Eval MCP tools against production (live; skips without MCP_EVAL_TOKEN secret)
+        if: github.event_name == 'push'
         env:
           MCP_EVAL_TOKEN: ${{ secrets.MCP_EVAL_TOKEN }}
         run: npm run eval --workspace @terminal49/mcp
