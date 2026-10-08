@@ -1131,10 +1131,11 @@ describe('MCP tool contracts', () => {
       client,
     );
 
+    // Compact rows (the default) include the shipment and POD terminal.
     expect(list).toHaveBeenCalledWith(
       {
         actively_tracked: true,
-        include: undefined,
+        include: ['shipment', 'pod_terminal'],
       },
       { format: 'mapped', page: 1, pageSize: 10 },
     );

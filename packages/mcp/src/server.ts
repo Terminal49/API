@@ -162,6 +162,7 @@ const NON_FILTER_LIST_ARGS = new Set([
   'include',
   'include_containers',
   'include_stopped_tracking',
+  'view',
   'sort',
   'advanced_filters',
   'intent',
@@ -1431,7 +1432,7 @@ export function createTerminal49McpServer(
         'Like the dashboard, only actively tracked containers are returned unless an explicit tracking filter is supplied. Set include_stopped_tracking: true for history across active and stopped records; use actively_tracked: false for stopped records only. ' +
         'Use the dashboard definitions and report meta.total for that set before any narrowing: ready for pickup = current_status available; at risk of demurrage or needs attention = requires_attention true with sort attention_priority (the Containers at Risk view); discharged but not picked up = current_status available,not_available,grounded,awaiting_inland_transfer. ' +
         'Add extra conditions such as LFD windows, fees or holds only when the user asks, and present them as a subset of that total. ' +
-        'Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_container with a returned UUID for a detailed snapshot. Do not pass conversation text into filters.',
+        'Compact rows preserve terminal freshness, POD timezone, shipment ID and active hold descriptions. Empty holds/fees arrays mean none reported; omitted holds/fees mean unavailable, not none. Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_container with a returned UUID for a detailed snapshot. Do not pass conversation text into filters.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
