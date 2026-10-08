@@ -415,6 +415,168 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
+    // ---- list filtering and pagination ----
+
+    const listItems = (p: unknown): Record<string, unknown>[] =>
+      isRecord(p) && Array.isArray(p.items) ? p.items.filter(isRecord) : [];
+    const listMeta = (p: unknown): Record<string, unknown> =>
+      isRecord(p) && isRecord(p._metadata) ? p._metadata : {};
+    const listTotal = (p: unknown): number | undefined =>
+      isRecord(p) && isRecord(p.meta) && typeof p.meta.total === 'number'
+        ? p.meta.total
+        : undefined;
+
+    for (const tool of ['list_shipments', 'list_containers'] as const) {
+      it(`${tool} reports a next page when total exceeds the page`, async ({
+        skip,
+      }) => {
+        const { result, score } = await evaluate(
+          tool,
+          { page_size: 2 },
+          {
+            requiredKeys: ['items', '_metadata'],
+            predicates: [
+              {
+                name: 'has_more is true and next_page is 2 when meta.total > 2',
+                test: (p) =>
+                  (listTotal(p) ?? 0) <= 2 ||
+                  (listMeta(p).has_more === true &&
+                    listMeta(p).next_page === 2),
+                detail: (p) =>
+                  `total=${String(listTotal(p))} has_more=${String(listMeta(p).has_more)} next_page=${String(listMeta(p).next_page)}`,
+              },
+            ],
+          },
+          'has-more',
+        );
+        if ((listTotal(result.payload) ?? 0) <= 2) return skip();
+        expect(score.contractPass).toBe(true);
+      });
+
+      it(`${tool} pages 1 and 2 do not overlap`, async ({ skip }) => {
+        const first = await client.callTool(tool, { page_size: 5, page: 1 });
+        const firstIds = new Set(listItems(first.payload).map((i) => i.id));
+        if (firstIds.size < 5) return skip();
+        const { score } = await evaluate(
+          tool,
+          { page_size: 5, page: 2 },
+          {
+            requiredKeys: ['items'],
+            predicates: [
+              {
+                name: 'no id from page 1 repeats on page 2',
+                test: (p) => listItems(p).every((i) => !firstIds.has(i.id)),
+                detail: (p) =>
+                  listItems(p)
+                    .filter((i) => firstIds.has(i.id))
+                    .map((i) => String(i.id))
+                    .join(','),
+              },
+            ],
+          },
+          'page-overlap',
+        );
+        expect(score.contractPass).toBe(true);
+      });
+    }
+
+    it('list_containers shipping_line_scac filter returns only that carrier', async ({
+      skip,
+    }) => {
+      const sample = await client.callTool('list_containers', { page_size: 5 });
+      const shipment = listItems(sample.payload)
+        .map((i) => i.shipment)
+        .find(isRecord);
+      const scac = shipment
+        ? readString(shipment, 'shipping_line_scac')
+        : undefined;
+      if (!scac) return skip();
+      const { score } = await evaluate(
+        'list_containers',
+        { shipping_line_scac: scac, page_size: 10 },
+        {
+          requiredKeys: ['items', '_metadata'],
+          predicates: [
+            {
+              name: 'at least one item',
+              test: (p) => listItems(p).length > 0,
+            },
+            {
+              name: 'every item matches the scac',
+              test: (p) =>
+                listItems(p).every(
+                  (i) =>
+                    isRecord(i.shipment) &&
+                    i.shipment.shipping_line_scac === scac,
+                ),
+            },
+            {
+              name: 'applied_filters echoes the scac',
+              test: (p) =>
+                isRecord(listMeta(p).applied_filters) &&
+                (listMeta(p).applied_filters as Record<string, unknown>)
+                  .shipping_line_scac === scac,
+            },
+          ],
+        },
+        'scac-filter',
+      );
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('list_containers pickup_lfd filter finds the container its date came from', async ({
+      skip,
+    }) => {
+      const sample = await client.callTool('list_containers', {
+        page_size: 25,
+      });
+      const withLfd = listItems(sample.payload).find(
+        (i) => typeof i.number === 'string' && typeof i.pickup_lfd === 'string',
+      );
+      if (!withLfd) return skip();
+      const lfd = String(withLfd.pickup_lfd).slice(0, 10);
+      const { score } = await evaluate(
+        'list_containers',
+        { pickup_lfd: lfd, number: String(withLfd.number) },
+        {
+          requiredKeys: ['items'],
+          predicates: [
+            {
+              name: `returns ${String(withLfd.number)} for pickup_lfd=${lfd}`,
+              test: (p) => listItems(p).some((i) => i.id === withLfd.id),
+              detail: (p) => `total=${String(listTotal(p))}`,
+            },
+          ],
+        },
+        'lfd-filter',
+      );
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('list_containers rejects a filter given at both levels', async () => {
+      const { result } = await evaluate(
+        'list_containers',
+        { pod_code: 'USLAX', advanced_filters: { pod_code: 'USLGB' } },
+        { expectError: true },
+        'duplicate-filter',
+      );
+      expect(result.isError).toBe(true);
+      expect(result.rawText).toContain(
+        'Invalid list filter "pod_code": duplicate filter; use the top level or advanced_filters, not both. Use the filter values',
+      );
+    });
+
+    it('list_containers rejects an impossible date before calling the API', async () => {
+      const { result } = await evaluate(
+        'list_containers',
+        { pickup_lfd: '>=2026-13-45' },
+        { expectError: true },
+        'invalid-date',
+      );
+      expect(result.isError).toBe(true);
+      expect(result.rawText).toContain('Invalid list filter "pickup_lfd"');
+    });
+
     // ---- error handling (negative cases) ----
 
     it('get_container rejects an unknown id with a tool error', async () => {

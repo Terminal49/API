@@ -76,10 +76,11 @@ JSON artifact under `eval/reports/` (gitignored) for diffing runs over time.
 
 ## CI
 
-The `mcp` job in `.github/workflows/ci.yml` runs this suite on every push/PR via
-`npm run eval` (plus `eval:check` to typecheck it). It passes
-`MCP_EVAL_TOKEN: ${{ secrets.MCP_EVAL_TOKEN }}` and hits production with the
-`Token` scheme. OAuth bearer tokens expire in minutes, so CI uses a **long-lived
+On pull requests, the `MCP preview` job runs this suite against the PR's Vercel
+preview, so new cases exercise the code under review. On pushes to `main`, the
+`mcp` job runs it against production as a deployed-state check. Both pass
+`MCP_EVAL_TOKEN: ${{ secrets.MCP_EVAL_TOKEN }}` with the `Token` scheme, and the
+`mcp` job always runs `eval:check` to typecheck the suite. OAuth bearer tokens expire in minutes, so CI uses a **long-lived
 Terminal49 API key** stored as the `MCP_EVAL_TOKEN` repo secret.
 
 > Add a **non-admin** account's API key as the `MCP_EVAL_TOKEN` repo secret

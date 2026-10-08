@@ -5,25 +5,37 @@
 
 import { Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
+import { compactContainer } from './compact-rows.js';
 
 const MAX_PAGE_SIZE = 25;
 
-export interface ListContainersArgs {
-  include?: Array<'shipment' | 'pod_terminal'>;
-  page?: number;
-  page_size?: number;
-}
+export type { ListContainersArgs } from './list-filters.js';
+import {
+  containerListInputSchema,
+  getContainerFilters,
+  getListResponseMetadata,
+  type ListContainersArgs,
+} from './list-filters.js';
 
 export async function executeListContainers(
   args: ListContainersArgs,
   client: Terminal49Client,
 ): Promise<any> {
+  args = containerListInputSchema.parse({
+    ...args,
+    page_size: Math.min(args.page_size ?? MAX_PAGE_SIZE, MAX_PAGE_SIZE),
+  });
+  const filters = getContainerFilters(args);
   const startTime = Date.now();
-  const include = args.include;
+  const compact = args.view !== 'full';
+  // Compact rows show the POD terminal and the shipment's BL, carrier and ETA.
+  const include =
+    args.include ?? (compact ? ['shipment', 'pod_terminal'] : undefined);
   const pageSize = Math.min(args.page_size ?? MAX_PAGE_SIZE, MAX_PAGE_SIZE);
   logMcpEvent({
     event: 'tool.execute.start',
     tool: 'list_containers',
+    filter_keys: Object.keys(filters),
     include,
     page: args.page,
     page_size: pageSize,
@@ -33,6 +45,8 @@ export async function executeListContainers(
   try {
     const result = await client.containers.list(
       {
+        ...filters,
+        sort: args.sort,
         include,
       },
       {
@@ -53,14 +67,22 @@ export async function executeListContainers(
       timestamp: new Date().toISOString(),
     });
 
-    return result;
+    const items =
+      compact && Array.isArray((result as any)?.items)
+        ? (result as any).items.map(compactContainer)
+        : (result as any)?.items;
+    return {
+      ...result,
+      items,
+      _metadata: getListResponseMetadata(result, filters, args, pageSize),
+    };
   } catch (error) {
     const duration = Date.now() - startTime;
     logMcpEvent({
       event: 'tool.execute.error',
       tool: 'list_containers',
       error: (error as Error).name,
-      message: (error as Error).message,
+
       duration_ms: duration,
       timestamp: new Date().toISOString(),
     });

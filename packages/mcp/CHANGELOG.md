@@ -5,6 +5,20 @@ All notable changes to the Terminal49 MCP Server (TypeScript) will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-10-08
+
+### Added
+- `list_parties`: resolve a company name to a party ID for party filters.
+- `summarize_containers`: count filtered containers by one dimension (terminal, status, shipping line, hold type, LFD date, arrival date). Counts are computed in the server by paging the list API.
+- `list_shipments` and `list_containers`: common filters plus `advanced_filters` generated from the public API contract, validated before any API call.
+- List responses carry `_metadata` with applied filters, sort, page, `has_more`, and `next_page`.
+- `search_docs`, and custom fields on `get_container` / `get_shipment_details` (shipped to production before this version was recorded).
+
+### Changed
+- `list_shipments` and `list_containers` return actively tracked records by default, matching the dashboard. Pass `actively_tracked: false` for stopped tracking.
+- List rows are compact by default. Compact container rows carry `availability_known` and keep `holds`/`fees` as `[]` when the terminal reported none; the fields are omitted only when unreported.
+- `list_parties` sets `truncated` when `limit` drops matches. `summarize_containers` returns `total: null` and `truncated: true` when it cannot count every page.
+
 ## [1.0.0] - 2025-10-22
 
 ### 🎉 Phase 1 & 2.1: Modern MCP SDK Upgrade Complete

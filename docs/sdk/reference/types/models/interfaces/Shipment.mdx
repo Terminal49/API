@@ -13,19 +13,23 @@ Simplified shipment model returned by mapped SDK responses.
 
 ## Properties
 
-| Property | Type |
-| ------ | ------ |
-| <a id="property-billoflading"></a> `billOfLading?` | `string` |
-| <a id="property-containers"></a> `containers?` | `object`[] |
-| <a id="property-customername"></a> `customerName?` | `string` |
-| <a id="property-id"></a> `id` | `string` |
-| <a id="property-ports"></a> `ports?` | `object` |
-| `ports.destination?` | \{ `ata?`: `string` \| `null`; `eta?`: `string` \| `null`; `locode?`: `string` \| `null`; `name?`: `string` \| `null`; `terminal?`: \{ `firmsCode?`: `string`; `id?`: `string`; `name?`: `string`; `nickname?`: `string`; \} \| `null`; `timezone?`: `string` \| `null`; \} \| `null` |
-| `ports.portOfDischarge?` | \{ `ata?`: `string` \| `null`; `code?`: `string` \| `null`; `countryCode?`: `string` \| `null`; `eta?`: `string` \| `null`; `locode?`: `string` \| `null`; `name?`: `string` \| `null`; `originalEta?`: `string` \| `null`; `terminal?`: \{ `firmsCode?`: `string`; `id?`: `string`; `name?`: `string`; `nickname?`: `string`; \} \| `null`; `timezone?`: `string` \| `null`; \} \| `null` |
-| `ports.portOfLading?` | \{ `atd?`: `string` \| `null`; `code?`: `string` \| `null`; `countryCode?`: `string` \| `null`; `etd?`: `string` \| `null`; `locode?`: `string` \| `null`; `name?`: `string` \| `null`; `timezone?`: `string` \| `null`; \} \| `null` |
-| <a id="property-shippinglinescac"></a> `shippingLineScac?` | `string` |
-| <a id="property-tracking"></a> `tracking?` | `object` |
-| `tracking.lineTrackingLastAttemptedAt?` | `string` \| `null` |
-| `tracking.lineTrackingLastSucceededAt?` | `string` \| `null` |
-| `tracking.lineTrackingStoppedAt?` | `string` \| `null` |
-| `tracking.lineTrackingStoppedReason?` | `string` \| `null` |
+| Property | Type | Description |
+| ------ | ------ | ------ |
+| <a id="property-billoflading"></a> `billOfLading?` | `string` | - |
+| <a id="property-containers"></a> `containers?` | `object`[] | - |
+| <a id="property-customername"></a> `customerName?` | `string` | - |
+| <a id="property-id"></a> `id` | `string` | - |
+| <a id="property-podataat"></a> `podAtaAt?` | `string` \| `null` | - |
+| <a id="property-podetaat"></a> `podEtaAt?` | `string` \| `null` | - |
+| <a id="property-podvesselname"></a> `podVesselName?` | `string` \| `null` | - |
+| <a id="property-portofdischargename"></a> `portOfDischargeName?` | `string` \| `null` | Set on the shipment summary embedded in a mapped container. |
+| <a id="property-ports"></a> `ports?` | `object` | - |
+| `ports.destination?` | \{ `ata?`: `string` \| `null`; `eta?`: `string` \| `null`; `locode?`: `string` \| `null`; `name?`: `string` \| `null`; `terminal?`: \{ `firmsCode?`: `string`; `id?`: `string`; `name?`: `string`; `nickname?`: `string`; \} \| `null`; `timezone?`: `string` \| `null`; \} \| `null` | - |
+| `ports.portOfDischarge?` | \{ `ata?`: `string` \| `null`; `code?`: `string` \| `null`; `countryCode?`: `string` \| `null`; `eta?`: `string` \| `null`; `locode?`: `string` \| `null`; `name?`: `string` \| `null`; `originalEta?`: `string` \| `null`; `terminal?`: \{ `firmsCode?`: `string`; `id?`: `string`; `name?`: `string`; `nickname?`: `string`; \} \| `null`; `timezone?`: `string` \| `null`; \} \| `null` | - |
+| `ports.portOfLading?` | \{ `atd?`: `string` \| `null`; `code?`: `string` \| `null`; `countryCode?`: `string` \| `null`; `etd?`: `string` \| `null`; `locode?`: `string` \| `null`; `name?`: `string` \| `null`; `timezone?`: `string` \| `null`; \} \| `null` | - |
+| <a id="property-shippinglinescac"></a> `shippingLineScac?` | `string` | - |
+| <a id="property-tracking"></a> `tracking?` | `object` | - |
+| `tracking.lineTrackingLastAttemptedAt?` | `string` \| `null` | - |
+| `tracking.lineTrackingLastSucceededAt?` | `string` \| `null` | - |
+| `tracking.lineTrackingStoppedAt?` | `string` \| `null` | - |
+| `tracking.lineTrackingStoppedReason?` | `string` \| `null` | - |
