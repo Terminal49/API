@@ -1481,7 +1481,12 @@ export function createTerminal49McpServer(
         summarizeContainersInputSchema,
       ),
       outputSchema: z.object({
-        total: z.number(),
+        total: z
+          .number()
+          .nullable()
+          .describe(
+            'Null when the API reports no total and pages remain uncounted.',
+          ),
         counted: z.number(),
         truncated: z.boolean(),
         group_by: z.string(),

@@ -5,6 +5,11 @@ All notable changes to the Terminal49 MCP Server (TypeScript) will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-10-08
+
+### Fixed
+- `summarize_containers` output schema allows `total: null`. When the API omits `meta.total` and pages remain, the uncounted result failed output validation instead of returning `truncated: true`.
+
 ## [1.1.0] - 2026-10-08
 
 ### Added
