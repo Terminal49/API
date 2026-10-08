@@ -23,14 +23,17 @@ function withoutEmpty<T extends Record<string, unknown>>(row: T): Partial<T> {
   ) as Partial<T>;
 }
 
+// Holds and fees stay as [] when the terminal reported none, and are omitted
+// when it reported nothing, so "no holds" never looks like "unknown".
 export function compactContainer(container: any) {
-  const holds: Hold[] = container?.demurrage?.holds ?? [];
-  const fees: Fee[] = container?.demurrage?.fees ?? [];
+  const holds: Hold[] | null | undefined = container?.demurrage?.holds;
+  const fees: Fee[] | null | undefined = container?.demurrage?.fees;
   const shipment = container?.shipment;
-  return withoutEmpty({
+  const row = withoutEmpty({
     id: container?.id,
     number: container?.number,
     status: container?.currentStatus ?? container?.status,
+    availability_known: container?.availabilityKnown,
     available_for_pickup: container?.location?.availableForPickup,
     pod_terminal: container?.terminals?.podTerminal?.name,
     pod_arrived_at: container?.location?.podArrivedAt,
@@ -38,16 +41,6 @@ export function compactContainer(container: any) {
     pod_full_out_at: container?.podFullOutAt,
     pickup_lfd: container?.demurrage?.pickupLfd,
     pickup_appointment_at: container?.demurrage?.pickupAppointmentAt,
-    holds: holds
-      .filter((hold) => hold?.status === 'hold')
-      .map((hold) => hold.name ?? hold.description ?? 'hold'),
-    fees: fees.map((fee) =>
-      withoutEmpty({
-        type: fee?.type,
-        amount: fee?.amount,
-        currency: fee?.currency_code ?? fee?.currency,
-      }),
-    ),
     shipment: shipment
       ? withoutEmpty({
           bill_of_lading: shipment.billOfLading,
@@ -60,4 +53,25 @@ export function compactContainer(container: any) {
       : undefined,
     last_status_refresh_at: container?.lastStatusRefreshAt,
   });
+  return {
+    ...row,
+    ...(Array.isArray(holds)
+      ? {
+          holds: holds
+            .filter((hold) => hold?.status === 'hold')
+            .map((hold) => hold.name ?? hold.description ?? 'hold'),
+        }
+      : {}),
+    ...(Array.isArray(fees)
+      ? {
+          fees: fees.map((fee) =>
+            withoutEmpty({
+              type: fee?.type,
+              amount: fee?.amount,
+              currency: fee?.currency_code ?? fee?.currency,
+            }),
+          ),
+        }
+      : {}),
+  };
 }

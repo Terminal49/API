@@ -117,20 +117,35 @@ export async function executeSummarizeContainers(
 
   try {
     const first: any = await fetchPage(1);
-    const total = Number(first?.meta?.total ?? first?.items?.length ?? 0);
-    const wanted = Math.min(total, args.max_rows);
-    const pages = Math.ceil(wanted / PAGE_SIZE);
     const rows: any[] = [...(first?.items ?? [])];
-    for (let start = 2; start <= pages; start += CONCURRENCY) {
-      const batch = await Promise.all(
-        Array.from(
-          { length: Math.min(CONCURRENCY, pages - start + 1) },
-          (_, i) => fetchPage(start + i),
-        ),
-      );
-      for (const page of batch) rows.push(...((page as any)?.items ?? []));
+    let total: number | null;
+    let morePages: boolean;
+    if (typeof first?.meta?.total === 'number') {
+      total = first.meta.total;
+      const pages = Math.ceil(Math.min(total, args.max_rows) / PAGE_SIZE);
+      for (let start = 2; start <= pages; start += CONCURRENCY) {
+        const batch = await Promise.all(
+          Array.from(
+            { length: Math.min(CONCURRENCY, pages - start + 1) },
+            (_, i) => fetchPage(start + i),
+          ),
+        );
+        for (const page of batch) rows.push(...((page as any)?.items ?? []));
+      }
+      morePages = false;
+    } else {
+      // Without meta.total the only completeness signal is links.next, so
+      // pages are fetched one at a time until it disappears or max_rows hits.
+      let page: any = first;
+      let next = 2;
+      while (page?.links?.next && rows.length < args.max_rows) {
+        page = await fetchPage(next++);
+        rows.push(...(page?.items ?? []));
+      }
+      morePages = Boolean(page?.links?.next);
+      total = morePages ? null : rows.length;
     }
-    const counted = rows.slice(0, wanted);
+    const counted = rows.slice(0, args.max_rows);
     const counts = new Map<string, number>();
     for (const container of counted) {
       for (const key of groupKeys(container, args.group_by))
@@ -150,7 +165,10 @@ export async function executeSummarizeContainers(
     return {
       total,
       counted: counted.length,
-      truncated: counted.length < total,
+      truncated:
+        morePages ||
+        counted.length < (total ?? 0) ||
+        rows.length > counted.length,
       group_by: args.group_by,
       groups: groups.slice(0, MAX_GROUPS),
       other_groups: groups.length > MAX_GROUPS ? groups.length - MAX_GROUPS : 0,

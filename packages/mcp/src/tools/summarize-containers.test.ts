@@ -26,7 +26,7 @@ const container = (
 });
 
 describe('compact container rows', () => {
-  it('keep the worklist fields and drop empty ones', () => {
+  it('keep the worklist fields and drop empty scalars', () => {
     const row = compactContainer({
       ...container('MSCU1234567', 'APM Terminals', ['customs']),
       demurrage: {
@@ -46,6 +46,7 @@ describe('compact container rows', () => {
       pod_terminal: 'APM Terminals',
       pickup_lfd: '2026-10-08T00:00:00Z',
       holds: ['customs'],
+      fees: [],
       shipment: {
         bill_of_lading: 'BL1',
         shipping_line_scac: 'MAEU',
@@ -55,7 +56,64 @@ describe('compact container rows', () => {
   });
 });
 
+describe('compact container rows: known versus unreported', () => {
+  it('keep reported-empty holds and fees, omit unreported ones, and carry availability_known', () => {
+    const reportedEmpty = compactContainer({
+      ...container('MSCU1111111', 'APM'),
+      availabilityKnown: true,
+      demurrage: { holds: [], fees: [] },
+    });
+    const unreported = compactContainer({
+      ...container('MSCU2222222', 'APM'),
+      availabilityKnown: false,
+      demurrage: { holds: null, fees: null },
+    });
+    expect(reportedEmpty).toMatchObject({
+      availability_known: true,
+      holds: [],
+      fees: [],
+    });
+    expect(unreported).toMatchObject({ availability_known: false });
+    expect(unreported).not.toHaveProperty('holds');
+    expect(unreported).not.toHaveProperty('fees');
+  });
+});
+
 describe('summarize_containers', () => {
+  it('follows next links when the API omits meta.total and flags the cap', async () => {
+    const page = (n: number, hasNext: boolean) => ({
+      items: Array.from({ length: 50 }, (_, i) =>
+        container(`P${n}-${i}`, 'APM'),
+      ),
+      links: hasNext
+        ? { next: `https://api.example/v2/containers?page[number]=${n + 1}` }
+        : {},
+    });
+    const list = vi.fn(async (_filters: any, options: any) =>
+      page(options.page, options.page < 3),
+    );
+    const complete = await executeSummarizeContainers(
+      { group_by: 'pod_terminal' },
+      { containers: { list } } as any,
+    );
+    expect(complete).toMatchObject({
+      total: 150,
+      counted: 150,
+      truncated: false,
+      groups: [{ key: 'APM', count: 150 }],
+    });
+
+    const capped = await executeSummarizeContainers(
+      { group_by: 'pod_terminal', max_rows: 100 },
+      { containers: { list } } as any,
+    );
+    expect(capped).toMatchObject({
+      total: null,
+      counted: 100,
+      truncated: true,
+    });
+  });
+
   it('counts every page of the filtered set by the chosen dimension', async () => {
     const pages: Record<number, any> = {
       1: {
