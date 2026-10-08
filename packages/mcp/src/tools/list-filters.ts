@@ -67,6 +67,7 @@ export const containerListInputSchema = z.strictObject({
   pol_code: containerFilterShape.pol_code,
   shipping_line_scac: containerFilterShape.shipping_line_scac,
   has_holds: containerFilterShape.has_holds,
+  hold_names: containerFilterShape.hold_names,
   has_fees: containerFilterShape.has_fees,
   requires_attention: containerFilterShape.requires_attention,
   actively_tracked: containerFilterShape.actively_tracked,

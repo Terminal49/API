@@ -332,6 +332,8 @@ describe('invalid queries fail before any network request', () => {
     ['ambiguous legacy timestamp', { updatedAfter: '2026-10-01T00:00:00Z' }],
     ['conflicting alias', { status: 'available', current_status: 'on_ship' }],
     ['broken deployed date filter', { pod_eta_at: '@exists' }],
+    ['hold name presence', { hold_names: '@exists' }],
+    ['hold name presence alternative', { hold_names: 'freight,@not_exists' }],
     ['ignored custom field', { custom_fields: { test_slug: '@exists' } }],
   ];
   for (const [name, filters] of invalidContainers) {

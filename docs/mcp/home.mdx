@@ -430,7 +430,7 @@ Use the typed `advanced_filters` object for the full shipment filter catalog. Us
 
 ### `list_containers`
 
-Return one page of containers with verified API filters. Common inputs include `number`, `current_status`, `pod_code`, `pol_code`, `shipping_line_scac`, `has_holds`, `has_fees`, `requires_attention`, `actively_tracked`, `arrival`, `pickup_lfd`, and `tags`.
+Return one page of containers with verified API filters. Common inputs include `number`, `current_status`, `pod_code`, `pol_code`, `shipping_line_scac`, `has_holds`, `hold_names`, `has_fees`, `requires_attention`, `actively_tracked`, `arrival`, `pickup_lfd`, and `tags`.
 
 Use the typed `advanced_filters` object for the full container filter catalog. Use `sort` for server ordering and `include` to add `shipment`, `pod_terminal`, or both. Pages default to 25 rows and cannot exceed 25.
 
@@ -442,6 +442,7 @@ Use the typed `advanced_filters` object for the full container filter catalog. U
 - `pol_code` *(string or string[], optional)* - Port of Lading UN/LOCODE.
 - `shipping_line_scac` *(string or string[], optional)* - carrier Standard Carrier Alpha Code.
 - `has_holds` *(boolean, optional)* - reported terminal hold state.
+- `hold_names` *(string or string[], optional)* - active hold names such as `freight` or `customs,USDA` (any of, case-insensitive).
 - `has_fees` *(boolean, optional)* - reported terminal fees.
 - `requires_attention` *(boolean, optional)* - attention selection. False is not the exact complement of true.
 - `actively_tracked` *(boolean, optional)* - related shipment tracking state.

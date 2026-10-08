@@ -113,6 +113,7 @@ export const CONTAINER_FILTER_KINDS = {
   "eta_changed_in_last_24h": "selector",
   "eta_changed_in_past_3_days": "selector",
   "has_holds": "boolean",
+  "hold_names": "string",
   "actively_tracked": "boolean",
   "search_by_ids": "search",
   "search_by_number": "search",
@@ -192,6 +193,8 @@ eta_changed_in_last_24h?: true;
 eta_changed_in_past_3_days?: true;
 /** true requires nonempty terminal holds; false requires an explicitly empty holds array. Unreported/null holds match neither branch. */
 has_holds?: boolean;
+/** Active terminal hold names (status hold; pending holds do not match), case-insensitive, such as freight, customs, USDA, or other. Comma-separated names mean ANY. Names come from terminal feeds, so read them from holds_at_pod_terminal rather than assuming a fixed list. Use has_holds for presence. */
+hold_names?: StringFilter;
 /** true selects shipments with tracking not stopped; false selects stopped tracking. Applies via the related shipment for containers. */
 actively_tracked?: boolean;
 /** Prefix text search of container and linked shipment identifiers. Optional ~ prefix is supported here. Do not use ~ on exact string filters. */
