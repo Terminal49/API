@@ -23,6 +23,10 @@ import {
 import { executeListShipments } from './tools/list-shipments.js';
 import { executeListContainers } from './tools/list-containers.js';
 import {
+  executeSummarizeContainers,
+  summarizeContainersInputSchema,
+} from './tools/summarize-containers.js';
+import {
   shipmentListInputSchema,
   containerListInputSchema,
   getShipmentFilters,
@@ -32,6 +36,10 @@ import {
   listResponseMetadataSchema,
 } from './tools/list-filters.js';
 import { executeListTrackingRequests } from './tools/list-tracking-requests.js';
+import {
+  executeListParties,
+  listPartiesInputSchema,
+} from './tools/list-parties.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
@@ -91,7 +99,7 @@ Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and bookin
 
 Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete or overwrite data.
 
-Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links.`;
+Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links.`;
 
 type ResponseDisplayColumn = {
   key: string;
@@ -157,6 +165,8 @@ const NON_FILTER_LIST_ARGS = new Set([
   'page_size',
   'include',
   'include_containers',
+  'include_stopped_tracking',
+  'view',
   'sort',
   'advanced_filters',
   'intent',
@@ -620,14 +630,16 @@ export function buildListContract(
         SUPPORTED_LIST_FILTERS_BY_ENTITY[entityType].includes(key),
     ),
   );
+  // The actively-tracked default is not a caller scope, so it never makes a list count as filtered.
+  const callerArgs = { ...supportedArgs, include_stopped_tracking: true };
   const normalizedFilters: Record<string, unknown> =
     entityType === 'container'
       ? {
-          ...getContainerFilters(containerListInputSchema.parse(supportedArgs)),
+          ...getContainerFilters(containerListInputSchema.parse(callerArgs)),
         }
       : entityType === 'shipment'
         ? {
-            ...getShipmentFilters(shipmentListInputSchema.parse(supportedArgs)),
+            ...getShipmentFilters(shipmentListInputSchema.parse(callerArgs)),
           }
         : supportedArgs;
   const applied = appliedFilterKeys(
@@ -1392,7 +1404,9 @@ export function createTerminal49McpServer(
     {
       title: 'List Shipments',
       description:
-        'Return one requested page of shipments using common filters or advanced_filters for the confirmed public API catalog. Page size is capped at 25. Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_shipment_details with a returned UUID for routing and container details. Never pass conversation text into identifier fields.',
+        'Return one requested page of shipments using common filters or advanced_filters for the confirmed public API catalog. Page size is capped at 25. ' +
+        'Like the dashboard, only actively tracked shipments are returned unless include_stopped_tracking is true (use it for history over a past period). Report meta.total for the requested set. ' +
+        'Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_shipment_details with a returned UUID for routing and container details. Never pass conversation text into identifier fields.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1418,7 +1432,11 @@ export function createTerminal49McpServer(
     {
       title: 'List Containers',
       description:
-        'Return one requested page of containers using common status, port, carrier, milestone, hold and fee filters, or advanced_filters for the confirmed public API catalog. Page size is capped at 25. Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_container with a returned UUID for a detailed snapshot. Do not pass conversation text into filters.',
+        'Return one requested page of containers using common status, port, carrier, milestone, hold and fee filters, or advanced_filters for the confirmed public API catalog. Page size is capped at 25. ' +
+        'Like the dashboard, only actively tracked containers are returned unless include_stopped_tracking is true (use it for history such as pickups or dwell over a past period). ' +
+        'Use the dashboard definitions and report meta.total for that set before any narrowing: ready for pickup = current_status available; at risk of demurrage or needs attention = requires_attention true with sort attention_priority (the Containers at Risk view); discharged but not picked up = current_status available,not_available,grounded,awaiting_inland_transfer. ' +
+        'Add extra conditions such as LFD windows, fees or holds only when the user asks, and present them as a subset of that total. ' +
+        'Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_container with a returned UUID for a detailed snapshot. Do not pass conversation text into filters.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1441,6 +1459,64 @@ export function createTerminal49McpServer(
       // resolve full details on demand instead of paying for them up front.
       (result) => buildListResourceLinks(result, 'container'),
     ),
+  );
+
+  // Tool 9b: Summarize Containers
+  server.registerTool(
+    'summarize_containers',
+    {
+      title: 'Summarize Containers',
+      description:
+        'Count containers grouped by POD terminal, status, shipping line, hold type, LFD date or arrival date, using the same filters as list_containers. ' +
+        'Use it for "how many" and "break down by" questions; use list_containers for "which ones". ' +
+        'Like the dashboard, only actively tracked containers are counted unless include_stopped_tracking is true. ' +
+        'Report the total, and say so when truncated is true.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.preprocess(
+        stripLegacyIntent,
+        summarizeContainersInputSchema,
+      ),
+      outputSchema: z.object({
+        total: z.number(),
+        counted: z.number(),
+        truncated: z.boolean(),
+        group_by: z.string(),
+        groups: z.array(z.object({ key: z.string(), count: z.number() })),
+        other_groups: z.number(),
+        applied_filters: z.record(z.string(), z.unknown()),
+      }),
+    },
+    wrapTool('summarize_containers', async (args) =>
+      executeSummarizeContainers(args, client),
+    ),
+  );
+
+  // Tool 9c: List Parties
+  server.registerTool(
+    'list_parties',
+    {
+      title: 'List Parties',
+      description:
+        "Find the companies on this account's shipments (customers, shippers, consignees, customs brokers, freight forwarders, dray carriers) by name and return their IDs. " +
+        'Use it before list_containers or summarize_containers when a question names a company, then filter with advanced_filters.parties keyed by role, for example { "customer": "<id>" }.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.preprocess(stripLegacyIntent, listPartiesInputSchema),
+      outputSchema: z.object({
+        total_matched: z.number(),
+        parties: z.array(z.object({ id: z.string(), name: z.string() })),
+        truncated: z.boolean(),
+        usage: z.string(),
+      }),
+    },
+    wrapTool('list_parties', async (args) => executeListParties(args, client)),
   );
 
   // Tool 10: List Tracking Requests

@@ -70,7 +70,10 @@ describe('confirmed list filter inputs', () => {
           [key]: p.example,
           ...(key === 'tags_and' ? { tags: 'priority' } : {}),
         };
-        const args = { advanced_filters: filters };
+        const args = {
+          advanced_filters: filters,
+          include_stopped_tracking: true,
+        };
         expect((helper as any)(args)).toEqual(filters);
         await (execute as any)(args, client);
         expect(fetchImpl).toHaveBeenCalledTimes(1);
@@ -270,4 +273,31 @@ describe('review regressions', () => {
       );
     },
   );
+});
+
+describe('actively tracked default', () => {
+  it('limits container and shipment lists to actively tracked records by default', () => {
+    expect(getContainerFilters({ current_status: 'available' })).toEqual({
+      current_status: 'available',
+      actively_tracked: true,
+    });
+    expect(getShipmentFilters({ pod_code: 'USLAX' })).toEqual({
+      pod_code: 'USLAX',
+      actively_tracked: true,
+    });
+  });
+  it('keeps an explicit tracking choice and allows history lookups', () => {
+    expect(getContainerFilters({ actively_tracked: false })).toEqual({
+      actively_tracked: false,
+    });
+    expect(getShipmentFilters({ tracking_stopped: true })).toEqual({
+      tracking_stopped: true,
+    });
+    expect(
+      getContainerFilters({
+        include_stopped_tracking: true,
+        current_status: 'picked_up',
+      }),
+    ).toEqual({ current_status: 'picked_up' });
+  });
 });

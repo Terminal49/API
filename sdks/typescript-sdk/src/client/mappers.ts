@@ -270,6 +270,10 @@ export function mapContainer(doc: any): Container {
             shipment.attributes?.bill_of_lading ||
             shipment.attributes?.bl_number,
           shippingLineScac: shipment.attributes?.shipping_line_scac,
+          portOfDischargeName: shipment.attributes?.port_of_discharge_name,
+          podVesselName: shipment.attributes?.pod_vessel_name,
+          podEtaAt: shipment.attributes?.pod_eta_at,
+          podAtaAt: shipment.attributes?.pod_ata_at,
         }
       : null,
   };
