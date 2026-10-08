@@ -16,7 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - `list_shipments` and `list_containers` return actively tracked records by default, matching the dashboard. Pass `actively_tracked: false` for stopped tracking.
-- List rows are compact by default.
+- List rows are compact by default. Compact container rows carry `availability_known` and keep `holds`/`fees` as `[]` when the terminal reported none; the fields are omitted only when unreported.
+- `list_parties` sets `truncated` when `limit` drops matches. `summarize_containers` returns `total: null` and `truncated: true` when it cannot count every page.
 
 ## [1.0.0] - 2025-10-22
 
