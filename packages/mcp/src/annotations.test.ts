@@ -228,14 +228,24 @@ describe('MCP tool annotations', () => {
       category: 'BUSINESS',
     });
     expect(chatGpt.app_info.description).toContain('Terminal49 helps users');
-    expect(chatGpt.test_cases).toHaveLength(5);
-    expect(chatGpt.negative_test_cases).toHaveLength(3);
-    expect(chatGpt.test_cases[0]?.expected_output).toContain(
+    // OpenAI's submission schema requires at least 5 positive and 3 negative cases.
+    expect(chatGpt.test_cases.length).toBeGreaterThanOrEqual(5);
+    expect(chatGpt.negative_test_cases.length).toBeGreaterThanOrEqual(3);
+    const caseFor = (tool: string) =>
+      chatGpt.test_cases.find((testCase) => testCase.tools_triggered === tool);
+    expect(caseFor('search_container')?.expected_output).toContain(
       'Otherwise, clearly reports zero matches',
     );
-    expect(chatGpt.test_cases[4]?.expected_output).toContain(
+    expect(caseFor('track_container')?.expected_output).toContain(
       'no request was created',
     );
+    const triggered = new Set(
+      chatGpt.test_cases.flatMap((testCase) =>
+        testCase.tools_triggered.split(',').map((name) => name.trim()),
+      ),
+    );
+    expect(triggered).toContain('summarize_containers');
+    expect(triggered).toContain('list_parties');
     for (const testCase of chatGpt.test_cases) {
       expect(testCase.description.trim()).not.toBe('');
       expect(testCase.user_prompt.trim()).not.toBe('');
