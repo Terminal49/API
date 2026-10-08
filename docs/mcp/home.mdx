@@ -144,6 +144,8 @@ Every tool is read-only except `track_container`, which creates a tracking reque
 
 Find containers by container number, BL, booking, or your own reference. This is the fastest way to locate containers.
 
+Results include containers, shipments, and tracking requests that have no shipment yet. A tracking request with `status: failed` and a `failed_reason` (such as `expired`, when the carrier never returned the shipment) answers "why isn't this number showing?".
+
 **Parameters**
 - `query` *(string, required)* – container number, BL, booking, or reference
 
@@ -192,7 +194,7 @@ Find containers by container number, BL, booking, or your own reference. This is
 
 ### `track_container`
 
-Start tracking a new container. Creates a tracking request and returns container details.
+Start tracking a new container, bill of lading, or booking number. Creates a tracking request in the account and returns container details. Call it only when the user asks to track a number, and confirm first when the client doesn't ask for approval; to look up a number, use `search_container`.
 
 **Parameters**
 - `number` *(string, required)* – container number, BL, or booking number
