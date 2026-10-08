@@ -175,14 +175,6 @@
       "expected_output_url": null
     },
     {
-      "description": "List a bounded page of actively tracked containers.",
-      "user_prompt": "Show the first 10 containers in my Terminal49 account.",
-      "file_attachment_urls": null,
-      "tools_triggered": "list_containers",
-      "expected_output": "Returns up to 10 actively tracked container records (the default, matching the Terminal49 dashboard), reports the applied filters, and says whether more pages remain.",
-      "expected_output_url": null
-    },
-    {
       "description": "Count containers by status.",
       "user_prompt": "How many of my containers are in each status right now?",
       "file_attachment_urls": null,
@@ -204,14 +196,6 @@
       "file_attachment_urls": null,
       "tools_triggered": "list_shipments",
       "expected_output": "Returns up to 10 of the most recently updated shipments with a page size of 10, include_containers=false, no carrier, status, or port filters, and no nested containers. Mentions pagination if present.",
-      "expected_output_url": null
-    },
-    {
-      "description": "Check whether a shipping line is supported before tracking.",
-      "user_prompt": "Does Terminal49 support tracking containers for Ocean Network Express?",
-      "file_attachment_urls": null,
-      "tools_triggered": "get_supported_shipping_lines",
-      "expected_output": "Returns matching supported shipping lines with their SCAC codes and names.",
       "expected_output_url": null
     },
     {

@@ -228,9 +228,10 @@ describe('MCP tool annotations', () => {
       category: 'BUSINESS',
     });
     expect(chatGpt.app_info.description).toContain('Terminal49 helps users');
-    // OpenAI's submission schema requires at least 5 positive and 3 negative cases.
-    expect(chatGpt.test_cases.length).toBeGreaterThanOrEqual(5);
-    expect(chatGpt.negative_test_cases.length).toBeGreaterThanOrEqual(3);
+    // Final directory review requires exactly 5 positive and 3 negative cases,
+    // although the import schema only declares minimums.
+    expect(chatGpt.test_cases).toHaveLength(5);
+    expect(chatGpt.negative_test_cases).toHaveLength(3);
     const caseFor = (tool: string) =>
       chatGpt.test_cases.find((testCase) => testCase.tools_triggered === tool);
     expect(caseFor('search_container')?.expected_output).toContain(
