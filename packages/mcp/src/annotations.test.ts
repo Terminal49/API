@@ -58,6 +58,7 @@ type ClaudeSubmission = {
     authentication: string;
   };
   listing: {
+    tool_names: string[];
     name: string;
     tagline: string;
     documentation_url: string;
@@ -285,5 +286,8 @@ describe('MCP tool annotations', () => {
       writes_data: true,
     });
     expect(claude.capabilities.primary_use_cases.length).toBeGreaterThan(0);
+    // Tool names are listing details in the Claude directory; a new or
+    // renamed tool needs a listing edit in the developer portal.
+    expect(claude.listing.tool_names).toEqual(Object.keys(tools).sort());
   });
 });

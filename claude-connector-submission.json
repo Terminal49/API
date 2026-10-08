@@ -1,6 +1,6 @@
 {
   "$comment": "Reference values for the Claude Connectors Directory portal. Claude does not publish an upload schema for remote connector listings.",
-  "submission_url": "https://claude.ai/admin-settings/directory/submissions/new",
+  "submission_url": "https://claude.ai/directory/manage",
   "server": {
     "url": "https://mcp.terminal49.com",
     "transport": "streamable-http",
@@ -10,7 +10,7 @@
   "listing": {
     "name": "Terminal49",
     "tagline": "Track ocean shipments",
-    "description": "Terminal49 helps users find and monitor ocean shipments and containers, inspect routes and transport events, check supported shipping lines, and create new tracking requests.",
+    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, and create new tracking requests.",
     "categories": [
       "Business"
     ],
@@ -20,7 +20,22 @@
     "terms_of_service_url": "https://terminal49.com/terms",
     "support_email": "support@terminal49.com",
     "icon": "public/store-icons/terminal49-light.png",
-    "icon_dark": "public/store-icons/terminal49-dark.png"
+    "icon_dark": "public/store-icons/terminal49-dark.png",
+    "tool_names": [
+      "get_container",
+      "get_container_route",
+      "get_container_transport_events",
+      "get_shipment_details",
+      "get_supported_shipping_lines",
+      "list_containers",
+      "list_parties",
+      "list_shipments",
+      "list_tracking_requests",
+      "search_container",
+      "search_docs",
+      "summarize_containers",
+      "track_container"
+    ]
   },
   "company": {
     "name": "Terminal49",
@@ -31,6 +46,7 @@
     "writes_data": true,
     "primary_use_cases": [
       "Find and monitor ocean shipments and containers",
+      "Filter and count container worklists by status, terminal, carrier, holds, last free day, or company",
       "Inspect routes and transport events",
       "Check supported shipping lines",
       "Create new tracking requests"
