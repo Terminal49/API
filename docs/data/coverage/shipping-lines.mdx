@@ -1,55 +1,7 @@
 ---
-title: "Ocean carriers"
-description: "Ocean carriers (shipping lines / VOCCs) Terminal49 integrates with directly, including SCAC, tracking identifiers, account-enabled lines, and feature coverage."
-keywords:
-  - "Terminal49 API"
-  - "supported carriers"
-  - "shipping lines"
-  - "VOCC"
-  - "SCAC"
-  - "bill of lading"
-mode: "wide"
+title: "Shipping line coverage reference"
+description: "Complete feature coverage with explicit statuses and public integration identifiers."
 ---
-
-import { CarrierCoverageExplorer, CarrierCoverageStatus, CarrierCoverageDetails } from "/snippets/data-sources/carrier-coverage.mdx";
-import { shippingLines as carriers, shippingLineFeatures, shippingLineCoverage, coverageUpdatedOn } from "/snippets/data-sources/carrier-feature-data.mdx";
-
-Ocean carriers — also called shipping lines or vessel-operating common carriers (VOCCs) — are the primary source of shipment data. Terminal49 integrates directly with each carrier below and normalizes bill of lading details, bookings, containers, vessel ETAs, and transport milestones into a single API.
-
-Track with a bill of lading number, booking number, or container number, depending on what the carrier supports. Search by name or Standard Carrier Alpha Code (SCAC), filter by a required feature, and expand a row for the full feature coverage.
-
-Carrier coverage is account-specific and can change. Use [`GET /shipping_lines`](/api-docs/api-reference/shipping-lines/shipping-lines) for the current list on your account.
-
-<Tip>
-  Have a tracking number but not the SCAC? The [Auto-Detect
-  Carrier](/api-docs/in-depth-guides/auto-detect-carrier) API identifies the carrier for you.
-</Tip>
-
-<CarrierCoverageExplorer carriers={carriers} features={shippingLineFeatures} coverage={shippingLineCoverage} summaryKeys={["billOfLading", "bookingNumber", "containerNumber", "podEta"]} access="public" carrierLabel="Shipping line" />
-
-[Complete shipping line feature table](/data/coverage/shipping-lines) · [JSON](/data/coverage/shipping-lines.json) · [CSV](/data/coverage/shipping-lines.csv)
-
-Westwood shipments are tracked through Swire (`SSBF`); `WWSU` is an alternative SCAC on that line.
-
-## Account-enabled carriers
-
-These carriers are live in production but are not part of the public default set. Contact Terminal49 to enable them on your account before sending tracking requests.
-
-<CarrierCoverageExplorer carriers={carriers} features={shippingLineFeatures} coverage={shippingLineCoverage} summaryKeys={["billOfLading", "bookingNumber", "containerNumber", "podEta"]} access="account" carrierLabel="Shipping line" updatedOn={coverageUpdatedOn} />
-
-## Data interpretation
-
-The expanded rows and [complete feature table](/data/coverage/shipping-lines) list feature availability. Even a supported field can be absent for an individual shipment. See [field availability](/coverage/fields).
-
-- Evergreen dates are provided as dates, not datetimes. Terminal49 stores them as midnight at the event location when the location is available, otherwise midnight UTC. Only dry, reefer, and flatpack equipment types are mapped.
-- ONE maps dry and reefer equipment types.
-- When a Yang Ming bill of lading has multiple containers, the returned weight is the shipment average (gross weight divided by container count).
-- Swire maps dry equipment types.
-
-{/* coverage-agent-data:start */}
-<Visibility for="agents">
-
-## Complete structured coverage
 
 Last updated 2026-10-09.
 
@@ -2645,6 +2597,3 @@ SCAC `ZIMU`.
 | Other events | Estimated Arrival | Supported |
 | Other events | Booking Cancelled | Not supported |
 
-
-</Visibility>
-{/* coverage-agent-data:end */}

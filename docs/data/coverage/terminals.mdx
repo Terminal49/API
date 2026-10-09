@@ -1,62 +1,7 @@
 ---
-title: "Ports & terminals"
-description: "Ports and terminals Terminal49 maps on container routes, with direct terminal operator connections for availability, last free day, holds, and fees."
-keywords:
-  - "Terminal49 API"
-  - "port coverage"
-  - "supported terminals"
-  - "transshipment"
-  - "FIRMS"
-  - "UN/LOCODE"
-  - "last free day"
-mode: "wide"
+title: "Terminal coverage reference"
+description: "Complete feature coverage with explicit statuses and public integration identifiers."
 ---
-
-import { TerminalCoverageTable, TerminalCoverageDetails, TerminalCoverageStatus, terminalCoverageFeatures } from "/snippets/data-sources/terminal-coverage.mdx";
-import { terminalCoverageEntities as terminals, terminalFeatureCoverage, terminalFeatureSnapshot } from "/snippets/data-sources/terminal-feature-data.mdx";
-
-Terminal49 covers ports and terminals at two levels: a global port and terminal dataset that maps every container's route, and direct terminal integrations that add the operational data you need to execute imports and exports.
-
-## Global port and terminal mapping
-
-Every tracked container's route is mapped end to end against Terminal49's global port and terminal dataset — origin, destination, transshipment, and inland ports and terminals worldwide, each identified by UN/LOCODE. Transport events reported by the ocean carrier — loaded, departed, arrived, berthed, discharged, and transshipment moves — are attributed to the port and terminal where they occur.
-
-This mapping is global and applies to every shipment. You always know where a container is, which locations it moves through, and what happened at each one, on any lane the ocean carriers serve.
-
-## Import and export execution data
-
-At the terminals below, Terminal49 also connects directly to the terminal operator. That connection adds the attributes that drive import and export execution at the gate:
-
-- **Import milestones** — additional terminal data for import container movements; individual milestone coverage varies by terminal
-- **Pickup availability** — whether the container is ready to be picked up
-- **Terminal last free day (LFD)** — the final day of free time reported by the terminal before demurrage charges apply
-- **Holds & releases** — customs, freight, TMF, USDA, and other active holds; cleared holds are removed from the holds array
-- **Fees** — demurrage, exam, and other charges with amounts
-
-A port that is not in this table still appears on routes with carrier-reported events; the table below is where the terminal-level operational data comes from.
-
-Search by terminal, port, UN/LOCODE, or FIRMS code, or filter by region and required feature. Select any row to inspect all attribute and feature coverage for that terminal. Choose **Expanded row** to show details below the selected row, or **Side panel** to show them alongside the table on wide layouts. Both views expand below the row on smaller screens.
-
-Holds, fees, LFD, and pickup availability vary by terminal. A terminal on this list does not mean every field is present for every container — see [field availability](/coverage/fields) for what each field depends on.
-
-The table lists publicly available direct terminal integrations.
-
-## Direct terminal integrations
-
-<TerminalCoverageTable terminals={terminals} coverage={terminalFeatureCoverage} snapshot={terminalFeatureSnapshot} />
-
-[Complete terminal feature table](/data/coverage/terminals) · [JSON](/data/coverage/terminals.json) · [CSV](/data/coverage/terminals.csv)
-
-Boston (Conley), Saint John, and Fraser Surrey are not currently supported. At Port Everglades, Port Everglades Terminal is supported; Florida International Terminal is not.
-
-In New Zealand, Lyttelton and Timaru are supported through PortConnect. Auckland and Tauranga are not yet supported at the terminal level; containers discharging there still show carrier-reported events.
-
-For how holds, fees, and LFD appear on a container, see [holds and fees](/api-docs/in-depth-guides/holds-and-fees).
-
-{/* coverage-agent-data:start */}
-<Visibility for="agents">
-
-## Complete structured coverage
 
 Last updated 2026-10-09.
 
@@ -2830,6 +2775,3 @@ Timaru, New Zealand. Port location code `NZTIU`. Terminal code `NZTIUTCTL`.
 | Container milestones | On rail | Unknown |
 | Container milestones | Empty returned | Unknown |
 
-
-</Visibility>
-{/* coverage-agent-data:end */}
