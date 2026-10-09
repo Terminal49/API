@@ -49,6 +49,21 @@ see the SDK quickstart in the docs site: `docs/api-docs/getting-started/sdk-quic
 - `getRailMilestones(containerId)` (helper)
 - `deserialize<T>(document)` → JSONA-based plain objects
 
+### Trade intelligence
+
+`client.tradeIntel` covers US import bill-of-lading records (US Customs manifests), January 2022 onward.
+Methods return the API's plain JSON body and throw `FeatureNotEnabledError` when the account lacks the feature.
+
+- `tradeIntel.meta()`
+- `tradeIntel.searchCompanies({ name?, imports?, state?, port_of_discharge?, origin_country?, min_containers?, limit? })`
+- `tradeIntel.companyProfile({ company_name, company_state?, months? })`
+- `tradeIntel.searchCommodities({ query, limit? })`
+- `tradeIntel.topImporters({ hs4?, port_of_discharge?, origin_country?, months?, limit? })`
+- `tradeIntel.trends({ measure?, group_by?, filters?, interval?, since?, until?, top? })`
+- `tradeIntel.breakdown({ dims, measure?, filters?, since?, until?, top? })`
+- `tradeIntel.lookupContainer(containerNumber)`
+- `tradeIntel.lookupBillOfLading(bolNumber, { months? })`
+
 ### Examples
 
 After building, run:

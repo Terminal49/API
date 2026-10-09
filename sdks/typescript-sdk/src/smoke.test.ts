@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { describe, expect, it } from 'vite-plus/test';
-import { Terminal49Client } from './client.js';
+import { FeatureNotEnabledError, Terminal49Client } from './client.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envCandidates = [
@@ -45,6 +45,23 @@ if (!token || !runSmoke) {
     it('lists tracking requests', async () => {
       const result = await client.trackingRequests.list();
       expect((result as any)?.data).toBeDefined();
+    });
+
+    // Trade intelligence is gated per account; a FeatureNotEnabledError means
+    // the token's account lacks it, which is a valid outcome, not a failure.
+    it('reads trade intelligence coverage and runs one search', async () => {
+      try {
+        const meta = await client.tradeIntel.meta();
+        expect(meta.facts_since_month).toMatch(/^\d{4}-\d{2}$/);
+
+        const search = await client.tradeIntel.searchCommodities({
+          query: 'office chairs',
+          limit: 2,
+        });
+        expect(Array.isArray(search.results)).toBe(true);
+      } catch (error) {
+        if (!(error instanceof FeatureNotEnabledError)) throw error;
+      }
     });
 
     const inferNumber = process.env.T49_INFER_NUMBER;

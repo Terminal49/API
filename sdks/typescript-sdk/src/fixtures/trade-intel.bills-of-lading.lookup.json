@@ -1,0 +1,47 @@
+{
+  "bol_number": "MEDUW9559867",
+  "found": true,
+  "searched_since": "2025-10-01",
+  "bills_matched": 1,
+  "bills_truncated": false,
+  "containers": [
+    {
+      "container_number": "MSCU1234567",
+      "imported_on": "2026-08-14",
+      "scac": "MSCU",
+      "vessel_name": "EXAMPLE VESSEL",
+      "voyage_number": "026N",
+      "port_of_lading_name": "NINGBO",
+      "port_of_discharge_name": "LOS ANGELES",
+      "destination_city": "ONTARIO",
+      "destination_state": "CA",
+      "container_type_short_description": "40 HC",
+      "container_teu": 2.0
+    }
+  ],
+  "containers_truncated": false,
+  "commodities": [
+    {
+      "imported_on": "2026-08-14",
+      "master_bill_of_lading_number": "MEDUW9559867",
+      "house_bill_of_lading_number": null,
+      "consignee": "EXAMPLE OUTDOOR SUPPLY",
+      "consignee_city": "ONTARIO",
+      "consignee_state": "CA",
+      "notify_party": "EXAMPLE OUTDOOR SUPPLY",
+      "shipper": "EXAMPLE FURNITURE CO LTD",
+      "shipper_country": "PEOPLES REP OF CHINA",
+      "commodity_short_description": "OFFICE CHAIRS",
+      "commodity_hs_code_6": "940130",
+      "commodity_hs_code_6_description": "Swivel seats with variable height adjustment",
+      "commodity_quantity": 420.0,
+      "commodity_quantity_uom": "CTN",
+      "commodity_estimated_value": 38000.0,
+      "bol_metric_tons": 8.2,
+      "bol_teus": 2.0,
+      "nvocc_scac": null,
+      "nvocc_scac_description": null
+    }
+  ],
+  "commodities_truncated": false
+}

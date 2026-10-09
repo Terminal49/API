@@ -58,6 +58,29 @@ The SDK exposes a `Terminal49Client` with methods grouped by resource type. Each
 |--------|-------------|
 | `client.shippingLines.list(search?, options?)` | List carriers. Use `search` to filter by name or SCAC. |
 
+### Trade intelligence
+
+Trade intelligence covers US import bill-of-lading records (US Customs manifests) from January 2022 onward, refreshed daily. These methods return the API's plain JSON body (not JSON:API), so `format` does not apply. Accounts without the feature get `FeatureNotEnabledError`; contact sales@terminal49.com to enable it.
+
+| Method | Description |
+|--------|-------------|
+| `client.tradeIntel.meta()` | Coverage window, history start, the current partial month, and build time. |
+| `client.tradeIntel.searchCompanies(request?)` | Find importers by name (fuzzy), by what they import, or both. Ranked by match quality, not size. |
+| `client.tradeIntel.companyProfile(request)` | One importer's monthly history, ports, origins, carriers, and HS4 commodities. Needs the exact `company_name` from `searchCompanies`. |
+| `client.tradeIntel.searchCommodities(request)` | Resolve a product description or HS prefix to 4-digit HS headings. |
+| `client.tradeIntel.topImporters(request?)` | Rank importers by containers for an HS4 heading, port, or origin country. |
+| `client.tradeIntel.trends(request?)` | Time series of containers, TEUs, or estimated value, split by up to two dimensions. |
+| `client.tradeIntel.breakdown(request)` | Nested totals over a dimension hierarchy such as region, country, and port. |
+| `client.tradeIntel.lookupContainer(containerNumber)` | A container's most recent US import: bills of lading, parties, and commodity lines. |
+| `client.tradeIntel.lookupBillOfLading(bolNumber, options?)` | The import record for a master or house bill of lading. |
+
+```typescript
+const { results } = await client.tradeIntel.searchCommodities({ query: 'office chairs' });
+const ranking = await client.tradeIntel.topImporters({ hs4: results[0].hs4, months: 12 });
+```
+
+Volume is physical containers, each counted once. Estimated values are modelled USD estimates, not declared customs values. `trends` and `breakdown` include the current, partial month by default. Company names are split by state and large importers use several names, so treat a company's figures as a floor. See the [Trade Intelligence API reference](/api-docs/api-reference/trade-intelligence/get-trade-intelligence-coverage) for every field and caveat.
+
 ## Helpers and aliases
 
 | Method | Description |
