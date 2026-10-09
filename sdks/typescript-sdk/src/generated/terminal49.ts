@@ -3359,13 +3359,13 @@ export interface components {
         /** @description Row counts of the monthly fact tables behind the analytics endpoints. */
         TradeIntelFactRowCounts: {
             /** @description Rows in the lane-by-month fact table. */
-            lane_month?: number;
+            lane_month: number;
             /** @description Rows in the company-by-month fact table. */
-            company_month?: number;
+            company_month: number;
             /** @description Rows in the commodity-by-month fact table. */
-            commodity_month?: number;
+            commodity_month: number;
             /** @description Rows in the HS-code-by-lane-by-month fact table. */
-            hs_lane_month?: number;
+            hs_lane_month: number;
         };
         /** @description Index window, freshness, and counts. Also returned as `index` by `companies/search`. */
         TradeIntelMeta: {
@@ -3373,71 +3373,71 @@ export interface components {
              * @description First month of the 12-full-month window that search results and rankings cover.
              * @example 2025-09
              */
-            since_month?: string;
+            since_month: string;
             /**
              * @description Month after the last full month in the search window (exclusive).
              * @example 2026-09
              */
-            until_month_exclusive?: string;
+            until_month_exclusive: string;
             /**
              * @description Number of full months in the search window.
              * @example 12
              */
-            months?: number;
+            months: number;
             /**
              * @description Minimum containers in the window for a company to be in the search index.
              * @example 5
              */
-            min_containers?: number;
+            min_containers: number;
             /**
              * @description Companies in the search index.
              * @example 250000
              */
-            companies?: number;
+            companies: number;
             /**
              * @description HS4 codes in the search index.
              * @example 1200
              */
-            hs_codes?: number;
+            hs_codes: number;
             /**
              * @description First month of history available to `companies/profile`, `importers/top`, `trends`, and `breakdown`. History starts in January 2022.
              * @example 2022-01
              */
-            facts_since_month?: string;
+            facts_since_month: string;
             /**
              * @description Month after the latest month with data (exclusive).
              * @example 2026-11
              */
-            facts_until_exclusive?: string;
+            facts_until_exclusive: string;
             /**
              * @description The current calendar month, which is still being loaded and is incomplete.
              * @example 2026-10
              */
-            partial_month?: string;
+            partial_month: string;
             /**
              * @description Serving mode of the index.
              * @example local
              */
-            mode?: string;
+            mode: string;
             /** @description Fingerprint of the current fact build. It changes whenever the data is refreshed. */
-            facts_hash?: string;
+            facts_hash: string;
             /**
              * @description Start of the period covered by the most recent daily refresh.
              * @example 2026-10-01
              */
-            refreshed_since?: string;
-            fact_rows?: components["schemas"]["TradeIntelFactRowCounts"];
+            refreshed_since: string;
+            fact_rows: components["schemas"]["TradeIntelFactRowCounts"];
             /**
              * @description Unit of every `containers` figure: physical containers, each counted once.
              * @example containers
              */
-            volume_measure?: string;
+            volume_measure: string;
             /**
              * Format: date-time
              * @description When the index was built.
              * @example 2026-10-08T06:12:44Z
              */
-            built_at?: string;
+            built_at: string;
         };
         TradeIntelNamedContainers: {
             /** @description Port, country, or carrier name as spelled on manifests. */
@@ -3511,37 +3511,37 @@ export interface components {
              * @description US state this row covers, or `null` when the row spans all states.
              * @example IL
              */
-            company_state?: string | null;
+            company_state: string | null;
             /** @description Physical containers in the index window. */
             containers: number;
             /** @description Containers where the company is the consignee. */
-            containers_as_consignee?: number;
+            containers_as_consignee: number;
             /** @description Containers where the company is the notify party. A share above about 70% usually indicates a logistics provider rather than the cargo owner. */
-            containers_as_notify_party?: number;
+            containers_as_notify_party: number;
             /** @description Twenty-foot equivalent units. */
-            teus?: number;
+            teus: number;
             /** @description Modelled USD estimate, not declared customs value. */
-            estimated_value?: number;
+            estimated_value: number;
             /** @description Share of containers that were refrigerated, 0 to 1. */
-            reefer_share?: number;
+            reefer_share: number;
             /**
              * @description First month with volume in the window.
              * @example 2025-09
              */
-            first_month?: string;
+            first_month: string;
             /**
              * @description Last month with volume in the window.
              * @example 2026-08
              */
-            last_month?: string;
+            last_month: string;
             /** @description Top US ports of discharge. */
-            top_ports?: components["schemas"]["TradeIntelNamedContainers"][];
+            top_ports: components["schemas"]["TradeIntelNamedContainers"][];
             /** @description Top origin countries. */
-            top_origins?: components["schemas"]["TradeIntelNamedContainers"][];
+            top_origins: components["schemas"]["TradeIntelNamedContainers"][];
             /** @description Top ocean carriers. */
-            top_carriers?: components["schemas"]["TradeIntelNamedContainers"][];
+            top_carriers: components["schemas"]["TradeIntelNamedContainers"][];
             /** @description Top HS4 headings. */
-            top_commodities?: components["schemas"]["TradeIntelCommodityVolume"][];
+            top_commodities: components["schemas"]["TradeIntelCommodityVolume"][];
             /** @description Match quality; higher is better. Not a measure of size. */
             score: number;
         };
@@ -3590,6 +3590,7 @@ export interface components {
             /** @description Twenty-foot equivalent units. */
             teus: number;
         };
+        /** @description Import profile for one company. When `found` is `true` the totals, monthly series, breakdowns, and notes are returned. */
         TradeIntelCompanyProfile: {
             /**
              * @description The requested company name.
@@ -3597,7 +3598,7 @@ export interface components {
              */
             company_name: string;
             /** @description The requested state, or `null` for all states. */
-            company_state?: string | null;
+            company_state: string | null;
             /**
              * @description First month of the period (inclusive).
              * @example 2025-10
@@ -3610,9 +3611,9 @@ export interface components {
             until: string;
             /** @description `false` when the exact name has no volume in the period. The name must match `companies/search` exactly; a company can also be split across several names. */
             found: boolean;
-            totals: components["schemas"]["TradeIntelCompanyProfileTotals"];
+            totals?: components["schemas"]["TradeIntelCompanyProfileTotals"];
             /** @description Volume per month, oldest first. */
-            monthly: components["schemas"]["TradeIntelMonthlyVolume"][];
+            monthly?: components["schemas"]["TradeIntelMonthlyVolume"][];
             /** @description US ports of discharge. */
             ports_of_discharge?: components["schemas"]["TradeIntelNamedVolume"][];
             /** @description Origin countries. */
@@ -3624,7 +3625,7 @@ export interface components {
             /** @description HS4 headings with estimated value. */
             commodities_hs4?: components["schemas"]["TradeIntelCommodityVolume"][];
             /** @description Counting caveats that apply to this response, for example that volume is physical containers or that the window includes a partial month. Surface these to end users. */
-            notes: string[];
+            notes?: string[];
         };
         TradeIntelCommoditySearchRequest: {
             /**
@@ -3647,11 +3648,11 @@ export interface components {
             /** @description HS heading description (truncated). */
             description: string;
             /** @description 12-month modelled USD import value, not declared customs value. */
-            estimated_value?: number;
+            estimated_value: number;
             /** @description Companies importing this heading in the index window. */
-            companies?: number;
+            companies: number;
             /** @description Goods commonly declared under this heading on bills of lading. Use these to confirm the heading covers what you mean; HS 0306, for example, covers all frozen crustaceans, not only shrimp. */
-            common_goods?: string[];
+            common_goods: string[];
             /** @description Match quality; higher is better. */
             score: number;
         };
