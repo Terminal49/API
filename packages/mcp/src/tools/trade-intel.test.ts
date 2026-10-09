@@ -362,7 +362,8 @@ describe('get_trade_trends', () => {
     expect(result.series[0].value).toBe(11);
     expect(result.truncated).toBe(true);
     expect(result.earlier_periods_not_shown).toBe(120);
-    expect(result.period).toEqual({ from: 'p120', to: '2026-10' });
+    expect(result.period).toEqual({ from: '2024-10', to: '2026-10' });
+    expect(result.periods_shown).toEqual({ first: 'p120', last: 'p619' });
   });
 });
 
