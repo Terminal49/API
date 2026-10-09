@@ -39,6 +39,12 @@ function buildContainerRaw(containerId = 'container-1') {
         pod_timezone: 'America/Los_Angeles',
         terminal_checked_at: '2099-01-05T00:00:00Z',
         import_deadlines: {
+          pod: {
+            unified: {
+              current_value: '2099-01-10',
+              current_selection: 'facility',
+            },
+          },
           pickup_lfd_terminal: '2099-01-10T00:00:00Z',
           pickup_lfd_rail: null,
           pickup_lfd_line: '2099-01-12T00:00:00Z',
@@ -462,7 +468,8 @@ describe('MCP tool contracts', () => {
 
   it('get_container suppresses demurrage urgency when terminal data is stale', async () => {
     const rawContainer = buildContainerRaw('container-stale');
-    (rawContainer.data.attributes as any).pickup_lfd = '2020-01-01';
+    rawContainer.data.attributes.import_deadlines.pod.unified.current_value =
+      '2020-01-01';
     (rawContainer.data.attributes as any).terminal_checked_at =
       '2019-01-01T00:00:00Z';
 
@@ -487,9 +494,8 @@ describe('MCP tool contracts', () => {
     // urgency; only the shipment-level tracking-stopped flag should suppress it.
     (rawContainer.data.attributes as any).terminal_checked_at =
       new Date().toISOString();
-    (rawContainer.data.attributes as any).pickup_lfd = new Date(
-      Date.now() + 2 * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    rawContainer.data.attributes.import_deadlines.pod.unified.current_value =
+      new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
     const shipmentInclude = rawContainer.included.find(
       (item: any) => item.type === 'shipment',
     ) as any;
@@ -523,9 +529,8 @@ describe('MCP tool contracts', () => {
     // line_tracking_stopped_* — urgency must remain active (not suppressed).
     (rawContainer.data.attributes as any).terminal_checked_at =
       new Date().toISOString();
-    (rawContainer.data.attributes as any).pickup_lfd = new Date(
-      Date.now() + 2 * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    rawContainer.data.attributes.import_deadlines.pod.unified.current_value =
+      new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
 
     const client = asClient({
       containers: {
@@ -549,9 +554,8 @@ describe('MCP tool contracts', () => {
     const rawContainer = buildContainerRaw('container-no-shipment');
     (rawContainer.data.attributes as any).terminal_checked_at =
       new Date().toISOString();
-    (rawContainer.data.attributes as any).pickup_lfd = new Date(
-      Date.now() + 2 * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    rawContainer.data.attributes.import_deadlines.pod.unified.current_value =
+      new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
     // Drop the sideloaded shipment entirely.
     rawContainer.included = rawContainer.included.filter(
       (item: any) => item.type !== 'shipment',
