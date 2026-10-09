@@ -47,6 +47,9 @@ if (!cfg) {
     containerNumber?: string;
   } = {};
   let serverInfo: unknown;
+  // Tools the server under test lists. Cases for tools added in a PR skip
+  // when the push-time eval runs against production before they deploy.
+  let listedTools = new Set<string>();
 
   /** Call a tool, score it, record the row, and return both for assertions. */
   async function evaluate(
@@ -79,6 +82,7 @@ if (!cfg) {
       const init = await client.initialize();
       serverInfo = init.serverInfo;
       expect(init.http).toBe(200);
+      listedTools = new Set((await client.listTools()).map((t) => t.name));
 
       // Discover real ids to feed the detail tools.
       const ships = await client.callTool('list_shipments', {
@@ -362,7 +366,10 @@ if (!cfg) {
       !result.isError &&
       /isn't enabled for this Terminal49 account/.test(result.rawText);
 
-    it('get_trade_data_coverage reports history from 2022 or a plain not-enabled message', async () => {
+    it('get_trade_data_coverage reports history from 2022 or a plain not-enabled message', async ({
+      skip,
+    }) => {
+      if (!listedTools.has('get_trade_data_coverage')) return skip();
       const { result, score } = await evaluate(
         'get_trade_data_coverage',
         {},
@@ -386,7 +393,10 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
-    it('search_commodities resolves a product to HS codes or explains it is not enabled', async () => {
+    it('search_commodities resolves a product to HS codes or explains it is not enabled', async ({
+      skip,
+    }) => {
+      if (!listedTools.has('search_commodities')) return skip();
       const { result, score } = await evaluate(
         'search_commodities',
         { query: 'office chairs', limit: 3 },
@@ -415,7 +425,10 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
-    it('get_trade_trends rejects an impossible month before calling the API', async () => {
+    it('get_trade_trends rejects an impossible month before calling the API', async ({
+      skip,
+    }) => {
+      if (!listedTools.has('get_trade_trends')) return skip();
       const { result, score } = await evaluate(
         'get_trade_trends',
         { since: '2026-13' },
