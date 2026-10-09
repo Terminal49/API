@@ -1,6 +1,8 @@
 import type { Terminal49Client } from '@terminal49/sdk';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import {
+  capRollupByLevel,
+  capSeriesByPeriod,
   executeGetImporterProfile,
   executeGetTradeBreakdown,
   executeGetTradeDataCoverage,
@@ -355,10 +357,12 @@ describe('get_trade_trends', () => {
     });
     expect(result).not.toHaveProperty('fact');
     expect(result.series).toHaveLength(500);
+    expect(result.series[0].period).toBe('p120');
+    expect(result.series.at(-1).period).toBe('p619');
     expect(result.series[0].value).toBe(11);
     expect(result.truncated).toBe(true);
-    expect(result.total_rows).toBe(620);
-    expect(result.period).toEqual({ from: '2024-10', to: '2026-10' });
+    expect(result.earlier_periods_not_shown).toBe(120);
+    expect(result.period).toEqual({ from: 'p120', to: '2026-10' });
   });
 });
 
@@ -439,5 +443,39 @@ describe('get_trade_data_coverage', () => {
       volume_unit: 'physical containers, each counted once',
       built_at: '2026-10-08T06:12:44Z',
     });
+  });
+});
+
+describe('capping', () => {
+  it('keeps whole periods, newest first, and never splits a period', () => {
+    const series = ['2026-01', '2026-02', '2026-03'].flatMap((period) =>
+      ['A', 'B', 'C'].map((group) => ({ period, group, value: 1 })),
+    );
+    const { points, omittedPeriods } = capSeriesByPeriod(series, 7);
+    expect(points.map((p) => p.period)).toEqual([
+      '2026-02',
+      '2026-02',
+      '2026-02',
+      '2026-03',
+      '2026-03',
+      '2026-03',
+    ]);
+    expect(omittedPeriods).toBe(1);
+    expect(capSeriesByPeriod(series, 9).omittedPeriods).toBe(0);
+  });
+
+  it("keeps whole rollup levels instead of cutting a parent's children", () => {
+    const rows = [
+      { level: 0, value: 10 },
+      { level: 1, a: 'X', value: 6 },
+      { level: 2, a: 'X', b: 'x1', value: 4 },
+      { level: 2, a: 'X', b: 'x2', value: 2 },
+      { level: 1, a: 'Y', value: 4 },
+      { level: 2, a: 'Y', b: 'y1', value: 4 },
+    ];
+    const capped = capRollupByLevel(rows, 4);
+    expect(capped.rows.map((row) => row.level)).toEqual([0, 1, 1]);
+    expect(capped.deepestLevel).toBe(1);
+    expect(capRollupByLevel(rows, 6).deepestLevel).toBeUndefined();
   });
 });
