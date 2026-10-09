@@ -159,7 +159,7 @@ export const searchImportersInputSchema = z.strictObject({
     .int()
     .positive()
     .describe(
-      'Only importers with at least this many containers in the last 12 full months.',
+      'Only importers with at least this many containers in the 12-month search window (see period in the results).',
     )
     .optional(),
   limit: z
@@ -261,7 +261,7 @@ export const getTradeTrendsInputSchema = z.strictObject({
       'Period size. Month for a year or less, quarter for two to three years.',
     ),
   since: month(
-    'First month, YYYY-MM, inclusive. Default: 24 months ago. Data goes back to 2022-01.',
+    'First month, YYYY-MM, inclusive. Default: about two years back. Data goes back to 2022-01. Set since and until explicitly when the number of periods matters.',
   ).optional(),
   until: month(
     'Last month, YYYY-MM, inclusive. Default: the current month, which is still incomplete. Set it to the last full month for any comparison.',
@@ -300,7 +300,7 @@ export const getTradeBreakdownInputSchema = z.strictObject({
   measure,
   filters: tradeFiltersSchema.optional(),
   since: month(
-    'First month, YYYY-MM, inclusive. Default: 12 months ago.',
+    'First month, YYYY-MM, inclusive. Default: about a year back, so the default window is not a clean 12 months. For an annual total set since and until to 12 full months.',
   ).optional(),
   until: month(
     'Last month, YYYY-MM, inclusive. Default: the current month, which is still incomplete. Set it to the last full month for clean totals.',
