@@ -19452,7 +19452,13 @@
             "type": "integer",
             "description": "Rows in the HS-code-by-lane-by-month fact table."
           }
-        }
+        },
+        "required": [
+          "lane_month",
+          "company_month",
+          "commodity_month",
+          "hs_lane_month"
+        ]
       },
       "TradeIntelMeta": {
         "type": "object",
@@ -19531,7 +19537,24 @@
             "format": "date-time",
             "example": "2026-10-08T06:12:44Z"
           }
-        }
+        },
+        "required": [
+          "since_month",
+          "until_month_exclusive",
+          "months",
+          "min_containers",
+          "companies",
+          "hs_codes",
+          "facts_since_month",
+          "facts_until_exclusive",
+          "partial_month",
+          "mode",
+          "facts_hash",
+          "refreshed_since",
+          "fact_rows",
+          "volume_measure",
+          "built_at"
+        ]
       },
       "TradeIntelNamedContainers": {
         "type": "object",
@@ -19737,7 +19760,19 @@
         },
         "required": [
           "company_name",
+          "company_state",
           "containers",
+          "containers_as_consignee",
+          "containers_as_notify_party",
+          "teus",
+          "estimated_value",
+          "reefer_share",
+          "first_month",
+          "last_month",
+          "top_ports",
+          "top_origins",
+          "top_carriers",
+          "top_commodities",
           "score"
         ]
       },
@@ -19929,13 +19964,12 @@
         },
         "required": [
           "company_name",
+          "company_state",
           "since",
           "until",
-          "found",
-          "totals",
-          "monthly",
-          "notes"
-        ]
+          "found"
+        ],
+        "description": "Import profile for one company. When `found` is `true` the totals, monthly series, breakdowns, and notes are returned."
       },
       "TradeIntelCommoditySearchRequest": {
         "type": "object",
@@ -19994,6 +20028,9 @@
         "required": [
           "hs4",
           "description",
+          "estimated_value",
+          "companies",
+          "common_goods",
           "score"
         ]
       },
