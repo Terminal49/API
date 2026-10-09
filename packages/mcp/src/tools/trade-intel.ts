@@ -677,10 +677,7 @@ export async function executeGetTradeTrends(
   const result = {
     measure: body.measure,
     interval: body.interval,
-    period: {
-      from: omittedPeriods > 0 ? points[0]?.period : body.since,
-      to: body.until,
-    },
+    period: { from: body.since, to: body.until },
     group_by: body.group_by ?? [],
     filters: body.filters ?? {},
     series: points.map((row) => roundValue(row, digits)),
@@ -690,6 +687,10 @@ export async function executeGetTradeTrends(
   return {
     ...result,
     truncated: true,
+    periods_shown: {
+      first: points[0]?.period,
+      last: points.at(-1)?.period,
+    },
     earlier_periods_not_shown: omittedPeriods,
     truncation_note:
       'Only the most recent whole periods fit. Ask for fewer groups (top), a longer interval, or a later since to see the rest.',
