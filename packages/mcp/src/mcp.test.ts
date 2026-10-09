@@ -20,20 +20,25 @@ vi.mock('@sentry/node', () => ({
 // Stubbed Terminal49Client so server tools can be exercised end-to-end without
 // hitting the live API. Tests configure these mocks per-case. `vi.hoisted`
 // is required because vi.mock factories are hoisted above normal declarations.
-const { search, shippingLinesList, containersList, shipmentsList } = vi.hoisted(
-  () => ({
-    search: vi.fn(),
-    shippingLinesList: vi.fn(),
-    containersList: vi.fn(),
-    shipmentsList: vi.fn(),
-  }),
-);
+const {
+  search,
+  shippingLinesList,
+  containersList,
+  shipmentsList,
+  containersSummary,
+} = vi.hoisted(() => ({
+  search: vi.fn(),
+  shippingLinesList: vi.fn(),
+  containersList: vi.fn(),
+  containersSummary: vi.fn(),
+  shipmentsList: vi.fn(),
+}));
 
 vi.mock('@terminal49/sdk', () => ({
   Terminal49Client: class Terminal49Client {
     search = search;
     shippingLines = { list: shippingLinesList };
-    containers = { list: containersList };
+    containers = { list: containersList, summary: containersSummary };
     shipments = { list: shipmentsList };
   },
   FeatureNotEnabledError: class FeatureNotEnabledError extends Error {},
@@ -44,6 +49,7 @@ beforeEach(() => {
   search.mockReset();
   shippingLinesList.mockReset();
   containersList.mockReset();
+  containersSummary.mockReset();
   shipmentsList.mockReset();
 });
 
@@ -415,31 +421,30 @@ describe('MCP server wiring', () => {
     }
   });
 
-  it('summarize_containers returns a schema-valid uncounted total when pages remain', async () => {
-    containersList.mockImplementation(
-      async (_filters: unknown, options: { page: number }) => ({
-        items: Array.from({ length: 50 }, (_, i) => ({
-          id: `C${options.page}-${i}`,
-          terminals: { podTerminal: { name: 'APM' } },
-        })),
-        links: {
-          next: `https://api.example/v2/containers?page[number]=${options.page + 1}`,
-        },
-      }),
-    );
+  it('summarize_containers returns schema-valid counts from one summary call', async () => {
+    containersSummary.mockResolvedValue({
+      total: 3,
+      truncated: false,
+      groups: [
+        { key: 'customs', label: 'customs', count: 2 },
+        { key: null, label: null, count: 1 },
+      ],
+    });
     const server = createTerminal49McpServer('token');
     const tool = (server as any)._registeredTools.summarize_containers;
-    const result = await tool.handler(
-      { group_by: 'pod_terminal', max_rows: 50 },
-      {},
-    );
+    const result = await tool.handler({ group_by: 'hold_type' }, {});
 
     expect(result.isError).toBeUndefined();
+    expect(containersSummary).toHaveBeenCalledTimes(1);
+    expect(containersSummary.mock.calls[0][0]).toBe('hold_type');
+    expect(containersList).not.toHaveBeenCalled();
     expect(result.structuredContent).toMatchObject({
-      total: null,
-      counted: 50,
-      truncated: true,
-      groups: [{ key: 'APM', count: 50 }],
+      total: 3,
+      group_by: 'hold_type',
+      groups: [
+        { key: 'customs', count: 2 },
+        { key: null, count: 1 },
+      ],
     });
     expect(tool.outputSchema.safeParse(result.structuredContent).success).toBe(
       true,
@@ -502,7 +507,7 @@ describe('MCP server wiring', () => {
     }
   });
 
-  it.each(['list_containers', 'list_shipments'])(
+  it.each(['list_containers', 'list_shipments', 'summarize_containers'])(
     '%s returns actionable SDK validation errors without submitted values',
     async (name) => {
       const error = Object.assign(
@@ -513,11 +518,18 @@ describe('MCP server wiring', () => {
       );
       (name === 'list_containers'
         ? containersList
-        : shipmentsList
+        : name === 'summarize_containers'
+          ? containersSummary
+          : shipmentsList
       ).mockRejectedValue(error);
       const result = await (
         createTerminal49McpServer('token') as any
-      )._registeredTools[name].handler({ pod_code: '=PRIVATE_VALUE' });
+      )._registeredTools[name].handler({
+        pod_code: '=PRIVATE_VALUE',
+        ...(name === 'summarize_containers'
+          ? { group_by: 'pod_terminal' }
+          : {}),
+      });
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toBe(
         'Invalid list filter "pod_code": expected literal values, not comparison expressions. Use the filter values and operators documented in the tool schema.',

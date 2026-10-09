@@ -474,8 +474,9 @@ Count containers grouped by one dimension, using the same filters as `list_conta
 **Parameters**
 
 - The filters accepted by `list_containers` (including `advanced_filters` and `include_stopped_tracking`).
-- `group_by` *(string, required)* - `pod_terminal`, `current_status`, `shipping_line`, `hold_type`, `pickup_lfd_date` or `pod_arrival_date`.
-- `max_rows` *(number, optional)* - most containers to count. Default 3000, maximum 6000; `truncated` is true when the set is larger.
+- `group_by` *(string, required)* - `pod_terminal`, `current_status`, `shipping_line`, `port_of_discharge`, `hold_type`, `pickup_lfd_date` or `pod_arrival_date`.
+
+Counts come from `GET /v2/containers/summary` in one request. `hold_type` counts each active hold, so a container with two holds counts twice; dates are UTC calendar days. Groups are ordered by count and capped at 200; `truncated` is true when there are more.
 
 **Good for**
 

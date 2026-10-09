@@ -900,7 +900,9 @@ function formatToolError(
   }
 
   if (
-    (toolName === 'list_shipments' || toolName === 'list_containers') &&
+    (toolName === 'list_shipments' ||
+      toolName === 'list_containers' ||
+      toolName === 'summarize_containers') &&
     err.name === 'ValidationError'
   ) {
     const details = asRecord(err.details);
@@ -1467,10 +1469,11 @@ export function createTerminal49McpServer(
     {
       title: 'Summarize Containers',
       description:
-        'Count containers grouped by POD terminal, status, shipping line, hold type, LFD date or arrival date, using the same filters as list_containers. ' +
+        'Count containers grouped by POD terminal, status, shipping line, port of discharge, hold type, LFD date or POD arrival date, using the same filters as list_containers. ' +
         'Use it for "how many" and "break down by" questions; use list_containers for "which ones". ' +
         'Like the dashboard, only actively tracked containers are counted unless include_stopped_tracking is true. ' +
-        'Report the total, and say so when truncated is true.',
+        'hold_type counts each active hold, so a container with two holds counts twice; dates are UTC calendar days. A null key means the container has no value (no hold, no LFD, no arrival). ' +
+        'Report the total, and say so when truncated is true (more than 200 groups).',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1481,17 +1484,16 @@ export function createTerminal49McpServer(
         summarizeContainersInputSchema,
       ),
       outputSchema: z.object({
-        total: z
-          .number()
-          .nullable()
-          .describe(
-            'Null when the API reports no total and pages remain uncounted.',
-          ),
-        counted: z.number(),
-        truncated: z.boolean(),
+        total: z.number(),
         group_by: z.string(),
-        groups: z.array(z.object({ key: z.string(), count: z.number() })),
-        other_groups: z.number(),
+        truncated: z.boolean(),
+        groups: z.array(
+          z.object({
+            key: z.string().nullable(),
+            label: z.string().nullable(),
+            count: z.number(),
+          }),
+        ),
         applied_filters: z.record(z.string(), z.unknown()),
       }),
     },
