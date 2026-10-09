@@ -539,14 +539,14 @@ Keep these in mind when you read the answers:
 
 ### `search_importers`
 
-Find US importers by company name (typos and partial names are fine), by what they import, or both. Each result covers the last 12 full months: containers, the consignee and notify-party split, TEUs, estimated value, and top ports, origin countries, carriers, and products. Results are ordered by match quality, not size.
+Find US importers by company name (typos and partial names are fine), by what they import, or both. Each result covers a 12-month search window, which can end a month or two before the last full month: containers, the consignee and notify-party split, twenty-foot equivalent units (TEUs), estimated value, and top ports, origin countries, carriers, and products. Results are ordered by match quality, not size.
 
 **Parameters**
 
 - `name` *(string, optional)* - company name.
 - `imports` *(string, optional)* - what the company imports, in plain words.
 - `state`, `port_of_discharge`, `origin_country` *(string, optional)* - narrow the search.
-- `min_containers` *(number, optional)* - minimum containers in the last 12 full months.
+- `min_containers` *(number, optional)* - minimum containers in the search window.
 - `limit` *(number, optional)* - default 10, maximum 25.
 
 **Good for**
@@ -574,7 +574,7 @@ One importer's imports over full calendar months ending last month: totals, a mo
 
 ### `search_commodities`
 
-Turn a product description or HS code prefix into four-digit HS codes, with the goods commonly declared under each code, the number of importers, and 12-month estimated value. Check the common goods before relying on a code.
+Turn a product description or Harmonized System (HS) code prefix into four-digit HS codes, with the goods commonly declared under each code, the number of importers, and 12-month estimated value. Check the common goods before relying on a code.
 
 **Parameters**
 
