@@ -420,6 +420,26 @@ export interface paths {
         patch: operations["patch-containers-id"];
         trace?: never;
     };
+    "/containers/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Summarize containers
+         * @description Counts the containers that `GET /containers` returns for the same filters, grouped by one dimension, in a single request. Accepts every `filter[...]` parameter of `GET /containers` (the same names and operators); pagination, sort, and include do not apply. Groups are ordered by count, most first, and capped at 200; `meta.truncated` is true when there are more.
+         */
+        get: operations["summarize-containers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/containers/{id}": {
         parameters: {
             query?: never;
@@ -5189,6 +5209,352 @@ export interface operations {
                         data?: components["schemas"]["container"];
                     };
                 };
+            };
+        };
+    };
+    "summarize-containers": {
+        parameters: {
+            query: {
+                /** @description Dimension to count by. `pod_terminal` and `port_of_discharge` groups are keyed by ID and labeled by name; `shipping_line` groups are keyed by ID and labeled by SCAC; `current_status` groups are keyed and labeled by status. `pickup_lfd_date` and `pod_arrival_date` groups are keyed by UTC calendar day (`YYYY-MM-DD`). `hold_type` counts each active POD terminal hold by name, so a container with two holds counts twice and group counts can add up to more than `total`. A null key means the container has no value for the dimension. */
+                group_by: "current_status" | "pod_terminal" | "shipping_line" | "port_of_discharge" | "hold_type" | "pickup_lfd_date" | "pod_arrival_date";
+                /**
+                 * @description Exact number match. Shipment arrays mean OR; container arrays of exact numbers mean AND. Use comma-separated container numbers for OR. Shipment scalar commas are literal. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example CAIU1234567
+                 */
+                "filter[number]"?: string;
+                /**
+                 * @description Port of lading name (including raw routing data when no port relationship exists). Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[pol]"?: string;
+                /**
+                 * @description Port of discharge name (including raw routing data when no port relationship exists). Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[pod]"?: string;
+                /**
+                 * @description Destination name, including raw routing data when no port relationship exists. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[destination]"?: string;
+                /**
+                 * @description Port of lading UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example CNSHA
+                 */
+                "filter[pol_code]"?: string;
+                /**
+                 * @description Port of discharge UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example USLAX
+                 */
+                "filter[pod_code]"?: string;
+                /**
+                 * @description Destination UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example USLAX
+                 */
+                "filter[destination_code]"?: string;
+                /**
+                 * @description Shipping line Standard Carrier Alpha Code (SCAC). Obtain valid values from GET /shipping_lines; preserve their exact codes. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example MAEU
+                 */
+                "filter[shipping_line_scac]"?: string;
+                /**
+                 * @description Customer account ID or customer party ID. Falls back to the shipment creator when no customer party role exists. Presence checks refer to the customer party role. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example 00000000-0000-4000-8000-000000000001
+                 */
+                "filter[customer_id]"?: string;
+                /**
+                 * @description Exact, case-sensitive customer company name. Prefer customer_id for names containing punctuation rejected by the string parser. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[customer_name]"?: string;
+                /**
+                 * @description Exact vessel name. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[vessel_name]"?: string;
+                /**
+                 * @description Port of discharge terminal ID. Obtain it from the related terminal resource. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example 00000000-0000-4000-8000-000000000001
+                 */
+                "filter[pod_terminal_id]"?: string;
+                /**
+                 * @description Container status. Known values: new, on_ship, available, not_available, grounded, on_rail, picked_up, off_dock, delivered, dropped, loaded, empty_returned, awaiting_inland_transfer. Unknown values return no matches in the API; the SDK rejects them. Comma-separated states mean OR; arrays mean AND.
+                 * @example available
+                 */
+                "filter[current_status]"?: string;
+                /**
+                 * @description true requires nonempty terminal fees; false requires an explicitly empty terminal fee array. Unreported/null fees match neither branch.
+                 * @example true
+                 */
+                "filter[has_fees]"?: boolean;
+                /**
+                 * @description true requires a terminal demurrage fee; false selects terminal records without a demurrage fee. Missing terminal data can be excluded.
+                 * @example true
+                 */
+                "filter[has_demurrage_fees]"?: boolean;
+                /**
+                 * @description true requires fees OR holds; false requires both arrays to be explicitly empty. Missing terminal data can be excluded.
+                 * @example true
+                 */
+                "filter[has_fees_or_holds]"?: boolean;
+                /**
+                 * @description true selects attention-marked, overdue pickup, or approaching-LFD containers. false selects containers whose stored attention value is false or null; it is not the exact complement of true.
+                 * @example true
+                 */
+                "filter[requires_attention]"?: boolean;
+                /**
+                 * @description Selects containers with estimated-event changes in the last 24 hours. Both true and false apply the positive selector in the API. The SDK accepts only true.
+                 * @example true
+                 */
+                "filter[eta_changed_in_last_24h]"?: boolean;
+                /**
+                 * @description Selects containers with estimated-event changes in the past three days. Both true and false apply the positive selector in the API. The SDK accepts only true.
+                 * @example true
+                 */
+                "filter[eta_changed_in_past_3_days]"?: boolean;
+                /**
+                 * @description true requires nonempty terminal holds; false requires an explicitly empty holds array. Unreported/null holds match neither branch.
+                 * @example true
+                 */
+                "filter[has_holds]"?: boolean;
+                /**
+                 * @description true selects shipments with tracking not stopped; false selects stopped tracking. Applies via the related shipment for containers.
+                 * @example true
+                 */
+                "filter[actively_tracked]"?: boolean;
+                /**
+                 * @description Prefix text search of container and linked shipment identifiers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[search_by_ids]"?: string;
+                /**
+                 * @description Prefix text search of container numbers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[search_by_number]"?: string;
+                /**
+                 * @description Prefix text search of shipment numbers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[search_by_shipment_number]"?: string;
+                /**
+                 * @description Prefix text search of shipment reference numbers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[search_by_shipment_ref_numbers]"?: string;
+                /**
+                 * @description Prefix text search of container reference numbers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[search_by_ref_numbers]"?: string;
+                /**
+                 * @description User IDs associated with containers. Use one ID or comma-separated user IDs; bracketed arrays are not supported by this scope. Presence and search operators do not apply.
+                 * @example 00000000-0000-4000-8000-000000000001
+                 */
+                "filter[search_by_owner_id]"?: string;
+                /**
+                 * @description Delivery date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[delivered_at]"?: string;
+                /**
+                 * @description POD discharge date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pod_discharged_at]"?: string;
+                /**
+                 * @description Container POD arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pod_arrived_at]"?: string;
+                /**
+                 * @description Estimated port of lading departure date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pol_etd_at]"?: string;
+                /**
+                 * @description Actual port of lading departure date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pol_atd_at]"?: string;
+                /**
+                 * @description Empty equipment out date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[empty_out_at]"?: string;
+                /**
+                 * @description Full equipment in at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pol_full_in_at]"?: string;
+                /**
+                 * @description Vessel loading at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pol_vessel_loaded_at]"?: string;
+                /**
+                 * @description Vessel departure at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pol_vessel_departed_at]"?: string;
+                /**
+                 * @description POD arrival date: actual arrival takes precedence over estimated arrival. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[arrival]"?: string;
+                /**
+                 * @description Pickup date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[picked_up_at]"?: string;
+                /**
+                 * @description Empty return date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[empty_returned_at]"?: string;
+                /**
+                 * @description Creation date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[created_at]"?: string;
+                /**
+                 * @description Last record update date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[updated_at]"?: string;
+                /**
+                 * @description Inclusive two-date range, encoded as filter[last_free_day_on][]=FROM and filter[last_free_day_on][]=TO, without operators. Requires both dates. Also restricts to available/not_available/off_dock containers, tracking not stopped, and destination absent or the same as POD. Use pickup_lfd for general comparisons.
+                 * @example [
+                 *       "2026-10-01",
+                 *       "2026-10-07"
+                 *     ]
+                 */
+                "filter[last_free_day_on][]"?: string[];
+                /**
+                 * @description Inland rail unloading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[inland_destination_rail_unloaded_at]"?: string;
+                /**
+                 * @description Final destination full out date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[final_destination_full_out_at]"?: string;
+                /**
+                 * @description Estimated inland destination arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[inland_destination_eta_at]"?: string;
+                /**
+                 * @description Actual inland destination arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[inland_destination_ata_at]"?: string;
+                /**
+                 * @description Rail departure from POD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pod_rail_departed_at]"?: string;
+                /**
+                 * @description Pickup last free day (LFD) date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pickup_lfd]"?: string;
+                /**
+                 * @description Reported rail pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pickup_lfd_rail_on]"?: string;
+                /**
+                 * @description Reported terminal pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pickup_lfd_terminal_on]"?: string;
+                /**
+                 * @description Reported shipping-line pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pickup_lfd_line_on]"?: string;
+                /**
+                 * @description Terminal pickup LFD. Calculated values are used only when enabled and visible for the account/carrier; otherwise reported values are used. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pickup_lfd_terminal_effective_on]"?: string;
+                /**
+                 * @description Shipping-line pickup LFD. Calculated values are used only when enabled and visible for the account/carrier; otherwise reported values are used. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pickup_lfd_line_effective_on]"?: string;
+                /**
+                 * @description Account-scoped shipment tags. Comma-separated names or arrays match ANY tag by default.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[tags]"?: string;
+                /**
+                 * @description With tags, true requires ALL tags; false or absent means ANY. Has no effect without tags. The SDK requires tags (or shipment tag) when this modifier is supplied.
+                 * @example true
+                 */
+                "filter[tags_and]"?: boolean;
+                /**
+                 * @description Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK.
+                 * @example {
+                 *       "shipper": "00000000-0000-4000-8000-000000000001"
+                 *     }
+                 */
+                "filter[parties]"?: {
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    shipper?: string;
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    consignee?: string;
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    notify_party?: string;
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    customs_broker?: string;
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    customer?: string;
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    freight_forwarder?: string;
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    pickup_dray_carrier?: string;
+                };
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @description Status, or the ID of the terminal, shipping line, or port. Null for containers without a value. */
+                            key: string | null;
+                            /** @description Display name for the key. */
+                            label: string | null;
+                            count: number;
+                        }[];
+                        meta: {
+                            /** @description Containers matching the filters. */
+                            total: number;
+                            /** @enum {string} */
+                            group_by: "current_status" | "pod_terminal" | "shipping_line" | "port_of_discharge" | "hold_type" | "pickup_lfd_date" | "pod_arrival_date";
+                            /** @description True when more than 200 groups exist; only the first 200 are returned. */
+                            truncated: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description Unknown group_by, or an invalid filter. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
