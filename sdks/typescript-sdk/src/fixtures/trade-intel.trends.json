@@ -1,0 +1,38 @@
+{
+  "measure": "containers",
+  "interval": "quarter",
+  "since": "2026-01",
+  "until": "2026-06",
+  "group_by": [
+    "origin_country"
+  ],
+  "filters": {
+    "hs4": "9401"
+  },
+  "fact": "hs_lane_month",
+  "notes": [
+    "volume is physical containers, each counted once"
+  ],
+  "series": [
+    {
+      "period": "2026-Q1",
+      "origin_country": "VIETNAM",
+      "value": 12000
+    },
+    {
+      "period": "2026-Q1",
+      "origin_country": "PEOPLES REP OF CHINA",
+      "value": 11000
+    },
+    {
+      "period": "2026-Q2",
+      "origin_country": "VIETNAM",
+      "value": 12500
+    },
+    {
+      "period": "2026-Q2",
+      "origin_country": "PEOPLES REP OF CHINA",
+      "value": 10800
+    }
+  ]
+}

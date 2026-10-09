@@ -137,6 +137,18 @@ export function extractErrorMessage(body: any): string {
     return body.detail;
   }
 
+  // Schema validation failures from the trade intelligence endpoints:
+  // `{ detail: [{ loc: ["body", "limit"], msg: "...", type: "..." }] }`.
+  if (Array.isArray(body?.detail) && body.detail.length > 0) {
+    return body.detail
+      .map((item: any) => {
+        const msg = item?.msg || item?.type || 'Invalid value';
+        const loc = Array.isArray(item?.loc) ? item.loc.join('.') : undefined;
+        return loc ? `${msg} (${loc})` : msg;
+      })
+      .join('; ');
+  }
+
   return 'Unknown error';
 }
 
