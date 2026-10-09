@@ -532,7 +532,7 @@ Keep these in mind when you read the answers:
 - Volume is physical containers, each counted once. Values are estimates, not declared customs values.
 - `get_trade_trends` and `get_trade_breakdown` include the current month, which is still incomplete, unless you set `until`. Compare full months against the same months a year earlier.
 - A company can appear under several names and once per US state. Some importers keep their names off the records or ship under a forwarder, so low volume for a well-known company is a floor, not its size.
-- Forwarders and customs brokers appear among importers. A high `share_as_notify_party` usually means a logistics provider.
+- Forwarders and customs brokers appear among importers. A high `share_as_notify_party` suggests a logistics provider, but large cargo owners can also be listed mostly as notify party, so weigh the company name and product mix too.
 - Don't add volumes across products or companies. Carriers appear under spelling variants, so merge them before computing shares.
 
 ---
@@ -580,6 +580,8 @@ Turn a product description or HS code prefix into four-digit HS codes, with the 
 
 - `query` *(string, required)* - such as `office chairs` or `94`.
 - `limit` *(number, optional)* - default 8, maximum 20.
+
+Each code lists up to 15 common goods; `common_goods_not_shown` counts any left out.
 
 ---
 
