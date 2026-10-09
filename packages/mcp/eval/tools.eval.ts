@@ -354,6 +354,78 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
+    // ---- trade intelligence ----
+    // Enabled per account. Without it the tools answer with a plain
+    // not-enabled message (not a tool error), which is a passing outcome here.
+
+    const tradeIntelNotEnabled = (result: ToolResult) =>
+      !result.isError &&
+      /isn't enabled for this Terminal49 account/.test(result.rawText);
+
+    it('get_trade_data_coverage reports history from 2022 or a plain not-enabled message', async () => {
+      const { result, score } = await evaluate(
+        'get_trade_data_coverage',
+        {},
+        {
+          requiredKeys: ['history_starts', 'latest_month', 'last_full_month'],
+          predicates: [
+            {
+              name: 'history starts in January 2022',
+              test: (p) => readString(p, 'history_starts') === '2022-01',
+            },
+            {
+              name: 'internal build fields are not exposed',
+              test: (p) =>
+                isRecord(p) && !('facts_hash' in p) && !('fact_rows' in p),
+            },
+          ],
+        },
+      );
+      if (tradeIntelNotEnabled(result)) return;
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('search_commodities resolves a product to HS codes or explains it is not enabled', async () => {
+      const { result, score } = await evaluate(
+        'search_commodities',
+        { query: 'office chairs', limit: 3 },
+        {
+          requiredKeys: ['products'],
+          predicates: [
+            {
+              name: 'returns four-digit codes with common goods',
+              test: (p) =>
+                isRecord(p) &&
+                Array.isArray(p.products) &&
+                p.products.length > 0 &&
+                p.products.every(
+                  (row) =>
+                    isRecord(row) &&
+                    typeof row.hs4 === 'string' &&
+                    /^\d{4}$/.test(row.hs4) &&
+                    Array.isArray(row.common_goods),
+                ),
+            },
+          ],
+        },
+      );
+      if (tradeIntelNotEnabled(result)) return;
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('get_trade_trends rejects an impossible month before calling the API', async () => {
+      const { result, score } = await evaluate(
+        'get_trade_trends',
+        { since: '2026-13' },
+        { expectError: true },
+        'invalid-month',
+      );
+      expect(result.isError).toBe(true);
+      expect(score.contractPass).toBe(true);
+    });
+
     // ---- search + track ----
 
     it('search_container finds the tracked container', async ({ skip }) => {

@@ -5,6 +5,11 @@ All notable changes to the Terminal49 MCP Server (TypeScript) will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Trade intelligence tools for US ocean import market data (US Customs bill-of-lading records, January 2022 onward): `search_importers`, `get_importer_profile`, `search_commodities`, `rank_importers`, `get_trade_trends`, `get_trade_breakdown`, and `get_trade_data_coverage`. All are read-only and gated per account; without the feature they reply that trade intelligence isn't enabled instead of failing. Responses are compacted (rounded numbers, capped lists, internal fields dropped), and the tool descriptions and server instructions carry the data caveats agents need. Record-level container and bill of lading lookups stay out of MCP.
+
 ## [1.1.1] - 2026-10-08
 
 ### Fixed

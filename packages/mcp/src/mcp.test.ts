@@ -9,6 +9,7 @@ import {
   createTerminal49McpServer,
   TERMINAL49_SERVER_INSTRUCTIONS,
 } from './server.js';
+import { TRADE_INTEL_TOOL_NAMES } from './tools/trade-intel.js';
 
 vi.mock('@sentry/node', () => ({
   captureException: vi.fn(),
@@ -20,14 +21,22 @@ vi.mock('@sentry/node', () => ({
 // Stubbed Terminal49Client so server tools can be exercised end-to-end without
 // hitting the live API. Tests configure these mocks per-case. `vi.hoisted`
 // is required because vi.mock factories are hoisted above normal declarations.
-const { search, shippingLinesList, containersList, shipmentsList } = vi.hoisted(
-  () => ({
+const { search, shippingLinesList, containersList, shipmentsList, tradeIntel } =
+  vi.hoisted(() => ({
     search: vi.fn(),
     shippingLinesList: vi.fn(),
     containersList: vi.fn(),
     shipmentsList: vi.fn(),
-  }),
-);
+    tradeIntel: {
+      meta: vi.fn(),
+      searchCompanies: vi.fn(),
+      companyProfile: vi.fn(),
+      searchCommodities: vi.fn(),
+      topImporters: vi.fn(),
+      trends: vi.fn(),
+      breakdown: vi.fn(),
+    },
+  }));
 
 vi.mock('@terminal49/sdk', () => ({
   Terminal49Client: class Terminal49Client {
@@ -35,8 +44,12 @@ vi.mock('@terminal49/sdk', () => ({
     shippingLines = { list: shippingLinesList };
     containers = { list: containersList };
     shipments = { list: shipmentsList };
+    tradeIntel = tradeIntel;
   },
-  FeatureNotEnabledError: class FeatureNotEnabledError extends Error {},
+  FeatureNotEnabledError: class FeatureNotEnabledError extends Error {
+    name = 'FeatureNotEnabledError';
+    status = 403;
+  },
   NotFoundError: class NotFoundError extends Error {},
 }));
 
@@ -45,6 +58,7 @@ beforeEach(() => {
   shippingLinesList.mockReset();
   containersList.mockReset();
   shipmentsList.mockReset();
+  for (const fn of Object.values(tradeIntel)) fn.mockReset();
 });
 
 function _hasResponseContract(schema: unknown): boolean {
@@ -350,7 +364,7 @@ describe('MCP server wiring', () => {
     );
     const prompts = Object.keys((server as any)._registeredPrompts || {});
 
-    expect(tools).toHaveLength(13);
+    expect(tools).toHaveLength(20);
     expect(tools).toContain('search_container');
     expect(tools).toContain('track_container');
     expect(tools).toContain('get_container');
@@ -364,6 +378,7 @@ describe('MCP server wiring', () => {
     expect(tools).toContain('list_containers');
     expect(tools).toContain('list_tracking_requests');
     expect(tools).toContain('search_docs');
+    for (const name of TRADE_INTEL_TOOL_NAMES) expect(tools).toContain(name);
 
     expect(prompts).toHaveLength(3);
     expect(prompts).toContain('track-shipment');
@@ -399,6 +414,13 @@ describe('MCP server wiring', () => {
       list_parties: { search: 'Acme' },
       list_tracking_requests: {},
       search_docs: { query: 'webhooks' },
+      search_importers: { name: 'acme' },
+      get_importer_profile: { company_name: 'ACME' },
+      search_commodities: { query: 'office chairs' },
+      rank_importers: { hs4: '9401' },
+      get_trade_trends: {},
+      get_trade_breakdown: { dims: ['pod_coast'] },
+      get_trade_data_coverage: {},
     };
 
     for (const [name, tool] of Object.entries(tools)) {
@@ -902,5 +924,153 @@ describe('MCP server wiring', () => {
     expect(
       answerAudience === undefined || answerAudience.includes('user'),
     ).toBe(true);
+  });
+});
+
+describe('trade intelligence tools', () => {
+  const sdkError = (name: string, status: number, message: string) =>
+    Object.assign(new Error(message), { name, status });
+
+  const callTool = async (name: string, args: Record<string, unknown>) => {
+    const server = createTerminal49McpServer('token');
+    const tool = (server as any)._registeredTools[name];
+    const result = await tool.handler(args, {});
+    return { tool, result };
+  };
+
+  it('registers every trade intelligence tool as read-only and closed-world', () => {
+    const tools = (createTerminal49McpServer('token') as any)._registeredTools;
+    for (const name of TRADE_INTEL_TOOL_NAMES) {
+      expect(tools[name].annotations, name).toEqual({
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      });
+    }
+  });
+
+  it('does not expose record-level container or bill of lading lookups', () => {
+    const tools = Object.keys(
+      (createTerminal49McpServer('token') as any)._registeredTools,
+    );
+    expect(tools.filter((name) => /lookup|bill_of_lading/.test(name))).toEqual(
+      [],
+    );
+  });
+
+  it.each(TRADE_INTEL_TOOL_NAMES.map((name) => [name]))(
+    '%s answers a 403 with a plain not-enabled message, not an error',
+    async (name) => {
+      const notEnabled = new (
+        (await import('@terminal49/sdk')) as any
+      ).FeatureNotEnabledError(
+        'Trade intelligence is not enabled for this account',
+      );
+      for (const fn of Object.values(tradeIntel))
+        fn.mockRejectedValue(notEnabled);
+      const args: Record<string, Record<string, unknown>> = {
+        search_importers: { name: 'acme' },
+        get_importer_profile: { company_name: 'ACME' },
+        search_commodities: { query: 'office chairs' },
+        rank_importers: {},
+        get_trade_trends: {},
+        get_trade_breakdown: { dims: ['pod_coast'] },
+        get_trade_data_coverage: {},
+      };
+
+      const { tool, result } = await callTool(name, args[name]);
+
+      expect(result.isError).toBeUndefined();
+      expect(result.content[0].text).toMatch(
+        /isn't enabled for this Terminal49 account/,
+      );
+      expect(result.content[0].text).toMatch(/support@terminal49\.com/);
+      expect(
+        tool.outputSchema.safeParse(result.structuredContent).success,
+      ).toBe(true);
+    },
+  );
+
+  it('shows the API reason for a 400 and stays generic for other failures', async () => {
+    tradeIntel.topImporters.mockRejectedValueOnce(
+      sdkError(
+        'ValidationError',
+        400,
+        "hs4 must be a 4-digit HS code, e.g. '0306'; use commodities/search to find one",
+      ),
+    );
+    const bad = await callTool('rank_importers', { hs4: '0306' });
+    expect(bad.result.isError).toBe(true);
+    expect(bad.result.content[0].text).toBe(
+      "Trade intelligence could not answer this request: hs4 must be a 4-digit HS code, e.g. '0306'; use commodities/search to find one",
+    );
+
+    tradeIntel.trends.mockRejectedValueOnce(
+      sdkError('RateLimitError', 429, 'Rate limit exceeded; retry in a minute'),
+    );
+    const limited = await callTool('get_trade_trends', {});
+    expect(limited.result.content[0].text).toMatch(/Wait a minute/);
+
+    tradeIntel.meta.mockRejectedValueOnce(
+      sdkError('UpstreamError', 502, 'upstream detail that must not leak'),
+    );
+    const down = await callTool('get_trade_data_coverage', {});
+    expect(down.result.content[0].text).toBe(
+      'Trade intelligence is temporarily unavailable. Try again shortly.',
+    );
+    expect(down.result.content[0].text).not.toMatch(/upstream detail/);
+  });
+
+  it('returns schema-valid compact results', async () => {
+    tradeIntel.searchCompanies.mockResolvedValue({
+      index: { since_month: '2025-09', until_month_exclusive: '2026-09' },
+      results: [
+        {
+          company_name: 'EXAMPLE OUTDOOR SUPPLY',
+          company_state: 'GA',
+          containers: 100,
+          containers_as_consignee: 20,
+          containers_as_notify_party: 80,
+          teus: 190.44,
+          estimated_value: 1234567.89,
+          reefer_share: 0,
+          first_month: '2025-09',
+          last_month: '2026-08',
+          top_ports: [],
+          top_origins: [],
+          top_carriers: [],
+          top_commodities: [],
+          score: 0.9,
+        },
+      ],
+    });
+    const { tool, result } = await callTool('search_importers', {
+      name: 'example outdoor',
+    });
+
+    expect(result.structuredContent.importers[0]).toMatchObject({
+      company_name: 'EXAMPLE OUTDOOR SUPPLY',
+      share_as_notify_party: 0.8,
+      teus: 190.4,
+      estimated_value_usd: 1234568,
+    });
+    expect(result.structuredContent.importers[0]).not.toHaveProperty('score');
+    expect(result.structuredContent).not.toHaveProperty('index');
+    expect(tool.outputSchema.safeParse(result.structuredContent).success).toBe(
+      true,
+    );
+  });
+
+  it('tells agents how to read the data in the server instructions', () => {
+    for (const phrase of [
+      'January 2022',
+      'physical containers',
+      'support@terminal49.com',
+      'months: 24',
+      'substring match',
+      'floor',
+    ]) {
+      expect(TERMINAL49_SERVER_INSTRUCTIONS).toContain(phrase);
+    }
   });
 });

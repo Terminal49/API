@@ -10,7 +10,7 @@
   "listing": {
     "name": "Terminal49",
     "tagline": "Track ocean shipments",
-    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, and create new tracking requests.",
+    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, create new tracking requests, and, where trade intelligence is enabled, research US ocean import markets (importers, products, origins, ports, and carriers).",
     "categories": [
       "Business"
     ],
@@ -25,14 +25,21 @@
       "get_container",
       "get_container_route",
       "get_container_transport_events",
+      "get_importer_profile",
       "get_shipment_details",
       "get_supported_shipping_lines",
+      "get_trade_breakdown",
+      "get_trade_data_coverage",
+      "get_trade_trends",
       "list_containers",
       "list_parties",
       "list_shipments",
       "list_tracking_requests",
+      "rank_importers",
+      "search_commodities",
       "search_container",
       "search_docs",
+      "search_importers",
       "summarize_containers",
       "track_container"
     ]
@@ -49,7 +56,8 @@
       "Filter and count container worklists by status, terminal, carrier, holds, last free day, or company",
       "Inspect routes and transport events",
       "Check supported shipping lines",
-      "Create new tracking requests"
+      "Create new tracking requests",
+      "Research US ocean import markets: importers, products, origin countries, ports, and carriers"
     ]
   }
 }
