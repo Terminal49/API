@@ -603,7 +603,7 @@ Rank US importers by containers over full calendar months for a product, a US po
 
 ### `get_trade_trends`
 
-A time series of containers, TEUs, or estimated value by month, quarter, or year, split by up to two dimensions and filtered by any of them. Defaults to the last 24 months through the current, incomplete month. History goes back to January 2022.
+A time series of containers, TEUs, or estimated value by month, quarter, or year, split by up to two dimensions and filtered by any of them. By default it runs from about two years back through the current, incomplete month. History goes back to January 2022.
 
 **Parameters**
 
@@ -622,7 +622,7 @@ A time series of containers, TEUs, or estimated value by month, quarter, or year
 
 ### `get_trade_breakdown`
 
-Nested totals over one to three dimensions, such as region, country, and US port, with a grand total and subtotals at every level. Defaults to the last 12 months including the current, incomplete month.
+Nested totals over one to three dimensions, such as region, country, and US port, with a grand total and subtotals at every level. By default it runs from about a year back through the current, incomplete month, so it is not a clean 12 months. For an annual total, set `since` and `until` to 12 full months.
 
 **Parameters**
 
