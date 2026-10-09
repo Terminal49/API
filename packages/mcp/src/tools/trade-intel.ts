@@ -594,12 +594,61 @@ export async function executeRankImporters(
 }
 
 /** Drop rows past `limit`, flagging the cut so the agent can narrow the query. */
-function cappedRows<T>(rows: unknown, limit: number) {
-  const list = Array.isArray(rows) ? (rows as T[]) : [];
+type SeriesPoint = { period?: string; value?: number };
+type RollupRow = { level?: number; value?: number };
+
+/**
+ * Keep whole periods, newest first, so a capped series never ends mid-period
+ * or hides the latest data. Points arrive ordered by period, then group.
+ */
+export function capSeriesByPeriod(series: unknown, limit: number) {
+  const points = Array.isArray(series) ? (series as SeriesPoint[]) : [];
+  if (points.length <= limit) {
+    return { points, omittedPeriods: 0 };
+  }
+  const periods: string[] = [];
+  const byPeriod = new Map<string, SeriesPoint[]>();
+  for (const point of points) {
+    const key = String(point.period);
+    if (!byPeriod.has(key)) {
+      byPeriod.set(key, []);
+      periods.push(key);
+    }
+    byPeriod.get(key)!.push(point);
+  }
+  const kept: string[] = [];
+  let count = 0;
+  for (let i = periods.length - 1; i >= 0; i--) {
+    const size = byPeriod.get(periods[i])!.length;
+    if (count + size > limit && kept.length > 0) break;
+    kept.unshift(periods[i]);
+    count += size;
+  }
   return {
-    rows: list.slice(0, limit),
-    truncated: list.length > limit,
-    total_rows: list.length,
+    points: kept.flatMap((period) => byPeriod.get(period)!),
+    omittedPeriods: periods.length - kept.length,
+  };
+}
+
+/**
+ * Keep whole levels of a rollup (grand total, then each nesting level) so a
+ * capped breakdown never shows a parent with only some of its children.
+ */
+export function capRollupByLevel(rows: unknown, limit: number) {
+  const list = Array.isArray(rows) ? (rows as RollupRow[]) : [];
+  if (list.length <= limit) return { rows: list, deepestLevel: undefined };
+  const levels = [...new Set(list.map((row) => row.level ?? 0))].sort(
+    (a, b) => a - b,
+  );
+  let deepest = levels[0];
+  for (const level of levels) {
+    const count = list.filter((row) => (row.level ?? 0) <= level).length;
+    if (count > limit) break;
+    deepest = level;
+  }
+  return {
+    rows: list.filter((row) => (row.level ?? 0) <= deepest),
+    deepestLevel: deepest,
   };
 }
 
@@ -621,24 +670,29 @@ export async function executeGetTradeTrends(
   );
   if (isNotEnabled(body)) return body;
   const digits = body.measure === 'teus' ? 1 : 0;
-  const { rows, truncated, total_rows } = cappedRows<{ value?: number }>(
+  const { points, omittedPeriods } = capSeriesByPeriod(
     body.series,
     MAX_SERIES_ROWS,
   );
-  return {
+  const result = {
     measure: body.measure,
     interval: body.interval,
-    period: { from: body.since, to: body.until },
+    period: {
+      from: omittedPeriods > 0 ? points[0]?.period : body.since,
+      to: body.until,
+    },
     group_by: body.group_by ?? [],
     filters: body.filters ?? {},
-    series: rows.map((row) => roundValue(row, digits)),
-    ...(truncated
-      ? {
-          truncated: true,
-          total_rows,
-        }
-      : {}),
+    series: points.map((row) => roundValue(row, digits)),
     notes: body.notes ?? [],
+  };
+  if (omittedPeriods === 0) return result;
+  return {
+    ...result,
+    truncated: true,
+    earlier_periods_not_shown: omittedPeriods,
+    truncation_note:
+      'Only the most recent whole periods fit. Ask for fewer groups (top), a longer interval, or a later since to see the rest.',
   };
 }
 
@@ -655,18 +709,25 @@ export async function executeGetTradeBreakdown(
   );
   if (isNotEnabled(body)) return body;
   const digits = body.measure === 'teus' ? 1 : 0;
-  const { rows, truncated, total_rows } = cappedRows<{ value?: number }>(
+  const { rows, deepestLevel } = capRollupByLevel(
     body.rows,
     MAX_BREAKDOWN_ROWS,
   );
-  return {
+  const result = {
     measure: body.measure,
     dims: body.dims,
     period: { from: body.since, to: body.until },
     filters: body.filters ?? {},
     rows: rows.map((row) => roundValue(row, digits)),
-    ...(truncated ? { truncated: true, total_rows } : {}),
     notes: body.notes ?? [],
+  };
+  if (deepestLevel === undefined) return result;
+  return {
+    ...result,
+    truncated: true,
+    deepest_level_shown: deepestLevel,
+    truncation_note:
+      'Deeper levels did not fit and were left out whole. Ask for fewer dimensions or a smaller top to see them.',
   };
 }
 
