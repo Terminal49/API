@@ -15,7 +15,7 @@ const data = JSON.parse(
 );
 
 test('only approved public entities and complete feature assessments are exported', () => {
-  assert.equal(data.terminals.length, 136);
+  assert.equal(data.terminals.length, 138);
   assert.equal(
     data.shippingLines.filter((row) => row.access === 'public').length,
     36,
@@ -38,7 +38,7 @@ test('only approved public entities and complete feature assessments are exporte
     data.terminals.filter(
       (row) => row.features.availableForPickup === 'unknown',
     ).length,
-    20,
+    22,
   );
   assert.ok(
     data.terminals.every(
