@@ -1,0 +1,130 @@
+export const CarrierCoverageStatus = ({ status, compact = false }) => {
+  const statuses = {
+    supported: { label: "Supported", symbol: "✓", className: "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400" },
+    limited: { label: "Partial", symbol: "◐", className: "bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300" },
+    unsupported: { label: "Not supported", symbol: "−", className: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/60" },
+    unknown: { label: "Unknown", symbol: "?", className: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/60" },
+    signed_in_only: { label: "Requires carrier credentials", symbol: "⚿", className: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300" },
+  }
+  const value = statuses[status] || statuses.unknown
+  return (
+    <span title={value.label} className={`inline-flex items-center justify-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium ${value.className}`}>
+      <span aria-hidden="true">{value.symbol}</span>
+      {compact ? <span className="sr-only">{value.label}</span> : value.label}
+    </span>
+  )
+}
+
+export const CarrierCoverageDetails = ({ carrier, features, coverage, onClose, Status }) => {
+  const groups = [...new Set(features.map((feature) => feature.group))]
+  return (
+    <section aria-label={`${carrier.name} feature coverage`} className="text-sm text-gray-900 dark:text-white">
+      <div className="carrier-coverage-feature-groups grid">
+        {groups.map((group) => (
+          <div key={group} className="carrier-coverage-feature-group min-w-0">
+            <h4 className="m-0 border-b border-gray-200 bg-gray-50 px-4 py-2 text-xs font-semibold dark:border-white/10 dark:bg-white/5">{group}</h4>
+            <dl>
+              {features.filter((feature) => feature.group === group).map((feature) => (
+                <div key={feature.key} className="flex items-start justify-between gap-3 border-b border-gray-100 px-4 py-2.5 dark:border-white/10">
+                  <dt className="min-w-0">
+                    {feature.href ? <a href={feature.href} className="text-gray-900 underline decoration-gray-300 underline-offset-4 hover:text-green-700 dark:text-white dark:decoration-white/30 dark:hover:text-green-400">{feature.label}</a> : feature.label}
+                    {feature.field ? <span className="mt-1 block break-all font-mono text-[11px] text-gray-500 dark:text-white/50">{feature.field}</span> : null}
+                  </dt>
+                  <dd className="shrink-0"><Status status={coverage?.features?.[feature.key]} /></dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-end border-t border-gray-200 px-4 py-2 dark:border-white/10">
+        <button type="button" onClick={onClose} aria-label={`Close ${carrier.name} coverage details`} className="rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600 dark:text-white/60 dark:hover:bg-white/10">Collapse details</button>
+      </div>
+    </section>
+  )
+}
+
+export const CarrierCoverageExplorer = ({ carriers, features, coverage = {}, summaryKeys, access, updatedOn, carrierLabel = "Carrier" }) => {
+  const [query, setQuery] = useState("")
+  const [requiredFeature, setRequiredFeature] = useState("all")
+  const [includeLimited, setIncludeLimited] = useState(false)
+  const [includeCredentials, setIncludeCredentials] = useState(false)
+  const [selectedScac, setSelectedScac] = useState(null)
+  const eligible = carriers.filter((carrier) => !access || carrier.access === access)
+  const rows = eligible.filter((carrier) => {
+    const matchesQuery = [carrier.name, carrier.legalName, carrier.scac, ...(carrier.alternativeScacs || [])].join(" ").toLowerCase().includes(query.trim().toLowerCase())
+    const status = coverage[carrier.scac]?.features?.[requiredFeature]
+    return matchesQuery && (requiredFeature === "all" || status === "supported" || (includeLimited && status === "limited") || (includeCredentials && status === "signed_in_only"))
+  })
+  const summary = summaryKeys.map((key) => features.find((feature) => feature.key === key)).filter(Boolean)
+  const idPrefix = `${carrierLabel}-${access || "all"}`.toLowerCase().replace(/[^a-z0-9-]/g, "-")
+  const controlClass = "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600 dark:border-white/10 dark:bg-white/5 dark:text-white"
+  const changeFilter = (setter, value) => { setter(value); setSelectedScac(null) }
+  const toggleRow = (scac) => setSelectedScac(selectedScac === scac ? null : scac)
+  const hasCredentials = eligible.some((carrier) => Object.values(coverage[carrier.scac]?.features || {}).includes("signed_in_only"))
+  return (
+    <div className="carrier-coverage not-prose min-w-0 space-y-4">
+      <style>{`
+        .carrier-coverage { container-type: inline-size; }
+        .carrier-coverage-feature-groups { grid-template-columns: 1fr; }
+        .carrier-coverage-feature-group { border-bottom: 1px solid rgb(156 163 175 / 0.2); }
+        @container (min-width: 640px) {
+          .carrier-coverage-feature-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .carrier-coverage-feature-group:nth-child(odd) { border-right: 1px solid rgb(156 163 175 / 0.2); }
+        }
+      `}</style>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="text-xs font-medium text-gray-600 dark:text-white/70">Search carriers
+          <input type="search" value={query} onChange={(event) => changeFilter(setQuery, event.target.value)} placeholder="Carrier name or SCAC" className={`${controlClass} mt-1`} />
+        </label>
+        <label className="text-xs font-medium text-gray-600 dark:text-white/70">Required feature
+          <select value={requiredFeature} onChange={(event) => changeFilter(setRequiredFeature, event.target.value)} className={`${controlClass} mt-1`}>
+            <option value="all">All features</option>
+            {features.map((feature) => <option key={feature.key} value={feature.key}>{feature.label}</option>)}
+          </select>
+        </label>
+      </div>
+      {requiredFeature !== "all" ? <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-white/70">
+        <label className="flex items-center gap-2"><input type="checkbox" checked={includeLimited} onChange={(event) => changeFilter(setIncludeLimited, event.target.checked)} className="accent-green-600" />Include partial coverage</label>
+        {hasCredentials ? <label className="flex items-center gap-2"><input type="checkbox" checked={includeCredentials} onChange={(event) => changeFilter(setIncludeCredentials, event.target.checked)} className="accent-green-600" />Include features requiring carrier credentials</label> : null}
+      </div> : null}
+      <p className="text-xs text-gray-500 dark:text-white/60">Showing {rows.length} of {eligible.length} carriers. Select a row for all features.</p>
+      <div className="flex flex-wrap gap-2" aria-label="Coverage status legend">
+        {["supported", "limited", "unsupported", "unknown", ...(hasCredentials ? ["signed_in_only"] : [])].map((status) => <CarrierCoverageStatus key={status} status={status} />)}
+      </div>
+      <div className="rounded-lg border border-gray-200 dark:border-white/15">
+        <table className="w-full table-fixed border-collapse text-left text-sm">
+          <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
+            <tr>
+              <th scope="col" className="w-full px-3 py-3 font-medium sm:w-2/5">{carrierLabel}</th>
+              {summary.map((feature) => <th key={feature.key} scope="col" className="hidden px-2 py-3 font-medium sm:table-cell">{feature.label}</th>)}
+            </tr>
+          </thead>
+          {rows.map((carrier) => {
+            const isSelected = selectedScac === carrier.scac
+            const detailId = `${idPrefix}-details-${carrier.scac}`
+            const buttonId = `${idPrefix}-toggle-${carrier.scac}`
+            return (
+              <tbody key={carrier.scac}>
+                <tr onClick={(event) => { if (!event.target.closest("button, a, input, select")) toggleRow(carrier.scac) }} className={`cursor-pointer border-b border-gray-100 align-top hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5 ${isSelected ? "bg-gray-50 dark:bg-white/5" : ""}`}>
+                  <td className="px-3 py-3">
+                    <button id={buttonId} type="button" aria-expanded={isSelected} aria-controls={isSelected ? detailId : undefined} onClick={() => toggleRow(carrier.scac)} className="flex w-full items-start justify-between gap-2 rounded text-left font-semibold text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600 dark:text-white">
+                      <span>{carrier.name}</span><span aria-hidden="true" className="shrink-0 text-green-600">{isSelected ? "⌄" : "›"}</span>
+                    </button>
+                    <div className="mt-1 break-words font-mono text-[11px] text-gray-500 dark:text-white/50">{carrier.scac}{carrier.alternativeScacs?.length ? ` · Also ${carrier.alternativeScacs.join(", ")}` : ""}</div>
+                    <div className="mt-3 grid grid-cols-2 gap-2 sm:hidden">{summary.map((feature) => <div key={feature.key}><div className="mb-1 text-xs text-gray-500 dark:text-white/60">{feature.label}</div><CarrierCoverageStatus status={coverage[carrier.scac]?.features?.[feature.key]} compact /></div>)}</div>
+                  </td>
+                  {summary.map((feature) => <td key={feature.key} className="hidden px-2 py-4 sm:table-cell"><CarrierCoverageStatus status={coverage[carrier.scac]?.features?.[feature.key]} compact /></td>)}
+                </tr>
+                {isSelected ? <tr><td colSpan={summary.length + 1} className="border-b border-gray-200 p-0 dark:border-white/10"><div id={detailId}><CarrierCoverageDetails Status={CarrierCoverageStatus} carrier={carrier} features={features} coverage={coverage[carrier.scac]} onClose={() => { setSelectedScac(null); document.getElementById(buttonId)?.focus() }} /></div></td></tr> : null}
+              </tbody>
+            )
+          })}
+          {rows.length === 0 ? <tbody><tr><td colSpan={summary.length + 1} className="px-3 py-10 text-center text-gray-500 dark:text-white/60">No carriers match these filters. Change the search or required feature.</td></tr></tbody> : null}
+        </table>
+      </div>
+      <p className="text-xs text-gray-500 dark:text-white/60">Supported fields may be absent for an individual container. <a href="/coverage/fields" className="underline underline-offset-2">See field availability</a>. Unknown means no feature status is available.</p>
+      {updatedOn ? <p className="text-xs leading-relaxed text-gray-500 dark:text-white/60">Data last updated {updatedOn}. We continuously improve our integrations, so coverage may have changed since this update. <a href="mailto:support@terminal49.com" className="underline underline-offset-2">Contact support</a> to confirm coverage for your carrier.</p> : null}
+    </div>
+  )
+}

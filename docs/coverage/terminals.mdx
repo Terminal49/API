@@ -12,8 +12,8 @@ keywords:
 mode: "wide"
 ---
 
-import { terminals } from "/snippets/data-sources/coverage-data.mdx";
-import { TerminalCoverageTable } from "/snippets/data-sources/coverage-tables.mdx";
+import { TerminalCoverageTable, TerminalCoverageDetails, TerminalCoverageStatus, terminalCoverageFeatures } from "/snippets/data-sources/terminal-coverage.mdx";
+import { terminalCoverageEntities as terminals, terminalFeatureCoverage, terminalFeatureSnapshot } from "/snippets/data-sources/terminal-feature-data.mdx";
 
 Terminal49 covers ports and terminals at two levels: a global port and terminal dataset that maps every container's route, and direct terminal integrations that add the operational data you need to execute imports and exports.
 
@@ -27,25 +27,2769 @@ This mapping is global and applies to every shipment. You always know where a co
 
 At the terminals below, Terminal49 also connects directly to the terminal operator. That connection adds the attributes that drive import and export execution at the gate:
 
+- **Import milestones** — additional terminal data for import container movements; individual milestone coverage varies by terminal
 - **Pickup availability** — whether the container is ready to be picked up
-- **Last free day (LFD)** — when demurrage starts
-- **Holds** — customs, freight, TMF, USDA, and other holds with status
+- **Terminal last free day (LFD)** — the final day of free time reported by the terminal before demurrage charges apply
+- **Holds & releases** — customs, freight, TMF, USDA, and other active holds; cleared holds are removed from the holds array
 - **Fees** — demurrage, exam, and other charges with amounts
 
 A port that is not in this table still appears on routes with carrier-reported events; the table below is where the terminal-level operational data comes from.
 
-Search by terminal, port, UN/LOCODE, or FIRMS code, or filter by region.
+Search by terminal, port, UN/LOCODE, or FIRMS code, or filter by region and required feature. Select any row to inspect all attribute and feature coverage for that terminal. Choose **Expanded row** to show details below the selected row, or **Side panel** to show them alongside the table on wide layouts. Both views expand below the row on smaller screens.
 
 Holds, fees, LFD, and pickup availability vary by terminal. A terminal on this list does not mean every field is present for every container — see [field availability](/coverage/fields) for what each field depends on.
 
-Coverage reflects production as of 15 September 2026. The table contains 136 publicly available direct terminal integrations.
+The table lists publicly available direct terminal integrations.
 
 ## Direct terminal integrations
 
-<TerminalCoverageTable terminals={terminals} />
+<TerminalCoverageTable terminals={terminals} coverage={terminalFeatureCoverage} snapshot={terminalFeatureSnapshot} />
+
+[Complete terminal feature table](/data/coverage/terminals) · [JSON](/data/coverage/terminals.json) · [CSV](/data/coverage/terminals.csv)
 
 Boston (Conley), Saint John, and Fraser Surrey are not currently supported. At Port Everglades, Port Everglades Terminal is supported; Florida International Terminal is not.
 
 PortConnect integrations for Lyttelton and Timaru have shipped but are not publicly available. Both remain disabled and non-default pending commercial entitlement and production credentials, so neither terminal appears in this table.
 
 For how holds, fees, and LFD appear on a container, see [holds and fees](/api-docs/in-depth-guides/holds-and-fees).
+
+{/* coverage-agent-data:start */}
+<Visibility for="agents">
+
+## Complete structured coverage
+
+Last updated 2026-10-08.
+
+[Download JSON](/data/coverage/terminals.json).
+
+Supported means the source returns the feature when applicable. Partial means it returns the feature in some cases. Not supported means this source does not return the feature. Unknown means no feature assessment is available. Carrier credentials required means the feature requires credentials for the carrier integration.
+
+Coverage describes integration capabilities. A supported field may be absent until its milestone occurs. We continually improve our integrations. Contact support to confirm current coverage.
+
+Terminal Last Free Day (LFD) coverage is separate from carrier-reported or estimated LFD, which may still be available.
+
+Standard Carrier Alpha Code (SCAC) identifies carriers. Terminal identities include the port location code and terminal code.
+
+## APM Terminals Buenos Aires T4
+
+Buenos Aires, Argentina. Port location code `ARBUE`. Terminal code `ARBUETERM4`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Flinders Adelaide Container Terminal
+
+Adelaide, Australia. Port location code `AUADL`. Terminal code `AUADLFLACT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Brisbane Autostrad
+
+Brisbane, Australia. Port location code `AUBNE`. Terminal code `AUBNEPTFIT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## DP World Brisbane
+
+Brisbane, Australia. Port location code `AUBNE`. Terminal code ``.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Hutchison Brisbane Container Terminals
+
+Brisbane, Australia. Port location code `AUBNE`. Terminal code `AUBNEHPAFI`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## DP World Fremantle
+
+Fremantle, Australia. Port location code `AUFRE`. Terminal code ``.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Fremantle
+
+Fremantle, Australia. Port location code `AUFRE`. Terminal code `AUFREASLFR`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## DP World West Swanson Dock
+
+Melbourne, Australia. Port location code `AUMEL`. Terminal code ``.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## East Swanson Dock
+
+Melbourne, Australia. Port location code `AUMEL`. Terminal code `AUMELASES1`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## VICT Webb Dock East
+
+Melbourne, Australia. Port location code `AUMEL`. Terminal code `AUMELVICTM`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## DP World Sydney
+
+Sydney, Australia. Port location code `AUSYD`. Terminal code ``.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Hutchison Sydney International Container Terminal
+
+Sydney, Australia. Port location code `AUSYD`. Terminal code `AUSYDHPAPB`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Sydney Autostrad
+
+Sydney, Australia. Port location code `AUSYD`. Terminal code `AUSYDASLPB`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Chittagong Port
+
+Chittagong, Bangladesh. Port location code `BDCGP`. Terminal code `BDCGPCPA`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## APM Terminals Pecem
+
+Pecem, Brazil. Port location code `BRPEC`. Terminal code `BRPECBRAPEC`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## South End Container Terminal
+
+Halifax, Canada. Port location code `CAHAL`. Terminal code `2036`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Maisonneuve - Section 68
+
+Montreal, Canada. Port location code `CAMTR`. Terminal code `2619`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## MGTP Cast - Section 77
+
+Montreal, Canada. Port location code `CAMTR`. Terminal code `2425`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## MGTP Racine - Section 66
+
+Montreal, Canada. Port location code `CAMTR`. Terminal code `2591`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Viau - Section 52
+
+Montreal, Canada. Port location code `CAMTR`. Terminal code `5540`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Prince Rupert Container Terminal
+
+Prince Rupert, Canada. Port location code `CAPRR`. Terminal code `5086`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Partial |
+| Container milestones | Empty returned | Not supported |
+
+## DP World Centerm
+
+Vancouver, Canada. Port location code `CAVAN`. Terminal code `3380`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## GCT Deltaport
+
+Vancouver, Canada. Port location code `CAVAN`. Terminal code `3891`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## GCT Vanterm
+
+Vancouver, Canada. Port location code `CAVAN`. Terminal code `3395`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## STI San Antonio
+
+San Antonio, Chile. Port location code `CLSAI`. Terminal code `CLSAISTI`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Haina International Terminals
+
+Rio Haina, Dominican Republic. Port location code `DOHAI`. Terminal code `DOHAIHIT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Contecon Guayaquil
+
+Guayaquil, Ecuador. Port location code `ECGYE`. Terminal code `ECGYECONTE`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Suez Canal Container Terminal
+
+Port Said, Egypt. Port location code `EGPSD`. Terminal code `EGPSDSCCT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## EUROGATE Container Terminal Bremerhaven
+
+Bremerhaven, Germany. Port location code `DEBRV`. Terminal code `DEBRVEGB`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## MSC Gate Bremerhaven
+
+Bremerhaven, Germany. Port location code `DEBRV`. Terminal code `DEBRVMSCBH`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## EUROGATE Hamburg
+
+Hamburg, Germany. Port location code `DEHAM`. Terminal code `DEHAMEGH`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## HHLA Container Terminal Altenwerder
+
+Hamburg, Germany. Port location code `DEHAM`. Terminal code `DEHAMCTA`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## HHLA Container Terminal Burchardkai
+
+Hamburg, Germany. Port location code `DEHAM`. Terminal code `DEHAMCTB`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## HHLA Container Terminal Tollerort
+
+Hamburg, Germany. Port location code `DEHAM`. Terminal code `DEHAMCTT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## EUROGATE Container Terminal Wilhelmshaven
+
+Wilhelmshaven, Germany. Port location code `DEWVN`. Terminal code `DEWVNEGW`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## APM Terminals Quetzal
+
+Puerto Quetzal, Guatemala. Port location code `GTPRQ`. Terminal code `GTPRQTCQ`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Empresa Portuaria Santo Tomas
+
+Puerto Santo Tomas De Castilla, Guatemala. Port location code `GTSTC`. Terminal code `GTSTCEPSTC`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Asia Container Terminals
+
+Hong Kong, Hong Kong. Port location code `HKHKG`. Terminal code `HKHKGACTHK`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## COSCO-HIT
+
+Hong Kong, Hong Kong. Port location code `HKHKG`. Terminal code `HKHKGCHTHK`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Hong Kong International Terminals
+
+Hong Kong, Hong Kong. Port location code `HKHKG`. Terminal code `HKHKGHITHK`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Hong Kong Modern Terminals
+
+Hong Kong, Hong Kong. Port location code `HKHKG`. Terminal code `HKHKGMTLHK`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Jakarta International Container Terminal
+
+Jakarta, Java, Indonesia. Port location code `IDJKT`. Terminal code `IDJKTUTC1`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Basra Gateway Terminal East
+
+Umm Qasr Pt, Iraq. Port location code `IQUQR`. Terminal code `IQUQRBGTE`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Basra Gateway Terminal West
+
+Umm Qasr Pt, Iraq. Port location code `IQUQR`. Terminal code `IQUQRBGTW`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Dublin Ferryport Terminal
+
+Dublin, Ireland. Port location code `IEDUB`. Terminal code `IEDUBDFP`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Haifa Port
+
+Haifa, Israel. Port location code `ILHFA`. Terminal code `ILHFAHPCL`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Terminal Alto Fondale
+
+Livorno, Italy. Port location code `ITLIV`. Terminal code `ITLIVTAFLIV`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Terminal Darsena Toscana
+
+Livorno, Italy. Port location code `ITLIV`. Terminal code `ITLIVTDT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Terminal Dock Etruschi
+
+Livorno, Italy. Port location code `ITLIV`. Terminal code `ITLIVIMP`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Terminal Lorenzini
+
+Livorno, Italy. Port location code `ITLIV`. Terminal code `ITLIVLOREN`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Conateco Terminal
+
+Naples, Italy. Port location code `ITNAP`. Terminal code `ITNAPCONA`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Kingston Container Terminal
+
+Kingston, Jamaica. Port location code `JMKIN`. Terminal code `JMKINKCT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Aqaba Container Terminal
+
+Al 'Aqabah, Jordan. Port location code `JOAQJ`. Terminal code `JOAQJACT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## CMA Beirut Terminal
+
+Beirut, Lebanon. Port location code `LBBEY`. Terminal code `LBBEYBCTC`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Partial |
+
+## Terminal Portuaria
+
+Altamira, Mexico. Port location code `MXATM`. Terminal code `20`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## International Terminal
+
+Ensenada, Mexico. Port location code `MXESE`. Terminal code `27`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## APM Terminals
+
+Lazaro Cardenas, Mexico. Port location code `MXLZC`. Terminal code `257`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Terminal Portuaria de Contenedores
+
+Lazaro Cardenas, Mexico. Port location code `MXLZC`. Terminal code `200`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Contecon
+
+Manzanillo, Mexico. Port location code `MXZLO`. Terminal code `241`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## SSA Mexico
+
+Manzanillo, Mexico. Port location code `MXZLO`. Terminal code `39`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Terminal Internacional de Manzanillo
+
+Manzanillo, Mexico. Port location code `MXZLO`. Terminal code `40`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Terminal de Contenedores de Yucatan
+
+Progreso, Mexico. Port location code `MXPGO`. Terminal code `184`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Hutchison ICAVE
+
+Veracruz, Mexico. Port location code `MXVER`. Terminal code `69`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## APM Terminals Salalah
+
+Salalah, Oman. Port location code `OMSLL`. Terminal code `OMSLLAPMT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## South Asia Pakistan Terminal
+
+Karachi, Pakistan. Port location code `PKKHI`. Terminal code `PKKHISAPT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## APM Terminals Callao
+
+Callao, Peru. Port location code `PECLL`. Terminal code `PECLLAPMCLL`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Baltic Container Terminal Gdynia
+
+Gdynia, Poland. Port location code `PLGDY`. Terminal code `PLGDYBCT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Dammam First Container Terminal
+
+Ad Dammam, Saudi Arabia. Port location code `SADMM`. Terminal code `SADMMFCT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Dammam Second Container Terminal
+
+Ad Dammam, Saudi Arabia. Port location code `SADMM`. Terminal code `SADMMSCT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## DP World South Container Terminal Jeddah
+
+Jeddah, Saudi Arabia. Port location code `SAJED`. Terminal code `SAJEDDPW`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Red Sea Gateway Terminal
+
+Jeddah, Saudi Arabia. Port location code `SAJED`. Terminal code `SAJEDRSGT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Busan New Container Terminal
+
+Busan, South Korea. Port location code `KRPUS`. Terminal code `KRPUSBNCT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## APM Terminals Algeciras
+
+Algeciras, Spain. Port location code `ESALG`. Terminal code `ESALGAPM`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Hutchison Ports BEST
+
+Barcelona, Spain. Port location code `ESBCN`. Terminal code `ESBCNBEST`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## APM Terminals Gothenburg
+
+Goteborg, Sweden. Port location code `SEGOT`. Terminal code `SEGOTCT1`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Kao Ming Terminal
+
+Kaohsiung, Taiwan. Port location code `TWKHH`. Terminal code `TWKHHKMCT`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## DP World Jebel Ali
+
+Jebel Ali, United Arab Emirates. Port location code `AEJEA`. Terminal code `AEJEADPWJ2`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## DP World Jebel Ali
+
+Jebel Ali, United Arab Emirates. Port location code `AEJEA`. Terminal code `AEJEADPWJ3`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## DP World Jebel Ali CT1
+
+Jebel Ali, United Arab Emirates. Port location code `AEJEA`. Terminal code `AEJEADPWJA`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## DP World Jebel Ali CT4
+
+Jebel Ali, United Arab Emirates. Port location code `AEJEA`. Terminal code `AEJEADPWJ4`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Victoria Terminal 3
+
+Belfast, United Kingdom. Port location code `GBBEL`. Terminal code `GBBELVIC3`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Berths 8&9
+
+Felixstowe, United Kingdom. Port location code `GBFXT`. Terminal code `GBFXTLNG`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Trinity Terminal
+
+Felixstowe, United Kingdom. Port location code `GBFXT`. Terminal code `GBFXTTTY`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## DP World London Gateway
+
+London Gateway Port, United Kingdom. Port location code `GBLGP`. Terminal code `GBLGPDPWLG`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Partial |
+
+## DP World Southampton
+
+Southampton, United Kingdom. Port location code `GBSOU`. Terminal code `GBSOUDPWS`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Partial |
+
+## Seagirt Terminal
+
+Baltimore, United States. Port location code `USBAL`. Terminal code `C324`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Partial |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Gloucester Marine Terminal
+
+Gloucester, United States. Port location code `USGLC`. Terminal code `D104`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Barbours Cut Terminal
+
+Houston, United States. Port location code `USHOU`. Terminal code `S787`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Bayport Container Terminal
+
+Houston, United States. Port location code `USHOU`. Terminal code `V136`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Blount Island Terminal
+
+Jacksonville, United States. Port location code `USJAX`. Terminal code `N296`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Tote Maritime
+
+Jacksonville, United States. Port location code `USJAX`. Terminal code `N762`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Trapac Jacksonville Terminal
+
+Jacksonville, United States. Port location code `USJAX`. Terminal code `M029`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## International Transportation Service
+
+Long Beach, United States. Port location code `USLGB`. Terminal code `Y309`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Long Beach Container Terminal
+
+Long Beach, United States. Port location code `USLGB`. Terminal code `WAC8`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Partial |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Pacific Container Terminal
+
+Long Beach, United States. Port location code `USLGB`. Terminal code `W182`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Shippers Transport Express
+
+Long Beach, United States. Port location code `USLGB`. Terminal code `STA`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Shippers Transport Express - Carson
+
+Long Beach, United States. Port location code `USLGB`. Terminal code `Z773`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## SSA Pier A
+
+Long Beach, United States. Port location code `USLGB`. Terminal code `Z978`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Total Terminals International
+
+Long Beach, United States. Port location code `USLGB`. Terminal code `Z952`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## APM Terminals
+
+Los Angeles, United States. Port location code `USLAX`. Terminal code `W185`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Everport Terminal Services
+
+Los Angeles, United States. Port location code `USLAX`. Terminal code `Y124`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Partial |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Fenix Marine Services
+
+Los Angeles, United States. Port location code `USLAX`. Terminal code `Y257`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## TraPac LA
+
+Los Angeles, United States. Port location code `USLAX`. Terminal code `Y258`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## West Basin Container Terminal
+
+Los Angeles, United States. Port location code `USLAX`. Terminal code `Y773`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Yusen Terminals
+
+Los Angeles, United States. Port location code `USLAX`. Terminal code `Y790`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Port of Miami Terminal Operating Company
+
+Miami Seaport, United States. Port location code `USMIA`. Terminal code `L239`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## South Florida Container Terminal
+
+Miami Seaport, United States. Port location code `USMIA`. Terminal code `N775`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## APM Terminal
+
+Mobile, United States. Port location code `USMOB`. Terminal code `R103`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Partial |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Napoleon Container Terminal
+
+New Orleans, United States. Port location code `USMSY`. Terminal code `P260`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## New Orleans Terminal
+
+New Orleans, United States. Port location code `USMSY`. Terminal code `Q795`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## GCT Bayonne
+
+New York / New Jersey, United States. Port location code `USNYC`. Terminal code `E364`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## GCT New York LP
+
+New York / New Jersey, United States. Port location code `USNYC`. Terminal code `E005`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Maher Terminals
+
+New York / New Jersey, United States. Port location code `USNYC`. Terminal code `E416`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Partial |
+| Container milestones | Empty returned | Partial |
+
+## Port Elizabeth
+
+New York / New Jersey, United States. Port location code `USNYC`. Terminal code `E425`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Partial |
+
+## Port Newark Container Terminal
+
+New York / New Jersey, United States. Port location code `USNYC`. Terminal code `F577`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Ben E. Nutter Terminal
+
+Oakland, United States. Port location code `USOAK`. Terminal code `WBA5`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Partial |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Oakland International Container Terminal
+
+Oakland, United States. Port location code `USOAK`. Terminal code `Z985`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Shippers Transport Express
+
+Oakland, United States. Port location code `USOAK`. Terminal code `STO`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## TraPac Terminal
+
+Oakland, United States. Port location code `USOAK`. Terminal code `Y549`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Packer Avenue
+
+PhilaPort, United States. Port location code `USPHL`. Terminal code `C095`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Tioga Marine Terminal
+
+PhilaPort, United States. Port location code `USPHL`. Terminal code `B197`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Port Everglades Terminal
+
+Port Everglades, United States. Port location code `USPEF`. Terminal code `O664`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Terminal 6
+
+Portland, United States. Port location code `USPDX`. Terminal code `X005`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Garden City Terminals
+
+Savannah, United States. Port location code `USSAV`. Terminal code `L737`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## SSA Terminal 18
+
+Seattle, United States. Port location code `USSEA`. Terminal code `X117`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## SSA Terminal 30
+
+Seattle, United States. Port location code `USSEA`. Terminal code `Y197`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Terminal 5
+
+Seattle, United States. Port location code `USSEA`. Terminal code `Y400`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Partial |
+| Container milestones | Empty returned | Not supported |
+
+## Husky Terminal
+
+Tacoma, United States. Port location code `USTIW`. Terminal code `Z693`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Pierce County Terminal
+
+Tacoma, United States. Port location code `USTIW`. Terminal code `X215`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Partial |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Washington United Terminals
+
+Tacoma, United States. Port location code `USTIW`. Terminal code `Z705`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Not supported |
+| Container milestones | Empty returned | Not supported |
+
+## West Sitcum Terminal (Matson)
+
+Tacoma, United States. Port location code `USTIW`. Terminal code `X335`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Tampa Bay Container Terminal
+
+Tampa, United States. Port location code `USTPA`. Terminal code `M669`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Norfolk International Terminals
+
+Virginia, United States. Port location code `USORF`. Terminal code `L005`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Portsmouth Marine Terminal
+
+Virginia, United States. Port location code `USORF`. Terminal code `L045`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Virginia International Gateway
+
+Virginia, United States. Port location code `USORF`. Terminal code `N195`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Port of Wilmington Container Terminal
+
+Wilmington (NC), United States. Port location code `USILM`. Terminal code `L194`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+
+</Visibility>
+{/* coverage-agent-data:end */}

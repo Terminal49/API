@@ -330,6 +330,7 @@
               "coverage/ocean-carriers",
               "coverage/terminals",
               "coverage/rail",
+              "coverage/inland-rail-terminals",
               "coverage/vessels"
             ]
           },
@@ -338,6 +339,16 @@
             "icon": "table",
             "pages": [
               "coverage/fields"
+            ]
+          },
+          {
+            "group": "Coverage data",
+            "icon": "table",
+            "pages": [
+              "data/coverage/terminals",
+              "data/coverage/shipping-lines",
+              "data/coverage/rail-carriers",
+              "data/coverage/inland-rail-terminals"
             ]
           },
           {
