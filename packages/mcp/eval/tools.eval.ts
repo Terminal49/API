@@ -24,6 +24,7 @@ import {
   hasArray,
   hasNonEmptyArray,
   readString,
+  scoreFeatureNotEnabled,
   scoreResult,
   type QualitySpec,
   type QualityScore,
@@ -61,6 +62,32 @@ if (!cfg) {
     const result = await client.callTool(tool, args);
     const score = scoreResult(result, spec);
     rows.push({ tool, testCase, result, score });
+    return { result, score };
+  }
+
+  /**
+   * Like evaluate(), but a "not enabled for this account" reply from an
+   * account-gated tool is scored as the allowed outcome it is.
+   */
+  async function evaluateGated(
+    tool: string,
+    args: Record<string, unknown>,
+    spec: QualitySpec,
+    testCase = 'happy-path',
+  ): Promise<{ result: ToolResult; score: QualityScore }> {
+    const result = await client.callTool(tool, args);
+    const notEnabled =
+      !result.isError &&
+      /isn't enabled for this Terminal49 account/.test(result.rawText);
+    const score = notEnabled
+      ? scoreFeatureNotEnabled(result)
+      : scoreResult(result, spec);
+    rows.push({
+      tool,
+      testCase: notEnabled ? 'not-enabled' : testCase,
+      result,
+      score,
+    });
     return { result, score };
   }
 
@@ -362,15 +389,11 @@ if (!cfg) {
     // Enabled per account. Without it the tools answer with a plain
     // not-enabled message (not a tool error), which is a passing outcome here.
 
-    const tradeIntelNotEnabled = (result: ToolResult) =>
-      !result.isError &&
-      /isn't enabled for this Terminal49 account/.test(result.rawText);
-
     it('get_trade_data_coverage reports history from 2022 or a plain not-enabled message', async ({
       skip,
     }) => {
       if (!listedTools.has('get_trade_data_coverage')) return skip();
-      const { result, score } = await evaluate(
+      const { result, score } = await evaluateGated(
         'get_trade_data_coverage',
         {},
         {
@@ -388,7 +411,6 @@ if (!cfg) {
           ],
         },
       );
-      if (tradeIntelNotEnabled(result)) return;
       expect(result.isError).toBe(false);
       expect(score.contractPass).toBe(true);
     });
@@ -397,7 +419,7 @@ if (!cfg) {
       skip,
     }) => {
       if (!listedTools.has('search_commodities')) return skip();
-      const { result, score } = await evaluate(
+      const { result, score } = await evaluateGated(
         'search_commodities',
         { query: 'office chairs', limit: 3 },
         {
@@ -420,7 +442,6 @@ if (!cfg) {
           ],
         },
       );
-      if (tradeIntelNotEnabled(result)) return;
       expect(result.isError).toBe(false);
       expect(score.contractPass).toBe(true);
     });

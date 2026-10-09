@@ -1695,7 +1695,7 @@ export function createTerminal49McpServer(
       title: 'Search US Importers',
       description:
         'Find US importers by company name (typos and partial names are fine), by what they import in plain words, or both, optionally narrowed by state, US port, or origin country. ' +
-        'Each result gives the last 12 full months: containers, how many as consignee versus notify party, TEUs, estimated value, and top ports, origin countries, carriers, and products. ' +
+        'Each result covers the 12-month search window in period (it can end a month or two before the last full month; use get_importer_profile for the latest months): containers, how many as consignee versus notify party, TEUs, estimated value, and top ports, origin countries, carriers, and products. ' +
         'Results are ordered by match quality, not size, and one company appears once per US state and often under several names (divisions, distribution centers), so read every row before answering. ' +
         'A high share_as_notify_party suggests a forwarder or customs broker, but large cargo owners can also be listed mostly as notify party, so weigh the name and product mix too. Long lists are cut to the top five, with more_not_shown counting the rest. Low volume for a well-known company is a floor: some importers keep their names off the records or ship under a forwarder. ' +
         'Pass a returned company_name unchanged to get_importer_profile.',
