@@ -120,7 +120,7 @@ Canonical chaining: start with search_container to resolve a container number / 
 
 Trade intelligence (search_importers, get_importer_profile, search_commodities, rank_importers, get_trade_trends, get_trade_breakdown, get_trade_data_coverage) answers market questions about US ocean imports: who imports a product, what a named company imports and how that is changing, where goods come from, and port, carrier, and lane volumes. It is built from US Customs bill-of-lading records from January 2022 to today, refreshed daily, and is enabled per account; if a tool says it isn't enabled, tell the user to contact support@terminal49.com and don't retry or invent figures.
 Resolve first, then analyze: search_importers for a company (use its exact company_name), search_commodities for a product (check common_goods before trusting an HS4 code). Then get_importer_profile for one company (months: 24 for a year-over-year trend; the company filter in trends is a substring match), rank_importers for "who imports X", get_trade_trends for change over time, get_trade_breakdown for mix and share. Most answers take two to five calls.
-Read the numbers carefully: volume is physical containers, each counted once; values are estimates, not declared customs values; trends and breakdowns include the current, incomplete month unless until is set, so a last-period drop is usually that; history starts in January 2022, not at the 24-month default. A company can appear under several names and once per state, and some importers keep their names off the records or ship under a forwarder, so low or missing volume is a floor, not the company's size. Forwarders and customs brokers appear among importers; a high share_as_notify_party usually means one. Don't add volumes across products or companies. Carriers appear under spelling variants; merge them before computing shares.
+Read the numbers carefully: volume is physical containers, each counted once; values are estimates, not declared customs values; trends and breakdowns include the current, incomplete month unless until is set, so a last-period drop is usually that; history starts in January 2022, not at the 24-month default. A company can appear under several names and once per state, and some importers keep their names off the records or ship under a forwarder, so low or missing volume is a floor, not the company's size. Forwarders and customs brokers appear among importers. A high share_as_notify_party is a clue, not proof: large cargo owners can also be listed mostly as notify party, so also weigh the name (LOGISTICS, FREIGHT, SHIPPING, CUSTOMS, BROKERAGE) and the product mix before calling a company a forwarder. Don't add volumes across products or companies. Carriers appear under spelling variants; merge them before computing shares.
 Answer in plain language: lead with the takeaway, name the period, round numbers, and describe caveats in everyday words rather than field names.`;
 
 type ResponseDisplayColumn = {
@@ -1697,7 +1697,7 @@ export function createTerminal49McpServer(
         'Find US importers by company name (typos and partial names are fine), by what they import in plain words, or both, optionally narrowed by state, US port, or origin country. ' +
         'Each result gives the last 12 full months: containers, how many as consignee versus notify party, TEUs, estimated value, and top ports, origin countries, carriers, and products. ' +
         'Results are ordered by match quality, not size, and one company appears once per US state and often under several names (divisions, distribution centers), so read every row before answering. ' +
-        'A high share_as_notify_party usually means a forwarder or customs broker. Low volume for a well-known company is a floor: some importers keep their names off the records or ship under a forwarder. ' +
+        'A high share_as_notify_party suggests a forwarder or customs broker, but large cargo owners can also be listed mostly as notify party, so weigh the name and product mix too. Long lists are cut to the top five, with more_not_shown counting the rest. Low volume for a well-known company is a floor: some importers keep their names off the records or ship under a forwarder. ' +
         'Pass a returned company_name unchanged to get_importer_profile.',
       annotations: tradeIntelAnnotations,
       inputSchema: z.preprocess(stripLegacyIntent, searchImportersInputSchema),
@@ -1746,7 +1746,7 @@ export function createTerminal49McpServer(
       title: 'Search Commodities',
       description:
         'Turn a product description ("office chairs") or an HS code prefix ("94") into four-digit HS product codes, with the goods commonly declared under each code, the number of importers, and 12-month estimated import value. ' +
-        'HS descriptions are terse and codes are broader than everyday product names (0306 covers all frozen crustaceans, not just shrimp), so check common_goods before using a code, and say which code you used. ' +
+        'HS descriptions are terse and codes are broader than everyday product names (0306 covers all frozen crustaceans, not just shrimp), so check common_goods before using a code (common_goods_not_shown counts goods left out), and say which code you used. ' +
         'Pass hs4 to rank_importers or as a filter to get_trade_trends and get_trade_breakdown.',
       annotations: tradeIntelAnnotations,
       inputSchema: z.preprocess(
@@ -1768,7 +1768,7 @@ export function createTerminal49McpServer(
       title: 'Rank US Importers',
       description:
         'Rank US importers by physical containers over full calendar months ending last month, for a product (hs4), a US port, an origin country, or any combination; includes estimated value when hs4 is given. ' +
-        'Use it for "who imports X" and "top importers through Y". The ranking includes forwarders and customs brokers and does not say which rows are; check the top names with search_importers (share_as_notify_party) when that matters. ' +
+        'Use it for "who imports X" and "top importers through Y". The ranking includes forwarders and customs brokers and does not say which rows are; check the top names with search_importers when that matters, using share_as_notify_party together with the company name and product mix (large cargo owners can also be mostly notify party). ' +
         'Big importers can be split across names, and some keep their names off the records, so absence from the list does not mean low volume.',
       annotations: tradeIntelAnnotations,
       inputSchema: z.preprocess(stripLegacyIntent, rankImportersInputSchema),

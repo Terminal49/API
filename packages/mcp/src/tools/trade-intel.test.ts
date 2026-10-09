@@ -68,6 +68,20 @@ describe('trade intelligence input schemas', () => {
     expect(() => searchImportersInputSchema.parse({ limit: 26 })).toThrow();
   });
 
+  it('accepts names and filters up to the API limit of 200 characters', () => {
+    const at = 'A'.repeat(200);
+    const over = 'A'.repeat(201);
+    expect(searchImportersInputSchema.parse({ name: at }).name).toBe(at);
+    expect(() => searchImportersInputSchema.parse({ name: over })).toThrow();
+    expect(
+      getTradeTrendsInputSchema.parse({ filters: { company: at } }).filters
+        ?.company,
+    ).toBe(at);
+    expect(() =>
+      getTradeTrendsInputSchema.parse({ filters: { company: over } }),
+    ).toThrow();
+  });
+
   it('applies defaults that keep answers bounded', () => {
     expect(getTradeTrendsInputSchema.parse({})).toEqual({
       measure: 'containers',
@@ -145,6 +159,7 @@ describe('search_importers', () => {
     expect(row.top_ports).toHaveLength(5);
     expect(row.top_carriers).toHaveLength(5);
     expect(row.top_origins).toHaveLength(2);
+    expect(row.more_not_shown).toEqual({ top_ports: 3, top_carriers: 1 });
     expect(row).not.toHaveProperty('score');
   });
 });
@@ -224,7 +239,7 @@ describe('get_importer_profile', () => {
 });
 
 describe('search_commodities', () => {
-  it('keeps the goods list short and drops match scores', async () => {
+  it('caps the goods list, counts what was cut, and drops match scores', async () => {
     const { client, tradeIntel } = fakeClient({
       searchCommodities: vi.fn().mockResolvedValue({
         results: [
@@ -233,7 +248,7 @@ describe('search_commodities', () => {
             description: 'Seats',
             estimated_value: 9800000000.2,
             companies: 4200,
-            common_goods: Array.from({ length: 12 }, (_, i) => `good ${i}`),
+            common_goods: Array.from({ length: 20 }, (_, i) => `good ${i}`),
             score: 0.9,
           },
         ],
@@ -252,7 +267,8 @@ describe('search_commodities', () => {
     expect(result.products[0]).toEqual({
       hs4: '9401',
       description: 'Seats',
-      common_goods: Array.from({ length: 8 }, (_, i) => `good ${i}`),
+      common_goods: Array.from({ length: 15 }, (_, i) => `good ${i}`),
+      common_goods_not_shown: 5,
       importers: 4200,
       estimated_value_usd_12_months: 9800000000,
     });
