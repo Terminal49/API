@@ -46,7 +46,7 @@ const usState = (what: string) =>
     .describe(`Two-letter US state code of ${what}, such as "CA".`);
 
 const substring = (description: string) =>
-  z.string().trim().min(1).max(100).describe(description);
+  z.string().trim().min(1).max(200).describe(description);
 
 const hs4 = z
   .string()
@@ -412,7 +412,7 @@ const SEARCH_TOP_LIST = 5;
 const PROFILE_LIST = 10;
 const MAX_SERIES_ROWS = 500;
 const MAX_BREAKDOWN_ROWS = 400;
-const MAX_COMMON_GOODS = 8;
+const MAX_COMMON_GOODS = 15;
 
 export async function executeSearchImporters(
   args: SearchImportersArgs,
@@ -434,33 +434,40 @@ export async function executeSearchImporters(
       to: previousMonth(window?.until_month_exclusive),
       note: 'Volumes cover the last 12 full calendar months.',
     },
-    importers: (body.results ?? []).map((row) => ({
-      company_name: row.company_name,
-      state: row.company_state ?? null,
-      containers: row.containers,
-      containers_as_consignee: row.containers_as_consignee,
-      containers_as_notify_party: row.containers_as_notify_party,
-      share_as_notify_party: share(
-        row.containers_as_notify_party,
-        row.containers,
-      ),
-      teus: round(row.teus, 1),
-      estimated_value_usd: round(row.estimated_value),
-      reefer_share: round(row.reefer_share, 2),
-      first_month: row.first_month,
-      last_month: row.last_month,
-      top_ports: capped<Named>(row.top_ports, SEARCH_TOP_LIST).items.map(named),
-      top_origins: capped<Named>(row.top_origins, SEARCH_TOP_LIST).items.map(
-        named,
-      ),
-      top_carriers: capped<Named>(row.top_carriers, SEARCH_TOP_LIST).items.map(
-        named,
-      ),
-      top_products: capped<Commodity>(
-        row.top_commodities,
-        SEARCH_TOP_LIST,
-      ).items.map(commodity),
-    })),
+    importers: (body.results ?? []).map((row) => {
+      const omitted: Record<string, number> = {};
+      const list = <T, R>(key: string, items: unknown, map: (r: T) => R) => {
+        const { items: kept, omitted: left } = capped<T>(
+          items,
+          SEARCH_TOP_LIST,
+        );
+        if (left > 0) omitted[key] = left;
+        return kept.map(map);
+      };
+      const compact = {
+        company_name: row.company_name,
+        state: row.company_state ?? null,
+        containers: row.containers,
+        containers_as_consignee: row.containers_as_consignee,
+        containers_as_notify_party: row.containers_as_notify_party,
+        share_as_notify_party: share(
+          row.containers_as_notify_party,
+          row.containers,
+        ),
+        teus: round(row.teus, 1),
+        estimated_value_usd: round(row.estimated_value),
+        reefer_share: round(row.reefer_share, 2),
+        first_month: row.first_month,
+        last_month: row.last_month,
+        top_ports: list('top_ports', row.top_ports, named),
+        top_origins: list('top_origins', row.top_origins, named),
+        top_carriers: list('top_carriers', row.top_carriers, named),
+        top_products: list('top_products', row.top_commodities, commodity),
+      };
+      return Object.keys(omitted).length
+        ? { ...compact, more_not_shown: omitted }
+        : compact;
+    }),
   };
 }
 
@@ -545,13 +552,19 @@ export async function executeSearchCommodities(
   const body = await guard(() => client.tradeIntel.searchCommodities(request));
   if (isNotEnabled(body)) return body;
   return {
-    products: (body.results ?? []).map((row) => ({
-      hs4: row.hs4,
-      description: row.description,
-      common_goods: capped<string>(row.common_goods, MAX_COMMON_GOODS).items,
-      importers: row.companies,
-      estimated_value_usd_12_months: round(row.estimated_value),
-    })),
+    products: (body.results ?? []).map((row) => {
+      const goods = capped<string>(row.common_goods, MAX_COMMON_GOODS);
+      const compact = {
+        hs4: row.hs4,
+        description: row.description,
+        common_goods: goods.items,
+        importers: row.companies,
+        estimated_value_usd_12_months: round(row.estimated_value),
+      };
+      return goods.omitted > 0
+        ? { ...compact, common_goods_not_shown: goods.omitted }
+        : compact;
+    }),
   };
 }
 
