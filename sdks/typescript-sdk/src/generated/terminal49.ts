@@ -3936,7 +3936,7 @@ export interface components {
             };
             /** @description Bills of lading the container travelled under on that import. */
             bills_of_lading?: components["schemas"]["TradeIntelContainerBillOfLading"][];
-            /** @description Commodity lines on those bills, highest estimated value first (at most 200). */
+            /** @description Commodity lines on those bills, grouped by bill with the highest estimated value first within each bill. At most 200 lines are returned; the cap keeps the first 200 in that order, not the 200 highest-value lines overall. */
             commodities?: components["schemas"]["TradeIntelCommodityLine"][];
             /** @description `true` when more than 200 commodity lines exist and only the first 200 are returned. */
             commodities_truncated?: boolean;
@@ -4005,7 +4005,7 @@ export interface components {
             containers?: components["schemas"]["TradeIntelBillOfLadingContainer"][];
             /** @description `true` when more than 200 containers exist and only the first 200 are returned. */
             containers_truncated?: boolean;
-            /** @description Commodity lines on the matched bills, highest estimated value first (at most 200). */
+            /** @description Commodity lines on the matched bills, grouped by bill with the highest estimated value first within each bill. At most 200 lines are returned; the cap keeps the first 200 in that order, not the 200 highest-value lines overall. */
             commodities?: components["schemas"]["TradeIntelCommodityLine"][];
             /** @description `true` when more than 200 commodity lines exist and only the first 200 are returned. */
             commodities_truncated?: boolean;
