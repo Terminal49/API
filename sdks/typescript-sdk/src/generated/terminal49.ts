@@ -1348,6 +1348,212 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/trade_intel/meta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get trade intelligence coverage
+         * @description Returns the window the search index covers, how far back history goes, which month is still partial, and when the data was last built. Call it to learn the exact `since_month` and `facts_since_month` before quoting a period, and to confirm the account has trade intelligence enabled (a `403` means it does not).
+         *
+         *     The data is US import bill-of-lading records (US Customs vessel manifests), January 2022 onward, refreshed daily.
+         */
+        get: operations["get-trade-intel-meta"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/companies/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search importers
+         * @description Find US importers by name, by what they import, or both, from US import bill-of-lading records (US Customs vessel manifests). `name` is a fuzzy match (partial or misspelled names are fine); `imports` is a semantic match on product descriptions. With neither, the largest importers matching the other filters are returned. Each result carries 12-full-month containers (split by consignee and notify party), TEUs, estimated value, and top ports, origins, carriers, and HS4 headings.
+         *
+         *     **Results are ranked by match quality, not size.** A fuzzy search for a well-known retailer can return a small, similarly named company above the retailer itself; check `containers` before choosing a row. Companies are split by state and large importers use several names, so look through the whole list before concluding a company is small. Importers can also have their names withheld from manifests, so absent volume does not mean low volume.
+         *
+         *     Take `company_name` from a result and pass it unchanged to `companies/profile` for monthly history.
+         */
+        post: operations["post-trade-intel-companies-search"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/companies/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get an importer profile
+         * @description Import profile for one company from US import bill-of-lading records (US Customs vessel manifests): totals (containers as consignee and as notify party, TEUs), a monthly series, ports of discharge, origin countries, carriers, destination states, and HS4 headings with estimated value.
+         *
+         *     `company_name` must be the exact normalized name returned by `companies/search`. The period is `months` full calendar months ending last month, so the current, partial month is excluded; use `months: 24` or more to compare a year against the same months a year earlier.
+         *
+         *     Volume is physical containers, each counted once. Estimated values are modelled USD estimates, not declared customs values. A company's figures are a floor: related entities and alternative names are separate companies, and importers can have their names withheld from manifests. Carrier names are as spelled on manifests; merge variants before computing shares.
+         */
+        post: operations["post-trade-intel-companies-profile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/commodities/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search commodities
+         * @description Resolve a product description, or an HS code prefix, to 4-digit HS headings. Each result carries the heading description, goods commonly declared under it on bills of lading, 12-month estimated import value, and the number of importing companies.
+         *
+         *     HS heading descriptions are truncated and headings are broader than everyday product names (HS 0306 covers all frozen crustaceans, not only shrimp), so check `common_goods` before relying on a code. Feed `hs4` into `importers/top` or into the `hs4` filter of `trends` and `breakdown`.
+         */
+        post: operations["post-trade-intel-commodities-search"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/importers/top": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rank importers
+         * @description Rank US importers by physical containers over `months` full calendar months, optionally restricted to one HS4 heading, a port of discharge, or an origin country. Estimated value is included when `hs4` is given.
+         *
+         *     The ranking is built from US import bill-of-lading records (US Customs vessel manifests), so it lists consignees and notify parties: forwarders, NVOCCs, and customs brokers appear alongside cargo owners, and the response does not say which is which or give each company's total volume. Run `companies/search` on shortlisted names to get the consignee/notify split and totals. Large importers can be split across several names and states, and some have their names withheld from manifests, so absence from the ranking does not mean low volume.
+         */
+        post: operations["post-trade-intel-importers-top"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get import trends
+         * @description Monthly, quarterly, or yearly series of containers, TEUs, or estimated value, optionally split by up to two dimensions (keeping the top N groups) and filtered by any dimension. Volume is physical containers, each counted once.
+         *
+         *     **Defaults.** Without `since` the series starts 24 months ago, but history is available back to January 2022 (`facts_since_month` in `meta`). Without `until` the series ends with the current, partial month, which is flagged `partial`; exclude it from comparisons and compare like periods (the same months a year earlier).
+         *
+         *     **Filters.** `company` is a substring match, so `IKEA` also matches `IKEA SUPPLY AG`; for one company's own series use `companies/profile`. Countries, ports, and carriers use the manifests' spellings and carriers appear under variants, so filter with substrings and merge variants before computing shares. Market totals come from a series without a `company` filter; do not add volumes across HS codes or companies, since a container can carry several codes and companies can share containers.
+         *
+         *     The response names the fact table used in `fact` and lists counting caveats in `notes`.
+         */
+        post: operations["post-trade-intel-trends"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get an import breakdown
+         * @description Nested totals over a dimension hierarchy (for example region > country > port, or HS2 > HS4), with a grand total at level 0 and subtotals at every level, keeping the top N children under each parent. Volume is physical containers, each counted once; estimated value is a modelled USD estimate.
+         *
+         *     Defaults to the last 12 months including the current, partial month; set `since` and `until` to full months for comparisons. The `company` filter is a substring match. Countries, ports, and carriers use the manifests' spellings, so filter with substrings and merge carrier variants before computing shares. Do not add values across HS codes or companies; use a breakdown without a `company` filter for market totals.
+         */
+        post: operations["post-trade-intel-breakdown"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/containers/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Look up a container's import record
+         * @description The most recent US import of a container from US import bill-of-lading records (US Customs vessel manifests): the bills of lading it travelled under (carrier, vessel, voyage, ports, destination) and the commodity lines on those bills with consignee, shipper, and notify party.
+         *
+         *     Only the most recent US import per container is on record; earlier trips are not returned. A malformed number returns `200` with `found: false` and an `error`; a well-formed number with no record returns `found: false`. Commodity lines are capped at 200 (`commodities_truncated`). This lookup reads record-level data and can take several seconds.
+         */
+        post: operations["post-trade-intel-containers-lookup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/bills_of_lading/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Look up a bill of lading
+         * @description The import record for a master or house bill of lading from US import bill-of-lading records (US Customs vessel manifests): the containers that moved under it and the commodity lines with consignee, shipper, and notify party.
+         *
+         *     The search covers the last `months` months (default 12). Up to 50 matching bill records are used (`bills_truncated`), and containers and commodity lines are each capped at 200 (`containers_truncated`, `commodities_truncated`). When nothing matches, `found` is `false` and `searched_since` tells you how far back the search went. This lookup reads record-level data and can take several seconds.
+         */
+        post: operations["post-trade-intel-bills-of-lading-lookup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3050,8 +3256,857 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** @description Plain JSON error body returned by trade intelligence endpoints (not JSON:API). */
+        TradeIntelError: {
+            /**
+             * @description What was wrong with the request, or why trade intelligence could not answer.
+             * @example hs4 must be a 4-digit HS code, e.g. '0306'; use commodities/search to find one
+             */
+            error: string;
+        };
+        /** @description Schema validation failure (for example a `limit` above its maximum or a malformed month). */
+        TradeIntelValidationError: {
+            /** @description One entry per field that failed schema validation. */
+            detail: {
+                /** @description Path to the offending field, for example `["body", "limit"]`. */
+                loc: (string | number)[];
+                /** @description Human-readable validation message. */
+                msg: string;
+                /** @description Validation error type, for example `less_than_equal`. */
+                type: string;
+            }[];
+        };
+        /**
+         * @description What to measure. `containers` counts physical containers (each box once). `teus` sums twenty-foot equivalent units. `estimated_value` sums modelled USD estimates, not declared customs values.
+         * @default containers
+         * @enum {string}
+         */
+        TradeIntelMeasure: "containers" | "teus" | "estimated_value";
+        /**
+         * @description Bucket size for a time series. Periods are formatted `YYYY-MM`, `YYYY-Qn`, or `YYYY`.
+         * @default month
+         * @enum {string}
+         */
+        TradeIntelInterval: "month" | "quarter" | "year";
+        /**
+         * @description A dimension to group or break down by. `pod` is the US port of discharge, `pol` the foreign port of lading, `pod_coast` is `EAST`, `WEST`, or `GULF`, `dest_state` is the destination US state, `company_state` the importer's state, `hs2` and `hs4` are HS chapter and heading codes, and `reefer` splits refrigerated from dry containers.
+         * @enum {string}
+         */
+        TradeIntelDimension: "carrier" | "scac" | "origin_country" | "origin_region" | "pod" | "pod_coast" | "dest_state" | "reefer" | "pol" | "pol_country" | "container_type" | "company" | "company_state" | "hs4" | "hs2";
+        /** @description Filters for `trends` and `breakdown`. Name-like fields match case-insensitive substrings; codes (`hs4`, `hs2`, `pod_coast`, states, `scac`) match exactly. Omit a field to leave it unfiltered. */
+        TradeIntelFilters: {
+            /**
+             * @description Case-insensitive **substring** match on the company name, so `IKEA` also matches `IKEA SUPPLY AG`. For one company's own figures use `companies/profile`, which matches the exact name.
+             * @example CATERPILLAR
+             */
+            company?: string | null;
+            /**
+             * @description Two-letter US state of the importer; exact match.
+             * @example IL
+             */
+            company_state?: string | null;
+            /**
+             * @description 4-digit HS heading; exact match. Use `commodities/search` to find one.
+             * @example 0306
+             */
+            hs4?: string | null;
+            /**
+             * @description 2-digit HS chapter; exact match.
+             * @example 03
+             */
+            hs2?: string | null;
+            /**
+             * @description Substring of the ocean carrier name as it appears on manifests. Carriers appear under spelling variants; prefer `scac` for an exact match.
+             * @example MAERSK
+             */
+            carrier?: string | null;
+            /**
+             * @description Carrier SCAC; exact match.
+             * @example MAEU
+             */
+            scac?: string | null;
+            /**
+             * @description Substring of the origin country as spelled on manifests, for example `china` matches `PEOPLES REP OF CHINA`.
+             * @example vietnam
+             */
+            origin_country?: string | null;
+            /** @description Substring of the origin region. */
+            origin_region?: string | null;
+            /** @description Substring of the foreign port of lading. */
+            pol?: string | null;
+            /** @description Substring of the port-of-lading country. */
+            pol_country?: string | null;
+            /**
+             * @description Substring of the US port of discharge.
+             * @example savannah
+             */
+            pod?: string | null;
+            /**
+             * @description US coast of the port of discharge; exact match.
+             * @enum {string|null}
+             */
+            pod_coast?: "EAST" | "WEST" | "GULF" | null;
+            /**
+             * @description Two-letter destination US state; exact match.
+             * @example TX
+             */
+            dest_state?: string | null;
+            /** @description Substring of the container type description. */
+            container_type?: string | null;
+            /** @description Only refrigerated (`true`) or only dry (`false`) containers. */
+            reefer?: boolean | null;
+        };
+        /** @description Row counts of the monthly fact tables behind the analytics endpoints. */
+        TradeIntelFactRowCounts: {
+            /** @description Rows in the lane-by-month fact table. */
+            lane_month: number;
+            /** @description Rows in the company-by-month fact table. */
+            company_month: number;
+            /** @description Rows in the commodity-by-month fact table. */
+            commodity_month: number;
+            /** @description Rows in the HS-code-by-lane-by-month fact table. */
+            hs_lane_month: number;
+        };
+        /** @description Index window, freshness, and counts. Also returned as `index` by `companies/search`. */
+        TradeIntelMeta: {
+            /**
+             * @description First month of the 12-full-month window that search results and rankings cover.
+             * @example 2025-09
+             */
+            since_month: string;
+            /**
+             * @description Month after the last full month in the search window (exclusive).
+             * @example 2026-09
+             */
+            until_month_exclusive: string;
+            /**
+             * @description Number of full months in the search window.
+             * @example 12
+             */
+            months: number;
+            /**
+             * @description Minimum containers in the window for a company to be in the search index.
+             * @example 5
+             */
+            min_containers: number;
+            /**
+             * @description Companies in the search index.
+             * @example 250000
+             */
+            companies: number;
+            /**
+             * @description HS4 codes in the search index.
+             * @example 1200
+             */
+            hs_codes: number;
+            /**
+             * @description First month of history available to `companies/profile`, `importers/top`, `trends`, and `breakdown`. History starts in January 2022.
+             * @example 2022-01
+             */
+            facts_since_month: string;
+            /**
+             * @description Month after the latest month with data (exclusive).
+             * @example 2026-11
+             */
+            facts_until_exclusive: string;
+            /**
+             * @description The current calendar month, which is still being loaded and is incomplete.
+             * @example 2026-10
+             */
+            partial_month: string;
+            /**
+             * @description Serving mode of the index.
+             * @example local
+             */
+            mode: string;
+            /** @description Fingerprint of the current fact build. It changes whenever the data is refreshed. */
+            facts_hash: string;
+            /**
+             * @description Start of the period covered by the most recent daily refresh.
+             * @example 2026-10-01
+             */
+            refreshed_since: string;
+            fact_rows: components["schemas"]["TradeIntelFactRowCounts"];
+            /**
+             * @description Unit of every `containers` figure: physical containers, each counted once.
+             * @example containers
+             */
+            volume_measure: string;
+            /**
+             * Format: date-time
+             * @description When the index was built.
+             * @example 2026-10-08T06:12:44Z
+             */
+            built_at: string;
+        };
+        TradeIntelNamedContainers: {
+            /** @description Port, country, or carrier name as spelled on manifests. */
+            name: string;
+            /** @description Physical containers. */
+            containers: number;
+        };
+        TradeIntelNamedVolume: {
+            /** @description Port, country, carrier, or state name as spelled on manifests. */
+            name: string;
+            /** @description Physical containers. */
+            containers: number;
+            /** @description Twenty-foot equivalent units. */
+            teus: number;
+        };
+        TradeIntelCommodityVolume: {
+            /**
+             * @description 4-digit HS heading.
+             * @example 9401
+             */
+            hs4: string;
+            /** @description HS heading description. Descriptions are truncated; check `common_goods` from `commodities/search` before relying on one. */
+            description: string;
+            /** @description Physical containers carrying this heading. */
+            containers: number;
+            /** @description Modelled USD estimate, not declared customs value. */
+            estimated_value: number;
+        };
+        /** @description Give `name`, `imports`, or both. With neither, lists the largest importers matching the filters. */
+        TradeIntelCompanySearchRequest: {
+            /**
+             * @description Company name; partial or misspelled is fine (fuzzy match). Results are ranked by match quality, not size, so a close but small match can outrank a large importer.
+             * @example home depot
+             */
+            name?: string | null;
+            /**
+             * @description What the company imports, in plain words (semantic match).
+             * @example frozen shrimp
+             */
+            imports?: string | null;
+            /**
+             * @description US state code of the importer.
+             * @example FL
+             */
+            state?: string | null;
+            /**
+             * @description Substring of a US port name.
+             * @example Long Beach
+             */
+            port_of_discharge?: string | null;
+            /**
+             * @description Substring of an origin country.
+             * @example Vietnam
+             */
+            origin_country?: string | null;
+            /** @description Minimum containers in the index window. */
+            min_containers?: number | null;
+            /**
+             * @description Maximum results to return.
+             * @default 10
+             */
+            limit?: number;
+        };
+        TradeIntelCompanySearchResult: {
+            /**
+             * @description Normalized company name. Pass it unchanged to `companies/profile`.
+             * @example CATERPILLAR
+             */
+            company_name: string;
+            /**
+             * @description US state this row covers, or `null` when the row spans all states.
+             * @example IL
+             */
+            company_state: string | null;
+            /** @description Physical containers in the index window. */
+            containers: number;
+            /** @description Containers where the company is the consignee. */
+            containers_as_consignee: number;
+            /** @description Containers where the company is the notify party. A share above about 70% usually indicates a logistics provider rather than the cargo owner. */
+            containers_as_notify_party: number;
+            /** @description Twenty-foot equivalent units. */
+            teus: number;
+            /** @description Modelled USD estimate, not declared customs value. */
+            estimated_value: number;
+            /** @description Share of containers that were refrigerated, 0 to 1. */
+            reefer_share: number;
+            /**
+             * @description First month with volume in the window.
+             * @example 2025-09
+             */
+            first_month: string;
+            /**
+             * @description Last month with volume in the window.
+             * @example 2026-08
+             */
+            last_month: string;
+            /** @description Top US ports of discharge. */
+            top_ports: components["schemas"]["TradeIntelNamedContainers"][];
+            /** @description Top origin countries. */
+            top_origins: components["schemas"]["TradeIntelNamedContainers"][];
+            /** @description Top ocean carriers. */
+            top_carriers: components["schemas"]["TradeIntelNamedContainers"][];
+            /** @description Top HS4 headings. */
+            top_commodities: components["schemas"]["TradeIntelCommodityVolume"][];
+            /** @description Match quality; higher is better. Not a measure of size. */
+            score: number;
+        };
+        TradeIntelCompanySearchResponse: {
+            index: components["schemas"]["TradeIntelMeta"];
+            /** @description Matches ordered by `score`. */
+            results: components["schemas"]["TradeIntelCompanySearchResult"][];
+        };
+        TradeIntelCompanyProfileRequest: {
+            /**
+             * @description Exact `company_name` from `companies/search`.
+             * @example CATERPILLAR
+             */
+            company_name: string;
+            /**
+             * @description Restrict to one state; omit for all states.
+             * @example IL
+             */
+            company_state?: string | null;
+            /**
+             * @description Full calendar months ending last month. Use 24 or more for a year-over-year view.
+             * @default 12
+             */
+            months?: number;
+        };
+        TradeIntelCompanyProfileTotals: {
+            /** @description Physical containers in the period. */
+            containers: number;
+            /** @description Containers where the company is the consignee. */
+            containers_as_consignee: number;
+            /** @description Containers where the company is the notify party. */
+            containers_as_notify_party: number;
+            /** @description Twenty-foot equivalent units. */
+            teus: number;
+            /** @description US states the company's rows are split across. */
+            states: string[];
+        };
+        TradeIntelMonthlyVolume: {
+            /**
+             * @description Calendar month.
+             * @example 2026-03
+             */
+            month: string;
+            /** @description Physical containers. */
+            containers: number;
+            /** @description Twenty-foot equivalent units. */
+            teus: number;
+        };
+        /** @description Import profile for one company. When `found` is `true` the totals, monthly series, breakdowns, and notes are returned. */
+        TradeIntelCompanyProfile: {
+            /**
+             * @description The requested company name.
+             * @example CATERPILLAR
+             */
+            company_name: string;
+            /** @description The requested state, or `null` for all states. */
+            company_state: string | null;
+            /**
+             * @description First month of the period (inclusive).
+             * @example 2025-10
+             */
+            since: string;
+            /**
+             * @description Last month of the period (inclusive).
+             * @example 2026-09
+             */
+            until: string;
+            /** @description `false` when the exact name has no volume in the period. The name must match `companies/search` exactly; a company can also be split across several names. */
+            found: boolean;
+            totals?: components["schemas"]["TradeIntelCompanyProfileTotals"];
+            /** @description Volume per month, oldest first. */
+            monthly?: components["schemas"]["TradeIntelMonthlyVolume"][];
+            /** @description US ports of discharge. */
+            ports_of_discharge?: components["schemas"]["TradeIntelNamedVolume"][];
+            /** @description Origin countries. */
+            origin_countries?: components["schemas"]["TradeIntelNamedVolume"][];
+            /** @description Ocean carriers as spelled on manifests. Merge spelling variants before computing shares. */
+            carriers?: components["schemas"]["TradeIntelNamedVolume"][];
+            /** @description Destination US states. */
+            destination_states?: components["schemas"]["TradeIntelNamedVolume"][];
+            /** @description HS4 headings with estimated value. */
+            commodities_hs4?: components["schemas"]["TradeIntelCommodityVolume"][];
+            /** @description Counting caveats that apply to this response, for example that volume is physical containers or that the window includes a partial month. Surface these to end users. */
+            notes?: string[];
+        };
+        TradeIntelCommoditySearchRequest: {
+            /**
+             * @description Product description in plain words, or an HS code prefix.
+             * @example office chairs
+             */
+            query: string;
+            /**
+             * @description Maximum results to return.
+             * @default 10
+             */
+            limit?: number;
+        };
+        TradeIntelCommoditySearchResult: {
+            /**
+             * @description 4-digit HS heading. Pass it to `importers/top` or as an `hs4` filter.
+             * @example 9401
+             */
+            hs4: string;
+            /** @description HS heading description (truncated). */
+            description: string;
+            /** @description 12-month modelled USD import value, not declared customs value. */
+            estimated_value: number;
+            /** @description Companies importing this heading in the index window. */
+            companies: number;
+            /** @description Goods commonly declared under this heading on bills of lading. Use these to confirm the heading covers what you mean; HS 0306, for example, covers all frozen crustaceans, not only shrimp. */
+            common_goods: string[];
+            /** @description Match quality; higher is better. */
+            score: number;
+        };
+        TradeIntelCommoditySearchResponse: {
+            /** @description Matches ordered by `score`. */
+            results: components["schemas"]["TradeIntelCommoditySearchResult"][];
+        };
+        TradeIntelTopImportersRequest: {
+            /**
+             * @description 4-digit HS heading: rank importers of containers carrying it. Any other value returns `400`. Use `commodities/search` to find one.
+             * @example 0306
+             */
+            hs4?: string | null;
+            /**
+             * @description Substring of a US port name.
+             * @example savannah
+             */
+            port_of_discharge?: string | null;
+            /**
+             * @description Substring of an origin country.
+             * @example vietnam
+             */
+            origin_country?: string | null;
+            /**
+             * @description Full calendar months ending last month.
+             * @default 12
+             */
+            months?: number;
+            /**
+             * @description Maximum importers to return.
+             * @default 20
+             */
+            limit?: number;
+        };
+        TradeIntelTopImporter: {
+            /** @description Normalized company name; pass it to `companies/search` or `companies/profile`. */
+            company_name: string;
+            /** @description US states the company's volume is split across. */
+            states: string[];
+            /** @description Physical containers matching the filters. */
+            containers: number;
+            /** @description Twenty-foot equivalent units. */
+            teus: number;
+            /** @description Modelled USD estimate; present when `hs4` was given. */
+            estimated_value?: number;
+        };
+        TradeIntelTopImporters: {
+            /**
+             * @description First month of the period (inclusive).
+             * @example 2025-10
+             */
+            since: string;
+            /**
+             * @description Last month of the period (inclusive).
+             * @example 2026-09
+             */
+            until: string;
+            /**
+             * @description The measure the ranking uses.
+             * @example containers
+             */
+            ranked_by: string;
+            /** @description The filters that were applied. */
+            filters: {
+                hs4?: string;
+                port_of_discharge?: string;
+                origin_country?: string;
+            };
+            /** @description Counting caveats that apply to this response, for example that volume is physical containers or that the window includes a partial month. Surface these to end users. */
+            notes: string[];
+            /** @description Importers in descending order. The list does not distinguish forwarders from cargo owners and does not give each company's total volume; use `companies/search` for those. */
+            importers: components["schemas"]["TradeIntelTopImporter"][];
+        };
+        TradeIntelTrendsRequest: {
+            measure?: components["schemas"]["TradeIntelMeasure"];
+            /** @description Split the series by up to two dimensions, keeping the top `top` groups. */
+            group_by?: components["schemas"]["TradeIntelDimension"][];
+            filters?: components["schemas"]["TradeIntelFilters"];
+            interval?: components["schemas"]["TradeIntelInterval"];
+            /**
+             * @description First period, `YYYY-MM` inclusive. Defaults to 24 months ago; history is available back to January 2022 (`facts_since_month` in `meta`).
+             * @example 2024-01
+             */
+            since?: string | null;
+            /**
+             * @description Last period, `YYYY-MM` inclusive. Defaults to the current, partial month.
+             * @example 2026-09
+             */
+            until?: string | null;
+            /**
+             * @description Keep the top N groups by total over the range.
+             * @default 10
+             */
+            top?: number;
+        };
+        /** @description One point in the series. When `group_by` is set, each point also carries one property per dimension (for example `origin_country`). */
+        TradeIntelTrendPoint: {
+            /**
+             * @description `YYYY-MM`, `YYYY-Qn`, or `YYYY` depending on `interval`.
+             * @example 2026-Q1
+             */
+            period: string;
+            /** @description The measure for this period and group. */
+            value: number;
+            /** @description `true` when the period includes the current, incomplete month. Exclude such periods from comparisons. */
+            partial?: boolean;
+        } & {
+            [key: string]: unknown;
+        };
+        TradeIntelTrends: {
+            measure: components["schemas"]["TradeIntelMeasure"];
+            interval: components["schemas"]["TradeIntelInterval"];
+            /**
+             * @description First period (inclusive).
+             * @example 2024-10
+             */
+            since: string;
+            /**
+             * @description Last period (inclusive).
+             * @example 2026-10
+             */
+            until: string;
+            /** @description The dimensions the series is split by. */
+            group_by: components["schemas"]["TradeIntelDimension"][];
+            filters: components["schemas"]["TradeIntelFilters"];
+            /** @description Name of the fact table the series was computed from. */
+            fact: string;
+            /** @description Counting caveats that apply to this response, for example that volume is physical containers or that the window includes a partial month. Surface these to end users. */
+            notes: string[];
+            /** @description Points ordered by period, then by group. */
+            series: components["schemas"]["TradeIntelTrendPoint"][];
+        };
+        TradeIntelBreakdownRequest: {
+            /** @description Hierarchy, outermost first, for example `["origin_region", "origin_country", "pod"]` or `["hs2", "hs4"]`. */
+            dims: components["schemas"]["TradeIntelDimension"][];
+            measure?: components["schemas"]["TradeIntelMeasure"];
+            filters?: components["schemas"]["TradeIntelFilters"];
+            /**
+             * @description First month, `YYYY-MM` inclusive. Defaults to 12 months ago.
+             * @example 2025-10
+             */
+            since?: string | null;
+            /**
+             * @description Last month, `YYYY-MM` inclusive. Defaults to the current, partial month.
+             * @example 2026-09
+             */
+            until?: string | null;
+            /**
+             * @description Top N children under each parent.
+             * @default 10
+             */
+            top?: number;
+        };
+        /** @description One row of the rollup. Besides `level` and `value`, each row carries one property per dimension down to its level (for example `pod_coast` and `pod`). */
+        TradeIntelBreakdownRow: {
+            /** @description Depth in the hierarchy: `0` is the grand total, `1` a subtotal for the first dimension, and so on. A row at level N carries a property for each of the first N dimensions. */
+            level: number;
+            /** @description The measure for this row. */
+            value: number;
+        } & {
+            [key: string]: unknown;
+        };
+        TradeIntelBreakdown: {
+            measure: components["schemas"]["TradeIntelMeasure"];
+            /** @description The hierarchy, outermost first. */
+            dims: components["schemas"]["TradeIntelDimension"][];
+            filters: components["schemas"]["TradeIntelFilters"];
+            /**
+             * @description First month (inclusive).
+             * @example 2025-10
+             */
+            since: string;
+            /**
+             * @description Last month (inclusive).
+             * @example 2026-10
+             */
+            until: string;
+            /** @description Name of the fact table the rollup was computed from. */
+            fact: string;
+            /** @description Counting caveats that apply to this response, for example that volume is physical containers or that the window includes a partial month. Surface these to end users. */
+            notes: string[];
+            /** @description Grand total first, then subtotals per level, keeping the top N children under each parent. */
+            rows: components["schemas"]["TradeIntelBreakdownRow"][];
+        };
+        TradeIntelContainerLookupRequest: {
+            /**
+             * @description ISO 6346 container number. Spaces and hyphens are removed and letters uppercased before matching.
+             * @example MSCU1234567
+             */
+            container_number: string;
+        };
+        /** @description One commodity line from a bill of lading, with the parties on that bill. */
+        TradeIntelCommodityLine: {
+            /**
+             * Format: date
+             * @description Import date.
+             */
+            imported_on?: string | null;
+            /** @description Carrier (master) bill of lading number. */
+            master_bill_of_lading_number?: string | null;
+            /** @description House bill of lading number, when the cargo moved under an NVOCC. */
+            house_bill_of_lading_number?: string | null;
+            /** @description Consignee name as declared on the manifest. */
+            consignee?: string | null;
+            consignee_city?: string | null;
+            /** @description Two-letter US state. */
+            consignee_state?: string | null;
+            /** @description Notify party as declared on the manifest. */
+            notify_party?: string | null;
+            /** @description Shipper name as declared on the manifest. */
+            shipper?: string | null;
+            shipper_country?: string | null;
+            /** @description Goods description from the manifest line. */
+            commodity_short_description?: string | null;
+            /** @description 6-digit HS code assigned to the line. */
+            commodity_hs_code_6?: string | null;
+            commodity_hs_code_6_description?: string | null;
+            /** @description Declared quantity. */
+            commodity_quantity?: number | null;
+            /** @description Unit of the declared quantity. */
+            commodity_quantity_uom?: string | null;
+            /** @description Modelled USD estimate for the line, not declared customs value. */
+            commodity_estimated_value?: number | null;
+            /** @description Weight of the bill of lading in metric tons. */
+            bol_metric_tons?: number | null;
+            /** @description TEUs on the bill of lading. */
+            bol_teus?: number | null;
+            /** @description SCAC of the NVOCC, when one filed the bill. */
+            nvocc_scac?: string | null;
+            /** @description NVOCC name. */
+            nvocc_scac_description?: string | null;
+        };
+        /** @description A bill of lading the container travelled under on its most recent US import. */
+        TradeIntelContainerBillOfLading: {
+            /**
+             * Format: date
+             * @description Import date.
+             */
+            imported_on?: string | null;
+            /** @description Carrier (master) bill of lading number. */
+            master_bill_of_lading_number?: string | null;
+            /** @description House bill of lading number, when the cargo moved under an NVOCC. */
+            house_bill_of_lading_number?: string | null;
+            /** @description Ocean carrier SCAC. */
+            scac?: string | null;
+            /** @description Ocean carrier name. */
+            scac_name?: string | null;
+            vessel_name?: string | null;
+            voyage_number?: string | null;
+            /** @description Foreign port where the container was loaded. */
+            port_of_lading_name?: string | null;
+            port_of_lading_country?: string | null;
+            /** @description US port where the container was discharged. */
+            port_of_discharge_name?: string | null;
+            destination_city?: string | null;
+            /** @description Two-letter US state. */
+            destination_state?: string | null;
+            ultimate_origin_country?: string | null;
+            /** @description Container type, for example a 40-foot high cube. */
+            container_type_short_description?: string | null;
+            /** @description TEUs of the container. */
+            container_teu?: number | null;
+            /** @description Whether the container is refrigerated. */
+            container_reefer_flag?: boolean | null;
+        };
+        TradeIntelContainerLookup: {
+            /**
+             * @description The normalized container number that was looked up.
+             * @example MSCU1234567
+             */
+            container_number: string;
+            /** @description `false` when no US import of this container is on record, or the number is malformed. */
+            found: boolean;
+            /**
+             * @description Only when `found` is `false` because the number is malformed.
+             * @example expected ISO 6346 format, e.g. MSCU1234567
+             */
+            error?: string;
+            /** @description Summary of the container's most recent US import (import date, carrier, vessel, ports, and destination), present when `found` is `true`. */
+            latest_import?: {
+                [key: string]: unknown;
+            };
+            /** @description Bills of lading the container travelled under on that import. */
+            bills_of_lading?: components["schemas"]["TradeIntelContainerBillOfLading"][];
+            /** @description Commodity lines on those bills, grouped by bill with the highest estimated value first within each bill. At most 200 lines are returned; the cap keeps the first 200 in that order, not the 200 highest-value lines overall. */
+            commodities?: components["schemas"]["TradeIntelCommodityLine"][];
+            /** @description `true` when more than 200 commodity lines exist and only the first 200 are returned. */
+            commodities_truncated?: boolean;
+            /**
+             * @description Coverage caveat for this response.
+             * @example only the most recent US import of this container is on record; earlier imports are not included
+             */
+            note?: string;
+        };
+        TradeIntelBillOfLadingLookupRequest: {
+            /**
+             * @description Master (SCAC-prefixed) or house bill of lading number. Spaces and hyphens are removed and letters uppercased before matching.
+             * @example MEDUW9559867
+             */
+            bol_number: string;
+            /**
+             * @description How many months back to search.
+             * @default 12
+             */
+            months?: number;
+        };
+        /** @description A container that moved under the bill of lading. */
+        TradeIntelBillOfLadingContainer: {
+            /** @description ISO 6346 container number. */
+            container_number?: string | null;
+            /**
+             * Format: date
+             * @description Import date.
+             */
+            imported_on?: string | null;
+            /** @description Ocean carrier SCAC. */
+            scac?: string | null;
+            vessel_name?: string | null;
+            voyage_number?: string | null;
+            /** @description Foreign port where the container was loaded. */
+            port_of_lading_name?: string | null;
+            /** @description US port where the container was discharged. */
+            port_of_discharge_name?: string | null;
+            destination_city?: string | null;
+            /** @description Two-letter US state. */
+            destination_state?: string | null;
+            /** @description Container type. */
+            container_type_short_description?: string | null;
+            /** @description TEUs of the container. */
+            container_teu?: number | null;
+        };
+        TradeIntelBillOfLadingLookup: {
+            /**
+             * @description The normalized bill of lading number that was looked up.
+             * @example MEDUW9559867
+             */
+            bol_number: string;
+            /** @description `false` when no import under this number is on record in the search window. */
+            found: boolean;
+            /**
+             * Format: date
+             * @description Start of the search window.
+             * @example 2025-10-01
+             */
+            searched_since: string;
+            /** @description Distinct bill of lading records matched (at most 50). */
+            bills_matched?: number;
+            /** @description `true` when more than 50 records matched and only the most recent 50 are used. */
+            bills_truncated?: boolean;
+            /** @description Containers on the matched bills (at most 200). */
+            containers?: components["schemas"]["TradeIntelBillOfLadingContainer"][];
+            /** @description `true` when more than 200 containers exist and only the first 200 are returned. */
+            containers_truncated?: boolean;
+            /** @description Commodity lines on the matched bills, grouped by bill with the highest estimated value first within each bill. At most 200 lines are returned; the cap keeps the first 200 in that order, not the 200 highest-value lines overall. */
+            commodities?: components["schemas"]["TradeIntelCommodityLine"][];
+            /** @description `true` when more than 200 commodity lines exist and only the first 200 are returned. */
+            commodities_truncated?: boolean;
+        };
     };
-    responses: never;
+    responses: {
+        /** @description Bad Request - the request was understood but a value is invalid, for example an `hs4` that is not a 4-digit HS code. */
+        TradeIntelBadRequest: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": "hs4 must be a 4-digit HS code, e.g. '0306'; use commodities/search to find one"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TradeIntelError"];
+            };
+        };
+        /** @description Unauthorized - the API key is missing or invalid. */
+        TradeIntelUnauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": "Terminal49 API key could not be verified"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TradeIntelError"];
+            };
+        };
+        /** @description Forbidden - trade intelligence is not enabled for this account. Contact sales@terminal49.com. */
+        TradeIntelNotEnabled: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": "Trade intelligence is not enabled for this account"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TradeIntelError"];
+            };
+        };
+        /** @description Unprocessable Entity - the body failed schema validation (a value out of range, a malformed month, or an unknown enum value). */
+        TradeIntelValidationFailed: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "detail": [
+                 *         {
+                 *           "loc": [
+                 *             "body",
+                 *             "limit"
+                 *           ],
+                 *           "msg": "Input should be less than or equal to 50",
+                 *           "type": "less_than_equal"
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": components["schemas"]["TradeIntelValidationError"];
+            };
+        };
+        /** @description Too Many Requests - about 120 requests per minute are allowed per account. */
+        TradeIntelRateLimited: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": "Rate limit exceeded; retry in a minute"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TradeIntelError"];
+            };
+        };
+        /** @description Bad Gateway or Gateway Timeout - trade intelligence is temporarily unavailable; retry shortly. */
+        TradeIntelUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": "Trade intelligence is temporarily unavailable; try again shortly"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TradeIntelError"];
+            };
+        };
+    };
     parameters: never;
     requestBodies: never;
     headers: never;
@@ -7869,6 +8924,678 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "get-trade-intel-meta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "since_month": "2025-09",
+                     *       "until_month_exclusive": "2026-09",
+                     *       "months": 12,
+                     *       "min_containers": 5,
+                     *       "companies": 250000,
+                     *       "hs_codes": 1200,
+                     *       "facts_since_month": "2022-01",
+                     *       "facts_until_exclusive": "2026-11",
+                     *       "partial_month": "2026-10",
+                     *       "mode": "local",
+                     *       "facts_hash": "3f9c1a7e",
+                     *       "refreshed_since": "2026-10-01",
+                     *       "fact_rows": {
+                     *         "lane_month": 1200000,
+                     *         "company_month": 9800000,
+                     *         "commodity_month": 6400000,
+                     *         "hs_lane_month": 15000000
+                     *       },
+                     *       "volume_measure": "containers",
+                     *       "built_at": "2026-10-08T06:12:44Z"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelMeta"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-companies-search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelCompanySearchRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "index": {
+                     *         "since_month": "2025-09",
+                     *         "until_month_exclusive": "2026-09",
+                     *         "months": 12,
+                     *         "min_containers": 5,
+                     *         "companies": 250000,
+                     *         "hs_codes": 1200,
+                     *         "facts_since_month": "2022-01",
+                     *         "facts_until_exclusive": "2026-11",
+                     *         "partial_month": "2026-10",
+                     *         "mode": "local",
+                     *         "facts_hash": "3f9c1a7e",
+                     *         "refreshed_since": "2026-10-01",
+                     *         "fact_rows": {
+                     *           "lane_month": 1200000,
+                     *           "company_month": 9800000,
+                     *           "commodity_month": 6400000,
+                     *           "hs_lane_month": 15000000
+                     *         },
+                     *         "volume_measure": "containers",
+                     *         "built_at": "2026-10-08T06:12:44Z"
+                     *       },
+                     *       "results": [
+                     *         {
+                     *           "company_name": "EXAMPLE OUTDOOR SUPPLY",
+                     *           "company_state": "GA",
+                     *           "containers": 1240,
+                     *           "containers_as_consignee": 1180,
+                     *           "containers_as_notify_party": 60,
+                     *           "teus": 2310.5,
+                     *           "estimated_value": 48200000,
+                     *           "reefer_share": 0,
+                     *           "first_month": "2025-09",
+                     *           "last_month": "2026-08",
+                     *           "top_ports": [
+                     *             {
+                     *               "name": "SAVANNAH",
+                     *               "containers": 900
+                     *             }
+                     *           ],
+                     *           "top_origins": [
+                     *             {
+                     *               "name": "VIETNAM",
+                     *               "containers": 700
+                     *             }
+                     *           ],
+                     *           "top_carriers": [
+                     *             {
+                     *               "name": "MAERSK LINE",
+                     *               "containers": 500
+                     *             }
+                     *           ],
+                     *           "top_commodities": [
+                     *             {
+                     *               "hs4": "9401",
+                     *               "description": "Seats (other than barber, dental, etc), and part",
+                     *               "estimated_value": 31000000,
+                     *               "containers": 800
+                     *             }
+                     *           ],
+                     *           "score": 0.97
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelCompanySearchResponse"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-companies-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelCompanyProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "company_name": "EXAMPLE OUTDOOR SUPPLY",
+                     *       "company_state": null,
+                     *       "since": "2025-10",
+                     *       "until": "2026-09",
+                     *       "found": true,
+                     *       "totals": {
+                     *         "containers": 1240,
+                     *         "containers_as_consignee": 1180,
+                     *         "containers_as_notify_party": 60,
+                     *         "teus": 2310.5,
+                     *         "states": [
+                     *           "GA",
+                     *           "CA"
+                     *         ]
+                     *       },
+                     *       "monthly": [
+                     *         {
+                     *           "month": "2025-10",
+                     *           "containers": 95,
+                     *           "teus": 180
+                     *         },
+                     *         {
+                     *           "month": "2025-11",
+                     *           "containers": 110,
+                     *           "teus": 205.5
+                     *         }
+                     *       ],
+                     *       "ports_of_discharge": [
+                     *         {
+                     *           "name": "SAVANNAH",
+                     *           "containers": 900,
+                     *           "teus": 1700
+                     *         }
+                     *       ],
+                     *       "origin_countries": [
+                     *         {
+                     *           "name": "VIETNAM",
+                     *           "containers": 700,
+                     *           "teus": 1300
+                     *         }
+                     *       ],
+                     *       "carriers": [
+                     *         {
+                     *           "name": "MAERSK LINE",
+                     *           "containers": 500,
+                     *           "teus": 950
+                     *         }
+                     *       ],
+                     *       "destination_states": [
+                     *         {
+                     *           "name": "GA",
+                     *           "containers": 900,
+                     *           "teus": 1700
+                     *         }
+                     *       ],
+                     *       "commodities_hs4": [
+                     *         {
+                     *           "hs4": "9401",
+                     *           "description": "Seats (other than barber, dental, etc), and part",
+                     *           "containers": 800,
+                     *           "estimated_value": 31000000
+                     *         }
+                     *       ],
+                     *       "notes": [
+                     *         "volume is physical containers, each counted once even when it appears on several bills",
+                     *         "the period covers full calendar months ending last month"
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelCompanyProfile"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-commodities-search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelCommoditySearchRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "results": [
+                     *         {
+                     *           "hs4": "9401",
+                     *           "description": "Seats (other than barber, dental, etc), and part",
+                     *           "estimated_value": 9800000000,
+                     *           "companies": 4200,
+                     *           "common_goods": [
+                     *             "office chairs",
+                     *             "sofas",
+                     *             "car seats"
+                     *           ],
+                     *           "score": 0.91
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelCommoditySearchResponse"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-importers-top": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelTopImportersRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "since": "2025-10",
+                     *       "until": "2026-09",
+                     *       "ranked_by": "containers",
+                     *       "filters": {
+                     *         "hs4": "9401"
+                     *       },
+                     *       "notes": [
+                     *         "volume is physical containers, each counted once"
+                     *       ],
+                     *       "importers": [
+                     *         {
+                     *           "company_name": "EXAMPLE OUTDOOR SUPPLY",
+                     *           "states": [
+                     *             "GA",
+                     *             "CA"
+                     *           ],
+                     *           "containers": 800,
+                     *           "teus": 1500,
+                     *           "estimated_value": 31000000
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelTopImporters"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelTrendsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "measure": "containers",
+                     *       "interval": "quarter",
+                     *       "since": "2026-01",
+                     *       "until": "2026-06",
+                     *       "group_by": [
+                     *         "origin_country"
+                     *       ],
+                     *       "filters": {
+                     *         "hs4": "9401"
+                     *       },
+                     *       "fact": "hs_lane_month",
+                     *       "notes": [
+                     *         "volume is physical containers, each counted once"
+                     *       ],
+                     *       "series": [
+                     *         {
+                     *           "period": "2026-Q1",
+                     *           "origin_country": "VIETNAM",
+                     *           "value": 12000
+                     *         },
+                     *         {
+                     *           "period": "2026-Q1",
+                     *           "origin_country": "PEOPLES REP OF CHINA",
+                     *           "value": 11000
+                     *         },
+                     *         {
+                     *           "period": "2026-Q2",
+                     *           "origin_country": "VIETNAM",
+                     *           "value": 12500
+                     *         },
+                     *         {
+                     *           "period": "2026-Q2",
+                     *           "origin_country": "PEOPLES REP OF CHINA",
+                     *           "value": 10800
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelTrends"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelBreakdownRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "measure": "containers",
+                     *       "dims": [
+                     *         "pod_coast",
+                     *         "pod"
+                     *       ],
+                     *       "filters": {
+                     *         "hs4": "9401"
+                     *       },
+                     *       "since": "2026-01",
+                     *       "until": "2026-06",
+                     *       "fact": "hs_lane_month",
+                     *       "notes": [
+                     *         "volume is physical containers, each counted once"
+                     *       ],
+                     *       "rows": [
+                     *         {
+                     *           "level": 0,
+                     *           "value": 60000
+                     *         },
+                     *         {
+                     *           "level": 1,
+                     *           "pod_coast": "WEST",
+                     *           "value": 32000
+                     *         },
+                     *         {
+                     *           "level": 2,
+                     *           "pod_coast": "WEST",
+                     *           "pod": "LOS ANGELES",
+                     *           "value": 18000
+                     *         },
+                     *         {
+                     *           "level": 2,
+                     *           "pod_coast": "WEST",
+                     *           "pod": "LONG BEACH",
+                     *           "value": 14000
+                     *         },
+                     *         {
+                     *           "level": 1,
+                     *           "pod_coast": "EAST",
+                     *           "value": 28000
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelBreakdown"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-containers-lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelContainerLookupRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "container_number": "MSCU1234567",
+                     *       "found": true,
+                     *       "latest_import": {
+                     *         "container_number": "MSCU1234567",
+                     *         "imported_on": "2026-08-14",
+                     *         "scac": "MSCU",
+                     *         "vessel_name": "EXAMPLE VESSEL",
+                     *         "port_of_discharge_name": "LOS ANGELES"
+                     *       },
+                     *       "bills_of_lading": [
+                     *         {
+                     *           "imported_on": "2026-08-14",
+                     *           "master_bill_of_lading_number": "MEDUW9559867",
+                     *           "house_bill_of_lading_number": null,
+                     *           "scac": "MSCU",
+                     *           "scac_name": "MEDITERRANEAN SHIPPING COMPANY",
+                     *           "vessel_name": "EXAMPLE VESSEL",
+                     *           "voyage_number": "026N",
+                     *           "port_of_lading_name": "NINGBO",
+                     *           "port_of_lading_country": "PEOPLES REP OF CHINA",
+                     *           "port_of_discharge_name": "LOS ANGELES",
+                     *           "destination_city": "ONTARIO",
+                     *           "destination_state": "CA",
+                     *           "ultimate_origin_country": "PEOPLES REP OF CHINA",
+                     *           "container_type_short_description": "40 HC",
+                     *           "container_teu": 2,
+                     *           "container_reefer_flag": false
+                     *         }
+                     *       ],
+                     *       "commodities": [
+                     *         {
+                     *           "imported_on": "2026-08-14",
+                     *           "master_bill_of_lading_number": "MEDUW9559867",
+                     *           "house_bill_of_lading_number": null,
+                     *           "consignee": "EXAMPLE OUTDOOR SUPPLY",
+                     *           "consignee_city": "ONTARIO",
+                     *           "consignee_state": "CA",
+                     *           "notify_party": "EXAMPLE OUTDOOR SUPPLY",
+                     *           "shipper": "EXAMPLE FURNITURE CO LTD",
+                     *           "shipper_country": "PEOPLES REP OF CHINA",
+                     *           "commodity_short_description": "OFFICE CHAIRS",
+                     *           "commodity_hs_code_6": "940130",
+                     *           "commodity_hs_code_6_description": "Swivel seats with variable height adjustment",
+                     *           "commodity_quantity": 420,
+                     *           "commodity_quantity_uom": "CTN",
+                     *           "commodity_estimated_value": 38000,
+                     *           "bol_metric_tons": 8.2,
+                     *           "bol_teus": 2,
+                     *           "nvocc_scac": null,
+                     *           "nvocc_scac_description": null
+                     *         }
+                     *       ],
+                     *       "commodities_truncated": false,
+                     *       "note": "only the most recent US import of this container is on record; earlier imports are not included"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelContainerLookup"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-bills-of-lading-lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelBillOfLadingLookupRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "bol_number": "MEDUW9559867",
+                     *       "found": true,
+                     *       "searched_since": "2025-10-01",
+                     *       "bills_matched": 1,
+                     *       "bills_truncated": false,
+                     *       "containers": [
+                     *         {
+                     *           "container_number": "MSCU1234567",
+                     *           "imported_on": "2026-08-14",
+                     *           "scac": "MSCU",
+                     *           "vessel_name": "EXAMPLE VESSEL",
+                     *           "voyage_number": "026N",
+                     *           "port_of_lading_name": "NINGBO",
+                     *           "port_of_discharge_name": "LOS ANGELES",
+                     *           "destination_city": "ONTARIO",
+                     *           "destination_state": "CA",
+                     *           "container_type_short_description": "40 HC",
+                     *           "container_teu": 2
+                     *         }
+                     *       ],
+                     *       "containers_truncated": false,
+                     *       "commodities": [
+                     *         {
+                     *           "imported_on": "2026-08-14",
+                     *           "master_bill_of_lading_number": "MEDUW9559867",
+                     *           "house_bill_of_lading_number": null,
+                     *           "consignee": "EXAMPLE OUTDOOR SUPPLY",
+                     *           "consignee_city": "ONTARIO",
+                     *           "consignee_state": "CA",
+                     *           "notify_party": "EXAMPLE OUTDOOR SUPPLY",
+                     *           "shipper": "EXAMPLE FURNITURE CO LTD",
+                     *           "shipper_country": "PEOPLES REP OF CHINA",
+                     *           "commodity_short_description": "OFFICE CHAIRS",
+                     *           "commodity_hs_code_6": "940130",
+                     *           "commodity_hs_code_6_description": "Swivel seats with variable height adjustment",
+                     *           "commodity_quantity": 420,
+                     *           "commodity_quantity_uom": "CTN",
+                     *           "commodity_estimated_value": 38000,
+                     *           "bol_metric_tons": 8.2,
+                     *           "bol_teus": 2,
+                     *           "nvocc_scac": null,
+                     *           "nvocc_scac_description": null
+                     *         }
+                     *       ],
+                     *       "commodities_truncated": false
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelBillOfLadingLookup"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
         };
     };
 }

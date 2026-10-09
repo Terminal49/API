@@ -251,6 +251,21 @@
             ]
           },
           {
+            "group": "Trade Intelligence",
+            "icon": "chart-line",
+            "pages": [
+              "api-docs/api-reference/trade-intelligence/get-trade-intelligence-coverage",
+              "api-docs/api-reference/trade-intelligence/search-importers",
+              "api-docs/api-reference/trade-intelligence/get-an-importer-profile",
+              "api-docs/api-reference/trade-intelligence/search-commodities",
+              "api-docs/api-reference/trade-intelligence/rank-importers",
+              "api-docs/api-reference/trade-intelligence/get-import-trends",
+              "api-docs/api-reference/trade-intelligence/get-an-import-breakdown",
+              "api-docs/api-reference/trade-intelligence/look-up-a-containers-import-record",
+              "api-docs/api-reference/trade-intelligence/look-up-a-bill-of-lading"
+            ]
+          },
+          {
             "group": "Shipping Lines",
             "icon": "ship",
             "pages": [
@@ -416,9 +431,30 @@
                   "sdk/reference/client/managers/classes/ShipmentManager",
                   "sdk/reference/client/managers/classes/ShippingLineManager",
                   "sdk/reference/client/managers/classes/TrackingRequestManager",
+                  "sdk/reference/client/managers/classes/TradeIntelManager",
                   "sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions",
                   "sdk/reference/client/managers/interfaces/TrackingRequestListFilters",
-                  "sdk/reference/client/managers/type-aliases/TrackingRequestType"
+                  "sdk/reference/client/managers/interfaces/TradeIntelBillOfLadingLookupOptions",
+                  "sdk/reference/client/managers/type-aliases/TrackingRequestType",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelBillOfLadingLookup",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelBreakdown",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelBreakdownRequest",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCommoditySearchRequest",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCommoditySearchResponse",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCompanyProfile",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCompanyProfileRequest",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCompanySearchRequest",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCompanySearchResponse",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCompanySearchResult",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelContainerLookup",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelDimension",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelFilters",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelMeasure",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelMeta",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelTopImporters",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelTopImportersRequest",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelTrends",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelTrendsRequest"
                 ]
               },
               {

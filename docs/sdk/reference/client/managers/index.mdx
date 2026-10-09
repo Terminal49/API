@@ -14,6 +14,7 @@ description: "Reference for the Terminal49 TypeScript SDK managers module: conta
 | [ShipmentManager](/sdk/reference/client/managers/classes/ShipmentManager) | - |
 | [ShippingLineManager](/sdk/reference/client/managers/classes/ShippingLineManager) | - |
 | [TrackingRequestManager](/sdk/reference/client/managers/classes/TrackingRequestManager) | - |
+| [TradeIntelManager](/sdk/reference/client/managers/classes/TradeIntelManager) | Trade intelligence: US import bill-of-lading records (US Customs manifests), January 2022 onward, refreshed daily. |
 
 ## Interfaces
 
@@ -22,12 +23,32 @@ description: "Reference for the Terminal49 TypeScript SDK managers module: conta
 | [CreateTrackingRequestFromInferOptions](/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) | - |
 | [IterateOptions](/sdk/reference/client/managers/interfaces/IterateOptions) | Options accepted by BaseManager.createIterator. |
 | [TrackingRequestListFilters](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) | - |
+| [TradeIntelBillOfLadingLookupOptions](/sdk/reference/client/managers/interfaces/TradeIntelBillOfLadingLookupOptions) | Options for [TradeIntelManager.lookupBillOfLading](/sdk/reference/client/managers/classes/TradeIntelManager#lookupbilloflading). |
 
 ## Type Aliases
 
 | Type Alias | Description |
 | ------ | ------ |
 | [TrackingRequestType](/sdk/reference/client/managers/type-aliases/TrackingRequestType) | - |
+| [TradeIntelBillOfLadingLookup](/sdk/reference/client/managers/type-aliases/TradeIntelBillOfLadingLookup) | Response of `POST /trade_intel/bills_of_lading/lookup`. |
+| [TradeIntelBreakdown](/sdk/reference/client/managers/type-aliases/TradeIntelBreakdown) | Response of `POST /trade_intel/breakdown`. |
+| [TradeIntelBreakdownRequest](/sdk/reference/client/managers/type-aliases/TradeIntelBreakdownRequest) | Body of `POST /trade_intel/breakdown`. |
+| [TradeIntelCommoditySearchRequest](/sdk/reference/client/managers/type-aliases/TradeIntelCommoditySearchRequest) | Body of `POST /trade_intel/commodities/search`. |
+| [TradeIntelCommoditySearchResponse](/sdk/reference/client/managers/type-aliases/TradeIntelCommoditySearchResponse) | Response of `POST /trade_intel/commodities/search`. |
+| [TradeIntelCompanyProfile](/sdk/reference/client/managers/type-aliases/TradeIntelCompanyProfile) | Response of `POST /trade_intel/companies/profile`. |
+| [TradeIntelCompanyProfileRequest](/sdk/reference/client/managers/type-aliases/TradeIntelCompanyProfileRequest) | Body of `POST /trade_intel/companies/profile`. |
+| [TradeIntelCompanySearchRequest](/sdk/reference/client/managers/type-aliases/TradeIntelCompanySearchRequest) | Body of `POST /trade_intel/companies/search`. |
+| [TradeIntelCompanySearchResponse](/sdk/reference/client/managers/type-aliases/TradeIntelCompanySearchResponse) | Response of `POST /trade_intel/companies/search`. |
+| [TradeIntelCompanySearchResult](/sdk/reference/client/managers/type-aliases/TradeIntelCompanySearchResult) | One importer returned by `searchCompanies`. |
+| [TradeIntelContainerLookup](/sdk/reference/client/managers/type-aliases/TradeIntelContainerLookup) | Response of `POST /trade_intel/containers/lookup`. |
+| [TradeIntelDimension](/sdk/reference/client/managers/type-aliases/TradeIntelDimension) | A dimension accepted by `group_by` (trends) and `dims` (breakdown). |
+| [TradeIntelFilters](/sdk/reference/client/managers/type-aliases/TradeIntelFilters) | Filters accepted by `trends` and `breakdown`. |
+| [TradeIntelMeasure](/sdk/reference/client/managers/type-aliases/TradeIntelMeasure) | A measure accepted by `trends` and `breakdown`. |
+| [TradeIntelMeta](/sdk/reference/client/managers/type-aliases/TradeIntelMeta) | Index window, freshness, and counts returned by `GET /trade_intel/meta`. |
+| [TradeIntelTopImporters](/sdk/reference/client/managers/type-aliases/TradeIntelTopImporters) | Response of `POST /trade_intel/importers/top`. |
+| [TradeIntelTopImportersRequest](/sdk/reference/client/managers/type-aliases/TradeIntelTopImportersRequest) | Body of `POST /trade_intel/importers/top`. |
+| [TradeIntelTrends](/sdk/reference/client/managers/type-aliases/TradeIntelTrends) | Response of `POST /trade_intel/trends`. |
+| [TradeIntelTrendsRequest](/sdk/reference/client/managers/type-aliases/TradeIntelTrendsRequest) | Body of `POST /trade_intel/trends`. |
 
 ## Variables
 

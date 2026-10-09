@@ -1,0 +1,65 @@
+{
+  "index": {
+    "since_month": "2025-09",
+    "until_month_exclusive": "2026-09",
+    "months": 12,
+    "min_containers": 5,
+    "companies": 250000,
+    "hs_codes": 1200,
+    "facts_since_month": "2022-01",
+    "facts_until_exclusive": "2026-11",
+    "partial_month": "2026-10",
+    "mode": "local",
+    "facts_hash": "3f9c1a7e",
+    "refreshed_since": "2026-10-01",
+    "fact_rows": {
+      "lane_month": 1200000,
+      "company_month": 9800000,
+      "commodity_month": 6400000,
+      "hs_lane_month": 15000000
+    },
+    "volume_measure": "containers",
+    "built_at": "2026-10-08T06:12:44Z"
+  },
+  "results": [
+    {
+      "company_name": "EXAMPLE OUTDOOR SUPPLY",
+      "company_state": "GA",
+      "containers": 1240,
+      "containers_as_consignee": 1180,
+      "containers_as_notify_party": 60,
+      "teus": 2310.5,
+      "estimated_value": 48200000.0,
+      "reefer_share": 0.0,
+      "first_month": "2025-09",
+      "last_month": "2026-08",
+      "top_ports": [
+        {
+          "name": "SAVANNAH",
+          "containers": 900
+        }
+      ],
+      "top_origins": [
+        {
+          "name": "VIETNAM",
+          "containers": 700
+        }
+      ],
+      "top_carriers": [
+        {
+          "name": "MAERSK LINE",
+          "containers": 500
+        }
+      ],
+      "top_commodities": [
+        {
+          "hs4": "9401",
+          "description": "Seats (other than barber, dental, etc), and part",
+          "estimated_value": 31000000.0,
+          "containers": 800
+        }
+      ],
+      "score": 0.97
+    }
+  ]
+}

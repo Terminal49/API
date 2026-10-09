@@ -1,0 +1,23 @@
+{
+  "since": "2025-10",
+  "until": "2026-09",
+  "ranked_by": "containers",
+  "filters": {
+    "hs4": "9401"
+  },
+  "notes": [
+    "volume is physical containers, each counted once"
+  ],
+  "importers": [
+    {
+      "company_name": "EXAMPLE OUTDOOR SUPPLY",
+      "states": [
+        "GA",
+        "CA"
+      ],
+      "containers": 800,
+      "teus": 1500.0,
+      "estimated_value": 31000000.0
+    }
+  ]
+}

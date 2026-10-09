@@ -143,10 +143,25 @@ export class Transport {
 
   private manualMiddlewareContext(
     request: Request,
-  ): Pick<MiddlewareCallbackParams, 'id' | 'request'> {
+  ): Pick<MiddlewareCallbackParams, 'id' | 'request' | 'schemaPath'> {
     return {
       request,
       id: `manual:${randomUUID()}`,
+      schemaPath: this.schemaPathOf(request),
     };
+  }
+
+  /**
+   * The request path relative to the API base, so manual requests get the
+   * same retry treatment as typed ones (openapi-fetch supplies `schemaPath`
+   * for the typed client; the manual path has no schema, so the concrete
+   * path stands in for it).
+   */
+  private schemaPathOf(request: Request): string {
+    const basePath = new URL(this.baseUrl).pathname.replace(/\/+$/, '');
+    const { pathname } = new URL(request.url);
+    return pathname.startsWith(basePath)
+      ? pathname.slice(basePath.length)
+      : pathname;
   }
 }
