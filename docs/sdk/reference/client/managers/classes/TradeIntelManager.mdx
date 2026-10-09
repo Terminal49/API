@@ -89,7 +89,7 @@ subtotals at every level.
 
 ### companyProfile()
 
-> **companyProfile**(`request`): `Promise`\<\{ `carriers?`: `object`[]; `commodities_hs4?`: `object`[]; `company_name`: `string`; `company_state?`: `string` \| `null`; `destination_states?`: `object`[]; `found`: `boolean`; `monthly`: `object`[]; `notes`: `string`[]; `origin_countries?`: `object`[]; `ports_of_discharge?`: `object`[]; `since`: `string`; `totals`: \{ `containers`: `number`; `containers_as_consignee`: `number`; `containers_as_notify_party`: `number`; `states`: `string`[]; `teus`: `number`; \}; `until`: `string`; \}\>
+> **companyProfile**(`request`): `Promise`\<\{ `carriers?`: `object`[]; `commodities_hs4?`: `object`[]; `company_name`: `string`; `company_state`: `string` \| `null`; `destination_states?`: `object`[]; `found`: `boolean`; `monthly?`: `object`[]; `notes?`: `string`[]; `origin_countries?`: `object`[]; `ports_of_discharge?`: `object`[]; `since`: `string`; `totals?`: \{ `containers`: `number`; `containers_as_consignee`: `number`; `containers_as_notify_party`: `number`; `states`: `string`[]; `teus`: `number`; \}; `until`: `string`; \}\>
 
 Import profile for one company over full calendar months. `company_name`
 must be the exact name returned by [searchCompanies](#searchcompanies).
@@ -105,7 +105,7 @@ must be the exact name returned by [searchCompanies](#searchcompanies).
 
 #### Returns
 
-`Promise`\<\{ `carriers?`: `object`[]; `commodities_hs4?`: `object`[]; `company_name`: `string`; `company_state?`: `string` \| `null`; `destination_states?`: `object`[]; `found`: `boolean`; `monthly`: `object`[]; `notes`: `string`[]; `origin_countries?`: `object`[]; `ports_of_discharge?`: `object`[]; `since`: `string`; `totals`: \{ `containers`: `number`; `containers_as_consignee`: `number`; `containers_as_notify_party`: `number`; `states`: `string`[]; `teus`: `number`; \}; `until`: `string`; \}\>
+`Promise`\<\{ `carriers?`: `object`[]; `commodities_hs4?`: `object`[]; `company_name`: `string`; `company_state`: `string` \| `null`; `destination_states?`: `object`[]; `found`: `boolean`; `monthly?`: `object`[]; `notes?`: `string`[]; `origin_countries?`: `object`[]; `ports_of_discharge?`: `object`[]; `since`: `string`; `totals?`: \{ `containers`: `number`; `containers_as_consignee`: `number`; `containers_as_notify_party`: `number`; `states`: `string`[]; `teus`: `number`; \}; `until`: `string`; \}\>
 
 ***
 
@@ -152,14 +152,14 @@ number is malformed or no import is on record.
 
 ### meta()
 
-> **meta**(): `Promise`\<\{ `built_at?`: `string`; `companies?`: `number`; `fact_rows?`: \{ `commodity_month?`: `number`; `company_month?`: `number`; `hs_lane_month?`: `number`; `lane_month?`: `number`; \}; `facts_hash?`: `string`; `facts_since_month?`: `string`; `facts_until_exclusive?`: `string`; `hs_codes?`: `number`; `min_containers?`: `number`; `mode?`: `string`; `months?`: `number`; `partial_month?`: `string`; `refreshed_since?`: `string`; `since_month?`: `string`; `until_month_exclusive?`: `string`; `volume_measure?`: `string`; \}\>
+> **meta**(): `Promise`\<\{ `built_at`: `string`; `companies`: `number`; `fact_rows`: \{ `commodity_month`: `number`; `company_month`: `number`; `hs_lane_month`: `number`; `lane_month`: `number`; \}; `facts_hash`: `string`; `facts_since_month`: `string`; `facts_until_exclusive`: `string`; `hs_codes`: `number`; `min_containers`: `number`; `mode`: `string`; `months`: `number`; `partial_month`: `string`; `refreshed_since`: `string`; `since_month`: `string`; `until_month_exclusive`: `string`; `volume_measure`: `string`; \}\>
 
 Index window, history start, partial month, and build time. Also the
 cheapest way to check whether the account has trade intelligence enabled.
 
 #### Returns
 
-`Promise`\<\{ `built_at?`: `string`; `companies?`: `number`; `fact_rows?`: \{ `commodity_month?`: `number`; `company_month?`: `number`; `hs_lane_month?`: `number`; `lane_month?`: `number`; \}; `facts_hash?`: `string`; `facts_since_month?`: `string`; `facts_until_exclusive?`: `string`; `hs_codes?`: `number`; `min_containers?`: `number`; `mode?`: `string`; `months?`: `number`; `partial_month?`: `string`; `refreshed_since?`: `string`; `since_month?`: `string`; `until_month_exclusive?`: `string`; `volume_measure?`: `string`; \}\>
+`Promise`\<\{ `built_at`: `string`; `companies`: `number`; `fact_rows`: \{ `commodity_month`: `number`; `company_month`: `number`; `hs_lane_month`: `number`; `lane_month`: `number`; \}; `facts_hash`: `string`; `facts_since_month`: `string`; `facts_until_exclusive`: `string`; `hs_codes`: `number`; `min_containers`: `number`; `mode`: `string`; `months`: `number`; `partial_month`: `string`; `refreshed_since`: `string`; `since_month`: `string`; `until_month_exclusive`: `string`; `volume_measure`: `string`; \}\>
 
 ***
 
@@ -185,7 +185,7 @@ Resolve a product description or HS code prefix to 4-digit HS headings.
 
 ### searchCompanies()
 
-> **searchCompanies**(`request?`): `Promise`\<\{ `index`: \{ `built_at?`: `string`; `companies?`: `number`; `fact_rows?`: \{ `commodity_month?`: `number`; `company_month?`: `number`; `hs_lane_month?`: `number`; `lane_month?`: `number`; \}; `facts_hash?`: `string`; `facts_since_month?`: `string`; `facts_until_exclusive?`: `string`; `hs_codes?`: `number`; `min_containers?`: `number`; `mode?`: `string`; `months?`: `number`; `partial_month?`: `string`; `refreshed_since?`: `string`; `since_month?`: `string`; `until_month_exclusive?`: `string`; `volume_measure?`: `string`; \}; `results`: `object`[]; \}\>
+> **searchCompanies**(`request?`): `Promise`\<\{ `index`: \{ `built_at`: `string`; `companies`: `number`; `fact_rows`: \{ `commodity_month`: `number`; `company_month`: `number`; `hs_lane_month`: `number`; `lane_month`: `number`; \}; `facts_hash`: `string`; `facts_since_month`: `string`; `facts_until_exclusive`: `string`; `hs_codes`: `number`; `min_containers`: `number`; `mode`: `string`; `months`: `number`; `partial_month`: `string`; `refreshed_since`: `string`; `since_month`: `string`; `until_month_exclusive`: `string`; `volume_measure`: `string`; \}; `results`: `object`[]; \}\>
 
 Find US importers by name (fuzzy), by what they import (semantic), or
 both. Results are ranked by match quality, not size.
@@ -205,7 +205,7 @@ both. Results are ranked by match quality, not size.
 
 #### Returns
 
-`Promise`\<\{ `index`: \{ `built_at?`: `string`; `companies?`: `number`; `fact_rows?`: \{ `commodity_month?`: `number`; `company_month?`: `number`; `hs_lane_month?`: `number`; `lane_month?`: `number`; \}; `facts_hash?`: `string`; `facts_since_month?`: `string`; `facts_until_exclusive?`: `string`; `hs_codes?`: `number`; `min_containers?`: `number`; `mode?`: `string`; `months?`: `number`; `partial_month?`: `string`; `refreshed_since?`: `string`; `since_month?`: `string`; `until_month_exclusive?`: `string`; `volume_measure?`: `string`; \}; `results`: `object`[]; \}\>
+`Promise`\<\{ `index`: \{ `built_at`: `string`; `companies`: `number`; `fact_rows`: \{ `commodity_month`: `number`; `company_month`: `number`; `hs_lane_month`: `number`; `lane_month`: `number`; \}; `facts_hash`: `string`; `facts_since_month`: `string`; `facts_until_exclusive`: `string`; `hs_codes`: `number`; `min_containers`: `number`; `mode`: `string`; `months`: `number`; `partial_month`: `string`; `refreshed_since`: `string`; `since_month`: `string`; `until_month_exclusive`: `string`; `volume_measure`: `string`; \}; `results`: `object`[]; \}\>
 
 ***
 

@@ -110,7 +110,7 @@ describe('TradeIntelManager', () => {
       months: 24,
     });
     expect(result).toEqual(body);
-    expect(result.totals.containers).toBe(1240);
+    expect(result.totals?.containers).toBe(1240);
   });
 
   it('companyProfile rejects a blank company name before any request', async () => {
