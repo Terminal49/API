@@ -20620,7 +20620,7 @@
             "items": {
               "$ref": "#/components/schemas/TradeIntelCommodityLine"
             },
-            "description": "Commodity lines on those bills, highest estimated value first (at most 200)."
+            "description": "Commodity lines on those bills, grouped by bill with the highest estimated value first within each bill. At most 200 lines are returned; the cap keeps the first 200 in that order, not the 200 highest-value lines overall."
           },
           "commodities_truncated": {
             "type": "boolean",
@@ -20760,7 +20760,7 @@
             "items": {
               "$ref": "#/components/schemas/TradeIntelCommodityLine"
             },
-            "description": "Commodity lines on the matched bills, highest estimated value first (at most 200)."
+            "description": "Commodity lines on the matched bills, grouped by bill with the highest estimated value first within each bill. At most 200 lines are returned; the cap keeps the first 200 in that order, not the 200 highest-value lines overall."
           },
           "commodities_truncated": {
             "type": "boolean",
