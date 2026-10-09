@@ -20203,14 +20203,14 @@
           "since": {
             "type": "string",
             "description": "First period, `YYYY-MM` inclusive. Defaults to 24 months ago; history is available back to January 2022 (`facts_since_month` in `meta`).",
-            "pattern": "^\\d{4}-\\d{2}$",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
             "example": "2024-01",
             "nullable": true
           },
           "until": {
             "type": "string",
             "description": "Last period, `YYYY-MM` inclusive. Defaults to the current, partial month.",
-            "pattern": "^\\d{4}-\\d{2}$",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
             "example": "2026-09",
             "nullable": true
           },
@@ -20328,14 +20328,14 @@
           "since": {
             "type": "string",
             "description": "First month, `YYYY-MM` inclusive. Defaults to 12 months ago.",
-            "pattern": "^\\d{4}-\\d{2}$",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
             "example": "2025-10",
             "nullable": true
           },
           "until": {
             "type": "string",
             "description": "Last month, `YYYY-MM` inclusive. Defaults to the current, partial month.",
-            "pattern": "^\\d{4}-\\d{2}$",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
             "example": "2026-09",
             "nullable": true
           },
