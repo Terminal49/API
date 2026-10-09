@@ -1,0 +1,195 @@
+{
+  "updatedOn": "2026-10-08",
+  "featureCatalog": [
+    {
+      "key": "railLoaded",
+      "label": "Rail Loaded",
+      "group": "Container milestones"
+    },
+    {
+      "key": "railDeparted",
+      "label": "Rail Departed",
+      "group": "Container milestones"
+    },
+    {
+      "key": "railArrived",
+      "label": "Rail Arrived",
+      "group": "Container milestones"
+    },
+    {
+      "key": "railUnloaded",
+      "label": "Rail Unloaded",
+      "group": "Container milestones"
+    },
+    {
+      "key": "arrivedAtDestination",
+      "label": "Arrived At Destination",
+      "group": "Container milestones"
+    },
+    {
+      "key": "available",
+      "label": "Available",
+      "group": "Container milestones"
+    },
+    {
+      "key": "fullOut",
+      "label": "Full Out",
+      "group": "Container milestones"
+    },
+    {
+      "key": "emptyReturned",
+      "label": "Empty Returned",
+      "group": "Container milestones"
+    },
+    {
+      "key": "lastFreeDay",
+      "label": "Rail LFD",
+      "group": "Rail attributes",
+      "requirements": [
+        "rail_plan"
+      ]
+    },
+    {
+      "key": "estArrivalAtDestination",
+      "label": "Carrier ETA",
+      "group": "Rail attributes"
+    },
+    {
+      "key": "podRailCarrier",
+      "label": "POD Rail Carrier",
+      "group": "Rail attributes"
+    },
+    {
+      "key": "destinationRailCarrier",
+      "label": "Destination Rail Carrier",
+      "group": "Rail attributes"
+    },
+    {
+      "key": "t49RailEta",
+      "label": "T49 Rail ETA",
+      "group": "Terminal49 estimates"
+    }
+  ],
+  "railCarriers": [
+    {
+      "name": "BNSF Railway",
+      "scac": "BNSF",
+      "group": "US Class I",
+      "features": {
+        "railLoaded": "unsupported",
+        "railDeparted": "unsupported",
+        "railArrived": "supported",
+        "railUnloaded": "unsupported",
+        "arrivedAtDestination": "supported",
+        "available": "supported",
+        "fullOut": "unsupported",
+        "emptyReturned": "unsupported",
+        "lastFreeDay": "supported",
+        "estArrivalAtDestination": "supported",
+        "podRailCarrier": "supported",
+        "destinationRailCarrier": "supported",
+        "t49RailEta": "supported"
+      }
+    },
+    {
+      "name": "Union Pacific",
+      "scac": "UPRR",
+      "group": "US Class I",
+      "features": {
+        "railLoaded": "unsupported",
+        "railDeparted": "supported",
+        "railArrived": "supported",
+        "railUnloaded": "unsupported",
+        "arrivedAtDestination": "limited",
+        "available": "supported",
+        "fullOut": "supported",
+        "emptyReturned": "limited",
+        "lastFreeDay": "supported",
+        "estArrivalAtDestination": "supported",
+        "podRailCarrier": "supported",
+        "destinationRailCarrier": "supported",
+        "t49RailEta": "supported"
+      }
+    },
+    {
+      "name": "Norfolk Southern",
+      "scac": "NSRR",
+      "group": "US Class I",
+      "features": {
+        "railLoaded": "signed_in_only",
+        "railDeparted": "signed_in_only",
+        "railArrived": "signed_in_only",
+        "railUnloaded": "limited",
+        "arrivedAtDestination": "supported",
+        "available": "limited",
+        "fullOut": "limited",
+        "emptyReturned": "unsupported",
+        "lastFreeDay": "limited",
+        "estArrivalAtDestination": "signed_in_only",
+        "podRailCarrier": "supported",
+        "destinationRailCarrier": "supported",
+        "t49RailEta": "supported"
+      }
+    },
+    {
+      "name": "CSX",
+      "scac": "CSXT",
+      "group": "US Class I",
+      "features": {
+        "railLoaded": "limited",
+        "railDeparted": "supported",
+        "railArrived": "supported",
+        "railUnloaded": "supported",
+        "arrivedAtDestination": "supported",
+        "available": "supported",
+        "fullOut": "unsupported",
+        "emptyReturned": "unsupported",
+        "lastFreeDay": "supported",
+        "estArrivalAtDestination": "supported",
+        "podRailCarrier": "supported",
+        "destinationRailCarrier": "supported",
+        "t49RailEta": "supported"
+      }
+    },
+    {
+      "name": "Canadian National",
+      "scac": "CNRU",
+      "group": "Canadian Class I",
+      "features": {
+        "railLoaded": "supported",
+        "railDeparted": "supported",
+        "railArrived": "supported",
+        "railUnloaded": "limited",
+        "arrivedAtDestination": "supported",
+        "available": "limited",
+        "fullOut": "supported",
+        "emptyReturned": "unsupported",
+        "lastFreeDay": "supported",
+        "estArrivalAtDestination": "supported",
+        "podRailCarrier": "supported",
+        "destinationRailCarrier": "supported",
+        "t49RailEta": "supported"
+      }
+    },
+    {
+      "name": "Canadian Pacific / KCS",
+      "scac": "CPRS",
+      "group": "Canadian Class I",
+      "features": {
+        "railLoaded": "unsupported",
+        "railDeparted": "signed_in_only",
+        "railArrived": "signed_in_only",
+        "railUnloaded": "unsupported",
+        "arrivedAtDestination": "signed_in_only",
+        "available": "signed_in_only",
+        "fullOut": "signed_in_only",
+        "emptyReturned": "unsupported",
+        "lastFreeDay": "supported",
+        "estArrivalAtDestination": "supported",
+        "podRailCarrier": "supported",
+        "destinationRailCarrier": "supported",
+        "t49RailEta": "supported"
+      }
+    }
+  ]
+}

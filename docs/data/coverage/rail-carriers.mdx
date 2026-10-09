@@ -1,0 +1,137 @@
+---
+title: "Rail carrier coverage reference"
+description: "Complete feature coverage with explicit statuses and public integration identifiers."
+---
+
+Last updated 2026-10-08.
+
+[Download JSON](/data/coverage/rail-carriers.json).
+
+Supported means the source returns the feature when applicable. Partial means it returns the feature in some cases. Not supported means this source does not return the feature. Unknown means no feature assessment is available. Carrier credentials required means the feature requires credentials for the carrier integration.
+
+Coverage describes integration capabilities. A supported field may be absent until its milestone occurs. We continually improve our integrations. Contact support to confirm current coverage.
+
+Rail Last Free Day (LFD) requires the Rail Plan. This entitlement is separate from carrier credential requirements.
+
+Standard Carrier Alpha Code (SCAC) identifies carriers. Terminal identities include the port location code and terminal code.
+
+## BNSF Railway
+
+SCAC `BNSF`. US Class I.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Rail Loaded | Not supported |
+| Container milestones | Rail Departed | Not supported |
+| Container milestones | Rail Arrived | Supported |
+| Container milestones | Rail Unloaded | Not supported |
+| Container milestones | Arrived At Destination | Supported |
+| Container milestones | Available | Supported |
+| Container milestones | Full Out | Not supported |
+| Container milestones | Empty Returned | Not supported |
+| Rail attributes | Rail LFD | Supported |
+| Rail attributes | Carrier ETA | Supported |
+| Rail attributes | POD Rail Carrier | Supported |
+| Rail attributes | Destination Rail Carrier | Supported |
+| Terminal49 estimates | T49 Rail ETA | Supported |
+
+## Union Pacific
+
+SCAC `UPRR`. US Class I.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Rail Loaded | Not supported |
+| Container milestones | Rail Departed | Supported |
+| Container milestones | Rail Arrived | Supported |
+| Container milestones | Rail Unloaded | Not supported |
+| Container milestones | Arrived At Destination | Partial |
+| Container milestones | Available | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Partial |
+| Rail attributes | Rail LFD | Supported |
+| Rail attributes | Carrier ETA | Supported |
+| Rail attributes | POD Rail Carrier | Supported |
+| Rail attributes | Destination Rail Carrier | Supported |
+| Terminal49 estimates | T49 Rail ETA | Supported |
+
+## Norfolk Southern
+
+SCAC `NSRR`. US Class I.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Rail Loaded | Carrier credentials required |
+| Container milestones | Rail Departed | Carrier credentials required |
+| Container milestones | Rail Arrived | Carrier credentials required |
+| Container milestones | Rail Unloaded | Partial |
+| Container milestones | Arrived At Destination | Supported |
+| Container milestones | Available | Partial |
+| Container milestones | Full Out | Partial |
+| Container milestones | Empty Returned | Not supported |
+| Rail attributes | Rail LFD | Partial |
+| Rail attributes | Carrier ETA | Carrier credentials required |
+| Rail attributes | POD Rail Carrier | Supported |
+| Rail attributes | Destination Rail Carrier | Supported |
+| Terminal49 estimates | T49 Rail ETA | Supported |
+
+## CSX
+
+SCAC `CSXT`. US Class I.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Rail Loaded | Partial |
+| Container milestones | Rail Departed | Supported |
+| Container milestones | Rail Arrived | Supported |
+| Container milestones | Rail Unloaded | Supported |
+| Container milestones | Arrived At Destination | Supported |
+| Container milestones | Available | Supported |
+| Container milestones | Full Out | Not supported |
+| Container milestones | Empty Returned | Not supported |
+| Rail attributes | Rail LFD | Supported |
+| Rail attributes | Carrier ETA | Supported |
+| Rail attributes | POD Rail Carrier | Supported |
+| Rail attributes | Destination Rail Carrier | Supported |
+| Terminal49 estimates | T49 Rail ETA | Supported |
+
+## Canadian National
+
+SCAC `CNRU`. Canadian Class I.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Rail Loaded | Supported |
+| Container milestones | Rail Departed | Supported |
+| Container milestones | Rail Arrived | Supported |
+| Container milestones | Rail Unloaded | Partial |
+| Container milestones | Arrived At Destination | Supported |
+| Container milestones | Available | Partial |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Not supported |
+| Rail attributes | Rail LFD | Supported |
+| Rail attributes | Carrier ETA | Supported |
+| Rail attributes | POD Rail Carrier | Supported |
+| Rail attributes | Destination Rail Carrier | Supported |
+| Terminal49 estimates | T49 Rail ETA | Supported |
+
+## Canadian Pacific / KCS
+
+SCAC `CPRS`. Canadian Class I.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Rail Loaded | Not supported |
+| Container milestones | Rail Departed | Carrier credentials required |
+| Container milestones | Rail Arrived | Carrier credentials required |
+| Container milestones | Rail Unloaded | Not supported |
+| Container milestones | Arrived At Destination | Carrier credentials required |
+| Container milestones | Available | Carrier credentials required |
+| Container milestones | Full Out | Carrier credentials required |
+| Container milestones | Empty Returned | Not supported |
+| Rail attributes | Rail LFD | Supported |
+| Rail attributes | Carrier ETA | Supported |
+| Rail attributes | POD Rail Carrier | Supported |
+| Rail attributes | Destination Rail Carrier | Supported |
+| Terminal49 estimates | T49 Rail ETA | Supported |
+

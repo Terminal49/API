@@ -1,0 +1,2599 @@
+---
+title: "Shipping line coverage reference"
+description: "Complete feature coverage with explicit statuses and public integration identifiers."
+---
+
+Last updated 2026-10-08.
+
+[Download JSON](/data/coverage/shipping-lines.json).
+
+Supported means the source returns the feature when applicable. Partial means it returns the feature in some cases. Not supported means this source does not return the feature. Unknown means no feature assessment is available. Carrier credentials required means the feature requires credentials for the carrier integration.
+
+Coverage describes integration capabilities. A supported field may be absent until its milestone occurs. We continually improve our integrations. Contact support to confirm current coverage.
+
+Standard Carrier Alpha Code (SCAC) identifies carriers. Terminal identities include the port location code and terminal code.
+
+## ANL
+
+SCAC `ANNU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Not supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## APL
+
+SCAC `APLU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Not supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## Arkas
+
+SCAC `ARKU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Supported |
+| Additional milestones | Feeder Discharged | Supported |
+| Additional milestones | Feeder Loaded | Supported |
+| Additional milestones | Feeder Departed | Supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Supported |
+
+## Atlantic Container Line
+
+SCAC `ACLU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Not supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Partial |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Not supported |
+| Container milestones | Transshipment Discharged | Not supported |
+| Container milestones | Transshipment Loaded | Not supported |
+| Container milestones | Transshipment Departed | Not supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Not supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Partial |
+| Additional milestones | Rail Unloaded | Not supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Not supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## CMA CGM
+
+SCAC `CMDU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Not supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## COSCO
+
+SCAC `COSU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Partial |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Not supported |
+| Container milestones | Full In | Not supported |
+| Container milestones | Vessel Loaded | Partial |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Partial |
+| Container milestones | Transshipment Loaded | Partial |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Partial |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## Crowley
+
+SCAC `CLAM`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Not supported |
+| Tracking identifiers | Container Number | Not supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Partial |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Not supported |
+| Inland destination | Destination Locode | Not supported |
+| Inland destination | Destination Timezone | Not supported |
+| Inland destination | Destination ETA | Not supported |
+| Inland destination | Destination ATA | Not supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Not supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Not supported |
+| Container attributes | Destination Full Out At | Not supported |
+| Container attributes | Empty Terminated At | Partial |
+| Container milestones | Empty Out | Not supported |
+| Container milestones | Full In | Partial |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Not supported |
+| Container milestones | Transshipment Discharged | Not supported |
+| Container milestones | Transshipment Loaded | Not supported |
+| Container milestones | Transshipment Departed | Not supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Partial |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Not supported |
+| Additional milestones | Rail Departed | Not supported |
+| Additional milestones | Rail Arrived | Not supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Not supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Not supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Not supported |
+| Other events | Booking Cancelled | Not supported |
+
+## CULines
+
+SCAC `CULU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Partial |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Not supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## Evergreen
+
+SCAC `EGLV`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Not supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Not supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Partial |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Partial |
+| Other events | SSL LFD Changed | Partial |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Supported |
+
+## Gold Star Line
+
+SCAC `GOSU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Supported |
+| Additional milestones | Feeder Discharged | Supported |
+| Additional milestones | Feeder Loaded | Supported |
+| Additional milestones | Feeder Departed | Supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Supported |
+
+## Hapag-Lloyd
+
+SCAC `HLCU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Partial |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Not supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Not supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Not supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Supported |
+| Additional milestones | Feeder Loaded | Supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Partial |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Not supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Partial |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Supported |
+
+## HEDE Shipping
+
+SCAC `HDUJ`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Not supported |
+| Additional milestones | Rail Departed | Not supported |
+| Additional milestones | Rail Arrived | Not supported |
+| Additional milestones | Rail Unloaded | Not supported |
+| Additional milestones | Arrived At Destination | Not supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Not supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Not supported |
+| Other events | Booking Cancelled | Not supported |
+
+## HMM
+
+SCAC `HDMU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Partial |
+| Container milestones | Transshipment Discharged | Not supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Partial |
+| Additional milestones | Feeder Departed | Supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## ICL
+
+SCAC `IILU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Supported |
+| Additional milestones | Feeder Discharged | Supported |
+| Additional milestones | Feeder Loaded | Supported |
+| Additional milestones | Feeder Departed | Supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Supported |
+
+## KMTC
+
+SCAC `KMTU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Unknown |
+| Origin | POL Locode | Unknown |
+| Origin | POL Timezone | Unknown |
+| Origin | POL ETD | Unknown |
+| Origin | POL ATD | Unknown |
+| Destination port | POD Name | Unknown |
+| Destination port | POD Locode | Unknown |
+| Destination port | POD Terminal | Unknown |
+| Destination port | POD Timezone | Unknown |
+| Destination port | POD Voyage Number | Unknown |
+| Destination port | POD Vessel Name | Unknown |
+| Destination port | POD Vessel IMO | Unknown |
+| Destination port | POD ETA | Unknown |
+| Destination port | POD ATA | Unknown |
+| Inland destination | Destination Name | Unknown |
+| Inland destination | Destination Locode | Unknown |
+| Inland destination | Destination Timezone | Unknown |
+| Inland destination | Destination ETA | Unknown |
+| Inland destination | Destination ATA | Unknown |
+| Container attributes | Number | Unknown |
+| Container attributes | Seal Number | Unknown |
+| Container attributes | Equipment Type | Unknown |
+| Container attributes | Equipment Length | Unknown |
+| Container attributes | Equipment Height | Unknown |
+| Container attributes | Weight (Lbs) | Unknown |
+| Container attributes | POD Arrived At | Unknown |
+| Container attributes | POD Discharged At | Unknown |
+| Container attributes | POD Full Out At | Unknown |
+| Container attributes | Destination Arrived At | Unknown |
+| Container attributes | Destination Full Out At | Unknown |
+| Container attributes | Empty Terminated At | Unknown |
+| Container milestones | Empty Out | Unknown |
+| Container milestones | Full In | Unknown |
+| Container milestones | Vessel Loaded | Unknown |
+| Container milestones | Vessel Departed | Unknown |
+| Container milestones | Transshipment Arrived | Unknown |
+| Container milestones | Transshipment Discharged | Unknown |
+| Container milestones | Transshipment Loaded | Unknown |
+| Container milestones | Transshipment Departed | Unknown |
+| Container milestones | Vessel Arrived | Unknown |
+| Container milestones | Vessel Berthed | Unknown |
+| Container milestones | Vessel Discharged | Unknown |
+| Container milestones | Full Out | Unknown |
+| Container milestones | Empty Returned | Unknown |
+| Additional milestones | Feeder Arrived | Unknown |
+| Additional milestones | Feeder Discharged | Unknown |
+| Additional milestones | Feeder Loaded | Unknown |
+| Additional milestones | Feeder Departed | Unknown |
+| Additional milestones | Rail Loaded | Unknown |
+| Additional milestones | Rail Departed | Unknown |
+| Additional milestones | Rail Arrived | Unknown |
+| Additional milestones | Rail Unloaded | Unknown |
+| Additional milestones | Arrived At Destination | Unknown |
+| Additional milestones | Delivered | Unknown |
+| Additional milestones | Estimated Arrival at Final Destination | Unknown |
+| Other events | SSL LFD Changed | Unknown |
+| Other events | Estimated Arrival | Unknown |
+| Other events | Booking Cancelled | Unknown |
+
+## Maersk
+
+SCAC `MAEU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Not supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Partial |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## Matson
+
+SCAC `MATS`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Not supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Not supported |
+| Origin | POL ATD | Partial |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Not supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Not supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Not supported |
+| Container milestones | Transshipment Arrived | Not supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Not supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Not supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Not supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Not supported |
+| Other events | Booking Cancelled | Not supported |
+
+## MSC
+
+SCAC `MSCU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Not supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Not supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Not supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Supported |
+| Additional milestones | Feeder Loaded | Supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Partial |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Partial |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## ONE
+
+SCAC `ONEY`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Partial |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## OOCL
+
+SCAC `OOLU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Partial |
+| Additional milestones | Rail Loaded | Partial |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Partial |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Partial |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Supported |
+
+## PIL
+
+SCAC `PCIU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Partial |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Not supported |
+| Inland destination | Destination Locode | Not supported |
+| Inland destination | Destination Timezone | Not supported |
+| Inland destination | Destination ETA | Not supported |
+| Inland destination | Destination ATA | Not supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Not supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Not supported |
+| Container attributes | Destination Full Out At | Not supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Not supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Not supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Not supported |
+| Additional milestones | Rail Departed | Not supported |
+| Additional milestones | Rail Arrived | Not supported |
+| Additional milestones | Rail Unloaded | Not supported |
+| Additional milestones | Arrived At Destination | Not supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Not supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## Safmarine
+
+SCAC `SAFM`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Not supported |
+| Origin | POL Name | Unknown |
+| Origin | POL Locode | Unknown |
+| Origin | POL Timezone | Unknown |
+| Origin | POL ETD | Unknown |
+| Origin | POL ATD | Unknown |
+| Destination port | POD Name | Unknown |
+| Destination port | POD Locode | Unknown |
+| Destination port | POD Terminal | Unknown |
+| Destination port | POD Timezone | Unknown |
+| Destination port | POD Voyage Number | Unknown |
+| Destination port | POD Vessel Name | Unknown |
+| Destination port | POD Vessel IMO | Unknown |
+| Destination port | POD ETA | Unknown |
+| Destination port | POD ATA | Unknown |
+| Inland destination | Destination Name | Unknown |
+| Inland destination | Destination Locode | Unknown |
+| Inland destination | Destination Timezone | Unknown |
+| Inland destination | Destination ETA | Unknown |
+| Inland destination | Destination ATA | Unknown |
+| Container attributes | Number | Unknown |
+| Container attributes | Seal Number | Unknown |
+| Container attributes | Equipment Type | Unknown |
+| Container attributes | Equipment Length | Unknown |
+| Container attributes | Equipment Height | Unknown |
+| Container attributes | Weight (Lbs) | Unknown |
+| Container attributes | POD Arrived At | Unknown |
+| Container attributes | POD Discharged At | Unknown |
+| Container attributes | POD Full Out At | Unknown |
+| Container attributes | Destination Arrived At | Unknown |
+| Container attributes | Destination Full Out At | Unknown |
+| Container attributes | Empty Terminated At | Unknown |
+| Container milestones | Empty Out | Unknown |
+| Container milestones | Full In | Unknown |
+| Container milestones | Vessel Loaded | Unknown |
+| Container milestones | Vessel Departed | Unknown |
+| Container milestones | Transshipment Arrived | Unknown |
+| Container milestones | Transshipment Discharged | Unknown |
+| Container milestones | Transshipment Loaded | Unknown |
+| Container milestones | Transshipment Departed | Unknown |
+| Container milestones | Vessel Arrived | Unknown |
+| Container milestones | Vessel Berthed | Unknown |
+| Container milestones | Vessel Discharged | Unknown |
+| Container milestones | Full Out | Unknown |
+| Container milestones | Empty Returned | Unknown |
+| Additional milestones | Feeder Arrived | Unknown |
+| Additional milestones | Feeder Discharged | Unknown |
+| Additional milestones | Feeder Loaded | Unknown |
+| Additional milestones | Feeder Departed | Unknown |
+| Additional milestones | Rail Loaded | Unknown |
+| Additional milestones | Rail Departed | Unknown |
+| Additional milestones | Rail Arrived | Unknown |
+| Additional milestones | Rail Unloaded | Unknown |
+| Additional milestones | Arrived At Destination | Unknown |
+| Additional milestones | Delivered | Unknown |
+| Additional milestones | Estimated Arrival at Final Destination | Unknown |
+| Other events | SSL LFD Changed | Unknown |
+| Other events | Estimated Arrival | Unknown |
+| Other events | Booking Cancelled | Unknown |
+
+## Seaboard Marine
+
+SCAC `SMLU`. Account enablement required.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Not supported |
+| Origin | POL Name | Unknown |
+| Origin | POL Locode | Unknown |
+| Origin | POL Timezone | Unknown |
+| Origin | POL ETD | Unknown |
+| Origin | POL ATD | Unknown |
+| Destination port | POD Name | Unknown |
+| Destination port | POD Locode | Unknown |
+| Destination port | POD Terminal | Unknown |
+| Destination port | POD Timezone | Unknown |
+| Destination port | POD Voyage Number | Unknown |
+| Destination port | POD Vessel Name | Unknown |
+| Destination port | POD Vessel IMO | Unknown |
+| Destination port | POD ETA | Unknown |
+| Destination port | POD ATA | Unknown |
+| Inland destination | Destination Name | Unknown |
+| Inland destination | Destination Locode | Unknown |
+| Inland destination | Destination Timezone | Unknown |
+| Inland destination | Destination ETA | Unknown |
+| Inland destination | Destination ATA | Unknown |
+| Container attributes | Number | Unknown |
+| Container attributes | Seal Number | Unknown |
+| Container attributes | Equipment Type | Unknown |
+| Container attributes | Equipment Length | Unknown |
+| Container attributes | Equipment Height | Unknown |
+| Container attributes | Weight (Lbs) | Unknown |
+| Container attributes | POD Arrived At | Unknown |
+| Container attributes | POD Discharged At | Unknown |
+| Container attributes | POD Full Out At | Unknown |
+| Container attributes | Destination Arrived At | Unknown |
+| Container attributes | Destination Full Out At | Unknown |
+| Container attributes | Empty Terminated At | Unknown |
+| Container milestones | Empty Out | Unknown |
+| Container milestones | Full In | Unknown |
+| Container milestones | Vessel Loaded | Unknown |
+| Container milestones | Vessel Departed | Unknown |
+| Container milestones | Transshipment Arrived | Unknown |
+| Container milestones | Transshipment Discharged | Unknown |
+| Container milestones | Transshipment Loaded | Unknown |
+| Container milestones | Transshipment Departed | Unknown |
+| Container milestones | Vessel Arrived | Unknown |
+| Container milestones | Vessel Berthed | Unknown |
+| Container milestones | Vessel Discharged | Unknown |
+| Container milestones | Full Out | Unknown |
+| Container milestones | Empty Returned | Unknown |
+| Additional milestones | Feeder Arrived | Unknown |
+| Additional milestones | Feeder Discharged | Unknown |
+| Additional milestones | Feeder Loaded | Unknown |
+| Additional milestones | Feeder Departed | Unknown |
+| Additional milestones | Rail Loaded | Unknown |
+| Additional milestones | Rail Departed | Unknown |
+| Additional milestones | Rail Arrived | Unknown |
+| Additional milestones | Rail Unloaded | Unknown |
+| Additional milestones | Arrived At Destination | Unknown |
+| Additional milestones | Delivered | Unknown |
+| Additional milestones | Estimated Arrival at Final Destination | Unknown |
+| Other events | SSL LFD Changed | Unknown |
+| Other events | Estimated Arrival | Unknown |
+| Other events | Booking Cancelled | Unknown |
+
+## Sealand Americas
+
+SCAC `SEAU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Partial |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Not supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Not supported |
+| Container attributes | Destination Arrived At | Not supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Partial |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Not supported |
+| Container milestones | Empty Returned | Not supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## Sealand Europe
+
+SCAC `SEJJ`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Unknown |
+| Origin | POL Locode | Unknown |
+| Origin | POL Timezone | Unknown |
+| Origin | POL ETD | Unknown |
+| Origin | POL ATD | Unknown |
+| Destination port | POD Name | Unknown |
+| Destination port | POD Locode | Unknown |
+| Destination port | POD Terminal | Unknown |
+| Destination port | POD Timezone | Unknown |
+| Destination port | POD Voyage Number | Unknown |
+| Destination port | POD Vessel Name | Unknown |
+| Destination port | POD Vessel IMO | Unknown |
+| Destination port | POD ETA | Unknown |
+| Destination port | POD ATA | Unknown |
+| Inland destination | Destination Name | Unknown |
+| Inland destination | Destination Locode | Unknown |
+| Inland destination | Destination Timezone | Unknown |
+| Inland destination | Destination ETA | Unknown |
+| Inland destination | Destination ATA | Unknown |
+| Container attributes | Number | Unknown |
+| Container attributes | Seal Number | Unknown |
+| Container attributes | Equipment Type | Unknown |
+| Container attributes | Equipment Length | Unknown |
+| Container attributes | Equipment Height | Unknown |
+| Container attributes | Weight (Lbs) | Unknown |
+| Container attributes | POD Arrived At | Unknown |
+| Container attributes | POD Discharged At | Unknown |
+| Container attributes | POD Full Out At | Unknown |
+| Container attributes | Destination Arrived At | Unknown |
+| Container attributes | Destination Full Out At | Unknown |
+| Container attributes | Empty Terminated At | Unknown |
+| Container milestones | Empty Out | Unknown |
+| Container milestones | Full In | Unknown |
+| Container milestones | Vessel Loaded | Unknown |
+| Container milestones | Vessel Departed | Unknown |
+| Container milestones | Transshipment Arrived | Unknown |
+| Container milestones | Transshipment Discharged | Unknown |
+| Container milestones | Transshipment Loaded | Unknown |
+| Container milestones | Transshipment Departed | Unknown |
+| Container milestones | Vessel Arrived | Unknown |
+| Container milestones | Vessel Berthed | Unknown |
+| Container milestones | Vessel Discharged | Unknown |
+| Container milestones | Full Out | Unknown |
+| Container milestones | Empty Returned | Unknown |
+| Additional milestones | Feeder Arrived | Unknown |
+| Additional milestones | Feeder Discharged | Unknown |
+| Additional milestones | Feeder Loaded | Unknown |
+| Additional milestones | Feeder Departed | Unknown |
+| Additional milestones | Rail Loaded | Unknown |
+| Additional milestones | Rail Departed | Unknown |
+| Additional milestones | Rail Arrived | Unknown |
+| Additional milestones | Rail Unloaded | Unknown |
+| Additional milestones | Arrived At Destination | Unknown |
+| Additional milestones | Delivered | Unknown |
+| Additional milestones | Estimated Arrival at Final Destination | Unknown |
+| Other events | SSL LFD Changed | Unknown |
+| Other events | Estimated Arrival | Unknown |
+| Other events | Booking Cancelled | Unknown |
+
+## SeaLead
+
+SCAC `SQQY`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Unknown |
+| Origin | POL Locode | Unknown |
+| Origin | POL Timezone | Unknown |
+| Origin | POL ETD | Unknown |
+| Origin | POL ATD | Unknown |
+| Destination port | POD Name | Unknown |
+| Destination port | POD Locode | Unknown |
+| Destination port | POD Terminal | Unknown |
+| Destination port | POD Timezone | Unknown |
+| Destination port | POD Voyage Number | Unknown |
+| Destination port | POD Vessel Name | Unknown |
+| Destination port | POD Vessel IMO | Unknown |
+| Destination port | POD ETA | Unknown |
+| Destination port | POD ATA | Unknown |
+| Inland destination | Destination Name | Unknown |
+| Inland destination | Destination Locode | Unknown |
+| Inland destination | Destination Timezone | Unknown |
+| Inland destination | Destination ETA | Unknown |
+| Inland destination | Destination ATA | Unknown |
+| Container attributes | Number | Unknown |
+| Container attributes | Seal Number | Unknown |
+| Container attributes | Equipment Type | Unknown |
+| Container attributes | Equipment Length | Unknown |
+| Container attributes | Equipment Height | Unknown |
+| Container attributes | Weight (Lbs) | Unknown |
+| Container attributes | POD Arrived At | Unknown |
+| Container attributes | POD Discharged At | Unknown |
+| Container attributes | POD Full Out At | Unknown |
+| Container attributes | Destination Arrived At | Unknown |
+| Container attributes | Destination Full Out At | Unknown |
+| Container attributes | Empty Terminated At | Unknown |
+| Container milestones | Empty Out | Unknown |
+| Container milestones | Full In | Unknown |
+| Container milestones | Vessel Loaded | Unknown |
+| Container milestones | Vessel Departed | Unknown |
+| Container milestones | Transshipment Arrived | Unknown |
+| Container milestones | Transshipment Discharged | Unknown |
+| Container milestones | Transshipment Loaded | Unknown |
+| Container milestones | Transshipment Departed | Unknown |
+| Container milestones | Vessel Arrived | Unknown |
+| Container milestones | Vessel Berthed | Unknown |
+| Container milestones | Vessel Discharged | Unknown |
+| Container milestones | Full Out | Unknown |
+| Container milestones | Empty Returned | Unknown |
+| Additional milestones | Feeder Arrived | Unknown |
+| Additional milestones | Feeder Discharged | Unknown |
+| Additional milestones | Feeder Loaded | Unknown |
+| Additional milestones | Feeder Departed | Unknown |
+| Additional milestones | Rail Loaded | Unknown |
+| Additional milestones | Rail Departed | Unknown |
+| Additional milestones | Rail Arrived | Unknown |
+| Additional milestones | Rail Unloaded | Unknown |
+| Additional milestones | Arrived At Destination | Unknown |
+| Additional milestones | Delivered | Unknown |
+| Additional milestones | Estimated Arrival at Final Destination | Unknown |
+| Other events | SSL LFD Changed | Unknown |
+| Other events | Estimated Arrival | Unknown |
+| Other events | Booking Cancelled | Unknown |
+
+## Seth Shipping
+
+SCAC `SSPH`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Supported |
+| Additional milestones | Feeder Discharged | Supported |
+| Additional milestones | Feeder Loaded | Supported |
+| Additional milestones | Feeder Departed | Supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Supported |
+
+## SM Line
+
+SCAC `SMLM`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Not supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Partial |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## Swire
+
+SCAC `SSBF`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Not supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Partial |
+| Destination port | POD Vessel IMO | Partial |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Not supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Not supported |
+| Container milestones | Transshipment Discharged | Not supported |
+| Container milestones | Transshipment Loaded | Not supported |
+| Container milestones | Transshipment Departed | Not supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Partial |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Partial |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Partial |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## Swire Shipping
+
+SCAC `CHVW`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Not supported |
+| Origin | POL Name | Unknown |
+| Origin | POL Locode | Unknown |
+| Origin | POL Timezone | Unknown |
+| Origin | POL ETD | Unknown |
+| Origin | POL ATD | Unknown |
+| Destination port | POD Name | Unknown |
+| Destination port | POD Locode | Unknown |
+| Destination port | POD Terminal | Unknown |
+| Destination port | POD Timezone | Unknown |
+| Destination port | POD Voyage Number | Unknown |
+| Destination port | POD Vessel Name | Unknown |
+| Destination port | POD Vessel IMO | Unknown |
+| Destination port | POD ETA | Unknown |
+| Destination port | POD ATA | Unknown |
+| Inland destination | Destination Name | Unknown |
+| Inland destination | Destination Locode | Unknown |
+| Inland destination | Destination Timezone | Unknown |
+| Inland destination | Destination ETA | Unknown |
+| Inland destination | Destination ATA | Unknown |
+| Container attributes | Number | Unknown |
+| Container attributes | Seal Number | Unknown |
+| Container attributes | Equipment Type | Unknown |
+| Container attributes | Equipment Length | Unknown |
+| Container attributes | Equipment Height | Unknown |
+| Container attributes | Weight (Lbs) | Unknown |
+| Container attributes | POD Arrived At | Unknown |
+| Container attributes | POD Discharged At | Unknown |
+| Container attributes | POD Full Out At | Unknown |
+| Container attributes | Destination Arrived At | Unknown |
+| Container attributes | Destination Full Out At | Unknown |
+| Container attributes | Empty Terminated At | Unknown |
+| Container milestones | Empty Out | Unknown |
+| Container milestones | Full In | Unknown |
+| Container milestones | Vessel Loaded | Unknown |
+| Container milestones | Vessel Departed | Unknown |
+| Container milestones | Transshipment Arrived | Unknown |
+| Container milestones | Transshipment Discharged | Unknown |
+| Container milestones | Transshipment Loaded | Unknown |
+| Container milestones | Transshipment Departed | Unknown |
+| Container milestones | Vessel Arrived | Unknown |
+| Container milestones | Vessel Berthed | Unknown |
+| Container milestones | Vessel Discharged | Unknown |
+| Container milestones | Full Out | Unknown |
+| Container milestones | Empty Returned | Unknown |
+| Additional milestones | Feeder Arrived | Unknown |
+| Additional milestones | Feeder Discharged | Unknown |
+| Additional milestones | Feeder Loaded | Unknown |
+| Additional milestones | Feeder Departed | Unknown |
+| Additional milestones | Rail Loaded | Unknown |
+| Additional milestones | Rail Departed | Unknown |
+| Additional milestones | Rail Arrived | Unknown |
+| Additional milestones | Rail Unloaded | Unknown |
+| Additional milestones | Arrived At Destination | Unknown |
+| Additional milestones | Delivered | Unknown |
+| Additional milestones | Estimated Arrival at Final Destination | Unknown |
+| Other events | SSL LFD Changed | Unknown |
+| Other events | Estimated Arrival | Unknown |
+| Other events | Booking Cancelled | Unknown |
+
+## Trailer Bridge
+
+SCAC `TRBR`. Account enablement required.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Not supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Not supported |
+| Origin | POL Name | Unknown |
+| Origin | POL Locode | Unknown |
+| Origin | POL Timezone | Unknown |
+| Origin | POL ETD | Unknown |
+| Origin | POL ATD | Unknown |
+| Destination port | POD Name | Unknown |
+| Destination port | POD Locode | Unknown |
+| Destination port | POD Terminal | Unknown |
+| Destination port | POD Timezone | Unknown |
+| Destination port | POD Voyage Number | Unknown |
+| Destination port | POD Vessel Name | Unknown |
+| Destination port | POD Vessel IMO | Unknown |
+| Destination port | POD ETA | Unknown |
+| Destination port | POD ATA | Unknown |
+| Inland destination | Destination Name | Unknown |
+| Inland destination | Destination Locode | Unknown |
+| Inland destination | Destination Timezone | Unknown |
+| Inland destination | Destination ETA | Unknown |
+| Inland destination | Destination ATA | Unknown |
+| Container attributes | Number | Unknown |
+| Container attributes | Seal Number | Unknown |
+| Container attributes | Equipment Type | Unknown |
+| Container attributes | Equipment Length | Unknown |
+| Container attributes | Equipment Height | Unknown |
+| Container attributes | Weight (Lbs) | Unknown |
+| Container attributes | POD Arrived At | Unknown |
+| Container attributes | POD Discharged At | Unknown |
+| Container attributes | POD Full Out At | Unknown |
+| Container attributes | Destination Arrived At | Unknown |
+| Container attributes | Destination Full Out At | Unknown |
+| Container attributes | Empty Terminated At | Unknown |
+| Container milestones | Empty Out | Unknown |
+| Container milestones | Full In | Unknown |
+| Container milestones | Vessel Loaded | Unknown |
+| Container milestones | Vessel Departed | Unknown |
+| Container milestones | Transshipment Arrived | Unknown |
+| Container milestones | Transshipment Discharged | Unknown |
+| Container milestones | Transshipment Loaded | Unknown |
+| Container milestones | Transshipment Departed | Unknown |
+| Container milestones | Vessel Arrived | Unknown |
+| Container milestones | Vessel Berthed | Unknown |
+| Container milestones | Vessel Discharged | Unknown |
+| Container milestones | Full Out | Unknown |
+| Container milestones | Empty Returned | Unknown |
+| Additional milestones | Feeder Arrived | Unknown |
+| Additional milestones | Feeder Discharged | Unknown |
+| Additional milestones | Feeder Loaded | Unknown |
+| Additional milestones | Feeder Departed | Unknown |
+| Additional milestones | Rail Loaded | Unknown |
+| Additional milestones | Rail Departed | Unknown |
+| Additional milestones | Rail Arrived | Unknown |
+| Additional milestones | Rail Unloaded | Unknown |
+| Additional milestones | Arrived At Destination | Unknown |
+| Additional milestones | Delivered | Unknown |
+| Additional milestones | Estimated Arrival at Final Destination | Unknown |
+| Other events | SSL LFD Changed | Unknown |
+| Other events | Estimated Arrival | Unknown |
+| Other events | Booking Cancelled | Unknown |
+
+## Transfar
+
+SCAC `TJFH`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Supported |
+| Additional milestones | Feeder Discharged | Supported |
+| Additional milestones | Feeder Loaded | Supported |
+| Additional milestones | Feeder Departed | Supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Supported |
+
+## TS Lines
+
+SCAC `TXZJ`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Supported |
+| Additional milestones | Feeder Discharged | Supported |
+| Additional milestones | Feeder Loaded | Supported |
+| Additional milestones | Feeder Departed | Supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Supported |
+
+## Turkon
+
+SCAC `TRKU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Not supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Not supported |
+| Inland destination | Destination Locode | Not supported |
+| Inland destination | Destination Timezone | Not supported |
+| Inland destination | Destination ETA | Not supported |
+| Inland destination | Destination ATA | Not supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Not supported |
+| Container attributes | Destination Full Out At | Not supported |
+| Container attributes | Empty Terminated At | Partial |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Partial |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Not supported |
+| Container milestones | Transshipment Discharged | Not supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Not supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Partial |
+| Additional milestones | Rail Departed | Not supported |
+| Additional milestones | Rail Arrived | Not supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Not supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Not supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Partial |
+| Other events | Booking Cancelled | Not supported |
+
+## Wan Hai
+
+SCAC `WHLC`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Partial |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Not supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Partial |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Not supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Not supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## World Direct Shipping
+
+SCAC `WDSB`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Not supported |
+| Tracking identifiers | Booking Number | Not supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Unknown |
+| Origin | POL Locode | Unknown |
+| Origin | POL Timezone | Unknown |
+| Origin | POL ETD | Unknown |
+| Origin | POL ATD | Unknown |
+| Destination port | POD Name | Unknown |
+| Destination port | POD Locode | Unknown |
+| Destination port | POD Terminal | Unknown |
+| Destination port | POD Timezone | Unknown |
+| Destination port | POD Voyage Number | Unknown |
+| Destination port | POD Vessel Name | Unknown |
+| Destination port | POD Vessel IMO | Unknown |
+| Destination port | POD ETA | Unknown |
+| Destination port | POD ATA | Unknown |
+| Inland destination | Destination Name | Unknown |
+| Inland destination | Destination Locode | Unknown |
+| Inland destination | Destination Timezone | Unknown |
+| Inland destination | Destination ETA | Unknown |
+| Inland destination | Destination ATA | Unknown |
+| Container attributes | Number | Unknown |
+| Container attributes | Seal Number | Unknown |
+| Container attributes | Equipment Type | Unknown |
+| Container attributes | Equipment Length | Unknown |
+| Container attributes | Equipment Height | Unknown |
+| Container attributes | Weight (Lbs) | Unknown |
+| Container attributes | POD Arrived At | Unknown |
+| Container attributes | POD Discharged At | Unknown |
+| Container attributes | POD Full Out At | Unknown |
+| Container attributes | Destination Arrived At | Unknown |
+| Container attributes | Destination Full Out At | Unknown |
+| Container attributes | Empty Terminated At | Unknown |
+| Container milestones | Empty Out | Unknown |
+| Container milestones | Full In | Unknown |
+| Container milestones | Vessel Loaded | Unknown |
+| Container milestones | Vessel Departed | Unknown |
+| Container milestones | Transshipment Arrived | Unknown |
+| Container milestones | Transshipment Discharged | Unknown |
+| Container milestones | Transshipment Loaded | Unknown |
+| Container milestones | Transshipment Departed | Unknown |
+| Container milestones | Vessel Arrived | Unknown |
+| Container milestones | Vessel Berthed | Unknown |
+| Container milestones | Vessel Discharged | Unknown |
+| Container milestones | Full Out | Unknown |
+| Container milestones | Empty Returned | Unknown |
+| Additional milestones | Feeder Arrived | Unknown |
+| Additional milestones | Feeder Discharged | Unknown |
+| Additional milestones | Feeder Loaded | Unknown |
+| Additional milestones | Feeder Departed | Unknown |
+| Additional milestones | Rail Loaded | Unknown |
+| Additional milestones | Rail Departed | Unknown |
+| Additional milestones | Rail Arrived | Unknown |
+| Additional milestones | Rail Unloaded | Unknown |
+| Additional milestones | Arrived At Destination | Unknown |
+| Additional milestones | Delivered | Unknown |
+| Additional milestones | Estimated Arrival at Final Destination | Unknown |
+| Other events | SSL LFD Changed | Unknown |
+| Other events | Estimated Arrival | Unknown |
+| Other events | Booking Cancelled | Unknown |
+
+## Yang Ming
+
+SCAC `YMLU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Partial |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Supported |
+| Additional milestones | Feeder Discharged | Not supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Supported |
+| Additional milestones | Rail Loaded | Not supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Not supported |
+| Additional milestones | Arrived At Destination | Partial |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Partial |
+| Other events | SSL LFD Changed | Partial |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
+## ZIM
+
+SCAC `ZIMU`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Tracking identifiers | Bill Of Lading | Supported |
+| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Container Number | Supported |
+| Origin | POL Name | Supported |
+| Origin | POL Locode | Supported |
+| Origin | POL Timezone | Supported |
+| Origin | POL ETD | Supported |
+| Origin | POL ATD | Supported |
+| Destination port | POD Name | Supported |
+| Destination port | POD Locode | Supported |
+| Destination port | POD Terminal | Supported |
+| Destination port | POD Timezone | Supported |
+| Destination port | POD Voyage Number | Supported |
+| Destination port | POD Vessel Name | Supported |
+| Destination port | POD Vessel IMO | Supported |
+| Destination port | POD ETA | Supported |
+| Destination port | POD ATA | Supported |
+| Inland destination | Destination Name | Supported |
+| Inland destination | Destination Locode | Supported |
+| Inland destination | Destination Timezone | Supported |
+| Inland destination | Destination ETA | Supported |
+| Inland destination | Destination ATA | Supported |
+| Container attributes | Number | Supported |
+| Container attributes | Seal Number | Not supported |
+| Container attributes | Equipment Type | Supported |
+| Container attributes | Equipment Length | Supported |
+| Container attributes | Equipment Height | Supported |
+| Container attributes | Weight (Lbs) | Not supported |
+| Container attributes | POD Arrived At | Supported |
+| Container attributes | POD Discharged At | Supported |
+| Container attributes | POD Full Out At | Supported |
+| Container attributes | Destination Arrived At | Supported |
+| Container attributes | Destination Full Out At | Supported |
+| Container attributes | Empty Terminated At | Supported |
+| Container milestones | Empty Out | Supported |
+| Container milestones | Full In | Supported |
+| Container milestones | Vessel Loaded | Supported |
+| Container milestones | Vessel Departed | Supported |
+| Container milestones | Transshipment Arrived | Supported |
+| Container milestones | Transshipment Discharged | Supported |
+| Container milestones | Transshipment Loaded | Supported |
+| Container milestones | Transshipment Departed | Supported |
+| Container milestones | Vessel Arrived | Supported |
+| Container milestones | Vessel Berthed | Not supported |
+| Container milestones | Vessel Discharged | Supported |
+| Container milestones | Full Out | Supported |
+| Container milestones | Empty Returned | Supported |
+| Additional milestones | Feeder Arrived | Not supported |
+| Additional milestones | Feeder Discharged | Supported |
+| Additional milestones | Feeder Loaded | Not supported |
+| Additional milestones | Feeder Departed | Not supported |
+| Additional milestones | Rail Loaded | Not supported |
+| Additional milestones | Rail Departed | Supported |
+| Additional milestones | Rail Arrived | Supported |
+| Additional milestones | Rail Unloaded | Not supported |
+| Additional milestones | Arrived At Destination | Supported |
+| Additional milestones | Delivered | Not supported |
+| Additional milestones | Estimated Arrival at Final Destination | Supported |
+| Other events | SSL LFD Changed | Not supported |
+| Other events | Estimated Arrival | Supported |
+| Other events | Booking Cancelled | Not supported |
+
