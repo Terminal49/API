@@ -24,6 +24,7 @@ import {
   hasArray,
   hasNonEmptyArray,
   readString,
+  scoreFeatureNotEnabled,
   scoreResult,
   type QualitySpec,
   type QualityScore,
@@ -47,6 +48,9 @@ if (!cfg) {
     containerNumber?: string;
   } = {};
   let serverInfo: unknown;
+  // Tools the server under test lists. Cases for tools added in a PR skip
+  // when the push-time eval runs against production before they deploy.
+  let listedTools = new Set<string>();
 
   /** Call a tool, score it, record the row, and return both for assertions. */
   async function evaluate(
@@ -58,6 +62,32 @@ if (!cfg) {
     const result = await client.callTool(tool, args);
     const score = scoreResult(result, spec);
     rows.push({ tool, testCase, result, score });
+    return { result, score };
+  }
+
+  /**
+   * Like evaluate(), but a "not enabled for this account" reply from an
+   * account-gated tool is scored as the allowed outcome it is.
+   */
+  async function evaluateGated(
+    tool: string,
+    args: Record<string, unknown>,
+    spec: QualitySpec,
+    testCase = 'happy-path',
+  ): Promise<{ result: ToolResult; score: QualityScore }> {
+    const result = await client.callTool(tool, args);
+    const notEnabled =
+      !result.isError &&
+      /isn't enabled for this Terminal49 account/.test(result.rawText);
+    const score = notEnabled
+      ? scoreFeatureNotEnabled(result)
+      : scoreResult(result, spec);
+    rows.push({
+      tool,
+      testCase: notEnabled ? 'not-enabled' : testCase,
+      result,
+      score,
+    });
     return { result, score };
   }
 
@@ -79,6 +109,7 @@ if (!cfg) {
       const init = await client.initialize();
       serverInfo = init.serverInfo;
       expect(init.http).toBe(200);
+      listedTools = new Set((await client.listTools()).map((t) => t.name));
 
       // Discover real ids to feed the detail tools.
       const ships = await client.callTool('list_shipments', {
@@ -351,6 +382,81 @@ if (!cfg) {
       // Soft-error responses are still HTTP 200 with a JSON payload.
       expect(result.http).toBe(200);
       expect(result.payload).toBeDefined();
+      expect(score.contractPass).toBe(true);
+    });
+
+    // ---- trade intelligence ----
+    // Enabled per account. Without it the tools answer with a plain
+    // not-enabled message (not a tool error), which is a passing outcome here.
+
+    it('get_trade_data_coverage reports history from 2022 or a plain not-enabled message', async ({
+      skip,
+    }) => {
+      if (!listedTools.has('get_trade_data_coverage')) return skip();
+      const { result, score } = await evaluateGated(
+        'get_trade_data_coverage',
+        {},
+        {
+          requiredKeys: ['history_starts', 'latest_month', 'last_full_month'],
+          predicates: [
+            {
+              name: 'history starts in January 2022',
+              test: (p) => readString(p, 'history_starts') === '2022-01',
+            },
+            {
+              name: 'internal build fields are not exposed',
+              test: (p) =>
+                isRecord(p) && !('facts_hash' in p) && !('fact_rows' in p),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('search_commodities resolves a product to HS codes or explains it is not enabled', async ({
+      skip,
+    }) => {
+      if (!listedTools.has('search_commodities')) return skip();
+      const { result, score } = await evaluateGated(
+        'search_commodities',
+        { query: 'office chairs', limit: 3 },
+        {
+          requiredKeys: ['products'],
+          predicates: [
+            {
+              name: 'returns four-digit codes with common goods',
+              test: (p) =>
+                isRecord(p) &&
+                Array.isArray(p.products) &&
+                p.products.length > 0 &&
+                p.products.every(
+                  (row) =>
+                    isRecord(row) &&
+                    typeof row.hs4 === 'string' &&
+                    /^\d{4}$/.test(row.hs4) &&
+                    Array.isArray(row.common_goods),
+                ),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('get_trade_trends rejects an impossible month before calling the API', async ({
+      skip,
+    }) => {
+      if (!listedTools.has('get_trade_trends')) return skip();
+      const { result, score } = await evaluate(
+        'get_trade_trends',
+        { since: '2026-13' },
+        { expectError: true },
+        'invalid-month',
+      );
+      expect(result.isError).toBe(true);
       expect(score.contractPass).toBe(true);
     });
 

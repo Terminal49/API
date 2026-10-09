@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Terminal49 MCP Server now provides **10 specialized tools** and **2 MCP resources** for comprehensive container tracking and shipment management.
+The Terminal49 MCP Server now provides **20 specialized tools** and **2 MCP resources** for comprehensive container tracking and shipment management.
 
 ### Design Philosophy
 
@@ -294,6 +294,11 @@ list_tracking_requests({
 - Response metadata
 
 **When to Use**: Audit, monitoring, and bulk intake workflows
+
+---
+
+### Trade intelligence tools
+`search_importers`, `get_importer_profile`, `search_commodities`, `rank_importers`, `get_trade_trends`, `get_trade_breakdown`, and `get_trade_data_coverage` answer US ocean import market questions from US Customs bill-of-lading records (January 2022 onward). They are read-only and enabled per account. See `docs/mcp/home.mdx` for parameters and the caveats agents must apply.
 
 ---
 

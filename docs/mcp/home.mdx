@@ -519,6 +519,129 @@ List tracking requests with optional filters and pagination.
 
 ---
 
+## Trade intelligence tools
+
+Trade intelligence answers market questions about US ocean imports: who imports a product, what a named company imports and how that is changing, where goods come from, and port, carrier, and lane volumes. It is built from US Customs bill-of-lading records from January 2022 to today, refreshed daily. These tools read market data, not your account's shipments, and all of them are read-only.
+
+<Note>
+Trade intelligence is enabled per account. Without it, each tool replies that trade intelligence isn't enabled for the account. To turn it on, contact support@terminal49.com.
+</Note>
+
+Keep these in mind when you read the answers:
+
+- Volume is physical containers, each counted once. Values are estimates, not declared customs values.
+- `get_trade_trends` and `get_trade_breakdown` include the current month, which is still incomplete, unless you set `until`. Compare full months against the same months a year earlier.
+- A company can appear under several names and once per US state. Some importers keep their names off the records or ship under a forwarder, so low volume for a well-known company is a floor, not its size.
+- Forwarders and customs brokers appear among importers. A high `share_as_notify_party` suggests a logistics provider, but large cargo owners can also be listed mostly as notify party, so weigh the company name and product mix too.
+- Don't add volumes across products or companies. Carriers appear under spelling variants, so merge them before computing shares.
+
+---
+
+### `search_importers`
+
+Find US importers by company name (typos and partial names are fine), by what they import, or both. Each result covers a 12-month search window, which can end a month or two before the last full month: containers, the consignee and notify-party split, twenty-foot equivalent units (TEUs), estimated value, and top ports, origin countries, carriers, and products. Results are ordered by match quality, not size.
+
+**Parameters**
+
+- `name` *(string, optional)* - company name.
+- `imports` *(string, optional)* - what the company imports, in plain words.
+- `state`, `port_of_discharge`, `origin_country` *(string, optional)* - narrow the search.
+- `min_containers` *(number, optional)* - minimum containers in the search window.
+- `limit` *(number, optional)* - default 10, maximum 25.
+
+**Good for**
+
+- "Who are the importers of frozen shrimp in Florida?"
+- "Find Example Outdoor Supply's importer records."
+
+---
+
+### `get_importer_profile`
+
+One importer's imports over full calendar months ending last month: totals, a monthly series, US ports, origin countries, carriers, destination states, and products with estimated value. Use `months: 24` to compare the latest months with the same months a year earlier.
+
+**Parameters**
+
+- `company_name` *(string, required)* - the exact name from `search_importers`.
+- `company_state` *(string, optional)* - one state; omit to combine all of the company's locations.
+- `months` *(number, optional)* - default 12, maximum 60.
+
+**Good for**
+
+- "What does this competitor import, and is it growing?"
+
+---
+
+### `search_commodities`
+
+Turn a product description or Harmonized System (HS) code prefix into four-digit HS codes, with the goods commonly declared under each code, the number of importers, and 12-month estimated value. Check the common goods before relying on a code.
+
+**Parameters**
+
+- `query` *(string, required)* - such as `office chairs` or `94`.
+- `limit` *(number, optional)* - default 8, maximum 20.
+
+Each code lists up to 15 common goods; `common_goods_not_shown` counts any left out.
+
+---
+
+### `rank_importers`
+
+Rank US importers by containers over full calendar months for a product, a US port, an origin country, or any combination. The ranking includes forwarders and customs brokers.
+
+**Parameters**
+
+- `hs4`, `port_of_discharge`, `origin_country` *(string, optional)* - filters.
+- `months` *(number, optional)* - default 12, maximum 60.
+- `limit` *(number, optional)* - default 20, maximum 50.
+
+**Good for**
+
+- "Who are the top importers of office chairs through Savannah?"
+
+---
+
+### `get_trade_trends`
+
+A time series of containers, TEUs, or estimated value by month, quarter, or year, split by up to two dimensions and filtered by any of them. By default it runs from about two years back through the current, incomplete month. History goes back to January 2022.
+
+**Parameters**
+
+- `measure` *(string, optional)* - `containers` (default), `teus`, or `estimated_value`.
+- `group_by` *(array, optional)* - up to two dimensions, such as `origin_country` or `pod`.
+- `filters` *(object, optional)* - product, importer, origin, port, coast, carrier, state, and equipment filters. The `company` filter matches every name containing the text.
+- `interval` *(string, optional)* - `month` (default), `quarter`, or `year`.
+- `since`, `until` *(string, optional)* - `YYYY-MM`, inclusive.
+- `top` *(number, optional)* - largest groups to keep, default 10, maximum 25.
+
+**Good for**
+
+- "Has Vietnam overtaken China for furniture imports?"
+
+---
+
+### `get_trade_breakdown`
+
+Nested totals over one to three dimensions, such as region, country, and US port, with a grand total and subtotals at every level. By default it runs from about a year back through the current, incomplete month, so it is not a clean 12 months. For an annual total, set `since` and `until` to 12 full months.
+
+**Parameters**
+
+- `dims` *(array, required)* - one to three dimensions, outermost first.
+- `measure`, `filters`, `since`, `until` - as for `get_trade_trends`.
+- `top` *(number, optional)* - largest children under each parent, default 10, maximum 20.
+
+**Good for**
+
+- "What share of seafood imports lands on each coast?"
+
+---
+
+### `get_trade_data_coverage`
+
+What the data covers right now: where history starts, the latest month and whether it is incomplete, the last full month, and when the data was last built. No parameters.
+
+---
+
 ## Prompts reference
 
 Prompts are pre-built workflows that guide the AI through multi-step analysis.
