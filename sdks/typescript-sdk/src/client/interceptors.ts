@@ -51,20 +51,31 @@ export class AuthInterceptor {
  * eligible, but non-idempotent writes are only retried when the caller supplied
  * an `Idempotency-Key` header. 429 backoff honors the server's `Retry-After`.
  */
+/** A request captured before it was sent, so it can be replayed on retry. */
+interface ReplayableRequest {
+  request: Request;
+  /** Schema path (e.g. `/trade_intel/trends`); read-only query `POST`s are retried like `GET`s. */
+  path?: string;
+}
+
+/** The middleware context the retry interceptor reads; `schemaPath` is absent on manual requests. */
+type RetryRequestParams = Pick<MiddlewareCallbackParams, 'id' | 'request'> &
+  Partial<Pick<MiddlewareCallbackParams, 'schemaPath'>>;
+
 export class RetryInterceptor {
-  private replayableRequests = new Map<Request | string, Request>();
+  private replayableRequests = new Map<Request | string, ReplayableRequest>();
 
   constructor(
     private maxRetries: number,
     private fetchImpl: typeof fetch = fetch,
   ) {}
 
-  onRequest({ request, id }: Pick<MiddlewareCallbackParams, 'id' | 'request'>) {
+  onRequest({ request, id, schemaPath }: RetryRequestParams) {
     try {
-      this.replayableRequests.set(
-        this.requestKey(request, id),
-        request.clone(),
-      );
+      this.replayableRequests.set(this.requestKey(request, id), {
+        request: request.clone(),
+        path: schemaPath,
+      });
     } catch {
       this.replayableRequests.delete(this.requestKey(request, id));
     }
@@ -79,15 +90,15 @@ export class RetryInterceptor {
     response: Response;
   }): Promise<Response> {
     const requestKey = this.requestKey(request, id);
-    const replayableRequest = this.replayableRequests.get(requestKey);
+    const replayable = this.replayableRequests.get(requestKey);
     let currentResponse = response;
     let attempt = 0;
 
     try {
       while (
-        replayableRequest &&
+        replayable &&
         isRetryableStatus(currentResponse.status) &&
-        this.isRetryable(replayableRequest) &&
+        this.isRetryable(replayable) &&
         attempt < this.maxRetries
       ) {
         const retryAfterMs = parseRetryAfterMs(
@@ -96,7 +107,7 @@ export class RetryInterceptor {
         await this.sleep(computeBackoffDelay(attempt, retryAfterMs));
 
         try {
-          currentResponse = await this.fetchImpl(replayableRequest.clone());
+          currentResponse = await this.fetchImpl(replayable.request.clone());
         } catch (error) {
           // openapi-fetch does NOT route a throw from `onResponse` back through
           // `onError`, so a network failure during a response-triggered retry
@@ -128,12 +139,12 @@ export class RetryInterceptor {
     error: unknown;
   }): Promise<Response | Error> {
     const requestKey = this.requestKey(request, id);
-    const replayableRequest = this.replayableRequests.get(requestKey);
+    const replayable = this.replayableRequests.get(requestKey);
 
     if (
-      replayableRequest &&
+      replayable &&
       isRetryableNetworkError(error) &&
-      this.isRetryable(replayableRequest)
+      this.isRetryable(replayable)
     ) {
       let attempt = 0;
       while (attempt < this.maxRetries) {
@@ -143,7 +154,7 @@ export class RetryInterceptor {
           // runs `onResponse` for this same request id. Keep the replay entry
           // so that path can still retry a subsequent 429/5xx — `onResponse`
           // deletes it once the response chain finishes.
-          return await this.fetchImpl(replayableRequest.clone());
+          return await this.fetchImpl(replayable.request.clone());
         } catch (retryError) {
           attempt++;
           if (attempt >= this.maxRetries) {
@@ -158,10 +169,11 @@ export class RetryInterceptor {
     return toNetworkError(error);
   }
 
-  private isRetryable(request: Request): boolean {
+  private isRetryable({ request, path }: ReplayableRequest): boolean {
     return shouldRetryRequest({
       method: request.method,
       hasIdempotencyKey: request.headers.has(IDEMPOTENCY_KEY_HEADER),
+      path,
     });
   }
 
