@@ -432,7 +432,7 @@ export async function executeSearchImporters(
     period: {
       from: window?.since_month,
       to: previousMonth(window?.until_month_exclusive),
-      note: 'Volumes cover the last 12 full calendar months.',
+      note: 'Volumes cover the 12-month search window from..to, which can end a month or two before the last full month. Use get_importer_profile for the latest full months.',
     },
     importers: (body.results ?? []).map((row) => {
       const omitted: Record<string, number> = {};

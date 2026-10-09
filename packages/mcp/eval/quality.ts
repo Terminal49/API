@@ -138,6 +138,53 @@ export function scoreResult(
   };
 }
 
+/**
+ * Score a reply that says an account-gated feature isn't enabled. That reply
+ * is an allowed outcome (plain text, not a tool error), so it is judged on its
+ * own contract instead of the enabled-data spec.
+ */
+export function scoreFeatureNotEnabled(
+  result: ToolResult,
+  latencyBudgetMs = DEFAULT_LATENCY_BUDGET_MS,
+): QualityScore {
+  const checks: Check[] = [
+    {
+      name: 'transport 200',
+      pass: result.http === 200,
+      detail: `http=${result.http}`,
+      soft: false,
+    },
+    {
+      name: 'not a tool error',
+      pass: !result.isError,
+      detail: result.errorMessage,
+      soft: false,
+    },
+    {
+      name: 'explains the feature is not enabled and how to get it',
+      pass:
+        /isn't enabled/.test(result.rawText) &&
+        /support@terminal49\.com/.test(result.rawText),
+      detail: undefined,
+      soft: false,
+    },
+    {
+      name: `latency < ${latencyBudgetMs}ms`,
+      pass: result.latencyMs <= latencyBudgetMs,
+      detail: `${result.latencyMs}ms`,
+      soft: true,
+    },
+  ];
+  const passed = checks.filter((check) => check.pass).length;
+  return {
+    score: passed / checks.length,
+    passed,
+    total: checks.length,
+    contractPass: checks.every((check) => check.soft || check.pass),
+    checks,
+  };
+}
+
 function findRemovedSteeringFields(values: unknown[]): string[] {
   const found = new Set<string>();
 
