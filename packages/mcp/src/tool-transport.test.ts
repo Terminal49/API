@@ -27,6 +27,7 @@ const sdk = vi.hoisted(() => ({
   shipmentsList: vi.fn(),
   shippingLinesList: vi.fn(),
   trackingRequestsList: vi.fn(),
+  me: vi.fn(),
 }));
 
 vi.mock('@terminal49/sdk', async (importOriginal) => ({
@@ -37,6 +38,7 @@ vi.mock('@terminal49/sdk', async (importOriginal) => ({
     createTrackingRequestFromInfer = sdk.createTrackingRequestFromInfer;
     createTrackingRequest = sdk.createTrackingRequest;
     getContainer = sdk.containersGet;
+    me = sdk.me;
     containers = {
       get: sdk.containersGet,
       events: sdk.containersEvents,
@@ -67,6 +69,7 @@ const TOOL_NAMES = [
   'list_shipments',
   'list_containers',
   'list_tracking_requests',
+  'whoami',
 ] as const;
 type ToolName = (typeof TOOL_NAMES)[number];
 
@@ -255,6 +258,23 @@ function configureHappyPath(toolName: ToolName): void {
         },
       ]);
       return;
+    case 'whoami':
+      sdk.me.mockResolvedValue({
+        id: 'key-1',
+        kind: 'api_key',
+        channel: 'api',
+        name: 'Production key',
+        features: { data_out_api: { status: 'available' } },
+        account: {
+          id: 'b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a',
+          companyName: 'Acme Logistics',
+          companyType: 'shipper',
+          plan: 'customer',
+          trackingSlots: null,
+        },
+        user: null,
+      });
+      return;
     case 'get_container_route':
       sdk.containersRoute.mockResolvedValue(mapContainerRoute(routeFixture));
       return;
@@ -340,6 +360,8 @@ function argumentsFor(toolName: ToolName): Record<string, unknown> {
       return { page: 1, page_size: 10 };
     case 'list_tracking_requests':
       return { status: 'succeeded', page: 1, page_size: 10 };
+    case 'whoami':
+      return {};
     default: {
       const exhaustive: never = toolName;
       throw new Error(`Unhandled tool ${exhaustive}`);
@@ -394,6 +416,19 @@ function expectedOutputFor(toolName: ToolName): Record<string, unknown> {
         shipping_lines: [
           expect.objectContaining({ scac: 'MAEU', name: 'Maersk' }),
         ],
+      };
+    case 'whoami':
+      return {
+        kind: 'api_key',
+        channel: 'api',
+        credential_name: 'Production key',
+        account: expect.objectContaining({
+          company_name: 'Acme Logistics',
+          company_type: 'shipper',
+          plan: 'customer',
+        }),
+        user: null,
+        other_accounts: [],
       };
     case 'get_container_route':
       return EXPECTED_ROUTE_SUMMARY;
@@ -465,6 +500,9 @@ function configureFailure(toolName: ToolName, error: Error): void {
       return;
     case 'list_tracking_requests':
       sdk.trackingRequestsList.mockRejectedValue(error);
+      return;
+    case 'whoami':
+      sdk.me.mockRejectedValue(error);
       return;
     default: {
       const exhaustive: never = toolName;

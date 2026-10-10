@@ -5,6 +5,11 @@ All notable changes to the Terminal49 MCP Server (TypeScript) will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-10-09
+
+### Added
+- `whoami`: identify the caller. Reports whether the session uses an API key or a signed-in user, the account it is scoped to (company name, business type, plan, location, tracking-slot usage), the accounts a user can switch to, and a per-feature availability map (`data_out_api`, `custom_fields`, `routing_data`, `rail_data`, `stop_tracking`, `trade_intel`) with the reason when a feature is unavailable. Backed by the new `GET /me` endpoint and `client.me()` in the SDK.
+
 ## [1.1.1] - 2026-10-08
 
 ### Fixed
