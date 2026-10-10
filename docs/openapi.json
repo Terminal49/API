@@ -13895,6 +13895,222 @@
           }
         }
       }
+    },
+    "/me": {
+      "get": {
+        "summary": "Get the current credential",
+        "tags": [
+          "Account"
+        ],
+        "operationId": "get-me",
+        "description": "Return the credential that authenticated this request: whether it is an API key or a signed-in user, the account it is scoped to, and which features that credential can use on that account.\n\nAccepts `Authorization: Token <api_key>` and `Authorization: Bearer <user_token>`. A user token selects the account with the `x-account-id` header and defaults to the user's primary account. The response is never cached (`Cache-Control: no-store`).\n\nUnlike most endpoints, an API key on a free plan can call this endpoint: `features.data_out_api.status` tells it which other calls will be refused and why.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/credential"
+                    },
+                    "included": {
+                      "type": "array",
+                      "description": "The current account, the signed-in user when there is one, and the other accounts that user can switch to.",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "$ref": "#/components/schemas/credential_account"
+                          },
+                          {
+                            "$ref": "#/components/schemas/credential_user"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "Signed-in user through an MCP client": {
+                    "value": {
+                      "data": {
+                        "id": "8c1d2f3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f",
+                        "type": "credential",
+                        "attributes": {
+                          "kind": "user",
+                          "channel": "mcp",
+                          "name": null,
+                          "features": {
+                            "data_out_api": {
+                              "status": "available"
+                            },
+                            "custom_fields": {
+                              "status": "available"
+                            },
+                            "routing_data": {
+                              "status": "available"
+                            },
+                            "rail_data": {
+                              "status": "not_enabled"
+                            },
+                            "stop_tracking": {
+                              "status": "available"
+                            },
+                            "trade_intel": {
+                              "status": "not_enabled"
+                            }
+                          }
+                        },
+                        "relationships": {
+                          "account": {
+                            "data": {
+                              "id": "b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a",
+                              "type": "account"
+                            }
+                          },
+                          "user": {
+                            "data": {
+                              "id": "8c1d2f3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f",
+                              "type": "user"
+                            }
+                          }
+                        }
+                      },
+                      "included": [
+                        {
+                          "id": "b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a",
+                          "type": "account",
+                          "attributes": {
+                            "company_name": "Acme Logistics",
+                            "company_type": "freight_forwarder",
+                            "scac": "ACML",
+                            "abbr_name": "ACME",
+                            "city": "Oakland",
+                            "state_abbr": "CA",
+                            "country": "United States",
+                            "plan": "customer",
+                            "tracking_slots": null
+                          }
+                        },
+                        {
+                          "id": "8c1d2f3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f",
+                          "type": "user",
+                          "attributes": {
+                            "email": "ops@example.com",
+                            "name": "Jordan Lee",
+                            "role": "account_manager",
+                            "job_role": "forwarder",
+                            "job_title": "Operations lead",
+                            "admin": false
+                          },
+                          "relationships": {
+                            "accounts": {
+                              "data": [
+                                {
+                                  "id": "b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a",
+                                  "type": "account"
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "API key on a free plan": {
+                    "value": {
+                      "data": {
+                        "id": "0d2c1b8a-7f6e-4d5c-9b8a-3e2f1d0c9b8a",
+                        "type": "credential",
+                        "attributes": {
+                          "kind": "api_key",
+                          "channel": "api",
+                          "name": "Production key",
+                          "features": {
+                            "data_out_api": {
+                              "status": "requires_paid_plan"
+                            },
+                            "custom_fields": {
+                              "status": "requires_user_credential"
+                            },
+                            "routing_data": {
+                              "status": "not_enabled"
+                            },
+                            "rail_data": {
+                              "status": "not_enabled"
+                            },
+                            "stop_tracking": {
+                              "status": "requires_paid_plan"
+                            },
+                            "trade_intel": {
+                              "status": "not_enabled"
+                            }
+                          }
+                        },
+                        "relationships": {
+                          "account": {
+                            "data": {
+                              "id": "b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a",
+                              "type": "account"
+                            }
+                          },
+                          "user": {
+                            "data": null
+                          }
+                        }
+                      },
+                      "included": [
+                        {
+                          "id": "b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a",
+                          "type": "account",
+                          "attributes": {
+                            "company_name": "Acme Logistics",
+                            "company_type": "shipper",
+                            "scac": null,
+                            "abbr_name": "ACME",
+                            "city": "Oakland",
+                            "state_abbr": "CA",
+                            "country": "United States",
+                            "plan": "free_plan",
+                            "tracking_slots": {
+                              "limit": 10,
+                              "used": 4,
+                              "remaining": 6
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. The credential is missing, invalid, disabled, or names an account it cannot access.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "x-tagGroups": [
@@ -18236,6 +18452,379 @@
             "additionalProperties": true
           }
         }
+      },
+      "feature_availability": {
+        "title": "Feature availability",
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "requires_paid_plan",
+              "requires_user_credential",
+              "not_enabled"
+            ],
+            "description": "`available`: this credential can use the feature on this account. `requires_paid_plan`: the account's plan does not include it. `requires_user_credential`: only a signed-in user may use it, not an API key. `not_enabled`: the feature is not turned on for this account."
+          }
+        }
+      },
+      "credential": {
+        "title": "Credential model",
+        "description": "The credential that authenticated the current request. Returned only by `GET /me`.",
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "attributes",
+          "relationships"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The API key id when `kind` is `api_key`, otherwise the user id."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "credential"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "required": [
+              "kind",
+              "channel",
+              "features"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "api_key",
+                  "user"
+                ],
+                "description": "`api_key` for `Authorization: Token`, `user` for a signed-in user's Bearer token."
+              },
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "api",
+                  "dashboard",
+                  "mcp",
+                  "askt49"
+                ],
+                "description": "How the credential reached Terminal49: a direct API call, the dashboard, an MCP connected client, or the AskT49 agent."
+              },
+              "name": {
+                "type": "string",
+                "nullable": true,
+                "description": "The API key's label from the developer portal. `null` for user tokens."
+              },
+              "features": {
+                "type": "object",
+                "description": "Whether this credential can use each gated feature on the current account. Keys are stable; new keys may be added.",
+                "required": [
+                  "data_out_api",
+                  "custom_fields",
+                  "routing_data",
+                  "rail_data",
+                  "stop_tracking",
+                  "trade_intel"
+                ],
+                "properties": {
+                  "data_out_api": {
+                    "$ref": "#/components/schemas/feature_availability"
+                  },
+                  "custom_fields": {
+                    "$ref": "#/components/schemas/feature_availability"
+                  },
+                  "routing_data": {
+                    "$ref": "#/components/schemas/feature_availability"
+                  },
+                  "rail_data": {
+                    "$ref": "#/components/schemas/feature_availability"
+                  },
+                  "stop_tracking": {
+                    "$ref": "#/components/schemas/feature_availability"
+                  },
+                  "trade_intel": {
+                    "$ref": "#/components/schemas/feature_availability"
+                  }
+                },
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/feature_availability"
+                }
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "required": [
+              "account",
+              "user"
+            ],
+            "properties": {
+              "account": {
+                "type": "object",
+                "description": "The account this credential is scoped to.",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "type"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "account"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "user": {
+                "type": "object",
+                "description": "The signed-in user. `data` is `null` for an API key unless the request also carried `x-user-email`.",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "required": [
+                      "id",
+                      "type"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "credential_account": {
+        "title": "Credential account",
+        "description": "An account as `GET /me` describes it. Narrower than the `account` relationship elsewhere in the API.",
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "attributes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "account"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "required": [
+              "company_name"
+            ],
+            "properties": {
+              "company_name": {
+                "type": "string"
+              },
+              "company_type": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  "trucking_company",
+                  "freight_forwarder",
+                  "customs_broker",
+                  "shipper",
+                  "terminal_49",
+                  "contractor",
+                  "software_company",
+                  "party_logistic",
+                  "other",
+                  null
+                ],
+                "description": "The business type the account declared. `shipper` is a cargo owner (importer or exporter); `freight_forwarder` and `customs_broker` are service providers."
+              },
+              "scac": {
+                "type": "string",
+                "nullable": true
+              },
+              "abbr_name": {
+                "type": "string",
+                "nullable": true,
+                "description": "Four-letter account abbreviation."
+              },
+              "city": {
+                "type": "string",
+                "nullable": true
+              },
+              "state_abbr": {
+                "type": "string",
+                "nullable": true
+              },
+              "country": {
+                "type": "string",
+                "nullable": true
+              },
+              "plan": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  "free_plan",
+                  "in_trial",
+                  "customer",
+                  "locked",
+                  "churned",
+                  null
+                ],
+                "description": "The account's billing lifecycle state."
+              },
+              "tracking_slots": {
+                "type": "object",
+                "nullable": true,
+                "description": "Tracking-slot usage on free and trial plans. `null` when the plan is not slot-limited. Present only on the account the credential is scoped to.",
+                "required": [
+                  "limit",
+                  "used",
+                  "remaining"
+                ],
+                "properties": {
+                  "limit": {
+                    "type": "integer"
+                  },
+                  "used": {
+                    "type": "integer"
+                  },
+                  "remaining": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "credential_user": {
+        "title": "Credential user",
+        "description": "The signed-in user as `GET /me` describes them to themselves.",
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "attributes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "user"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "required": [
+              "email",
+              "admin"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "name": {
+                "type": "string",
+                "nullable": true
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "member",
+                  "account_manager"
+                ],
+                "description": "`account_manager` can manage the account's users and billing."
+              },
+              "job_role": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  "other",
+                  "dispatcher",
+                  "driver",
+                  "broker",
+                  "shipper",
+                  "forwarder",
+                  null
+                ]
+              },
+              "job_title": {
+                "type": "string",
+                "nullable": true
+              },
+              "admin": {
+                "type": "boolean",
+                "description": "`true` only for Terminal49 staff."
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "accounts": {
+                "type": "object",
+                "description": "Every open account this user can select with `x-account-id`.",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "account"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "securitySchemes": {
@@ -18304,6 +18893,9 @@
     },
     {
       "name": "Parties"
+    },
+    {
+      "name": "Account"
     }
   ],
   "security": [
