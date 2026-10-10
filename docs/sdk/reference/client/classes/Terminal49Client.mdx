@@ -967,6 +967,25 @@ List webhooks.
 
 ***
 
+### me()
+
+> **me**(`options?`): `Promise`\<`any`\>
+
+Describe the credential behind this client: API key or signed-in user, the account it is
+scoped to, and which gated features it can use there. Works for free-plan API keys too.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### refreshContainer()
 
 > **refreshContainer**(`id`, `options?`): `Promise`\<`any`\>

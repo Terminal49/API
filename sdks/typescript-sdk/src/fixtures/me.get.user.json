@@ -1,0 +1,84 @@
+{
+  "data": {
+    "id": "8c1d2f3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f",
+    "type": "credential",
+    "attributes": {
+      "kind": "user",
+      "channel": "mcp",
+      "name": null,
+      "features": {
+        "data_out_api": {
+          "status": "available"
+        },
+        "custom_fields": {
+          "status": "available"
+        },
+        "routing_data": {
+          "status": "available"
+        },
+        "rail_data": {
+          "status": "not_enabled"
+        },
+        "stop_tracking": {
+          "status": "available"
+        },
+        "trade_intel": {
+          "status": "not_enabled"
+        }
+      }
+    },
+    "relationships": {
+      "account": {
+        "data": {
+          "id": "b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a",
+          "type": "account"
+        }
+      },
+      "user": {
+        "data": {
+          "id": "8c1d2f3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f",
+          "type": "user"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a",
+      "type": "account",
+      "attributes": {
+        "company_name": "Acme Logistics",
+        "company_type": "freight_forwarder",
+        "scac": "ACML",
+        "abbr_name": "ACME",
+        "city": "Oakland",
+        "state_abbr": "CA",
+        "country": "United States",
+        "plan": "customer",
+        "tracking_slots": null
+      }
+    },
+    {
+      "id": "8c1d2f3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f",
+      "type": "user",
+      "attributes": {
+        "email": "ops@example.com",
+        "name": "Jordan Lee",
+        "role": "account_manager",
+        "job_role": "forwarder",
+        "job_title": "Operations lead",
+        "admin": false
+      },
+      "relationships": {
+        "accounts": {
+          "data": [
+            {
+              "id": "b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a",
+              "type": "account"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

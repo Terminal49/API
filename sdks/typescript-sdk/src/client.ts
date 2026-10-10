@@ -26,6 +26,7 @@ import type {
   TrackingRequestListFilters,
   TrackingRequestType,
 } from './client/managers/tracking-requests.js';
+import { mapCurrentCredential } from './client/mappers.js';
 import { Transport } from './client/transport.js';
 import type {
   CallOptions,
@@ -505,6 +506,15 @@ export class Terminal49Client {
       { method: 'DELETE' },
     );
     return this.formatResult(raw, options?.format);
+  }
+
+  /**
+   * Describe the credential behind this client: API key or signed-in user, the account it is
+   * scoped to, and which gated features it can use there. Works for free-plan API keys too.
+   */
+  async me(options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(this.endpoint('/me'));
+    return this.formatResult(raw, options?.format, mapCurrentCredential);
   }
 
   /** List webhook source IP ranges. */

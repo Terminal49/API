@@ -1,0 +1,22 @@
+---
+title: "Interface: CurrentAccount"
+---
+
+# Interface: CurrentAccount
+
+An account as `GET /me` describes it.
+
+## Properties
+
+| Property | Type | Description |
+| ------ | ------ | ------ |
+| <a id="property-abbrname"></a> `abbrName?` | `string` | - |
+| <a id="property-city"></a> `city?` | `string` | - |
+| <a id="property-companyname"></a> `companyName` | `string` | - |
+| <a id="property-companytype"></a> `companyType?` | `string` | - |
+| <a id="property-country"></a> `country?` | `string` | - |
+| <a id="property-id"></a> `id` | `string` | - |
+| <a id="property-plan"></a> `plan?` | `string` | Billing lifecycle state: free_plan, in_trial, customer, locked, or churned. |
+| <a id="property-scac"></a> `scac?` | `string` | - |
+| <a id="property-stateabbr"></a> `stateAbbr?` | `string` | - |
+| <a id="property-trackingslots"></a> `trackingSlots?` | [`TrackingSlots`](/sdk/reference/types/models/interfaces/TrackingSlots) \| `null` | Present only on the account the credential is scoped to; `null` when not slot-limited. |

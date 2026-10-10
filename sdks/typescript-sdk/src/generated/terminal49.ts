@@ -1348,6 +1348,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the current credential
+         * @description Return the credential that authenticated this request: whether it is an API key or a signed-in user, the account it is scoped to, and which features that credential can use on that account.
+         *
+         *     Accepts `Authorization: Token <api_key>` and `Authorization: Bearer <user_token>`. A user token selects the account with the `x-account-id` header and defaults to the user's primary account. The response is never cached (`Cache-Control: no-store`).
+         *
+         *     Unlike most endpoints, an API key on a free plan can call this endpoint: `features.data_out_api.status` tells it which other calls will be refused and why.
+         */
+        get: operations["get-me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3048,6 +3072,143 @@ export interface components {
             type?: "user";
             attributes?: {
                 [key: string]: unknown;
+            };
+        };
+        /** Feature availability */
+        feature_availability: {
+            /**
+             * @description `available`: this credential can use the feature on this account. `requires_paid_plan`: the account's plan does not include it. `requires_user_credential`: only a signed-in user may use it, not an API key. `not_enabled`: the feature is not turned on for this account.
+             * @enum {string}
+             */
+            status: "available" | "requires_paid_plan" | "requires_user_credential" | "not_enabled";
+        };
+        /**
+         * Credential model
+         * @description The credential that authenticated the current request. Returned only by `GET /me`.
+         */
+        credential: {
+            /**
+             * Format: uuid
+             * @description The API key id when `kind` is `api_key`, otherwise the user id.
+             */
+            id: string;
+            /** @enum {string} */
+            type: "credential";
+            attributes: {
+                /**
+                 * @description `api_key` for `Authorization: Token`, `user` for a signed-in user's Bearer token.
+                 * @enum {string}
+                 */
+                kind: "api_key" | "user";
+                /**
+                 * @description How the credential reached Terminal49: a direct API call, the dashboard, an MCP connected client, or the AskT49 agent.
+                 * @enum {string}
+                 */
+                channel: "api" | "dashboard" | "mcp" | "askt49";
+                /** @description The API key's label from the developer portal. `null` for user tokens. */
+                name?: string | null;
+                /** @description Whether this credential can use each gated feature on the current account. Keys are stable; new keys may be added. */
+                features: {
+                    data_out_api: components["schemas"]["feature_availability"];
+                    custom_fields: components["schemas"]["feature_availability"];
+                    routing_data: components["schemas"]["feature_availability"];
+                    rail_data: components["schemas"]["feature_availability"];
+                    stop_tracking: components["schemas"]["feature_availability"];
+                    trade_intel: components["schemas"]["feature_availability"];
+                } & {
+                    [key: string]: components["schemas"]["feature_availability"];
+                };
+            };
+            relationships: {
+                /** @description The account this credential is scoped to. */
+                account: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "account";
+                    };
+                };
+                /** @description The signed-in user. `data` is `null` for an API key unless the request also carried `x-user-email`. */
+                user: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "user";
+                    } | null;
+                };
+            };
+        };
+        /**
+         * Credential account
+         * @description An account as `GET /me` describes it. Narrower than the `account` relationship elsewhere in the API.
+         */
+        credential_account: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            type: "account";
+            attributes: {
+                company_name: string;
+                /**
+                 * @description The business type the account declared. `shipper` is a cargo owner (importer or exporter); `freight_forwarder` and `customs_broker` are service providers.
+                 * @enum {string|null}
+                 */
+                company_type?: "trucking_company" | "freight_forwarder" | "customs_broker" | "shipper" | "terminal_49" | "contractor" | "software_company" | "party_logistic" | "other" | null;
+                scac?: string | null;
+                /** @description Four-letter account abbreviation. */
+                abbr_name?: string | null;
+                city?: string | null;
+                state_abbr?: string | null;
+                country?: string | null;
+                /**
+                 * @description The account's billing lifecycle state.
+                 * @enum {string|null}
+                 */
+                plan?: "free_plan" | "in_trial" | "customer" | "locked" | "churned" | null;
+                /** @description Tracking-slot usage on free and trial plans. `null` when the plan is not slot-limited. Present only on the account the credential is scoped to. */
+                tracking_slots?: {
+                    limit: number;
+                    used: number;
+                    remaining: number;
+                } | null;
+            };
+        };
+        /**
+         * Credential user
+         * @description The signed-in user as `GET /me` describes them to themselves.
+         */
+        credential_user: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            type: "user";
+            attributes: {
+                /** Format: email */
+                email: string;
+                name?: string | null;
+                /**
+                 * @description `account_manager` can manage the account's users and billing.
+                 * @enum {string}
+                 */
+                role?: "member" | "account_manager";
+                /** @enum {string|null} */
+                job_role?: "other" | "dispatcher" | "driver" | "broker" | "shipper" | "forwarder" | null;
+                job_title?: string | null;
+                /** @description `true` only for Terminal49 staff. */
+                admin: boolean;
+            };
+            relationships?: {
+                /** @description Every open account this user can select with `x-account-id`. */
+                accounts?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "account";
+                    }[];
+                };
             };
         };
     };
@@ -7859,6 +8020,41 @@ export interface operations {
                 };
             };
             /** @description Unauthorized — missing or invalid API token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+        };
+    };
+    "get-me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["credential"];
+                        /** @description The current account, the signed-in user when there is one, and the other accounts that user can switch to. */
+                        included?: (components["schemas"]["credential_account"] | components["schemas"]["credential_user"])[];
+                    };
+                };
+            };
+            /** @description Unauthorized. The credential is missing, invalid, disabled, or names an account it cannot access. */
             401: {
                 headers: {
                     [name: string]: unknown;
