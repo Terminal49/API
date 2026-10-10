@@ -1,0 +1,63 @@
+{
+  "data": {
+    "id": "0d2c1b8a-7f6e-4d5c-9b8a-3e2f1d0c9b8a",
+    "type": "credential",
+    "attributes": {
+      "kind": "api_key",
+      "channel": "api",
+      "name": "Production key",
+      "features": {
+        "data_out_api": {
+          "status": "requires_paid_plan"
+        },
+        "custom_fields": {
+          "status": "requires_user_credential"
+        },
+        "routing_data": {
+          "status": "not_enabled"
+        },
+        "rail_data": {
+          "status": "not_enabled"
+        },
+        "stop_tracking": {
+          "status": "requires_paid_plan"
+        },
+        "trade_intel": {
+          "status": "not_enabled"
+        }
+      }
+    },
+    "relationships": {
+      "account": {
+        "data": {
+          "id": "b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a",
+          "type": "account"
+        }
+      },
+      "user": {
+        "data": null
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a",
+      "type": "account",
+      "attributes": {
+        "company_name": "Acme Logistics",
+        "company_type": "shipper",
+        "scac": null,
+        "abbr_name": "ACME",
+        "city": "Oakland",
+        "state_abbr": "CA",
+        "country": "United States",
+        "plan": "free_plan",
+        "tracking_slots": {
+          "limit": 10,
+          "used": 4,
+          "remaining": 6
+        }
+      }
+    }
+  ]
+}

@@ -31,6 +31,7 @@ import type {
 } from './client/managers/tracking-requests.js';
 import { applyTypedPagination, normalizeInclude } from './client/query.js';
 import { callerPayload, type JsonBody } from './client/spec.js';
+import { mapCurrentCredential } from './client/mappers.js';
 import { Transport } from './client/transport.js';
 import type { components, paths } from './generated/terminal49.js';
 import type {
@@ -629,6 +630,15 @@ export class Terminal49Client {
       }),
     );
     return this.formatResult(raw, options?.format);
+  }
+
+  /**
+   * Describe the credential behind this client: API key or signed-in user, the account it is
+   * scoped to, and which gated features it can use there. Works for free-plan API keys too.
+   */
+  async me(options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(this.endpoint('/me'));
+    return this.formatResult(raw, options?.format, mapCurrentCredential);
   }
 
   /** List webhook source IP ranges. */
