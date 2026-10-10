@@ -41,6 +41,7 @@ import {
   listPartiesInputSchema,
 } from './tools/list-parties.js';
 import { executeSearchDocs } from './tools/search-docs.js';
+import { executeWhoami } from './tools/whoami.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
 import {
@@ -99,7 +100,7 @@ Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and bookin
 
 Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete or overwrite data.
 
-Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links.`;
+Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links. Call whoami to learn which account and credential this session is bound to and which features it can use: when the user asks who they are or which account is connected, when a lookup returns nothing or an authorization error, or before relying on a gated feature such as routing, custom fields, or stop tracking.`;
 
 type ResponseDisplayColumn = {
   key: string;
@@ -1627,6 +1628,65 @@ export function createTerminal49McpServer(
         { assistantApiKey: process.env.MINTLIFY_ASSISTANT_API_KEY },
       ),
     ),
+  );
+
+  // Tool 14: Whoami
+  server.registerTool(
+    'whoami',
+    {
+      title: 'Who Am I',
+      description:
+        'Identify the caller: whether this session uses an API key or a signed-in user, which ' +
+        'Terminal49 account it is scoped to (company name, business type, plan, location), and ' +
+        'which gated features that credential can use here (data_out_api, custom_fields, ' +
+        'routing_data, rail_data, stop_tracking, trade_intel). Each feature carries a status: ' +
+        'available, requires_paid_plan, requires_user_credential, or not_enabled. Call it when ' +
+        'the user asks who they are or which account is connected, when another tool returns ' +
+        'nothing or an authorization error, or before relying on a gated feature. Takes no arguments.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: z.object({}),
+      outputSchema: z.object({
+        kind: z.enum(['api_key', 'user']),
+        channel: z.string(),
+        credential_name: z.string().nullable(),
+        account: z.object({
+          id: z.string(),
+          company_name: z.string(),
+          company_type: z.string().nullable(),
+          plan: z.string().nullable(),
+          scac: z.string().nullable(),
+          abbr_name: z.string().nullable(),
+          location: z.string().nullable(),
+          tracking_slots: z
+            .object({
+              limit: z.number(),
+              used: z.number(),
+              remaining: z.number(),
+            })
+            .nullable(),
+        }),
+        user: z
+          .object({
+            id: z.string(),
+            email: z.string(),
+            name: z.string().nullable(),
+            role: z.string().nullable(),
+            job_role: z.string().nullable(),
+            job_title: z.string().nullable(),
+            terminal49_staff: z.boolean(),
+          })
+          .nullable(),
+        other_accounts: z.array(
+          z.object({ id: z.string(), company_name: z.string() }),
+        ),
+        features: z.record(z.string(), z.object({ status: z.string() })),
+      }),
+    },
+    wrapTool('whoami', async () => executeWhoami(client)),
   );
 
   // ==================== PROMPTS ====================
