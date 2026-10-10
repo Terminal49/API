@@ -251,6 +251,13 @@
             ]
           },
           {
+            "group": "Account",
+            "icon": "id-badge",
+            "pages": [
+              "api-docs/api-reference/account/get-the-current-credential"
+            ]
+          },
+          {
             "group": "Shipping Lines",
             "icon": "ship",
             "pages": [
@@ -458,12 +465,17 @@
                 "pages": [
                   "sdk/reference/types/models/index",
                   "sdk/reference/types/models/interfaces/Container",
+                  "sdk/reference/types/models/interfaces/CurrentAccount",
+                  "sdk/reference/types/models/interfaces/CurrentCredential",
+                  "sdk/reference/types/models/interfaces/CurrentUser",
+                  "sdk/reference/types/models/interfaces/FeatureAvailability",
                   "sdk/reference/types/models/interfaces/PaginatedResult",
                   "sdk/reference/types/models/interfaces/PaginationLinks",
                   "sdk/reference/types/models/interfaces/Route",
                   "sdk/reference/types/models/interfaces/Shipment",
                   "sdk/reference/types/models/interfaces/ShippingLine",
-                  "sdk/reference/types/models/interfaces/TrackingRequest"
+                  "sdk/reference/types/models/interfaces/TrackingRequest",
+                  "sdk/reference/types/models/interfaces/TrackingSlots"
                 ]
               },
               {

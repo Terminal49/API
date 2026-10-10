@@ -297,6 +297,24 @@ list_tracking_requests({
 
 ---
 
+### 11. `whoami`
+**Purpose**: Identify the caller, the account the session is scoped to, and which gated features that credential can use
+
+**Usage**:
+```typescript
+whoami()
+```
+
+**Returns**:
+- `kind` (`api_key` | `user`) and `channel` (`api`, `dashboard`, `mcp`, `askt49`)
+- Account: company name, business type, plan, SCAC, location, tracking-slot usage on free/trial plans
+- User (when signed in): email, name, role, job role, job title; `other_accounts` the user can switch to
+- `features`: per-feature status (`available`, `requires_paid_plan`, `requires_user_credential`, `not_enabled`)
+
+**Use when**: the user asks which account is connected, a lookup returns nothing or 401, or before relying on routing, custom fields, or stop tracking.
+
+---
+
 ## MCP Resources
 
 ### 1. `terminal49://container/{id}`
@@ -349,6 +367,9 @@ list_tracking_requests({
 ### User asks: "Is it available for pickup? Any holds?"
 → Use `get_container` with default includes (has demurrage data)
 → Metadata will guide presentation (urgent if holds exist)
+
+### User asks: "Which account am I connected to?" / "Why can't I see anything?"
+→ Use `whoami` (shows the account, plan, and which features this credential can use)
 
 ### User asks: "What carriers do you track?"
 → Use `get_supported_shipping_lines`

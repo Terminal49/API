@@ -189,3 +189,64 @@ export interface CustomField {
   dataType?: string;
   updatedAt?: string | null;
 }
+
+/** Availability of one gated feature for the current credential on the current account. */
+export interface FeatureAvailability {
+  status:
+    | 'available'
+    | 'requires_paid_plan'
+    | 'requires_user_credential'
+    | 'not_enabled';
+}
+
+/** Tracking-slot usage on free and trial plans. */
+export interface TrackingSlots {
+  limit: number;
+  used: number;
+  remaining: number;
+}
+
+/** An account as `GET /me` describes it. */
+export interface CurrentAccount {
+  id: string;
+  companyName: string;
+  companyType?: string;
+  scac?: string;
+  abbrName?: string;
+  city?: string;
+  stateAbbr?: string;
+  country?: string;
+  /** Billing lifecycle state: free_plan, in_trial, customer, locked, or churned. */
+  plan?: string;
+  /** Present only on the account the credential is scoped to; `null` when not slot-limited. */
+  trackingSlots?: TrackingSlots | null;
+}
+
+/** The signed-in user as `GET /me` describes them. */
+export interface CurrentUser {
+  id: string;
+  email: string;
+  name?: string;
+  role?: string;
+  jobRole?: string;
+  jobTitle?: string;
+  /** `true` only for Terminal49 staff. */
+  admin: boolean;
+  /** Every open account this user can select with `x-account-id`. */
+  accounts: CurrentAccount[];
+}
+
+/** Mapped `GET /me` response: the credential behind the current request. */
+export interface CurrentCredential {
+  /** The API key id or the user id, depending on `kind`. */
+  id: string;
+  kind: 'api_key' | 'user';
+  /** api, dashboard, mcp, or askt49. */
+  channel: string;
+  /** API key label; undefined for user tokens. */
+  name?: string;
+  features: Record<string, FeatureAvailability>;
+  account: CurrentAccount;
+  /** `null` for an API key that is not acting as a user. */
+  user: CurrentUser | null;
+}

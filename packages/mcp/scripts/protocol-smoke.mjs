@@ -68,11 +68,12 @@ try {
 
   const { tools } = await client.listTools();
   if (
-    tools.length !== 13 ||
-    !tools.some((tool) => tool.name === 'search_docs')
+    tools.length !== 14 ||
+    !tools.some((tool) => tool.name === 'search_docs') ||
+    !tools.some((tool) => tool.name === 'whoami')
   ) {
     throw new Error(
-      `Expected 13 tools including search_docs over ${protocolVersion}, received ${tools.length}`,
+      `Expected 14 tools including search_docs and whoami over ${protocolVersion}, received ${tools.length}`,
     );
   }
 

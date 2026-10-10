@@ -519,6 +519,29 @@ List tracking requests with optional filters and pagination.
 
 ---
 
+### `whoami`
+
+Identify the caller: API key or signed-in user, the account the session is scoped to, and which gated features that credential can use there.
+
+**Parameters**
+- none
+
+**Returns**
+- `kind` (`api_key` or `user`), `channel` (`api`, `dashboard`, `mcp`, `askt49`), and the API key label when there is one
+- `account` – company name, business type (`shipper`, `freight_forwarder`, `customs_broker`, `trucking_company`, …), plan, SCAC, location, and tracking-slot usage on free and trial plans
+- `user` – email, name, role, job role, and job title for a signed-in user; `null` for an API key
+- `other_accounts` – other accounts the signed-in user can switch to
+- `features` – one status per gated feature: `available`, `requires_paid_plan`, `requires_user_credential`, or `not_enabled`
+
+**Good for**
+- "Which account am I connected to?"
+- "Why does list_containers return nothing?" (a free-plan API key lacks `data_out_api`)
+- Checking `routing_data`, `custom_fields`, or `stop_tracking` before relying on them
+
+**REST equivalent**: [GET /me](/api-docs/api-reference/account/get-the-current-credential)
+
+---
+
 ## Prompts reference
 
 Prompts are pre-built workflows that guide the AI through multi-step analysis.

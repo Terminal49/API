@@ -74,6 +74,7 @@ Search for bill of lading 123456789
 | `list_containers` | Browse all tracked containers |
 | `list_shipments` | Browse all shipments |
 | `list_tracking_requests` | Browse tracking requests |
+| `whoami` | Identify the credential, account, and available features |
 
 ### 🎯 Workflow Prompts (3)
 
