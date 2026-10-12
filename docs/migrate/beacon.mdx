@@ -188,7 +188,7 @@ Beacon's `GET /v1/containers/{containerNumber}` response is container-centric �
 | `purchase_orders` | No equivalent. Terminal49's tracking API does not do order management |
 
 <Note>
-  Beacon's documented container response does not include an equipment type or size field. If your integration reads container equipment (dry, reefer, size) from Beacon today, confirm with Beacon support where that comes from before you map it — Terminal49 returns it as `container.attributes.equipment_type`, `equipment_length` (10, 20, 40, 45), and `equipment_height` (standard, high cube).
+  Beacon's documented container response does not include an equipment type or size field. If your integration reads container equipment (dry, reefer, size) from Beacon today, confirm with Beacon support where that comes from before you map it. Terminal49 returns it as `container.attributes.equipment_type`, `equipment_length` (10, 20, 40, 45), and `equipment_height` (standard, high cube).
 </Note>
 
 ### Locations, facilities, and vessels
@@ -349,11 +349,11 @@ Full detail in [Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/ho
   </Accordion>
 
   <Accordion title="Timestamps are UTC with a separate timezone field" icon="clock">
-    Beacon's date fields carry a local UTC offset for the event's location, but fall back to a plain `...Z` UTC timestamp if no zone information is available, or a date with no time at all if no time information is available — so parsing has to branch on which shape you got. Terminal49 always stores event timestamps in UTC and returns the matching IANA timezone alongside as a separate field. Convert for display rather than assuming local time. See [Event Timestamps](/api-docs/in-depth-guides/event-timestamps).
+    Beacon's date fields carry a local UTC offset for the event's location. If no zone information is available, they fall back to a plain `...Z` UTC timestamp. If no time information is available, they return a date with no time at all. Your parser has to branch on which shape it receives. Terminal49 always stores event timestamps in UTC and returns the matching IANA timezone alongside as a separate field. Convert for display rather than assuming local time. See [Event Timestamps](/api-docs/in-depth-guides/event-timestamps).
   </Accordion>
 
   <Accordion title="Polling cadence vs. webhooks" icon="arrows-rotate">
-    Beacon recommends polling `GET /v1/containers/{containerNumber}` no more than once every 2 hours. If your Beacon integration is polling on a cron, you can either keep the same cadence against `GET /v2/containers`, or drop polling entirely and let Terminal49 push webhook events as they happen — freshness is no longer capped by how often you ask.
+    Beacon recommends polling `GET /v1/containers/{containerNumber}` no more than once every 2 hours. If your Beacon integration is polling on a cron, you can either keep the same cadence against `GET /v2/containers`, or drop polling entirely and let Terminal49 push webhook events as they happen. Freshness is then no longer capped by how often you ask.
   </Accordion>
 
   <Accordion title="Empty arrays are the normal state" icon="brackets-square">
@@ -492,7 +492,7 @@ Everyone does the base path. Then pick a branch.
 
 ## Migrate with an AI coding agent
 
-If you use Cursor, Claude Code, Windsurf, Copilot, or another AI coding assistant, hand it the prompt below. It is written to run a **side-by-side migration**: the agent stands up a Terminal49 client next to your existing Beacon code, shadows every Beacon call with a Terminal49 call, diffs the responses, and only cuts over once parity is proven.
+If you use Cursor, Claude Code, Windsurf, Copilot, or another AI coding assistant, hand it the prompt below. The prompt runs a **side-by-side migration**. The agent stands up a Terminal49 client next to your existing Beacon code, shadows every Beacon call with a Terminal49 call, diffs the responses, and only cuts over once parity is proven.
 
 <Tip>
   Point your agent at this page as context (paste the URL or add it as a doc source). The prompt references the mappings above, so the more of this page the agent can see, the better it does.

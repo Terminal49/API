@@ -74,4 +74,4 @@ Treat container `pod_eta_at`, `pod_ata_at`, and dynamic custom-field list filter
 
 ## Continue through pages
 
-Keep the same filter and sort parameters when requesting `page[number]=2` and subsequent pages. Container page sizes above 50 are capped by the API. `meta.total` describes the filtered collection; the returned `data` array contains only the current page. If `links.next` exists, a summary based on the rows fetched so far is partial. The SDK offers [bounded iteration](/sdk/filtering-pagination#pagination) for applications that need more rows.
+Keep the same filter and sort parameters when requesting `page[number]=2` and subsequent pages. The API caps container page sizes above 50. `meta.total` describes the filtered collection; the returned `data` array contains only the current page. If `links.next` exists, a summary based on the rows fetched so far is partial. The SDK offers [bounded iteration](/sdk/filtering-pagination#pagination) for applications that need more rows.
