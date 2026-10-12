@@ -18,6 +18,7 @@ Use this guide to assign parties to your shipments from code instead of the dash
 - A **party** is a company in your account, managed through [`/v2/parties`](/api-docs/api-reference/parties/list-parties).
 - A **party role** links one party to one shipment or container in one role.
 - Roles are a list, not a field. A shipment can carry two parties as `consignee`. To replace a party, remove its role and assign a new one.
+- The API can create, list, get, and [edit](/api-docs/api-reference/parties/edit-a-party) parties, but it has no endpoint to delete a party. To detach a party from a shipment or container, remove its party role. See [Replace a party](#replace-a-party).
 
 | Role | Tracking request creation | Shipment | Container |
 |------|---------------------------|----------|-----------|
