@@ -123,7 +123,7 @@ If your endpoint goes down, Terminal49 retries failed deliveries. When your endp
 
 ### Recover events you were never subscribed to
 
-If you add a new event to a webhook subscription after it has already fired for a shipment or container (for example, subscribing to `shipment.estimated.arrival` after the ETA has already changed several times), Terminal49 will **not** send those historical notifications retroactively.
+If you add a new event to a webhook subscription after it has already fired for a shipment or container, Terminal49 does **not** send those historical notifications retroactively. For example, if you subscribe to `shipment.estimated.arrival` after the ETA has already changed several times, you don't receive the earlier ETA changes.
 
 To recover state you missed:
 

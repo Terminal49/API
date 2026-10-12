@@ -189,7 +189,7 @@ Hold names are case-sensitive. `USDA`, `VACIS`, and `TMF` are uppercase. `freigh
   </Accordion>
 
   <Accordion title="TMF — Terminal management fee">
-    A Terminal Management Fee (TMF) hold is placed by the terminal itself — sometimes called a pier pass or terminal gate fee. This hold is typically resolved by paying the fee directly to the terminal.
+    The terminal itself places a Terminal Management Fee (TMF) hold, sometimes called a pier pass or terminal gate fee. You typically resolve this hold by paying the fee directly to the terminal.
 
     ```json
     {
@@ -251,7 +251,7 @@ Each item in `fees_at_pod_terminal` is a `terminal_fee` object:
     }
     ```
 
-    **Note:** Demurrage is charged by the carrier, not the terminal. The terminal reports it, but you pay the carrier.
+    **Note:** The carrier charges demurrage, not the terminal. The terminal reports it, but you pay the carrier.
   </Accordion>
 
   <Accordion title="extended_dwell_time — Terminal dwell charge">
