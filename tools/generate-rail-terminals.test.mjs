@@ -29,14 +29,20 @@ test('corrected rail facility locations remain consistent in every export', () =
     const row = catalog.terminals.find((terminal) => terminal.name === name);
     assert.deepEqual([row.city, row.state, row.locode], [city, state, locode]);
     const outputs = railTerminalArtifacts(catalog, page);
-    assert.ok(outputs['docs/data/coverage/inland-rail-terminals.csv'].includes(
-      `"${name}","${city}","${state}","United States","${locode}"`,
-    ));
+    assert.ok(
+      outputs['docs/data/coverage/inland-rail-terminals.csv'].includes(
+        `"${name}","${city}","${state}","United States","${locode}"`,
+      ),
+    );
     for (const path of [
       'docs/coverage/inland-rail-terminals.mdx',
       'docs/data/coverage/inland-rail-terminals.mdx',
     ]) {
-      assert.ok(outputs[path].includes(`| ${name} | ${city} | ${state} | United States | ${locode} |`));
+      assert.ok(
+        outputs[path].includes(
+          `| ${name} | ${city} | ${state} | United States | ${locode} |`,
+        ),
+      );
     }
   }
 });
