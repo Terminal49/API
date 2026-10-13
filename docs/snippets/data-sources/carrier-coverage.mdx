@@ -45,16 +45,14 @@ export const CarrierCoverageDetails = ({ carrier, features, coverage, onClose, S
 }
 
 export const ShippingCarrierCoverageDetails = ({ features, coverage, Status }) => {
-  const routing = [
-    { label: "Port of Lading (POL)", group: "Origin" },
-    { label: "Port of Discharge (POD)", group: "Destination port" },
-    { label: "Final Destination", group: "Inland destination" },
-  ]
   const sections = [
-    { label: "Container Details", group: "Container attributes", open: false, hint: "Number · Seal · Equipment · Weight" },
-    { label: "Core Transport Milestones", group: "Container milestones", open: true },
-    { label: "Extended Transport Milestones", group: "Additional milestones", open: true },
-    { label: "Other Events", group: "Other events", open: true },
+    { label: "Port of Lading (POL)", group: "Origin", shortLabels: true },
+    { label: "Port of Discharge (POD)", group: "Destination port", shortLabels: true },
+    { label: "Final Destination", group: "Inland destination", shortLabels: true },
+    { label: "Container Details", group: "Container attributes" },
+    { label: "Core Transport Milestones", group: "Container milestones" },
+    { label: "Extended Transport Milestones", group: "Additional milestones" },
+    { label: "Other Events", group: "Other events" },
   ]
   const FeatureBadges = ({ items }) => (
     <ul className="shipping-feature-badges">
@@ -66,25 +64,16 @@ export const ShippingCarrierCoverageDetails = ({ features, coverage, Status }) =
     </ul>
   )
   return (
-    <div className="shipping-coverage-details space-y-3 p-3 text-sm text-gray-900 dark:text-white">
-      <section aria-label="Routing" className="shipping-section">
-        <h4 className="shipping-section-heading">Routing</h4>
-        {routing.map((location) => (
-          <div key={location.group} className="shipping-route">
-            <h5 className="shipping-route-name">{location.label}</h5>
-            <FeatureBadges items={features.filter((feature) => feature.group === location.group).map((feature) => ({ ...feature, label: feature.label.replace(/^(POL|POD|Destination) /, "") }))} />
-          </div>
-        ))}
-      </section>
+    <dl className="shipping-coverage-details text-sm text-gray-900 dark:text-white">
       {sections.map((section) => (
-        <details key={section.label} className="shipping-section" open={section.open}>
-          <summary className="shipping-section-heading"><span className="shipping-chevron" aria-hidden="true">›</span><span>{section.label}</span>{section.hint ? <span className="ml-auto text-xs font-normal text-gray-500 dark:text-white/60">{section.hint}</span> : null}</summary>
-          <div className="p-3">
-            <FeatureBadges items={features.filter((feature) => feature.group === section.group)} />
-          </div>
-        </details>
+        <div key={section.group} className="shipping-feature-group">
+          <dt>{section.label}</dt>
+          <dd>
+            <FeatureBadges items={features.filter((feature) => feature.group === section.group).map((feature) => section.shortLabels ? { ...feature, label: feature.label.replace(/^(POL|POD|Destination) /, "") } : feature)} />
+          </dd>
+        </div>
       ))}
-    </div>
+    </dl>
   )
 }
 
@@ -157,17 +146,11 @@ export const CarrierCoverageExplorer = ({ carriers, features, coverage = {}, sum
         .shipping-tracking-badges { display: flex; grid-column: 1 / -1; grid-row: 3; flex-wrap: wrap; gap: 6px; font-size: 12px; }
         .shipping-row-chevron { grid-column: 2; grid-row: 1; justify-self: end; transition: transform 120ms; }
         .shipping-carrier-header[aria-expanded="true"] > .shipping-row-chevron { transform: rotate(90deg); }
-        .shipping-section { border: 1px solid rgb(156 163 175 / 0.25); border-radius: 3px; }
-        .shipping-section-heading { display: flex; align-items: center; gap: 12px; margin: 0; padding: 10px 12px; font-size: 14px; font-weight: 600; background: rgb(156 163 175 / 0.07); }
-        .shipping-section > summary { cursor: pointer; list-style: none; }
-        .shipping-section > summary::-webkit-details-marker { display: none; }
-        .shipping-section > summary:focus-visible { outline: 2px solid #16a34a; outline-offset: 2px; }
-        .shipping-section[open] > summary, .shipping-section > h4 { border-bottom: 1px solid rgb(156 163 175 / 0.2); }
-        .shipping-chevron { display: inline-block; font-size: 20px; line-height: 16px; transition: transform 120ms; }
-        details[open] > summary > .shipping-chevron { transform: rotate(90deg); }
-        .shipping-route + .shipping-route { border-top: 1px solid rgb(156 163 175 / 0.2); }
-        .shipping-route { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 10px 16px; padding: 12px; }
-        .shipping-route-name { margin: 0; font-size: 14px; font-weight: 500; }
+        .shipping-coverage-details { margin: 0; }
+        .shipping-feature-group { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 10px 16px; padding: 14px 16px; }
+        .shipping-feature-group + .shipping-feature-group { border-top: 1px solid rgb(156 163 175 / 0.2); }
+        .shipping-feature-group > dt { margin: 0; font-weight: 500; }
+        .shipping-feature-group > dd { min-width: 0; margin: 0; }
         .shipping-feature-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
         .shipping-feature-badges > li { min-width: 0; max-width: 100%; }
         .shipping-feature-badge { max-width: 100%; padding: 6px 12px; text-align: left; }
@@ -176,7 +159,7 @@ export const CarrierCoverageExplorer = ({ carriers, features, coverage = {}, sum
           .shipping-carrier-columns { grid-template-columns: minmax(0, 1.2fr) minmax(70px, 0.55fr) minmax(0, 1.8fr) 18px; }
           .shipping-table-heading { display: grid; border-bottom: 1px solid rgb(156 163 175 / 0.25); }
           .shipping-carrier-name, .shipping-carrier-scacs, .shipping-tracking-badges, .shipping-row-chevron { grid-column: auto; grid-row: auto; }
-          .shipping-route { grid-template-columns: minmax(150px, 0.8fr) minmax(0, 2fr); }
+          .shipping-feature-group { grid-template-columns: minmax(0, 1fr) minmax(0, 2.6fr); }
         }
 
         .carrier-coverage-feature-groups { grid-template-columns: 1fr; }
