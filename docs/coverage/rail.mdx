@@ -12,7 +12,7 @@ keywords:
 mode: "wide"
 ---
 
-import { CarrierCoverageExplorer, CarrierCoverageStatus, CarrierCoverageDetails, ShippingCarrierCoverageRows, ShippingCarrierCoverageDetails } from "/snippets/data-sources/carrier-coverage.mdx";
+import { CarrierCoverageExplorer, CarrierCoverageStatus, CarrierCoverageDetails, CarrierCoverageRows, ShippingCarrierCoverageDetails } from "/snippets/data-sources/carrier-coverage.mdx";
 import { railCarriers, railCarrierFeatures, railCarrierCoverage, coverageUpdatedOn } from "/snippets/data-sources/carrier-feature-data.mdx";
 
 Terminal49 keeps tracking after the container leaves the ocean terminal. For inland moves on North American rail, the same container and shipment objects pick up rail milestones, the rail carrier's ETA, and the rail last free day — no separate tracking request needed.
@@ -27,7 +27,7 @@ Terminal49 keeps tracking after the container leaves the ocean terminal. For inl
 
 Terminal49 covers all six Class I railroads that move intermodal containers in North America:
 
-Search by carrier name or Standard Carrier Alpha Code (SCAC), filter by a required feature, and expand a row for the full feature coverage.
+Search by carrier name or Standard Carrier Alpha Code (SCAC), filter by a required feature, and select a carrier row to see all container milestones, rail attributes, and Terminal49 estimates.
 
 T49 Rail ETA shows Terminal49 estimate coverage; Carrier ETA shows estimates supplied by the railroad.
 
@@ -46,7 +46,7 @@ Browse the [complete inland rail terminal directory](/coverage/inland-rail-termi
 
 ## Rail data
 
-Feature availability varies by rail carrier. Expand a carrier above to check support for:
+Feature availability varies by rail carrier. Select a carrier above to check data availability for:
 
 - Rail loaded, departed, arrived, and unloaded events
 - Arrival at the inland destination, with the rail carrier's ETA and ATA
