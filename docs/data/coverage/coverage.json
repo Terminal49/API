@@ -453,7 +453,7 @@
       "locode": "ARBUE",
       "country": "Argentina",
       "region": "Latin America",
-      "firmsCode": "ARBUETERM4",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -468,7 +468,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "ARBUETERM4",
+      "smdgCode": "TERM4"
     },
     {
       "name": "Flinders Adelaide Container Terminal",
@@ -476,7 +478,7 @@
       "locode": "AUADL",
       "country": "Australia",
       "region": "Australia",
-      "firmsCode": "AUADLFLACT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -491,7 +493,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "AUADLFLACT",
+      "smdgCode": "FLACT"
     },
     {
       "name": "Brisbane Autostrad",
@@ -499,7 +503,7 @@
       "locode": "AUBNE",
       "country": "Australia",
       "region": "Australia",
-      "firmsCode": "AUBNEPTFIT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unknown",
@@ -514,7 +518,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "AUBNEPTFIT",
+      "smdgCode": "PTFIT"
     },
     {
       "name": "DP World Brisbane",
@@ -537,7 +543,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "",
+      "smdgCode": "DPBNE"
     },
     {
       "name": "Hutchison Brisbane Container Terminals",
@@ -545,7 +553,7 @@
       "locode": "AUBNE",
       "country": "Australia",
       "region": "Australia",
-      "firmsCode": "AUBNEHPAFI",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -560,7 +568,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "AUBNEHPAFI",
+      "smdgCode": "HPAFI"
     },
     {
       "name": "DP World Fremantle",
@@ -583,7 +593,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "",
+      "smdgCode": "CONFR"
     },
     {
       "name": "Fremantle",
@@ -591,7 +603,7 @@
       "locode": "AUFRE",
       "country": "Australia",
       "region": "Australia",
-      "firmsCode": "AUFREASLFR",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unknown",
@@ -606,7 +618,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "AUFREASLFR",
+      "smdgCode": "ASLFR"
     },
     {
       "name": "DP World West Swanson Dock",
@@ -629,7 +643,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "",
+      "smdgCode": "CONWS"
     },
     {
       "name": "East Swanson Dock",
@@ -637,7 +653,7 @@
       "locode": "AUMEL",
       "country": "Australia",
       "region": "Australia",
-      "firmsCode": "AUMELASES1",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unknown",
@@ -652,7 +668,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "AUMELASES1",
+      "smdgCode": "ASES1"
     },
     {
       "name": "VICT Webb Dock East",
@@ -660,7 +678,7 @@
       "locode": "AUMEL",
       "country": "Australia",
       "region": "Australia",
-      "firmsCode": "AUMELVICTM",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -675,7 +693,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "AUMELVICTM",
+      "smdgCode": "VICTM"
     },
     {
       "name": "DP World Sydney",
@@ -698,7 +718,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "",
+      "smdgCode": "CTLPB"
     },
     {
       "name": "Hutchison Sydney International Container Terminal",
@@ -706,7 +728,7 @@
       "locode": "AUSYD",
       "country": "Australia",
       "region": "Australia",
-      "firmsCode": "AUSYDHPAPB",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -721,7 +743,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "AUSYDHPAPB",
+      "smdgCode": "HPAPB"
     },
     {
       "name": "Sydney Autostrad",
@@ -729,7 +753,7 @@
       "locode": "AUSYD",
       "country": "Australia",
       "region": "Australia",
-      "firmsCode": "AUSYDASLPB",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "limited",
@@ -744,7 +768,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "AUSYDASLPB",
+      "smdgCode": "ASLPB"
     },
     {
       "name": "Chittagong Port",
@@ -752,7 +778,7 @@
       "locode": "BDCGP",
       "country": "Bangladesh",
       "region": "Asia",
-      "firmsCode": "BDCGPCPA",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unsupported",
@@ -767,7 +793,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "BDCGPCPA",
+      "smdgCode": ""
     },
     {
       "name": "APM Terminals Pecem",
@@ -775,7 +803,7 @@
       "locode": "BRPEC",
       "country": "Brazil",
       "region": "Latin America",
-      "firmsCode": "BRPECBRAPEC",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -790,7 +818,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "BRPECBRAPEC",
+      "smdgCode": "BRAPEC"
     },
     {
       "name": "South End Container Terminal",
@@ -798,7 +828,7 @@
       "locode": "CAHAL",
       "country": "Canada",
       "region": "Canada",
-      "firmsCode": "2036",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -813,7 +843,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "2036",
+      "smdgCode": "HAFXT"
     },
     {
       "name": "Maisonneuve - Section 68",
@@ -821,7 +853,7 @@
       "locode": "CAMTR",
       "country": "Canada",
       "region": "Canada",
-      "firmsCode": "2619",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -836,7 +868,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "2619",
+      "smdgCode": "TMTMAI"
     },
     {
       "name": "MGTP Cast - Section 77",
@@ -844,7 +878,7 @@
       "locode": "CAMTR",
       "country": "Canada",
       "region": "Canada",
-      "firmsCode": "2425",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -859,7 +893,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "2425",
+      "smdgCode": "MGTCAS"
     },
     {
       "name": "MGTP Racine - Section 66",
@@ -867,7 +903,7 @@
       "locode": "CAMTR",
       "country": "Canada",
       "region": "Canada",
-      "firmsCode": "2591",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -882,7 +918,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "2591",
+      "smdgCode": "MGTRAC"
     },
     {
       "name": "Viau - Section 52",
@@ -890,7 +928,7 @@
       "locode": "CAMTR",
       "country": "Canada",
       "region": "Canada",
-      "firmsCode": "5540",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -905,7 +943,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "5540",
+      "smdgCode": "VIAU"
     },
     {
       "name": "Prince Rupert Container Terminal",
@@ -913,7 +953,7 @@
       "locode": "CAPRR",
       "country": "Canada",
       "region": "Canada",
-      "firmsCode": "5086",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -928,7 +968,9 @@
         "chassisNumber": "unsupported",
         "onRail": "limited",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "5086",
+      "smdgCode": "FCTPRR"
     },
     {
       "name": "DP World Centerm",
@@ -936,7 +978,7 @@
       "locode": "CAVAN",
       "country": "Canada",
       "region": "Canada",
-      "firmsCode": "3380",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -951,7 +993,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "3380",
+      "smdgCode": "CTM"
     },
     {
       "name": "GCT Deltaport",
@@ -959,7 +1003,7 @@
       "locode": "CAVAN",
       "country": "Canada",
       "region": "Canada",
-      "firmsCode": "3891",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "limited",
@@ -974,7 +1018,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "3891",
+      "smdgCode": "DLT"
     },
     {
       "name": "GCT Vanterm",
@@ -982,7 +1028,7 @@
       "locode": "CAVAN",
       "country": "Canada",
       "region": "Canada",
-      "firmsCode": "3395",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -997,7 +1043,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "3395",
+      "smdgCode": "VTM"
     },
     {
       "name": "STI San Antonio",
@@ -1005,7 +1053,7 @@
       "locode": "CLSAI",
       "country": "Chile",
       "region": "Latin America",
-      "firmsCode": "CLSAISTI",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1020,7 +1068,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "CLSAISTI",
+      "smdgCode": "STI"
     },
     {
       "name": "Haina International Terminals",
@@ -1028,7 +1078,7 @@
       "locode": "DOHAI",
       "country": "Dominican Republic",
       "region": "Latin America",
-      "firmsCode": "DOHAIHIT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1043,7 +1093,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "DOHAIHIT",
+      "smdgCode": "HIT"
     },
     {
       "name": "Contecon Guayaquil",
@@ -1051,7 +1103,7 @@
       "locode": "ECGYE",
       "country": "Ecuador",
       "region": "Latin America",
-      "firmsCode": "ECGYECONTE",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unsupported",
@@ -1066,7 +1118,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "ECGYECONTE",
+      "smdgCode": "CONTE"
     },
     {
       "name": "Suez Canal Container Terminal",
@@ -1074,7 +1128,7 @@
       "locode": "EGPSD",
       "country": "Egypt",
       "region": "Middle East",
-      "firmsCode": "EGPSDSCCT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unknown",
@@ -1089,7 +1143,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "EGPSDSCCT",
+      "smdgCode": "SCCT"
     },
     {
       "name": "EUROGATE Container Terminal Bremerhaven",
@@ -1097,7 +1153,7 @@
       "locode": "DEBRV",
       "country": "Germany",
       "region": "Europe",
-      "firmsCode": "DEBRVEGB",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unknown",
@@ -1112,7 +1168,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "DEBRVEGB",
+      "smdgCode": "EGB"
     },
     {
       "name": "MSC Gate Bremerhaven",
@@ -1120,7 +1178,7 @@
       "locode": "DEBRV",
       "country": "Germany",
       "region": "Europe",
-      "firmsCode": "DEBRVMSCBH",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1135,7 +1193,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "DEBRVMSCBH",
+      "smdgCode": "MSCBH"
     },
     {
       "name": "EUROGATE Hamburg",
@@ -1143,7 +1203,7 @@
       "locode": "DEHAM",
       "country": "Germany",
       "region": "Europe",
-      "firmsCode": "DEHAMEGH",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1158,7 +1218,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "DEHAMEGH",
+      "smdgCode": "EGH"
     },
     {
       "name": "HHLA Container Terminal Altenwerder",
@@ -1166,7 +1228,7 @@
       "locode": "DEHAM",
       "country": "Germany",
       "region": "Europe",
-      "firmsCode": "DEHAMCTA",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unsupported",
@@ -1181,7 +1243,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "DEHAMCTA",
+      "smdgCode": "CTA"
     },
     {
       "name": "HHLA Container Terminal Burchardkai",
@@ -1189,7 +1253,7 @@
       "locode": "DEHAM",
       "country": "Germany",
       "region": "Europe",
-      "firmsCode": "DEHAMCTB",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1204,7 +1268,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "DEHAMCTB",
+      "smdgCode": "CTB"
     },
     {
       "name": "HHLA Container Terminal Tollerort",
@@ -1212,7 +1278,7 @@
       "locode": "DEHAM",
       "country": "Germany",
       "region": "Europe",
-      "firmsCode": "DEHAMCTT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1227,7 +1293,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "DEHAMCTT",
+      "smdgCode": "CTT"
     },
     {
       "name": "EUROGATE Container Terminal Wilhelmshaven",
@@ -1235,7 +1303,7 @@
       "locode": "DEWVN",
       "country": "Germany",
       "region": "Europe",
-      "firmsCode": "DEWVNEGW",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unknown",
@@ -1250,7 +1318,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "DEWVNEGW",
+      "smdgCode": "EGW"
     },
     {
       "name": "APM Terminals Quetzal",
@@ -1258,7 +1328,7 @@
       "locode": "GTPRQ",
       "country": "Guatemala",
       "region": "Latin America",
-      "firmsCode": "GTPRQTCQ",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1273,7 +1343,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "GTPRQTCQ",
+      "smdgCode": "TCQ"
     },
     {
       "name": "Empresa Portuaria Santo Tomas",
@@ -1281,7 +1353,7 @@
       "locode": "GTSTC",
       "country": "Guatemala",
       "region": "Latin America",
-      "firmsCode": "GTSTCEPSTC",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1296,7 +1368,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "GTSTCEPSTC",
+      "smdgCode": "EPSTC"
     },
     {
       "name": "Asia Container Terminals",
@@ -1304,7 +1378,7 @@
       "locode": "HKHKG",
       "country": "Hong Kong",
       "region": "Asia",
-      "firmsCode": "HKHKGACTHK",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1319,7 +1393,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "HKHKGACTHK",
+      "smdgCode": "ACTHK"
     },
     {
       "name": "COSCO-HIT",
@@ -1327,7 +1403,7 @@
       "locode": "HKHKG",
       "country": "Hong Kong",
       "region": "Asia",
-      "firmsCode": "HKHKGCHTHK",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1342,7 +1418,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "HKHKGCHTHK",
+      "smdgCode": "CHTHK"
     },
     {
       "name": "Hong Kong International Terminals",
@@ -1350,7 +1428,7 @@
       "locode": "HKHKG",
       "country": "Hong Kong",
       "region": "Asia",
-      "firmsCode": "HKHKGHITHK",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unsupported",
@@ -1365,7 +1443,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "HKHKGHITHK",
+      "smdgCode": "HITHK"
     },
     {
       "name": "Hong Kong Modern Terminals",
@@ -1373,7 +1453,7 @@
       "locode": "HKHKG",
       "country": "Hong Kong",
       "region": "Asia",
-      "firmsCode": "HKHKGMTLHK",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unsupported",
@@ -1388,7 +1468,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "HKHKGMTLHK",
+      "smdgCode": "MTLHK"
     },
     {
       "name": "Jakarta International Container Terminal",
@@ -1396,7 +1478,7 @@
       "locode": "IDJKT",
       "country": "Indonesia",
       "region": "Asia",
-      "firmsCode": "IDJKTUTC1",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1411,7 +1493,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "IDJKTUTC1",
+      "smdgCode": "UTC1"
     },
     {
       "name": "Basra Gateway Terminal East",
@@ -1419,7 +1503,7 @@
       "locode": "IQUQR",
       "country": "Iraq",
       "region": "Middle East",
-      "firmsCode": "IQUQRBGTE",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1434,7 +1518,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "IQUQRBGTE",
+      "smdgCode": "BGTE"
     },
     {
       "name": "Basra Gateway Terminal West",
@@ -1442,7 +1528,7 @@
       "locode": "IQUQR",
       "country": "Iraq",
       "region": "Middle East",
-      "firmsCode": "IQUQRBGTW",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1457,7 +1543,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "IQUQRBGTW",
+      "smdgCode": "BGTW"
     },
     {
       "name": "Dublin Ferryport Terminal",
@@ -1465,7 +1553,7 @@
       "locode": "IEDUB",
       "country": "Ireland",
       "region": "Europe",
-      "firmsCode": "IEDUBDFP",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1480,7 +1568,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "IEDUBDFP",
+      "smdgCode": "DFP"
     },
     {
       "name": "Haifa Port",
@@ -1488,7 +1578,7 @@
       "locode": "ILHFA",
       "country": "Israel",
       "region": "Middle East",
-      "firmsCode": "ILHFAHPCL",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1503,7 +1593,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "ILHFAHPCL",
+      "smdgCode": "HPCL"
     },
     {
       "name": "Terminal Alto Fondale",
@@ -1511,7 +1603,7 @@
       "locode": "ITLIV",
       "country": "Italy",
       "region": "Europe",
-      "firmsCode": "ITLIVTAFLIV",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unknown",
@@ -1526,7 +1618,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "ITLIVTAFLIV",
+      "smdgCode": "TAFLIV"
     },
     {
       "name": "Terminal Darsena Toscana",
@@ -1534,7 +1628,7 @@
       "locode": "ITLIV",
       "country": "Italy",
       "region": "Europe",
-      "firmsCode": "ITLIVTDT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1549,7 +1643,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "ITLIVTDT",
+      "smdgCode": "TDT"
     },
     {
       "name": "Terminal Dock Etruschi",
@@ -1557,7 +1653,7 @@
       "locode": "ITLIV",
       "country": "Italy",
       "region": "Europe",
-      "firmsCode": "ITLIVIMP",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unknown",
@@ -1572,7 +1668,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "ITLIVIMP",
+      "smdgCode": "IMP"
     },
     {
       "name": "Terminal Lorenzini",
@@ -1580,7 +1678,7 @@
       "locode": "ITLIV",
       "country": "Italy",
       "region": "Europe",
-      "firmsCode": "ITLIVLOREN",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1595,7 +1693,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "ITLIVLOREN",
+      "smdgCode": "LOREN"
     },
     {
       "name": "Conateco Terminal",
@@ -1603,7 +1703,7 @@
       "locode": "ITNAP",
       "country": "Italy",
       "region": "Europe",
-      "firmsCode": "ITNAPCONA",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1618,7 +1718,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "ITNAPCONA",
+      "smdgCode": "CONA"
     },
     {
       "name": "Kingston Container Terminal",
@@ -1626,7 +1728,7 @@
       "locode": "JMKIN",
       "country": "Jamaica",
       "region": "Latin America",
-      "firmsCode": "JMKINKCT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unsupported",
@@ -1641,7 +1743,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "JMKINKCT",
+      "smdgCode": "KCT"
     },
     {
       "name": "Aqaba Container Terminal",
@@ -1649,7 +1753,7 @@
       "locode": "JOAQJ",
       "country": "Jordan",
       "region": "Middle East",
-      "firmsCode": "JOAQJACT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1664,7 +1768,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "JOAQJACT",
+      "smdgCode": "ACT"
     },
     {
       "name": "CMA Beirut Terminal",
@@ -1672,7 +1778,7 @@
       "locode": "LBBEY",
       "country": "Lebanon",
       "region": "Middle East",
-      "firmsCode": "LBBEYBCTC",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unsupported",
@@ -1687,7 +1793,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "limited"
-      }
+      },
+      "terminalCode": "LBBEYBCTC",
+      "smdgCode": "BCTC"
     },
     {
       "name": "Terminal Portuaria",
@@ -1695,7 +1803,7 @@
       "locode": "MXATM",
       "country": "Mexico",
       "region": "Mexico",
-      "firmsCode": "20",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unsupported",
@@ -1710,7 +1818,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "20",
+      "smdgCode": "ATP"
     },
     {
       "name": "International Terminal",
@@ -1718,7 +1828,7 @@
       "locode": "MXESE",
       "country": "Mexico",
       "region": "Mexico",
-      "firmsCode": "27",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1733,7 +1843,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "27",
+      "smdgCode": "EIT"
     },
     {
       "name": "APM Terminals",
@@ -1741,7 +1853,7 @@
       "locode": "MXLZC",
       "country": "Mexico",
       "region": "Mexico",
-      "firmsCode": "257",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1756,7 +1868,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "257",
+      "smdgCode": "APMT"
     },
     {
       "name": "Terminal Portuaria de Contenedores",
@@ -1764,7 +1878,7 @@
       "locode": "MXLZC",
       "country": "Mexico",
       "region": "Mexico",
-      "firmsCode": "200",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1779,7 +1893,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "200",
+      "smdgCode": "LCT"
     },
     {
       "name": "Contecon",
@@ -1787,7 +1903,7 @@
       "locode": "MXZLO",
       "country": "Mexico",
       "region": "Mexico",
-      "firmsCode": "241",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1802,7 +1918,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "241",
+      "smdgCode": "CMSA"
     },
     {
       "name": "SSA Mexico",
@@ -1810,7 +1928,7 @@
       "locode": "MXZLO",
       "country": "Mexico",
       "region": "Mexico",
-      "firmsCode": "39",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1825,7 +1943,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "39",
+      "smdgCode": "SSAMX"
     },
     {
       "name": "Terminal Internacional de Manzanillo",
@@ -1833,7 +1953,7 @@
       "locode": "MXZLO",
       "country": "Mexico",
       "region": "Mexico",
-      "firmsCode": "40",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1848,7 +1968,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "40",
+      "smdgCode": "TIMSA"
     },
     {
       "name": "Terminal de Contenedores de Yucatan",
@@ -1856,7 +1978,7 @@
       "locode": "MXPGO",
       "country": "Mexico",
       "region": "Mexico",
-      "firmsCode": "184",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "limited",
@@ -1871,7 +1993,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "184",
+      "smdgCode": "TCY"
     },
     {
       "name": "Hutchison ICAVE",
@@ -1879,7 +2003,7 @@
       "locode": "MXVER",
       "country": "Mexico",
       "region": "Mexico",
-      "firmsCode": "69",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1894,7 +2018,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "69",
+      "smdgCode": "ICAVE"
     },
     {
       "name": "APM Terminals Salalah",
@@ -1902,7 +2028,7 @@
       "locode": "OMSLL",
       "country": "Oman",
       "region": "Middle East",
-      "firmsCode": "OMSLLAPMT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1917,7 +2043,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "OMSLLAPMT",
+      "smdgCode": "APMT"
     },
     {
       "name": "South Asia Pakistan Terminal",
@@ -1925,7 +2053,7 @@
       "locode": "PKKHI",
       "country": "Pakistan",
       "region": "Asia",
-      "firmsCode": "PKKHISAPT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unsupported",
@@ -1940,7 +2068,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "PKKHISAPT",
+      "smdgCode": "SAPT"
     },
     {
       "name": "APM Terminals Callao",
@@ -1948,7 +2078,7 @@
       "locode": "PECLL",
       "country": "Peru",
       "region": "Latin America",
-      "firmsCode": "PECLLAPMCLL",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1963,7 +2093,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "PECLLAPMCLL",
+      "smdgCode": "APMCLL"
     },
     {
       "name": "Baltic Container Terminal Gdynia",
@@ -1971,7 +2103,7 @@
       "locode": "PLGDY",
       "country": "Poland",
       "region": "Europe",
-      "firmsCode": "PLGDYBCT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -1986,7 +2118,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "PLGDYBCT",
+      "smdgCode": "PLBCT"
     },
     {
       "name": "Dammam First Container Terminal",
@@ -1994,7 +2128,7 @@
       "locode": "SADMM",
       "country": "Saudi Arabia",
       "region": "Middle East",
-      "firmsCode": "SADMMFCT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2009,7 +2143,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "SADMMFCT",
+      "smdgCode": "FCT"
     },
     {
       "name": "Dammam Second Container Terminal",
@@ -2017,7 +2153,7 @@
       "locode": "SADMM",
       "country": "Saudi Arabia",
       "region": "Middle East",
-      "firmsCode": "SADMMSCT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2032,7 +2168,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "SADMMSCT",
+      "smdgCode": "SCT"
     },
     {
       "name": "DP World South Container Terminal Jeddah",
@@ -2040,7 +2178,7 @@
       "locode": "SAJED",
       "country": "Saudi Arabia",
       "region": "Middle East",
-      "firmsCode": "SAJEDDPW",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "limited",
@@ -2055,7 +2193,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "SAJEDDPW",
+      "smdgCode": "DPW"
     },
     {
       "name": "Red Sea Gateway Terminal",
@@ -2063,7 +2203,7 @@
       "locode": "SAJED",
       "country": "Saudi Arabia",
       "region": "Middle East",
-      "firmsCode": "SAJEDRSGT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2078,7 +2218,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "SAJEDRSGT",
+      "smdgCode": "RSGT"
     },
     {
       "name": "Busan New Container Terminal",
@@ -2086,7 +2228,7 @@
       "locode": "KRPUS",
       "country": "South Korea",
       "region": "Asia",
-      "firmsCode": "KRPUSBNCT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2101,7 +2243,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "KRPUSBNCT",
+      "smdgCode": "BNCT"
     },
     {
       "name": "APM Terminals Algeciras",
@@ -2109,7 +2253,7 @@
       "locode": "ESALG",
       "country": "Spain",
       "region": "Europe",
-      "firmsCode": "ESALGAPM",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2124,7 +2268,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "ESALGAPM",
+      "smdgCode": "APM"
     },
     {
       "name": "Hutchison Ports BEST",
@@ -2132,7 +2278,7 @@
       "locode": "ESBCN",
       "country": "Spain",
       "region": "Europe",
-      "firmsCode": "ESBCNBEST",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unsupported",
@@ -2147,7 +2293,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "ESBCNBEST",
+      "smdgCode": "BEST"
     },
     {
       "name": "APM Terminals Gothenburg",
@@ -2155,7 +2303,7 @@
       "locode": "SEGOT",
       "country": "Sweden",
       "region": "Europe",
-      "firmsCode": "SEGOTCT1",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2170,7 +2318,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "SEGOTCT1",
+      "smdgCode": "CT1"
     },
     {
       "name": "Kao Ming Terminal",
@@ -2178,7 +2328,7 @@
       "locode": "TWKHH",
       "country": "Taiwan",
       "region": "Asia",
-      "firmsCode": "TWKHHKMCT",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unknown",
@@ -2193,7 +2343,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "TWKHHKMCT",
+      "smdgCode": "KMCT"
     },
     {
       "name": "DP World Jebel Ali",
@@ -2201,7 +2353,7 @@
       "locode": "AEJEA",
       "country": "United Arab Emirates",
       "region": "Middle East",
-      "firmsCode": "AEJEADPWJ2",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2216,7 +2368,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "AEJEADPWJ2",
+      "smdgCode": "DPWJ2"
     },
     {
       "name": "DP World Jebel Ali",
@@ -2224,7 +2378,7 @@
       "locode": "AEJEA",
       "country": "United Arab Emirates",
       "region": "Middle East",
-      "firmsCode": "AEJEADPWJ3",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2239,7 +2393,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "AEJEADPWJ3",
+      "smdgCode": "DPWJ3"
     },
     {
       "name": "DP World Jebel Ali CT1",
@@ -2247,7 +2403,7 @@
       "locode": "AEJEA",
       "country": "United Arab Emirates",
       "region": "Middle East",
-      "firmsCode": "AEJEADPWJA",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2262,7 +2418,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "AEJEADPWJA",
+      "smdgCode": "DPWJA"
     },
     {
       "name": "DP World Jebel Ali CT4",
@@ -2270,7 +2428,7 @@
       "locode": "AEJEA",
       "country": "United Arab Emirates",
       "region": "Middle East",
-      "firmsCode": "AEJEADPWJ4",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2285,7 +2443,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "AEJEADPWJ4",
+      "smdgCode": "DPWJ4"
     },
     {
       "name": "Victoria Terminal 3",
@@ -2293,7 +2453,7 @@
       "locode": "GBBEL",
       "country": "United Kingdom",
       "region": "United Kingdom",
-      "firmsCode": "GBBELVIC3",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2308,7 +2468,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "GBBELVIC3",
+      "smdgCode": "VIC3"
     },
     {
       "name": "Berths 8&9",
@@ -2316,7 +2478,7 @@
       "locode": "GBFXT",
       "country": "United Kingdom",
       "region": "United Kingdom",
-      "firmsCode": "GBFXTLNG",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2331,7 +2493,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "GBFXTLNG",
+      "smdgCode": "LNG"
     },
     {
       "name": "Trinity Terminal",
@@ -2339,7 +2503,7 @@
       "locode": "GBFXT",
       "country": "United Kingdom",
       "region": "United Kingdom",
-      "firmsCode": "GBFXTTTY",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2354,7 +2518,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "GBFXTTTY",
+      "smdgCode": "TTY"
     },
     {
       "name": "DP World London Gateway",
@@ -2362,7 +2528,7 @@
       "locode": "GBLGP",
       "country": "United Kingdom",
       "region": "United Kingdom",
-      "firmsCode": "GBLGPDPWLG",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2377,7 +2543,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "limited"
-      }
+      },
+      "terminalCode": "GBLGPDPWLG",
+      "smdgCode": "DPWLG"
     },
     {
       "name": "DP World Southampton",
@@ -2385,7 +2553,7 @@
       "locode": "GBSOU",
       "country": "United Kingdom",
       "region": "United Kingdom",
-      "firmsCode": "GBSOUDPWS",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2400,7 +2568,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "limited"
-      }
+      },
+      "terminalCode": "GBSOUDPWS",
+      "smdgCode": "DPWS"
     },
     {
       "name": "Seagirt Terminal",
@@ -2423,7 +2593,9 @@
         "chassisNumber": "limited",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "C324",
+      "smdgCode": "SMT"
     },
     {
       "name": "Gloucester Marine Terminal",
@@ -2446,7 +2618,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "D104",
+      "smdgCode": ""
     },
     {
       "name": "Barbours Cut Terminal",
@@ -2469,7 +2643,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "S787",
+      "smdgCode": "BCMT"
     },
     {
       "name": "Bayport Container Terminal",
@@ -2492,7 +2668,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "V136",
+      "smdgCode": "BPTM"
     },
     {
       "name": "Blount Island Terminal",
@@ -2515,7 +2693,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "N296",
+      "smdgCode": "BLOJX"
     },
     {
       "name": "Tote Maritime",
@@ -2538,7 +2718,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "N762",
+      "smdgCode": "TMG"
     },
     {
       "name": "Trapac Jacksonville Terminal",
@@ -2561,7 +2743,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "M029",
+      "smdgCode": "DPJL"
     },
     {
       "name": "International Transportation Service",
@@ -2584,7 +2768,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Y309",
+      "smdgCode": "ITS"
     },
     {
       "name": "Long Beach Container Terminal",
@@ -2607,7 +2793,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "WAC8",
+      "smdgCode": "LBCT"
     },
     {
       "name": "Pacific Container Terminal",
@@ -2630,7 +2818,9 @@
         "chassisNumber": "limited",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "W182",
+      "smdgCode": "SSAPCT"
     },
     {
       "name": "Shippers Transport Express",
@@ -2638,7 +2828,7 @@
       "locode": "USLGB",
       "country": "United States",
       "region": "US West Coast",
-      "firmsCode": "STA",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "supported",
@@ -2653,7 +2843,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "STA",
+      "smdgCode": ""
     },
     {
       "name": "Shippers Transport Express - Carson",
@@ -2676,7 +2868,9 @@
         "chassisNumber": "limited",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Z773",
+      "smdgCode": ""
     },
     {
       "name": "SSA Pier A",
@@ -2699,7 +2893,9 @@
         "chassisNumber": "limited",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Z978",
+      "smdgCode": "SSATA"
     },
     {
       "name": "Total Terminals International",
@@ -2722,7 +2918,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Z952",
+      "smdgCode": "TTI"
     },
     {
       "name": "APM Terminals",
@@ -2745,7 +2943,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "W185",
+      "smdgCode": "APMT"
     },
     {
       "name": "Everport Terminal Services",
@@ -2768,7 +2968,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Y124",
+      "smdgCode": "ETS"
     },
     {
       "name": "Fenix Marine Services",
@@ -2791,7 +2993,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Y257",
+      "smdgCode": "EAGLE"
     },
     {
       "name": "TraPac LA",
@@ -2814,7 +3018,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Y258",
+      "smdgCode": "TRAP"
     },
     {
       "name": "West Basin Container Terminal",
@@ -2837,7 +3043,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Y773",
+      "smdgCode": "WBCT"
     },
     {
       "name": "Yusen Terminals",
@@ -2860,7 +3068,9 @@
         "chassisNumber": "limited",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Y790",
+      "smdgCode": "YUSEN"
     },
     {
       "name": "Port of Miami Terminal Operating Company",
@@ -2883,7 +3093,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "L239",
+      "smdgCode": "POM"
     },
     {
       "name": "South Florida Container Terminal",
@@ -2906,7 +3118,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "N775",
+      "smdgCode": "SOU"
     },
     {
       "name": "APM Terminal",
@@ -2929,7 +3143,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "R103",
+      "smdgCode": "APMT"
     },
     {
       "name": "Napoleon Container Terminal",
@@ -2952,7 +3168,9 @@
         "chassisNumber": "limited",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "P260",
+      "smdgCode": "NOLA"
     },
     {
       "name": "New Orleans Terminal",
@@ -2975,7 +3193,9 @@
         "chassisNumber": "limited",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Q795",
+      "smdgCode": "NOT"
     },
     {
       "name": "GCT Bayonne",
@@ -2998,7 +3218,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "E364",
+      "smdgCode": "GTC"
     },
     {
       "name": "GCT New York LP",
@@ -3021,7 +3243,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "E005",
+      "smdgCode": "NYCT"
     },
     {
       "name": "Maher Terminals",
@@ -3044,7 +3268,9 @@
         "chassisNumber": "unsupported",
         "onRail": "limited",
         "emptyReturned": "limited"
-      }
+      },
+      "terminalCode": "E416",
+      "smdgCode": "MAHER"
     },
     {
       "name": "Port Elizabeth",
@@ -3067,7 +3293,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "limited"
-      }
+      },
+      "terminalCode": "E425",
+      "smdgCode": "APMT"
     },
     {
       "name": "Port Newark Container Terminal",
@@ -3090,7 +3318,9 @@
         "chassisNumber": "limited",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "F577",
+      "smdgCode": "PNCT"
     },
     {
       "name": "Ben E. Nutter Terminal",
@@ -3113,7 +3343,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "WBA5",
+      "smdgCode": "BENT"
     },
     {
       "name": "Oakland International Container Terminal",
@@ -3136,7 +3368,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Z985",
+      "smdgCode": "B58"
     },
     {
       "name": "Shippers Transport Express",
@@ -3144,7 +3378,7 @@
       "locode": "USOAK",
       "country": "United States",
       "region": "US West Coast",
-      "firmsCode": "STO",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unknown",
@@ -3159,7 +3393,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "STO",
+      "smdgCode": ""
     },
     {
       "name": "TraPac Terminal",
@@ -3182,7 +3418,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Y549",
+      "smdgCode": "TPOAK"
     },
     {
       "name": "Packer Avenue",
@@ -3205,7 +3443,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "C095",
+      "smdgCode": "PAMT"
     },
     {
       "name": "Tioga Marine Terminal",
@@ -3228,7 +3468,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "B197",
+      "smdgCode": ""
     },
     {
       "name": "Port Everglades Terminal",
@@ -3251,7 +3493,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "O664",
+      "smdgCode": "PET"
     },
     {
       "name": "Terminal 6",
@@ -3274,7 +3518,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "supported"
-      }
+      },
+      "terminalCode": "X005",
+      "smdgCode": "PT6"
     },
     {
       "name": "Garden City Terminals",
@@ -3297,7 +3543,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "L737",
+      "smdgCode": "GCMT"
     },
     {
       "name": "SSA Terminal 18",
@@ -3320,7 +3568,9 @@
         "chassisNumber": "limited",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "X117",
+      "smdgCode": "SSA18"
     },
     {
       "name": "SSA Terminal 30",
@@ -3343,7 +3593,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "Y197",
+      "smdgCode": "SSA30"
     },
     {
       "name": "Terminal 5",
@@ -3366,7 +3618,9 @@
         "chassisNumber": "limited",
         "onRail": "limited",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Y400",
+      "smdgCode": "SSA5"
     },
     {
       "name": "Husky Terminal",
@@ -3389,7 +3643,9 @@
         "chassisNumber": "limited",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Z693",
+      "smdgCode": "HUSKY"
     },
     {
       "name": "Pierce County Terminal",
@@ -3412,7 +3668,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "X215",
+      "smdgCode": "PCT"
     },
     {
       "name": "Washington United Terminals",
@@ -3435,7 +3693,9 @@
         "chassisNumber": "unsupported",
         "onRail": "unsupported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "Z705",
+      "smdgCode": "WUT"
     },
     {
       "name": "West Sitcum Terminal (Matson)",
@@ -3458,7 +3718,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "X335",
+      "smdgCode": "WSIT"
     },
     {
       "name": "Tampa Bay Container Terminal",
@@ -3481,7 +3743,9 @@
         "chassisNumber": "supported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "M669",
+      "smdgCode": "PTCT"
     },
     {
       "name": "Norfolk International Terminals",
@@ -3504,7 +3768,9 @@
         "chassisNumber": "unsupported",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "L005",
+      "smdgCode": "NIT"
     },
     {
       "name": "Portsmouth Marine Terminal",
@@ -3527,7 +3793,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "L045",
+      "smdgCode": ""
     },
     {
       "name": "Virginia International Gateway",
@@ -3550,7 +3818,9 @@
         "chassisNumber": "limited",
         "onRail": "supported",
         "emptyReturned": "unsupported"
-      }
+      },
+      "terminalCode": "N195",
+      "smdgCode": "VIG"
     },
     {
       "name": "Port of Wilmington Container Terminal",
@@ -3573,7 +3843,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "L194",
+      "smdgCode": "NCSPA"
     },
     {
       "name": "Lyttelton Port Company",
@@ -3581,7 +3853,7 @@
       "locode": "NZLYT",
       "country": "New Zealand",
       "region": "New Zealand",
-      "firmsCode": "NZLYTLPC",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unknown",
@@ -3596,7 +3868,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "NZLYTLPC",
+      "smdgCode": "LPC"
     },
     {
       "name": "Timaru Container Terminal",
@@ -3604,7 +3878,7 @@
       "locode": "NZTIU",
       "country": "New Zealand",
       "region": "New Zealand",
-      "firmsCode": "NZTIUTCTL",
+      "firmsCode": "",
       "features": {
         "importMilestones": "supported",
         "availableForPickup": "unknown",
@@ -3619,7 +3893,9 @@
         "chassisNumber": "unknown",
         "onRail": "unknown",
         "emptyReturned": "unknown"
-      }
+      },
+      "terminalCode": "NZTIUTCTL",
+      "smdgCode": "TCTL"
     }
   ],
   "shippingLines": [

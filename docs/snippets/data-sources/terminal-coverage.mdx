@@ -58,9 +58,9 @@ export const TerminalCoverageTable = ({ terminals, coverage = {}, snapshot }) =>
   const [includeLimited, setIncludeLimited] = useState(false)
   const [selectedKey, setSelectedKey] = useState(null)
   const regions = [...new Set(terminals.map((terminal) => terminal.region))].sort()
-  const keyFor = (terminal) => `${terminal.locode}:${terminal.firmsCode || terminal.name}`
+  const keyFor = (terminal) => `${terminal.locode}:${terminal.terminalCode || terminal.name}`
   const rows = terminals.filter((terminal) => {
-    const matchesQuery = [terminal.name, terminal.port, terminal.locode, terminal.firmsCode, terminal.country, terminal.region].join(" ").toLowerCase().includes(query.trim().toLowerCase())
+    const matchesQuery = [terminal.name, terminal.port, terminal.locode, terminal.terminalCode, terminal.smdgCode, terminal.firmsCode, terminal.country, terminal.region].join(" ").toLowerCase().includes(query.trim().toLowerCase())
     const status = coverage[keyFor(terminal)]?.features?.[requiredFeature]
     return matchesQuery && (region === "all" || terminal.region === region) && (requiredFeature === "all" || status === "supported" || (includeLimited && status === "limited"))
   })
@@ -95,8 +95,11 @@ export const TerminalCoverageTable = ({ terminals, coverage = {}, snapshot }) =>
         .dark .terminal-row-expanded { background: rgb(var(--background-dark, 10 10 10)); border-bottom-color: #525252; box-shadow: inset 3px 0 #a3a3a3; }
         .dark .terminal-row-header.terminal-row-selected { background: #262626; border-bottom-color: #525252; box-shadow: inset 3px 0 #a3a3a3; }
         .terminal-row-name { grid-column: 1; grid-row: 1; overflow-wrap: anywhere; }
-        .terminal-row-code { grid-column: 1; grid-row: 2; overflow-wrap: anywhere; }
-        .terminal-summary-badges { display: flex; grid-column: 1 / -1; grid-row: 3; flex-wrap: wrap; gap: 6px; font-size: 12px; }
+        .terminal-row-smdg { grid-column: 1; grid-row: 2; }
+        .terminal-row-firms { grid-column: 1; grid-row: 3; }
+        .terminal-row-code { overflow-wrap: anywhere; }
+        .terminal-code-label { font-family: sans-serif; margin-right: 6px; }
+        .terminal-summary-badges { display: flex; grid-column: 1 / -1; grid-row: 4; flex-wrap: wrap; gap: 6px; font-size: 12px; }
         .terminal-summary-badges > span { min-width: 0; max-width: 100%; }
         .terminal-row-chevron { grid-column: 2; grid-row: 1; justify-self: end; transition: transform 120ms; }
         .terminal-row-header[aria-expanded="true"] > .terminal-row-chevron { transform: rotate(90deg); }
@@ -110,15 +113,16 @@ export const TerminalCoverageTable = ({ terminals, coverage = {}, snapshot }) =>
         .terminal-feature-badge { max-width: 100%; padding: 6px 12px; text-align: left; }
         .terminal-feature-label { min-width: 0; overflow-wrap: anywhere; }
         @container (min-width: 640px) {
-          .terminal-columns { grid-template-columns: minmax(0, 1.6fr) minmax(70px, 0.8fr) minmax(0, 1.2fr) 18px; }
+          .terminal-columns { grid-template-columns: minmax(0, 1.6fr) minmax(55px, 0.4fr) minmax(55px, 0.4fr) minmax(0, 1.2fr) 18px; }
           .terminal-table-heading { display: grid; border-bottom: 1px solid rgb(156 163 175 / 0.25); }
           .terminal-row-name, .terminal-row-code, .terminal-summary-badges, .terminal-row-chevron { grid-column: auto; grid-row: auto; }
+          .terminal-code-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
           .terminal-feature-group { grid-template-columns: minmax(0, 1fr) minmax(0, 2.6fr); }
         }
       `}</style>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <label className="text-xs font-medium text-gray-600 dark:text-white/70">Search terminals
-          <input type="search" value={query} onChange={(event) => changeFilter(setQuery, event.target.value)} placeholder="Terminal, port, UN/LOCODE, or terminal code" className={`${controlClass} mt-1`} />
+          <input type="search" value={query} onChange={(event) => changeFilter(setQuery, event.target.value)} placeholder="Terminal, port, SMDG, or FIRMS" className={`${controlClass} mt-1`} />
         </label>
         <label className="text-xs font-medium text-gray-600 dark:text-white/70">Region
           <select value={region} onChange={(event) => changeFilter(setRegion, event.target.value)} className={`${controlClass} mt-1`}>
@@ -140,7 +144,7 @@ export const TerminalCoverageTable = ({ terminals, coverage = {}, snapshot }) =>
         {["supported", "limited", "unsupported", "unknown"].map((status) => <TerminalCoverageStatus key={status} status={status} />)}
       </div>
       <div className="terminal-port-groups rounded border border-gray-200 text-sm dark:border-white/15">
-        <div className="terminal-columns terminal-table-heading text-xs font-medium text-gray-600 dark:text-white/70" aria-hidden="true"><span>Terminal</span><span>Terminal code</span><span>Data availability</span><span /></div>
+        <div className="terminal-columns terminal-table-heading text-xs font-medium text-gray-600 dark:text-white/70" aria-hidden="true"><span>Terminal</span><span>SMDG</span><span>FIRMS</span><span>Data availability</span><span /></div>
         {ports.map((port) => (
           <section key={port.locode} data-port-locode={port.locode} aria-labelledby={`terminal-port-${port.locode}`} className="terminal-port">
             <div className="terminal-port-heading bg-gray-50 dark:bg-white/5">
@@ -155,9 +159,10 @@ export const TerminalCoverageTable = ({ terminals, coverage = {}, snapshot }) =>
               const buttonId = `terminal-feature-toggle-${encodeURIComponent(key)}`
               return (
                 <article key={key} data-terminal-key={key} aria-label={terminal.name} className={`terminal-row ${isSelected ? "terminal-row-expanded" : ""}`}>
-                  <button id={buttonId} type="button" aria-expanded={isSelected} aria-controls={isSelected ? detailId : undefined} aria-label={`${isSelected ? "Hide" : "Show"} ${terminal.name} details`} aria-describedby={`${buttonId}-code ${buttonId}-summary`} onClick={() => setSelectedKey(isSelected ? null : key)} className={`terminal-columns terminal-row-header ${isSelected ? "terminal-row-selected" : ""}`}>
+                  <button id={buttonId} type="button" aria-expanded={isSelected} aria-controls={isSelected ? detailId : undefined} aria-label={`${isSelected ? "Hide" : "Show"} ${terminal.name} details`} aria-describedby={`${buttonId}-smdg ${buttonId}-firms ${buttonId}-summary`} onClick={() => setSelectedKey(isSelected ? null : key)} className={`terminal-columns terminal-row-header ${isSelected ? "terminal-row-selected" : ""}`}>
                     <span className="terminal-row-name min-w-0 font-semibold text-gray-900 dark:text-white">{terminal.name}</span>
-                    <span id={`${buttonId}-code`} className="terminal-row-code font-mono text-[11px] text-gray-500 dark:text-white/50"><span className="sr-only">{terminal.locode.startsWith("US") ? "FIRMS code: " : "Terminal code: "}</span>{terminal.firmsCode || "—"}</span>
+                    <span id={`${buttonId}-smdg`} className="terminal-row-code terminal-row-smdg font-mono text-[11px] text-gray-500 dark:text-white/50" title={terminal.smdgCode ? "SMDG terminal code" : "SMDG code not listed"}><span className="terminal-code-label">SMDG:</span>{terminal.smdgCode || <><span aria-hidden="true">—</span><span className="sr-only">Not listed</span></>}</span>
+                    <span id={`${buttonId}-firms`} className="terminal-row-code terminal-row-firms font-mono text-[11px] text-gray-500 dark:text-white/50" title={terminal.locode.startsWith("US") ? "US CBP FIRMS code" : "FIRMS is not applicable outside the US"}><span className="terminal-code-label">FIRMS:</span>{terminal.firmsCode || <><span aria-hidden="true">—</span><span className="sr-only">{terminal.locode.startsWith("US") ? "Not listed" : "Not applicable"}</span></>}</span>
                     <span id={`${buttonId}-summary`} className="terminal-summary-badges">
                       <span className="sr-only">Data availability: </span>
                       <TerminalCoverageStatus status={coverage[key]?.features?.importMilestones} label="Import milestones" description="Additional terminal data for import container milestones. Individual milestone coverage is shown in the details." />
