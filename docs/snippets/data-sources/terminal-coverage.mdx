@@ -75,7 +75,13 @@ export const TerminalCoverageTable = ({ terminals, coverage = {}, snapshot }) =>
   const selected = rows.find((terminal) => keyFor(terminal) === selectedKey)
   const controlClass = "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600 dark:border-white/10 dark:bg-white/5 dark:text-white"
   const changeFilter = (setter, value) => { setter(value); setSelectedKey(null) }
-  const toggleRow = (key) => setSelectedKey(selectedKey === key ? null : key)
+  const toggleRow = (key, detailId) => {
+    setSelectedKey(selectedKey === key ? null : key)
+    if (selectedKey !== key && detailLayout === "panel") requestAnimationFrame(() => {
+      const panel = document.getElementById(detailId)
+      if (panel && getComputedStyle(panel).position === "absolute") panel.firstElementChild?.scrollIntoView({ block: "nearest" })
+    })
+  }
   const summaryFeatures = [
     { key: "importMilestones", label: "Import milestones", description: "Additional terminal data for import container milestones. Individual milestone coverage is shown in the details." },
     ...terminalCoverageFeatures.filter((feature) => ["availableForPickup", "lastFreeDay", "holds"].includes(feature.key)),
@@ -94,11 +100,11 @@ export const TerminalCoverageTable = ({ terminals, coverage = {}, snapshot }) =>
         }
         @container (min-width: 1000px) {
           .terminal-coverage-layout[data-layout="panel"] { padding-right: 380px; min-height: 240px; }
-          .terminal-coverage-layout[data-layout="panel"][data-selected="true"] { min-height: 1280px; }
+          .terminal-coverage-layout[data-layout="panel"][data-selected="true"] { min-height: calc(100vh - 120px); }
           .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-detail-row > td { padding: 0; border: 0; }
-          .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-detail-panel { position: absolute; top: 0; right: 0; width: 360px; }
+          .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-detail-panel { position: absolute; top: 0; bottom: 0; right: 0; width: 360px; }
+          .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-detail-panel > section { position: sticky; top: 100px; max-height: calc(100vh - 120px); overflow-y: auto; scroll-margin-top: 100px; scroll-margin-bottom: 20px; border: 1px solid rgb(156 163 175 / 0.3); border-radius: 8px; }
           .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-feature-groups { grid-template-columns: 1fr; }
-          .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-detail-panel { border: 1px solid rgb(156 163 175 / 0.3); border-radius: 8px; }
           .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-feature-group { border-right: 0; }
           .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-inspector-placeholder { display: block; position: absolute; top: 0; right: 0; width: 360px; }
         }
@@ -148,9 +154,9 @@ export const TerminalCoverageTable = ({ terminals, coverage = {}, snapshot }) =>
             const buttonId = `terminal-feature-toggle-${index}`
             return (
               <tbody key={key}>
-                <tr onClick={(event) => { if (!event.target.closest("button, a, input, select")) toggleRow(key) }} className={`cursor-pointer border-b border-gray-100 align-top hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5 ${isSelected ? "bg-gray-50 dark:bg-white/5" : ""}`}>
+                <tr onClick={(event) => { if (!event.target.closest("button, a, input, select")) toggleRow(key, detailId) }} className={`cursor-pointer border-b border-gray-100 align-top hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5 ${isSelected ? "bg-gray-50 dark:bg-white/5" : ""}`}>
                   <td className="px-3 py-3">
-                    <button id={buttonId} type="button" aria-expanded={isSelected} aria-controls={isSelected ? detailId : undefined} onClick={() => toggleRow(key)} className="flex w-full items-start justify-between gap-2 rounded text-left font-semibold text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600 dark:text-white">
+                    <button id={buttonId} type="button" aria-expanded={isSelected} aria-controls={isSelected ? detailId : undefined} onClick={() => toggleRow(key, detailId)} className="flex w-full items-start justify-between gap-2 rounded text-left font-semibold text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600 dark:text-white">
                       <span>{terminal.name}</span><span aria-hidden="true" className="shrink-0 text-green-600">{isSelected ? "⌄" : "›"}</span>
                     </button>
                     <div className="mt-1 text-xs text-gray-500 dark:text-white/60">{terminal.port}, {terminal.country}</div>
