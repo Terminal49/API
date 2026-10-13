@@ -1,5 +1,5 @@
 {
-  "updatedOn": "2026-10-09",
+  "updatedOn": "2026-10-13",
   "featureCatalog": [
     {
       "key": "billOfLading",
@@ -667,7 +667,7 @@
       "features": {
         "billOfLading": "supported",
         "bookingNumber": "supported",
-        "containerNumber": "supported",
+        "containerNumber": "unsupported",
         "polName": "supported",
         "polLocode": "supported",
         "polTimezone": "supported",
@@ -738,7 +738,7 @@
       "access": "public",
       "features": {
         "billOfLading": "supported",
-        "bookingNumber": "unsupported",
+        "bookingNumber": "supported",
         "containerNumber": "unsupported",
         "polName": "supported",
         "polLocode": "supported",
@@ -877,8 +877,8 @@
       "alternativeScacs": [],
       "access": "public",
       "features": {
-        "billOfLading": "supported",
-        "bookingNumber": "supported",
+        "billOfLading": "unsupported",
+        "bookingNumber": "unsupported",
         "containerNumber": "supported",
         "polName": "supported",
         "polLocode": "supported",
@@ -949,7 +949,7 @@
       "features": {
         "billOfLading": "supported",
         "bookingNumber": "supported",
-        "containerNumber": "supported",
+        "containerNumber": "unsupported",
         "polName": "supported",
         "polLocode": "supported",
         "polTimezone": "supported",
@@ -1229,7 +1229,7 @@
       "features": {
         "billOfLading": "supported",
         "bookingNumber": "supported",
-        "containerNumber": "supported",
+        "containerNumber": "unsupported",
         "polName": "supported",
         "polLocode": "supported",
         "polTimezone": "supported",
@@ -1719,8 +1719,8 @@
       "alternativeScacs": [],
       "access": "public",
       "features": {
-        "billOfLading": "supported",
-        "bookingNumber": "supported",
+        "billOfLading": "unsupported",
+        "bookingNumber": "unsupported",
         "containerNumber": "supported",
         "polName": "supported",
         "polLocode": "supported",
@@ -2145,7 +2145,7 @@
       "features": {
         "billOfLading": "supported",
         "bookingNumber": "supported",
-        "containerNumber": "supported",
+        "containerNumber": "unsupported",
         "polName": "supported",
         "polLocode": "supported",
         "polTimezone": "supported",
@@ -2503,7 +2503,7 @@
       "features": {
         "billOfLading": "supported",
         "bookingNumber": "supported",
-        "containerNumber": "supported",
+        "containerNumber": "unsupported",
         "polName": "supported",
         "polLocode": "supported",
         "polTimezone": "supported",
@@ -2571,8 +2571,8 @@
       "alternativeScacs": [],
       "access": "public",
       "features": {
-        "billOfLading": "supported",
-        "bookingNumber": "supported",
+        "billOfLading": "unsupported",
+        "bookingNumber": "unsupported",
         "containerNumber": "supported",
         "polName": "supported",
         "polLocode": "supported",
@@ -2927,7 +2927,7 @@
       "features": {
         "billOfLading": "supported",
         "bookingNumber": "supported",
-        "containerNumber": "supported",
+        "containerNumber": "unsupported",
         "polName": "supported",
         "polLocode": "supported",
         "polTimezone": "supported",

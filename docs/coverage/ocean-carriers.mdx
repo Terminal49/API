@@ -39,6 +39,8 @@ These carriers are live in production but are not part of the public default set
 
 ## Data interpretation
 
+Tracking identifier support shows which number types you can use to start tracking. Other features describe the data a carrier returns for tracked shipments.
+
 The expanded rows and [complete feature table](/data/coverage/shipping-lines) list feature availability. Even a supported field can be absent for an individual shipment. See [field availability](/coverage/fields).
 
 - Evergreen dates are provided as dates, not datetimes. Terminal49 stores them as midnight at the event location when the location is available, otherwise midnight UTC. Only dry, reefer, and flatpack equipment types are mapped.
@@ -51,7 +53,7 @@ The expanded rows and [complete feature table](/data/coverage/shipping-lines) li
 
 ## Complete structured coverage
 
-Last updated 2026-10-09.
+Last updated 2026-10-13.
 
 [Download JSON](/data/coverage/shipping-lines.json).
 
@@ -409,7 +411,7 @@ SCAC `COSU`.
 | --- | --- | --- |
 | Tracking identifiers | Bill Of Lading | Supported |
 | Tracking identifiers | Booking Number | Supported |
-| Tracking identifiers | Container Number | Supported |
+| Tracking identifiers | Container Number | Not supported |
 | Origin | POL Name | Supported |
 | Origin | POL Locode | Supported |
 | Origin | POL Timezone | Supported |
@@ -476,7 +478,7 @@ SCAC `CLAM`.
 | Section | Feature | Coverage |
 | --- | --- | --- |
 | Tracking identifiers | Bill Of Lading | Supported |
-| Tracking identifiers | Booking Number | Not supported |
+| Tracking identifiers | Booking Number | Supported |
 | Tracking identifiers | Container Number | Not supported |
 | Origin | POL Name | Supported |
 | Origin | POL Locode | Supported |
@@ -611,8 +613,8 @@ SCAC `EGLV`.
 
 | Section | Feature | Coverage |
 | --- | --- | --- |
-| Tracking identifiers | Bill Of Lading | Supported |
-| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Bill Of Lading | Not supported |
+| Tracking identifiers | Booking Number | Not supported |
 | Tracking identifiers | Container Number | Supported |
 | Origin | POL Name | Supported |
 | Origin | POL Locode | Supported |
@@ -681,7 +683,7 @@ SCAC `GOSU`.
 | --- | --- | --- |
 | Tracking identifiers | Bill Of Lading | Supported |
 | Tracking identifiers | Booking Number | Supported |
-| Tracking identifiers | Container Number | Supported |
+| Tracking identifiers | Container Number | Not supported |
 | Origin | POL Name | Supported |
 | Origin | POL Locode | Supported |
 | Origin | POL Timezone | Supported |
@@ -953,7 +955,7 @@ SCAC `IILU`.
 | --- | --- | --- |
 | Tracking identifiers | Bill Of Lading | Supported |
 | Tracking identifiers | Booking Number | Supported |
-| Tracking identifiers | Container Number | Supported |
+| Tracking identifiers | Container Number | Not supported |
 | Origin | POL Name | Supported |
 | Origin | POL Locode | Supported |
 | Origin | POL Timezone | Supported |
@@ -1427,8 +1429,8 @@ SCAC `PCIU`.
 
 | Section | Feature | Coverage |
 | --- | --- | --- |
-| Tracking identifiers | Bill Of Lading | Supported |
-| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Bill Of Lading | Not supported |
+| Tracking identifiers | Booking Number | Not supported |
 | Tracking identifiers | Container Number | Supported |
 | Origin | POL Name | Supported |
 | Origin | POL Locode | Supported |
@@ -1837,7 +1839,7 @@ SCAC `SSPH`.
 | --- | --- | --- |
 | Tracking identifiers | Bill Of Lading | Supported |
 | Tracking identifiers | Booking Number | Supported |
-| Tracking identifiers | Container Number | Supported |
+| Tracking identifiers | Container Number | Not supported |
 | Origin | POL Name | Supported |
 | Origin | POL Locode | Supported |
 | Origin | POL Timezone | Supported |
@@ -2177,7 +2179,7 @@ SCAC `TJFH`.
 | --- | --- | --- |
 | Tracking identifiers | Bill Of Lading | Supported |
 | Tracking identifiers | Booking Number | Supported |
-| Tracking identifiers | Container Number | Supported |
+| Tracking identifiers | Container Number | Not supported |
 | Origin | POL Name | Supported |
 | Origin | POL Locode | Supported |
 | Origin | POL Timezone | Supported |
@@ -2243,8 +2245,8 @@ SCAC `TXZJ`.
 
 | Section | Feature | Coverage |
 | --- | --- | --- |
-| Tracking identifiers | Bill Of Lading | Supported |
-| Tracking identifiers | Booking Number | Supported |
+| Tracking identifiers | Bill Of Lading | Not supported |
+| Tracking identifiers | Booking Number | Not supported |
 | Tracking identifiers | Container Number | Supported |
 | Origin | POL Name | Supported |
 | Origin | POL Locode | Supported |
@@ -2585,7 +2587,7 @@ SCAC `ZIMU`.
 | --- | --- | --- |
 | Tracking identifiers | Bill Of Lading | Supported |
 | Tracking identifiers | Booking Number | Supported |
-| Tracking identifiers | Container Number | Supported |
+| Tracking identifiers | Container Number | Not supported |
 | Origin | POL Name | Supported |
 | Origin | POL Locode | Supported |
 | Origin | POL Timezone | Supported |
