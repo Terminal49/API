@@ -32,6 +32,47 @@ description: "ShipmentManager class in the Terminal49 TypeScript SDK, used to li
 
 ## Methods
 
+### addPartyRole()
+
+> **addPartyRole**(`id`, `role`, `partyId`, `options?`): `Promise`\<`any`\>
+
+Attaches a party to the shipment in a role.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `role` | `string` |
+| `partyId` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### clearCustomField()
+
+> **clearCustomField**(`id`, `apiSlug`, `options?`): `Promise`\<`any`\>
+
+Removes a custom field value from the shipment.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `apiSlug` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### customFields()
 
 > **customFields**(`id`, `options?`): `Promise`\<`any`\>
@@ -94,6 +135,45 @@ description: "ShipmentManager class in the Terminal49 TypeScript SDK, used to li
 | ------ | ------ |
 | `filters` | [`ShipmentListFilters`](/sdk/reference/types/filters/interfaces/ShipmentListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### partyRoles()
+
+> **partyRoles**(`id`, `options?`): `Promise`\<`any`\>
+
+Lists the parties attached to the shipment by role.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### removePartyRole()
+
+> **removePartyRole**(`id`, `partyRoleId`, `options?`): `Promise`\<`any`\>
+
+Detaches a party role from the shipment; the party itself is kept.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `partyRoleId` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 

@@ -137,7 +137,7 @@ Input and output recording is disabled by default. Leave `SENTRY_MCP_RECORD_INPU
 ## Tools reference
 
 <Note>
-Every tool is read-only except `track_container`, which creates a tracking request. If a container for the number is already in your account, `track_container` returns it instead of creating a new request; otherwise it creates a tracking request, so repeated calls before a container links can create additional requests.
+Every tool is read-only except three. `track_container` creates a tracking request: if a container for the number is already in your account, it returns that container instead; otherwise it creates a tracking request, so repeated calls before a container links can create additional requests. `set_party_role` and `set_custom_field` change parties and custom fields on your containers and shipments; repeating a call changes nothing more.
 </Note>
 
 ### `search_container`
@@ -497,6 +497,44 @@ Find the companies on the account's shipments (customers, shippers, consignees, 
 
 - "How many containers does Acme have at the terminal?" (find Acme, then filter by `customer`)
 - "Which containers is Ray Drayage picking up?" (find the carrier, then filter by `pickup_dray_carrier`)
+
+---
+
+### `set_party_role`
+
+Attach a party to containers or shipments in a role, or detach it. Find the party ID with `list_parties` first.
+
+**Parameters**
+
+- `container_ids` or `shipment_ids` *(array of IDs)* - 1 to 50 records; pass one, not both.
+- `role` *(string)* - containers support `pickup_dray_carrier`; shipments also support `shipper`, `consignee`, `notify_party`, `customs_broker`, `customer`, and `freight_forwarder`.
+- `party_id` *(string)* - the party's ID.
+- `action` *(string)* - `add` or `remove`.
+
+Returns the records that changed, those that already matched, and any that failed.
+
+**Good for**
+
+- "Set the drayage carrier to Manzo Transport on these containers."
+
+---
+
+### `set_custom_field`
+
+Set or clear one of your account's custom fields on containers or shipments.
+
+**Parameters**
+
+- `entity` *(string)* - `container` or `shipment`.
+- `ids` *(array of IDs)* - 1 to 50 records.
+- `api_slug` *(string)* - the custom field's API slug.
+- `value` *(string, number, boolean, or null)* - the new value; `null` clears the field.
+
+Returns the records that changed, those that already matched, and any that failed.
+
+**Good for**
+
+- "Set Sales Rep to Sofia Cortina on these containers."
 
 ---
 

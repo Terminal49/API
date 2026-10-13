@@ -32,6 +32,47 @@ description: "ContainerManager reference for the Terminal49 TypeScript SDK, used
 
 ## Methods
 
+### addPartyRole()
+
+> **addPartyRole**(`id`, `role`, `partyId`, `options?`): `Promise`\<`any`\>
+
+Attaches a party to the container in a role.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `role` | `string` |
+| `partyId` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### clearCustomField()
+
+> **clearCustomField**(`id`, `apiSlug`, `options?`): `Promise`\<`any`\>
+
+Removes a custom field value from the container.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `apiSlug` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### customFields()
 
 > **customFields**(`id`, `options?`): `Promise`\<`any`\>
@@ -151,6 +192,25 @@ description: "ContainerManager reference for the Terminal49 TypeScript SDK, used
 
 ***
 
+### partyRoles()
+
+> **partyRoles**(`id`, `options?`): `Promise`\<`any`\>
+
+Lists the parties attached to the container by role.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### rawEvents()
 
 > **rawEvents**(`id`, `options?`): `Promise`\<`any`\>
@@ -177,6 +237,26 @@ description: "ContainerManager reference for the Terminal49 TypeScript SDK, used
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### removePartyRole()
+
+> **removePartyRole**(`id`, `partyRoleId`, `options?`): `Promise`\<`any`\>
+
+Detaches a party role from the container; the party itself is kept.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `partyRoleId` | `string` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
