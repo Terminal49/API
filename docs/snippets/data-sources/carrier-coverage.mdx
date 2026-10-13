@@ -140,11 +140,11 @@ export const CarrierCoverageExplorer = ({ carriers, features, coverage = {}, sum
         .shipping-carrier-header:focus-visible { outline: 2px solid #16a34a; outline-offset: -2px; }
         .dark .shipping-carrier-header { background: rgb(var(--background-dark, 10 10 10)); }
         .dark .shipping-carrier-header:hover { background: #1f2937; }
-        .shipping-carrier-expanded { background: #f8fafc; box-shadow: inset 3px 0 #64748b; border-bottom: 2px solid #cbd5e1; }
+        .shipping-carrier-expanded { background: #fafafa; box-shadow: inset 3px 0 #737373; border-bottom: 2px solid #d4d4d4; }
         .shipping-carrier-expanded + .shipping-carrier { border-top: 0; }
-        .shipping-carrier-header.shipping-carrier-selected { position: sticky; top: var(--carrier-coverage-sticky-top, 6rem); z-index: 10; background: #e2e8f0; border-bottom: 1px solid #cbd5e1; box-shadow: inset 3px 0 #64748b; }
-        .dark .shipping-carrier-expanded { background: #111827; border-bottom-color: #475569; box-shadow: inset 3px 0 #94a3b8; }
-        .dark .shipping-carrier-header.shipping-carrier-selected { background: #1e293b; border-bottom-color: #475569; box-shadow: inset 3px 0 #94a3b8; }
+        .shipping-carrier-header.shipping-carrier-selected { position: sticky; top: var(--carrier-coverage-sticky-top, 6rem); z-index: 10; background: #f0f0f0; border-bottom: 1px solid #d4d4d4; box-shadow: inset 3px 0 #737373; }
+        .dark .shipping-carrier-expanded { background: #171717; border-bottom-color: #525252; box-shadow: inset 3px 0 #a3a3a3; }
+        .dark .shipping-carrier-header.shipping-carrier-selected { background: #262626; border-bottom-color: #525252; box-shadow: inset 3px 0 #a3a3a3; }
         .shipping-carrier-name { grid-column: 1; grid-row: 1; }
         .shipping-carrier-scacs { grid-column: 1; grid-row: 2; }
         .shipping-tracking-badges { display: flex; grid-column: 1 / -1; grid-row: 3; flex-wrap: wrap; gap: 6px; font-size: 12px; }
