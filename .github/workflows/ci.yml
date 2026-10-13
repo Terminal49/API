@@ -12,6 +12,17 @@ permissions:
   statuses: read
 
 jobs:
+  coverage:
+    name: Coverage generators and drift checks
+    runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Test coverage generators and verify generated artifacts
+        run: npm run test:coverage
+
   toolchain:
     name: Vite+ monorepo check
     runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
