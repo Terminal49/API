@@ -91,10 +91,26 @@ const shippingGroups = {
 async function importHex(filename) {
   const hex = JSON.parse(await readFile(filename, 'utf8'));
   const identity = await read('docs/snippets/data-sources/coverage-data.mdx');
-  const terminalProfiles = exportValue(
-    await read('docs/snippets/data-sources/terminal-feature-data.mdx'),
-    'terminalFeatureCoverage',
+  const terminalProfiles = new Map(
+    hex.terminals.map((row) => [
+      row.port_locode + ':' + (row.firms_code || row.terminal),
+      row,
+    ]),
   );
+  const terminalLabels = {
+    availableForPickup: 'Available For Pickup',
+    lastFreeDay: 'Last Free Day',
+    holds: 'Holds',
+    feeType: 'Fee Type',
+    feeAmount: 'Fee Amount',
+    pickupAppointment: 'Pickup Appointment',
+    yardLocation: 'Yard Location',
+    vesselDischarged: 'Vessel Discharged',
+    fullOut: 'Full Out',
+    chassisNumber: 'Full Out Chassis #',
+    onRail: 'On Rail',
+    emptyReturned: 'Empty Returned',
+  };
   const catalog = {
     terminals: terminalDefinitions.map(([key, label, group]) => ({
       key,
@@ -134,7 +150,7 @@ async function importHex(filename) {
   const sourceShipping = new Map(
     hex.shipping_lines.map((row) => [row.scac, row]),
   );
-  const features = (row, definitions, fallback = {}) =>
+  const features = (row, definitions) =>
     Object.fromEntries(
       definitions.map(({ key, label }) => [
         key,
@@ -145,7 +161,7 @@ async function importHex(filename) {
               : label === 'Carrier ETA'
                 ? 'Est. Arrival at Destination'
                 : label
-          ] ?? fallback[key],
+          ],
         ),
       ]),
     );
@@ -157,9 +173,9 @@ async function importHex(filename) {
         key === 'importMilestones'
           ? 'supported'
           : normalizeStatus(
-              terminalProfiles[
-                terminal.locode + ':' + (terminal.firmsCode || terminal.name)
-              ]?.features[key],
+              terminalProfiles.get(
+                terminal.locode + ':' + (terminal.firmsCode || terminal.name),
+              )?.features[terminalLabels[key]],
             ),
       ]),
     ),
@@ -167,15 +183,14 @@ async function importHex(filename) {
   const shippingLines = exportValue(identity, 'carriers').map(
     ({ billOfLading, bookingNumber, containerNumber, ...carrier }) => ({
       ...carrier,
-      features: features(
-        sourceShipping.get(carrier.scac),
-        catalog.shippingLines,
-        Object.fromEntries(
+      features: {
+        ...features(sourceShipping.get(carrier.scac), catalog.shippingLines),
+        ...Object.fromEntries(
           Object.entries({ billOfLading, bookingNumber, containerNumber }).map(
             ([key, value]) => [key, value ? 'supported' : 'unsupported'],
           ),
         ),
-      ),
+      },
     }),
   );
   const railCarriers = hex.rail_carriers.map((row) => ({
@@ -188,7 +203,7 @@ async function importHex(filename) {
     },
   }));
   return {
-    updatedOn: '2026-10-08',
+    updatedOn: hex.metadata?.captured_on,
     featureCatalog: catalog,
     terminals,
     shippingLines,
@@ -208,7 +223,12 @@ export function validateCoverage(data) {
     )
   )
     throw new Error('Unexpected coverage metadata');
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(data.updatedOn))
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(data.updatedOn) ||
+    !Number.isFinite(Date.parse(data.updatedOn + 'T00:00:00Z')) ||
+    new Date(data.updatedOn + 'T00:00:00Z').toISOString().slice(0, 10) !==
+      data.updatedOn
+  )
     throw new Error('Invalid coverage update date');
   for (const [type] of types) {
     const catalog = data.featureCatalog[type];
