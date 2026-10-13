@@ -40,6 +40,15 @@ import {
   executeListParties,
   listPartiesInputSchema,
 } from './tools/list-parties.js';
+import {
+  executeSetCustomField,
+  executeSetPartyRole,
+  recordWriteOutputSchema,
+  setCustomFieldInputSchema,
+  setPartyRoleInputSchema,
+  type SetCustomFieldArgs,
+  type SetPartyRoleArgs,
+} from './tools/record-writes.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
@@ -97,7 +106,7 @@ export const TERMINAL49_SERVER_INSTRUCTIONS = `Terminal49 tracks ocean container
 
 Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered); custom fields = account-defined fields (PO number, project manager, etc.) on containers and shipments, loaded with get_container include ['custom_fields'] or get_shipment_details include_custom_fields.
 
-Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete or overwrite data.
+Three tools change Terminal49 account records and are marked non-read-only: track_container creates a tracking request to begin monitoring a number; set_party_role attaches or detaches a party (such as the drayage carrier) on containers or shipments; set_custom_field sets or clears an account custom field on containers or shipments. Call the two set_ tools only when the user asks to change those records. The other tools only fetch data and are marked read-only. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete records.
 
 Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links.`;
 
@@ -1522,6 +1531,54 @@ export function createTerminal49McpServer(
       }),
     },
     wrapTool('list_parties', async (args) => executeListParties(args, client)),
+  );
+
+  // Tool 9d: Set Party Role
+  server.registerTool(
+    'set_party_role',
+    {
+      title: 'Set Party Role',
+      description:
+        'Attach a party to containers or shipments in a role, or detach it, for example "set the drayage carrier to Manzo Transport on these containers". ' +
+        'Resolve the company to a party_id with list_parties first, and the records to IDs with search_container or list_containers. Up to 50 records per call. ' +
+        'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
+        'Returns which records were updated, which already matched, and which failed.',
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: z.preprocess(stripLegacyIntent, setPartyRoleInputSchema),
+      outputSchema: recordWriteOutputSchema,
+    },
+    wrapTool('set_party_role', async (args: SetPartyRoleArgs) =>
+      executeSetPartyRole(args, client),
+    ),
+  );
+
+  // Tool 9e: Set Custom Field
+  server.registerTool(
+    'set_custom_field',
+    {
+      title: 'Set Custom Field',
+      description:
+        "Set or clear one of the account's custom fields (for example a sales rep or PO number) on containers or shipments. " +
+        "Read the field's api_slug and expected values from get_container or get_shipment_details with custom_fields first; never guess the slug. Up to 50 records per call; value null clears the field. " +
+        'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
+        'Returns which records were updated, which already matched, and which failed.',
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: z.preprocess(stripLegacyIntent, setCustomFieldInputSchema),
+      outputSchema: recordWriteOutputSchema,
+    },
+    wrapTool('set_custom_field', async (args: SetCustomFieldArgs) =>
+      executeSetCustomField(args, client),
+    ),
   );
 
   // Tool 10: List Tracking Requests
