@@ -17,6 +17,22 @@ const data = JSON.parse(
   ),
 );
 
+test('canonical terminal identifiers match the approved import mapping', async () => {
+  const identifiers = JSON.parse(
+    await readFile(
+      new URL('./data/terminal-identifiers.json', import.meta.url),
+      'utf8',
+    ),
+  );
+  const canonical = Object.fromEntries(
+    data.terminals.map((row) => [
+      `${row.locode}:${row.terminalCode || row.name}`,
+      { smdgCode: row.smdgCode, firmsCode: row.firmsCode },
+    ]),
+  );
+  assert.deepEqual(canonical, identifiers);
+});
+
 test('only approved public entities and complete feature assessments are exported', () => {
   assert.equal(data.terminals.length, 138);
   assert.equal(
@@ -116,7 +132,7 @@ test('a canonical refresh updates UI identity, feature exports, and literal agen
   );
   assert.equal(
     exportedValue(terminal, 'terminalFeatureCoverage')[
-      entity.locode + ':' + (entity.firmsCode || entity.name)
+      entity.locode + ':' + (entity.terminalCode || entity.name)
     ].features.availableForPickup,
     'limited',
   );
@@ -191,10 +207,10 @@ test('agent regeneration preserves edited human prose on both sides and rejects 
   );
 });
 
-test('terminal identities use names when FIRMS codes are blank', () => {
+test('terminal identities use names when source codes are blank', () => {
   const copy = structuredClone(data);
-  copy.terminals[0].firmsCode = '';
-  copy.terminals[1].firmsCode = '';
+  copy.terminals[0].terminalCode = '';
+  copy.terminals[1].terminalCode = '';
   copy.terminals[1].locode = copy.terminals[0].locode;
   validateCoverage(copy);
   copy.terminals[1].name = copy.terminals[0].name;
@@ -339,7 +355,21 @@ async function importFixture(t, mutate = () => {}) {
       },
     ],
   };
-  mutate(hex);
+  const identifierOptions = {
+    identifiers: {
+      'USXXX:AB12': { smdgCode: 'ABC', firmsCode: 'XY98' },
+      'USXXX:Named terminal': { smdgCode: 'NAM', firmsCode: '' },
+    },
+    omitFile: false,
+  };
+  mutate(hex, identifierOptions);
+  if (!identifierOptions.omitFile) {
+    await mkdir(path.join(directory, 'tools/data'), { recursive: true });
+    await writeFile(
+      path.join(directory, 'tools/data/terminal-identifiers.json'),
+      JSON.stringify(identifierOptions.identifiers),
+    );
+  }
   const filename = path.join(directory, 'source.json');
   await writeFile(filename, JSON.stringify(hex));
   const result = spawnSync(
@@ -548,4 +578,180 @@ test('CLI matches primary SCAC only and preserves unknown assessments for unmatc
         status === (key === 'importMilestones' ? 'supported' : 'unknown'),
     ),
   );
+});
+
+test('terminal identifiers export separately while coverage keys retain source identity', () => {
+  const copy = structuredClone(data);
+  const entity = copy.terminals.find((row) => row.locode.startsWith('US'));
+  entity.smdgCode = 'NEW123';
+  entity.firmsCode = 'Z999';
+  const stableKey = entity.locode + ':' + (entity.terminalCode || entity.name);
+  const files = generateFiles(copy);
+  const terminalJson = JSON.parse(
+    files.get('docs/data/coverage/terminals.json'),
+  );
+  const exported = terminalJson.terminals.find(
+    (row) => row.name === entity.name,
+  );
+  assert.equal(exported.terminalCode, entity.terminalCode);
+  assert.equal(exported.smdgCode, 'NEW123');
+  assert.equal(exported.firmsCode, 'Z999');
+  const snippet = files.get(
+    'docs/snippets/data-sources/terminal-feature-data.mdx',
+  );
+  assert.deepEqual(
+    exportedValue(snippet, 'terminalFeatureCoverage')[stableKey],
+    { features: entity.features },
+  );
+  const identity = exportedValue(snippet, 'terminalCoverageEntities').find(
+    (row) => row.name === entity.name,
+  );
+  assert.equal(identity.smdgCode, 'NEW123');
+  assert.equal(identity.firmsCode, 'Z999');
+  const csv = files.get('docs/data/coverage/terminals.csv');
+  assert.ok(csv.includes('"terminalCode","smdgCode","firmsCode"'));
+  assert.ok(csv.includes('"' + entity.terminalCode + '","NEW123","Z999"'));
+  assert.ok(
+    !files.get('docs/data/coverage/shipping-lines.csv').includes('"smdgCode"'),
+  );
+  for (const text of [
+    files.get('docs/data/coverage/terminals.mdx'),
+    updateAgentCoverage('', copy, 'terminals', 'terminals', 'Terminal'),
+  ]) {
+    assert.ok(
+      text.includes(
+        'Port UN/LOCODE `' +
+          entity.locode +
+          '`. SMDG code: `NEW123`. FIRMS code: `Z999`.',
+      ),
+    );
+    assert.ok(text.includes('FIRMS code: Not applicable.'));
+  }
+  entity.smdgCode = '';
+  entity.firmsCode = '';
+  const cleared = generateFiles(copy);
+  assert.deepEqual(
+    exportedValue(
+      cleared.get('docs/snippets/data-sources/terminal-feature-data.mdx'),
+      'terminalFeatureCoverage',
+    )[stableKey],
+    { features: entity.features },
+  );
+  assert.ok(
+    cleared
+      .get('docs/data/coverage/terminals.mdx')
+      .includes('SMDG code: Not listed. FIRMS code: Not listed.'),
+  );
+});
+
+test('terminal code validation requires explicit identifiers and rejects malformed or non-US FIRMS codes', () => {
+  for (const change of [
+    (row) => {
+      delete row.terminalCode;
+    },
+    (row) => {
+      delete row.smdgCode;
+    },
+    (row) => {
+      delete row.firmsCode;
+    },
+    (row) => {
+      row.terminalCode = 123;
+    },
+    (row) => {
+      row.smdgCode = 'AB';
+    },
+    (row) => {
+      row.smdgCode = 'ABCDEFG';
+    },
+    (row) => {
+      row.smdgCode = 'abc';
+    },
+    (row) => {
+      row.smdgCode = 'ABC-12';
+    },
+    (row) => {
+      row.firmsCode = 'US1234';
+    },
+    (row) => {
+      row.firmsCode = 'a123';
+    },
+    (row) => {
+      row.locode = 'CAVAN';
+      row.firmsCode = 'A123';
+    },
+  ]) {
+    const copy = structuredClone(data);
+    change(copy.terminals[0]);
+    assert.throws(
+      () => validateCoverage(copy),
+      /Invalid (terminal source|SMDG|FIRMS) code/,
+    );
+  }
+});
+
+test('CLI overlays verified identifiers by source key without inferring codes from source identifiers', async (t) => {
+  const fixture = await importFixture(t);
+  assert.equal(fixture.result.status, 0, fixture.result.stderr);
+  const imported = JSON.parse(
+    await fixture.read('docs/data/coverage/coverage.json'),
+  );
+  assert.deepEqual(
+    imported.terminals.map(({ terminalCode, smdgCode, firmsCode }) => ({
+      terminalCode,
+      smdgCode,
+      firmsCode,
+    })),
+    [
+      { terminalCode: 'AB12', smdgCode: 'ABC', firmsCode: 'XY98' },
+      { terminalCode: '', smdgCode: 'NAM', firmsCode: '' },
+      { terminalCode: 'CD34', smdgCode: '', firmsCode: '' },
+    ],
+  );
+  assert.equal(imported.terminals[0].features.availableForPickup, 'limited');
+  assert.equal(imported.terminals[1].features.availableForPickup, 'supported');
+  const snippet = await fixture.read(
+    'docs/snippets/data-sources/terminal-feature-data.mdx',
+  );
+  const coverage = exportedValue(snippet, 'terminalFeatureCoverage');
+  assert.ok(coverage['USXXX:AB12']);
+  assert.ok(coverage['USXXX:Named terminal']);
+  assert.equal(coverage['USXXX:XY98'], undefined);
+  assert.equal(coverage['USXXX:ABC'], undefined);
+});
+
+test('CLI rejects missing or malformed identifier mapping before publishing', async (t) => {
+  for (const change of [
+    (options) => {
+      options.omitFile = true;
+    },
+    (options) => {
+      options.identifiers = [];
+    },
+    (options) => {
+      delete options.identifiers['USXXX:AB12'].firmsCode;
+    },
+    (options) => {
+      options.identifiers['USXXX:AB12'].smdgCode = 'too-long';
+    },
+    (options) => {
+      options.identifiers['CAVAN:SOURCE'] = {
+        smdgCode: 'ABC',
+        firmsCode: 'A123',
+      };
+    },
+    (options) => {
+      options.identifiers['USXXX:AB12'].extra = 'value';
+    },
+  ]) {
+    const fixture = await importFixture(t, (_hex, options) => change(options));
+    assert.notEqual(fixture.result.status, 0);
+    assert.match(
+      fixture.result.stderr,
+      /ENOENT|Invalid (terminal identifier mapping|SMDG|FIRMS) code|Invalid terminal identifier mapping/,
+    );
+    await assert.rejects(fixture.read('docs/data/coverage/coverage.json'), {
+      code: 'ENOENT',
+    });
+  }
 });

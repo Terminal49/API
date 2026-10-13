@@ -11,6 +11,8 @@ const allowedFields = {
     'locode',
     'country',
     'region',
+    'terminalCode',
+    'smdgCode',
     'firmsCode',
     'features',
   ],
@@ -88,9 +90,45 @@ const shippingGroups = {
   'Other Events': 'Other events',
 };
 
+function validateTerminalIdentifiers({ locode, smdgCode, firmsCode }) {
+  if (
+    typeof smdgCode !== 'string' ||
+    (smdgCode && !/^[A-Z0-9]{3,6}$/.test(smdgCode))
+  )
+    throw new Error('Invalid SMDG code for ' + locode);
+  if (
+    typeof firmsCode !== 'string' ||
+    (firmsCode &&
+      (!locode.startsWith('US') || !/^[A-Z0-9]{4}$/.test(firmsCode)))
+  )
+    throw new Error('Invalid FIRMS code for ' + locode);
+}
+
 async function importHex(filename) {
   const hex = JSON.parse(await readFile(filename, 'utf8'));
   const identity = await read('docs/snippets/data-sources/coverage-data.mdx');
+  const terminalIdentifiers = JSON.parse(
+    await read('tools/data/terminal-identifiers.json'),
+  );
+  if (
+    !terminalIdentifiers ||
+    typeof terminalIdentifiers !== 'object' ||
+    Array.isArray(terminalIdentifiers)
+  )
+    throw new Error('Invalid terminal identifier mapping');
+  for (const [key, codes] of Object.entries(terminalIdentifiers)) {
+    if (
+      !/^[A-Z]{2}[A-Z0-9]{3}:.+$/.test(key) ||
+      !codes ||
+      typeof codes !== 'object' ||
+      Array.isArray(codes) ||
+      Object.keys(codes).some(
+        (field) => !['smdgCode', 'firmsCode'].includes(field),
+      )
+    )
+      throw new Error('Invalid terminal identifier mapping for ' + key);
+    validateTerminalIdentifiers({ locode: key.slice(0, 5), ...codes });
+  }
   const terminalProfiles = new Map(
     hex.terminals.map((row) => [
       row.port_locode + ':' + (row.firms_code || row.terminal),
@@ -165,21 +203,28 @@ async function importHex(filename) {
         ),
       ]),
     );
-  const terminals = exportValue(identity, 'terminals').map((terminal) => ({
-    ...terminal,
-    features: Object.fromEntries(
-      catalog.terminals.map(({ key }) => [
-        key,
-        key === 'importMilestones'
-          ? 'supported'
-          : normalizeStatus(
-              terminalProfiles.get(
-                terminal.locode + ':' + (terminal.firmsCode || terminal.name),
-              )?.features[terminalLabels[key]],
-            ),
-      ]),
-    ),
-  }));
+  const terminals = exportValue(identity, 'terminals').map(
+    ({ firmsCode: terminalCode, ...terminal }) => {
+      const key = terminal.locode + ':' + (terminalCode || terminal.name);
+      return {
+        ...terminal,
+        terminalCode,
+        ...(terminalIdentifiers[key] ?? { smdgCode: '', firmsCode: '' }),
+        features: Object.fromEntries(
+          catalog.terminals.map(({ key: featureKey }) => [
+            featureKey,
+            featureKey === 'importMilestones'
+              ? 'supported'
+              : normalizeStatus(
+                  terminalProfiles.get(key)?.features[
+                    terminalLabels[featureKey]
+                  ],
+                ),
+          ]),
+        ),
+      };
+    },
+  );
   const shippingLines = exportValue(identity, 'carriers').map(
     ({ billOfLading, bookingNumber, containerNumber, ...carrier }) => ({
       ...carrier,
@@ -258,9 +303,14 @@ export function validateCoverage(data) {
         !['public', 'account'].includes(entity.access)
       )
         throw new Error('Invalid shipping line access');
+      if (type === 'terminals') {
+        if (typeof entity.terminalCode !== 'string')
+          throw new Error('Invalid terminal source code');
+        validateTerminalIdentifiers(entity);
+      }
       const identifier =
         type === 'terminals'
-          ? entity.locode + ':' + (entity.firmsCode || entity.name)
+          ? entity.locode + ':' + (entity.terminalCode || entity.name)
           : entity.scac;
       if (!entity.name || !identifier || identities.has(identifier))
         throw new Error('Invalid or duplicate identity for ' + type);
@@ -316,7 +366,9 @@ function staticReference(data, type, slug, title) {
       '',
     );
   lines.push(
-    'Standard Carrier Alpha Code (SCAC) identifies carriers. Terminal identities include the port location code and terminal code.',
+    type === 'terminals'
+      ? 'Terminal identities list the port UN/LOCODE, SMDG terminal code where listed, and FIRMS code for US terminals where listed.'
+      : 'Standard Carrier Alpha Code (SCAC) identifies carriers. Terminal identities include the port location code and terminal code.',
     '',
   );
   for (const entity of data[type]) {
@@ -324,11 +376,17 @@ function staticReference(data, type, slug, title) {
     if (type === 'terminals')
       lines.push(
         escapeMarkdown(entity.port + ', ' + entity.country) +
-          '. Port location code `' +
+          '. Port UN/LOCODE `' +
           entity.locode +
-          '`. Terminal code `' +
-          entity.firmsCode +
-          '`.',
+          '`. SMDG code: ' +
+          (entity.smdgCode ? '`' + entity.smdgCode + '`' : 'Not listed') +
+          '. FIRMS code: ' +
+          (entity.firmsCode
+            ? '`' + entity.firmsCode + '`'
+            : entity.locode.startsWith('US')
+              ? 'Not listed'
+              : 'Not applicable') +
+          '.',
         '',
       );
     else
@@ -377,6 +435,7 @@ export function generateFiles(data) {
         'locode',
         'country',
         'region',
+        ...(type === 'terminals' ? ['terminalCode', 'smdgCode'] : []),
         'firmsCode',
         'group',
         'feature',
@@ -396,6 +455,9 @@ export function generateFiles(data) {
           entity.locode,
           entity.country,
           entity.region,
+          ...(type === 'terminals'
+            ? [entity.terminalCode, entity.smdgCode]
+            : []),
           entity.firmsCode,
           entity.group,
           feature.key,
@@ -446,7 +508,7 @@ export function generateFiles(data) {
     terminalFeatureSnapshot: { capturedOn: data.updatedOn },
     terminalFeatureCoverage: Object.fromEntries(
       data.terminals.map((row) => [
-        row.locode + ':' + (row.firmsCode || row.name),
+        row.locode + ':' + (row.terminalCode || row.name),
         { features: row.features },
       ]),
     ),
