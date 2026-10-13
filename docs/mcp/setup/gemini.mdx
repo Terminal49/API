@@ -1,66 +1,71 @@
 ---
 title: "Connect Gemini to Terminal49"
 sidebarTitle: "Gemini"
-description: "Add the Terminal49 MCP server to Gemini CLI with `gemini mcp add` and sign in through your browser, or configure Gemini Code Assist in VS Code with an API key."
+description: "Add the Terminal49 MCP server to Google Antigravity and sign in with your Terminal49 account, or connect Gemini CLI with an API key."
 keywords:
   - "Terminal49 MCP server"
+  - "Google Antigravity"
+  - "Gemini"
   - "Gemini CLI"
-  - "Gemini Code Assist"
-  - "gemini mcp add"
-  - "settings.json"
+  - "mcp_config.json"
   - "OAuth"
   - "container tracking"
 ---
-Connect Gemini CLI to the Terminal49 MCP server so it can answer questions with live container and shipment tracking data while you work in your terminal. Gemini Code Assist agent mode in VS Code can use the same server with an API key.
+Connect Google Antigravity to the Terminal49 MCP server so its Gemini agent can answer questions with live container and shipment tracking data.
 
 <Note>
-**No API key required for Gemini CLI.** The Terminal49 MCP server supports OAuth 2.1 with Dynamic Client Registration, and Gemini CLI discovers it automatically. When you authenticate, Gemini CLI opens a browser sign-in page. Log in with your Terminal49 credentials to finish.
+**No API key required for Antigravity.** The Terminal49 MCP server supports OAuth 2.1 with Dynamic Client Registration. Antigravity registers itself automatically, and you sign in with your Terminal49 credentials in the browser.
 </Note>
 
 ## Prerequisites
 
-- [Gemini CLI](https://github.com/google-gemini/gemini-cli) installed.
+- [Google Antigravity](https://antigravity.google) installed and signed in with your Google account.
 - A Terminal49 account.
-- A machine where Gemini CLI can open a browser and receive a redirect on `localhost`. OAuth sign-in doesn't work in headless environments, remote SSH sessions without a browser, or containers. In those cases, use the [API key alternative](#api-key-alternative).
 
-## Add the server
+## Add the server to Antigravity
 
 <Steps>
-  <Step title="Add the server from your terminal">
-    ```bash
-    gemini mcp add --transport http --scope user terminal49 https://mcp.terminal49.com
-    ```
-
-    `--scope user` saves the server to `~/.gemini/settings.json` so it's available in every project. Without it, the server is saved to `.gemini/settings.json` in the current project.
-
-    Alternatively, add it manually to the `mcpServers` object in your `settings.json`:
+  <Step title="Add the server to your MCP config">
+    Open `~/.gemini/config/mcp_config.json` (create it if it doesn't exist) and add Terminal49 to the `mcpServers` object:
 
     ```json
     {
       "mcpServers": {
         "terminal49": {
-          "httpUrl": "https://mcp.terminal49.com"
+          "serverUrl": "https://mcp.terminal49.com",
+          "oauth": {}
         }
       }
     }
     ```
+
+    You can also open this file from Antigravity: go to **Customizations → Installed**, and under **MCP Servers** select **Copy Config File Path**.
+  </Step>
+  <Step title="Authenticate">
+    In Antigravity, go to **Customizations → Installed**. `terminal49` appears under **MCP Servers** with an **Unauthorized** error until you sign in. Select **Authenticate**.
   </Step>
   <Step title="Sign in to Terminal49">
-    Start Gemini CLI, run `/mcp auth terminal49`, and complete the sign-in in the browser window that opens. Log in and approve access. Gemini CLI stores and refreshes the tokens automatically.
+    A browser window opens the Terminal49 sign-in page. Log in, choose your organization under **Organization access**, and select **Allow access**.
+  </Step>
+  <Step title="Paste the authorization code">
+    The browser shows an authorization code. Select **Copy to Clipboard**, paste the code into the field under `terminal49` in Antigravity, and select **Submit**.
   </Step>
   <Step title="Confirm the connection">
-    Run `/mcp list`. The `terminal49` server should show as **Connected**.
-  </Step>
-  <Step title="Use it in a session">
-    Ask Gemini CLI:
-
-    > "Using Terminal49, search for container CAIU1234567 and summarize its status."
+    `terminal49` shows a green status with **Sign out** and the number of tools enabled.
   </Step>
 </Steps>
 
-## API key alternative
+## Test your connection
 
-If you prefer a fixed credential (for example on a machine where the browser flow isn't practical), create an API key in the [developer portal](https://app.terminal49.com/developers/api-keys) and pass it as a header instead:
+Start a new conversation in Antigravity and ask:
+
+> "Using Terminal49, list 3 of my containers and their current status."
+
+Antigravity asks for permission the first time it calls each Terminal49 tool, for example `terminal49/list_containers`. See the [tools reference](/mcp/home#tools-reference) for the full list, and [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+
+## Gemini CLI
+
+Gemini CLI connects with an API key. Create one in the [developer portal](https://app.terminal49.com/developers/api-keys), then run:
 
 ```bash
 gemini mcp add --transport http --scope user \
@@ -68,68 +73,16 @@ gemini mcp add --transport http --scope user \
   terminal49 https://mcp.terminal49.com
 ```
 
-Or in `settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "terminal49": {
-      "httpUrl": "https://mcp.terminal49.com",
-      "headers": {
-        "Authorization": "Token YOUR_API_KEY"
-      }
-    }
-  }
-}
-```
-
-<Note>
-Use the `Token` scheme for API keys. Don't commit a `settings.json` that contains a real key to source control.
-</Note>
-
-## Gemini Code Assist in VS Code
-
-Gemini Code Assist agent mode in VS Code reads MCP servers from the same `~/.gemini/settings.json` file. Google's documentation shows authenticating remote servers with an HTTP `Authorization` header, so use the API key configuration:
-
-<Steps>
-  <Step title="Add the server to your Gemini settings">
-    Open `~/.gemini/settings.json` and add:
-
-    ```json
-    {
-      "mcpServers": {
-        "terminal49": {
-          "httpUrl": "https://mcp.terminal49.com",
-          "headers": {
-            "Authorization": "Token YOUR_API_KEY"
-          }
-        }
-      }
-    }
-    ```
-  </Step>
-  <Step title="Reload VS Code">
-    Open the command palette and select **Developer: Reload Window**. The Terminal49 tools are then available to the agent in agent mode.
-  </Step>
-</Steps>
-
-## Test your connection
-
-Ask Gemini:
-
-> "List the tools available in the Terminal49 MCP server and what they're for."
-
-It should list tools such as `search_container`, `track_container`, and `get_container`. Gemini CLI prefixes MCP tool names with the server name, for example `mcp_terminal49_search_container`. See the [tools reference](/mcp/home#tools-reference) for the full list, and [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+Gemini CLI turns off MCP servers in folders you haven't trusted. If `/mcp list` shows the server as **Disabled**, run `/permissions trust` in that folder.
 
 ## Troubleshooting
 
 | Symptom | How to fix |
 |---------|------------|
-| Server shows as **Disabled** in `/mcp list` | Gemini CLI turns off MCP servers in folders you haven't trusted. Run `/permissions trust` in the folder, or start Gemini CLI from a trusted folder |
-| Server shows as **Disconnected** in `/mcp list` | Confirm the URL is exactly `https://mcp.terminal49.com` (no path) and the transport is `http` (`httpUrl` in `settings.json`) |
-| Sign-in window never opens | Gemini CLI needs a local browser and a `localhost` redirect. On a headless machine or over SSH, use the [API key alternative](#api-key-alternative) |
-| `401 Unauthorized` | Run `/mcp auth terminal49` to re-authenticate, or check the `Authorization: Token YOUR_API_KEY` header if you use an API key |
-| Tools list is empty or out of date | Run `/mcp reload` in Gemini CLI, or restart it so it reloads `settings.json` |
+| `terminal49` doesn't appear under **MCP Servers** | Check that `~/.gemini/config/mcp_config.json` is valid JSON and uses `serverUrl` (not `url`), then reopen **Customizations → Installed** |
+| `Unauthorized` error on `terminal49` | Select **Authenticate** and complete the sign-in. If it persists, select **Sign out** and authenticate again |
+| Authorization code is rejected | Codes are single-use. Select **Authenticate** again and paste the new code |
+| Tool calls return no data | Check that you chose the right organization when you allowed access. Sign out and authenticate again to pick another one |
 
 ## Related guides
 
