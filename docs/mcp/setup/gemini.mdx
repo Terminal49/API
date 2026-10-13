@@ -1,0 +1,139 @@
+---
+title: "Connect Gemini to Terminal49"
+sidebarTitle: "Gemini"
+description: "Add the Terminal49 MCP server to Gemini CLI with `gemini mcp add` and sign in through your browser, or configure Gemini Code Assist in VS Code with an API key."
+keywords:
+  - "Terminal49 MCP server"
+  - "Gemini CLI"
+  - "Gemini Code Assist"
+  - "gemini mcp add"
+  - "settings.json"
+  - "OAuth"
+  - "container tracking"
+---
+Connect Gemini CLI to the Terminal49 MCP server so it can answer questions with live container and shipment tracking data while you work in your terminal. Gemini Code Assist agent mode in VS Code can use the same server with an API key.
+
+<Note>
+**No API key required for Gemini CLI.** The Terminal49 MCP server supports OAuth 2.1 with Dynamic Client Registration, and Gemini CLI discovers it automatically. When you authenticate, Gemini CLI opens a browser sign-in page. Log in with your Terminal49 credentials to finish.
+</Note>
+
+## Prerequisites
+
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli) installed.
+- A Terminal49 account.
+- A machine where Gemini CLI can open a browser and receive a redirect on `localhost`. OAuth sign-in doesn't work in headless environments, remote SSH sessions without a browser, or containers. In those cases, use the [API key alternative](#api-key-alternative).
+
+## Add the server
+
+<Steps>
+  <Step title="Add the server from your terminal">
+    ```bash
+    gemini mcp add --transport http --scope user terminal49 https://mcp.terminal49.com
+    ```
+
+    `--scope user` saves the server to `~/.gemini/settings.json` so it's available in every project. Without it, the server is saved to `.gemini/settings.json` in the current project.
+
+    Alternatively, add it manually to the `mcpServers` object in your `settings.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "terminal49": {
+          "httpUrl": "https://mcp.terminal49.com"
+        }
+      }
+    }
+    ```
+  </Step>
+  <Step title="Sign in to Terminal49">
+    Start Gemini CLI, run `/mcp auth terminal49`, and complete the sign-in in the browser window that opens. Log in and approve access. Gemini CLI stores and refreshes the tokens automatically.
+  </Step>
+  <Step title="Confirm the connection">
+    Run `/mcp list`. The `terminal49` server should show as **Connected**.
+  </Step>
+  <Step title="Use it in a session">
+    Ask Gemini CLI:
+
+    > "Using Terminal49, search for container CAIU1234567 and summarize its status."
+  </Step>
+</Steps>
+
+## API key alternative
+
+If you prefer a fixed credential (for example on a machine where the browser flow isn't practical), create an API key in the [developer portal](https://app.terminal49.com/developers/api-keys) and pass it as a header instead:
+
+```bash
+gemini mcp add --transport http --scope user \
+  --header "Authorization: Token YOUR_API_KEY" \
+  terminal49 https://mcp.terminal49.com
+```
+
+Or in `settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "terminal49": {
+      "httpUrl": "https://mcp.terminal49.com",
+      "headers": {
+        "Authorization": "Token YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+<Note>
+Use the `Token` scheme for API keys. Don't commit a `settings.json` that contains a real key to source control.
+</Note>
+
+## Gemini Code Assist in VS Code
+
+Gemini Code Assist agent mode in VS Code reads MCP servers from the same `~/.gemini/settings.json` file. Google's documentation shows authenticating remote servers with an HTTP `Authorization` header, so use the API key configuration:
+
+<Steps>
+  <Step title="Add the server to your Gemini settings">
+    Open `~/.gemini/settings.json` and add:
+
+    ```json
+    {
+      "mcpServers": {
+        "terminal49": {
+          "httpUrl": "https://mcp.terminal49.com",
+          "headers": {
+            "Authorization": "Token YOUR_API_KEY"
+          }
+        }
+      }
+    }
+    ```
+  </Step>
+  <Step title="Reload VS Code">
+    Open the command palette and select **Developer: Reload Window**. The Terminal49 tools are then available to the agent in agent mode.
+  </Step>
+</Steps>
+
+## Test your connection
+
+Ask Gemini:
+
+> "List the tools available in the Terminal49 MCP server and what they're for."
+
+It should list tools such as `search_container`, `track_container`, and `get_container`. Gemini CLI prefixes MCP tool names with the server name, for example `mcp_terminal49_search_container`. See the [tools reference](/mcp/home#tools-reference) for the full list, and [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+
+## Troubleshooting
+
+| Symptom | How to fix |
+|---------|------------|
+| Server shows as **Disconnected** in `/mcp list` | Confirm the URL is exactly `https://mcp.terminal49.com` (no path) and the transport is `http` (`httpUrl` in `settings.json`) |
+| Sign-in window never opens | Gemini CLI needs a local browser and a `localhost` redirect. On a headless machine or over SSH, use the [API key alternative](#api-key-alternative) |
+| `401 Unauthorized` | Run `/mcp auth terminal49` to re-authenticate, or check the `Authorization: Token YOUR_API_KEY` header if you use an API key |
+| Tools list is empty or out of date | Run `/mcp reload` in Gemini CLI, or restart it so it reloads `settings.json` |
+
+## Related guides
+
+- [Claude Code](/mcp/setup/claude-code) – `claude mcp add` for Claude Code
+- [VS Code](/mcp/setup/vs-code) – GitHub Copilot agent mode
+- [MCP Overview](/mcp/home) – Tools, prompts, and resources reference
+- [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, including API-key and local stdio options
+- [Other MCP clients](/mcp/setup/other-clients) – Generic configuration for any client
