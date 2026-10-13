@@ -13,48 +13,41 @@ export const terminalCoverageFeatures = [
   { key: "emptyReturned", label: "Empty returned", group: "Container milestones", field: "empty_terminated_at", href: "/api-docs/webhooks/event-catalog" },
 ]
 
-export const TerminalCoverageStatus = ({ status, compact = false }) => {
+export const TerminalCoverageStatus = ({ status, compact = false, label, description }) => {
   const statuses = {
-    supported: { label: "Supported", symbol: "✓", className: "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400" },
-    limited: { label: "Partial", symbol: "◐", className: "bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300" },
-    unsupported: { label: "Not supported", symbol: "−", className: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/60" },
+    supported: { label: "Available", symbol: "✓", className: "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400" },
+    limited: { label: "Limited", symbol: "◐", className: "bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300" },
+    unsupported: { label: "Not available", symbol: "−", className: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/60" },
     unknown: { label: "Unknown", symbol: "?", className: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/60" },
   }
   const value = statuses[status] || statuses.unknown
   return (
-    <span title={value.label} className={`inline-flex items-center justify-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium ${value.className}`}>
-      <span aria-hidden="true">{value.symbol}</span>
-      {compact ? <span className="sr-only">{value.label}</span> : value.label}
+    <span title={[label ? `${label}: ${value.label}` : value.label, description].filter(Boolean).join(". ")} className={`${label ? "terminal-feature-badge " : ""}inline-flex items-center justify-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium ${value.className}`}>
+      <span aria-hidden="true" className="shrink-0">{value.symbol}</span>
+      {label ? <><span className="terminal-feature-label">{label}</span><span className="sr-only">, {value.label}</span></> : compact ? <span className="sr-only">{value.label}</span> : value.label}
     </span>
   )
 }
 
-export const TerminalCoverageDetails = ({ terminal, coverage, onClose }) => {
+export const TerminalCoverageDetails = ({ features, coverage, Status }) => {
   const groups = ["Pickup & availability", "Holds & fees", "Gate & yard", "Container milestones"]
   return (
-    <section aria-label={`${terminal.name} feature coverage`} className="text-sm text-gray-900 dark:text-white">
-      <div className="terminal-coverage-feature-groups grid">
-        {groups.map((group) => (
-          <div key={group} className="terminal-coverage-feature-group min-w-0">
-            <h4 className="m-0 border-b border-gray-200 bg-gray-50 px-4 py-2 text-xs font-semibold dark:border-white/10 dark:bg-white/5">{group}</h4>
-            <dl>
-              {terminalCoverageFeatures.filter((feature) => feature.group === group).map((feature) => (
-                <div key={feature.key} className="flex items-start justify-between gap-3 border-b border-gray-100 px-4 py-2.5 dark:border-white/10">
-                  <dt className="min-w-0">
-                    <a href={feature.href} title={feature.description} className="text-gray-900 underline decoration-gray-300 underline-offset-4 hover:text-green-700 dark:text-white dark:decoration-white/30 dark:hover:text-green-400">{feature.label}</a>
-                    {feature.field ? <span className="mt-1 block break-all font-mono text-[11px] text-gray-500 dark:text-white/50">{feature.field}</span> : null}
-                  </dt>
-                  <dd className="shrink-0"><TerminalCoverageStatus status={coverage?.features?.[feature.key]} /></dd>
-                </div>
+    <dl className="terminal-coverage-details text-sm text-gray-900 dark:text-white">
+      {groups.map((group) => (
+        <div key={group} className="terminal-feature-group">
+          <dt>{group}</dt>
+          <dd>
+            <ul className="terminal-feature-badges">
+              {features.filter((feature) => feature.group === group).map((feature) => (
+                <li key={feature.key} data-feature-key={feature.key}>
+                  <a href={feature.href} className="inline-flex max-w-full rounded-full hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600"><Status status={coverage?.features?.[feature.key]} label={feature.label} description={[feature.description, feature.field].filter(Boolean).join(" ")} /></a>
+                </li>
               ))}
-            </dl>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-end border-t border-gray-200 px-4 py-2 dark:border-white/10">
-        <button type="button" onClick={onClose} aria-label={`Close ${terminal.name} coverage details`} className="rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600 dark:text-white/60 dark:hover:bg-white/10">Collapse details</button>
-      </div>
-    </section>
+            </ul>
+          </dd>
+        </div>
+      ))}
+    </dl>
   )
 }
 
@@ -64,7 +57,6 @@ export const TerminalCoverageTable = ({ terminals, coverage = {}, snapshot }) =>
   const [requiredFeature, setRequiredFeature] = useState("all")
   const [includeLimited, setIncludeLimited] = useState(false)
   const [selectedKey, setSelectedKey] = useState(null)
-  const [detailLayout, setDetailLayout] = useState("expanded")
   const regions = [...new Set(terminals.map((terminal) => terminal.region))].sort()
   const keyFor = (terminal) => `${terminal.locode}:${terminal.firmsCode || terminal.name}`
   const rows = terminals.filter((terminal) => {
@@ -72,16 +64,15 @@ export const TerminalCoverageTable = ({ terminals, coverage = {}, snapshot }) =>
     const status = coverage[keyFor(terminal)]?.features?.[requiredFeature]
     return matchesQuery && (region === "all" || terminal.region === region) && (requiredFeature === "all" || status === "supported" || (includeLimited && status === "limited"))
   })
-  const selected = rows.find((terminal) => keyFor(terminal) === selectedKey)
+  const portsByLocode = new Map()
+  rows.forEach((terminal) => {
+    if (!portsByLocode.has(terminal.locode)) portsByLocode.set(terminal.locode, { locode: terminal.locode, name: terminal.port, country: terminal.country, terminals: [] })
+    portsByLocode.get(terminal.locode).terminals.push(terminal)
+  })
+  const ports = [...portsByLocode.values()].sort((a, b) => a.name.localeCompare(b.name) || a.country.localeCompare(b.country) || a.locode.localeCompare(b.locode))
+  ports.forEach((port) => port.terminals.sort((a, b) => a.name.localeCompare(b.name)))
   const controlClass = "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600 dark:border-white/10 dark:bg-white/5 dark:text-white"
   const changeFilter = (setter, value) => { setter(value); setSelectedKey(null) }
-  const toggleRow = (key, detailId) => {
-    setSelectedKey(selectedKey === key ? null : key)
-    if (selectedKey !== key && detailLayout === "panel") requestAnimationFrame(() => {
-      const panel = document.getElementById(detailId)
-      if (panel && getComputedStyle(panel).position === "absolute") panel.firstElementChild?.scrollIntoView({ block: "nearest" })
-    })
-  }
   const summaryFeatures = [
     { key: "importMilestones", label: "Import milestones", description: "Additional terminal data for import container milestones. Individual milestone coverage is shown in the details." },
     ...terminalCoverageFeatures.filter((feature) => ["availableForPickup", "lastFreeDay", "holds"].includes(feature.key)),
@@ -90,28 +81,48 @@ export const TerminalCoverageTable = ({ terminals, coverage = {}, snapshot }) =>
     <div className="terminal-coverage not-prose min-w-0 space-y-4">
       <style>{`
         .terminal-coverage { container-type: inline-size; }
-        .terminal-coverage-layout { position: relative; }
-        .terminal-coverage-inspector-placeholder { display: none; }
-        .terminal-coverage-feature-groups { grid-template-columns: 1fr; }
-        .terminal-coverage-feature-group { border-bottom: 1px solid rgb(156 163 175 / 0.2); }
+        .terminal-port + .terminal-port { margin-top: 24px; }
+        .terminal-port-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding: 14px 16px; border-bottom: 1px solid rgb(156 163 175 / 0.25); }
+        .terminal-port-heading h3 { margin: 0; font-size: 15px; font-weight: 600; }
+        .terminal-port-count { margin-left: auto; }
+        .terminal-row + .terminal-row { border-top: 1px solid rgb(156 163 175 / 0.25); }
+        .terminal-columns { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 14px 16px; }
+        .terminal-table-heading { display: none; }
+        .terminal-row-header { width: 100%; border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; background: rgb(var(--background-light, 255 255 255)); }
+        .terminal-row-header:hover { background: #f9fafb; }
+        .terminal-row-header:focus-visible { outline: 2px solid #16a34a; outline-offset: -2px; }
+        .dark .terminal-row-header { background: rgb(var(--background-dark, 10 10 10)); }
+        .dark .terminal-row-header:hover { background: #1f2937; }
+        .terminal-row-expanded { background: rgb(var(--background-light, 255 255 255)); box-shadow: inset 3px 0 #737373; border-bottom: 2px solid #d4d4d4; }
+        .terminal-row-expanded + .terminal-row { border-top: 0; }
+        .terminal-row-header.terminal-row-selected { position: sticky; top: var(--carrier-coverage-sticky-top, 6rem); z-index: 10; background: #f0f0f0; border-bottom: 1px solid #d4d4d4; box-shadow: inset 3px 0 #737373; }
+        .dark .terminal-row-expanded { background: rgb(var(--background-dark, 10 10 10)); border-bottom-color: #525252; box-shadow: inset 3px 0 #a3a3a3; }
+        .dark .terminal-row-header.terminal-row-selected { background: #262626; border-bottom-color: #525252; box-shadow: inset 3px 0 #a3a3a3; }
+        .terminal-row-name { grid-column: 1; grid-row: 1; overflow-wrap: anywhere; }
+        .terminal-row-code { grid-column: 1; grid-row: 2; overflow-wrap: anywhere; }
+        .terminal-summary-badges { display: flex; grid-column: 1 / -1; grid-row: 3; flex-wrap: wrap; gap: 6px; font-size: 12px; }
+        .terminal-summary-badges > span { min-width: 0; max-width: 100%; }
+        .terminal-row-chevron { grid-column: 2; grid-row: 1; justify-self: end; transition: transform 120ms; }
+        .terminal-row-header[aria-expanded="true"] > .terminal-row-chevron { transform: rotate(90deg); }
+        .terminal-coverage-details { margin: 0 12px 0 16px; }
+        .terminal-feature-group { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 10px 16px; padding: 14px 16px; }
+        .terminal-feature-group + .terminal-feature-group { border-top: 1px solid rgb(156 163 175 / 0.15); }
+        .terminal-feature-group > dt { margin: 0; font-weight: 500; }
+        .terminal-feature-group > dd { min-width: 0; margin: 0; }
+        .terminal-feature-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+        .terminal-feature-badges > li { min-width: 0; max-width: 100%; }
+        .terminal-feature-badge { max-width: 100%; padding: 6px 12px; text-align: left; }
+        .terminal-feature-label { min-width: 0; overflow-wrap: anywhere; }
         @container (min-width: 640px) {
-          .terminal-coverage-feature-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .terminal-coverage-feature-group:nth-child(odd) { border-right: 1px solid rgb(156 163 175 / 0.2); }
-        }
-        @container (min-width: 1000px) {
-          .terminal-coverage-layout[data-layout="panel"] { padding-right: 380px; min-height: 240px; }
-          .terminal-coverage-layout[data-layout="panel"][data-selected="true"] { min-height: calc(100vh - 120px); }
-          .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-detail-row > td { padding: 0; border: 0; }
-          .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-detail-panel { position: absolute; top: 0; bottom: 0; right: 0; width: 360px; }
-          .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-detail-panel > section { position: sticky; top: 100px; max-height: calc(100vh - 120px); overflow-y: auto; scroll-margin-top: 100px; scroll-margin-bottom: 20px; border: 1px solid rgb(156 163 175 / 0.3); border-radius: 8px; }
-          .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-feature-groups { grid-template-columns: 1fr; }
-          .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-feature-group { border-right: 0; }
-          .terminal-coverage-layout[data-layout="panel"] .terminal-coverage-inspector-placeholder { display: block; position: absolute; top: 0; right: 0; width: 360px; }
+          .terminal-columns { grid-template-columns: minmax(0, 1.2fr) minmax(70px, 0.5fr) minmax(0, 2fr) 18px; }
+          .terminal-table-heading { display: grid; border-bottom: 1px solid rgb(156 163 175 / 0.25); }
+          .terminal-row-name, .terminal-row-code, .terminal-summary-badges, .terminal-row-chevron { grid-column: auto; grid-row: auto; }
+          .terminal-feature-group { grid-template-columns: minmax(0, 1fr) minmax(0, 2.6fr); }
         }
       `}</style>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <label className="text-xs font-medium text-gray-600 dark:text-white/70">Search terminals
-          <input type="search" value={query} onChange={(event) => changeFilter(setQuery, event.target.value)} placeholder="Terminal, port, UN/LOCODE, or FIRMS" className={`${controlClass} mt-1`} />
+          <input type="search" value={query} onChange={(event) => changeFilter(setQuery, event.target.value)} placeholder="Terminal, port, UN/LOCODE, or terminal code" className={`${controlClass} mt-1`} />
         </label>
         <label className="text-xs font-medium text-gray-600 dark:text-white/70">Region
           <select value={region} onChange={(event) => changeFilter(setRegion, event.target.value)} className={`${controlClass} mt-1`}>
@@ -126,56 +137,47 @@ export const TerminalCoverageTable = ({ terminals, coverage = {}, snapshot }) =>
           </select>
         </label>
       </div>
-      {requiredFeature !== "all" ? <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-white/70"><input type="checkbox" checked={includeLimited} onChange={(event) => changeFilter(setIncludeLimited, event.target.checked)} className="accent-green-600" />Include partial coverage</label> : null}
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 dark:text-white/60">
-        <p>Showing {rows.length} of {terminals.length} terminals. Select a row for all features.</p>
-        <div role="group" aria-label="Coverage detail view" className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-white/10 dark:bg-white/5">
-          {[{ value: "expanded", label: "Expanded row" }, { value: "panel", label: "Side panel" }].map((layout) => (
-            <button key={layout.value} type="button" aria-pressed={detailLayout === layout.value} onClick={() => setDetailLayout(layout.value)} className={`rounded-md px-3 py-1.5 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600 ${detailLayout === layout.value ? "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-300" : "text-gray-600 hover:bg-gray-100 dark:text-white/60 dark:hover:bg-white/10"}`}>{layout.label}</button>
-          ))}
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-2" aria-label="Coverage status legend">
+      {requiredFeature !== "all" ? <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-white/70"><input type="checkbox" checked={includeLimited} onChange={(event) => changeFilter(setIncludeLimited, event.target.checked)} className="accent-green-600" />Include limited availability</label> : null}
+      <p className="text-xs text-gray-500 dark:text-white/60">Showing {rows.length} of {terminals.length} terminals across {ports.length} {ports.length === 1 ? "port" : "ports"}. Select a terminal row for data availability.</p>
+      <div className="flex flex-wrap items-center gap-2" aria-label="Data availability legend">
+        <span className="mr-2 text-xs text-gray-600 dark:text-white/70">Data available through the terminal integration</span>
         {["supported", "limited", "unsupported", "unknown"].map((status) => <TerminalCoverageStatus key={status} status={status} />)}
       </div>
-      <div className="terminal-coverage-layout" data-layout={detailLayout} data-selected={Boolean(selected)}>
-        <div className="rounded-lg border border-gray-200 dark:border-white/15">
-        <table className="w-full table-fixed border-collapse text-left text-sm">
-          <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-            <tr>
-              <th scope="col" className="w-full px-3 py-3 font-medium sm:w-2/5">Terminal</th>
-              {summaryFeatures.map((feature) => <th key={feature.key} scope="col" title={feature.description} className="hidden px-2 py-3 font-medium sm:table-cell">{feature.label}</th>)}
-            </tr>
-          </thead>
-          {rows.map((terminal, index) => {
-            const key = keyFor(terminal)
-            const isSelected = keyFor(selected || {}) === key
-            const detailId = `terminal-feature-details-${index}`
-            const buttonId = `terminal-feature-toggle-${index}`
-            return (
-              <tbody key={key}>
-                <tr onClick={(event) => { if (!event.target.closest("button, a, input, select")) toggleRow(key, detailId) }} className={`cursor-pointer border-b border-gray-100 align-top hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5 ${isSelected ? "bg-gray-50 dark:bg-white/5" : ""}`}>
-                  <td className="px-3 py-3">
-                    <button id={buttonId} type="button" aria-expanded={isSelected} aria-controls={isSelected ? detailId : undefined} onClick={() => toggleRow(key, detailId)} className="flex w-full items-start justify-between gap-2 rounded text-left font-semibold text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600 dark:text-white">
-                      <span>{terminal.name}</span><span aria-hidden="true" className="shrink-0 text-green-600">{isSelected ? "⌄" : "›"}</span>
-                    </button>
-                    <div className="mt-1 text-xs text-gray-500 dark:text-white/60">{terminal.port}, {terminal.country}</div>
-                    <div className="mt-1 break-words font-mono text-[11px] text-gray-500 dark:text-white/50">{terminal.locode}{terminal.firmsCode ? ` · FIRMS ${terminal.firmsCode}` : ""}</div>
-                    <div className="mt-3 grid grid-cols-2 gap-2 sm:hidden">{summaryFeatures.map((feature) => <div key={feature.key}><div className="mb-1 text-xs text-gray-500 dark:text-white/60">{feature.label}</div><TerminalCoverageStatus status={feature.status || coverage[key]?.features?.[feature.key]} compact /></div>)}</div>
-                  </td>
-                  {summaryFeatures.map((feature) => <td key={feature.key} className="hidden px-2 py-4 sm:table-cell"><TerminalCoverageStatus status={feature.status || coverage[key]?.features?.[feature.key]} compact /></td>)}
-                </tr>
-                {isSelected ? <tr className="terminal-coverage-detail-row"><td colSpan={5} className="border-b border-gray-200 p-0 dark:border-white/10"><div id={detailId} className="terminal-coverage-detail-panel"><TerminalCoverageDetails terminal={terminal} coverage={coverage[key]} onClose={() => { setSelectedKey(null); document.getElementById(buttonId)?.focus() }} /></div></td></tr> : null}
-              </tbody>
-            )
-          })}
-          {rows.length === 0 ? <tbody><tr><td colSpan={5} className="px-3 py-10 text-center text-gray-500 dark:text-white/60">No terminals match these filters. Change the search, region, or required feature.</td></tr></tbody> : null}
-        </table>
-        </div>
-        {detailLayout === "panel" && !selected ? <aside className="terminal-coverage-inspector-placeholder rounded-lg border border-dashed border-gray-200 p-6 text-sm text-gray-500 dark:border-white/20 dark:text-white/60">Select a terminal to inspect all 12 features and their API fields.</aside> : null}
+      <div className="terminal-port-groups">
+        {ports.map((port) => (
+          <section key={port.locode} data-port-locode={port.locode} aria-labelledby={`terminal-port-${port.locode}`} className="terminal-port rounded border border-gray-200 text-sm dark:border-white/15">
+            <div className="terminal-port-heading bg-gray-50 dark:bg-white/5">
+              <h3 id={`terminal-port-${port.locode}`} className="text-gray-900 dark:text-white">{port.name}</h3>
+              <span className="text-xs text-gray-500 dark:text-white/60">{port.country} · <span className="font-mono">{port.locode}</span></span>
+              <span className="terminal-port-count text-xs text-gray-500 dark:text-white/60">{port.terminals.length} {port.terminals.length === 1 ? "terminal" : "terminals"}</span>
+            </div>
+            <div className="terminal-columns terminal-table-heading text-xs font-medium text-gray-600 dark:text-white/70" aria-hidden="true"><span>Terminal</span><span>Terminal code</span><span>Data availability</span><span /></div>
+            {port.terminals.map((terminal) => {
+              const key = keyFor(terminal)
+              const isSelected = selectedKey === key
+              const detailId = `terminal-feature-details-${encodeURIComponent(key)}`
+              const buttonId = `terminal-feature-toggle-${encodeURIComponent(key)}`
+              return (
+                <article key={key} data-terminal-key={key} aria-label={terminal.name} className={`terminal-row ${isSelected ? "terminal-row-expanded" : ""}`}>
+                  <button id={buttonId} type="button" aria-expanded={isSelected} aria-controls={isSelected ? detailId : undefined} aria-label={`${isSelected ? "Hide" : "Show"} ${terminal.name} details`} aria-describedby={`${buttonId}-code ${buttonId}-summary`} onClick={() => setSelectedKey(isSelected ? null : key)} className={`terminal-columns terminal-row-header ${isSelected ? "terminal-row-selected" : ""}`}>
+                    <span className="terminal-row-name min-w-0 font-semibold text-gray-900 dark:text-white">{terminal.name}</span>
+                    <span id={`${buttonId}-code`} className="terminal-row-code font-mono text-[11px] text-gray-500 dark:text-white/50"><span className="sr-only">{terminal.locode.startsWith("US") ? "FIRMS code: " : "Terminal code: "}</span>{terminal.firmsCode || "—"}</span>
+                    <span id={`${buttonId}-summary`} className="terminal-summary-badges">
+                      <span className="sr-only">Data availability: </span>
+                      {summaryFeatures.map((feature) => <span key={feature.key}><TerminalCoverageStatus status={coverage[key]?.features?.[feature.key]} label={feature.label} description={feature.description} /></span>)}
+                    </span>
+                    <svg className="terminal-row-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+                  </button>
+                  {isSelected ? <section id={detailId} aria-labelledby={buttonId}><TerminalCoverageDetails features={terminalCoverageFeatures} coverage={coverage[key]} Status={TerminalCoverageStatus} /></section> : null}
+                </article>
+              )
+            })}
+          </section>
+        ))}
+        {rows.length === 0 ? <p className="rounded border border-gray-200 px-3 py-10 text-center text-sm text-gray-500 dark:border-white/15 dark:text-white/60">No terminals match these filters. Change the search, region, or required feature.</p> : null}
       </div>
       <p className="text-xs leading-relaxed text-gray-500 dark:text-white/60">Terminal LFD is the last free day reported by the terminal. Carrier-reported LFD or an estimated LFD, where enabled, may still be available when terminal LFD is missing.</p>
-      <p className="text-xs text-gray-500 dark:text-white/60">Supported fields may be absent for an individual container. <a href="/coverage/fields" className="underline underline-offset-2">See field availability</a>. Unknown means no feature status is available.</p>
+      <p className="text-xs text-gray-500 dark:text-white/60">Available fields may be absent for an individual container. <a href="/coverage/fields" className="underline underline-offset-2">See field availability</a>. Unknown means no feature status is available.</p>
       {snapshot?.capturedOn ? <p className="text-xs leading-relaxed text-gray-500 dark:text-white/60">Data last updated {snapshot.capturedOn}. We continuously improve our integrations, so coverage may have changed since this update. <a href="mailto:support@terminal49.com" className="underline underline-offset-2">Contact support</a> to confirm coverage for your terminal.</p> : null}
     </div>
   )
