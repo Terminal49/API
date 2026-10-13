@@ -125,6 +125,7 @@ It should list tools such as `search_container`, `track_container`, and `get_con
 
 | Symptom | How to fix |
 |---------|------------|
+| Server shows as **Disabled** in `/mcp list` | Gemini CLI turns off MCP servers in folders you haven't trusted. Run `/permissions trust` in the folder, or start Gemini CLI from a trusted folder |
 | Server shows as **Disconnected** in `/mcp list` | Confirm the URL is exactly `https://mcp.terminal49.com` (no path) and the transport is `http` (`httpUrl` in `settings.json`) |
 | Sign-in window never opens | Gemini CLI needs a local browser and a `localhost` redirect. On a headless machine or over SSH, use the [API key alternative](#api-key-alternative) |
 | `401 Unauthorized` | Run `/mcp auth terminal49` to re-authenticate, or check the `Authorization: Token YOUR_API_KEY` header if you use an API key |
