@@ -342,16 +342,6 @@
             ]
           },
           {
-            "group": "Coverage data",
-            "icon": "table",
-            "pages": [
-              "data/coverage/terminals",
-              "data/coverage/shipping-lines",
-              "data/coverage/rail-carriers",
-              "data/coverage/inland-rail-terminals"
-            ]
-          },
-          {
             "group": "Updates",
             "icon": "clock-rotate-left",
             "pages": [
