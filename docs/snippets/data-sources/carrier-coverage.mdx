@@ -1,4 +1,4 @@
-export const CarrierCoverageStatus = ({ status, compact = false, availability = false }) => {
+export const CarrierCoverageStatus = ({ status, compact = false, availability = false, label }) => {
   const statuses = {
     supported: { label: availability ? "Available" : "Supported", symbol: "✓", className: "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400" },
     limited: { label: availability ? "Limited" : "Partial", symbol: "◐", className: "bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300" },
@@ -8,9 +8,9 @@ export const CarrierCoverageStatus = ({ status, compact = false, availability = 
   }
   const value = statuses[status] || statuses.unknown
   return (
-    <span title={value.label} className={`inline-flex items-center justify-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium ${value.className}`}>
-      <span aria-hidden="true">{value.symbol}</span>
-      {compact ? <span className="sr-only">{value.label}</span> : value.label}
+    <span title={label ? `${label}: ${value.label}` : value.label} className={`${label ? "shipping-feature-badge " : ""}inline-flex items-center justify-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium ${value.className}`}>
+      <span aria-hidden="true" className="shrink-0">{value.symbol}</span>
+      {label ? <><span className="shipping-feature-label">{label}</span><span className="sr-only">, {value.label}</span></> : compact ? <span className="sr-only">{value.label}</span> : value.label}
     </span>
   )
 }
@@ -57,15 +57,14 @@ export const ShippingCarrierCoverageDetails = ({ features, coverage, Status }) =
     { label: "Import Milestones", keys: ["sslLfdChanged"], open: true },
     { label: "Other Events", group: "Other events", excluded: ["sslLfdChanged"], open: false },
   ]
-  const FeatureRows = ({ items }) => (
-    <dl className="shipping-feature-list">
+  const FeatureBadges = ({ items }) => (
+    <ul className="shipping-feature-badges">
       {items.map((feature) => (
-        <div key={feature.key} data-feature-key={feature.key} className="shipping-feature-row">
-          <dt>{feature.href ? <a href={feature.href} className="underline underline-offset-4">{feature.label}</a> : feature.label}{feature.field ? <span className="block break-all font-mono text-[11px] text-gray-500 dark:text-white/50">{feature.field}</span> : null}</dt>
-          <dd><Status status={coverage?.features?.[feature.key]} availability compact /></dd>
-        </div>
+        <li key={feature.key} data-feature-key={feature.key}>
+          {feature.href ? <a href={feature.href} className="inline-flex max-w-full rounded-full hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600"><Status status={coverage?.features?.[feature.key]} label={feature.label} availability /></a> : <Status status={coverage?.features?.[feature.key]} label={feature.label} availability />}
+        </li>
       ))}
-    </dl>
+    </ul>
   )
   return (
     <div className="shipping-coverage-details space-y-3 p-3 text-sm text-gray-900 dark:text-white">
@@ -77,28 +76,26 @@ export const ShippingCarrierCoverageDetails = ({ features, coverage, Status }) =
       </div>
       <section aria-label="Routing" className="shipping-section">
         <h4 className="shipping-section-heading">Routing</h4>
-        <div className="shipping-routing-head text-xs font-medium text-gray-600 dark:text-white/70" aria-hidden="true"><span>Location</span><span>ETD / ETA</span><span>ATD / ATA</span><span /></div>
         {routing.map((location) => (
           <details key={location.group} className="shipping-route">
             <summary className="shipping-route-summary">
               <span className="shipping-route-name">{location.label}</span>
-              <span data-feature-key={location.estimated} className="inline-flex items-center gap-2"><span className="text-xs text-gray-500 dark:text-white/60">{location.estimatedLabel}</span><Status status={coverage?.features?.[location.estimated]} availability compact /></span>
-              <span data-feature-key={location.actual} className="inline-flex items-center gap-2"><span className="text-xs text-gray-500 dark:text-white/60">{location.actualLabel}</span><Status status={coverage?.features?.[location.actual]} availability compact /></span>
+              <span data-feature-key={location.estimated}><Status status={coverage?.features?.[location.estimated]} label={location.estimatedLabel} availability /></span>
+              <span data-feature-key={location.actual}><Status status={coverage?.features?.[location.actual]} label={location.actualLabel} availability /></span>
               <span className="shipping-attribute-toggle text-xs text-gray-600 dark:text-white/70"><span className="shipping-when-closed">See all attributes</span><span className="shipping-when-open">Hide attributes</span><span className="shipping-chevron" aria-hidden="true">›</span></span>
             </summary>
             <div className="shipping-route-attributes px-3 pb-2">
               <h5 className="py-2 text-xs font-semibold text-gray-500 dark:text-white/60">{location.group}</h5>
-              <FeatureRows items={features.filter((feature) => feature.group === location.group && feature.key !== location.estimated && feature.key !== location.actual)} />
+              <FeatureBadges items={features.filter((feature) => feature.group === location.group && feature.key !== location.estimated && feature.key !== location.actual)} />
             </div>
           </details>
         ))}
       </section>
       {sections.map((section) => (
-        <details key={section.label} className={`shipping-section ${section.keys?.length === 1 ? "shipping-single-feature" : ""}`} open={section.open}>
+        <details key={section.label} className="shipping-section" open={section.open}>
           <summary className="shipping-section-heading"><span className="shipping-chevron" aria-hidden="true">›</span><span>{section.label}</span>{section.hint ? <span className="ml-auto text-xs font-normal text-gray-500 dark:text-white/60">{section.hint}</span> : null}</summary>
-          <div className="px-3 pb-2">
-            <div className="shipping-feature-head text-xs font-medium"><span>Feature</span><span>Availability</span><span aria-hidden="true">Feature</span><span aria-hidden="true">Availability</span></div>
-            <FeatureRows items={features.filter((feature) => section.keys ? section.keys.includes(feature.key) : feature.group === section.group && !section.excluded?.includes(feature.key))} />
+          <div className="p-3">
+            <FeatureBadges items={features.filter((feature) => section.keys ? section.keys.includes(feature.key) : feature.group === section.group && !section.excluded?.includes(feature.key))} />
           </div>
         </details>
       ))}
@@ -124,7 +121,7 @@ export const ShippingCarrierCoverageRows = ({ rows, features, coverage, selected
             <div className={`shipping-carrier-columns shipping-carrier-header ${isSelected ? "shipping-carrier-selected" : ""}`}>
               <div className="min-w-0"><span className="font-semibold text-gray-900 dark:text-white">{carrier.name}</span><div className="mt-1 break-words font-mono text-[11px] text-gray-500 dark:text-white/50">{carrier.scac}{carrier.alternativeScacs?.length ? ` · Also ${carrier.alternativeScacs.join(", ")}` : ""}</div></div>
               <div className="shipping-tracking-badges" aria-label="Tracking number support">
-                {identifiers.map((identifier) => <span key={identifier.key} data-feature-key={identifier.key} title={identifier.title} className="inline-flex items-center gap-1.5"><Status status={coverage[carrier.scac]?.features?.[identifier.key]} compact /><span>{identifier.label}</span></span>)}
+                {identifiers.map((identifier) => <span key={identifier.key} data-feature-key={identifier.key} title={identifier.title}><Status status={coverage[carrier.scac]?.features?.[identifier.key]} label={identifier.label} /></span>)}
               </div>
               <button id={buttonId} type="button" aria-expanded={isSelected} aria-controls={isSelected ? detailId : undefined} aria-label={`${isSelected ? "Hide" : "Show"} ${carrier.name} details`} onClick={() => toggleRow(carrier.scac)} className="shipping-details-toggle inline-flex items-center justify-end gap-2 rounded text-xs font-medium text-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600 dark:text-white/80"><span>{isSelected ? "Hide details" : "Show details"}</span><span aria-hidden="true">{isSelected ? "⌃" : "⌄"}</span></button>
             </div>
@@ -175,7 +172,6 @@ export const CarrierCoverageExplorer = ({ carriers, features, coverage = {}, sum
         .shipping-section[open] > summary, .shipping-section > h4 { border-bottom: 1px solid rgb(156 163 175 / 0.2); }
         .shipping-chevron { display: inline-block; font-size: 20px; line-height: 16px; transition: transform 120ms; }
         details[open] > summary > .shipping-chevron, details[open] > summary > .shipping-attribute-toggle > .shipping-chevron { transform: rotate(90deg); }
-        .shipping-routing-head { display: none; }
         .shipping-route + .shipping-route { border-top: 1px solid rgb(156 163 175 / 0.2); }
         .shipping-route-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; padding: 10px 12px; }
         .shipping-route-name, .shipping-attribute-toggle { grid-column: 1 / -1; }
@@ -184,26 +180,17 @@ export const CarrierCoverageExplorer = ({ carriers, features, coverage = {}, sum
         .shipping-route[open] > summary .shipping-when-open { display: inline; }
         .shipping-route[open] > summary .shipping-when-closed { display: none; }
         .shipping-route-attributes { border-top: 1px solid rgb(156 163 175 / 0.15); }
-        .shipping-feature-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 4px 0; border-top: 1px solid rgb(156 163 175 / 0.2); }
-        .shipping-feature-row dt { min-width: 0; overflow-wrap: anywhere; }
-        .shipping-feature-row dd { flex-shrink: 0; margin: 0 12px; }
-        .shipping-feature-head { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 9px 0 6px; }
-        .shipping-feature-head > :nth-child(n+3) { display: none; }
+        .shipping-feature-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+        .shipping-feature-badges > li { min-width: 0; max-width: 100%; }
+        .shipping-feature-badge { max-width: 100%; padding: 6px 12px; text-align: left; }
+        .shipping-feature-label { min-width: 0; overflow-wrap: anywhere; }
         @container (min-width: 640px) {
           .shipping-carrier-columns { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.8fr) minmax(100px, 0.7fr); }
           .shipping-table-heading { display: grid; border-bottom: 1px solid rgb(156 163 175 / 0.25); }
           .shipping-tracking-badges { grid-column: auto; grid-row: auto; justify-content: space-between; gap: 8px; }
           .shipping-details-toggle { grid-column: auto; grid-row: auto; }
-          .shipping-route-summary, .shipping-routing-head { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(140px, 1fr); align-items: center; gap: 12px; }
-          .shipping-routing-head { padding: 9px 12px; }
+          .shipping-route-summary { grid-template-columns: minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(140px, 1fr); align-items: center; gap: 12px; }
           .shipping-route-name, .shipping-attribute-toggle { grid-column: auto; }
-          .shipping-feature-list { columns: 2; column-gap: 32px; }
-          .shipping-feature-row { break-inside: avoid; }
-          .shipping-single-feature .shipping-feature-list { columns: 1; }
-          .shipping-single-feature .shipping-feature-head { grid-template-columns: 1fr auto; }
-          .shipping-single-feature .shipping-feature-head > :nth-child(n+3) { display: none; }
-          .shipping-feature-head { grid-template-columns: 1fr auto 1fr auto; gap: 32px; }
-          .shipping-feature-head > :nth-child(n+3) { display: block; }
         }
 
         .carrier-coverage-feature-groups { grid-template-columns: 1fr; }
