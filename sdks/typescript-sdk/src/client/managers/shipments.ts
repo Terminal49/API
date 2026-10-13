@@ -14,6 +14,13 @@ import {
   normalizeIncludeWithDefault,
 } from '../query.js';
 import { BaseManager } from './base.js';
+import {
+  addPartyRole,
+  clearCustomField,
+  listPartyRoles,
+  mapPartyRoles,
+  removePartyRole,
+} from './record-writes.js';
 
 const DEFAULT_SHIPMENT_INCLUDES = [
   'containers',
@@ -170,5 +177,52 @@ export class ShipmentManager extends BaseManager {
       },
     );
     return this.formatResult(raw, options?.format);
+  }
+
+  /** Lists the parties attached to the shipment by role. */
+  async partyRoles(id: string, options?: CallOptions): Promise<any> {
+    const raw = await listPartyRoles(this.transport, 'shipments', id);
+    return this.formatResult(raw, options?.format, mapPartyRoles);
+  }
+
+  /** Attaches a party to the shipment in a role. */
+  async addPartyRole(
+    id: string,
+    role: string,
+    partyId: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await addPartyRole(
+      this.transport,
+      'shipments',
+      id,
+      role,
+      partyId,
+    );
+    return this.formatResult(raw, options?.format, mapPartyRoles);
+  }
+
+  /** Detaches a party role from the shipment; the party itself is kept. */
+  async removePartyRole(
+    id: string,
+    partyRoleId: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    return this.formatResult(
+      await removePartyRole(this.transport, 'shipments', id, partyRoleId),
+      options?.format,
+    );
+  }
+
+  /** Removes a custom field value from the shipment. */
+  async clearCustomField(
+    id: string,
+    apiSlug: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    return this.formatResult(
+      await clearCustomField(this.transport, 'shipments', id, apiSlug),
+      options?.format,
+    );
   }
 }

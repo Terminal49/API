@@ -20,6 +20,13 @@ import {
   normalizeInclude,
 } from '../query.js';
 import { BaseManager } from './base.js';
+import {
+  addPartyRole,
+  clearCustomField,
+  listPartyRoles,
+  mapPartyRoles,
+  removePartyRole,
+} from './record-writes.js';
 
 const DEFAULT_CONTAINER_INCLUDES = [
   'shipment',
@@ -183,5 +190,52 @@ export class ContainerManager extends BaseManager {
       pod_arrived_at: container.pod_arrived_at,
       pod_discharged_at: container.pod_discharged_at,
     };
+  }
+
+  /** Lists the parties attached to the container by role. */
+  async partyRoles(id: string, options?: CallOptions): Promise<any> {
+    const raw = await listPartyRoles(this.transport, 'containers', id);
+    return this.formatResult(raw, options?.format, mapPartyRoles);
+  }
+
+  /** Attaches a party to the container in a role. */
+  async addPartyRole(
+    id: string,
+    role: string,
+    partyId: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await addPartyRole(
+      this.transport,
+      'containers',
+      id,
+      role,
+      partyId,
+    );
+    return this.formatResult(raw, options?.format, mapPartyRoles);
+  }
+
+  /** Detaches a party role from the container; the party itself is kept. */
+  async removePartyRole(
+    id: string,
+    partyRoleId: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    return this.formatResult(
+      await removePartyRole(this.transport, 'containers', id, partyRoleId),
+      options?.format,
+    );
+  }
+
+  /** Removes a custom field value from the container. */
+  async clearCustomField(
+    id: string,
+    apiSlug: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    return this.formatResult(
+      await clearCustomField(this.transport, 'containers', id, apiSlug),
+      options?.format,
+    );
   }
 }
