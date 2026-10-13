@@ -20,6 +20,27 @@ const page = readFileSync(
   'utf8',
 );
 
+test('corrected rail facility locations remain consistent in every export', () => {
+  for (const [name, city, state, locode] of [
+    ['UP - Beaumont', 'Beaumont', 'TX', 'USBPT'],
+    ['KCS - Kendleton', 'Houston', 'TX', 'USZKD'],
+    ['NS - Livernois', 'Detroit', 'MI', 'USDET'],
+  ]) {
+    const row = catalog.terminals.find((terminal) => terminal.name === name);
+    assert.deepEqual([row.city, row.state, row.locode], [city, state, locode]);
+    const outputs = railTerminalArtifacts(catalog, page);
+    assert.ok(outputs['docs/data/coverage/inland-rail-terminals.csv'].includes(
+      `"${name}","${city}","${state}","United States","${locode}"`,
+    ));
+    for (const path of [
+      'docs/coverage/inland-rail-terminals.mdx',
+      'docs/data/coverage/inland-rail-terminals.mdx',
+    ]) {
+      assert.ok(outputs[path].includes(`| ${name} | ${city} | ${state} | United States | ${locode} |`));
+    }
+  }
+});
+
 test('complete catalog retains every location and identifier in static and interactive outputs', () => {
   assert.equal(catalog.count, 221);
   assert.equal(catalog.terminals.length, 221);
