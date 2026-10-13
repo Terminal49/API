@@ -16,7 +16,7 @@ import { shippingLines as carriers, shippingLineFeatures, shippingLineCoverage, 
 
 Ocean carriers — also called shipping lines or vessel-operating common carriers (VOCCs) — are the primary source of shipment data. Terminal49 integrates directly with each carrier below and normalizes bill of lading details, bookings, containers, vessel ETAs, and transport milestones into a single API.
 
-The MBOL (master bill of lading), Booking, and Container badges show which numbers each carrier supports for tracking. Search by name or Standard Carrier Alpha Code (SCAC), filter by a required feature, and select **Show details** for data availability. Expand the routing attributes, container details, and milestone sections to see individual fields.
+The MBOL (master bill of lading), Booking, and Container badges show which numbers each carrier supports for tracking. Search by name or Standard Carrier Alpha Code (SCAC), filter by a required feature, and select a carrier row to see routing attributes and events. Expand Container Details for equipment and other container fields.
 
 Carrier coverage is account-specific and can change. Use [`GET /shipping_lines`](/api-docs/api-reference/shipping-lines/shipping-lines) for the current list on your account.
 
