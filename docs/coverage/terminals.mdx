@@ -12,8 +12,8 @@ keywords:
 mode: "wide"
 ---
 
-import { terminals } from "/snippets/data-sources/coverage-data.mdx";
-import { TerminalCoverageTable } from "/snippets/data-sources/coverage-tables.mdx";
+import { TerminalCoverageTable, TerminalCoverageDetails, TerminalCoverageStatus, terminalCoverageFeatures } from "/snippets/data-sources/terminal-coverage.mdx";
+import { terminalCoverageEntities as terminals, terminalFeatureCoverage, terminalFeatureSnapshot } from "/snippets/data-sources/terminal-feature-data.mdx";
 
 Terminal49 covers ports and terminals at two levels: a global port and terminal dataset that maps every container's route, and direct terminal integrations that add the operational data you need to execute imports and exports.
 
@@ -27,25 +27,2811 @@ This mapping is global and applies to every shipment. You always know where a co
 
 At the terminals below, Terminal49 also connects directly to the terminal operator. That connection adds the attributes that drive import and export execution at the gate:
 
+- **Import milestones** — additional terminal data for import container movements; individual milestone coverage varies by terminal
 - **Pickup availability** — whether the container is ready to be picked up
-- **Last free day (LFD)** — when demurrage starts
-- **Holds** — customs, freight, TMF, USDA, and other holds with status
+- **Terminal last free day (LFD)** — the final day of free time reported by the terminal before demurrage charges apply
+- **Holds & releases** — customs, freight, TMF, USDA, and other active holds; cleared holds are removed from the holds array
 - **Fees** — demurrage, exam, and other charges with amounts
 
 A port that is not in this table still appears on routes with carrier-reported events; the table below is where the terminal-level operational data comes from.
 
-Search by terminal, port, UN/LOCODE, or FIRMS code, or filter by region.
+Terminals are grouped by port. Search by terminal, port, UN/LOCODE, SMDG, or FIRMS code, or filter by region and required feature. Select a terminal row to see all available attributes and milestones, grouped into pickup and availability, holds and fees, gate and yard, and container milestones.
+
+SMDG codes identify marine container terminals within a port's UN/LOCODE. FIRMS codes identify US customs facilities and are shown separately for US terminals. A dash means the code is not listed, or FIRMS does not apply outside the US.
 
 Holds, fees, LFD, and pickup availability vary by terminal. A terminal on this list does not mean every field is present for every container — see [field availability](/coverage/fields) for what each field depends on.
 
-Coverage reflects production as of 9 October 2026. The table contains 138 publicly available direct terminal integrations.
+The table lists publicly available direct terminal integrations.
 
 ## Direct terminal integrations
 
-<TerminalCoverageTable terminals={terminals} />
+<TerminalCoverageTable terminals={terminals} coverage={terminalFeatureCoverage} snapshot={terminalFeatureSnapshot} />
+
+[Complete terminal feature table](/data/coverage/terminals) · [JSON](/data/coverage/terminals.json) · [CSV](/data/coverage/terminals.csv)
 
 Boston (Conley), Saint John, and Fraser Surrey are not currently supported. At Port Everglades, Port Everglades Terminal is supported; Florida International Terminal is not.
 
 In New Zealand, Lyttelton and Timaru are supported through PortConnect. Auckland and Tauranga are not yet supported at the terminal level; containers discharging there still show carrier-reported events.
 
 For how holds, fees, and LFD appear on a container, see [holds and fees](/api-docs/in-depth-guides/holds-and-fees).
+
+{/* coverage-agent-data:start */}
+<Visibility for="agents">
+
+## Complete structured coverage
+
+Last updated 2026-10-13.
+
+[Download JSON](/data/coverage/terminals.json).
+
+Supported means the source returns the feature when applicable. Partial means it returns the feature in some cases. Not supported means this source does not return the feature. Unknown means no feature assessment is available. Carrier credentials required means the feature requires credentials for the carrier integration.
+
+Coverage describes integration capabilities. A supported field may be absent until its milestone occurs. We continually improve our integrations. Contact support to confirm current coverage.
+
+Terminal Last Free Day (LFD) coverage is separate from carrier-reported or estimated LFD, which may still be available.
+
+Terminal identities list the port UN/LOCODE, SMDG terminal code where listed, and FIRMS code for US terminals where listed.
+
+## APM Terminals Buenos Aires T4
+
+Buenos Aires, Argentina. Port UN/LOCODE `ARBUE`. SMDG code: `TERM4`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Flinders Adelaide Container Terminal
+
+Adelaide, Australia. Port UN/LOCODE `AUADL`. SMDG code: `FLACT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Brisbane Autostrad
+
+Brisbane, Australia. Port UN/LOCODE `AUBNE`. SMDG code: `PTFIT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## DP World Brisbane
+
+Brisbane, Australia. Port UN/LOCODE `AUBNE`. SMDG code: `DPBNE`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Hutchison Brisbane Container Terminals
+
+Brisbane, Australia. Port UN/LOCODE `AUBNE`. SMDG code: `HPAFI`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## DP World Fremantle
+
+Fremantle, Australia. Port UN/LOCODE `AUFRE`. SMDG code: `CONFR`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Fremantle
+
+Fremantle, Australia. Port UN/LOCODE `AUFRE`. SMDG code: `ASLFR`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## DP World West Swanson Dock
+
+Melbourne, Australia. Port UN/LOCODE `AUMEL`. SMDG code: `CONWS`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## East Swanson Dock
+
+Melbourne, Australia. Port UN/LOCODE `AUMEL`. SMDG code: `ASES1`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## VICT Webb Dock East
+
+Melbourne, Australia. Port UN/LOCODE `AUMEL`. SMDG code: `VICTM`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## DP World Sydney
+
+Sydney, Australia. Port UN/LOCODE `AUSYD`. SMDG code: `CTLPB`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Hutchison Sydney International Container Terminal
+
+Sydney, Australia. Port UN/LOCODE `AUSYD`. SMDG code: `HPAPB`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Sydney Autostrad
+
+Sydney, Australia. Port UN/LOCODE `AUSYD`. SMDG code: `ASLPB`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Chittagong Port
+
+Chittagong, Bangladesh. Port UN/LOCODE `BDCGP`. SMDG code: Not listed. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## APM Terminals Pecem
+
+Pecem, Brazil. Port UN/LOCODE `BRPEC`. SMDG code: `BRAPEC`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## South End Container Terminal
+
+Halifax, Canada. Port UN/LOCODE `CAHAL`. SMDG code: `HAFXT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Maisonneuve - Section 68
+
+Montreal, Canada. Port UN/LOCODE `CAMTR`. SMDG code: `TMTMAI`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## MGTP Cast - Section 77
+
+Montreal, Canada. Port UN/LOCODE `CAMTR`. SMDG code: `MGTCAS`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## MGTP Racine - Section 66
+
+Montreal, Canada. Port UN/LOCODE `CAMTR`. SMDG code: `MGTRAC`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Viau - Section 52
+
+Montreal, Canada. Port UN/LOCODE `CAMTR`. SMDG code: `VIAU`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Prince Rupert Container Terminal
+
+Prince Rupert, Canada. Port UN/LOCODE `CAPRR`. SMDG code: `FCTPRR`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Partial |
+| Container milestones | Empty returned | Not supported |
+
+## DP World Centerm
+
+Vancouver, Canada. Port UN/LOCODE `CAVAN`. SMDG code: `CTM`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## GCT Deltaport
+
+Vancouver, Canada. Port UN/LOCODE `CAVAN`. SMDG code: `DLT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## GCT Vanterm
+
+Vancouver, Canada. Port UN/LOCODE `CAVAN`. SMDG code: `VTM`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## STI San Antonio
+
+San Antonio, Chile. Port UN/LOCODE `CLSAI`. SMDG code: `STI`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Haina International Terminals
+
+Rio Haina, Dominican Republic. Port UN/LOCODE `DOHAI`. SMDG code: `HIT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Contecon Guayaquil
+
+Guayaquil, Ecuador. Port UN/LOCODE `ECGYE`. SMDG code: `CONTE`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Suez Canal Container Terminal
+
+Port Said, Egypt. Port UN/LOCODE `EGPSD`. SMDG code: `SCCT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## EUROGATE Container Terminal Bremerhaven
+
+Bremerhaven, Germany. Port UN/LOCODE `DEBRV`. SMDG code: `EGB`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## MSC Gate Bremerhaven
+
+Bremerhaven, Germany. Port UN/LOCODE `DEBRV`. SMDG code: `MSCBH`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## EUROGATE Hamburg
+
+Hamburg, Germany. Port UN/LOCODE `DEHAM`. SMDG code: `EGH`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## HHLA Container Terminal Altenwerder
+
+Hamburg, Germany. Port UN/LOCODE `DEHAM`. SMDG code: `CTA`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## HHLA Container Terminal Burchardkai
+
+Hamburg, Germany. Port UN/LOCODE `DEHAM`. SMDG code: `CTB`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## HHLA Container Terminal Tollerort
+
+Hamburg, Germany. Port UN/LOCODE `DEHAM`. SMDG code: `CTT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## EUROGATE Container Terminal Wilhelmshaven
+
+Wilhelmshaven, Germany. Port UN/LOCODE `DEWVN`. SMDG code: `EGW`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## APM Terminals Quetzal
+
+Puerto Quetzal, Guatemala. Port UN/LOCODE `GTPRQ`. SMDG code: `TCQ`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Empresa Portuaria Santo Tomas
+
+Puerto Santo Tomas De Castilla, Guatemala. Port UN/LOCODE `GTSTC`. SMDG code: `EPSTC`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Asia Container Terminals
+
+Hong Kong, Hong Kong. Port UN/LOCODE `HKHKG`. SMDG code: `ACTHK`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## COSCO-HIT
+
+Hong Kong, Hong Kong. Port UN/LOCODE `HKHKG`. SMDG code: `CHTHK`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Hong Kong International Terminals
+
+Hong Kong, Hong Kong. Port UN/LOCODE `HKHKG`. SMDG code: `HITHK`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Hong Kong Modern Terminals
+
+Hong Kong, Hong Kong. Port UN/LOCODE `HKHKG`. SMDG code: `MTLHK`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Jakarta International Container Terminal
+
+Jakarta, Java, Indonesia. Port UN/LOCODE `IDJKT`. SMDG code: `UTC1`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Basra Gateway Terminal East
+
+Umm Qasr Pt, Iraq. Port UN/LOCODE `IQUQR`. SMDG code: `BGTE`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Basra Gateway Terminal West
+
+Umm Qasr Pt, Iraq. Port UN/LOCODE `IQUQR`. SMDG code: `BGTW`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Dublin Ferryport Terminal
+
+Dublin, Ireland. Port UN/LOCODE `IEDUB`. SMDG code: `DFP`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Haifa Port
+
+Haifa, Israel. Port UN/LOCODE `ILHFA`. SMDG code: `HPCL`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Terminal Alto Fondale
+
+Livorno, Italy. Port UN/LOCODE `ITLIV`. SMDG code: `TAFLIV`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Terminal Darsena Toscana
+
+Livorno, Italy. Port UN/LOCODE `ITLIV`. SMDG code: `TDT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Terminal Dock Etruschi
+
+Livorno, Italy. Port UN/LOCODE `ITLIV`. SMDG code: `IMP`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Terminal Lorenzini
+
+Livorno, Italy. Port UN/LOCODE `ITLIV`. SMDG code: `LOREN`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Conateco Terminal
+
+Naples, Italy. Port UN/LOCODE `ITNAP`. SMDG code: `CONA`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Kingston Container Terminal
+
+Kingston, Jamaica. Port UN/LOCODE `JMKIN`. SMDG code: `KCT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Aqaba Container Terminal
+
+Al 'Aqabah, Jordan. Port UN/LOCODE `JOAQJ`. SMDG code: `ACT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## CMA Beirut Terminal
+
+Beirut, Lebanon. Port UN/LOCODE `LBBEY`. SMDG code: `BCTC`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Partial |
+
+## Terminal Portuaria
+
+Altamira, Mexico. Port UN/LOCODE `MXATM`. SMDG code: `ATP`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## International Terminal
+
+Ensenada, Mexico. Port UN/LOCODE `MXESE`. SMDG code: `EIT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## APM Terminals
+
+Lazaro Cardenas, Mexico. Port UN/LOCODE `MXLZC`. SMDG code: `APMT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Terminal Portuaria de Contenedores
+
+Lazaro Cardenas, Mexico. Port UN/LOCODE `MXLZC`. SMDG code: `LCT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Contecon
+
+Manzanillo, Mexico. Port UN/LOCODE `MXZLO`. SMDG code: `CMSA`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## SSA Mexico
+
+Manzanillo, Mexico. Port UN/LOCODE `MXZLO`. SMDG code: `SSAMX`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Terminal Internacional de Manzanillo
+
+Manzanillo, Mexico. Port UN/LOCODE `MXZLO`. SMDG code: `TIMSA`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Terminal de Contenedores de Yucatan
+
+Progreso, Mexico. Port UN/LOCODE `MXPGO`. SMDG code: `TCY`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Hutchison ICAVE
+
+Veracruz, Mexico. Port UN/LOCODE `MXVER`. SMDG code: `ICAVE`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## APM Terminals Salalah
+
+Salalah, Oman. Port UN/LOCODE `OMSLL`. SMDG code: `APMT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## South Asia Pakistan Terminal
+
+Karachi, Pakistan. Port UN/LOCODE `PKKHI`. SMDG code: `SAPT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## APM Terminals Callao
+
+Callao, Peru. Port UN/LOCODE `PECLL`. SMDG code: `APMCLL`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Baltic Container Terminal Gdynia
+
+Gdynia, Poland. Port UN/LOCODE `PLGDY`. SMDG code: `PLBCT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Dammam First Container Terminal
+
+Ad Dammam, Saudi Arabia. Port UN/LOCODE `SADMM`. SMDG code: `FCT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Dammam Second Container Terminal
+
+Ad Dammam, Saudi Arabia. Port UN/LOCODE `SADMM`. SMDG code: `SCT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## DP World South Container Terminal Jeddah
+
+Jeddah, Saudi Arabia. Port UN/LOCODE `SAJED`. SMDG code: `DPW`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Red Sea Gateway Terminal
+
+Jeddah, Saudi Arabia. Port UN/LOCODE `SAJED`. SMDG code: `RSGT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Busan New Container Terminal
+
+Busan, South Korea. Port UN/LOCODE `KRPUS`. SMDG code: `BNCT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## APM Terminals Algeciras
+
+Algeciras, Spain. Port UN/LOCODE `ESALG`. SMDG code: `APM`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Hutchison Ports BEST
+
+Barcelona, Spain. Port UN/LOCODE `ESBCN`. SMDG code: `BEST`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## APM Terminals Gothenburg
+
+Goteborg, Sweden. Port UN/LOCODE `SEGOT`. SMDG code: `CT1`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Kao Ming Terminal
+
+Kaohsiung, Taiwan. Port UN/LOCODE `TWKHH`. SMDG code: `KMCT`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## DP World Jebel Ali
+
+Jebel Ali, United Arab Emirates. Port UN/LOCODE `AEJEA`. SMDG code: `DPWJ2`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## DP World Jebel Ali
+
+Jebel Ali, United Arab Emirates. Port UN/LOCODE `AEJEA`. SMDG code: `DPWJ3`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## DP World Jebel Ali CT1
+
+Jebel Ali, United Arab Emirates. Port UN/LOCODE `AEJEA`. SMDG code: `DPWJA`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## DP World Jebel Ali CT4
+
+Jebel Ali, United Arab Emirates. Port UN/LOCODE `AEJEA`. SMDG code: `DPWJ4`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Victoria Terminal 3
+
+Belfast, United Kingdom. Port UN/LOCODE `GBBEL`. SMDG code: `VIC3`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Berths 8&9
+
+Felixstowe, United Kingdom. Port UN/LOCODE `GBFXT`. SMDG code: `LNG`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Trinity Terminal
+
+Felixstowe, United Kingdom. Port UN/LOCODE `GBFXT`. SMDG code: `TTY`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## DP World London Gateway
+
+London Gateway Port, United Kingdom. Port UN/LOCODE `GBLGP`. SMDG code: `DPWLG`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Partial |
+
+## DP World Southampton
+
+Southampton, United Kingdom. Port UN/LOCODE `GBSOU`. SMDG code: `DPWS`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Partial |
+
+## Seagirt Terminal
+
+Baltimore, United States. Port UN/LOCODE `USBAL`. SMDG code: `SMT`. FIRMS code: `C324`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Partial |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Gloucester Marine Terminal
+
+Gloucester, United States. Port UN/LOCODE `USGLC`. SMDG code: Not listed. FIRMS code: `D104`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Barbours Cut Terminal
+
+Houston, United States. Port UN/LOCODE `USHOU`. SMDG code: `BCMT`. FIRMS code: `S787`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Bayport Container Terminal
+
+Houston, United States. Port UN/LOCODE `USHOU`. SMDG code: `BPTM`. FIRMS code: `V136`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Blount Island Terminal
+
+Jacksonville, United States. Port UN/LOCODE `USJAX`. SMDG code: `BLOJX`. FIRMS code: `N296`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Tote Maritime
+
+Jacksonville, United States. Port UN/LOCODE `USJAX`. SMDG code: `TMG`. FIRMS code: `N762`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Trapac Jacksonville Terminal
+
+Jacksonville, United States. Port UN/LOCODE `USJAX`. SMDG code: `DPJL`. FIRMS code: `M029`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## International Transportation Service
+
+Long Beach, United States. Port UN/LOCODE `USLGB`. SMDG code: `ITS`. FIRMS code: `Y309`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Long Beach Container Terminal
+
+Long Beach, United States. Port UN/LOCODE `USLGB`. SMDG code: `LBCT`. FIRMS code: `WAC8`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Partial |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Pacific Container Terminal
+
+Long Beach, United States. Port UN/LOCODE `USLGB`. SMDG code: `SSAPCT`. FIRMS code: `W182`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Shippers Transport Express
+
+Long Beach, United States. Port UN/LOCODE `USLGB`. SMDG code: Not listed. FIRMS code: Not listed.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Shippers Transport Express - Carson
+
+Long Beach, United States. Port UN/LOCODE `USLGB`. SMDG code: Not listed. FIRMS code: `Z773`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## SSA Pier A
+
+Long Beach, United States. Port UN/LOCODE `USLGB`. SMDG code: `SSATA`. FIRMS code: `Z978`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Total Terminals International
+
+Long Beach, United States. Port UN/LOCODE `USLGB`. SMDG code: `TTI`. FIRMS code: `Z952`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## APM Terminals
+
+Los Angeles, United States. Port UN/LOCODE `USLAX`. SMDG code: `APMT`. FIRMS code: `W185`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Everport Terminal Services
+
+Los Angeles, United States. Port UN/LOCODE `USLAX`. SMDG code: `ETS`. FIRMS code: `Y124`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Partial |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Fenix Marine Services
+
+Los Angeles, United States. Port UN/LOCODE `USLAX`. SMDG code: `EAGLE`. FIRMS code: `Y257`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## TraPac LA
+
+Los Angeles, United States. Port UN/LOCODE `USLAX`. SMDG code: `TRAP`. FIRMS code: `Y258`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## West Basin Container Terminal
+
+Los Angeles, United States. Port UN/LOCODE `USLAX`. SMDG code: `WBCT`. FIRMS code: `Y773`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Yusen Terminals
+
+Los Angeles, United States. Port UN/LOCODE `USLAX`. SMDG code: `YUSEN`. FIRMS code: `Y790`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Not supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Port of Miami Terminal Operating Company
+
+Miami Seaport, United States. Port UN/LOCODE `USMIA`. SMDG code: `POM`. FIRMS code: `L239`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## South Florida Container Terminal
+
+Miami Seaport, United States. Port UN/LOCODE `USMIA`. SMDG code: `SOU`. FIRMS code: `N775`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## APM Terminal
+
+Mobile, United States. Port UN/LOCODE `USMOB`. SMDG code: `APMT`. FIRMS code: `R103`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Not supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Partial |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Napoleon Container Terminal
+
+New Orleans, United States. Port UN/LOCODE `USMSY`. SMDG code: `NOLA`. FIRMS code: `P260`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## New Orleans Terminal
+
+New Orleans, United States. Port UN/LOCODE `USMSY`. SMDG code: `NOT`. FIRMS code: `Q795`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## GCT Bayonne
+
+New York / New Jersey, United States. Port UN/LOCODE `USNYC`. SMDG code: `GTC`. FIRMS code: `E364`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## GCT New York LP
+
+New York / New Jersey, United States. Port UN/LOCODE `USNYC`. SMDG code: `NYCT`. FIRMS code: `E005`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Maher Terminals
+
+New York / New Jersey, United States. Port UN/LOCODE `USNYC`. SMDG code: `MAHER`. FIRMS code: `E416`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Partial |
+| Container milestones | Empty returned | Partial |
+
+## Port Elizabeth
+
+New York / New Jersey, United States. Port UN/LOCODE `USNYC`. SMDG code: `APMT`. FIRMS code: `E425`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Partial |
+
+## Port Newark Container Terminal
+
+New York / New Jersey, United States. Port UN/LOCODE `USNYC`. SMDG code: `PNCT`. FIRMS code: `F577`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Ben E. Nutter Terminal
+
+Oakland, United States. Port UN/LOCODE `USOAK`. SMDG code: `BENT`. FIRMS code: `WBA5`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Partial |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Oakland International Container Terminal
+
+Oakland, United States. Port UN/LOCODE `USOAK`. SMDG code: `B58`. FIRMS code: `Z985`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Shippers Transport Express
+
+Oakland, United States. Port UN/LOCODE `USOAK`. SMDG code: Not listed. FIRMS code: Not listed.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## TraPac Terminal
+
+Oakland, United States. Port UN/LOCODE `USOAK`. SMDG code: `TPOAK`. FIRMS code: `Y549`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Packer Avenue
+
+PhilaPort, United States. Port UN/LOCODE `USPHL`. SMDG code: `PAMT`. FIRMS code: `C095`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Tioga Marine Terminal
+
+PhilaPort, United States. Port UN/LOCODE `USPHL`. SMDG code: Not listed. FIRMS code: `B197`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Port Everglades Terminal
+
+Port Everglades, United States. Port UN/LOCODE `USPEF`. SMDG code: `PET`. FIRMS code: `O664`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Terminal 6
+
+Portland, United States. Port UN/LOCODE `USPDX`. SMDG code: `PT6`. FIRMS code: `X005`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Supported |
+
+## Garden City Terminals
+
+Savannah, United States. Port UN/LOCODE `USSAV`. SMDG code: `GCMT`. FIRMS code: `L737`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Partial |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## SSA Terminal 18
+
+Seattle, United States. Port UN/LOCODE `USSEA`. SMDG code: `SSA18`. FIRMS code: `X117`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## SSA Terminal 30
+
+Seattle, United States. Port UN/LOCODE `USSEA`. SMDG code: `SSA30`. FIRMS code: `Y197`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Terminal 5
+
+Seattle, United States. Port UN/LOCODE `USSEA`. SMDG code: `SSA5`. FIRMS code: `Y400`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Partial |
+| Container milestones | Empty returned | Not supported |
+
+## Husky Terminal
+
+Tacoma, United States. Port UN/LOCODE `USTIW`. SMDG code: `HUSKY`. FIRMS code: `Z693`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Pierce County Terminal
+
+Tacoma, United States. Port UN/LOCODE `USTIW`. SMDG code: `PCT`. FIRMS code: `X215`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Partial |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Washington United Terminals
+
+Tacoma, United States. Port UN/LOCODE `USTIW`. SMDG code: `WUT`. FIRMS code: `Z705`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Partial |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Not supported |
+| Container milestones | Empty returned | Not supported |
+
+## West Sitcum Terminal (Matson)
+
+Tacoma, United States. Port UN/LOCODE `USTIW`. SMDG code: `WSIT`. FIRMS code: `X335`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Tampa Bay Container Terminal
+
+Tampa, United States. Port UN/LOCODE `USTPA`. SMDG code: `PTCT`. FIRMS code: `M669`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Supported |
+| Pickup & availability | Terminal LFD | Supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Partial |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Supported |
+| Container milestones | Vessel discharged | Not supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Norfolk International Terminals
+
+Virginia, United States. Port UN/LOCODE `USORF`. SMDG code: `NIT`. FIRMS code: `L005`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Not supported |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Not supported |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Portsmouth Marine Terminal
+
+Virginia, United States. Port UN/LOCODE `USORF`. SMDG code: Not listed. FIRMS code: `L045`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Virginia International Gateway
+
+Virginia, United States. Port UN/LOCODE `USORF`. SMDG code: `VIG`. FIRMS code: `N195`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Partial |
+| Pickup & availability | Terminal LFD | Partial |
+| Holds & fees | Holds & releases | Supported |
+| Holds & fees | Fee type | Supported |
+| Holds & fees | Fee amount | Supported |
+| Gate & yard | Pickup appointment | Not supported |
+| Gate & yard | Yard location | Not supported |
+| Container milestones | Vessel discharged | Supported |
+| Container milestones | Full out | Supported |
+| Gate & yard | Chassis number | Partial |
+| Container milestones | On rail | Supported |
+| Container milestones | Empty returned | Not supported |
+
+## Port of Wilmington Container Terminal
+
+Wilmington (NC), United States. Port UN/LOCODE `USILM`. SMDG code: `NCSPA`. FIRMS code: `L194`.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Lyttelton Port Company
+
+Lyttelton, New Zealand. Port UN/LOCODE `NZLYT`. SMDG code: `LPC`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+## Timaru Container Terminal
+
+Timaru, New Zealand. Port UN/LOCODE `NZTIU`. SMDG code: `TCTL`. FIRMS code: Not applicable.
+
+| Section | Feature | Coverage |
+| --- | --- | --- |
+| Container milestones | Import milestones | Supported |
+| Pickup & availability | Available for pickup | Unknown |
+| Pickup & availability | Terminal LFD | Unknown |
+| Holds & fees | Holds & releases | Unknown |
+| Holds & fees | Fee type | Unknown |
+| Holds & fees | Fee amount | Unknown |
+| Gate & yard | Pickup appointment | Unknown |
+| Gate & yard | Yard location | Unknown |
+| Container milestones | Vessel discharged | Unknown |
+| Container milestones | Full out | Unknown |
+| Gate & yard | Chassis number | Unknown |
+| Container milestones | On rail | Unknown |
+| Container milestones | Empty returned | Unknown |
+
+
+</Visibility>
+{/* coverage-agent-data:end */}

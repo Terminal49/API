@@ -1,0 +1,53 @@
+export const RailTerminalDirectory = ({ terminals, updatedOn }) => {
+  const [query, setQuery] = useState("")
+  const [country, setCountry] = useState("all")
+  const countries = [...new Set(terminals.map((terminal) => terminal.country))].sort()
+  const rows = terminals.filter((terminal) =>
+    (country === "all" || terminal.country === country) &&
+    Object.values(terminal).join(" ").toLowerCase().includes(query.trim().toLowerCase())
+  )
+  const controlClass = "mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600 dark:border-white/15 dark:bg-white/5 dark:text-white"
+  const identifiers = [{ key: "locode", label: "UN/LOCODE" }, { key: "firmsCode", label: "FIRMS" }, { key: "splc", label: "SPLC" }]
+  return (
+    <div className="not-prose min-w-0 space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="text-xs font-medium text-gray-600 dark:text-white/70">Search inland rail terminals
+          <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name, city, state, or terminal code" className={controlClass} />
+        </label>
+        <label className="text-xs font-medium text-gray-600 dark:text-white/70">Country
+          <select value={country} onChange={(event) => setCountry(event.target.value)} className={controlClass}>
+            <option value="all">All countries</option>
+            {countries.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </label>
+      </div>
+      <p aria-live="polite" className="text-xs text-gray-500 dark:text-white/60">Showing {rows.length} of {terminals.length} inland rail terminals.</p>
+      <div className="rounded-lg border border-gray-200 dark:border-white/15">
+        <table className="w-full table-fixed border-collapse text-left text-sm">
+          <thead className="border-b border-gray-200 bg-gray-50 text-xs text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
+            <tr>
+              <th scope="col" className="w-full px-3 py-3 font-medium sm:w-3/5">Terminal</th>
+              {identifiers.map((identifier) => <th key={identifier.key} scope="col" className="hidden px-2 py-3 font-medium sm:table-cell">{identifier.label}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((terminal) => <tr key={JSON.stringify(Object.values(terminal))} className="border-b border-gray-100 align-top last:border-b-0 dark:border-white/10">
+              <th scope="row" className="break-words px-3 py-3 font-normal">
+                <span className="font-semibold text-gray-900 dark:text-white">{terminal.name}</span>
+                <div className="mt-1 text-xs text-gray-500 dark:text-white/60">{[terminal.city, terminal.state, terminal.country].filter(Boolean).join(", ")}</div>
+                <dl className="mt-3 grid grid-cols-3 gap-2 sm:hidden">
+                  {identifiers.map((identifier) => <div key={identifier.key} className="min-w-0"><dt className="text-xs text-gray-500 dark:text-white/60">{identifier.label}</dt><dd className="mt-1 break-all font-mono text-xs text-gray-900 dark:text-white">{terminal[identifier.key] || "Not listed"}</dd></div>)}
+                </dl>
+              </th>
+              {identifiers.map((identifier) => <td key={identifier.key} className="hidden break-all px-2 py-4 font-mono text-xs text-gray-600 sm:table-cell dark:text-white/70">{terminal[identifier.key] || "Not listed"}</td>)}
+            </tr>)}
+            {rows.length === 0 ? <tr><td colSpan={4} className="px-3 py-10 text-center text-gray-500 dark:text-white/60">No terminals match these filters. Change the search or country.</td></tr> : null}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-gray-500 dark:text-white/60">UN/LOCODE identifies a location. FIRMS and Standard Point Location Code (SPLC) identify facilities where listed. Missing codes are shown as "Not listed".</p>
+      <p className="text-xs text-gray-500 dark:text-white/60"><a href="/data/coverage/inland-rail-terminals.json" className="underline underline-offset-4">JSON</a> · <a href="/data/coverage/inland-rail-terminals.csv" className="underline underline-offset-4">CSV</a> · <a href="/data/coverage/inland-rail-terminals" className="underline underline-offset-4">Complete table</a></p>
+      <p className="text-xs text-gray-500 dark:text-white/60">Last updated {updatedOn}. We continually improve our integrations, so coverage may have changed since this date. Contact <a href="mailto:support@terminal49.com" className="underline underline-offset-4">support</a> to confirm coverage for your route.</p>
+    </div>
+  )
+}

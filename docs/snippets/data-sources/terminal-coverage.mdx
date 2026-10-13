@@ -1,0 +1,185 @@
+export const terminalCoverageFeatures = [
+  { key: "availableForPickup", label: "Available for pickup", group: "Pickup & availability", field: "available_for_pickup", href: "/coverage/fields" },
+  { key: "lastFreeDay", label: "Terminal LFD", description: "Last free day reported by the terminal. Carrier-reported LFD or an estimated LFD, where enabled, may still be available when terminal LFD is missing.", group: "Pickup & availability", field: "import_deadlines.pickup_lfd_terminal", href: "/api-docs/in-depth-guides/holds-and-fees" },
+  { key: "holds", label: "Holds & releases", description: "Active terminal holds and their clearance. Cleared holds are removed from holds_at_pod_terminal; there is no separate released status.", group: "Holds & fees", field: "holds_at_pod_terminal", href: "/api-docs/in-depth-guides/holds-and-fees" },
+  { key: "feeType", label: "Fee type", group: "Holds & fees", field: "fees_at_pod_terminal[].type", href: "/api-docs/in-depth-guides/holds-and-fees" },
+  { key: "feeAmount", label: "Fee amount", group: "Holds & fees", field: "fees_at_pod_terminal[].amount", href: "/api-docs/in-depth-guides/holds-and-fees" },
+  { key: "pickupAppointment", label: "Pickup appointment", group: "Gate & yard", field: "pickup_appointment_at", href: "/api-docs/api-reference/containers/get-a-container" },
+  { key: "yardLocation", label: "Yard location", group: "Gate & yard", field: "location_at_pod_terminal", href: "/api-docs/api-reference/containers/get-a-container" },
+  { key: "chassisNumber", label: "Chassis number", group: "Gate & yard", field: "pod_full_out_chassis_number", href: "/api-docs/api-reference/containers/get-a-container" },
+  { key: "vesselDischarged", label: "Vessel discharged", group: "Container milestones", field: "pod_discharged_at", href: "/api-docs/webhooks/event-catalog" },
+  { key: "fullOut", label: "Full out", group: "Container milestones", field: "pod_full_out_at", href: "/api-docs/webhooks/event-catalog" },
+  { key: "onRail", label: "On rail", group: "Container milestones", href: "/coverage/rail" },
+  { key: "emptyReturned", label: "Empty returned", group: "Container milestones", field: "empty_terminated_at", href: "/api-docs/webhooks/event-catalog" },
+]
+
+export const TerminalCoverageStatus = ({ status, compact = false, label, description }) => {
+  const statuses = {
+    supported: { label: "Available", symbol: "✓", className: "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400" },
+    limited: { label: "Limited", symbol: "◐", className: "bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300" },
+    unsupported: { label: "Not available", symbol: "−", className: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/60" },
+    unknown: { label: "Unknown", symbol: "?", className: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/60" },
+  }
+  const value = statuses[status] || statuses.unknown
+  return (
+    <span title={[label ? `${label}: ${value.label}` : value.label, description].filter(Boolean).join(". ")} className={`${label ? "terminal-feature-badge " : ""}inline-flex items-center justify-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium ${value.className}`}>
+      <span aria-hidden="true" className="shrink-0">{value.symbol}</span>
+      {label ? <><span className="terminal-feature-label">{label}</span><span className="sr-only">, {value.label}</span></> : compact ? <span className="sr-only">{value.label}</span> : value.label}
+    </span>
+  )
+}
+
+export const TerminalCoverageDetails = ({ features, coverage, Status }) => {
+  const groups = ["Pickup & availability", "Holds & fees", "Gate & yard", "Container milestones"]
+  return (
+    <dl className="terminal-coverage-details text-sm text-gray-900 dark:text-white">
+      {groups.map((group) => (
+        <div key={group} className="terminal-feature-group">
+          <dt>{group}</dt>
+          <dd>
+            <ul className="terminal-feature-badges">
+              {features.filter((feature) => feature.group === group).map((feature) => (
+                <li key={feature.key} data-feature-key={feature.key}>
+                  <a href={feature.href} className="inline-flex max-w-full rounded-full hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600"><Status status={coverage?.features?.[feature.key]} label={feature.label} description={[feature.description, feature.field].filter(Boolean).join(" ")} /></a>
+                </li>
+              ))}
+            </ul>
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+export const TerminalCoverageTable = ({ terminals, coverage = {}, snapshot }) => {
+  const [query, setQuery] = useState("")
+  const [region, setRegion] = useState("all")
+  const [requiredFeature, setRequiredFeature] = useState("all")
+  const [includeLimited, setIncludeLimited] = useState(false)
+  const [selectedKey, setSelectedKey] = useState(null)
+  const regions = [...new Set(terminals.map((terminal) => terminal.region))].sort()
+  const keyFor = (terminal) => `${terminal.locode}:${terminal.terminalCode || terminal.name}`
+  const rows = terminals.filter((terminal) => {
+    const matchesQuery = [terminal.name, terminal.port, terminal.locode, terminal.terminalCode, terminal.smdgCode, terminal.firmsCode, terminal.country, terminal.region].join(" ").toLowerCase().includes(query.trim().toLowerCase())
+    const status = coverage[keyFor(terminal)]?.features?.[requiredFeature]
+    return matchesQuery && (region === "all" || terminal.region === region) && (requiredFeature === "all" || status === "supported" || (includeLimited && status === "limited"))
+  })
+  const portsByLocode = new Map()
+  rows.forEach((terminal) => {
+    if (!portsByLocode.has(terminal.locode)) portsByLocode.set(terminal.locode, { locode: terminal.locode, name: terminal.port, country: terminal.country, terminals: [] })
+    portsByLocode.get(terminal.locode).terminals.push(terminal)
+  })
+  const ports = [...portsByLocode.values()].sort((a, b) => a.name.localeCompare(b.name) || a.country.localeCompare(b.country) || a.locode.localeCompare(b.locode))
+  ports.forEach((port) => port.terminals.sort((a, b) => a.name.localeCompare(b.name)))
+  const controlClass = "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-600 dark:border-white/10 dark:bg-white/5 dark:text-white"
+  const changeFilter = (setter, value) => { setter(value); setSelectedKey(null) }
+  return (
+    <div className="terminal-coverage not-prose min-w-0 space-y-4">
+      <style>{`
+        .terminal-coverage { container-type: inline-size; }
+        .terminal-port + .terminal-port { border-top: 1px solid rgb(156 163 175 / 0.35); }
+        .terminal-port-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding: 14px 16px; border-bottom: 1px solid rgb(156 163 175 / 0.25); }
+        .terminal-port-heading h3 { margin: 0; font-size: 15px; font-weight: 600; }
+        .terminal-port-count { margin-left: auto; }
+        .terminal-row + .terminal-row { border-top: 1px solid rgb(156 163 175 / 0.25); }
+        .terminal-columns { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 14px 16px; }
+        .terminal-table-heading { display: none; }
+        .terminal-row-header { width: 100%; border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; background: rgb(var(--background-light, 255 255 255)); }
+        .terminal-row-header:hover { background: #f9fafb; }
+        .terminal-row-header:focus-visible { outline: 2px solid #16a34a; outline-offset: -2px; }
+        .dark .terminal-row-header { background: rgb(var(--background-dark, 10 10 10)); }
+        .dark .terminal-row-header:hover { background: #1f2937; }
+        .terminal-row-expanded { background: rgb(var(--background-light, 255 255 255)); box-shadow: inset 3px 0 #737373; border-bottom: 2px solid #d4d4d4; }
+        .terminal-row-expanded + .terminal-row { border-top: 0; }
+        .terminal-row-header.terminal-row-selected { position: sticky; top: var(--carrier-coverage-sticky-top, 6rem); z-index: 10; background: #f0f0f0; border-bottom: 1px solid #d4d4d4; box-shadow: inset 3px 0 #737373; }
+        .dark .terminal-row-expanded { background: rgb(var(--background-dark, 10 10 10)); border-bottom-color: #525252; box-shadow: inset 3px 0 #a3a3a3; }
+        .dark .terminal-row-header.terminal-row-selected { background: #262626; border-bottom-color: #525252; box-shadow: inset 3px 0 #a3a3a3; }
+        .terminal-row-name { grid-column: 1; grid-row: 1; overflow-wrap: anywhere; }
+        .terminal-row-smdg { grid-column: 1; grid-row: 2; }
+        .terminal-row-firms { grid-column: 1; grid-row: 3; }
+        .terminal-row-code { overflow-wrap: anywhere; }
+        .terminal-code-label { font-family: sans-serif; margin-right: 6px; }
+        .terminal-summary-badges { display: flex; grid-column: 1 / -1; grid-row: 4; flex-wrap: wrap; gap: 6px; font-size: 12px; }
+        .terminal-summary-badges > span { min-width: 0; max-width: 100%; }
+        .terminal-row-chevron { grid-column: 2; grid-row: 1; justify-self: end; transition: transform 120ms; }
+        .terminal-row-header[aria-expanded="true"] > .terminal-row-chevron { transform: rotate(90deg); }
+        .terminal-coverage-details { margin: 0 12px 0 16px; }
+        .terminal-feature-group { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 10px 16px; padding: 14px 16px; }
+        .terminal-feature-group + .terminal-feature-group { border-top: 1px solid rgb(156 163 175 / 0.15); }
+        .terminal-feature-group > dt { margin: 0; font-weight: 500; }
+        .terminal-feature-group > dd { min-width: 0; margin: 0; }
+        .terminal-feature-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+        .terminal-feature-badges > li { min-width: 0; max-width: 100%; }
+        .terminal-feature-badge { max-width: 100%; padding: 6px 12px; text-align: left; }
+        .terminal-feature-label { min-width: 0; overflow-wrap: anywhere; }
+        @container (min-width: 640px) {
+          .terminal-columns { grid-template-columns: minmax(0, 1.6fr) minmax(55px, 0.4fr) minmax(55px, 0.4fr) minmax(0, 1.2fr) 18px; }
+          .terminal-table-heading { display: grid; border-bottom: 1px solid rgb(156 163 175 / 0.25); }
+          .terminal-row-name, .terminal-row-code, .terminal-summary-badges, .terminal-row-chevron { grid-column: auto; grid-row: auto; }
+          .terminal-code-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+          .terminal-feature-group { grid-template-columns: minmax(0, 1fr) minmax(0, 2.6fr); }
+        }
+      `}</style>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <label className="text-xs font-medium text-gray-600 dark:text-white/70">Search terminals
+          <input type="search" value={query} onChange={(event) => changeFilter(setQuery, event.target.value)} placeholder="Terminal, port, SMDG, or FIRMS" className={`${controlClass} mt-1`} />
+        </label>
+        <label className="text-xs font-medium text-gray-600 dark:text-white/70">Region
+          <select value={region} onChange={(event) => changeFilter(setRegion, event.target.value)} className={`${controlClass} mt-1`}>
+            <option value="all">All regions</option>
+            {regions.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </label>
+        <label className="text-xs font-medium text-gray-600 dark:text-white/70">Required feature
+          <select value={requiredFeature} onChange={(event) => changeFilter(setRequiredFeature, event.target.value)} className={`${controlClass} mt-1`}>
+            <option value="all">All features</option>
+            {terminalCoverageFeatures.map((feature) => <option key={feature.key} value={feature.key}>{feature.label}</option>)}
+          </select>
+        </label>
+      </div>
+      {requiredFeature !== "all" ? <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-white/70"><input type="checkbox" checked={includeLimited} onChange={(event) => changeFilter(setIncludeLimited, event.target.checked)} className="accent-green-600" />Include limited availability</label> : null}
+      <p className="text-xs text-gray-500 dark:text-white/60">Showing {rows.length} of {terminals.length} terminals across {ports.length} {ports.length === 1 ? "port" : "ports"}. Select a terminal row for data availability.</p>
+      <div className="flex flex-wrap items-center gap-2" aria-label="Data availability legend">
+        <span className="mr-2 text-xs text-gray-600 dark:text-white/70">Data available through the terminal integration</span>
+        {["supported", "limited", "unsupported", "unknown"].map((status) => <TerminalCoverageStatus key={status} status={status} />)}
+      </div>
+      <div className="terminal-port-groups rounded border border-gray-200 text-sm dark:border-white/15">
+        <div className="terminal-columns terminal-table-heading text-xs font-medium text-gray-600 dark:text-white/70" aria-hidden="true"><span>Terminal</span><span>SMDG</span><span>FIRMS</span><span>Data availability</span><span /></div>
+        {ports.map((port) => (
+          <section key={port.locode} data-port-locode={port.locode} aria-labelledby={`terminal-port-${port.locode}`} className="terminal-port">
+            <div className="terminal-port-heading bg-gray-50 dark:bg-white/5">
+              <h3 id={`terminal-port-${port.locode}`} className="text-gray-900 dark:text-white">{port.name}</h3>
+              <span className="text-xs text-gray-500 dark:text-white/60">{port.country} · <span className="font-mono">{port.locode}</span></span>
+              <span className="terminal-port-count text-xs text-gray-500 dark:text-white/60">{port.terminals.length} {port.terminals.length === 1 ? "terminal" : "terminals"}</span>
+            </div>
+            {port.terminals.map((terminal) => {
+              const key = keyFor(terminal)
+              const isSelected = selectedKey === key
+              const detailId = `terminal-feature-details-${encodeURIComponent(key)}`
+              const buttonId = `terminal-feature-toggle-${encodeURIComponent(key)}`
+              return (
+                <article key={key} data-terminal-key={key} aria-label={terminal.name} className={`terminal-row ${isSelected ? "terminal-row-expanded" : ""}`}>
+                  <button id={buttonId} type="button" aria-expanded={isSelected} aria-controls={isSelected ? detailId : undefined} aria-label={`${isSelected ? "Hide" : "Show"} ${terminal.name} details`} aria-describedby={`${buttonId}-smdg ${buttonId}-firms ${buttonId}-summary`} onClick={() => setSelectedKey(isSelected ? null : key)} className={`terminal-columns terminal-row-header ${isSelected ? "terminal-row-selected" : ""}`}>
+                    <span className="terminal-row-name min-w-0 font-semibold text-gray-900 dark:text-white">{terminal.name}</span>
+                    <span id={`${buttonId}-smdg`} className="terminal-row-code terminal-row-smdg font-mono text-[11px] text-gray-500 dark:text-white/50" title={terminal.smdgCode ? "SMDG terminal code" : "SMDG code not listed"}><span className="terminal-code-label">SMDG:</span>{terminal.smdgCode || <><span aria-hidden="true">—</span><span className="sr-only">Not listed</span></>}</span>
+                    <span id={`${buttonId}-firms`} className="terminal-row-code terminal-row-firms font-mono text-[11px] text-gray-500 dark:text-white/50" title={terminal.locode.startsWith("US") ? "US CBP FIRMS code" : "FIRMS is not applicable outside the US"}><span className="terminal-code-label">FIRMS:</span>{terminal.firmsCode || <><span aria-hidden="true">—</span><span className="sr-only">{terminal.locode.startsWith("US") ? "Not listed" : "Not applicable"}</span></>}</span>
+                    <span id={`${buttonId}-summary`} className="terminal-summary-badges">
+                      <span className="sr-only">Data availability: </span>
+                      <TerminalCoverageStatus status={coverage[key]?.features?.importMilestones} label="Import milestones" description="Additional terminal data for import container milestones. Individual milestone coverage is shown in the details." />
+                    </span>
+                    <svg className="terminal-row-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+                  </button>
+                  {isSelected ? <section id={detailId} aria-labelledby={buttonId}><TerminalCoverageDetails features={terminalCoverageFeatures} coverage={coverage[key]} Status={TerminalCoverageStatus} /></section> : null}
+                </article>
+              )
+            })}
+          </section>
+        ))}
+        {rows.length === 0 ? <p className="px-3 py-10 text-center text-sm text-gray-500 dark:text-white/60">No terminals match these filters. Change the search, region, or required feature.</p> : null}
+      </div>
+      <p className="text-xs leading-relaxed text-gray-500 dark:text-white/60">Terminal LFD is the last free day reported by the terminal. Carrier-reported LFD or an estimated LFD, where enabled, may still be available when terminal LFD is missing.</p>
+      <p className="text-xs text-gray-500 dark:text-white/60">Available fields may be absent for an individual container. <a href="/coverage/fields" className="underline underline-offset-2">See field availability</a>. Unknown means no feature status is available.</p>
+      {snapshot?.capturedOn ? <p className="text-xs leading-relaxed text-gray-500 dark:text-white/60">Data last updated {snapshot.capturedOn}. We continuously improve our integrations, so coverage may have changed since this update. <a href="mailto:support@terminal49.com" className="underline underline-offset-2">Contact support</a> to confirm coverage for your terminal.</p> : null}
+    </div>
+  )
+}

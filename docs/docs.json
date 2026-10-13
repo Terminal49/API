@@ -330,6 +330,7 @@
               "coverage/ocean-carriers",
               "coverage/terminals",
               "coverage/rail",
+              "coverage/inland-rail-terminals",
               "coverage/vessels"
             ]
           },
