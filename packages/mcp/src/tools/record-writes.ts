@@ -1,0 +1,290 @@
+/**
+ * set_party_role and set_custom_field tools
+ *
+ * The first record edits: attach a party to containers or shipments in a role
+ * (for example the drayage carrier) and set or clear an account custom field.
+ * Each call takes up to 50 records, reads the current value first so a repeat
+ * call reports `unchanged` instead of failing, and keeps going past a record
+ * that fails. Rails checks the user's permissions and records who made the
+ * change and through which channel.
+ */
+
+import { z } from 'zod';
+import type {
+  ContainerAddPartyRoleParams,
+  ShipmentAddPartyRoleParams,
+  Terminal49Client,
+} from '@terminal49/sdk';
+
+const MAX_RECORDS = 50;
+const CONCURRENCY = 5;
+// The hosted /mcp function stops at 30s (vercel.json maxDuration). Stop starting
+// new records well before that so the caller still gets the result back.
+export const CALL_BUDGET_MS = 20_000;
+
+export const CONTAINER_PARTY_ROLES = [
+  'pickup_dray_carrier',
+] as const satisfies readonly ContainerAddPartyRoleParams['role'][];
+export const SHIPMENT_PARTY_ROLES = [
+  'shipper',
+  'consignee',
+  'notify_party',
+  'customs_broker',
+  'customer',
+  'freight_forwarder',
+  'pickup_dray_carrier',
+] as const satisfies readonly ShipmentAddPartyRoleParams['role'][];
+
+type ContainerPartyRole = (typeof CONTAINER_PARTY_ROLES)[number];
+const isContainerPartyRole = (role: string): role is ContainerPartyRole =>
+  // SAFETY: widening the tuple to string[] only lets includes() accept any string.
+  (CONTAINER_PARTY_ROLES as readonly string[]).includes(role);
+const CONTAINER_ROLE_MESSAGE =
+  'Containers support only the pickup_dray_carrier role.';
+
+const recordIds = z.array(z.string().uuid()).min(1).max(MAX_RECORDS);
+
+export const setPartyRoleInputSchema = z
+  .strictObject({
+    container_ids: recordIds
+      .optional()
+      .describe(
+        'Terminal49 container IDs (UUIDs), 1 to 50. Pass container_ids or shipment_ids, not both.',
+      ),
+    shipment_ids: recordIds
+      .optional()
+      .describe(
+        'Terminal49 shipment IDs (UUIDs), 1 to 50. Pass container_ids or shipment_ids, not both.',
+      ),
+    role: z
+      .enum(SHIPMENT_PARTY_ROLES)
+      .describe(
+        'Role to set. Containers support only pickup_dray_carrier; shipments support every listed role.',
+      ),
+    party_id: z
+      .string()
+      .uuid()
+      .describe('Party ID from list_parties. Never pass a company name.'),
+    action: z
+      .enum(['add', 'remove'])
+      .describe('add attaches the party in the role; remove detaches it.'),
+  })
+  .refine((args) => !!args.container_ids !== !!args.shipment_ids, {
+    message: 'Pass container_ids or shipment_ids, not both.',
+  })
+  .refine((args) => !args.container_ids || isContainerPartyRole(args.role), {
+    message: CONTAINER_ROLE_MESSAGE,
+  });
+export type SetPartyRoleArgs = z.input<typeof setPartyRoleInputSchema>;
+
+export const setCustomFieldInputSchema = z.strictObject({
+  entity: z
+    .enum(['container', 'shipment'])
+    .describe('Whether ids are container or shipment IDs.'),
+  ids: recordIds.describe('Terminal49 container or shipment IDs, 1 to 50.'),
+  api_slug: z
+    .string()
+    .trim()
+    .min(1)
+    .max(100)
+    .describe(
+      "The custom field's api_slug from the account's custom field definitions (shown on get_container or get_shipment_details with custom_fields). Never guess it from the display name.",
+    ),
+  value: z
+    .union([
+      z.string().max(1000),
+      z.number(),
+      z.boolean(),
+      z.array(z.string().max(1000)).max(100),
+      z.null(),
+    ])
+    .describe(
+      'New value, in the format the field expects (for an option field, the option value; for a multi-select field, an array of option values; for a date, YYYY-MM-DD). null clears the field.',
+    ),
+});
+export type SetCustomFieldArgs = z.input<typeof setCustomFieldInputSchema>;
+
+export interface RecordWriteResult {
+  updated: string[];
+  unchanged: string[];
+  failed: { id: string; error: string }[];
+  not_attempted: string[];
+  summary: string;
+}
+
+export const recordWriteOutputSchema = z.object({
+  updated: z.array(z.string()),
+  unchanged: z.array(z.string()),
+  failed: z.array(z.object({ id: z.string(), error: z.string() })),
+  not_attempted: z
+    .array(z.string())
+    .describe(
+      'Records the call ran out of time to reach. Nothing was changed on them; call again with these IDs.',
+    ),
+  summary: z.string(),
+});
+
+type Outcome = 'updated' | 'unchanged';
+
+// Messages from the API describe the record (validation, not found, access),
+// so they are safe to show; anything else gets a generic message.
+function describeError(error: unknown): string {
+  const err = error as { name?: string; status?: number; message?: string };
+  if (err.name === 'NotFoundError' || err.status === 404) {
+    return 'Record not found in this account.';
+  }
+  if (err.name === 'AuthorizationError' || err.status === 403) {
+    return 'Not allowed to change this record.';
+  }
+  if (
+    (err.name === 'ValidationError' || err.status === 422) &&
+    typeof err.message === 'string' &&
+    err.message.trim()
+  ) {
+    return err.message.trim().slice(0, 200);
+  }
+  return 'The change could not be saved.';
+}
+
+async function applyEach(
+  ids: string[],
+  change: (id: string) => Promise<Outcome>,
+  describe: (counts: {
+    updated: number;
+    unchanged: number;
+    failed: number;
+  }) => string,
+): Promise<RecordWriteResult> {
+  const deadline = Date.now() + CALL_BUDGET_MS;
+  const result: RecordWriteResult = {
+    updated: [],
+    unchanged: [],
+    failed: [],
+    not_attempted: [],
+    summary: '',
+  };
+  const queue = [...new Set(ids)];
+  const workers = Array.from(
+    { length: Math.min(CONCURRENCY, queue.length) },
+    async () => {
+      while (Date.now() < deadline) {
+        const id = queue.shift();
+        if (id === undefined) break;
+        try {
+          result[await change(id)].push(id);
+        } catch (error) {
+          result.failed.push({ id, error: describeError(error) });
+        }
+      }
+    },
+  );
+  await Promise.all(workers);
+  result.not_attempted = queue;
+  result.summary = describe({
+    updated: result.updated.length,
+    unchanged: result.unchanged.length,
+    failed: result.failed.length,
+  });
+  if (queue.length > 0) {
+    result.summary += ` Ran out of time before ${queue.length} more; call again with not_attempted.`;
+  }
+  return result;
+}
+
+const records = (count: number, noun: string) =>
+  `${count} ${noun}${count === 1 ? '' : 's'}`;
+
+// GET .../party_roles returns a JSON:API list; the role's party is a relationship.
+const partyRoleListSchema = z.object({
+  data: z.array(
+    z.object({
+      id: z.string(),
+      attributes: z.object({ role: z.string() }),
+      relationships: z.object({
+        party: z.object({ data: z.object({ id: z.string() }).nullable() }),
+      }),
+    }),
+  ),
+});
+
+export async function executeSetPartyRole(
+  args: SetPartyRoleArgs,
+  client: Terminal49Client,
+): Promise<RecordWriteResult> {
+  const { container_ids, shipment_ids, role, party_id, action } =
+    setPartyRoleInputSchema.parse(args);
+  const manager = container_ids ? client.containers : client.shipments;
+  const noun = container_ids ? 'container' : 'shipment';
+  const addRole = (id: string) => {
+    if (!container_ids) {
+      return client.shipments.addPartyRole(id, { role, partyId: party_id });
+    }
+    if (!isContainerPartyRole(role)) throw new Error(CONTAINER_ROLE_MESSAGE);
+    return client.containers.addPartyRole(id, { role, partyId: party_id });
+  };
+
+  return applyEach(
+    container_ids ?? shipment_ids ?? [],
+    async (id) => {
+      const { data } = partyRoleListSchema.parse(
+        await manager.partyRoles(id, { format: 'raw' }),
+      );
+      const matching = data.filter(
+        (assignment) =>
+          assignment.attributes.role === role &&
+          assignment.relationships.party.data?.id === party_id,
+      );
+      if (action === 'add') {
+        if (matching.length > 0) return 'unchanged';
+        await addRole(id);
+        return 'updated';
+      }
+      if (matching.length === 0) return 'unchanged';
+      for (const assignment of matching) {
+        await manager.removePartyRole(id, assignment.id);
+      }
+      return 'updated';
+    },
+    ({ updated, unchanged, failed }) =>
+      `${action === 'add' ? 'Assigned' : 'Removed'} ${role} on ${records(updated, noun)}; ` +
+      `${unchanged} already ${action === 'add' ? 'had it' : 'without it'}; ${failed} failed.`,
+  );
+}
+
+// Multi-select values are sets: the same options in another order are unchanged.
+const comparable = (value: unknown) =>
+  JSON.stringify(
+    Array.isArray(value) ? value.map(String).sort() : (value ?? null),
+  );
+const sameValue = (a: unknown, b: unknown) => comparable(a) === comparable(b);
+
+export async function executeSetCustomField(
+  args: SetCustomFieldArgs,
+  client: Terminal49Client,
+): Promise<RecordWriteResult> {
+  const { entity, ids, api_slug, value } =
+    setCustomFieldInputSchema.parse(args);
+  const manager = entity === 'container' ? client.containers : client.shipments;
+
+  return applyEach(
+    ids,
+    async (id) => {
+      // SAFETY: `format: 'mapped'` makes the SDK return the result of mapCustomFields.
+      const current = (await manager.customFields(id, {
+        format: 'mapped',
+      })) as { slug?: string; value?: unknown }[];
+      const existing = current.find((field) => field.slug === api_slug);
+      if (value === null) {
+        if (!existing || existing.value == null) return 'unchanged';
+        await manager.deleteCustomField(id, api_slug);
+        return 'updated';
+      }
+      if (existing && sameValue(existing.value, value)) return 'unchanged';
+      await manager.setCustomField(id, api_slug, value);
+      return 'updated';
+    },
+    ({ updated, unchanged, failed }) =>
+      `${value === null ? 'Cleared' : 'Set'} ${api_slug} on ${records(updated, entity)}; ` +
+      `${unchanged} already ${value === null ? 'empty' : 'had that value'}; ${failed} failed.`,
+  );
+}

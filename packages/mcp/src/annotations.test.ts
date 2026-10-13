@@ -99,7 +99,8 @@ describe('MCP tool annotations', () => {
     'list_tracking_requests',
     'whoami',
   ];
-  const allTools = [...readTools, 'track_container'];
+  const writeTools = ['set_custom_field', 'set_party_role', 'track_container'];
+  const allTools = [...readTools, ...writeTools];
 
   it('marks fetch-only tools as read-only', () => {
     const tools = getRegisteredTools();
@@ -128,16 +129,25 @@ describe('MCP tool annotations', () => {
     expect(annotations?.idempotentHint).toBe(false);
   });
 
-  it('advertises track_container as the only write and no destructive tools', () => {
+  it('marks the record edit tools as idempotent writes', () => {
     const tools = getRegisteredTools();
-    const writeTools = Object.entries(tools)
+
+    for (const name of ['set_party_role', 'set_custom_field']) {
+      expect(tools[name]?.annotations?.readOnlyHint, name).toBe(false);
+      expect(tools[name]?.annotations?.idempotentHint, name).toBe(true);
+    }
+  });
+
+  it('advertises only the expected writes and no destructive tools', () => {
+    const tools = getRegisteredTools();
+    const writes = Object.entries(tools)
       .filter(([, tool]) => tool.annotations?.readOnlyHint === false)
       .map(([name]) => name);
     const destructiveTools = Object.entries(tools)
       .filter(([, tool]) => tool.annotations?.destructiveHint === true)
       .map(([name]) => name);
 
-    expect(writeTools).toEqual(['track_container']);
+    expect(writes.sort()).toEqual(writeTools);
     expect(destructiveTools).toEqual([]);
   });
 

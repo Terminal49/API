@@ -33,6 +33,8 @@
       "list_tracking_requests",
       "search_container",
       "search_docs",
+      "set_custom_field",
+      "set_party_role",
       "summarize_containers",
       "track_container",
       "whoami"
