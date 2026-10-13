@@ -91,7 +91,7 @@ export const ShippingCarrierCoverageRows = ({ rows, features, coverage, selected
         const detailId = `${idPrefix}-details-${carrier.scac}`
         const buttonId = `${idPrefix}-toggle-${carrier.scac}`
         return (
-          <article key={carrier.scac} data-carrier-scac={carrier.scac} className="shipping-carrier" aria-label={carrier.name}>
+          <article key={carrier.scac} data-carrier-scac={carrier.scac} className={`shipping-carrier ${isSelected ? "shipping-carrier-expanded" : ""}`} aria-label={carrier.name}>
             <button id={buttonId} type="button" aria-expanded={isSelected} aria-controls={isSelected ? detailId : undefined} aria-label={`${isSelected ? "Hide" : "Show"} ${carrier.name} details`} aria-describedby={`${buttonId}-scacs ${buttonId}-tracking`} onClick={() => toggleRow(carrier.scac)} className={`shipping-carrier-columns shipping-carrier-header ${isSelected ? "shipping-carrier-selected" : ""}`}>
               <span className="shipping-carrier-name min-w-0 font-semibold text-gray-900 dark:text-white">{carrier.name}</span>
               <span id={`${buttonId}-scacs`} className="shipping-carrier-scacs break-words font-mono text-[11px] text-gray-500 dark:text-white/50">{[carrier.scac, ...(carrier.alternativeScacs || [])].join(", ")}</span>
@@ -140,15 +140,19 @@ export const CarrierCoverageExplorer = ({ carriers, features, coverage = {}, sum
         .shipping-carrier-header:focus-visible { outline: 2px solid #16a34a; outline-offset: -2px; }
         .dark .shipping-carrier-header { background: rgb(var(--background-dark, 10 10 10)); }
         .dark .shipping-carrier-header:hover { background: #1f2937; }
-        .shipping-carrier-selected { position: sticky; top: var(--carrier-coverage-sticky-top, 6rem); z-index: 10; border-bottom: 1px solid rgb(156 163 175 / 0.25); box-shadow: inset 3px 0 currentColor; }
+        .shipping-carrier-expanded { background: #f8fafc; box-shadow: inset 3px 0 #64748b; border-bottom: 2px solid #cbd5e1; }
+        .shipping-carrier-expanded + .shipping-carrier { border-top: 0; }
+        .shipping-carrier-header.shipping-carrier-selected { position: sticky; top: var(--carrier-coverage-sticky-top, 6rem); z-index: 10; background: #e2e8f0; border-bottom: 1px solid #cbd5e1; box-shadow: inset 3px 0 #64748b; }
+        .dark .shipping-carrier-expanded { background: #111827; border-bottom-color: #475569; box-shadow: inset 3px 0 #94a3b8; }
+        .dark .shipping-carrier-header.shipping-carrier-selected { background: #1e293b; border-bottom-color: #475569; box-shadow: inset 3px 0 #94a3b8; }
         .shipping-carrier-name { grid-column: 1; grid-row: 1; }
         .shipping-carrier-scacs { grid-column: 1; grid-row: 2; }
         .shipping-tracking-badges { display: flex; grid-column: 1 / -1; grid-row: 3; flex-wrap: wrap; gap: 6px; font-size: 12px; }
         .shipping-row-chevron { grid-column: 2; grid-row: 1; justify-self: end; transition: transform 120ms; }
         .shipping-carrier-header[aria-expanded="true"] > .shipping-row-chevron { transform: rotate(90deg); }
-        .shipping-coverage-details { margin: 0; }
+        .shipping-coverage-details { margin: 0 12px 0 16px; }
         .shipping-feature-group { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 10px 16px; padding: 14px 16px; }
-        .shipping-feature-group + .shipping-feature-group { border-top: 1px solid rgb(156 163 175 / 0.2); }
+        .shipping-feature-group + .shipping-feature-group { border-top: 1px solid rgb(156 163 175 / 0.15); }
         .shipping-feature-group > dt { margin: 0; font-weight: 500; }
         .shipping-feature-group > dd { min-width: 0; margin: 0; }
         .shipping-feature-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
