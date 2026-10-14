@@ -46,7 +46,7 @@ export interface paths {
         head?: never;
         /**
          * Edit a shipment
-         * @description Update a shipment
+         * @description Update a shipment.
          */
         patch: operations["patch-shipments-id"];
         trace?: never;
@@ -169,7 +169,7 @@ export interface paths {
         head?: never;
         /**
          * Edit a tracking request
-         * @description Update a tracking request
+         * @description Update a tracking request.
          */
         patch: operations["patch-track-request-by-id"];
         trace?: never;
@@ -229,21 +229,21 @@ export interface paths {
         };
         /**
          * Get single webhook
-         * @description Get the details of a single webhook
+         * @description Get the details of a single webhook.
          */
         get: operations["get-webhooks-id"];
         put?: never;
         post?: never;
         /**
          * Delete a webhook
-         * @description Delete a webhook
+         * @description Delete a webhook.
          */
         delete: operations["delete-webhooks-id"];
         options?: never;
         head?: never;
         /**
          * Edit a webhook
-         * @description Update a single webhook
+         * @description Update a single webhook.
          */
         patch: operations["patch-webhooks-id"];
         trace?: never;
@@ -303,10 +303,7 @@ export interface paths {
             };
             cookie?: never;
         };
-        /**
-         * Get a single webhook notification
-         * @description
-         */
+        /** Get a single webhook notification */
         get: operations["get-webhook-notification-id"];
         put?: never;
         post?: never;
@@ -1129,14 +1126,14 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** @description Returns a party by it's given identifier */
+        /** @description Returns a party by it's given identifier. */
         get: operations["get-parties-id"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Updates a party */
+        /** @description Updates a party. */
         patch: operations["edit-party"];
         trace?: never;
     };
@@ -3979,6 +3976,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description Not Found */
             404: {
                 headers: {
@@ -4044,6 +4042,10 @@ export interface operations {
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "patch-shipments-id-stop-tracking": {
@@ -4468,6 +4470,7 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
             /** @description Not Found */
             404: {
                 headers: {
@@ -4520,6 +4523,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
         };
     };
@@ -4552,6 +4557,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "post-tracking-requests-custom-fields": {
@@ -4602,6 +4609,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
         };
@@ -4627,6 +4635,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-tracking-requests-custom-fields-api-slug": {
@@ -4667,6 +4677,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
         };
     };
@@ -4692,6 +4704,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "delete-webhooks-id": {
@@ -4712,6 +4726,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -4764,6 +4779,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
         };
     };
@@ -4905,6 +4922,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "get-webhook-notifications": {
@@ -6148,6 +6167,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -6211,6 +6231,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-containers-id-transport_events": {
@@ -6241,6 +6262,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-containers-id-map-geojson": {
@@ -6342,6 +6364,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description Forbidden - This API endpoint is not enabled for your account. Please contact support@terminal49.com */
             403: {
                 headers: {
@@ -6360,6 +6383,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
             /** @description Too Many Requests - You've hit the refresh limit. Please try again in a minute. */
             429: {
                 headers: {
@@ -6427,6 +6451,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-metro-area-id": {
@@ -6440,14 +6465,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description OK. An unknown id or UN/LOCODE returns `data: null` with status 200, not 404. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data?: components["schemas"]["metro_area"];
+                        data?: components["schemas"]["metro_area"] | (never | null);
                     };
                 };
             };
@@ -6475,6 +6500,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-vessels-id": {
@@ -6523,6 +6549,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-vessels-imo": {
@@ -6571,6 +6598,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-vessels-id-future-positions": {
@@ -6622,6 +6650,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-vessels-id-future-positions-with-coordinates": {
@@ -6677,6 +6706,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-terminal-id": {
@@ -6701,6 +6731,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "list-parties": {
@@ -6901,6 +6932,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "delete-custom-field-definitions-id": {
@@ -6973,6 +7005,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
         };
     };
@@ -7000,6 +7033,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "post-custom-field-options": {
@@ -7041,6 +7075,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
         };
     };
@@ -7071,6 +7106,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "delete-custom-field-options-id": {
@@ -7138,6 +7174,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
         };
     };
@@ -7262,6 +7299,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "delete-custom-fields-id": {
@@ -7283,6 +7321,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -7322,6 +7361,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
         };
     };
@@ -7354,6 +7395,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "post-shipments-custom-fields": {
@@ -7404,6 +7447,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
         };
@@ -7429,6 +7473,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-shipments-custom-fields-api-slug": {
@@ -7469,6 +7515,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
         };
     };
@@ -7673,6 +7721,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "post-containers-custom-fields": {
@@ -7723,6 +7773,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
         };
@@ -7748,6 +7799,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-containers-custom-fields-api-slug": {
@@ -7788,6 +7841,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
         };
     };
@@ -7986,6 +8041,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "edit-party": {
@@ -8027,6 +8084,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             /** @description Unprocessable Entity */
             422: {
                 headers: {
@@ -9030,6 +9089,27 @@ export interface operations {
                     "application/json": {
                         data?: components["schemas"]["custom_field_definition"];
                         links?: components["schemas"]["link-self"];
+                    };
+                };
+            };
+            /** @description `template_id` does not match a Terminal49 template. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "errors": [
+                     *         {
+                     *           "status": "404",
+                     *           "title": "Not Found"
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
                     };
                 };
             };

@@ -1387,6 +1387,9 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -1500,9 +1503,21 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
-        "description": "Update a shipment",
+        "description": "Update a shipment.",
         "tags": [
           "Shipments"
         ],
@@ -2990,6 +3005,9 @@
           "400": {
             "$ref": "#/components/responses/BadRequest"
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -3022,7 +3040,7 @@
           }
         },
         "operationId": "get-track-request-by-id",
-        "description": "Get the details and status of an existing tracking request. ",
+        "description": "Get the details and status of an existing tracking request.",
         "tags": [
           "Tracking Requests"
         ],
@@ -3057,11 +3075,17 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
-        "description": "Update a tracking request",
+        "description": "Update a tracking request.",
         "tags": [
           "Tracking Requests"
         ],
@@ -3166,6 +3190,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "parameters": [
@@ -3203,6 +3233,9 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
@@ -3309,6 +3342,12 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
           }
@@ -3360,6 +3399,12 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -3395,10 +3440,16 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-webhooks-id",
-        "description": "Get the details of a single webhook"
+        "description": "Get the details of a single webhook."
       },
       "patch": {
         "summary": "Edit a webhook",
@@ -3419,11 +3470,17 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
-        "description": "Update a single webhook",
+        "description": "Update a single webhook.",
         "tags": [
           "Webhooks"
         ],
@@ -3554,11 +3611,14 @@
           "204": {
             "description": "No Content"
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "404": {
             "$ref": "#/components/responses/NotFound"
           }
         },
-        "description": "Delete a webhook",
+        "description": "Delete a webhook.",
         "tags": [
           "Webhooks"
         ]
@@ -4642,10 +4702,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-webhook-notification-id",
-        "description": "\n",
         "tags": [
           "Webhook Notifications"
         ],
@@ -8483,6 +8548,9 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "404": {
             "$ref": "#/components/responses/NotFound"
           }
@@ -9012,6 +9080,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-containers-id-raw_events",
@@ -9342,6 +9413,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-containers-id-transport_events",
@@ -9834,6 +9908,9 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "403": {
             "description": "Forbidden - This API endpoint is not enabled for your account. Please contact support@terminal49.com",
             "content": {
@@ -9865,6 +9942,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           },
           "429": {
             "description": "Too Many Requests - You've hit the refresh limit. Please try again in a minute.",
@@ -9974,6 +10054,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-shipping_lines-id",
@@ -9998,14 +10081,49 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "OK. An unknown id or UN/LOCODE returns `data: null` with status 200, not 404.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/metro_area"
+                      "oneOf": [
+                        {
+                          "$ref": "#/components/schemas/metro_area"
+                        },
+                        {
+                          "type": "object",
+                          "nullable": true,
+                          "enum": [
+                            null
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                "examples": {
+                  "Metro area": {
+                    "value": {
+                      "data": {
+                        "id": "13a8bea0-36e7-4186-a9a0-5fc4f94ccdd9",
+                        "type": "metro_area",
+                        "attributes": {
+                          "name": "Los Angeles",
+                          "state_abbr": "CA",
+                          "code": "USLAX",
+                          "latitude": "34.0522342",
+                          "longitude": "-118.2436849",
+                          "country_code": "US",
+                          "time_zone": "America/Los_Angeles"
+                        }
+                      }
+                    }
+                  },
+                  "Unknown id": {
+                    "value": {
+                      "data": null
                     }
                   }
                 }
@@ -10048,6 +10166,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-port-id",
@@ -10143,6 +10264,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-vessels-id",
@@ -10238,6 +10362,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-vessels-imo",
@@ -10318,6 +10445,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-vessels-id-future-positions",
@@ -10419,6 +10549,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-vessels-id-future-positions-with-coordinates",
@@ -10496,6 +10629,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-terminal-id",
@@ -10910,6 +11046,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       },
@@ -10940,6 +11079,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
@@ -11063,6 +11205,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "description": "Lists every option of the definition. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`."
@@ -11094,6 +11239,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
@@ -11194,6 +11342,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       },
@@ -11224,6 +11375,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
@@ -11510,6 +11664,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       },
@@ -11537,6 +11694,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
@@ -11589,6 +11752,9 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
@@ -11660,6 +11826,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "parameters": [
@@ -11697,6 +11869,9 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
@@ -11803,6 +11978,12 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
           }
@@ -11854,6 +12035,12 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -12343,6 +12530,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "parameters": [
@@ -12380,6 +12573,9 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
@@ -12486,6 +12682,12 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
           }
@@ -12537,6 +12739,12 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -13001,16 +13209,22 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-parties-id",
-        "description": "Returns a party by it's given identifier",
+        "description": "Returns a party by it's given identifier.",
         "tags": [
           "Parties"
         ]
       },
       "patch": {
-        "description": "Updates a party",
+        "description": "Updates a party.",
         "operationId": "edit-party",
         "responses": {
           "200": {
@@ -13030,6 +13244,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           },
           "422": {
             "description": "Unprocessable Entity",
@@ -15063,6 +15283,32 @@
                       "$ref": "#/components/schemas/link-self"
                     }
                   }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`template_id` does not match a Terminal49 template.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "status": "404",
+                      "title": "Not Found"
+                    }
+                  ]
                 }
               }
             }
