@@ -78,6 +78,27 @@ type CustomFieldDefinitionAttributes = NonNullable<
   JsonBody<paths['/custom_field_definitions']['post']>['data']
 >['attributes'];
 
+type FuturePositionsQuery =
+  paths['/vessels/{id}/future_positions']['get']['parameters']['query'];
+type FuturePositionsWithCoordsQuery =
+  paths['/vessels/{id}/future_positions_with_coordinates']['get']['parameters']['query'];
+
+/** Parameters for {@link Terminal49Client.getVesselFuturePositions}. */
+export interface VesselFuturePositionsParams {
+  /** Destination port ID. */
+  portId: FuturePositionsQuery['port_id'];
+  /** ID of the port the vessel left before heading to `portId`. */
+  previousPortId: FuturePositionsQuery['previous_port_id'];
+}
+
+/** Parameters for {@link Terminal49Client.getVesselFuturePositionsWithCoords}. */
+export interface VesselFuturePositionsWithCoordsParams extends VesselFuturePositionsParams {
+  /** Starting latitude. */
+  latitude: FuturePositionsWithCoordsQuery['latitude'];
+  /** Starting longitude. */
+  longitude: FuturePositionsWithCoordsQuery['longitude'];
+}
+
 /** Parameters for {@link Terminal49Client.triggerWebhook}. */
 export interface TriggerWebhookParams {
   /** HTTPS destination URL for the test delivery. */
@@ -191,10 +212,16 @@ export class Terminal49Client {
     get: (id: string, options?: CallOptions) => this.getVessel(id, options),
     getByImo: (imo: string, options?: CallOptions) =>
       this.getVesselByImo(imo, options),
-    futurePositions: (id: string, options?: CallOptions) =>
-      this.getVesselFuturePositions(id, options),
-    futurePositionsWithCoords: (id: string, options?: CallOptions) =>
-      this.getVesselFuturePositionsWithCoords(id, options),
+    futurePositions: (
+      id: string,
+      params: VesselFuturePositionsParams,
+      options?: CallOptions,
+    ) => this.getVesselFuturePositions(id, params, options),
+    futurePositionsWithCoords: (
+      id: string,
+      params: VesselFuturePositionsWithCoordsParams,
+      options?: CallOptions,
+    ) => this.getVesselFuturePositionsWithCoords(id, params, options),
   };
 
   public ports = {
@@ -670,26 +697,47 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
-  /** Fetch future vessel positions. */
+  /** Fetch a vessel's estimated positions between two ports. Requires the Routing Data feature. */
   async getVesselFuturePositions(
     id: string,
+    params: VesselFuturePositionsParams,
     options?: CallOptions,
   ): Promise<any> {
-    // The spec marks port_id and previous_port_id required; this signature never accepted them.
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/vessels/${encodeURIComponent(id)}/future_positions`,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/vessels/{id}/future_positions', {
+        params: {
+          path: { id },
+          query: {
+            port_id: params.portId,
+            previous_port_id: params.previousPortId,
+          },
+        },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
-  /** Fetch future vessel positions with coordinates. */
+  /** Fetch a vessel's estimated positions from a starting coordinate. Requires the Routing Data feature. */
   async getVesselFuturePositionsWithCoords(
     id: string,
+    params: VesselFuturePositionsWithCoordsParams,
     options?: CallOptions,
   ): Promise<any> {
-    // The spec marks port and coordinate params required; this signature never accepted them.
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/vessels/${encodeURIComponent(id)}/future_positions_with_coordinates`,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET(
+        '/vessels/{id}/future_positions_with_coordinates',
+        {
+          params: {
+            path: { id },
+            query: {
+              port_id: params.portId,
+              previous_port_id: params.previousPortId,
+              latitude: params.latitude,
+              longitude: params.longitude,
+            },
+          },
+        },
+      ),
     );
     return this.formatResult(raw, options?.format);
   }

@@ -346,8 +346,16 @@ describe('resource methods on the client', () => {
     await client.webhookNotifications.examples();
     await client.vessels.get('v-1');
     await client.vessels.getByImo('9876543');
-    await client.vessels.futurePositions('v-1');
-    await client.vessels.futurePositionsWithCoords('v-1');
+    await client.vessels.futurePositions('v-1', {
+      portId: 'port-2',
+      previousPortId: 'port-1',
+    });
+    await client.vessels.futurePositionsWithCoords('v-1', {
+      portId: 'port-2',
+      previousPortId: 'port-1',
+      latitude: 13.07,
+      longitude: -100.84,
+    });
     await client.ports.get('p-1');
     await client.terminals.get('t-1');
     await client.parties.list({ pageSize: 10 });
@@ -390,8 +398,23 @@ describe('resource methods on the client', () => {
       ['GET', '/webhook_notifications/examples', {}, undefined],
       ['GET', '/vessels/v-1', {}, undefined],
       ['GET', '/vessels/9876543', {}, undefined],
-      ['GET', '/vessels/v-1/future_positions', {}, undefined],
-      ['GET', '/vessels/v-1/future_positions_with_coordinates', {}, undefined],
+      [
+        'GET',
+        '/vessels/v-1/future_positions',
+        { port_id: 'port-2', previous_port_id: 'port-1' },
+        undefined,
+      ],
+      [
+        'GET',
+        '/vessels/v-1/future_positions_with_coordinates',
+        {
+          port_id: 'port-2',
+          previous_port_id: 'port-1',
+          latitude: '13.07',
+          longitude: '-100.84',
+        },
+        undefined,
+      ],
       ['GET', '/ports/p-1', {}, undefined],
       ['GET', '/terminals/t-1', {}, undefined],
       ['GET', '/parties', { 'page[size]': '10' }, undefined],

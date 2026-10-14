@@ -1,7 +1,7 @@
 /**
  * t49 containers <action>
  *
- * Subcommands: get, list, events, route, raw-events, refresh, demurrage, rail
+ * Subcommands: get, list, events, route, map (alias of route), raw-events, refresh, demurrage, rail
  */
 
 import type { Command } from 'commander';

@@ -114,4 +114,42 @@ describe('renderTable', () => {
     expect(output).toContain('in_transit');
     expect(output).toContain('unknown');
   });
+
+  it('renders route ports in order for containers route and map', () => {
+    const route = {
+      ports: [
+        {
+          sequence: 1,
+          label: 'POL',
+          name: 'Laem Chabang',
+          countryCode: 'TH',
+          inbound: { eta: null, ata: null },
+          outbound: { etd: null, atd: '2025-11-08T00:44:52Z' },
+        },
+        {
+          sequence: 3,
+          label: 'POD',
+          name: 'Savannah',
+          countryCode: 'US',
+          inbound: { eta: '2025-12-31T05:00:00Z', ata: null },
+          outbound: { etd: null, atd: null },
+        },
+      ],
+      currentVessel: null,
+      totalPorts: 2,
+    };
+
+    for (const command of ['containers.route', 'containers.map']) {
+      const lines = renderTable(command, route).split('\n');
+      const header = lines.find((line) => line.includes('Seq'));
+      expect(header).toMatch(
+        /Seq.*Label.*Port.*Country.*Inbound ETA.*Inbound ATA.*Outbound ETD.*Outbound ATD/,
+      );
+      const pol = lines.findIndex((line) => line.includes('Laem Chabang'));
+      const pod = lines.findIndex((line) => line.includes('Savannah'));
+      expect(lines[pol]).toMatch(/1.*POL.*Laem Chabang.*TH.*2025-11-08/);
+      expect(lines[pod]).toMatch(/3.*POD.*Savannah.*US.*2025-12-31/);
+      expect(pol).toBeLessThan(pod);
+    }
+  });
 });

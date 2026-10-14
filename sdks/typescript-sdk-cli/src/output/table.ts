@@ -13,6 +13,17 @@ interface ColumnDef {
   title: string;
 }
 
+const ROUTE_PORT_COLUMNS: ColumnDef[] = [
+  { key: 'sequence', title: 'Seq' },
+  { key: 'label', title: 'Label' },
+  { key: 'name', title: 'Port' },
+  { key: 'countryCode', title: 'Country' },
+  { key: 'inbound.eta', title: 'Inbound ETA' },
+  { key: 'inbound.ata', title: 'Inbound ATA' },
+  { key: 'outbound.etd', title: 'Outbound ETD' },
+  { key: 'outbound.atd', title: 'Outbound ATD' },
+];
+
 const commandColumns: Record<string, ColumnDef[]> = {
   'shipments.list': [
     { key: 'id', title: 'ID' },
@@ -51,21 +62,8 @@ const commandColumns: Record<string, ColumnDef[]> = {
     { key: ['dataSource', 'attributes.data_source'], title: 'Source' },
     { key: ['value', 'attributes.value'], title: 'Value' },
   ],
-  'containers.route': [
-    { key: ['port.name', 'port.code', 'location.name'], title: 'Port' },
-    { key: ['inbound.mode', 'attributes.inbound_mode'], title: 'Inbound' },
-    { key: ['inbound.eta', 'attributes.inbound_eta_at'], title: 'Inbound ETA' },
-    { key: ['inbound.ata', 'attributes.inbound_ata_at'], title: 'Inbound ATA' },
-    { key: ['outbound.mode', 'attributes.outbound_mode'], title: 'Outbound' },
-    {
-      key: ['outbound.etd', 'attributes.outbound_etd_at'],
-      title: 'Outbound ETD',
-    },
-    {
-      key: ['outbound.atd', 'attributes.outbound_atd_at'],
-      title: 'Outbound ATD',
-    },
-  ],
+  'containers.route': ROUTE_PORT_COLUMNS,
+  'containers.map': ROUTE_PORT_COLUMNS,
   'containers.demurrage': [
     { key: 'container_id', title: 'Container ID' },
     { key: 'pickup_lfd', title: 'Pickup LFD' },
@@ -590,15 +588,14 @@ function rowsForCommand(
     return record.mapped as Record<string, unknown>[];
   }
 
-  if (command === 'containers.route') {
+  if (command === 'containers.route' || command === 'containers.map') {
     const mapped = record?.mapped;
-    if (mapped && typeof mapped === 'object' && !Array.isArray(mapped)) {
-      const locations = (mapped as Record<string, unknown>).locations;
-      if (Array.isArray(locations))
-        return locations as Record<string, unknown>[];
-    }
-    if (Array.isArray(record?.locations)) {
-      return record.locations as Record<string, unknown>[];
+    const route =
+      mapped && typeof mapped === 'object' && !Array.isArray(mapped)
+        ? (mapped as Record<string, unknown>)
+        : record;
+    if (Array.isArray(route?.ports)) {
+      return route.ports as Record<string, unknown>[];
     }
   }
 
