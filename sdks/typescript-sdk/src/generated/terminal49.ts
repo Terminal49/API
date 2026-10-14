@@ -413,11 +413,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /**
-         * Edit a container
-         * @description Update a container
-         */
-        patch: operations["patch-containers-id"];
+        patch?: never;
         trace?: never;
     };
     "/containers/{id}": {
@@ -439,7 +435,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Edit a container
+         * @description Update a container
+         */
+        patch: operations["patch-containers-id"];
         trace?: never;
     };
     "/containers/{id}/raw_events": {
@@ -5160,38 +5160,6 @@ export interface operations {
             };
         };
     };
-    "patch-containers-id": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    data?: {
-                        attributes: {
-                            ref_numbers?: string[];
-                        };
-                    };
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data?: components["schemas"]["container"];
-                    };
-                };
-            };
-        };
-    };
     "get-containers-id": {
         parameters: {
             query?: {
@@ -5215,6 +5183,40 @@ export interface operations {
                     "application/json": {
                         data?: components["schemas"]["container"];
                         included?: (components["schemas"]["shipment"] | components["schemas"]["terminal"] | components["schemas"]["transport_event"])[];
+                    };
+                };
+            };
+        };
+    };
+    "patch-containers-id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    data?: {
+                        attributes: {
+                            ref_numbers?: string[];
+                        };
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["container"];
                     };
                 };
             };
