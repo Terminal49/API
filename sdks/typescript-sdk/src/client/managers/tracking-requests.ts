@@ -6,9 +6,19 @@ import type {
   TrackingRequestInclude,
 } from '../../types/options.js';
 import { ValidationError } from '../errors.js';
-import { mapTrackingRequest, mapTrackingRequestList } from '../mappers.js';
+import {
+  mapCustomFields,
+  mapTrackingRequest,
+  mapTrackingRequestList,
+} from '../mappers.js';
 import { copyStringParams, normalizeInclude } from '../query.js';
 import { BaseManager } from './base.js';
+import {
+  createCustomField,
+  deleteCustomField,
+  listCustomFields,
+  updateCustomField,
+} from './entity-subresources.js';
 
 export type TrackingRequestType =
   | 'container'
@@ -99,6 +109,61 @@ export class TrackingRequestManager extends BaseManager {
     );
 
     return this.formatResult(raw, options?.format, mapTrackingRequest);
+  }
+
+  /** List custom field values set on a tracking request, with their definitions. */
+  async customFields(id: string, options?: CallOptions): Promise<any> {
+    const raw = await listCustomFields(this.transport, 'tracking_requests', id);
+    return this.formatResult(raw, options?.format, mapCustomFields);
+  }
+
+  /** Create a custom field value on a tracking request. */
+  async setCustomField(
+    id: string,
+    apiSlug: string,
+    value: unknown,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await createCustomField(
+      this.transport,
+      'tracking_requests',
+      id,
+      apiSlug,
+      value,
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Update an existing custom field value on a tracking request. */
+  async updateCustomField(
+    id: string,
+    apiSlug: string,
+    value: unknown,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await updateCustomField(
+      this.transport,
+      'tracking_requests',
+      id,
+      apiSlug,
+      value,
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Remove a custom field value from a tracking request. */
+  async deleteCustomField(
+    id: string,
+    apiSlug: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await deleteCustomField(
+      this.transport,
+      'tracking_requests',
+      id,
+      apiSlug,
+    );
+    return this.formatResult(raw, options?.format);
   }
 
   async create(params: {

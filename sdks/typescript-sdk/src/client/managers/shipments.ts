@@ -14,6 +14,16 @@ import {
   normalizeIncludeWithDefault,
 } from '../query.js';
 import { BaseManager } from './base.js';
+import {
+  createCustomField,
+  createPartyRole,
+  deleteCustomField,
+  deletePartyRole,
+  listCustomFields,
+  listPartyRoles,
+  type PartyRoleName,
+  updateCustomField,
+} from './entity-subresources.js';
 
 const DEFAULT_SHIPMENT_INCLUDES = [
   'containers',
@@ -57,9 +67,7 @@ export class ShipmentManager extends BaseManager {
   }
 
   async customFields(id: string, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/shipments/${encodeURIComponent(id)}/custom_fields?include=definition`,
-    );
+    const raw = await listCustomFields(this.transport, 'shipments', id);
     return this.formatResult(raw, options?.format, mapCustomFields);
   }
 
@@ -145,29 +153,89 @@ export class ShipmentManager extends BaseManager {
     return this.formatResult(raw, options?.format, mapShipment);
   }
 
+  /** Create a custom field value on a shipment. */
   async setCustomField(
     id: string,
-    fieldId: string,
+    apiSlug: string,
     value: unknown,
     options?: CallOptions,
   ): Promise<any> {
-    const encodedId = encodeURIComponent(id);
-    const payload = {
-      data: {
-        type: 'custom_field',
-        attributes: {
-          api_slug: fieldId,
-          value,
-        },
-      },
-    };
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/shipments/${encodedId}/custom_fields`,
-      {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' },
-      },
+    const raw = await createCustomField(
+      this.transport,
+      'shipments',
+      id,
+      apiSlug,
+      value,
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Update an existing custom field value on a shipment. */
+  async updateCustomField(
+    id: string,
+    apiSlug: string,
+    value: unknown,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await updateCustomField(
+      this.transport,
+      'shipments',
+      id,
+      apiSlug,
+      value,
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Remove a custom field value from a shipment. */
+  async deleteCustomField(
+    id: string,
+    apiSlug: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await deleteCustomField(
+      this.transport,
+      'shipments',
+      id,
+      apiSlug,
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** List the party roles (shipper, consignee, ...) assigned to a shipment. */
+  async partyRoles(id: string, options?: CallOptions): Promise<any> {
+    const raw = await listPartyRoles(this.transport, 'shipments', id);
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Assign a party to a shipment in the given role. */
+  async addPartyRole(
+    id: string,
+    role: PartyRoleName,
+    partyId: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await createPartyRole(
+      this.transport,
+      'shipments',
+      id,
+      role,
+      partyId,
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Remove a party role assignment from a shipment. */
+  async removePartyRole(
+    id: string,
+    partyRoleId: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await deletePartyRole(
+      this.transport,
+      'shipments',
+      id,
+      partyRoleId,
     );
     return this.formatResult(raw, options?.format);
   }

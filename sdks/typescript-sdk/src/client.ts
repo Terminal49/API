@@ -17,6 +17,9 @@ import {
 } from './client/errors.js';
 import {
   ContainerManager,
+  DocumentManager,
+  DocumentSchemaManager,
+  EmailSubmissionManager,
   ShipmentManager,
   ShippingLineManager,
   TrackingRequestManager,
@@ -27,6 +30,7 @@ import type {
   TrackingRequestType,
 } from './client/managers/tracking-requests.js';
 import { Transport } from './client/transport.js';
+import type { paths } from './generated/terminal49.js';
 import type {
   CallOptions,
   ContainerInclude,
@@ -55,6 +59,35 @@ export {
   UpstreamError,
   ValidationError,
 };
+
+type TriggerWebhookBody =
+  paths['/webhooks/trigger']['post']['requestBody']['content']['application/json'];
+
+/** Parameters for {@link Terminal49Client.triggerWebhook}. */
+export interface TriggerWebhookParams {
+  /** HTTPS destination URL for the test delivery. */
+  url: string;
+  /** Webhook event name used to generate the example payload, e.g. `tracking_request.succeeded`. */
+  event: string;
+  /** Optional secret used to sign the request in `X-T49-Webhook-Signature`. */
+  secret?: string;
+  /** Document type for `document_representation.*` example payloads. */
+  documentType?: string;
+}
+
+/** Filters accepted by `customFields.list`. */
+export interface CustomFieldListFilters {
+  entityType?: 'Shipment' | 'Container';
+  entityId?: string;
+  definitionId?: string;
+}
+
+/** Filters accepted by `customFieldDefinitions.list`. */
+export interface CustomFieldDefinitionListFilters {
+  entityType?: 'Shipment' | 'Container';
+  dataType?: string;
+  displayName?: string;
+}
 
 /** Configuration for {@link Terminal49Client}. */
 export interface Terminal49ClientConfig {
@@ -109,6 +142,9 @@ export class Terminal49Client {
   public containers: ContainerManager;
   public trackingRequests: TrackingRequestManager;
   public shippingLines: ShippingLineManager;
+  public documents: DocumentManager;
+  public emailSubmissions: EmailSubmissionManager;
+  public documentSchemas: DocumentSchemaManager;
 
   public webhooks = {
     list: (options?: ListOptions) => this.listWebhooks(options),
@@ -123,6 +159,9 @@ export class Terminal49Client {
     delete: (id: string, options?: CallOptions) =>
       this.deleteWebhook(id, options),
     ips: (options?: CallOptions) => this.getWebhookIps(options),
+    events: (options?: CallOptions) => this.listWebhookEvents(options),
+    trigger: (params: TriggerWebhookParams, options?: CallOptions) =>
+      this.triggerWebhook(params, options),
   };
 
   public webhookNotifications = {
@@ -154,6 +193,13 @@ export class Terminal49Client {
   public parties = {
     list: (options?: ListOptions) => this.listParties(options),
     get: (id: string, options?: CallOptions) => this.getParty(id, options),
+    create: (payload: Record<string, unknown>, options?: CallOptions) =>
+      this.createParty(payload, options),
+    update: (
+      id: string,
+      payload: Record<string, unknown>,
+      options?: CallOptions,
+    ) => this.updateParty(id, payload, options),
   };
 
   public metroAreas = {
@@ -161,7 +207,9 @@ export class Terminal49Client {
   };
 
   public customFieldDefinitions = {
-    list: (options?: ListOptions) => this.listCustomFieldDefinitions(options),
+    list: (
+      options?: ListOptions & { filters?: CustomFieldDefinitionListFilters },
+    ) => this.listCustomFieldDefinitions(options),
     get: (id: string, options?: CallOptions) =>
       this.getCustomFieldDefinition(id, options),
     create: (payload: Record<string, unknown>, options?: CallOptions) =>
@@ -196,7 +244,8 @@ export class Terminal49Client {
   };
 
   public customFields = {
-    list: (options?: ListOptions) => this.listCustomFields(options),
+    list: (options?: ListOptions & { filters?: CustomFieldListFilters }) =>
+      this.listCustomFields(options),
     get: (id: string, options?: CallOptions) =>
       this.getCustomField(id, options),
     create: (payload: Record<string, unknown>, options?: CallOptions) =>
@@ -237,6 +286,15 @@ export class Terminal49Client {
       defaultFormat,
     );
     this.shippingLines = new ShippingLineManager(this.transport, defaultFormat);
+    this.documents = new DocumentManager(this.transport, defaultFormat);
+    this.emailSubmissions = new EmailSubmissionManager(
+      this.transport,
+      defaultFormat,
+    );
+    this.documentSchemas = new DocumentSchemaManager(
+      this.transport,
+      defaultFormat,
+    );
   }
 
   /**
@@ -258,12 +316,8 @@ export class Terminal49Client {
       throw new ValidationError('query is required (/query)');
     }
 
-    const params = new URLSearchParams({ query });
-    // `/search` is not present in the generated OpenAPI types, so it cannot be
-    // routed through the typed `client.GET(...)`. `executeManual` runs it through
-    // the same Auth -> Retry -> ErrorMapping -> timeout pipeline as the typed client.
-    return this.transport.executeManual(
-      `${this.transport.baseUrl}/search?${params.toString()}`,
+    return this.transport.execute(() =>
+      this.transport.client.GET('/search', { params: { query: { query } } }),
     );
   }
 
@@ -515,6 +569,38 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
+  /** List the event names a webhook can subscribe to. */
+  async listWebhookEvents(options?: CallOptions): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint('/webhooks/events'),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Send a test webhook delivery with an example payload to a URL. */
+  async triggerWebhook(
+    params: TriggerWebhookParams,
+    options?: CallOptions,
+  ): Promise<any> {
+    const body: TriggerWebhookBody = {
+      url: params.url,
+      event: params.event,
+      secret: params.secret,
+      sample: params.documentType
+        ? { document_type: params.documentType }
+        : undefined,
+    };
+    const raw = await this.transport.executeManual(
+      this.endpoint('/webhooks/trigger'),
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
   /** List webhook notifications. */
   async listWebhookNotifications(options?: ListOptions): Promise<any> {
     const raw = await this.transport.executeManual(
@@ -617,6 +703,36 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
+  /** Create a party. */
+  async createParty(
+    payload: Record<string, unknown>,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(this.endpoint('/parties'), {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Update a party. */
+  async updateParty(
+    id: string,
+    payload: Record<string, unknown>,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.executeManual(
+      this.endpoint(`/parties/${encodeURIComponent(id)}`),
+      {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
   /** Fetch a metro area by ID. */
   async getMetroArea(id: string, options?: CallOptions): Promise<any> {
     const raw = await this.transport.executeManual(
@@ -626,9 +742,17 @@ export class Terminal49Client {
   }
 
   /** List custom field definitions. */
-  async listCustomFieldDefinitions(options?: ListOptions): Promise<any> {
+  async listCustomFieldDefinitions(
+    options?: ListOptions & { filters?: CustomFieldDefinitionListFilters },
+  ): Promise<any> {
+    const filters = options?.filters;
     const raw = await this.transport.executeManual(
-      this.endpoint('/custom_field_definitions', this.listQuery(options)),
+      this.endpoint('/custom_field_definitions', {
+        ...this.listQuery(options),
+        'filter[entity_type]': filters?.entityType,
+        'filter[data_type]': filters?.dataType,
+        'filter[display_name]': filters?.displayName,
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -772,9 +896,17 @@ export class Terminal49Client {
   }
 
   /** List custom field assignments. */
-  async listCustomFields(options?: ListOptions): Promise<any> {
+  async listCustomFields(
+    options?: ListOptions & { filters?: CustomFieldListFilters },
+  ): Promise<any> {
+    const filters = options?.filters;
     const raw = await this.transport.executeManual(
-      this.endpoint('/custom_fields', this.listQuery(options)),
+      this.endpoint('/custom_fields', {
+        ...this.listQuery(options),
+        'filter[entity_type]': filters?.entityType,
+        'filter[entity_id]': filters?.entityId,
+        'filter[definition_id]': filters?.definitionId,
+      }),
     );
     return this.formatResult(raw, options?.format);
   }

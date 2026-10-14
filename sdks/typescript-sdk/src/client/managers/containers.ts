@@ -20,6 +20,16 @@ import {
   normalizeInclude,
 } from '../query.js';
 import { BaseManager } from './base.js';
+import {
+  createCustomField,
+  createPartyRole,
+  deleteCustomField,
+  deletePartyRole,
+  listCustomFields,
+  listPartyRoles,
+  type PartyRoleName,
+  updateCustomField,
+} from './entity-subresources.js';
 
 const DEFAULT_CONTAINER_INCLUDES = [
   'shipment',
@@ -49,10 +59,26 @@ export class ContainerManager extends BaseManager {
     return this.formatResult(raw, options?.format);
   }
 
-  async customFields(id: string, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/containers/${encodeURIComponent(id)}/custom_fields?include=definition`,
+  /** Update container attributes such as `ref_numbers`. */
+  async update(
+    id: string,
+    attrs: Record<string, any>,
+    options?: CallOptions,
+  ): Promise<any> {
+    const payload = {
+      data: { type: 'container' as const, id, attributes: attrs },
+    };
+    const raw = await this.transport.execute(() =>
+      this.transport.client.PATCH('/containers/{id}', {
+        params: { path: { id } },
+        body: payload as any,
+      }),
     );
+    return this.formatResult(raw, options?.format);
+  }
+
+  async customFields(id: string, options?: CallOptions): Promise<any> {
+    const raw = await listCustomFields(this.transport, 'containers', id);
     return this.formatResult(raw, options?.format, mapCustomFields);
   }
 
@@ -101,6 +127,11 @@ export class ContainerManager extends BaseManager {
     return this.formatResult(raw, options?.format, mapTransportEvents);
   }
 
+  /**
+   * @deprecated `GET /containers/{id}/route` is no longer part of the public
+   * Terminal49 API and is expected to return `NotFoundError`. Use
+   * {@link ContainerManager.map} for routing geometry instead.
+   */
   async route(id: string, options?: CallOptions): Promise<any> {
     // The route path is absent from current OpenAPI, although this SDK already
     // supports it. Keep the existing client/middleware path while regenerating
@@ -125,29 +156,89 @@ export class ContainerManager extends BaseManager {
     return this.formatResult(raw, options?.format);
   }
 
+  /** Create a custom field value on a container. */
   async setCustomField(
     id: string,
-    fieldId: string,
+    apiSlug: string,
     value: unknown,
     options?: CallOptions,
   ): Promise<any> {
-    const encodedId = encodeURIComponent(id);
-    const payload = {
-      data: {
-        type: 'custom_field',
-        attributes: {
-          api_slug: fieldId,
-          value,
-        },
-      },
-    };
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/containers/${encodedId}/custom_fields`,
-      {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' },
-      },
+    const raw = await createCustomField(
+      this.transport,
+      'containers',
+      id,
+      apiSlug,
+      value,
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Update an existing custom field value on a container. */
+  async updateCustomField(
+    id: string,
+    apiSlug: string,
+    value: unknown,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await updateCustomField(
+      this.transport,
+      'containers',
+      id,
+      apiSlug,
+      value,
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Remove a custom field value from a container. */
+  async deleteCustomField(
+    id: string,
+    apiSlug: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await deleteCustomField(
+      this.transport,
+      'containers',
+      id,
+      apiSlug,
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** List the party roles (shipper, consignee, ...) assigned to a container. */
+  async partyRoles(id: string, options?: CallOptions): Promise<any> {
+    const raw = await listPartyRoles(this.transport, 'containers', id);
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Assign a party to a container in the given role. */
+  async addPartyRole(
+    id: string,
+    role: PartyRoleName,
+    partyId: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await createPartyRole(
+      this.transport,
+      'containers',
+      id,
+      role,
+      partyId,
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Remove a party role assignment from a container. */
+  async removePartyRole(
+    id: string,
+    partyRoleId: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await deletePartyRole(
+      this.transport,
+      'containers',
+      id,
+      partyRoleId,
     );
     return this.formatResult(raw, options?.format);
   }

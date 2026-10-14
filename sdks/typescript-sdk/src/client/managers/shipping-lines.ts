@@ -12,4 +12,14 @@ export class ShippingLineManager extends BaseManager {
     );
     return this.formatResult(raw, options?.format, mapShippingLines);
   }
+
+  /** Fetch a shipping line by ID. */
+  async get(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/shipping_lines/{id}', {
+        params: { path: { id } },
+      }),
+    );
+    return this.formatResult(raw, options?.format);
+  }
 }
