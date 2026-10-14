@@ -38,6 +38,18 @@ describe('generated document-type Postman examples', () => {
     });
   });
 
+  it('uses a structural JSON schema in the detail example', () => {
+    const example = responses(collection.item, 'Get a document type').find(
+      (item) => item.code === 200,
+    );
+    expect(example).toBeDefined();
+    expect(JSON.parse(example!.body).document_type.schema.payload).toEqual({
+      type: 'object',
+      properties: {},
+    });
+    expect(example!.body).not.toContain('<Circular reference');
+  });
+
   it('includes required titles in both unauthorized examples', () => {
     for (const name of ['List document types', 'Get a document type']) {
       const example = responses(collection.item, name).find(
