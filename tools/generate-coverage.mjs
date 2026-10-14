@@ -104,6 +104,101 @@ function validateTerminalIdentifiers({ locode, smdgCode, firmsCode }) {
     throw new Error('Invalid FIRMS code for ' + locode);
 }
 
+export function validateTerminalCapabilities(capabilities) {
+  const featureKeys = new Set(terminalDefinitions.map(([key]) => key));
+  if (
+    !capabilities ||
+    typeof capabilities !== 'object' ||
+    Array.isArray(capabilities)
+  )
+    throw new Error('Invalid terminal capability mapping');
+  for (const [key, declaration] of Object.entries(capabilities)) {
+    if (
+      !/^[A-Z]{2}[A-Z0-9]{3}:[A-Z0-9]{3,6}$/.test(key) ||
+      !declaration ||
+      typeof declaration !== 'object' ||
+      Array.isArray(declaration) ||
+      Object.keys(declaration).length !== 1 ||
+      !declaration.features ||
+      typeof declaration.features !== 'object' ||
+      Array.isArray(declaration.features) ||
+      Object.keys(declaration.features).length === 0 ||
+      Object.entries(declaration.features).some(
+        ([feature, status]) =>
+          !featureKeys.has(feature) || !statuses.has(status),
+      )
+    )
+      throw new Error('Invalid terminal capability mapping for ' + key);
+  }
+}
+
+export function validateShippingLineOverrides(overrides, registry) {
+  if (
+    !overrides ||
+    typeof overrides !== 'object' ||
+    Array.isArray(overrides)
+  )
+    throw new Error('Invalid shipping line overrides');
+  const primaryScacs = new Set(registry.map(({ scac }) => scac));
+  for (const [scac, override] of Object.entries(overrides)) {
+    if (
+      !primaryScacs.has(scac) ||
+      !override ||
+      typeof override !== 'object' ||
+      Array.isArray(override) ||
+      Object.keys(override).length === 0 ||
+      Object.keys(override).some(
+        (key) =>
+          !['enabled', 'access', 'trackingIdentifiers'].includes(key),
+      ) ||
+      ('enabled' in override && typeof override.enabled !== 'boolean') ||
+      ('access' in override &&
+        !['public', 'account'].includes(override.access))
+    )
+      throw new Error('Invalid shipping line override for ' + scac);
+    if ('trackingIdentifiers' in override) {
+      const identifiers = override.trackingIdentifiers;
+      if (
+        !identifiers ||
+        typeof identifiers !== 'object' ||
+        Array.isArray(identifiers) ||
+        Object.keys(identifiers).length === 0 ||
+        Object.entries(identifiers).some(
+          ([key, value]) =>
+            ![
+              'billOfLading',
+              'bookingNumber',
+              'containerNumber',
+            ].includes(key) || typeof value !== 'boolean',
+        )
+      )
+        throw new Error(
+          'Invalid shipping line tracking override for ' + scac,
+        );
+    }
+  }
+}
+
+export function applyShippingLineOverrides(registry, overrides) {
+  validateShippingLineOverrides(overrides, registry);
+  return registry
+    .filter(
+      ({ scac }) =>
+        !Object.hasOwn(overrides, scac) ||
+        overrides[scac].enabled !== false,
+    )
+    .map((carrier) => {
+      const override = Object.hasOwn(overrides, carrier.scac)
+        ? overrides[carrier.scac]
+        : undefined;
+      return {
+        ...carrier,
+        ...(override?.access ? { access: override.access } : {}),
+        ...override?.trackingIdentifiers,
+      };
+    });
+}
+
 async function importHex(filename) {
   const hex = JSON.parse(await readFile(filename, 'utf8'));
   const identity = await read('docs/snippets/data-sources/coverage-data.mdx');
@@ -129,6 +224,10 @@ async function importHex(filename) {
       throw new Error('Invalid terminal identifier mapping for ' + key);
     validateTerminalIdentifiers({ locode: key.slice(0, 5), ...codes });
   }
+  const terminalCapabilities = JSON.parse(
+    await read('tools/data/terminal-capabilities.json'),
+  );
+  validateTerminalCapabilities(terminalCapabilities);
   const terminalProfiles = new Map(
     hex.terminals.map((row) => [
       row.port_locode + ':' + (row.firms_code || row.terminal),
@@ -206,26 +305,43 @@ async function importHex(filename) {
   const terminals = exportValue(identity, 'terminals').map(
     ({ firmsCode: terminalCode, ...terminal }) => {
       const key = terminal.locode + ':' + (terminalCode || terminal.name);
+      const identifiers = terminalIdentifiers[key] ?? {
+        smdgCode: '',
+        firmsCode: '',
+      };
+      const declaredFeatures = identifiers.smdgCode
+        ? terminalCapabilities[terminal.locode + ':' + identifiers.smdgCode]
+            ?.features
+        : undefined;
       return {
         ...terminal,
         terminalCode,
-        ...(terminalIdentifiers[key] ?? { smdgCode: '', firmsCode: '' }),
-        features: Object.fromEntries(
-          catalog.terminals.map(({ key: featureKey }) => [
-            featureKey,
-            featureKey === 'importMilestones'
-              ? 'supported'
-              : normalizeStatus(
-                  terminalProfiles.get(key)?.features[
-                    terminalLabels[featureKey]
-                  ],
-                ),
-          ]),
-        ),
+        ...identifiers,
+        features: {
+          ...Object.fromEntries(
+            catalog.terminals.map(({ key: featureKey }) => [
+              featureKey,
+              featureKey === 'importMilestones'
+                ? 'supported'
+                : normalizeStatus(
+                    terminalProfiles.get(key)?.features[
+                      terminalLabels[featureKey]
+                    ],
+                  ),
+            ]),
+          ),
+          ...declaredFeatures,
+        },
       };
     },
   );
-  const shippingLines = exportValue(identity, 'carriers').map(
+  const shippingOverrides = JSON.parse(
+    await read('tools/data/shipping-line-overrides.json'),
+  );
+  const shippingLines = applyShippingLineOverrides(
+    exportValue(identity, 'carriers'),
+    shippingOverrides,
+  ).map(
     ({ billOfLading, bookingNumber, containerNumber, ...carrier }) => ({
       ...carrier,
       features: {
