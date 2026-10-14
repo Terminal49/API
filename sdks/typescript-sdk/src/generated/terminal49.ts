@@ -1371,6 +1371,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tracking_requests/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tracking Request ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Cancel a tracking request
+         * @description Cancel a tracking request that is still `pending` or `awaiting_manifest`. The request moves to status `cancelled` with failed_reason `Cancelled by user`. Requests in any other status return 422. A request that belongs to another account also returns 422 with a string `errors`. An unknown tracking request ID currently returns a 500 server error, not 404. A 401 comes only from authentication. It means the API token is missing or invalid, or the account may not use the API.
+         */
+        patch: operations["patch-tracking-request-cancel"];
+        trace?: never;
+    };
     "/me": {
         parameters: {
             query?: never;
@@ -1936,12 +1959,12 @@ export interface components {
                 ref_numbers?: string[] | null;
                 tags?: string[];
                 /** @enum {string} */
-                status: "pending" | "awaiting_manifest" | "created" | "failed" | "tracking_stopped";
+                status: "pending" | "awaiting_manifest" | "created" | "failed" | "tracking_stopped" | "cancelled";
                 /**
-                 * @description If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request. `scac_auto_detect_failed` means `auto_detect_vocc_scac` was set but no supported carrier SCAC could be inferred from the request number.
+                 * @description If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request. `scac_auto_detect_failed` means `auto_detect_vocc_scac` was set but no supported carrier SCAC could be inferred from the request number. A request waiting for the carrier to publish the shipment or its containers has status `awaiting_manifest` and failed_reason null. Only older records carry the `awaiting_manifest` failed_reason value. `shipping_line_not_supported` means Terminal49 cannot track that shipping line. A request cancelled through `PATCH /tracking_requests/{id}/cancel` has status `cancelled` and failed_reason `Cancelled by user`.
                  * @enum {string|null}
                  */
-                failed_reason?: "booking_cancelled" | "duplicate" | "expired" | "internal_processing_error" | "invalid_number" | "not_found" | "retries_exhausted" | "shipping_line_unreachable" | "unrecognized_response" | "data_unavailable" | "scac_auto_detect_failed" | null;
+                failed_reason?: "booking_cancelled" | "duplicate" | "expired" | "internal_processing_error" | "invalid_number" | "not_found" | "retries_exhausted" | "shipping_line_unreachable" | "unrecognized_response" | "data_unavailable" | "scac_auto_detect_failed" | "awaiting_manifest" | "shipping_line_not_supported" | "Cancelled by user" | null;
                 /**
                  * @example bill_of_lading
                  * @enum {string}
@@ -3830,8 +3853,8 @@ export interface operations {
                 q?: string;
                 /** @description filter by `request_number` */
                 "filter[request_number]"?: string;
-                /** @description filter by `status` */
-                "filter[status]"?: "created" | "pending" | "failed";
+                /** @description filter by `status`. `pending` matches requests with status `pending`; any value other than `created`, `failed` or `cancelled` is treated as `pending`. */
+                "filter[status]"?: "created" | "pending" | "failed" | "cancelled";
                 /** @description filter by shipping line `scac` */
                 "filter[scac]"?: string;
                 /** @description filter by tracking_requests `created_at` after a certain ISO8601 timestamp */
@@ -4217,10 +4240,12 @@ export interface operations {
                     data?: {
                         attributes: {
                             /**
-                             * @description Tracking request ref number.
-                             * @example REFNUMBER11
+                             * @description Customer reference numbers. The list you send replaces the existing list.
+                             * @example [
+                             *       "REFNUMBER11"
+                             *     ]
                              */
-                            ref_number?: string;
+                            ref_numbers?: string[];
                         };
                     };
                 };
@@ -8542,6 +8567,73 @@ export interface operations {
                         errors?: components["schemas"]["error"][];
                     };
                 };
+            };
+        };
+    };
+    "patch-tracking-request-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tracking Request ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancelled. The response body is an empty JSON object. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /** @example {} */
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Unauthorized. The API token is missing or invalid, or the account may not use the API. Ownership never causes a 401 here: another account's tracking request returns 422. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "errors": [
+                     *         {
+                     *           "detail": "invalid API token"
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+            /** @description The tracking request is not in a cancellable status, or it belongs to another account. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "errors": "Can't cancel tracking request in created state.  Must be in pending or awaiting_manifest state."
+                     *     }
+                     */
+                    "application/json": {
+                        errors?: string;
+                    };
+                };
+            };
+            /** @description Server error. An unknown tracking request ID currently returns 500 instead of 404. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

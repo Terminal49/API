@@ -1,0 +1,15 @@
+---
+title: "Cancel a tracking request"
+description: "Cancel a pending or awaiting_manifest tracking request in the Terminal49 API so Terminal49 stops trying to find the shipment."
+og:title: Cancel a Tracking Request | Terminal49 API
+og:description: Cancel a tracking request that is still pending or awaiting_manifest. The request moves to status cancelled with failed_reason Cancelled by user.
+openapi: patch /tracking_requests/{id}/cancel
+---
+
+Cancels a tracking request whose `status` is `pending` or `awaiting_manifest`. The request moves to `status` `cancelled`, and `failed_reason` becomes `Cancelled by user`.
+
+- A request in any other status returns `422`. The `errors` value in that response is a string, not a JSON:API errors array.
+- A request that belongs to another account also returns `422`, not `404`.
+- An unknown tracking request ID currently returns a `500` server error, not `404`. This differs from other lookups by ID, which return `404`. A `401` comes only from authentication. It means your API token is missing or invalid, or your account may not use the API.
+- A request that has already created a shipment cannot be cancelled. To stop tracking that shipment, use [Stop tracking a shipment](/api-docs/api-reference/shipments/stop-tracking-shipment).
+- To find cancelled requests, filter the list with `filter[status]=cancelled`.

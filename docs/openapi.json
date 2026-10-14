@@ -2363,13 +2363,14 @@
               "enum": [
                 "created",
                 "pending",
-                "failed"
+                "failed",
+                "cancelled"
               ],
               "example": "created"
             },
             "in": "query",
             "name": "filter[status]",
-            "description": "filter by `status`"
+            "description": "filter by `status`. `pending` matches requests with status `pending`; any value other than `created`, `failed` or `cancelled` is treated as `pending`."
           },
           {
             "schema": {
@@ -3080,10 +3081,15 @@
                       "attributes": {
                         "type": "object",
                         "properties": {
-                          "ref_number": {
-                            "type": "string",
-                            "example": "REFNUMBER11",
-                            "description": "Tracking request ref number."
+                          "ref_numbers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "example": [
+                              "REFNUMBER11"
+                            ],
+                            "description": "Customer reference numbers. The list you send replaces the existing list."
                           }
                         }
                       }
@@ -14841,6 +14847,87 @@
         }
       }
     },
+    "/tracking_requests/{id}/cancel": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Tracking Request ID"
+        }
+      ],
+      "patch": {
+        "summary": "Cancel a tracking request",
+        "operationId": "patch-tracking-request-cancel",
+        "description": "Cancel a tracking request that is still `pending` or `awaiting_manifest`. The request moves to status `cancelled` with failed_reason `Cancelled by user`. Requests in any other status return 422. A request that belongs to another account also returns 422 with a string `errors`. An unknown tracking request ID currently returns a 500 server error, not 404. A 401 comes only from authentication. It means the API token is missing or invalid, or the account may not use the API.",
+        "tags": [
+          "Tracking Requests"
+        ],
+        "responses": {
+          "200": {
+            "description": "Cancelled. The response body is an empty JSON object.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. The API token is missing or invalid, or the account may not use the API. Ownership never causes a 401 here: another account's tracking request returns 422.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "detail": "invalid API token"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The tracking request is not in a cancellable status, or it belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "errors": "Can't cancel tracking request in created state.  Must be in pending or awaiting_manifest state."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error. An unknown tracking request ID currently returns 500 instead of 404."
+          }
+        }
+      }
+    },
     "/me": {
       "get": {
         "summary": "Get the current credential",
@@ -16588,7 +16675,8 @@
                   "awaiting_manifest",
                   "created",
                   "failed",
-                  "tracking_stopped"
+                  "tracking_stopped",
+                  "cancelled"
                 ]
               },
               "failed_reason": {
@@ -16605,9 +16693,12 @@
                   "unrecognized_response",
                   "data_unavailable",
                   "scac_auto_detect_failed",
+                  "awaiting_manifest",
+                  "shipping_line_not_supported",
+                  "Cancelled by user",
                   null
                 ],
-                "description": "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request. `scac_auto_detect_failed` means `auto_detect_vocc_scac` was set but no supported carrier SCAC could be inferred from the request number.",
+                "description": "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request. `scac_auto_detect_failed` means `auto_detect_vocc_scac` was set but no supported carrier SCAC could be inferred from the request number. A request waiting for the carrier to publish the shipment or its containers has status `awaiting_manifest` and failed_reason null. Only older records carry the `awaiting_manifest` failed_reason value. `shipping_line_not_supported` means Terminal49 cannot track that shipping line. A request cancelled through `PATCH /tracking_requests/{id}/cancel` has status `cancelled` and failed_reason `Cancelled by user`.",
                 "nullable": true
               },
               "request_type": {
