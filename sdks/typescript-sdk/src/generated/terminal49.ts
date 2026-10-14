@@ -1138,9 +1138,29 @@ export interface paths {
         };
         /**
          * List document types
-         * @description Returns account-scoped allowed document types and labels.
+         * @description Returns every document type allowed for the authenticated account. Catalog-visible items also include a description and schema detail URL; option-only items contain just code and label. The response does not include a schema payload, field counts, or derived field paths.
          */
         get: operations["get-documents-types"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/documents/types/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a document type
+         * @description Returns one catalog-visible document type for the authenticated account and its sanitized extraction-field structure. Use this endpoint only for list items containing schema.detail_url; account-allowed option-only codes return 404. The schema payload is for rendering extraction fields; it is not the versioned schema used to validate document representation payloads.
+         */
+        get: operations["get-documents-types-code"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1754,6 +1774,15 @@ export interface components {
             type: "account";
             attributes: {
                 company_name: string;
+            };
+        };
+        /** @description Related JSON:API user resource. Returned attributes depend on the relationship and caller permissions. */
+        user: {
+            id?: string;
+            /** @enum {string} */
+            type?: "user";
+            attributes?: {
+                [key: string]: unknown;
             };
         };
         /** Error model */
@@ -2820,7 +2849,7 @@ export interface components {
                 schema_format?: "json_schema";
                 /** @description Optional notes describing this schema. */
                 description?: string | null;
-                /** @description JSON Schema payload used to validate and describe extracted fields. */
+                /** @description Versioned JSON Schema used to validate document_representation.payload. This is not the sanitized extraction-field structure returned by GET /documents/types/{code}. */
                 schema_payload?: {
                     [key: string]: unknown;
                 };
@@ -3041,13 +3070,96 @@ export interface components {
                 };
             };
         };
-        /** @description Related JSON:API user resource. Returned attributes depend on the relationship and caller permissions. */
-        user: {
-            id?: string;
-            /** @enum {string} */
-            type?: "user";
-            attributes?: {
-                [key: string]: unknown;
+        /**
+         * Document type
+         * @description One document type allowed for the authenticated account. Public catalog metadata is present when a schema detail view is available.
+         */
+        document_type_list_item: {
+            /** @description Stable document type code. */
+            code: string;
+            /** @description Human-readable document type label. */
+            label: string;
+            /** @description Public description of the document type. */
+            description?: string;
+            /** @description Metadata for the extraction-field structure available from the detail endpoint. */
+            schema?: {
+                /**
+                 * @description Fully qualified extraction schema ID.
+                 * @example packing_list@2026-03-23
+                 */
+                id: string;
+                /**
+                 * @description Extraction schema version.
+                 * @example 2026-03-23
+                 */
+                version: string;
+                /**
+                 * @description Relative URL for the document type detail endpoint.
+                 * @example /v2/documents/types/packing_list
+                 */
+                detail_url: string;
+            };
+        };
+        /**
+         * Sanitized extraction-field schema
+         * @description Recursive public-safe JSON Schema projection for rendering extraction fields. It includes only the structural keys retained by the sanitizer; internal extensions, prompts, instructions, titles, and descriptions are omitted.
+         * @example {
+         *       "type": "object",
+         *       "properties": {
+         *         "bill_of_lading_number": {
+         *           "type": [
+         *             "string",
+         *             "null"
+         *           ]
+         *         }
+         *       }
+         *     }
+         */
+        sanitized_extraction_schema: {
+            /** @description JSON Schema field type. It can be a string or an array of strings, such as ["string", "null"] for nullable fields. */
+            type?: string | string[];
+            /** @description JSON Schema format, when available. */
+            format?: string;
+            /** @description Allowed field values, when available. */
+            enum?: unknown[];
+            /** @description Nested object fields keyed by property name. */
+            properties?: {
+                [key: string]: components["schemas"]["sanitized_extraction_schema"];
+            };
+            /** @description Array item schema or tuple of item schemas. */
+            items?: components["schemas"]["sanitized_extraction_schema"] | components["schemas"]["sanitized_extraction_schema"][];
+            /** @description Required property names for an object field. */
+            required?: string[];
+        };
+        /**
+         * Document type detail
+         * @description One public catalog item and its sanitized extraction-field structure.
+         */
+        document_type_detail: {
+            /** @description Stable document type code. */
+            code: string;
+            /** @description Human-readable document type label. */
+            label: string;
+            /** @description Public description of the document type. */
+            description: string;
+            /** @description Sanitized extraction-field schema metadata and structure. */
+            schema: {
+                /**
+                 * @description Fully qualified extraction schema ID.
+                 * @example packing_list@2026-03-23
+                 */
+                id: string;
+                /**
+                 * @description Extraction schema version.
+                 * @example 2026-03-23
+                 */
+                version: string;
+                /**
+                 * @description Format of the extraction-field structure.
+                 * @enum {string}
+                 */
+                format: "json_schema";
+                payload: components["schemas"]["sanitized_extraction_schema"];
             };
         };
     };
@@ -7205,15 +7317,62 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        document_types?: {
-                            code: string;
-                            label: string;
-                        }[];
+                        document_types: components["schemas"]["document_type_list_item"][];
                     };
                 };
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+        };
+    };
+    "get-documents-types-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Document type code from the list response.
+                 * @example packing_list
+                 */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        document_type: components["schemas"]["document_type_detail"];
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
