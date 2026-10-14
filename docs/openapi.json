@@ -5105,7 +5105,20 @@
                     "included": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/shipment"
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/terminal"
+                          },
+                          {
+                            "$ref": "#/components/schemas/transport_event"
+                          },
+                          {
+                            "$ref": "#/components/schemas/raw_event"
+                          }
+                        ]
                       }
                     },
                     "links": {
@@ -8362,6 +8375,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/transport_event"
+                          },
+                          {
+                            "$ref": "#/components/schemas/raw_event"
                           }
                         ]
                       }

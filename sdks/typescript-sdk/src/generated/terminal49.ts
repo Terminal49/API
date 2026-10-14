@@ -5471,7 +5471,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["container"][];
-                        included?: components["schemas"]["shipment"][];
+                        included?: (components["schemas"]["shipment"] | components["schemas"]["terminal"] | components["schemas"]["transport_event"] | components["schemas"]["raw_event"])[];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
                     };
@@ -5858,7 +5858,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["container"];
-                        included?: (components["schemas"]["shipment"] | components["schemas"]["terminal"] | components["schemas"]["transport_event"])[];
+                        included?: (components["schemas"]["shipment"] | components["schemas"]["terminal"] | components["schemas"]["transport_event"] | components["schemas"]["raw_event"])[];
                     };
                 };
             };
