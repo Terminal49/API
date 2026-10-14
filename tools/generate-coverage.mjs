@@ -104,6 +104,34 @@ function validateTerminalIdentifiers({ locode, smdgCode, firmsCode }) {
     throw new Error('Invalid FIRMS code for ' + locode);
 }
 
+export function validateTerminalCapabilities(capabilities) {
+  const featureKeys = new Set(terminalDefinitions.map(([key]) => key));
+  if (
+    !capabilities ||
+    typeof capabilities !== 'object' ||
+    Array.isArray(capabilities)
+  )
+    throw new Error('Invalid terminal capability mapping');
+  for (const [key, declaration] of Object.entries(capabilities)) {
+    if (
+      !/^[A-Z]{2}[A-Z0-9]{3}:[A-Z0-9]{3,6}$/.test(key) ||
+      !declaration ||
+      typeof declaration !== 'object' ||
+      Array.isArray(declaration) ||
+      Object.keys(declaration).length !== 1 ||
+      !declaration.features ||
+      typeof declaration.features !== 'object' ||
+      Array.isArray(declaration.features) ||
+      Object.keys(declaration.features).length === 0 ||
+      Object.entries(declaration.features).some(
+        ([feature, status]) =>
+          !featureKeys.has(feature) || !statuses.has(status),
+      )
+    )
+      throw new Error('Invalid terminal capability mapping for ' + key);
+  }
+}
+
 async function importHex(filename) {
   const hex = JSON.parse(await readFile(filename, 'utf8'));
   const identity = await read('docs/snippets/data-sources/coverage-data.mdx');
@@ -129,6 +157,10 @@ async function importHex(filename) {
       throw new Error('Invalid terminal identifier mapping for ' + key);
     validateTerminalIdentifiers({ locode: key.slice(0, 5), ...codes });
   }
+  const terminalCapabilities = JSON.parse(
+    await read('tools/data/terminal-capabilities.json'),
+  );
+  validateTerminalCapabilities(terminalCapabilities);
   const terminalProfiles = new Map(
     hex.terminals.map((row) => [
       row.port_locode + ':' + (row.firms_code || row.terminal),
@@ -206,22 +238,33 @@ async function importHex(filename) {
   const terminals = exportValue(identity, 'terminals').map(
     ({ firmsCode: terminalCode, ...terminal }) => {
       const key = terminal.locode + ':' + (terminalCode || terminal.name);
+      const identifiers = terminalIdentifiers[key] ?? {
+        smdgCode: '',
+        firmsCode: '',
+      };
+      const declaredFeatures = identifiers.smdgCode
+        ? terminalCapabilities[terminal.locode + ':' + identifiers.smdgCode]
+            ?.features
+        : undefined;
       return {
         ...terminal,
         terminalCode,
-        ...(terminalIdentifiers[key] ?? { smdgCode: '', firmsCode: '' }),
-        features: Object.fromEntries(
-          catalog.terminals.map(({ key: featureKey }) => [
-            featureKey,
-            featureKey === 'importMilestones'
-              ? 'supported'
-              : normalizeStatus(
-                  terminalProfiles.get(key)?.features[
-                    terminalLabels[featureKey]
-                  ],
-                ),
-          ]),
-        ),
+        ...identifiers,
+        features: {
+          ...Object.fromEntries(
+            catalog.terminals.map(({ key: featureKey }) => [
+              featureKey,
+              featureKey === 'importMilestones'
+                ? 'supported'
+                : normalizeStatus(
+                    terminalProfiles.get(key)?.features[
+                      terminalLabels[featureKey]
+                    ],
+                  ),
+            ]),
+          ),
+          ...declaredFeatures,
+        },
       };
     },
   );
