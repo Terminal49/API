@@ -139,6 +139,17 @@ describe('Terminal49Client.me', () => {
     );
   });
 
+  it('rejects a linked user without an email', async () => {
+    const doc = structuredClone(userDoc);
+    const user = doc.included.find((item: any) => item.type === 'user');
+    delete user.attributes.email;
+    const { client } = clientFor(doc);
+
+    await expect(client.me({ format: 'mapped' })).rejects.toThrow(
+      'Invalid /me response',
+    );
+  });
+
   it('returns both shapes when asked', async () => {
     const { client } = clientFor(userDoc);
 
