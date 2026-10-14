@@ -301,7 +301,7 @@ Gnosis's `demurrage_amount` maps to a `demurrage` entry in `fees_at_pod_terminal
 
 Each has its own webhook event, so you can alert on whichever source your operation cares about.
 
-Gnosis's `gnosis_estimated_last_free_demurrage_day_dt` is a predictive estimate. The Terminal49 equivalent is the calculated LFD: an estimate we compute from carrier and terminal tariffs before a source publishes its date. It is opt-in. Accounts with Smart LFD turn it on under **Settings → Estimated LFD**, for all shipping lines or only selected ones. When it is on, `import_deadlines.pod` carries the estimate per source in `line.calculated` and `facility.calculated`, and `unified.current_value` with `unified.current_selection` tell you which date is in use and where it came from. Calculated LFDs cover the port of discharge (POD) only, not inland rail destinations.
+Gnosis's `gnosis_estimated_last_free_demurrage_day_dt` is a predictive estimate. The Terminal49 equivalent is the calculated LFD, a tariff-based estimate for the port of discharge, available to accounts opted into Smart LFD.
 
 ### Release readiness
 
