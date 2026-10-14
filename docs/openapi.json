@@ -3467,7 +3467,11 @@
                                 "container.transport.not_available",
                                 "container.transport.delivered",
                                 "document_representation.created",
-                                "document_representation.failed"
+                                "document_representation.failed",
+                                "container.detention_lfd_line.changed",
+                                "container.delivery_appointment.changed",
+                                "shipment.routing.filled",
+                                "link.created"
                               ]
                             }
                           },
@@ -3640,7 +3644,7 @@
                         "type": "object",
                         "required": [
                           "url",
-                          "active"
+                          "events"
                         ],
                         "properties": {
                           "url": {
@@ -3699,13 +3703,18 @@
                                 "container.transport.not_available",
                                 "container.transport.delivered",
                                 "document_representation.created",
-                                "document_representation.failed"
+                                "document_representation.failed",
+                                "container.detention_lfd_line.changed",
+                                "container.delivery_appointment.changed",
+                                "shipment.routing.filled",
+                                "link.created"
                               ],
                               "example": "tracking_request.succeeded"
                             }
                           },
                           "active": {
-                            "type": "boolean"
+                            "type": "boolean",
+                            "default": true
                           },
                           "headers": {
                             "type": "array",
@@ -4786,6 +4795,15 @@
                           },
                           {
                             "$ref": "#/components/schemas/document_email_submission"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container_created_event"
+                          },
+                          {
+                            "$ref": "#/components/schemas/link"
+                          },
+                          {
+                            "$ref": "#/components/schemas/document_observation"
                           }
                         ]
                       }
@@ -4848,7 +4866,11 @@
                 "container.transport.not_available",
                 "container.transport.delivered",
                 "document_representation.created",
-                "document_representation.failed"
+                "document_representation.failed",
+                "container.detention_lfd_line.changed",
+                "container.delivery_appointment.changed",
+                "shipment.routing.filled",
+                "link.created"
               ],
               "example": "container.transport.full_out"
             },
@@ -16873,7 +16895,11 @@
                     "container.transport.not_available",
                     "container.transport.delivered",
                     "document_representation.created",
-                    "document_representation.failed"
+                    "document_representation.failed",
+                    "container.detention_lfd_line.changed",
+                    "container.delivery_appointment.changed",
+                    "shipment.routing.filled",
+                    "link.created"
                   ]
                 }
               },
@@ -17030,6 +17056,7 @@
             "properties": {
               "event": {
                 "type": "string",
+                "description": "The event name. The three `container.pickup_lfd_*_calculated.changed` events are Last Free Day estimates that Terminal49 calculates. They can appear when you read transport events, but you cannot subscribe a webhook to them.",
                 "enum": [
                   "container.transport.vessel_arrived",
                   "container.transport.estimated.vessel_arrived",
@@ -17065,7 +17092,12 @@
                   "container.transport.not_available",
                   "container.transport.delivered",
                   "document_representation.created",
-                  "document_representation.failed"
+                  "document_representation.failed",
+                  "container.detention_lfd_line.changed",
+                  "container.delivery_appointment.changed",
+                  "container.pickup_lfd_line_calculated.changed",
+                  "container.pickup_lfd_terminal_calculated.changed",
+                  "container.pickup_lfd_rail_calculated.changed"
                 ]
               },
               "voyage_number": {
@@ -17430,7 +17462,11 @@
                   "container.transport.not_available",
                   "container.transport.delivered",
                   "document_representation.created",
-                  "document_representation.failed"
+                  "document_representation.failed",
+                  "container.detention_lfd_line.changed",
+                  "container.delivery_appointment.changed",
+                  "shipment.routing.filled",
+                  "link.created"
                 ]
               },
               "delivery_status": {
@@ -17493,7 +17529,11 @@
                           "estimated_event",
                           "transport_event",
                           "container_updated_event",
-                          "document"
+                          "document",
+                          "container_created_event",
+                          "container_pod_terminal_changed_event",
+                          "link",
+                          "document_observation"
                         ]
                       }
                     }
@@ -19569,6 +19609,361 @@
           "attributes": {
             "type": "object",
             "additionalProperties": true
+          }
+        }
+      },
+      "container_created_event": {
+        "title": "container_created_event",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "container_created_event"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "timezone": {
+                "type": "string",
+                "nullable": true,
+                "description": "IANA tz"
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "container": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "container"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "shipment": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "shipment"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "link": {
+        "title": "link",
+        "type": "object",
+        "description": "A link between a document and the shipment or container it belongs to.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "link"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "kind_label": {
+                "type": "string"
+              },
+              "created_by": {
+                "type": "string"
+              },
+              "created_by_label": {
+                "type": "string"
+              },
+              "source_type": {
+                "type": "string",
+                "example": "Document"
+              },
+              "source_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "target_type": {
+                "type": "string",
+                "example": "Shipment"
+              },
+              "target_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "has_parent": {
+                "type": "boolean"
+              },
+              "link_description": {
+                "type": "string",
+                "example": "Document to Shipment"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "document"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "target": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "container",
+                          "shipment"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "parent": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "link"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "child_links": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "link"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "document_observation": {
+        "title": "document_observation",
+        "type": "object",
+        "description": "A shipment field value read from a document. The reference object of `shipment.routing.filled`.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "document_observation"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "before": {},
+              "after": {},
+              "source": {
+                "type": "string",
+                "nullable": true
+              },
+              "observed_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "document_name": {
+                "type": "string",
+                "nullable": true
+              },
+              "document_processing_id": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              },
+              "schema_version": {
+                "type": "string",
+                "nullable": true,
+                "example": "2026-09-24"
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "shipment": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "shipment"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "document": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "document"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },

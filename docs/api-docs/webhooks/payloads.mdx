@@ -72,7 +72,11 @@ Use `data.id` on the notification as the idempotency key when deduplicating retr
 | `shipment.estimated.arrival` | `estimated_event` | Includes the estimate event and related shipment records. |
 | `container.updated` | `container_updated_event` | Includes a `changeset` describing changed container attributes. |
 | `container.created` | `container_created_event` | Includes the new container and related shipment. |
+| `container.pod_terminal_changed` | `container_pod_terminal_changed_event` | Includes the container, its shipment, and the new terminal. |
+| `shipment.routing.filled` | `document_observation` | Names the shipment field a document filled, with its before and after values. Includes the shipment and the document. |
+| `link.created` | `link` | Includes the linked document (`source`) and the shipment or container it was linked to (`target`). |
 | `container.pickup_lfd.changed` and the `pickup_lfd_line` / `pickup_lfd_terminal` / `pickup_lfd_rail` variants | `transport_event` | The transport event's `value` attribute carries the new Last Free Day. The container with updated LFD fields may also be included, as in the `container.pickup_lfd.changed` example. |
+| `container.detention_lfd_line.changed` and `container.delivery_appointment.changed` | `transport_event` | The transport event's `event` attribute names which of the two changed. |
 | `document.*` | document-related event resource | Available for accounts using document processing. See [Document Processing Workflows](/api-docs/in-depth-guides/document-processing-workflows). |
 
 ## Included resources
