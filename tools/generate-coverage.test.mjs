@@ -37,11 +37,11 @@ test('only approved public entities and complete feature assessments are exporte
   assert.equal(data.terminals.length, 138);
   assert.equal(
     data.shippingLines.filter((row) => row.access === 'public').length,
-    36,
+    37,
   );
   assert.equal(
     data.shippingLines.filter((row) => row.access === 'account').length,
-    2,
+    1,
   );
   assert.equal(data.railCarriers.length, 6);
   assert.equal(data.featureCatalog.railCarriers.length, 13);

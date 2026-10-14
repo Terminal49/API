@@ -1857,11 +1857,11 @@
       "legalName": "Seaboard Marine",
       "scac": "SMLU",
       "alternativeScacs": [],
-      "access": "account",
+      "access": "public",
       "features": {
         "billOfLading": "supported",
         "bookingNumber": "supported",
-        "containerNumber": "unsupported",
+        "containerNumber": "supported",
         "polName": "unknown",
         "polLocode": "unknown",
         "polTimezone": "unknown",
