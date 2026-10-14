@@ -160,6 +160,19 @@ describe('Terminal49Client.me', () => {
     );
   });
 
+  it('rejects account-list linkage without an included account', async () => {
+    const doc = structuredClone(userDoc);
+    const user = doc.included.find((item: any) => item.type === 'user');
+    user.relationships.accounts.data.push({
+      id: 'missing-account',
+      type: 'account',
+    });
+    const { client } = clientFor(doc);
+    await expect(client.me({ format: 'mapped' })).rejects.toThrow(
+      'Invalid /me response',
+    );
+  });
+
   it('returns both shapes when asked', async () => {
     const { client } = clientFor(userDoc);
 
