@@ -17,11 +17,11 @@ mode: "wide"
 
 Terminal49 is a single Automated Container Tracking API for bills of lading, bookings, and container numbers. Behind it are direct integrations with ocean carriers, port terminal operators, and North American rail carriers, plus AIS vessel data — normalized into one data model so you integrate once and get every source.
 
-This section lists exactly what is live in production, so you can verify coverage for your lanes before you write a line of code. Terminal coverage reflects production as of 15 September 2026; the [coverage changelog](/coverage/changelog) records additions and removals. Use [`GET /shipping_lines`](/api-docs/api-reference/shipping-lines/shipping-lines) for the current carrier list on your account.
+Use these coverage pages to check integrations and field availability for your lanes. Each page shows its data update date; the [coverage changelog](/coverage/changelog) records additions and removals. Use [`GET /shipping_lines`](/api-docs/api-reference/shipping-lines/shipping-lines) for the current carrier list on your account.
 
 <Columns cols={2}>
   <Card title="Ocean carriers" icon="ship" href="/coverage/ocean-carriers">
-    Direct integrations with 36+ shipping lines (VOCCs). Filter by name, SCAC, or track-by type.
+    Direct ocean carrier integrations. Filter by name, SCAC, or tracking number type.
   </Card>
   <Card title="Ports & terminals" icon="warehouse" href="/coverage/terminals">
     Global port and terminal mapping on every route, plus 138 direct terminal integrations.
@@ -40,7 +40,7 @@ This section lists exactly what is live in production, so you can verify coverag
 
 ## Getting the coverage list programmatically
 
-Coverage is documented on the pages linked above. There is no downloadable spreadsheet, Google Sheet, or Excel export of the carrier or terminal matrix. If you need a machine-readable list, query it from the API:
+The ocean carrier, terminal, and rail carrier coverage pages include complete feature tables and JSON/CSV snapshot downloads. The inland rail terminal directory also includes JSON/CSV downloads. Use the API for the current carrier list on your account or terminal details for a port:
 
 - [`GET /shipping_lines`](/api-docs/api-reference/shipping-lines/shipping-lines) returns every ocean carrier enabled on your account, with SCAC and supported tracking number types.
 - [`GET /metro_areas/{unlocode_or_id}`](/api-docs/api-reference/metro-areas/get-a-metro-area-using-the-unlocode-or-the-id) returns terminal details for a given port.
@@ -57,7 +57,7 @@ Coverage is documented on the pages linked above. There is no downloadable sprea
 Terminal49 integrates directly with each supported shipping line and normalizes their data into a single API. Filter by name, Standard Carrier Alpha Code (SCAC), or the number types you can send on a [tracking request](/api-docs/getting-started/tracking-shipments-and-containers).
 
 <Card title="Open the ocean carrier list" icon="ship" href="/coverage/ocean-carriers">
-  36 public lines with support for bill of lading, booking, or container tracking, depending on the carrier. Includes account-enabled carriers and known field gaps.
+  Public and account-enabled carriers, with support for bill of lading, booking, or container tracking and per-field availability.
 </Card>
 
 ### Account-enabled carriers
@@ -71,7 +71,7 @@ See [account-enabled carriers](/coverage/ocean-carriers#account-enabled-carriers
 Terminal49 maps origin, destination, transshipment, and inland ports and terminals globally on every route, and attributes carrier events — arrival, departure, loaded, discharged, transshipment — to the location where they occur. Direct terminal integrations add the operational answers on top: availability, holds, fees, and last free day, straight from the terminal operator.
 
 <Card title="Open the ports & terminals list" icon="warehouse" href="/coverage/terminals">
-  Global port and terminal mapping, plus 138 directly integrated terminals with UN/LOCODE and FIRMS codes.
+  Global port and terminal mapping, plus 138 directly integrated terminals with port UN/LOCODEs, SMDG codes, and US FIRMS codes where available.
 </Card>
 
 ## Rail carriers
@@ -84,7 +84,7 @@ Tracking continues inland: North American rail milestones, rail ETA, and rail LF
 
 ## Known issues (ocean)
 
-Shipment data comes from the carrier, and some carriers do not publish every field. The gaps we see most often — missing seal numbers, weights, or equipment types — are listed on the [ocean carriers](/coverage/ocean-carriers#known-issues-ocean) page.
+Shipment data comes from the carrier, and some carriers do not publish every field. Check individual feature badges and [data interpretation notes](/coverage/ocean-carriers#data-interpretation) for seal numbers, weights, equipment types, and other fields.
 
 ## Data fields and availability
 

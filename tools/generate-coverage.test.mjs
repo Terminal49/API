@@ -105,6 +105,36 @@ test('static references include every feature and preserve credential requiremen
   assert.deepEqual([...generateFiles(data)], [...files]);
 });
 
+test('coverage downloads use published raw assets in human and agent references', async () => {
+  const files = generateFiles(data);
+  for (const [type, slug, pageName] of [
+    ['terminals', 'terminals', 'terminals'],
+    ['shippingLines', 'shipping-lines', 'ocean-carriers'],
+    ['railCarriers', 'rail-carriers', 'rail'],
+  ]) {
+    const page = await readFile(
+      new URL('../docs/coverage/' + pageName + '.mdx', import.meta.url),
+      'utf8',
+    );
+    const reference = files.get('docs/data/coverage/' + slug + '.mdx');
+    const updatedPage = updateAgentCoverage(page, data, type, slug, pageName);
+    const base =
+      'https://raw.githubusercontent.com/Terminal49/API/main/docs/data/coverage/' +
+      slug;
+    for (const output of [reference, updatedPage]) {
+      assert.ok(output.includes('[Download JSON](' + base + '.json)'));
+      assert.doesNotMatch(
+        output,
+        /\]\(\/data\/coverage\/[^)]+\.(?:json|csv)\)/,
+      );
+    }
+    for (const extension of ['json', 'csv']) {
+      assert.ok(page.includes('](' + base + '.' + extension + ')'));
+    }
+    assert.ok(page.includes('](/data/coverage/' + slug + ')'));
+  }
+});
+
 const exportedValue = (source, name) =>
   JSON.parse(
     source.match(new RegExp('export const ' + name + ' = ([\\s\\S]*?);'))[1],

@@ -20,6 +20,36 @@ const page = readFileSync(
   'utf8',
 );
 
+test('rail directory downloads use published raw assets on every surface', () => {
+  const outputs = railTerminalArtifacts(catalog, page);
+  const snippet = readFileSync(
+    new URL(
+      '../docs/snippets/data-sources/rail-terminal-directory.mdx',
+      import.meta.url,
+    ),
+    'utf8',
+  );
+  for (const source of [
+    outputs['docs/coverage/inland-rail-terminals.mdx'],
+    outputs['docs/data/coverage/inland-rail-terminals.mdx'],
+    snippet,
+  ]) {
+    for (const extension of ['json', 'csv']) {
+      assert.ok(
+        source.includes(
+          'https://raw.githubusercontent.com/Terminal49/API/main/docs/data/coverage/inland-rail-terminals.' +
+            extension,
+        ),
+      );
+    }
+    assert.doesNotMatch(
+      source,
+      /(?:\]\(|href=")\/data\/coverage\/[^)"\s]+\.(?:json|csv)/,
+    );
+  }
+  assert.ok(snippet.includes('href="/data/coverage/inland-rail-terminals"'));
+});
+
 test('corrected rail facility locations remain consistent in every export', () => {
   for (const [name, city, state, locode] of [
     ['UP - Beaumont', 'Beaumont', 'TX', 'USBPT'],

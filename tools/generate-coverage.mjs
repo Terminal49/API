@@ -348,7 +348,9 @@ function staticReference(data, type, slug, title) {
     '',
     'Last updated ' + data.updatedOn + '.',
     '',
-    '[Download JSON](/data/coverage/' + slug + '.json).',
+    '[Download JSON](https://raw.githubusercontent.com/Terminal49/API/main/docs/data/coverage/' +
+      slug +
+      '.json).',
     '',
     'Supported means the source returns the feature when applicable. Partial means it returns the feature in some cases. Not supported means this source does not return the feature. Unknown means no feature assessment is available. Carrier credentials required means the feature requires credentials for the carrier integration.',
     '',
