@@ -3139,13 +3139,45 @@
                     },
                     "meta": {
                       "$ref": "#/components/schemas/meta"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/custom_field_definition"
+                          },
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container"
+                          },
+                          {
+                            "$ref": "#/components/schemas/tracking_request"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
+                          }
+                        ]
+                      }
                     }
                   }
                 }
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "include",
+            "description": "Comma-separated relationships to include: `definition`, `entity`, `updated_by`."
+          }
+        ]
       },
       "post": {
         "summary": "Create a tracking request custom field",
@@ -10648,7 +10680,7 @@
     },
     "/custom_field_definitions": {
       "get": {
-        "summary": "List custom field definitions",
+        "summary": "List custom field definition templates",
         "operationId": "get-custom-field-definitions",
         "tags": [
           "Custom Field Definitions"
@@ -10656,27 +10688,15 @@
         "parameters": [
           {
             "schema": {
-              "type": "integer",
-              "default": 1
-            },
-            "in": "query",
-            "name": "page[number]"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "default": 25
-            },
-            "in": "query",
-            "name": "page[size]"
-          },
-          {
-            "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Shipment",
+                "Cargo"
+              ]
             },
             "in": "query",
             "name": "filter[entity_type]",
-            "description": "Filter by entity type (Shipment or Container)"
+            "description": "Filter by entity type. `Cargo` means containers."
           },
           {
             "schema": {
@@ -10711,19 +10731,17 @@
                     },
                     "links": {
                       "$ref": "#/components/schemas/links"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/meta"
                     }
                   }
                 }
               }
             }
           }
-        }
+        },
+        "description": "Lists the Terminal49 template definitions. To list the definitions configured for your account, use `GET /accounts/{account_id}/custom_field_definitions`. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`."
       },
       "post": {
-        "summary": "Create a custom field definition",
+        "summary": "Create a custom field definition template",
         "operationId": "post-custom-field-definitions",
         "tags": [
           "Custom Field Definitions"
@@ -10746,6 +10764,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -10780,8 +10804,9 @@
                             "type": "string",
                             "enum": [
                               "Shipment",
-                              "Container"
-                            ]
+                              "Cargo"
+                            ],
+                            "description": "`Cargo` means containers."
                           },
                           "api_slug": {
                             "type": "string"
@@ -10821,6 +10846,21 @@
                           },
                           "default_value": {
                             "$ref": "#/components/schemas/custom_field_value"
+                          },
+                          "reference_number": {
+                            "type": "boolean",
+                            "description": "Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching.",
+                            "default": false
+                          },
+                          "sensitive": {
+                            "type": "boolean",
+                            "description": "Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views.",
+                            "default": false
+                          },
+                          "inline_option_creation": {
+                            "type": "boolean",
+                            "description": "Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app.",
+                            "default": false
                           }
                         }
                       }
@@ -10830,7 +10870,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Creates a Terminal49 template definition. Only Terminal49 accounts can create templates; other accounts receive 401. To create a definition for your account, use `POST /accounts/{account_id}/custom_field_definitions`."
       }
     },
     "/custom_field_definitions/{id}": {
@@ -10933,19 +10974,24 @@
                             "type": "string",
                             "nullable": true
                           },
-                          "validation": {
-                            "type": "object",
-                            "nullable": true,
-                            "additionalProperties": true
-                          },
                           "default_format": {
                             "type": "string",
                             "nullable": true
                           },
-                          "default_value": {
-                            "$ref": "#/components/schemas/custom_field_value"
+                          "reference_number": {
+                            "type": "boolean",
+                            "description": "Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching."
+                          },
+                          "sensitive": {
+                            "type": "boolean",
+                            "description": "Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views."
+                          },
+                          "inline_option_creation": {
+                            "type": "boolean",
+                            "description": "Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app."
                           }
-                        }
+                        },
+                        "description": "The attributes the API updates. It ignores any other attribute, such as `data_type`, `validation` or `default_value`, and still returns 200."
                       }
                     }
                   }
@@ -10975,7 +11021,7 @@
             "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
-        "description": "Deletes a custom field definition. A definition that has values, or a template other accounts use, returns 422; archive it instead."
+        "description": "Deletes a custom field definition. A definition that has values returns 422; archive it instead. Templates are Terminal49-managed: other accounts get 401 when they update or delete one, so only Terminal49 accounts can see the 422 for a template that other accounts use."
       }
     },
     "/custom_field_definitions/{definition_id}/options": {
@@ -11012,16 +11058,14 @@
                     },
                     "links": {
                       "$ref": "#/components/schemas/links"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/meta"
                     }
                   }
                 }
               }
             }
           }
-        }
+        },
+        "description": "Lists every option of the definition. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`."
       },
       "post": {
         "summary": "Create a custom field option",
@@ -11253,27 +11297,16 @@
         "parameters": [
           {
             "schema": {
-              "type": "integer",
-              "default": 1
-            },
-            "in": "query",
-            "name": "page[number]"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "default": 25
-            },
-            "in": "query",
-            "name": "page[size]"
-          },
-          {
-            "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Shipment",
+                "Cargo",
+                "TrackingRequest"
+              ]
             },
             "in": "query",
             "name": "filter[entity_type]",
-            "description": "Filter by entity type (Shipment or Container)"
+            "description": "Filter by entity type. The value must match exactly: `Shipment`, `Cargo` (containers) or `TrackingRequest`."
           },
           {
             "schema": {
@@ -11308,16 +11341,14 @@
                     },
                     "links": {
                       "$ref": "#/components/schemas/links"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/meta"
                     }
                   }
                 }
               }
             }
           }
-        }
+        },
+        "description": "The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`."
       },
       "post": {
         "summary": "Create a custom field",
@@ -11403,7 +11434,8 @@
                                     "type": "string",
                                     "enum": [
                                       "shipment",
-                                      "container"
+                                      "container",
+                                      "tracking_request"
                                     ]
                                   },
                                   "id": {
@@ -11601,13 +11633,45 @@
                     },
                     "meta": {
                       "$ref": "#/components/schemas/meta"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/custom_field_definition"
+                          },
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container"
+                          },
+                          {
+                            "$ref": "#/components/schemas/tracking_request"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
+                          }
+                        ]
+                      }
                     }
                   }
                 }
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "include",
+            "description": "Comma-separated relationships to include: `definition`, `entity`, `updated_by`."
+          }
+        ]
       },
       "post": {
         "summary": "Create a shipment custom field",
@@ -12252,13 +12316,45 @@
                     },
                     "meta": {
                       "$ref": "#/components/schemas/meta"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/custom_field_definition"
+                          },
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container"
+                          },
+                          {
+                            "$ref": "#/components/schemas/tracking_request"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
+                          }
+                        ]
+                      }
                     }
                   }
                 }
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "include",
+            "description": "Comma-separated relationships to include: `definition`, `entity`, `updated_by`."
+          }
+        ]
       },
       "post": {
         "summary": "Create a container custom field",
@@ -14862,6 +14958,211 @@
             "description": "Server error. An unknown tracking request ID currently returns 500 instead of 404."
           }
         }
+      }
+    },
+    "/accounts/{account_id}/custom_field_definitions": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "description": "Your account ID. The API always uses the account of the authenticated user."
+        }
+      ],
+      "get": {
+        "summary": "List custom field definitions",
+        "operationId": "get-account-custom-field-definitions",
+        "tags": [
+          "Custom Field Definitions"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Shipment",
+                "Cargo"
+              ]
+            },
+            "in": "query",
+            "name": "filter[entity_type]",
+            "description": "Filter by entity type. `Cargo` means containers."
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "filter[data_type]",
+            "description": "Filter by data type"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "filter[display_name]",
+            "description": "Filter by display name (prefix match)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/custom_field_definition"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Lists the custom field definitions configured for your account. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`."
+      },
+      "post": {
+        "summary": "Create a custom field definition",
+        "operationId": "post-account-custom-field-definitions",
+        "tags": [
+          "Custom Field Definitions"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field_definition"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field_definition"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "entity_type": {
+                            "type": "string",
+                            "enum": [
+                              "Shipment",
+                              "Cargo"
+                            ],
+                            "description": "`Cargo` means containers."
+                          },
+                          "api_slug": {
+                            "type": "string"
+                          },
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "data_type": {
+                            "type": "string",
+                            "enum": [
+                              "short_text",
+                              "number",
+                              "date",
+                              "datetime",
+                              "boolean",
+                              "enum",
+                              "enum_multi",
+                              "reference"
+                            ]
+                          },
+                          "reference_type": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "validation": {
+                            "type": "object",
+                            "nullable": true,
+                            "additionalProperties": true
+                          },
+                          "default_format": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "default_value": {
+                            "$ref": "#/components/schemas/custom_field_value"
+                          },
+                          "template_id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "ID of a Terminal49 template definition to copy."
+                          },
+                          "reference_number": {
+                            "type": "boolean",
+                            "description": "Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching.",
+                            "default": false
+                          },
+                          "sensitive": {
+                            "type": "boolean",
+                            "description": "Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views.",
+                            "default": false
+                          },
+                          "inline_option_creation": {
+                            "type": "boolean",
+                            "description": "Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app.",
+                            "default": false
+                          }
+                        },
+                        "description": "Send `template_id`, or all of `entity_type`, `api_slug`, `display_name` and `data_type`. With `template_id`, the template supplies any of those four you leave out."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Creates a custom field definition for your account. Pass `template_id` to copy a Terminal49 template; attributes you send override the template's values."
       }
     },
     "/me": {
@@ -18599,9 +18900,9 @@
                 "type": "string",
                 "enum": [
                   "Shipment",
-                  "Container",
-                  "TrackingRequest"
-                ]
+                  "Cargo"
+                ],
+                "description": "The entity type this definition applies to. `Cargo` means containers."
               },
               "api_slug": {
                 "type": "string"
@@ -18641,6 +18942,42 @@
               },
               "default_value": {
                 "$ref": "#/components/schemas/custom_field_value"
+              },
+              "reference_number": {
+                "type": "boolean",
+                "description": "Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching."
+              },
+              "sensitive": {
+                "type": "boolean",
+                "description": "Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views."
+              },
+              "inline_option_creation": {
+                "type": "boolean",
+                "description": "Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app."
+              },
+              "template_id": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true,
+                "description": "ID of the Terminal49 template this definition was copied from."
+              },
+              "has_data": {
+                "type": "boolean",
+                "description": "Whether any entity has a value for this definition."
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "discarded_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "description": "When the definition was archived."
               }
             },
             "required": [
@@ -18649,6 +18986,90 @@
               "display_name",
               "data_type"
             ]
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "account": {
+                "type": "object",
+                "description": "The owning account. `null` for Terminal49 templates.",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "required": [
+                      "type",
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "account"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "created_by": {
+                "type": "object",
+                "description": "The user who created the definition.",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "required": [
+                      "type",
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "options": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "id"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "custom_field_option"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "required": [

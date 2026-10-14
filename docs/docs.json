@@ -224,6 +224,8 @@
           {
             "group": "Custom Field Definitions",
             "pages": [
+              "api-docs/api-reference/custom-fields/list-account-custom-field-definitions",
+              "api-docs/api-reference/custom-fields/create-account-custom-field-definition",
               "api-docs/api-reference/custom-fields/list-custom-field-definitions",
               "api-docs/api-reference/custom-fields/get-a-custom-field-definition",
               "api-docs/api-reference/custom-fields/create-a-custom-field-definition",

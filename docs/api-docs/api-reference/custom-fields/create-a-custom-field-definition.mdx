@@ -1,18 +1,18 @@
 ---
-title: Create a custom field definition
-description: "Create a new custom field definition in the Terminal49 API to attach structured metadata like reference codes or enums to shipments and containers."
-og:title: Create a Custom Field Definition | Terminal49 API Documentation
-og:description: Create a new custom field definition for shipments or containers in the Terminal49 API. Define the field name, data type, and api_slug for programmatic access.
+title: Create a custom field definition template
+description: "Create a Terminal49 custom field definition template. Only Terminal49 accounts can create templates; use the account-scoped route for your own definitions."
+og:title: Create a Custom Field Definition Template | Terminal49 API Documentation
+og:description: Create a Terminal49 custom field definition template. Other accounts receive 401 and should create definitions with the account-scoped route.
 openapi: post /custom_field_definitions
 ---
 
-Create a custom field definition to describe metadata you want to store on shipments or containers.
+Creates a Terminal49 template definition. Only Terminal49 accounts can create templates; other accounts receive `401`. To create a definition on your account, use [Create an account custom field definition](/api-docs/api-reference/custom-fields/create-account-custom-field-definition).
 
 ## Request body
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `entity_type` | Yes | The entity type this field applies to (`Shipment` or `Container`) |
+| `entity_type` | Yes | The entity type this field applies to: `Shipment` or `Cargo` (containers) |
 | `api_slug` | Yes | Unique identifier for the field |
 | `display_name` | Yes | Human-readable name for the field |
 | `data_type` | Yes | Data type for values (for example: `short_text`, `number`, `date`, `reference`) |

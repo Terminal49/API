@@ -795,10 +795,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List custom field definitions */
+        /**
+         * List custom field definition templates
+         * @description Lists the Terminal49 template definitions. To list the definitions configured for your account, use `GET /accounts/{account_id}/custom_field_definitions`. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
+         */
         get: operations["get-custom-field-definitions"];
         put?: never;
-        /** Create a custom field definition */
+        /**
+         * Create a custom field definition template
+         * @description Creates a Terminal49 template definition. Only Terminal49 accounts can create templates; other accounts receive 401. To create a definition for your account, use `POST /accounts/{account_id}/custom_field_definitions`.
+         */
         post: operations["post-custom-field-definitions"];
         delete?: never;
         options?: never;
@@ -822,7 +828,7 @@ export interface paths {
         post?: never;
         /**
          * Delete a custom field definition
-         * @description Deletes a custom field definition. A definition that has values, or a template other accounts use, returns 422; archive it instead.
+         * @description Deletes a custom field definition. A definition that has values returns 422; archive it instead. Templates are Terminal49-managed: other accounts get 401 when they update or delete one, so only Terminal49 accounts can see the 422 for a template that other accounts use.
          */
         delete: operations["delete-custom-field-definitions-id"];
         options?: never;
@@ -841,7 +847,10 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** List custom field options */
+        /**
+         * List custom field options
+         * @description Lists every option of the definition. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
+         */
         get: operations["get-custom-field-options"];
         put?: never;
         /** Create a custom field option */
@@ -883,7 +892,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List custom fields */
+        /**
+         * List custom fields
+         * @description The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
+         */
         get: operations["get-custom-fields"];
         put?: never;
         /** Create a custom field */
@@ -1392,6 +1404,33 @@ export interface paths {
          * @description Cancel a tracking request that is still `pending` or `awaiting_manifest`. The request moves to status `cancelled` with failed_reason `Cancelled by user`. Requests in any other status return 422. A request that belongs to another account also returns 422 with a string `errors`. An unknown tracking request ID currently returns a 500 server error, not 404. A 401 comes only from authentication. It means the API token is missing or invalid, or the account may not use the API.
          */
         patch: operations["patch-tracking-request-cancel"];
+        trace?: never;
+    };
+    "/accounts/{account_id}/custom_field_definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Your account ID. The API always uses the account of the authenticated user. */
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List custom field definitions
+         * @description Lists the custom field definitions configured for your account. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
+         */
+        get: operations["get-account-custom-field-definitions"];
+        put?: never;
+        /**
+         * Create a custom field definition
+         * @description Creates a custom field definition for your account. Pass `template_id` to copy a Terminal49 template; attributes you send override the template's values.
+         */
+        post: operations["post-account-custom-field-definitions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/me": {
@@ -2772,8 +2811,11 @@ export interface components {
             /** @enum {string} */
             type: "custom_field_definition";
             attributes?: {
-                /** @enum {string} */
-                entity_type: "Shipment" | "Container" | "TrackingRequest";
+                /**
+                 * @description The entity type this definition applies to. `Cargo` means containers.
+                 * @enum {string}
+                 */
+                entity_type: "Shipment" | "Cargo";
                 api_slug: string;
                 display_name: string;
                 description?: string | null;
@@ -2785,6 +2827,56 @@ export interface components {
                 } | null;
                 default_format?: string | null;
                 default_value?: components["schemas"]["custom_field_value"];
+                /** @description Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching. */
+                reference_number?: boolean;
+                /** @description Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views. */
+                sensitive?: boolean;
+                /** @description Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app. */
+                inline_option_creation?: boolean;
+                /**
+                 * Format: uuid
+                 * @description ID of the Terminal49 template this definition was copied from.
+                 */
+                template_id?: string | null;
+                /** @description Whether any entity has a value for this definition. */
+                has_data?: boolean;
+                /** Format: date-time */
+                created_at?: string;
+                /** Format: date-time */
+                updated_at?: string;
+                /**
+                 * Format: date-time
+                 * @description When the definition was archived.
+                 */
+                discarded_at?: string | null;
+            };
+            relationships?: {
+                /** @description The owning account. `null` for Terminal49 templates. */
+                account?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "account";
+                    } | null;
+                };
+                /** @description The user who created the definition. */
+                created_by?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "user";
+                    } | null;
+                };
+                options?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "custom_field_option";
+                    }[];
+                };
             };
         };
         /** Custom field option */
@@ -4430,7 +4522,10 @@ export interface operations {
     };
     "get-tracking-requests-custom-fields": {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Comma-separated relationships to include: `definition`, `entity`, `updated_by`. */
+                include?: string;
+            };
             header?: never;
             path: {
                 /** @description Tracking request ID */
@@ -4450,6 +4545,7 @@ export interface operations {
                         data?: components["schemas"]["custom_field"][];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
+                        included?: (components["schemas"]["custom_field_definition"] | components["schemas"]["shipment"] | components["schemas"]["container"] | components["schemas"]["tracking_request"] | components["schemas"]["user"])[];
                     };
                 };
             };
@@ -6684,10 +6780,8 @@ export interface operations {
     "get-custom-field-definitions": {
         parameters: {
             query?: {
-                "page[number]"?: number;
-                "page[size]"?: number;
-                /** @description Filter by entity type (Shipment or Container) */
-                "filter[entity_type]"?: string;
+                /** @description Filter by entity type. `Cargo` means containers. */
+                "filter[entity_type]"?: "Shipment" | "Cargo";
                 /** @description Filter by data type */
                 "filter[data_type]"?: string;
                 /** @description Filter by display name (prefix match) */
@@ -6708,7 +6802,6 @@ export interface operations {
                     "application/json": {
                         data?: components["schemas"]["custom_field_definition"][];
                         links?: components["schemas"]["links"];
-                        meta?: components["schemas"]["meta"];
                     };
                 };
             };
@@ -6728,8 +6821,11 @@ export interface operations {
                         /** @enum {string} */
                         type: "custom_field_definition";
                         attributes: {
-                            /** @enum {string} */
-                            entity_type: "Shipment" | "Container";
+                            /**
+                             * @description `Cargo` means containers.
+                             * @enum {string}
+                             */
+                            entity_type: "Shipment" | "Cargo";
                             api_slug: string;
                             display_name: string;
                             description?: string | null;
@@ -6741,6 +6837,21 @@ export interface operations {
                             } | null;
                             default_format?: string | null;
                             default_value?: components["schemas"]["custom_field_value"];
+                            /**
+                             * @description Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching.
+                             * @default false
+                             */
+                            reference_number?: boolean;
+                            /**
+                             * @description Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views.
+                             * @default false
+                             */
+                            sensitive?: boolean;
+                            /**
+                             * @description Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app.
+                             * @default false
+                             */
+                            inline_option_creation?: boolean;
                         };
                     };
                 };
@@ -6759,6 +6870,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-field-definitions-id": {
@@ -6827,14 +6940,17 @@ export interface operations {
                     data?: {
                         /** @enum {string} */
                         type: "custom_field_definition";
+                        /** @description The attributes the API updates. It ignores any other attribute, such as `data_type`, `validation` or `default_value`, and still returns 200. */
                         attributes: {
                             display_name?: string;
                             description?: string | null;
-                            validation?: {
-                                [key: string]: unknown;
-                            } | null;
                             default_format?: string | null;
-                            default_value?: components["schemas"]["custom_field_value"];
+                            /** @description Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching. */
+                            reference_number?: boolean;
+                            /** @description Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views. */
+                            sensitive?: boolean;
+                            /** @description Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app. */
+                            inline_option_creation?: boolean;
                         };
                     };
                 };
@@ -6878,7 +6994,6 @@ export interface operations {
                     "application/json": {
                         data?: components["schemas"]["custom_field_option"][];
                         links?: components["schemas"]["links"];
-                        meta?: components["schemas"]["meta"];
                     };
                 };
             };
@@ -7026,10 +7141,8 @@ export interface operations {
     "get-custom-fields": {
         parameters: {
             query?: {
-                "page[number]"?: number;
-                "page[size]"?: number;
-                /** @description Filter by entity type (Shipment or Container) */
-                "filter[entity_type]"?: string;
+                /** @description Filter by entity type. The value must match exactly: `Shipment`, `Cargo` (containers) or `TrackingRequest`. */
+                "filter[entity_type]"?: "Shipment" | "Cargo" | "TrackingRequest";
                 /** @description Filter by entity ID */
                 "filter[entity_id]"?: string;
                 /** @description Filter by custom field definition ID */
@@ -7050,7 +7163,6 @@ export interface operations {
                     "application/json": {
                         data?: components["schemas"]["custom_field"][];
                         links?: components["schemas"]["links"];
-                        meta?: components["schemas"]["meta"];
                     };
                 };
             };
@@ -7096,7 +7208,7 @@ export interface operations {
                             entity?: {
                                 data?: {
                                     /** @enum {string} */
-                                    type: "shipment" | "container";
+                                    type: "shipment" | "container" | "tracking_request";
                                     /** Format: uuid */
                                     id: string;
                                 };
@@ -7212,7 +7324,10 @@ export interface operations {
     };
     "get-shipments-custom-fields": {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Comma-separated relationships to include: `definition`, `entity`, `updated_by`. */
+                include?: string;
+            };
             header?: never;
             path: {
                 /** @description Shipment ID */
@@ -7232,6 +7347,7 @@ export interface operations {
                         data?: components["schemas"]["custom_field"][];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
+                        included?: (components["schemas"]["custom_field_definition"] | components["schemas"]["shipment"] | components["schemas"]["container"] | components["schemas"]["tracking_request"] | components["schemas"]["user"])[];
                     };
                 };
             };
@@ -7527,7 +7643,10 @@ export interface operations {
     };
     "get-containers-custom-fields": {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Comma-separated relationships to include: `definition`, `entity`, `updated_by`. */
+                include?: string;
+            };
             header?: never;
             path: {
                 /** @description Container ID */
@@ -7547,6 +7666,7 @@ export interface operations {
                         data?: components["schemas"]["custom_field"][];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
+                        included?: (components["schemas"]["custom_field_definition"] | components["schemas"]["shipment"] | components["schemas"]["container"] | components["schemas"]["tracking_request"] | components["schemas"]["user"])[];
                     };
                 };
             };
@@ -8800,6 +8920,114 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    "get-account-custom-field-definitions": {
+        parameters: {
+            query?: {
+                /** @description Filter by entity type. `Cargo` means containers. */
+                "filter[entity_type]"?: "Shipment" | "Cargo";
+                /** @description Filter by data type */
+                "filter[data_type]"?: string;
+                /** @description Filter by display name (prefix match) */
+                "filter[display_name]"?: string;
+            };
+            header?: never;
+            path: {
+                /** @description Your account ID. The API always uses the account of the authenticated user. */
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["custom_field_definition"][];
+                        links?: components["schemas"]["links"];
+                    };
+                };
+            };
+        };
+    };
+    "post-account-custom-field-definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Your account ID. The API always uses the account of the authenticated user. */
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    data?: {
+                        /** @enum {string} */
+                        type: "custom_field_definition";
+                        /** @description Send `template_id`, or all of `entity_type`, `api_slug`, `display_name` and `data_type`. With `template_id`, the template supplies any of those four you leave out. */
+                        attributes: {
+                            /**
+                             * @description `Cargo` means containers.
+                             * @enum {string}
+                             */
+                            entity_type?: "Shipment" | "Cargo";
+                            api_slug?: string;
+                            display_name?: string;
+                            description?: string | null;
+                            /** @enum {string} */
+                            data_type?: "short_text" | "number" | "date" | "datetime" | "boolean" | "enum" | "enum_multi" | "reference";
+                            reference_type?: string | null;
+                            validation?: {
+                                [key: string]: unknown;
+                            } | null;
+                            default_format?: string | null;
+                            default_value?: components["schemas"]["custom_field_value"];
+                            /**
+                             * Format: uuid
+                             * @description ID of a Terminal49 template definition to copy.
+                             */
+                            template_id?: string;
+                            /**
+                             * @description Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching.
+                             * @default false
+                             */
+                            reference_number?: boolean;
+                            /**
+                             * @description Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views.
+                             * @default false
+                             */
+                            sensitive?: boolean;
+                            /**
+                             * @description Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app.
+                             * @default false
+                             */
+                            inline_option_creation?: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["custom_field_definition"];
+                        links?: components["schemas"]["link-self"];
+                    };
+                };
+            };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-me": {

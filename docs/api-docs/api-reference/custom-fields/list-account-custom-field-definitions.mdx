@@ -1,0 +1,19 @@
+---
+title: List account custom field definitions
+description: "List the custom field definitions configured for your Terminal49 account, including data type, api_slug, and the entity type each definition applies to."
+og:title: List Account Custom Field Definitions | Terminal49 API Documentation
+og:description: List the custom field definitions configured for your Terminal49 account. Returns display names, data types, api_slugs, and entity types for shipments and containers.
+openapi: get /accounts/{account_id}/custom_field_definitions
+---
+
+Lists the custom field definitions configured for your account. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
+
+The API always returns the definitions of the authenticated user's account, whatever `account_id` you pass.
+
+## Query filters
+
+| Filter | Description |
+|--------|-------------|
+| `filter[entity_type]` | Filter by entity type: `Shipment` or `Cargo` (containers) |
+| `filter[data_type]` | Filter by data type |
+| `filter[display_name]` | Filter by display name (prefix match) |
