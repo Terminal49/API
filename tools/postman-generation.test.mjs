@@ -47,3 +47,20 @@ for (const path of ['/shipments', '/containers']) {
     assert.equal(query.find(({ key }) => key === 'page[size]').value, '30');
   });
 }
+
+for (const path of ['/documents/types', '/documents/types/{code}']) {
+  test(`${path} publishes the declared response examples`, () => {
+    const operation = spec.paths[path].get;
+    const item = requests(collection.item).find(
+      (candidate) => candidate.name === operation.summary,
+    );
+    assert.ok(item, `Missing generated request for ${operation.summary}`);
+    for (const [status, response] of Object.entries(operation.responses)) {
+      const declared = response.content['application/json'].examples;
+      const generated = item.response.find((example) => example.code === Number(status));
+      assert.ok(generated, `Missing generated ${status} example`);
+      assert.deepEqual(JSON.parse(generated.body), Object.values(declared)[0].value);
+      assert.equal(generated.body.includes('<Circular reference'), false);
+    }
+  });
+}
