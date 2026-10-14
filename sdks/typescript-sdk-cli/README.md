@@ -144,7 +144,7 @@ Stable error codes include `USAGE_ERROR`, `NETWORK_ERROR`, `AUTH_ERROR`, `RATE_L
 ## Commands
 
 - `t49 shipments get|list|update|stop-tracking|resume-tracking|custom-fields|set-custom-field`
-- `t49 containers get|list|events|route|map|raw-events|refresh|demurrage|rail|custom-fields|set-custom-field` (`map` is deprecated: it prints the raw GeoJSON FeatureCollection, the same as `route --format raw`)
+- `t49 containers get|list|events|route|map|raw-events|refresh|demurrage|rail|custom-fields|set-custom-field` (`map` is deprecated: with `--json` it prints the raw GeoJSON FeatureCollection, the same as `route --format raw --json`. In table mode both print only the collection type. In table mode, `route` prints the ports and a Current vessel table.)
 - `t49 tracking-requests list|get|create|update|infer|create-from-infer`
 - `t49 track <number>`
 - `t49 shipping-lines list`

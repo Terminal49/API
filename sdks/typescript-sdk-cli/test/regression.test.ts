@@ -248,16 +248,31 @@ describe('CLI regressions', () => {
     ]);
   });
 
-  it('containers route and its map alias both read map_geojson', async () => {
+  it('containers route prints mapped ports and map prints the unmapped GeoJSON', async () => {
+    const collection = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [121.5, 31.2] },
+          properties: {
+            feature_type: 'port',
+            location_id: 'loc-1',
+            name: 'Shanghai',
+            ports_sequence: 1,
+          },
+        },
+      ],
+    };
     const paths: string[] = [];
     vi.stubGlobal('fetch', async (input: Request | URL | string) => {
       paths.push(
         new URL(input instanceof Request ? input.url : String(input)).pathname,
       );
-      return new Response(
-        JSON.stringify({ type: 'FeatureCollection', features: [] }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } },
-      );
+      return new Response(JSON.stringify(collection), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     });
     process.env.T49_API_TOKEN = 'token-123';
     process.env.T49_API_BASE_URL = 'https://api.test/v2';
@@ -265,9 +280,53 @@ describe('CLI regressions', () => {
 
     const route = await runProgram(['--json', 'containers', 'route', 'c-1']);
     const map = await runProgram(['--json', 'containers', 'map', 'c-1']);
+    const mapBoth = await runProgram([
+      '--json',
+      '--format',
+      'both',
+      'containers',
+      'map',
+      'c-1',
+    ]);
+    const mapTable = await runProgram(['--table', 'containers', 'map', 'c-1']);
 
-    expect([route.status, map.status]).toEqual([0, 0]);
+    expect([route.status, map.status, mapBoth.status, mapTable.status]).toEqual(
+      [0, 0, 0, 0],
+    );
+    expect(JSON.parse(mapBoth.stdout).data).toEqual({
+      raw: collection,
+      mapped: collection,
+    });
+    expect(mapTable.stdout).toBe(
+      [
+        '┌───────────────────┐',
+        '│ Type              │',
+        '├───────────────────┤',
+        '│ FeatureCollection │',
+        '└───────────────────┘',
+        '',
+      ].join('\n'),
+    );
+    expect(JSON.parse(route.stdout).data).toEqual({
+      ports: [
+        {
+          locationId: 'loc-1',
+          name: 'Shanghai',
+          countryCode: null,
+          label: null,
+          sequence: 1,
+          coordinates: { latitude: 31.2, longitude: 121.5 },
+          inbound: { eta: null, ata: null },
+          outbound: { etd: null, atd: null },
+        },
+      ],
+      currentVessel: null,
+      totalPorts: 1,
+    });
+    expect(JSON.parse(map.stdout).data).toEqual(collection);
     expect(paths).toEqual([
+      '/v2/containers/c-1/map_geojson',
+      '/v2/containers/c-1/map_geojson',
       '/v2/containers/c-1/map_geojson',
       '/v2/containers/c-1/map_geojson',
     ]);

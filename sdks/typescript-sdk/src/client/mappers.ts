@@ -128,8 +128,17 @@ function mapRouteVessel(
     coordinates: pointCoordinates(geometry),
     heading: props.vessel_location_heading ?? null,
     speed: props.vessel_location_speed ?? null,
-    departurePortId: props.departure_port_id ?? null,
-    arrivalPortId: props.arrival_port_id ?? null,
+    positionAt: props.vessel_location_timestamp ?? null,
+    departurePort: {
+      locationId: props.departure_port_id ?? null,
+      name: props.departure_port_name ?? null,
+      label: props.departure_port_label ?? null,
+    },
+    arrivalPort: {
+      locationId: props.arrival_port_id ?? null,
+      name: props.arrival_port_name ?? null,
+      label: props.arrival_port_label ?? null,
+    },
   };
 }
 

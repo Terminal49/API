@@ -34,7 +34,7 @@ see the SDK quickstart in the docs site: `docs/api-docs/getting-started/sdk-quic
 ### Methods
 - `search(query)`
 - `getContainer(id, include?)`
-- `trackContainer({ containerNumber?, bookingNumber?, scac?, refNumbers? })`
+- `trackContainer({ containerNumber?, bookingNumber?, billOfLading?, scac?, refNumbers? })`: sends `request_type` `container`, `booking_number`, or `bill_of_lading` to match the number you pass
 - `createTrackingRequest({ requestType, requestNumber, scac?, refNumbers?, shipmentTags? })`
 - `inferTrackingNumber(number)`
 - `createTrackingRequestFromInfer(number, { scac?, numberType?, refNumbers?, shipmentTags? })`
@@ -43,13 +43,24 @@ see the SDK quickstart in the docs site: `docs/api-docs/getting-started/sdk-quic
 - `listContainers(filters?, options?)`
 - `listTrackingRequests(filters?, options?)` / `listTrackRequests(filters?, options?)`
 - `getContainerTransportEvents(id)`
-- `getContainerRoute(id)`: ports in route order and the current vessel, from `GET /containers/{id}/map_geojson` (Routing Data feature)
+- `getContainerRoute(id, options?)`: the route from `GET /containers/{id}/map_geojson` (Routing Data feature). By default (`format: 'raw'`) it returns the GeoJSON FeatureCollection. With `{ format: 'mapped' }` it returns `{ ports, currentVessel, totalPorts }`, with ports in route order.
 - `getVesselFuturePositions(id, { portId, previousPortId })`
 - `getVesselFuturePositionsWithCoords(id, { portId, previousPortId, latitude, longitude })`
 - `listShippingLines(search?)`
+- `listWebhooks(options?)`, `getWebhook(id)`, `createWebhook(payload)`, `updateWebhook(id, payload)`, `deleteWebhook(id)`, `getWebhookIps()`
+- `listWebhookEvents()`: the event names a webhook can subscribe to
+- `triggerWebhook({ url, event, secret?, documentType? })`: sends a test delivery with an example payload
+- `listWebhookNotifications(options?)`, `getWebhookNotification(id, options?)`, `getWebhookNotificationExamples(event?)`
+- `getVessel(id)`, `getVesselByImo(imo)`, `getPort(id)`, `getTerminal(id)`, `getMetroArea(id)`
+- `listParties(options?)`, `getParty(id)`, `createParty(attributes)`, `updateParty(id, attributes)`
+- `listCustomFieldDefinitions(options?)`, `getCustomFieldDefinition(id)`, `createCustomFieldDefinition(payload)`, `updateCustomFieldDefinition(id, payload)`, `deleteCustomFieldDefinition(id)`
+- `listCustomFieldOptions(definitionId, options?)`, `getCustomFieldOption(definitionId, optionId)`, `createCustomFieldOption(definitionId, payload)`, `updateCustomFieldOption(definitionId, optionId, payload)`, `deleteCustomFieldOption(definitionId, optionId)`
+- `listCustomFields(options?)`, `getCustomField(id)`, `createCustomField(payload)`, `updateCustomField(id, payload)`, `deleteCustomField(id)`
 - `getDemurrage(containerId)` (helper)
 - `getRailMilestones(containerId)` (helper)
 - `deserialize<T>(document)` → JSONA-based plain objects
+
+Some methods exist only on a resource namespace, for example `containers.update(id, attrs)`, `shippingLines.get(id)`, the per-entity custom field methods (`containers`, `shipments`, `trackingRequests`), the party role methods (`containers`, `shipments`), and the `documents`, `emailSubmissions`, and `documentSchemas` methods. See `docs/sdk/methods.mdx` for the full list.
 
 ### Examples
 

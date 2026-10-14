@@ -71,13 +71,10 @@ export class ContainerManager extends BaseManager {
     attrs: ContainerUpdateAttributes,
     options?: CallOptions,
   ): Promise<any> {
-    const payload = {
-      data: { type: 'container' as const, id, attributes: attrs },
-    };
     const raw = await this.transport.execute(() =>
       this.transport.client.PATCH('/containers/{id}', {
         params: { path: { id } },
-        body: payload,
+        body: { data: { type: 'container', id, attributes: attrs } },
       }),
     );
     return this.formatResult(raw, options?.format);
@@ -153,7 +150,8 @@ export class ContainerManager extends BaseManager {
 
   /**
    * @deprecated Use {@link ContainerManager.route}. Returns the GeoJSON
-   * FeatureCollection in every format.
+   * FeatureCollection unmapped: `raw` and `mapped` return it as is, and
+   * `both` returns `{ raw, mapped }` with the FeatureCollection in each half.
    */
   async map(id: string, options?: CallOptions): Promise<any> {
     const raw = await this.route(id, { format: 'raw' });

@@ -9,6 +9,12 @@ interface RecordedCall {
   body: any;
 }
 
+function servedBody(method: string, pathname: string) {
+  return {
+    data: { id: `${method} ${pathname.replace('/v2', '')}`, type: 'stub' },
+  };
+}
+
 function buildClient() {
   const calls: RecordedCall[] = [];
   const fetchImpl: typeof fetch = async (input, init) => {
@@ -22,7 +28,7 @@ function buildClient() {
       body: text ? JSON.parse(text) : undefined,
     });
     if (request.method === 'DELETE') return new Response(null, { status: 204 });
-    return jsonResponse({ data: { id: 'x', type: 'stub' } });
+    return jsonResponse(servedBody(request.method, url.pathname));
   };
   const client = new Terminal49Client({
     apiToken: 'token-123',
@@ -275,15 +281,22 @@ describe('webhooks', () => {
 });
 
 describe('parties', () => {
-  it('creates and updates parties', async () => {
+  it('creates and updates parties with the documented JSON:API body', async () => {
     const { client, calls } = buildClient();
-    const payload = { data: { attributes: { company_name: 'ACME' } } };
-    await client.parties.create(payload);
-    await client.parties.update('p-1', payload);
+    await client.parties.create({ company_name: 'ACME' });
+    await client.parties.update('p-1', { company_name: 'ACME 2' });
 
     expect(calls.map((c) => [c.method, c.path, c.body])).toEqual([
-      ['POST', '/parties', payload],
-      ['PATCH', '/parties/p-1', payload],
+      [
+        'POST',
+        '/parties',
+        { data: { type: 'party', attributes: { company_name: 'ACME' } } },
+      ],
+      [
+        'PATCH',
+        '/parties/p-1',
+        { data: { type: 'party', attributes: { company_name: 'ACME 2' } } },
+      ],
     ]);
   });
 });
@@ -314,6 +327,21 @@ describe('custom field list filters', () => {
       'filter[data_type]': 'enum',
       'filter[display_name]': 'PO',
     });
+  });
+
+  it('filters by the TrackingRequest entity type', async () => {
+    const { client, calls } = buildClient();
+    await client.customFields.list({
+      filters: { entityType: 'TrackingRequest' },
+    });
+    await client.customFieldDefinitions.list({
+      filters: { entityType: 'TrackingRequest' },
+    });
+
+    expect(calls.map((c) => c.query)).toEqual([
+      { 'filter[entity_type]': 'TrackingRequest' },
+      { 'filter[entity_type]': 'TrackingRequest' },
+    ]);
   });
 });
 
@@ -441,16 +469,307 @@ describe('resource methods on the client', () => {
     ]);
   });
 
+  it('sends include on webhook notification list and get', async () => {
+    const { client, calls } = buildClient();
+    await client.webhookNotifications.list({
+      page: 2,
+      include: ['webhook', 'reference_object'],
+    });
+    await client.webhookNotifications.get('n-1', { include: 'webhook' });
+
+    expect(calls.map((c) => [c.path, c.query])).toEqual([
+      [
+        '/webhook_notifications',
+        { include: 'webhook,reference_object', 'page[number]': '2' },
+      ],
+      ['/webhook_notifications/n-1', { include: 'webhook' }],
+    ]);
+  });
+
   it('clamps page[size] to the API maximum', async () => {
     const { client, calls } = buildClient();
     await client.parties.list({ pageSize: 500 });
     expect(calls[0].query).toEqual({ 'page[size]': '100' });
   });
+});
 
-  it('returns the response body the API served', async () => {
+describe('return values', () => {
+  it.each([
+    ['GET', '/webhooks/w-1', (c: Terminal49Client) => c.webhooks.get('w-1')],
+    ['GET', '/webhooks/events', (c: Terminal49Client) => c.webhooks.events()],
+    [
+      'POST',
+      '/webhooks/trigger',
+      (c: Terminal49Client) =>
+        c.webhooks.trigger({
+          url: 'https://example.com/hook',
+          event: 'container.updated',
+        }),
+    ],
+    [
+      'GET',
+      '/webhook_notifications',
+      (c: Terminal49Client) => c.webhookNotifications.list(),
+    ],
+    [
+      'GET',
+      '/webhook_notifications/n-1',
+      (c: Terminal49Client) => c.webhookNotifications.get('n-1'),
+    ],
+    [
+      'POST',
+      '/parties',
+      (c: Terminal49Client) => c.parties.create({ company_name: 'ACME' }),
+    ],
+    [
+      'PATCH',
+      '/parties/p-1',
+      (c: Terminal49Client) =>
+        c.parties.update('p-1', { company_name: 'ACME' }),
+    ],
+    [
+      'GET',
+      '/shipping_lines/sl-1',
+      (c: Terminal49Client) => c.shippingLines.get('sl-1'),
+    ],
+    [
+      'PATCH',
+      '/containers/c-1',
+      (c: Terminal49Client) => c.containers.update('c-1', { ref_numbers: [] }),
+    ],
+    [
+      'GET',
+      '/containers/c-1/custom_fields',
+      (c: Terminal49Client) => c.containers.customFields('c-1'),
+    ],
+    [
+      'POST',
+      '/shipments/s-1/custom_fields',
+      (c: Terminal49Client) => c.shipments.setCustomField('s-1', 'po', 'PO-1'),
+    ],
+    [
+      'PATCH',
+      '/tracking_requests/t-1/custom_fields/po',
+      (c: Terminal49Client) =>
+        c.trackingRequests.updateCustomField('t-1', 'po', 'PO-2'),
+    ],
+    [
+      'GET',
+      '/tracking_requests/t-1/custom_fields',
+      (c: Terminal49Client) => c.trackingRequests.customFields('t-1'),
+    ],
+    [
+      'POST',
+      '/tracking_requests/t-1/custom_fields',
+      (c: Terminal49Client) =>
+        c.trackingRequests.setCustomField('t-1', 'po', 'PO-1'),
+    ],
+    [
+      'PATCH',
+      '/containers/c-1/custom_fields/po',
+      (c: Terminal49Client) =>
+        c.containers.updateCustomField('c-1', 'po', 'PO-2'),
+    ],
+    [
+      'PATCH',
+      '/shipments/s-1/custom_fields/po',
+      (c: Terminal49Client) =>
+        c.shipments.updateCustomField('s-1', 'po', 'PO-2'),
+    ],
+    [
+      'GET',
+      '/containers/c-1/party_roles',
+      (c: Terminal49Client) => c.containers.partyRoles('c-1'),
+    ],
+    [
+      'POST',
+      '/containers/c-1/party_roles',
+      (c: Terminal49Client) =>
+        c.containers.addPartyRole('c-1', {
+          role: 'pickup_dray_carrier',
+          partyId: 'pa-1',
+        }),
+    ],
+    [
+      'GET',
+      '/shipments/s-1/party_roles',
+      (c: Terminal49Client) => c.shipments.partyRoles('s-1'),
+    ],
+    [
+      'POST',
+      '/shipments/s-1/party_roles',
+      (c: Terminal49Client) =>
+        c.shipments.addPartyRole('s-1', { role: 'consignee', partyId: 'pa-1' }),
+    ],
+    ['GET', '/documents', (c: Terminal49Client) => c.documents.list()],
+    [
+      'POST',
+      '/documents',
+      (c: Terminal49Client) =>
+        c.documents.create({ name: 'BOL.pdf', attachedDocument: 'blob-1' }),
+    ],
+    ['GET', '/documents/d-1', (c: Terminal49Client) => c.documents.get('d-1')],
+    [
+      'PATCH',
+      '/documents/d-1',
+      (c: Terminal49Client) =>
+        c.documents.update('d-1', { documentTypeManual: 'bill_of_lading' }),
+    ],
+    ['GET', '/documents/types', (c: Terminal49Client) => c.documents.types()],
+    [
+      'GET',
+      '/documents/d-1/download_url',
+      (c: Terminal49Client) => c.documents.downloadUrl('d-1'),
+    ],
+    [
+      'POST',
+      '/documents/d-1/reextract',
+      (c: Terminal49Client) => c.documents.reextract('d-1'),
+    ],
+    [
+      'POST',
+      '/documents/d-1/reclassify',
+      (c: Terminal49Client) => c.documents.reclassify('d-1'),
+    ],
+    [
+      'POST',
+      '/documents/d-1/relink',
+      (c: Terminal49Client) => c.documents.relink('d-1'),
+    ],
+    [
+      'POST',
+      '/documents/d-1/rotate',
+      (c: Terminal49Client) => c.documents.rotate('d-1', 90),
+    ],
+    [
+      'GET',
+      '/email_submissions',
+      (c: Terminal49Client) => c.emailSubmissions.list(),
+    ],
+    [
+      'GET',
+      '/email_submissions/e-1',
+      (c: Terminal49Client) => c.emailSubmissions.get('e-1'),
+    ],
+    [
+      'GET',
+      '/document_schemas/bill_of_lading',
+      (c: Terminal49Client) => c.documentSchemas.get('bill_of_lading'),
+    ],
+    ['GET', '/custom_fields', (c: Terminal49Client) => c.customFields.list()],
+    [
+      'GET',
+      '/custom_field_definitions',
+      (c: Terminal49Client) => c.customFieldDefinitions.list(),
+    ],
+    ['GET', '/webhooks', (c: Terminal49Client) => c.webhooks.list()],
+    [
+      'POST',
+      '/webhooks',
+      (c: Terminal49Client) => c.webhooks.create({ data: {} }),
+    ],
+    [
+      'PATCH',
+      '/webhooks/w-1',
+      (c: Terminal49Client) => c.webhooks.update('w-1', { data: {} }),
+    ],
+    ['GET', '/webhooks/ips', (c: Terminal49Client) => c.webhooks.ips()],
+    [
+      'GET',
+      '/webhook_notifications/examples',
+      (c: Terminal49Client) => c.webhookNotifications.examples(),
+    ],
+    ['GET', '/vessels/v-1', (c: Terminal49Client) => c.vessels.get('v-1')],
+    [
+      'GET',
+      '/vessels/9876543',
+      (c: Terminal49Client) => c.vessels.getByImo('9876543'),
+    ],
+    [
+      'GET',
+      '/vessels/v-1/future_positions',
+      (c: Terminal49Client) =>
+        c.vessels.futurePositions('v-1', {
+          portId: 'port-2',
+          previousPortId: 'port-1',
+        }),
+    ],
+    [
+      'GET',
+      '/vessels/v-1/future_positions_with_coordinates',
+      (c: Terminal49Client) =>
+        c.vessels.futurePositionsWithCoords('v-1', {
+          portId: 'port-2',
+          previousPortId: 'port-1',
+          latitude: 13.07,
+          longitude: -100.84,
+        }),
+    ],
+    ['GET', '/ports/p-1', (c: Terminal49Client) => c.ports.get('p-1')],
+    ['GET', '/terminals/t-1', (c: Terminal49Client) => c.terminals.get('t-1')],
+    ['GET', '/parties', (c: Terminal49Client) => c.parties.list()],
+    ['GET', '/parties/pa-1', (c: Terminal49Client) => c.parties.get('pa-1')],
+    [
+      'GET',
+      '/metro_areas/m-1',
+      (c: Terminal49Client) => c.metroAreas.get('m-1'),
+    ],
+    [
+      'GET',
+      '/custom_field_definitions/d-1',
+      (c: Terminal49Client) => c.customFieldDefinitions.get('d-1'),
+    ],
+    [
+      'POST',
+      '/custom_field_definitions',
+      (c: Terminal49Client) => c.customFieldDefinitions.create({ data: {} }),
+    ],
+    [
+      'PATCH',
+      '/custom_field_definitions/d-1',
+      (c: Terminal49Client) =>
+        c.customFieldDefinitions.update('d-1', { data: {} }),
+    ],
+    [
+      'GET',
+      '/custom_field_definitions/d-1/options',
+      (c: Terminal49Client) => c.customFieldOptions.list('d-1'),
+    ],
+    [
+      'GET',
+      '/custom_field_definitions/d-1/options/o-1',
+      (c: Terminal49Client) => c.customFieldOptions.get('d-1', 'o-1'),
+    ],
+    [
+      'POST',
+      '/custom_field_definitions/d-1/options',
+      (c: Terminal49Client) => c.customFieldOptions.create('d-1', { data: {} }),
+    ],
+    [
+      'PATCH',
+      '/custom_field_definitions/d-1/options/o-1',
+      (c: Terminal49Client) =>
+        c.customFieldOptions.update('d-1', 'o-1', { data: {} }),
+    ],
+    [
+      'GET',
+      '/custom_fields/cf-1',
+      (c: Terminal49Client) => c.customFields.get('cf-1'),
+    ],
+    [
+      'POST',
+      '/custom_fields',
+      (c: Terminal49Client) => c.customFields.create({ data: {} }),
+    ],
+    [
+      'PATCH',
+      '/custom_fields/cf-1',
+      (c: Terminal49Client) => c.customFields.update('cf-1', { data: {} }),
+    ],
+  ] as const)('%s %s returns the served body', async (method, path, call) => {
     const { client } = buildClient();
-    await expect(client.webhooks.get('w-1')).resolves.toEqual({
-      data: { id: 'x', type: 'stub' },
-    });
+    await expect(call(client)).resolves.toEqual(
+      servedBody(method, `/v2${path}`),
+    );
   });
 });

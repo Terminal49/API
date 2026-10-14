@@ -1330,7 +1330,7 @@ export function createTerminal49McpServer(
       title: 'Get Container Route',
       description:
         'Get the ocean route for a container: ports in order (POL, transshipment ports, POD) with ETA/ATA and ETD/ATD, ' +
-        'plus the vessel carrying it now (name, IMO, voyage, position, speed) while it is at sea. ' +
+        'plus the vessel carrying it now (name, IMO, voyage, position with the time it was reported, speed) while it is at sea. ' +
         'This paid feature (Routing Data) may not be available for every account.',
       annotations: {
         readOnlyHint: true,

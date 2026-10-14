@@ -2616,7 +2616,9 @@ export interface components {
             coordinates: number[];
         };
         /** @description Raw custom field value (type depends on definition) */
-        custom_field_value: (string | number | boolean | string[] | Record<string, never>) | null;
+        custom_field_value: (string | number | boolean | string[] | {
+            [key: string]: unknown;
+        }) | null;
         /** Custom field */
         custom_field: {
             /** Format: uuid */
@@ -5201,6 +5203,10 @@ export interface operations {
             content: {
                 "application/json": {
                     data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type: "container";
                         attributes: {
                             ref_numbers?: string[];
                         };
@@ -5773,6 +5779,8 @@ export interface operations {
             content: {
                 "application/json": {
                     data?: {
+                        /** @enum {string} */
+                        type: "party";
                         attributes: {
                             /**
                              * @description The name of the company
@@ -7021,6 +7029,8 @@ export interface operations {
             content: {
                 "application/json": {
                     data?: {
+                        /** @enum {string} */
+                        type: "party";
                         attributes: {
                             /**
                              * @description The name of the company

@@ -215,6 +215,45 @@ describe('Terminal49Client', () => {
     });
   });
 
+  it.each([
+    [{ bookingNumber: 'BK123' }, 'booking_number', 'BK123'],
+    [{ billOfLading: 'MAEU123456789' }, 'bill_of_lading', 'MAEU123456789'],
+    [
+      {
+        containerNumber: 'MSCU1234567',
+        bookingNumber: 'BK123',
+        billOfLading: 'B1',
+      },
+      'container',
+      'MSCU1234567',
+    ],
+    [{ bookingNumber: 'BK123', billOfLading: 'B1' }, 'booking_number', 'BK123'],
+  ])(
+    'sends the matching request_type for %o',
+    async (number, requestType, requestNumber) => {
+      let capturedBody: any = null;
+      const { fetchImpl } = createMockFetch({
+        '/tracking_requests': (init) => {
+          capturedBody = JSON.parse(String(init?.body));
+          return jsonResponse({ data: { id: 'tr-1', attributes: {} } }, 201);
+        },
+      });
+      const client = new Terminal49Client({
+        apiToken: 'token-123',
+        apiBaseUrl: baseUrl,
+        fetchImpl,
+      });
+
+      await client.trackContainer({ ...number, scac: 'MAEU' });
+
+      expect(capturedBody.data.attributes).toEqual({
+        request_type: requestType,
+        request_number: requestNumber,
+        scac: 'MAEU',
+      });
+    },
+  );
+
   it('uses deserialize helper to flatten JSON:API with included', async () => {
     const doc = {
       data: {

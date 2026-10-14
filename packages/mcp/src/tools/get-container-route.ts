@@ -3,6 +3,7 @@ import {
   NotFoundError,
   Terminal49Client,
   type ContainerRoute,
+  type RouteVesselPort,
 } from '@terminal49/sdk';
 import { z } from 'zod';
 import { logMcpEvent } from '../logging.js';
@@ -62,6 +63,7 @@ const routeSummarySchema = z.object({
       longitude: z.number().nullable(),
       heading: z.number().nullable(),
       speed_knots: z.number().nullable(),
+      position_at: z.string().nullable(),
       departure_port: portRefSchema,
       arrival_port: portRefSchema,
     })
@@ -189,9 +191,12 @@ function formatRoute({
   currentVessel,
   totalPorts,
 }: ContainerRoute): RouteSummary {
-  const portRef = (id: string | null) => {
+  const portRef = ({ locationId, name, label }: RouteVesselPort) => {
+    if (name !== null || label !== null) return { name, label };
     const port =
-      id === null ? undefined : ports.find((p) => p.locationId === id);
+      locationId === null
+        ? undefined
+        : ports.find((p) => p.locationId === locationId);
     return port ? { name: port.name, label: port.label } : null;
   };
 
@@ -213,8 +218,9 @@ function formatRoute({
       longitude: currentVessel.coordinates?.longitude ?? null,
       heading: currentVessel.heading,
       speed_knots: currentVessel.speed,
-      departure_port: portRef(currentVessel.departurePortId),
-      arrival_port: portRef(currentVessel.arrivalPortId),
+      position_at: currentVessel.positionAt,
+      departure_port: portRef(currentVessel.departurePort),
+      arrival_port: portRef(currentVessel.arrivalPort),
     },
   };
 }

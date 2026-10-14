@@ -47,6 +47,7 @@ export const EXPECTED_ROUTE_SUMMARY: RouteSummary = {
     longitude: -131.128473333,
     heading: 108,
     speed_knots: 21,
+    position_at: '2025-12-11T11:46:03Z',
     departure_port: { name: 'Xiamen', label: 'TS1' },
     arrival_port: { name: 'Savannah', label: 'POD' },
   },

@@ -56,10 +56,10 @@ data from Node.js applications.
 | <a id="property-metroareas"></a> `metroAreas` | `public` | `object` |
 | `metroAreas.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | <a id="property-parties"></a> `parties` | `public` | `object` |
-| `parties.create` | `public` | (`payload`, `options?`) => `Promise`\<`any`\> |
+| `parties.create` | `public` | (`attributes`, `options?`) => `Promise`\<`any`\> |
 | `parties.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | `parties.list` | `public` | (`options?`) => `Promise`\<`any`\> |
-| `parties.update` | `public` | (`id`, `payload`, `options?`) => `Promise`\<`any`\> |
+| `parties.update` | `public` | (`id`, `attributes`, `options?`) => `Promise`\<`any`\> |
 | <a id="property-ports"></a> `ports` | `public` | `object` |
 | `ports.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | <a id="property-shipments"></a> `shipments` | `public` | [`ShipmentManager`](/sdk/reference/client/managers/classes/ShipmentManager) |
@@ -148,7 +148,7 @@ Create a custom field option.
 
 ### createParty()
 
-> **createParty**(`payload`, `options?`): `Promise`\<`any`\>
+> **createParty**(`attributes`, `options?`): `Promise`\<`any`\>
 
 Create a party.
 
@@ -156,10 +156,8 @@ Create a party.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `payload` | \{ `data?`: \{ `attributes`: \{ `company_name?`: `string`; \}; \}; \} | - |
-| `payload.data?` | \{ `attributes`: \{ `company_name?`: `string`; \}; \} | - |
-| `payload.data.attributes?` | \{ `company_name?`: `string`; \} | - |
-| `payload.data.attributes.company_name?` | `string` | **Description** The name of the company **Example** `COMPANY NAME` |
+| `attributes` | \{ `company_name?`: `string`; \} | - |
+| `attributes.company_name?` | `string` | **Description** The name of the company **Example** `COMPANY NAME` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) | - |
 
 #### Returns
@@ -749,7 +747,7 @@ Fetch a webhook notification by ID.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`WebhookNotificationGetOptions`](/sdk/reference/client/interfaces/WebhookNotificationGetOptions) |
 
 #### Returns
 
@@ -990,7 +988,7 @@ List webhook notifications.
 
 | Parameter | Type |
 | ------ | ------ |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| `options?` | [`WebhookNotificationListOptions`](/sdk/reference/client/interfaces/WebhookNotificationListOptions) |
 
 #### Returns
 
@@ -1095,14 +1093,15 @@ Stop tracking a shipment and its containers.
 
 > **trackContainer**(`params`): `Promise`\<`any`\>
 
-Convenience helper for creating a tracking request from a container or booking number.
+Convenience helper for creating a tracking request from a container, booking, or bill of lading number.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `params` | \{ `autoDetectVoccScac?`: `boolean`; `bookingNumber?`: `string`; `containerNumber?`: `string`; `refNumbers?`: `string`[]; `scac?`: `string`; \} |
+| `params` | \{ `autoDetectVoccScac?`: `boolean`; `billOfLading?`: `string`; `bookingNumber?`: `string`; `containerNumber?`: `string`; `refNumbers?`: `string`[]; `scac?`: `string`; \} |
 | `params.autoDetectVoccScac?` | `boolean` |
+| `params.billOfLading?` | `string` |
 | `params.bookingNumber?` | `string` |
 | `params.containerNumber?` | `string` |
 | `params.refNumbers?` | `string`[] |
@@ -1196,7 +1195,7 @@ Update a custom field option.
 
 ### updateParty()
 
-> **updateParty**(`id`, `payload`, `options?`): `Promise`\<`any`\>
+> **updateParty**(`id`, `attributes`, `options?`): `Promise`\<`any`\>
 
 Update a party.
 
@@ -1205,10 +1204,8 @@ Update a party.
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `id` | `string` | - |
-| `payload` | \{ `data?`: \{ `attributes`: \{ `company_name?`: `string`; \}; \}; \} | - |
-| `payload.data?` | \{ `attributes`: \{ `company_name?`: `string`; \}; \} | - |
-| `payload.data.attributes?` | \{ `company_name?`: `string`; \} | - |
-| `payload.data.attributes.company_name?` | `string` | **Description** The name of the company **Example** `COMPANY NAME` |
+| `attributes` | \{ `company_name?`: `string`; \} | - |
+| `attributes.company_name?` | `string` | **Description** The name of the company **Example** `COMPANY NAME` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) | - |
 
 #### Returns

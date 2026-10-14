@@ -29,10 +29,10 @@ import type {
   TrackingRequestListFilters,
   TrackingRequestType,
 } from './client/managers/tracking-requests.js';
-import { applyTypedPagination } from './client/query.js';
+import { applyTypedPagination, normalizeInclude } from './client/query.js';
 import { callerPayload, type JsonBody } from './client/spec.js';
 import { Transport } from './client/transport.js';
-import type { paths } from './generated/terminal49.js';
+import type { components, paths } from './generated/terminal49.js';
 import type {
   CallOptions,
   ContainerInclude,
@@ -41,6 +41,7 @@ import type {
   ResponseFormat,
   ShipmentInclude,
   TrackingRequestInclude,
+  WebhookNotificationInclude,
 } from './types/options.js';
 
 /**
@@ -68,15 +69,19 @@ type WebhookEvent = NonNullable<
 type CustomFieldDefinitionListQuery = NonNullable<
   paths['/custom_field_definitions']['get']['parameters']['query']
 >;
+type WebhookNotificationListQuery = NonNullable<
+  paths['/webhook_notifications']['get']['parameters']['query']
+>;
 type CustomFieldListQuery = NonNullable<
   paths['/custom_fields']['get']['parameters']['query']
 >;
 type TriggerWebhookBody = JsonBody<paths['/webhooks/trigger']['post']>;
-type CreatePartyBody = JsonBody<paths['/parties']['post']>;
-type UpdatePartyBody = JsonBody<paths['/parties/{id}']['patch']>;
-type CustomFieldDefinitionAttributes = NonNullable<
-  JsonBody<paths['/custom_field_definitions']['post']>['data']
+type PartyAttributes = NonNullable<
+  JsonBody<paths['/parties']['post']>['data']
 >['attributes'];
+type CustomFieldDefinitionAttributes = NonNullable<
+  components['schemas']['custom_field_definition']['attributes']
+>;
 
 type FuturePositionsQuery =
   paths['/vessels/{id}/future_positions']['get']['parameters']['query'];
@@ -98,6 +103,12 @@ export interface VesselFuturePositionsWithCoordsParams extends VesselFuturePosit
   /** Starting longitude. */
   longitude: FuturePositionsWithCoordsQuery['longitude'];
 }
+
+const TRACK_CONTAINER_NUMBER_TYPES = [
+  ['containerNumber', 'container'],
+  ['bookingNumber', 'booking_number'],
+  ['billOfLading', 'bill_of_lading'],
+] as const satisfies readonly (readonly [string, TrackingRequestType])[];
 
 /** Parameters for {@link Terminal49Client.triggerWebhook}. */
 export interface TriggerWebhookParams {
@@ -123,6 +134,18 @@ export interface CustomFieldDefinitionListFilters {
   entityType?: CustomFieldDefinitionAttributes['entity_type'];
   dataType?: CustomFieldDefinitionAttributes['data_type'];
   displayName?: string;
+}
+
+/** Options for {@link Terminal49Client.getWebhookNotification}. */
+export interface WebhookNotificationGetOptions extends CallOptions {
+  /** Related resources to sideload. */
+  include?: IncludeParam<WebhookNotificationInclude>;
+}
+
+/** Options for {@link Terminal49Client.listWebhookNotifications}. */
+export interface WebhookNotificationListOptions extends ListOptions {
+  /** Related resources to sideload. */
+  include?: IncludeParam<WebhookNotificationInclude>;
 }
 
 /** Configuration for {@link Terminal49Client}. */
@@ -201,8 +224,9 @@ export class Terminal49Client {
   };
 
   public webhookNotifications = {
-    list: (options?: ListOptions) => this.listWebhookNotifications(options),
-    get: (id: string, options?: CallOptions) =>
+    list: (options?: WebhookNotificationListOptions) =>
+      this.listWebhookNotifications(options),
+    get: (id: string, options?: WebhookNotificationGetOptions) =>
       this.getWebhookNotification(id, options),
     examples: (event?: string, options?: CallOptions) =>
       this.getWebhookNotificationExamples(event, options),
@@ -235,10 +259,10 @@ export class Terminal49Client {
   public parties = {
     list: (options?: ListOptions) => this.listParties(options),
     get: (id: string, options?: CallOptions) => this.getParty(id, options),
-    create: (payload: CreatePartyBody, options?: CallOptions) =>
-      this.createParty(payload, options),
-    update: (id: string, payload: UpdatePartyBody, options?: CallOptions) =>
-      this.updateParty(id, payload, options),
+    create: (attributes: PartyAttributes, options?: CallOptions) =>
+      this.createParty(attributes, options),
+    update: (id: string, attributes: PartyAttributes, options?: CallOptions) =>
+      this.updateParty(id, attributes, options),
   };
 
   public metroAreas = {
@@ -373,28 +397,30 @@ export class Terminal49Client {
     return this.containers.get(id, include, options);
   }
 
-  /** Convenience helper for creating a tracking request from a container or booking number. */
+  /** Convenience helper for creating a tracking request from a container, booking, or bill of lading number. */
   async trackContainer(params: {
     containerNumber?: string;
     bookingNumber?: string;
+    billOfLading?: string;
     scac?: string;
     autoDetectVoccScac?: boolean;
     refNumbers?: string[];
   }): Promise<any> {
-    const requestType: TrackingRequestType = params.containerNumber
-      ? 'container'
-      : 'bill_of_lading';
-    const requestNumber = params.containerNumber || params.bookingNumber;
+    const [request] = TRACK_CONTAINER_NUMBER_TYPES.flatMap(
+      ([key, requestType]) => {
+        const requestNumber = params[key];
+        return requestNumber ? [{ requestType, requestNumber }] : [];
+      },
+    );
 
-    if (!requestNumber) {
+    if (!request) {
       throw new ValidationError(
         'request_number is required (/data/attributes/request_number)',
       );
     }
 
     return this.trackingRequests.create({
-      requestType,
-      requestNumber,
+      ...request,
       scac: params.scac,
       autoDetectVoccScac: params.autoDetectVoccScac,
       refNumbers: params.refNumbers,
@@ -642,10 +668,17 @@ export class Terminal49Client {
   }
 
   /** List webhook notifications. */
-  async listWebhookNotifications(options?: ListOptions): Promise<any> {
+  async listWebhookNotifications(
+    options?: WebhookNotificationListOptions,
+  ): Promise<any> {
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/webhook_notifications', {
-        params: { query: applyTypedPagination({}, options) },
+        params: {
+          query: applyTypedPagination<WebhookNotificationListQuery>(
+            { include: normalizeInclude(options?.include) },
+            options,
+          ),
+        },
       }),
     );
     return this.formatResult(raw, options?.format);
@@ -654,11 +687,14 @@ export class Terminal49Client {
   /** Fetch a webhook notification by ID. */
   async getWebhookNotification(
     id: string,
-    options?: CallOptions,
+    options?: WebhookNotificationGetOptions,
   ): Promise<any> {
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/webhook_notifications/{id}', {
-        params: { path: { id } },
+        params: {
+          path: { id },
+          query: { include: normalizeInclude(options?.include) },
+        },
       }),
     );
     return this.formatResult(raw, options?.format);
@@ -780,11 +816,13 @@ export class Terminal49Client {
 
   /** Create a party. */
   async createParty(
-    payload: CreatePartyBody,
+    attributes: PartyAttributes,
     options?: CallOptions,
   ): Promise<any> {
     const raw = await this.transport.execute(() =>
-      this.transport.client.POST('/parties', { body: payload }),
+      this.transport.client.POST('/parties', {
+        body: { data: { type: 'party', attributes } },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -792,13 +830,13 @@ export class Terminal49Client {
   /** Update a party. */
   async updateParty(
     id: string,
-    payload: UpdatePartyBody,
+    attributes: PartyAttributes,
     options?: CallOptions,
   ): Promise<any> {
     const raw = await this.transport.execute(() =>
       this.transport.client.PATCH('/parties/{id}', {
         params: { path: { id } },
-        body: payload,
+        body: { data: { type: 'party', attributes } },
       }),
     );
     return this.formatResult(raw, options?.format);

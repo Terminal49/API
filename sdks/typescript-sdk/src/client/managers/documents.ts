@@ -240,7 +240,7 @@ export class EmailSubmissionManager extends BaseManager {
 }
 
 export class DocumentSchemaManager extends BaseManager {
-  /** Fetch the extraction schema for a document type. */
+  /** Fetch an extraction schema by its versioned id, `<document_type>@<version>`, such as `commercial_invoice@2026-03-23`. */
   async get(id: string, options?: CallOptions): Promise<any> {
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/document_schemas/{id}', {

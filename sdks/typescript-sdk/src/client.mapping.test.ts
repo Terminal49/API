@@ -565,8 +565,17 @@ describe('Terminal49Client mapping helpers', () => {
         coordinates: { longitude: -131.128473333, latitude: 31.023033333 },
         heading: 108,
         speed: 21,
-        departurePortId: 'ed64d446-9098-420c-ab08-c127e62509fe',
-        arrivalPortId: '6129528d-846e-4571-ae16-b5328a4285ab',
+        positionAt: '2025-12-11T11:46:03Z',
+        departurePort: {
+          locationId: 'ed64d446-9098-420c-ab08-c127e62509fe',
+          name: 'Xiamen',
+          label: 'TS1',
+        },
+        arrivalPort: {
+          locationId: '6129528d-846e-4571-ae16-b5328a4285ab',
+          name: 'Savannah',
+          label: 'POD',
+        },
       },
       totalPorts: 3,
     });
@@ -585,10 +594,15 @@ describe('Terminal49Client mapping helpers', () => {
 
     const both = await client.containers.route('cont-1', { format: 'both' });
     const viaMap = await client.containers.map('cont-1', { format: 'mapped' });
+    const viaMapBoth = await client.containers.map('cont-1', {
+      format: 'both',
+    });
 
     expect(both.raw).toEqual(fixture);
     expect(viaMap).toEqual(fixture);
+    expect(viaMapBoth).toEqual({ raw: fixture, mapped: fixture });
     expect(calls.map((c) => c.url.pathname)).toEqual([
+      '/v2/containers/cont-1/map_geojson',
       '/v2/containers/cont-1/map_geojson',
       '/v2/containers/cont-1/map_geojson',
     ]);
@@ -646,8 +660,9 @@ describe('Terminal49Client mapping helpers', () => {
       coordinates: { longitude: 10, latitude: 20 },
       heading: null,
       speed: null,
-      departurePortId: null,
-      arrivalPortId: null,
+      positionAt: null,
+      departurePort: { locationId: null, name: null, label: null },
+      arrivalPort: { locationId: null, name: null, label: null },
     });
     expect(result.totalPorts).toBe(3);
   });

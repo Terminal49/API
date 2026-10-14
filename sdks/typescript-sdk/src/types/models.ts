@@ -156,6 +156,15 @@ export interface RoutePort {
   outbound: { etd: string | null; atd: string | null };
 }
 
+/** A port the current vessel left or is heading to, as the `current_vessel` feature names it. */
+export interface RouteVesselPort {
+  /** Matches {@link RoutePort.locationId} of the same port. */
+  locationId: string | null;
+  name: string | null;
+  /** `POL`, `POD`, or `TS1`, `TS2`, and so on for transshipment ports. */
+  label: string | null;
+}
+
 /** The vessel carrying the container right now. Present only while it is at sea. */
 export interface RouteVessel {
   name: string | null;
@@ -166,8 +175,10 @@ export interface RouteVessel {
   heading: number | null;
   /** Knots. */
   speed: number | null;
-  departurePortId: string | null;
-  arrivalPortId: string | null;
+  /** When the vessel reported `coordinates`, `heading`, and `speed` (ISO 8601). */
+  positionAt: string | null;
+  departurePort: RouteVesselPort;
+  arrivalPort: RouteVesselPort;
 }
 
 /** Mapped container route: ports in route order plus the current vessel. */

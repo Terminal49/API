@@ -349,7 +349,7 @@ if (!cfg) {
           ],
         },
       );
-      // Soft-error responses are still HTTP 200 with a JSON payload.
+      // Soft errors are HTTP 200; FeatureNotEnabled carries its fields only in structuredContent.
       expect(result.http).toBe(200);
       expect(result.payload).toBeDefined();
       expect(score.contractPass).toBe(true);

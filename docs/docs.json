@@ -410,7 +410,9 @@
                   "sdk/reference/client/interfaces/CustomFieldListFilters",
                   "sdk/reference/client/interfaces/TriggerWebhookParams",
                   "sdk/reference/client/interfaces/VesselFuturePositionsParams",
-                  "sdk/reference/client/interfaces/VesselFuturePositionsWithCoordsParams"
+                  "sdk/reference/client/interfaces/VesselFuturePositionsWithCoordsParams",
+                  "sdk/reference/client/interfaces/WebhookNotificationGetOptions",
+                  "sdk/reference/client/interfaces/WebhookNotificationListOptions"
                 ]
               },
               {
@@ -477,6 +479,7 @@
                   "sdk/reference/types/models/interfaces/RouteCoordinates",
                   "sdk/reference/types/models/interfaces/RoutePort",
                   "sdk/reference/types/models/interfaces/RouteVessel",
+                  "sdk/reference/types/models/interfaces/RouteVesselPort",
                   "sdk/reference/types/models/interfaces/Shipment",
                   "sdk/reference/types/models/interfaces/ShippingLine",
                   "sdk/reference/types/models/interfaces/TrackingRequest"
@@ -493,7 +496,8 @@
                   "sdk/reference/types/options/type-aliases/IncludeParam",
                   "sdk/reference/types/options/type-aliases/ResponseFormat",
                   "sdk/reference/types/options/type-aliases/ShipmentInclude",
-                  "sdk/reference/types/options/type-aliases/TrackingRequestInclude"
+                  "sdk/reference/types/options/type-aliases/TrackingRequestInclude",
+                  "sdk/reference/types/options/type-aliases/WebhookNotificationInclude"
                 ]
               }
             ]
@@ -656,6 +660,10 @@
     {
       "source": "/api-docs/getting-started/migrate-from-searates",
       "destination": "/migrate/searates"
+    },
+    {
+      "source": "/sdk/reference/types/models/interfaces/Route",
+      "destination": "/sdk/reference/types/models/interfaces/ContainerRoute"
     }
   ],
   "contextual": {

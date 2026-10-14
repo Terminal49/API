@@ -7715,6 +7715,16 @@
                       "type"
                     ],
                     "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "container"
+                        ]
+                      },
                       "attributes": {
                         "type": "object",
                         "properties": {
@@ -9811,9 +9821,16 @@
                   "data": {
                     "type": "object",
                     "required": [
+                      "type",
                       "attributes"
                     ],
                     "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "party"
+                        ]
+                      },
                       "attributes": {
                         "type": "object",
                         "properties": {
@@ -12110,9 +12127,16 @@
                   "data": {
                     "type": "object",
                     "required": [
+                      "type",
                       "attributes"
                     ],
                     "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "party"
+                        ]
+                      },
                       "attributes": {
                         "type": "object",
                         "properties": {
@@ -17170,7 +17194,8 @@
             }
           },
           {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": true
           }
         ]
       },

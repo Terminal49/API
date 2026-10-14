@@ -1029,6 +1029,139 @@ describe('MCP tool contracts', () => {
     });
   });
 
+  it('get_container_route returns the ports when no vessel position is known', async () => {
+    const withoutVessel = {
+      ...routeFixture,
+      features: routeFixture.features.filter(
+        (feature: { properties: { feature_type: string } }) =>
+          feature.properties.feature_type !== 'current_vessel',
+      ),
+    };
+    const client = asClient({
+      containers: {
+        route: vi.fn().mockResolvedValue(mapContainerRoute(withoutVessel)),
+      },
+    });
+
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(result).toEqual({
+      ...EXPECTED_ROUTE_SUMMARY,
+      current_vessel: null,
+    });
+  });
+
+  it('get_container_route returns the vessel when the route has no ports', async () => {
+    const vesselOnly = {
+      ...routeFixture,
+      features: routeFixture.features.filter(
+        (feature: { properties: { feature_type: string } }) =>
+          feature.properties.feature_type === 'current_vessel',
+      ),
+    };
+    const client = asClient({
+      containers: {
+        route: vi.fn().mockResolvedValue(mapContainerRoute(vesselOnly)),
+      },
+    });
+
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(result).toEqual({
+      total_ports: 0,
+      ports: [],
+      current_vessel: EXPECTED_ROUTE_SUMMARY.current_vessel,
+    });
+  });
+
+  it('get_container_route names vessel ports from the port features when the vessel omits them', async () => {
+    const unnamedVesselPorts = {
+      ...routeFixture,
+      features: routeFixture.features.map(
+        (feature: { properties: Record<string, unknown> }) => {
+          if (feature.properties.feature_type !== 'current_vessel') {
+            return feature;
+          }
+          const {
+            departure_port_name: _departureName,
+            departure_port_label: _departureLabel,
+            arrival_port_name: _arrivalName,
+            arrival_port_label: _arrivalLabel,
+            ...properties
+          } = feature.properties;
+          return { ...feature, properties };
+        },
+      ),
+    };
+    const client = asClient({
+      containers: {
+        route: vi.fn().mockResolvedValue(mapContainerRoute(unnamedVesselPorts)),
+      },
+    });
+
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(result).toEqual(EXPECTED_ROUTE_SUMMARY);
+  });
+
+  it('get_container_route returns null vessel ports when no port feature matches', async () => {
+    const unresolvableVesselPorts = {
+      ...routeFixture,
+      features: routeFixture.features.map(
+        (feature: { properties: Record<string, unknown> }) => {
+          if (feature.properties.feature_type !== 'current_vessel') {
+            return feature;
+          }
+          const {
+            departure_port_name: _departureName,
+            departure_port_label: _departureLabel,
+            arrival_port_name: _arrivalName,
+            arrival_port_label: _arrivalLabel,
+            ...properties
+          } = feature.properties;
+          return {
+            ...feature,
+            properties: {
+              ...properties,
+              departure_port_id: 'unknown-departure',
+              arrival_port_id: null,
+            },
+          };
+        },
+      ),
+    };
+    const client = asClient({
+      containers: {
+        route: vi
+          .fn()
+          .mockResolvedValue(mapContainerRoute(unresolvableVesselPorts)),
+      },
+    });
+
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(result).toEqual({
+      ...EXPECTED_ROUTE_SUMMARY,
+      current_vessel: {
+        ...EXPECTED_ROUTE_SUMMARY.current_vessel,
+        departure_port: null,
+        arrival_port: null,
+      },
+    });
+  });
+
   it('get_container_route returns a NotFound soft result for an unknown container', async () => {
     const client = asClient({
       containers: {

@@ -192,7 +192,8 @@ Remove a custom field value from a container.
 #### Deprecated
 
 Use [ContainerManager.route](#route). Returns the GeoJSON
-FeatureCollection in every format.
+FeatureCollection unmapped: `raw` and `mapped` return it as is, and
+`both` returns `{ raw, mapped }` with the FeatureCollection in each half.
 
 ***
 
@@ -345,7 +346,7 @@ Update an existing custom field value on a container.
 | ------ | ------ |
 | `id` | `string` |
 | `apiSlug` | `string` |
-| `value` | `string` \| `number` \| `boolean` \| `string`[] \| `Record`\<`string`, `never`\> \| `null` |
+| `value` | `string` \| `number` \| `boolean` \| `string`[] \| \{\[`key`: `string`\]: `unknown`; \} \| `null` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns

@@ -40,7 +40,11 @@ export interface ToolResult {
   bytes: number;
   /** Every text content block, JSON parsed where possible. */
   blocks: ParsedBlock[];
-  /** First JSON block: the tool's primary payload. */
+  /**
+   * First JSON block, else `structuredContent`: the tool's primary payload.
+   * Soft errors such as FeatureNotEnabled render as plain text, so only
+   * `structuredContent` carries their fields.
+   */
   payload: unknown;
   /** JSON-RPC error message, when the transport returned one. */
   errorMessage: string | undefined;
@@ -236,7 +240,9 @@ export class EvalClient {
       latencyMs,
       bytes: texts.reduce((sum, text) => sum + text.length, 0),
       blocks,
-      payload: payloadBlock?.json,
+      payload:
+        payloadBlock?.json ??
+        (isRecord(body.result) ? body.result.structuredContent : undefined),
       errorMessage: body.error?.message,
       rawText: texts.join('\n'),
     };

@@ -47,3 +47,5 @@ export type ContainerInclude =
   | 'transport_events';
 
 export type TrackingRequestInclude = 'shipment' | 'container';
+
+export type WebhookNotificationInclude = 'webhook' | 'reference_object';
