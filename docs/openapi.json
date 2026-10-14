@@ -15218,7 +15218,8 @@
                     "required": [
                       "type",
                       "id"
-                    ]
+                    ],
+                    "nullable": true
                   }
                 }
               },
@@ -15243,7 +15244,8 @@
                     "required": [
                       "type",
                       "id"
-                    ]
+                    ],
+                    "nullable": true
                   }
                 }
               },
@@ -15267,7 +15269,8 @@
                     "required": [
                       "type",
                       "id"
-                    ]
+                    ],
+                    "nullable": true
                   }
                 }
               }
@@ -15967,7 +15970,8 @@
                           "terminal"
                         ]
                       }
-                    }
+                    },
+                    "nullable": true
                   }
                 }
               },
@@ -16373,43 +16377,53 @@
                 "type": "string"
               },
               "nickname": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "firms_code": {
                 "type": "string",
-                "description": "CBP FIRMS Code or CBS Sublocation Code"
+                "description": "CBP FIRMS Code or CBS Sublocation Code",
+                "nullable": true
               },
               "smdg_code": {
                 "type": "string",
-                "description": "SMDG Code"
+                "description": "SMDG Code",
+                "nullable": true
               },
               "bic_facility_code": {
                 "type": "string",
-                "description": "BIC Facility Code"
+                "description": "BIC Facility Code",
+                "nullable": true
               },
               "street": {
                 "type": "string",
-                "description": "Street part of the address"
+                "description": "Street part of the address",
+                "nullable": true
               },
               "city": {
                 "type": "string",
-                "description": "City part of the address"
+                "description": "City part of the address",
+                "nullable": true
               },
               "state": {
                 "type": "string",
-                "description": "State part of the address"
+                "description": "State part of the address",
+                "nullable": true
               },
               "state_abbr": {
                 "type": "string",
-                "description": "State abbreviation for the state"
+                "description": "State abbreviation for the state",
+                "nullable": true
               },
               "zip": {
                 "type": "string",
-                "description": "ZIP code part of the address"
+                "description": "ZIP code part of the address",
+                "nullable": true
               },
               "country": {
                 "type": "string",
-                "description": "Country part of the address"
+                "description": "Country part of the address",
+                "nullable": true
               }
             }
           },
@@ -17641,7 +17655,8 @@
               },
               "location_name": {
                 "type": "string",
-                "description": "The city or facility name of the event location"
+                "description": "The city or facility name of the event location",
+                "nullable": true
               },
               "location_locode": {
                 "type": "string",
@@ -17688,7 +17703,8 @@
                           "metro_area"
                         ]
                       }
-                    }
+                    },
+                    "nullable": true
                   }
                 }
               },
@@ -17706,6 +17722,48 @@
                         "type": "string",
                         "enum": [
                           "vessel"
+                        ]
+                      }
+                    },
+                    "nullable": true
+                  }
+                }
+              },
+              "container": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "container"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "terminal": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "terminal"
                         ]
                       }
                     }
@@ -17973,15 +18031,18 @@
           },
           "country_code": {
             "type": "string",
-            "description": "ISO country code"
+            "description": "ISO country code",
+            "nullable": true
           },
           "country": {
             "type": "string",
-            "description": "Country name"
+            "description": "Country name",
+            "nullable": true
           },
           "time_zone": {
             "type": "string",
-            "description": "IANA timezone identifier"
+            "description": "IANA timezone identifier",
+            "nullable": true
           },
           "label": {
             "type": "string",
@@ -18088,11 +18149,13 @@
           },
           "departure_port_country_code": {
             "type": "string",
-            "description": "Country code of departure port"
+            "description": "Country code of departure port",
+            "nullable": true
           },
           "departure_port_country": {
             "type": "string",
-            "description": "Country name of departure port"
+            "description": "Country name of departure port",
+            "nullable": true
           },
           "departure_port_label": {
             "type": "string",
@@ -18106,7 +18169,8 @@
           },
           "departure_port_time_zone": {
             "type": "string",
-            "description": "Timezone of departure port"
+            "description": "Timezone of departure port",
+            "nullable": true
           },
           "arrival_port_id": {
             "type": "string",

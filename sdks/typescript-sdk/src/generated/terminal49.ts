@@ -1442,7 +1442,7 @@ export interface components {
                         type: "terminal";
                         /** Format: uuid */
                         id: string;
-                    };
+                    } | null;
                 };
                 destination_terminal?: {
                     data?: {
@@ -1450,7 +1450,7 @@ export interface components {
                         type: "terminal" | "rail_terminal";
                         /** Format: uuid */
                         id: string;
-                    };
+                    } | null;
                 };
                 line_tracking_stopped_by_user?: {
                     data?: {
@@ -1458,7 +1458,7 @@ export interface components {
                         type: "user";
                         /** Format: uuid */
                         id: string;
-                    };
+                    } | null;
                 };
             };
             attributes: {
@@ -1731,7 +1731,7 @@ export interface components {
                         id?: string;
                         /** @enum {string} */
                         type?: "terminal";
-                    };
+                    } | null;
                 };
                 pod_terminal?: {
                     data?: {
@@ -1852,25 +1852,25 @@ export interface components {
             };
             attributes: {
                 name: string;
-                nickname?: string;
+                nickname?: string | null;
                 /** @description CBP FIRMS Code or CBS Sublocation Code */
-                firms_code?: string;
+                firms_code?: string | null;
                 /** @description SMDG Code */
-                smdg_code?: string;
+                smdg_code?: string | null;
                 /** @description BIC Facility Code */
-                bic_facility_code?: string;
+                bic_facility_code?: string | null;
                 /** @description Street part of the address */
-                street?: string;
+                street?: string | null;
                 /** @description City part of the address */
-                city?: string;
+                city?: string | null;
                 /** @description State part of the address */
-                state?: string;
+                state?: string | null;
                 /** @description State abbreviation for the state */
-                state_abbr?: string;
+                state_abbr?: string | null;
                 /** @description ZIP code part of the address */
-                zip?: string;
+                zip?: string | null;
                 /** @description Country part of the address */
-                country?: string;
+                country?: string | null;
             };
             /** @enum {string} */
             type?: "terminal";
@@ -2338,7 +2338,7 @@ export interface components {
                  */
                 created_at?: string;
                 /** @description The city or facility name of the event location */
-                location_name?: string;
+                location_name?: string | null;
                 /** @description UNLOCODE of the event location */
                 location_locode?: string | null;
                 /** @description The name of the vessel where applicable */
@@ -2356,7 +2356,7 @@ export interface components {
                         id?: string;
                         /** @enum {string} */
                         type?: "port" | "metro_area";
-                    };
+                    } | null;
                 };
                 vessel?: {
                     data?: {
@@ -2364,7 +2364,23 @@ export interface components {
                         id?: string;
                         /** @enum {string} */
                         type?: "vessel";
+                    } | null;
+                };
+                container?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "container";
                     };
+                };
+                terminal?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "terminal";
+                    } | null;
                 };
             };
         };
@@ -2477,11 +2493,11 @@ export interface components {
             /** @description State name (if applicable) */
             state?: string | null;
             /** @description ISO country code */
-            country_code?: string;
+            country_code?: string | null;
             /** @description Country name */
-            country?: string;
+            country?: string | null;
             /** @description IANA timezone identifier */
-            time_zone?: string;
+            time_zone?: string | null;
             /** @description Port label: POL, POD, or TS1, TS2, etc. */
             label?: string;
             /**
@@ -2545,9 +2561,9 @@ export interface components {
             /** @description State name of departure port */
             departure_port_state?: string | null;
             /** @description Country code of departure port */
-            departure_port_country_code?: string;
+            departure_port_country_code?: string | null;
             /** @description Country name of departure port */
-            departure_port_country?: string;
+            departure_port_country?: string | null;
             /** @description Label of departure port (POL, POD, TS1, etc.) */
             departure_port_label?: string;
             /**
@@ -2556,7 +2572,7 @@ export interface components {
              */
             departure_port_atd?: string | null;
             /** @description Timezone of departure port */
-            departure_port_time_zone?: string;
+            departure_port_time_zone?: string | null;
             /** @description ID of the next port the vessel is heading to */
             arrival_port_id?: string | null;
             /** @description Name of the arrival port */
