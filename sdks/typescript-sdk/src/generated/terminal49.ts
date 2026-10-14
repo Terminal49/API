@@ -1770,8 +1770,16 @@ export interface components {
                 country_code?: string;
                 /** @description IANA tz */
                 time_zone?: string;
-                latitude?: number | null;
-                longitude?: number | null;
+                /**
+                 * @description Latitude in decimal degrees, serialized as a decimal string (for example `"22.57489971"`).
+                 * @example 22.57489971
+                 */
+                latitude?: string | null;
+                /**
+                 * @description Longitude in decimal degrees, serialized as a decimal string (for example `"22.57489971"`).
+                 * @example 114.27769989
+                 */
+                longitude?: string | null;
             };
             /** @enum {string} */
             type: "port";
@@ -1829,8 +1837,16 @@ export interface components {
                 country_code?: string;
                 /** @description IANA tz */
                 time_zone?: string;
-                latitude?: number | null;
-                longitude?: number | null;
+                /**
+                 * @description Latitude in decimal degrees, serialized as a decimal string (for example `"22.57489971"`).
+                 * @example 22.57489971
+                 */
+                latitude?: string | null;
+                /**
+                 * @description Longitude in decimal degrees, serialized as a decimal string (for example `"22.57489971"`).
+                 * @example 114.27769989
+                 */
+                longitude?: string | null;
             };
             /** @enum {string} */
             type: "metro_area";

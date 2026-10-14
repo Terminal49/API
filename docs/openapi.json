@@ -16088,18 +16088,22 @@
                 "description": "IANA tz"
               },
               "latitude": {
-                "type": "number",
+                "type": "string",
                 "x-stoplight": {
                   "id": "480os7a90z6kk"
                 },
-                "nullable": true
+                "nullable": true,
+                "description": "Latitude in decimal degrees, serialized as a decimal string (for example `\"22.57489971\"`).",
+                "example": "22.57489971"
               },
               "longitude": {
-                "type": "number",
+                "type": "string",
                 "x-stoplight": {
                   "id": "nfdetqgx5p1yv"
                 },
-                "nullable": true
+                "nullable": true,
+                "description": "Longitude in decimal degrees, serialized as a decimal string (for example `\"22.57489971\"`).",
+                "example": "114.27769989"
               }
             }
           },
@@ -16298,18 +16302,22 @@
                 }
               },
               "latitude": {
-                "type": "number",
+                "type": "string",
                 "x-stoplight": {
                   "id": "9l62t4cwsp53w"
                 },
-                "nullable": true
+                "nullable": true,
+                "description": "Latitude in decimal degrees, serialized as a decimal string (for example `\"22.57489971\"`).",
+                "example": "22.57489971"
               },
               "longitude": {
-                "type": "number",
+                "type": "string",
                 "x-stoplight": {
                   "id": "3tzibc0li8xvg"
                 },
-                "nullable": true
+                "nullable": true,
+                "description": "Longitude in decimal degrees, serialized as a decimal string (for example `\"22.57489971\"`).",
+                "example": "114.27769989"
               }
             }
           },
