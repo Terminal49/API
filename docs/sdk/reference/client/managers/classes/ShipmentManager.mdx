@@ -32,6 +32,26 @@ description: "ShipmentManager class in the Terminal49 TypeScript SDK, used to li
 
 ## Methods
 
+### addPartyRole()
+
+> **addPartyRole**(`id`, `__namedParameters`, `options?`): `Promise`\<`any`\>
+
+Assign a party to a shipment in the given role.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `__namedParameters` | `AddPartyRoleParams` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### customFields()
 
 > **customFields**(`id`, `options?`): `Promise`\<`any`\>
@@ -41,6 +61,26 @@ description: "ShipmentManager class in the Terminal49 TypeScript SDK, used to li
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### deleteCustomField()
+
+> **deleteCustomField**(`id`, `apiSlug`, `options?`): `Promise`\<`any`\>
+
+Remove a custom field value from a shipment.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `apiSlug` | `string` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
@@ -101,6 +141,45 @@ description: "ShipmentManager class in the Terminal49 TypeScript SDK, used to li
 
 ***
 
+### partyRoles()
+
+> **partyRoles**(`id`, `options?`): `Promise`\<`any`\>
+
+List the party roles assigned to a shipment.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### removePartyRole()
+
+> **removePartyRole**(`id`, `partyRoleId`, `options?`): `Promise`\<`any`\>
+
+Remove a party role assignment from a shipment.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `partyRoleId` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### resumeTracking()
 
 > **resumeTracking**(`id`, `options?`): `Promise`\<`any`\>
@@ -120,14 +199,16 @@ description: "ShipmentManager class in the Terminal49 TypeScript SDK, used to li
 
 ### setCustomField()
 
-> **setCustomField**(`id`, `fieldId`, `value`, `options?`): `Promise`\<`any`\>
+> **setCustomField**(`id`, `apiSlug`, `value`, `options?`): `Promise`\<`any`\>
+
+Create a custom field value on a shipment.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `fieldId` | `string` |
+| `apiSlug` | `string` |
 | `value` | `unknown` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
@@ -164,6 +245,27 @@ description: "ShipmentManager class in the Terminal49 TypeScript SDK, used to li
 | ------ | ------ |
 | `id` | `string` |
 | `attrs` | `Record`\<`string`, `any`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### updateCustomField()
+
+> **updateCustomField**(`id`, `apiSlug`, `value`, `options?`): `Promise`\<`any`\>
+
+Update an existing custom field value on a shipment.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `apiSlug` | `string` |
+| `value` | `string` \| `number` \| `boolean` \| `string`[] \| `Record`\<`string`, `never`\> \| `null` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns

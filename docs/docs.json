@@ -405,7 +405,12 @@
                 "pages": [
                   "sdk/reference/client/index",
                   "sdk/reference/client/classes/Terminal49Client",
-                  "sdk/reference/client/interfaces/Terminal49ClientConfig"
+                  "sdk/reference/client/interfaces/Terminal49ClientConfig",
+                  "sdk/reference/client/interfaces/CustomFieldDefinitionListFilters",
+                  "sdk/reference/client/interfaces/CustomFieldListFilters",
+                  "sdk/reference/client/interfaces/TriggerWebhookParams",
+                  "sdk/reference/client/interfaces/VesselFuturePositionsParams",
+                  "sdk/reference/client/interfaces/VesselFuturePositionsWithCoordsParams"
                 ]
               },
               {
@@ -414,11 +419,18 @@
                   "sdk/reference/client/managers/index",
                   "sdk/reference/client/managers/classes/BaseManager",
                   "sdk/reference/client/managers/classes/ContainerManager",
+                  "sdk/reference/client/managers/classes/DocumentManager",
+                  "sdk/reference/client/managers/classes/DocumentSchemaManager",
+                  "sdk/reference/client/managers/classes/EmailSubmissionManager",
                   "sdk/reference/client/managers/classes/ShipmentManager",
                   "sdk/reference/client/managers/classes/ShippingLineManager",
                   "sdk/reference/client/managers/classes/TrackingRequestManager",
+                  "sdk/reference/client/managers/interfaces/CreateDocumentParams",
                   "sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions",
+                  "sdk/reference/client/managers/interfaces/DocumentListFilters",
                   "sdk/reference/client/managers/interfaces/TrackingRequestListFilters",
+                  "sdk/reference/client/managers/interfaces/UpdateDocumentParams",
+                  "sdk/reference/client/managers/type-aliases/DocumentRotation",
                   "sdk/reference/client/managers/type-aliases/TrackingRequestType"
                 ]
               },
@@ -459,9 +471,12 @@
                 "pages": [
                   "sdk/reference/types/models/index",
                   "sdk/reference/types/models/interfaces/Container",
+                  "sdk/reference/types/models/interfaces/ContainerRoute",
                   "sdk/reference/types/models/interfaces/PaginatedResult",
                   "sdk/reference/types/models/interfaces/PaginationLinks",
-                  "sdk/reference/types/models/interfaces/Route",
+                  "sdk/reference/types/models/interfaces/RouteCoordinates",
+                  "sdk/reference/types/models/interfaces/RoutePort",
+                  "sdk/reference/types/models/interfaces/RouteVessel",
                   "sdk/reference/types/models/interfaces/Shipment",
                   "sdk/reference/types/models/interfaces/ShippingLine",
                   "sdk/reference/types/models/interfaces/TrackingRequest"

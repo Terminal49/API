@@ -69,7 +69,7 @@ Search for bill of lading 123456789
 | `get_container` | Get detailed container information |
 | `get_shipment_details` | Get complete shipment routing and containers |
 | `get_container_transport_events` | Get full event timeline |
-| `get_container_route` | Get vessel routing with ETAs |
+| `get_container_route` | Get ports in route order with ETAs and the current vessel |
 | `get_supported_shipping_lines` | List 40+ supported carriers |
 | `list_containers` | Browse all tracked containers |
 | `list_shipments` | Browse all shipments |

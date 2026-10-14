@@ -53,11 +53,12 @@ async function main() {
   });
   console.log(`Container has ${events.length} events`);
 
-  // 5) Get routing details (vessels, ports, legs)
+  // 5) Get the route: ports in order and the current vessel.
+  // Requires the Routing Data feature; otherwise this throws FeatureNotEnabledError.
   const route = await client.containers.route(containerId, {
     format: 'mapped',
   });
-  console.log(`Route has ${route.locations.length} locations`);
+  console.log(`Route has ${route.totalPorts} ports`);
 }
 
 main();

@@ -205,7 +205,7 @@ get_supported_shipping_lines({ search: "MSCU" })
 ---
 
 ### 7. `get_container_route` ⭐ **NEW**
-**Purpose**: Get detailed routing with vessel itinerary
+**Purpose**: Get the container's ports in route order and its current vessel, from `GET /containers/{id}/map_geojson`
 
 **Usage**:
 ```typescript
@@ -213,24 +213,25 @@ get_container_route({ id: "container-uuid" })
 ```
 
 **Returns**:
-- Complete multi-leg journey
-- Each port with inbound/outbound vessels
-- ETD/ETA/ATD/ATA for each leg
-- Transshipment details
+- `ports`: sequence, label (POL, TS1, POD), name, country code, inbound ETA/ATA, outbound ETD/ATD
+- `current_vessel`: name, IMO, voyage, position, heading, speed, departure and arrival ports (`null` when not at sea)
+- `total_ports`
 
-**Important**: This is a **PAID FEATURE** in Terminal49. If not enabled:
+It does not return track geometry, port codes, transport mode, carrier SCAC, or the vessel for past legs.
+
+**Soft results**: an empty route returns `{ "error": "NoRouteData", ... }`. If the paid feature is not enabled:
 ```json
 {
   "error": "FeatureNotEnabled",
-  "message": "Route tracking is a paid feature...",
-  "alternative": "Use get_container_transport_events for historical movement"
+  "message": "Route data is a paid feature (Routing Data)... Contact sales@terminal49.com to enable it.",
+  "alternative": "Use get_container_transport_events to see historical movement..."
 }
 ```
 
 **When to Use**:
 - User asks about routing or transshipments
-- Need vessel itinerary
-- Detailed multi-leg journey analysis
+- User asks which vessel the container is on, or where it is now
+- ETAs for each port on the route
 
 ---
 
@@ -354,7 +355,7 @@ list_tracking_requests({
 → Use `get_supported_shipping_lines`
 
 ### User asks: "How did it get from Shanghai to Chicago?"
-→ Option A: Use `get_container_route` (paid feature, shows routing)
+→ Option A: Use `get_container_route` (paid feature, shows ports and ETAs)
 → Option B: Use `get_container_transport_events` (shows actual movement)
 
 ---

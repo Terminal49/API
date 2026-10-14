@@ -1,0 +1,67 @@
+---
+title: "Class: EmailSubmissionManager"
+---
+
+# Class: EmailSubmissionManager
+
+## Extends
+
+- [`BaseManager`](/sdk/reference/client/managers/classes/BaseManager)
+
+## Constructors
+
+### Constructor
+
+> **new EmailSubmissionManager**(`transport`, `defaultFormat?`): `EmailSubmissionManager`
+
+#### Parameters
+
+| Parameter | Type | Default value |
+| ------ | ------ | ------ |
+| `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
+| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+
+#### Returns
+
+`EmailSubmissionManager`
+
+#### Inherited from
+
+[`BaseManager`](/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/sdk/reference/client/managers/classes/BaseManager#constructor)
+
+## Methods
+
+### get()
+
+> **get**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch an email submission by ID.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### list()
+
+> **list**(`options?`): `Promise`\<`any`\>
+
+List email submissions (documents sent to your Terminal49 inbox).
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) & `object` |
+
+#### Returns
+
+`Promise`\<`any`\>

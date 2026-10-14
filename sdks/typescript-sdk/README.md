@@ -43,7 +43,9 @@ see the SDK quickstart in the docs site: `docs/api-docs/getting-started/sdk-quic
 - `listContainers(filters?, options?)`
 - `listTrackingRequests(filters?, options?)` / `listTrackRequests(filters?, options?)`
 - `getContainerTransportEvents(id)`
-- `getContainerRoute(id)`
+- `getContainerRoute(id)`: ports in route order and the current vessel, from `GET /containers/{id}/map_geojson` (Routing Data feature)
+- `getVesselFuturePositions(id, { portId, previousPortId })`
+- `getVesselFuturePositionsWithCoords(id, { portId, previousPortId, latitude, longitude })`
 - `listShippingLines(search?)`
 - `getDemurrage(containerId)` (helper)
 - `getRailMilestones(containerId)` (helper)

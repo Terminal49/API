@@ -25,7 +25,7 @@
 | **`get_shipment_details`** | Get shipment routing, BOL, containers, ports | Full shipment context |
 | **`get_container_transport_events`** | Get full event timeline for a container | Milestone history |
 | **`get_supported_shipping_lines`** | List 40+ major carriers with SCAC codes | Filterable by name/code |
-| **`get_container_route`** | Get multi-leg routing with vessels and ETAs | Premium feature |
+| **`get_container_route`** | Get ports in route order with ETAs and the current vessel | Premium feature |
 | **`list_shipments`** | List shipments with filters and pagination | Fleet-level visibility |
 | **`list_containers`** | List containers with filters and pagination | Returns ResourceLinks ✨ |
 | **`list_tracking_requests`** | List tracking requests and statuses | Audit and monitoring |

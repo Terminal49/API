@@ -144,13 +144,13 @@ Stable error codes include `USAGE_ERROR`, `NETWORK_ERROR`, `AUTH_ERROR`, `RATE_L
 ## Commands
 
 - `t49 shipments get|list|update|stop-tracking|resume-tracking|custom-fields|set-custom-field`
-- `t49 containers get|list|events|route|map|raw-events|refresh|demurrage|rail|custom-fields|set-custom-field`
+- `t49 containers get|list|events|route|map|raw-events|refresh|demurrage|rail|custom-fields|set-custom-field` (`map` is an alias of `route`)
 - `t49 tracking-requests list|get|create|update|infer|create-from-infer`
 - `t49 track <number>`
 - `t49 shipping-lines list`
 - `t49 webhooks list|get|create|update|delete|ips`
 - `t49 webhook-notifications list|get|examples`
-- `t49 vessels get|get-by-imo|future-positions|future-positions-coords`
+- `t49 vessels get|get-by-imo|future-positions|future-positions-coords`. `future-positions` requires `--port-id` and `--previous-port-id`. `future-positions-coords` also requires `--latitude` and `--longitude`.
 - `t49 ports get`
 - `t49 terminals get`
 - `t49 parties list|get`

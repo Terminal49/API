@@ -32,6 +32,26 @@ description: "ContainerManager reference for the Terminal49 TypeScript SDK, used
 
 ## Methods
 
+### addPartyRole()
+
+> **addPartyRole**(`id`, `__namedParameters`, `options?`): `Promise`\<`any`\>
+
+Assign a party to a container in the given role.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `__namedParameters` | `AddPartyRoleParams` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### customFields()
 
 > **customFields**(`id`, `options?`): `Promise`\<`any`\>
@@ -41,6 +61,26 @@ description: "ContainerManager reference for the Terminal49 TypeScript SDK, used
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### deleteCustomField()
+
+> **deleteCustomField**(`id`, `apiSlug`, `options?`): `Promise`\<`any`\>
+
+Remove a custom field value from a container.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `apiSlug` | `string` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
@@ -134,9 +174,32 @@ description: "ContainerManager reference for the Terminal49 TypeScript SDK, used
 
 ***
 
-### map()
+### ~~map()~~
 
 > **map**(`id`, `options?`): `Promise`\<`any`\>
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+#### Deprecated
+
+Use [ContainerManager.route](#route).
+
+***
+
+### partyRoles()
+
+> **partyRoles**(`id`, `options?`): `Promise`\<`any`\>
+
+List the party roles assigned to a container.
 
 #### Parameters
 
@@ -185,9 +248,34 @@ description: "ContainerManager reference for the Terminal49 TypeScript SDK, used
 
 ***
 
+### removePartyRole()
+
+> **removePartyRole**(`id`, `partyRoleId`, `options?`): `Promise`\<`any`\>
+
+Remove a party role assignment from a container.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `partyRoleId` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### route()
 
 > **route**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch the container's route: ports, the current vessel, and vessel tracks.
+The raw format is the GeoJSON FeatureCollection; the mapped format is a
+`ContainerRoute`. Requires the Routing Data feature, otherwise the API
+returns 403.
 
 #### Parameters
 
@@ -204,15 +292,59 @@ description: "ContainerManager reference for the Terminal49 TypeScript SDK, used
 
 ### setCustomField()
 
-> **setCustomField**(`id`, `fieldId`, `value`, `options?`): `Promise`\<`any`\>
+> **setCustomField**(`id`, `apiSlug`, `value`, `options?`): `Promise`\<`any`\>
+
+Create a custom field value on a container.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `fieldId` | `string` |
+| `apiSlug` | `string` |
 | `value` | `unknown` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### update()
+
+> **update**(`id`, `attrs`, `options?`): `Promise`\<`any`\>
+
+Update container attributes such as `ref_numbers`.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `attrs` | \{ `ref_numbers?`: `string`[]; \} |
+| `attrs.ref_numbers?` | `string`[] |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### updateCustomField()
+
+> **updateCustomField**(`id`, `apiSlug`, `value`, `options?`): `Promise`\<`any`\>
+
+Update an existing custom field value on a container.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `apiSlug` | `string` |
+| `value` | `string` \| `number` \| `boolean` \| `string`[] \| `Record`\<`string`, `never`\> \| `null` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
