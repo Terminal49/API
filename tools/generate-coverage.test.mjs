@@ -9,6 +9,8 @@ import {
   updateAgentCoverage,
   validateCoverage,
   validateTerminalCapabilities,
+  applyShippingLineOverrides,
+  validateShippingLineOverrides,
 } from './generate-coverage.mjs';
 
 const data = JSON.parse(
@@ -38,11 +40,11 @@ test('only approved public entities and complete feature assessments are exporte
   assert.equal(data.terminals.length, 138);
   assert.equal(
     data.shippingLines.filter((row) => row.access === 'public').length,
-    36,
+    34,
   );
   assert.equal(
     data.shippingLines.filter((row) => row.access === 'account').length,
-    2,
+    1,
   );
   assert.equal(data.railCarriers.length, 6);
   assert.equal(data.featureCatalog.railCarriers.length, 13);
@@ -98,7 +100,7 @@ test('static references include every feature and preserve credential requiremen
   const files = generateFiles(data);
   const shipping = files.get('docs/data/coverage/shipping-lines.mdx');
   const rail = files.get('docs/data/coverage/rail-carriers.mdx');
-  assert.equal((shipping.match(/^\| (?!---|Section)/gm) ?? []).length, 38 * 61);
+  assert.equal((shipping.match(/^\| (?!---|Section)/gm) ?? []).length, 35 * 61);
   assert.equal((rail.match(/^\| (?!---|Section)/gm) ?? []).length, 6 * 13);
   assert.ok(rail.includes('Carrier credentials required'));
   assert.ok(rail.includes('requires the Rail Plan'));
@@ -386,6 +388,9 @@ async function importFixture(t, mutate = () => {}) {
     omitFile: false,
     capabilities: {},
     omitCapabilities: false,
+    shippingOverrides: {},
+    omitShippingOverrides: false,
+    carriers,
     terminals,
   };
   mutate(hex, identifierOptions);
@@ -401,6 +406,13 @@ async function importFixture(t, mutate = () => {}) {
     await writeFile(
       path.join(directory, 'tools/data/terminal-capabilities.json'),
       JSON.stringify(identifierOptions.capabilities),
+    );
+  }
+  if (!identifierOptions.omitShippingOverrides) {
+    await mkdir(path.join(directory, 'tools/data'), { recursive: true });
+    await writeFile(
+      path.join(directory, 'tools/data/shipping-line-overrides.json'),
+      JSON.stringify(identifierOptions.shippingOverrides),
     );
   }
   await writeFile(
@@ -580,7 +592,10 @@ test('canonical tracking identifiers follow approved lookup admission for every 
     ),
     'carriers',
   );
-  for (const approved of registry) {
+  const overrides = JSON.parse(
+    await readFile(new URL('./data/shipping-line-overrides.json', import.meta.url), 'utf8'),
+  );
+  for (const approved of applyShippingLineOverrides(registry, overrides)) {
     const row = data.shippingLines.find(({ scac }) => scac === approved.scac);
     for (const key of ['billOfLading', 'bookingNumber', 'containerNumber'])
       assert.equal(
@@ -889,4 +904,124 @@ test('terminals sharing an SMDG code in different ports cannot inherit a declara
   assert.equal(imported.terminals[0].features.lastFreeDay, 'supported');
   assert.equal(imported.terminals[1].smdgCode, 'ABC');
   assert.equal(imported.terminals[1].features.lastFreeDay, 'unknown');
+});
+
+test('reviewed carrier state survives fresh observations and overrides historical admission', async (t) => {
+  const fixture = await importFixture(t, (hex, options) => {
+    for (const scac of ['SAFM', 'SEJJ', 'SQQY', 'SMLU', 'TRBR']) {
+      options.carriers.push({
+        ...options.carriers[0],
+        scac,
+        access: 'account',
+        containerNumber: false,
+      });
+      if (scac !== 'SMLU') hex.shipping_lines.push({
+        scac,
+        features: {
+          'Container Number': 'supported',
+          'POD ETA': 'supported',
+        },
+      });
+    }
+    options.shippingOverrides = {
+      SAFM: { enabled: false },
+      SEJJ: { enabled: false },
+      SQQY: { enabled: false },
+      SMLU: {
+        access: 'public',
+        trackingIdentifiers: { containerNumber: true },
+      },
+    };
+  });
+  assert.equal(fixture.result.status, 0, fixture.result.stderr);
+  const imported = JSON.parse(
+    await fixture.read('docs/data/coverage/coverage.json'),
+  );
+  for (const scac of ['SAFM', 'SEJJ', 'SQQY']) {
+    assert.ok(!imported.shippingLines.some((row) => row.scac === scac));
+    assert.ok(
+      !JSON.parse(
+        await fixture.read('docs/data/coverage/shipping-lines.json'),
+      ).shippingLines.some((row) => row.scac === scac),
+    );
+  }
+  const seaboard = imported.shippingLines.find(
+    (row) => row.scac === 'SMLU',
+  );
+  assert.equal(seaboard.access, 'public');
+  assert.equal(seaboard.features.containerNumber, 'supported');
+  assert.equal(seaboard.features.podEta, 'unknown');
+  const turkon = imported.shippingLines.find(
+    (row) => row.scac === 'TRBR',
+  );
+  assert.equal(turkon.access, 'account');
+  assert.equal(turkon.features.containerNumber, 'unsupported');
+});
+
+test('shipping overrides require exact primary SCACs and reviewed field types', () => {
+  const registry = [
+    {
+      scac: 'SMLU',
+      alternativeScacs: ['ALIA'],
+      access: 'account',
+      containerNumber: false,
+    },
+  ];
+  for (const overrides of [
+    null,
+    [],
+    { ALIA: { enabled: false } },
+    { XXXX: { enabled: false } },
+    { SMLU: {} },
+    { SMLU: { name: 'Changed' } },
+    { SMLU: { enabled: 'false' } },
+    { SMLU: { access: 'private' } },
+    { SMLU: { trackingIdentifiers: [] } },
+    { SMLU: { trackingIdentifiers: {} } },
+    { SMLU: { trackingIdentifiers: { podEta: true } } },
+    { SMLU: { trackingIdentifiers: { containerNumber: 'true' } } },
+  ])
+    assert.throws(
+      () => validateShippingLineOverrides(overrides, registry),
+      /Invalid shipping line/,
+    );
+  assert.deepEqual(applyShippingLineOverrides(registry, {}), registry);
+  assert.deepEqual(
+    applyShippingLineOverrides(
+      registry,
+      Object.create({ SMLU: { enabled: false } }),
+    ),
+    registry,
+  );
+  assert.deepEqual(
+    applyShippingLineOverrides(registry, {
+      SMLU: {
+        access: 'public',
+        trackingIdentifiers: { containerNumber: true },
+      },
+    }),
+    [{ ...registry[0], access: 'public', containerNumber: true }],
+  );
+  assert.deepEqual(
+    applyShippingLineOverrides(registry, { SMLU: { enabled: false } }),
+    [],
+  );
+});
+
+test('CLI requires the shipping override file and rejects invalid review state', async (t) => {
+  for (const mutate of [
+    (_hex, options) => {
+      options.omitShippingOverrides = true;
+    },
+    (_hex, options) => {
+      options.shippingOverrides = { ALIA: { enabled: false } };
+    },
+  ]) {
+    const fixture = await importFixture(t, mutate);
+    assert.notEqual(fixture.result.status, 0);
+    await assert.rejects(
+      fixture.read('docs/data/coverage/coverage.json'),
+      { code: 'ENOENT' },
+    );
+  }
 });

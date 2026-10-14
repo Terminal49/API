@@ -132,6 +132,73 @@ export function validateTerminalCapabilities(capabilities) {
   }
 }
 
+export function validateShippingLineOverrides(overrides, registry) {
+  if (
+    !overrides ||
+    typeof overrides !== 'object' ||
+    Array.isArray(overrides)
+  )
+    throw new Error('Invalid shipping line overrides');
+  const primaryScacs = new Set(registry.map(({ scac }) => scac));
+  for (const [scac, override] of Object.entries(overrides)) {
+    if (
+      !primaryScacs.has(scac) ||
+      !override ||
+      typeof override !== 'object' ||
+      Array.isArray(override) ||
+      Object.keys(override).length === 0 ||
+      Object.keys(override).some(
+        (key) =>
+          !['enabled', 'access', 'trackingIdentifiers'].includes(key),
+      ) ||
+      ('enabled' in override && typeof override.enabled !== 'boolean') ||
+      ('access' in override &&
+        !['public', 'account'].includes(override.access))
+    )
+      throw new Error('Invalid shipping line override for ' + scac);
+    if ('trackingIdentifiers' in override) {
+      const identifiers = override.trackingIdentifiers;
+      if (
+        !identifiers ||
+        typeof identifiers !== 'object' ||
+        Array.isArray(identifiers) ||
+        Object.keys(identifiers).length === 0 ||
+        Object.entries(identifiers).some(
+          ([key, value]) =>
+            ![
+              'billOfLading',
+              'bookingNumber',
+              'containerNumber',
+            ].includes(key) || typeof value !== 'boolean',
+        )
+      )
+        throw new Error(
+          'Invalid shipping line tracking override for ' + scac,
+        );
+    }
+  }
+}
+
+export function applyShippingLineOverrides(registry, overrides) {
+  validateShippingLineOverrides(overrides, registry);
+  return registry
+    .filter(
+      ({ scac }) =>
+        !Object.hasOwn(overrides, scac) ||
+        overrides[scac].enabled !== false,
+    )
+    .map((carrier) => {
+      const override = Object.hasOwn(overrides, carrier.scac)
+        ? overrides[carrier.scac]
+        : undefined;
+      return {
+        ...carrier,
+        ...(override?.access ? { access: override.access } : {}),
+        ...override?.trackingIdentifiers,
+      };
+    });
+}
+
 async function importHex(filename) {
   const hex = JSON.parse(await readFile(filename, 'utf8'));
   const identity = await read('docs/snippets/data-sources/coverage-data.mdx');
@@ -268,7 +335,13 @@ async function importHex(filename) {
       };
     },
   );
-  const shippingLines = exportValue(identity, 'carriers').map(
+  const shippingOverrides = JSON.parse(
+    await read('tools/data/shipping-line-overrides.json'),
+  );
+  const shippingLines = applyShippingLineOverrides(
+    exportValue(identity, 'carriers'),
+    shippingOverrides,
+  ).map(
     ({ billOfLading, bookingNumber, containerNumber, ...carrier }) => ({
       ...carrier,
       features: {

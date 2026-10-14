@@ -1,0 +1,17 @@
+{
+  "SAFM": {
+    "enabled": false
+  },
+  "SEJJ": {
+    "enabled": false
+  },
+  "SQQY": {
+    "enabled": false
+  },
+  "SMLU": {
+    "access": "public",
+    "trackingIdentifiers": {
+      "containerNumber": true
+    }
+  }
+}
