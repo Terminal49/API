@@ -26,7 +26,6 @@ const DEFAULT_CONTAINER_INCLUDES = [
   'pod_terminal',
   'pickup_facility',
 ] as const satisfies readonly ContainerInclude[];
-const DEFAULT_ROUTE_INCLUDE = 'port,vessel,route_location';
 
 export class ContainerManager extends BaseManager {
   async get(

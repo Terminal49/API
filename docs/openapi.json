@@ -12559,7 +12559,8 @@
                     "value": {
                       "errors": [
                         {
-                          "detail": "invalid API token"
+                          "detail": "invalid API token",
+                          "title": "Unauthorized"
                         }
                       ]
                     }
@@ -12650,7 +12651,8 @@
                     "value": {
                       "errors": [
                         {
-                          "detail": "invalid API token"
+                          "detail": "invalid API token",
+                          "title": "Unauthorized"
                         }
                       ]
                     }
@@ -15204,12 +15206,11 @@
         "x-examples": {}
       },
       "user": {
-        "title": "User model",
+        "description": "Related JSON:API user resource. Returned attributes depend on the relationship and caller permissions.",
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "format": "uuid"
+            "type": "string"
           },
           "type": {
             "type": "string",
@@ -15219,15 +15220,9 @@
           },
           "attributes": {
             "type": "object",
-            "description": "User attributes. Available fields depend on the endpoint.",
             "additionalProperties": true
           }
-        },
-        "required": [
-          "id",
-          "type",
-          "attributes"
-        ]
+        }
       },
       "error": {
         "title": "Error model",
@@ -18387,25 +18382,6 @@
                 }
               }
             }
-          }
-        }
-      },
-      "user": {
-        "description": "Related JSON:API user resource. Returned attributes depend on the relationship and caller permissions.",
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "user"
-            ]
-          },
-          "attributes": {
-            "type": "object",
-            "additionalProperties": true
           }
         }
       },
