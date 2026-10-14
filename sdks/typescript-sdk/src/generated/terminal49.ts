@@ -3144,7 +3144,7 @@ export interface components {
             relationships: {
                 /** @description The account this credential is scoped to. */
                 account: {
-                    data?: {
+                    data: {
                         /** Format: uuid */
                         id: string;
                         /** @enum {string} */
@@ -3153,7 +3153,7 @@ export interface components {
                 };
                 /** @description The signed-in user. `data` is `null` for an API key unless the request also carried `x-user-email`. */
                 user: {
-                    data?: {
+                    data: {
                         /** Format: uuid */
                         id: string;
                         /** @enum {string} */
@@ -8413,7 +8413,10 @@ export interface operations {
     "get-me": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Select an account accessible to the signed-in user. Defaults to the user's primary account. API keys remain scoped to their own account. */
+                "x-account-id"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -8427,8 +8430,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["credential"];
-                        /** @description The current account, the signed-in user when there is one, and the other accounts that user can switch to. */
-                        included?: (components["schemas"]["credential_account"] | components["schemas"]["credential_user"])[];
+                        /** @description Includes the current account, the linked user when present, and every account in that user's accounts relationship. Linked resources are always included. */
+                        included: (components["schemas"]["credential_account"] | components["schemas"]["credential_user"])[];
                     };
                 };
             };

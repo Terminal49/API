@@ -100,6 +100,45 @@ describe('Terminal49Client.me', () => {
     ]);
   });
 
+  it.each([
+    [
+      'included account',
+      (doc: any) => {
+        doc.included = [];
+      },
+    ],
+    [
+      'account linkage',
+      (doc: any) => {
+        delete doc.data.relationships.account.data;
+      },
+    ],
+    [
+      'account company name',
+      (doc: any) => {
+        delete doc.included[0].attributes.company_name;
+      },
+    ],
+  ])('rejects a mapped credential missing %s', async (_name, corrupt) => {
+    const doc = structuredClone(apiKeyDoc);
+    corrupt(doc);
+    const { client } = clientFor(doc);
+
+    await expect(client.me({ format: 'mapped' })).rejects.toThrow(
+      'Invalid /me response',
+    );
+  });
+
+  it('rejects a mapped credential missing the included user', async () => {
+    const doc = structuredClone(userDoc);
+    doc.included = doc.included.filter((item: any) => item.type !== 'user');
+    const { client } = clientFor(doc);
+
+    await expect(client.me({ format: 'mapped' })).rejects.toThrow(
+      'Invalid /me response',
+    );
+  });
+
   it('returns both shapes when asked', async () => {
     const { client } = clientFor(userDoc);
 

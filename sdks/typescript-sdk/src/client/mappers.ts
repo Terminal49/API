@@ -513,7 +513,15 @@ function mapCurrentAccount(
   resource: any,
   trackingSlots: boolean,
 ): CurrentAccount {
-  const attrs = resource?.attributes || {};
+  if (
+    typeof resource?.id !== 'string' ||
+    typeof resource?.attributes?.company_name !== 'string'
+  ) {
+    throw new Error(
+      'Invalid /me response: linked account must be included with its company name',
+    );
+  }
+  const attrs = resource.attributes;
   const account: CurrentAccount = {
     id: resource.id,
     companyName: attrs.company_name,
@@ -540,14 +548,19 @@ export function mapCurrentCredential(doc: any): CurrentCredential {
     included.find((item) => item?.type === type && item?.id === id);
 
   const accountRef = data.relationships?.account?.data;
-  const accountResource = find('account', accountRef?.id) || accountRef;
+  const accountResource = find('account', accountRef?.id);
   const account = mapCurrentAccount(accountResource, true);
 
   const userRef = data.relationships?.user?.data;
   let user: CurrentUser | null = null;
   if (userRef?.id) {
-    const userResource = find('user', userRef.id) || userRef;
-    const userAttrs = userResource.attributes || {};
+    const userResource = find('user', userRef.id);
+    if (typeof userResource?.attributes?.email !== 'string') {
+      throw new Error(
+        'Invalid /me response: linked user must be included with its email',
+      );
+    }
+    const userAttrs = userResource.attributes;
     const accountRefs: any[] = Array.isArray(
       userResource.relationships?.accounts?.data,
     )
@@ -562,10 +575,7 @@ export function mapCurrentCredential(doc: any): CurrentCredential {
       jobTitle: userAttrs.job_title ?? undefined,
       admin: userAttrs.admin === true,
       accounts: accountRefs.map((ref) =>
-        mapCurrentAccount(
-          find('account', ref.id) || ref,
-          ref.id === account.id,
-        ),
+        mapCurrentAccount(find('account', ref.id), ref.id === account.id),
       ),
     };
   }

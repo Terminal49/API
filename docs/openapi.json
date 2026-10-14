@@ -14714,7 +14714,18 @@
         ],
         "operationId": "get-me",
         "description": "Return the credential that authenticated this request: whether it is an API key or a signed-in user, the account it is scoped to, and which features that credential can use on that account.\n\nAccepts `Authorization: Token <api_key>` and `Authorization: Bearer <user_token>`. A user token selects the account with the `x-account-id` header and defaults to the user's primary account. The response is never cached (`Cache-Control: no-store`).\n\nUnlike most endpoints, an API key on a free plan can call this endpoint: `features.data_out_api.status` tells it which other calls will be refused and why.",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-account-id",
+            "in": "header",
+            "required": false,
+            "description": "Select an account accessible to the signed-in user. Defaults to the user's primary account. API keys remain scoped to their own account.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -14723,7 +14734,8 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "data"
+                    "data",
+                    "included"
                   ],
                   "properties": {
                     "data": {
@@ -14731,7 +14743,7 @@
                     },
                     "included": {
                       "type": "array",
-                      "description": "The current account, the signed-in user when there is one, and the other accounts that user can switch to.",
+                      "description": "Includes the current account, the linked user when present, and every account in that user's accounts relationship. Linked resources are always included.",
                       "items": {
                         "oneOf": [
                           {
@@ -14741,7 +14753,8 @@
                             "$ref": "#/components/schemas/credential_user"
                           }
                         ]
-                      }
+                      },
+                      "minItems": 1
                     }
                   }
                 },
@@ -19403,7 +19416,10 @@
                       }
                     }
                   }
-                }
+                },
+                "required": [
+                  "data"
+                ]
               },
               "user": {
                 "type": "object",
@@ -19429,7 +19445,10 @@
                       }
                     }
                   }
-                }
+                },
+                "required": [
+                  "data"
+                ]
               }
             }
           }
