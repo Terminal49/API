@@ -40,7 +40,7 @@ const htmlLinks = (body) =>
       (attribute) => attribute[1].toLowerCase() === 'href',
     );
     const value = href?.[2] ?? href?.[3] ?? href?.[4];
-    return typeof value === 'string' ? [value.replaceAll('&amp;', '&')] : [];
+    return value === undefined ? [] : [value.replaceAll('&amp;', '&')];
   });
 
 export async function verifyDeployedCoverage({
