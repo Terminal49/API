@@ -14668,11 +14668,9 @@
                           },
                           "type": {
                             "type": "string",
-                            "description": "Resource type",
+                            "description": "Always `search_result`. The matched resource kind is in `attributes.entity_type`.",
                             "enum": [
-                              "shipment",
-                              "cargo",
-                              "tracking_request"
+                              "search_result"
                             ]
                           },
                           "attributes": {
@@ -14680,7 +14678,12 @@
                             "properties": {
                               "entity_type": {
                                 "type": "string",
-                                "description": "Type of the matched entity: `shipment`, `cargo`, or `tracking_request`"
+                                "description": "Type of the matched entity: `shipment`, `cargo` (a container), or `tracking_request`",
+                                "enum": [
+                                  "shipment",
+                                  "cargo",
+                                  "tracking_request"
+                                ]
                               },
                               "number": {
                                 "type": "string",
@@ -14759,7 +14762,7 @@
                   "data": [
                     {
                       "id": "abc12345-6789-40ef-9012-3456789abcde",
-                      "type": "shipment",
+                      "type": "search_result",
                       "attributes": {
                         "entity_type": "shipment",
                         "number": "MEDUA1234567",
@@ -14781,7 +14784,7 @@
                     },
                     {
                       "id": "def45678-9012-43ab-9cde-f0123456789a",
-                      "type": "cargo",
+                      "type": "search_result",
                       "attributes": {
                         "entity_type": "cargo",
                         "number": "MSCU1234567",

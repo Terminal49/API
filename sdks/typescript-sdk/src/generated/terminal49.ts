@@ -8593,7 +8593,7 @@ export interface operations {
                      *       "data": [
                      *         {
                      *           "id": "abc12345-6789-40ef-9012-3456789abcde",
-                     *           "type": "shipment",
+                     *           "type": "search_result",
                      *           "attributes": {
                      *             "entity_type": "shipment",
                      *             "number": "MEDUA1234567",
@@ -8615,7 +8615,7 @@ export interface operations {
                      *         },
                      *         {
                      *           "id": "def45678-9012-43ab-9cde-f0123456789a",
-                     *           "type": "cargo",
+                     *           "type": "search_result",
                      *           "attributes": {
                      *             "entity_type": "cargo",
                      *             "number": "MSCU1234567",
@@ -8641,13 +8641,16 @@ export interface operations {
                             /** @description Unique identifier of the matched resource */
                             id?: string;
                             /**
-                             * @description Resource type
+                             * @description Always `search_result`. The matched resource kind is in `attributes.entity_type`.
                              * @enum {string}
                              */
-                            type?: "shipment" | "cargo" | "tracking_request";
+                            type?: "search_result";
                             attributes?: {
-                                /** @description Type of the matched entity: `shipment`, `cargo`, or `tracking_request` */
-                                entity_type?: string;
+                                /**
+                                 * @description Type of the matched entity: `shipment`, `cargo` (a container), or `tracking_request`
+                                 * @enum {string}
+                                 */
+                                entity_type?: "shipment" | "cargo" | "tracking_request";
                                 /** @description BL number (shipments), container number (cargos), or request number (tracking requests) */
                                 number?: string;
                                 /** @description Associated shipment ID (for cargos and tracking requests only) */
