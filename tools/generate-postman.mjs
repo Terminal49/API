@@ -46,9 +46,68 @@ try {
     }
   }
   collect(collection.item);
+  function resolveParameter(parameter) {
+    const visited = new Set();
+    while (parameter.$ref) {
+      if (!parameter.$ref.startsWith('#/') || visited.has(parameter.$ref)) {
+        throw new Error(`Unsupported parameter reference: ${parameter.$ref}`);
+      }
+      visited.add(parameter.$ref);
+      parameter = parameter.$ref
+        .slice(2)
+        .split('/')
+        .reduce(
+          (value, key) => value?.[key.replace(/~1/g, '/').replace(/~0/g, '~')],
+          spec,
+        );
+      if (!parameter) throw new Error('Missing referenced OpenAPI parameter');
+    }
+    return parameter;
+  }
+
   for (const [path, operations] of Object.entries(spec.paths)) {
     for (const [method, operation] of Object.entries(operations)) {
       if (!operation.responses) continue;
+      const parameters = new Map();
+      for (const input of [
+        ...(operations.parameters ?? []),
+        ...(operation.parameters ?? []),
+      ]) {
+        const parameter = resolveParameter(input);
+        parameters.set(`${parameter.in}:${parameter.name}`, parameter);
+      }
+      for (const parameter of parameters.values()) {
+        if (parameter.in !== 'path') continue;
+        const example =
+          parameter.example ??
+          Object.values(parameter.examples ?? {}).find(
+            (value) => 'value' in value,
+          )?.value ??
+          parameter.schema?.example;
+        if (example === undefined) continue;
+        if (!['string', 'number', 'boolean'].includes(typeof example)) {
+          throw new Error(
+            `Unsupported structured path example for ${parameter.name}`,
+          );
+        }
+        for (const item of requests.get(`${method.toUpperCase()} ${path}`) ??
+          []) {
+          for (const request of [
+            item.request,
+            ...item.response.map((response) => response.originalRequest),
+          ]) {
+            const variable = request?.url?.variable?.find(
+              (value) => value.key === parameter.name,
+            );
+            if (!variable)
+              throw new Error(
+                `Missing generated path parameter ${parameter.name}`,
+              );
+            variable.value = String(example);
+          }
+        }
+      }
+
       for (const [status, response] of Object.entries(operation.responses)) {
         const content = response.content?.['application/json'];
         const example =

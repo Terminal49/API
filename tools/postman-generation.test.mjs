@@ -79,3 +79,22 @@ test('schema-based webhook edit request bodies survive response example generati
   assert.equal(body.data.type, 'webhook');
   assert.equal(typeof body.data.attributes.url, 'string');
 });
+
+test('document type detail requests use the declared path example', () => {
+  const item = requests(collection.item).find(
+    (candidate) => candidate.name === 'Get a document type',
+  );
+  assert.ok(item);
+  assert.equal(
+    item.request.url.variable.find((parameter) => parameter.key === 'code')
+      .value,
+    'packing_list',
+  );
+  const code = item.request.url.variable.find(
+    (parameter) => parameter.key === 'code',
+  ).value;
+  assert.equal(
+    item.request.url.path.join('/').replace(':code', code),
+    'documents/types/packing_list',
+  );
+});
