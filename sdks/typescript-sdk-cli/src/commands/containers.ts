@@ -1,7 +1,7 @@
 /**
  * t49 containers <action>
  *
- * Subcommands: get, list, events, route, map (alias of route), raw-events, refresh, demurrage, rail
+ * Subcommands: get, list, events, route, map (deprecated, GeoJSON), raw-events, refresh, demurrage, rail
  */
 
 import type { Command } from 'commander';
@@ -202,7 +202,9 @@ export function registerContainersCommand(program: Command): void {
 
   cmd
     .command('route <id>')
-    .description('Fetch container route')
+    .description(
+      'Fetch container route ports and current vessel (--format raw for GeoJSON)',
+    )
     .action(
       action('containers.route', async ({ client, globals }, id: string) =>
         client.containers.route(id, { format: globals.format }),
@@ -211,7 +213,9 @@ export function registerContainersCommand(program: Command): void {
 
   cmd
     .command('map <id>')
-    .description('Fetch container route geometry as GeoJSON')
+    .description(
+      'Fetch container route geometry as GeoJSON (deprecated: use route)',
+    )
     .action(
       action('containers.map', async ({ client, globals }, id: string) =>
         client.containers.map(id, { format: globals.format }),

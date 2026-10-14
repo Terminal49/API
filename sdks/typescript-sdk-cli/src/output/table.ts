@@ -63,7 +63,6 @@ const commandColumns: Record<string, ColumnDef[]> = {
     { key: ['value', 'attributes.value'], title: 'Value' },
   ],
   'containers.route': ROUTE_PORT_COLUMNS,
-  'containers.map': ROUTE_PORT_COLUMNS,
   'containers.demurrage': [
     { key: 'container_id', title: 'Container ID' },
     { key: 'pickup_lfd', title: 'Pickup LFD' },
@@ -588,7 +587,7 @@ function rowsForCommand(
     return record.mapped as Record<string, unknown>[];
   }
 
-  if (command === 'containers.route' || command === 'containers.map') {
+  if (command === 'containers.route') {
     const mapped = record?.mapped;
     const route =
       mapped && typeof mapped === 'object' && !Array.isArray(mapped)

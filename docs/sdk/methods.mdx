@@ -37,7 +37,7 @@ The SDK exposes a `Terminal49Client` with methods grouped by resource type. Each
 | `client.containers.get(id, include?, options?)` | Fetch a container by ID. `include` is an array of related resources. |
 | `client.containers.list(filters?, options?)` | List containers matching filter criteria. |
 | `client.containers.events(id, options?)` | Get transport events for a container. |
-| `client.containers.route(id, options?)` | Get the container's route from `GET /containers/{id}/map_geojson`. `raw` returns the GeoJSON FeatureCollection. `mapped` returns `{ ports, currentVessel, totalPorts }`, with ports in route order and their arrival and departure times. Requires the Routing Data feature. `client.containers.map` is a deprecated alias. |
+| `client.containers.route(id, options?)` | Get the container's route from `GET /containers/{id}/map_geojson`. `raw` returns the GeoJSON FeatureCollection. `mapped` returns `{ ports, currentVessel, totalPorts }`, with ports in route order and their arrival and departure times. Requires the Routing Data feature. `client.containers.map` is deprecated and always returns the GeoJSON FeatureCollection. |
 | `client.containers.rawEvents(id, options?)` | Get unprocessed events as received from carriers. |
 | `client.containers.refresh(id, options?)` | Request an immediate data refresh from the carrier. |
 

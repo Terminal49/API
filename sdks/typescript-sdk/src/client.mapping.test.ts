@@ -572,7 +572,7 @@ describe('Terminal49Client mapping helpers', () => {
     });
   });
 
-  it('keeps the GeoJSON body as the raw half and serves map() as an alias', async () => {
+  it('keeps the GeoJSON body as the raw half, and map() still returns GeoJSON', async () => {
     const fixture = loadFixture('containers.map_geojson');
     const { fetchImpl, calls } = createMockFetch({
       '/containers/cont-1/map_geojson': () => jsonResponse(fixture),
@@ -587,7 +587,7 @@ describe('Terminal49Client mapping helpers', () => {
     const viaMap = await client.containers.map('cont-1', { format: 'mapped' });
 
     expect(both.raw).toEqual(fixture);
-    expect(viaMap).toEqual(both.mapped);
+    expect(viaMap).toEqual(fixture);
     expect(calls.map((c) => c.url.pathname)).toEqual([
       '/v2/containers/cont-1/map_geojson',
       '/v2/containers/cont-1/map_geojson',

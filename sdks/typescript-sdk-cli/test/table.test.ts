@@ -139,17 +139,31 @@ describe('renderTable', () => {
       totalPorts: 2,
     };
 
-    for (const command of ['containers.route', 'containers.map']) {
-      const lines = renderTable(command, route).split('\n');
-      const header = lines.find((line) => line.includes('Seq'));
-      expect(header).toMatch(
-        /Seq.*Label.*Port.*Country.*Inbound ETA.*Inbound ATA.*Outbound ETD.*Outbound ATD/,
-      );
-      const pol = lines.findIndex((line) => line.includes('Laem Chabang'));
-      const pod = lines.findIndex((line) => line.includes('Savannah'));
-      expect(lines[pol]).toMatch(/1.*POL.*Laem Chabang.*TH.*2025-11-08/);
-      expect(lines[pod]).toMatch(/3.*POD.*Savannah.*US.*2025-12-31/);
-      expect(pol).toBeLessThan(pod);
-    }
+    const lines = renderTable('containers.route', route).split('\n');
+    const header = lines.find((line) => line.includes('Seq'));
+    expect(header).toMatch(
+      /Seq.*Label.*Port.*Country.*Inbound ETA.*Inbound ATA.*Outbound ETD.*Outbound ATD/,
+    );
+    const pol = lines.findIndex((line) => line.includes('Laem Chabang'));
+    const pod = lines.findIndex((line) => line.includes('Savannah'));
+    expect(lines[pol]).toMatch(/1.*POL.*Laem Chabang.*TH.*2025-11-08/);
+    expect(lines[pod]).toMatch(/3.*POD.*Savannah.*US.*2025-12-31/);
+    expect(pol).toBeLessThan(pod);
+  });
+
+  it('does not render containers map GeoJSON as route ports', () => {
+    const geojson = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [100.88, 13.08] },
+          properties: { feature_type: 'port', name: 'Laem Chabang' },
+        },
+      ],
+    };
+    const table = renderTable('containers.map', geojson);
+    expect(table).toMatch(/│ FeatureCollection │/);
+    expect(table).not.toMatch(/Seq.*Label/);
   });
 });

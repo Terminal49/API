@@ -151,9 +151,13 @@ export class ContainerManager extends BaseManager {
     return this.formatResult(raw, options?.format, mapContainerRoute);
   }
 
-  /** @deprecated Use {@link ContainerManager.route}. */
+  /**
+   * @deprecated Use {@link ContainerManager.route}. Returns the GeoJSON
+   * FeatureCollection in every format.
+   */
   async map(id: string, options?: CallOptions): Promise<any> {
-    return this.route(id, options);
+    const raw = await this.route(id, { format: 'raw' });
+    return this.formatResult(raw, options?.format);
   }
 
   /** Create a custom field value on a container. */
