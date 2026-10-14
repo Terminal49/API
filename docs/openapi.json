@@ -3981,32 +3981,7 @@
                     "included": {
                       "type": "array",
                       "items": {
-                        "anyOf": [
-                          {
-                            "$ref": "#/components/schemas/webhook"
-                          },
-                          {
-                            "$ref": "#/components/schemas/tracking_request"
-                          },
-                          {
-                            "$ref": "#/components/schemas/transport_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/estimated_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/container_updated_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document_representation"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document_email_submission"
-                          }
-                        ]
+                        "$ref": "#/components/schemas/webhook_notification_included"
                       }
                     }
                   }
@@ -4680,32 +4655,7 @@
                     "included": {
                       "type": "array",
                       "items": {
-                        "anyOf": [
-                          {
-                            "$ref": "#/components/schemas/webhook"
-                          },
-                          {
-                            "$ref": "#/components/schemas/tracking_request"
-                          },
-                          {
-                            "$ref": "#/components/schemas/transport_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/estimated_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/container_updated_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document_representation"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document_email_submission"
-                          }
-                        ]
+                        "$ref": "#/components/schemas/webhook_notification_included"
                       }
                     }
                   }
@@ -4757,65 +4707,25 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/webhook_notification"
-                      }
-                    },
-                    "links": {
-                      "$ref": "#/components/schemas/links"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/meta"
+                      "$ref": "#/components/schemas/webhook_notification"
                     },
                     "included": {
                       "type": "array",
                       "items": {
-                        "anyOf": [
-                          {
-                            "$ref": "#/components/schemas/webhook"
-                          },
-                          {
-                            "$ref": "#/components/schemas/tracking_request"
-                          },
-                          {
-                            "$ref": "#/components/schemas/transport_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/estimated_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/container_updated_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document_representation"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document_email_submission"
-                          },
-                          {
-                            "$ref": "#/components/schemas/container_created_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/link"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document_observation"
-                          }
-                        ]
+                        "$ref": "#/components/schemas/webhook_notification_included"
                       }
                     }
                   }
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           }
         },
         "operationId": "get-webhook-notifications-example",
-        "description": "Returns an example payload as it would be sent to a webhook endpoint for the provided `event` ",
+        "description": "Returns an example payload as it would be sent to a webhook endpoint for the provided `event`. The event must be one your account can subscribe to; otherwise the API returns 400.",
         "tags": [
           "Webhook Notifications"
         ],
@@ -4876,7 +4786,8 @@
             },
             "in": "query",
             "name": "event",
-            "description": "The webhook notification event name you wish to see an example of"
+            "description": "The webhook notification event name you wish to see an example of",
+            "required": true
           }
         ]
       },
@@ -17938,10 +17849,14 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "type": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "container_pod_terminal_changed_event"
+            ]
           },
           "attributes": {
             "type": "object",
@@ -17969,53 +17884,70 @@
               "container": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "container"
-                    ]
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "container"
+                        ]
+                      }
+                    }
                   }
                 }
               },
               "shipment": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "shipment"
-                    ]
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "shipment"
+                        ]
+                      }
+                    }
                   }
                 }
               },
               "terminal": {
                 "type": "object",
-                "description": "The terminal the container has changed to. If this container is still on the vessel this represents an advisory. If it was previously at the terminal this represents an off-dock move.",
                 "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "terminal"
-                    ]
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "terminal"
+                        ]
+                      }
+                    }
                   }
-                }
+                },
+                "description": "The terminal the container has changed to. If this container is still on the vessel this represents an advisory. If it was previously at the terminal this represents an off-dock move."
               }
             }
           }
-        },
-        "description": ""
+        }
       },
       "party": {
         "title": "Party model",
@@ -19969,6 +19901,72 @@
             }
           }
         }
+      },
+      "webhook_notification_included": {
+        "title": "Webhook notification included resource",
+        "description": "A resource that can appear in `included` on a webhook notification response.",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/webhook"
+          },
+          {
+            "$ref": "#/components/schemas/tracking_request"
+          },
+          {
+            "$ref": "#/components/schemas/transport_event"
+          },
+          {
+            "$ref": "#/components/schemas/estimated_event"
+          },
+          {
+            "$ref": "#/components/schemas/container_updated_event"
+          },
+          {
+            "$ref": "#/components/schemas/container_pod_terminal_changed_event"
+          },
+          {
+            "$ref": "#/components/schemas/container_created_event"
+          },
+          {
+            "$ref": "#/components/schemas/document"
+          },
+          {
+            "$ref": "#/components/schemas/document_representation"
+          },
+          {
+            "$ref": "#/components/schemas/document_email_submission"
+          },
+          {
+            "$ref": "#/components/schemas/document_observation"
+          },
+          {
+            "$ref": "#/components/schemas/link"
+          },
+          {
+            "$ref": "#/components/schemas/shipment"
+          },
+          {
+            "$ref": "#/components/schemas/container"
+          },
+          {
+            "$ref": "#/components/schemas/port"
+          },
+          {
+            "$ref": "#/components/schemas/metro_area"
+          },
+          {
+            "$ref": "#/components/schemas/terminal"
+          },
+          {
+            "$ref": "#/components/schemas/vessel"
+          },
+          {
+            "$ref": "#/components/schemas/shipping_line"
+          },
+          {
+            "$ref": "#/components/schemas/account"
+          }
+        ]
       },
       "feature_availability": {
         "title": "Feature availability",

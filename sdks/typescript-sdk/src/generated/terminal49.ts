@@ -345,7 +345,7 @@ export interface paths {
         };
         /**
          * Get webhook notification payload examples
-         * @description Returns an example payload as it would be sent to a webhook endpoint for the provided `event`
+         * @description Returns an example payload as it would be sent to a webhook endpoint for the provided `event`. The event must be one your account can subscribe to; otherwise the API returns 400.
          */
         get: operations["get-webhook-notifications-example"];
         put?: never;
@@ -2430,8 +2430,10 @@ export interface components {
         };
         /** Container Pod Terminal Changed Event */
         container_pod_terminal_changed_event: {
+            /** Format: uuid */
             id?: string;
-            type?: string;
+            /** @enum {string} */
+            type?: "container_pod_terminal_changed_event";
             attributes?: {
                 /**
                  * @description Where the information about the terminal change came from
@@ -2447,23 +2449,29 @@ export interface components {
             };
             relationships?: {
                 container?: {
-                    /** Format: uuid */
-                    id?: string;
-                    /** @enum {string} */
-                    type?: "container";
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "container";
+                    } | null;
                 };
                 shipment?: {
-                    /** Format: uuid */
-                    id?: string;
-                    /** @enum {string} */
-                    type?: "shipment";
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "shipment";
+                    } | null;
                 };
                 /** @description The terminal the container has changed to. If this container is still on the vessel this represents an advisory. If it was previously at the terminal this represents an off-dock move. */
                 terminal?: {
-                    /** Format: uuid */
-                    id?: string;
-                    /** @enum {string} */
-                    type?: "terminal";
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "terminal";
+                    } | null;
                 };
             };
         };
@@ -3305,6 +3313,11 @@ export interface components {
                 };
             };
         };
+        /**
+         * Webhook notification included resource
+         * @description A resource that can appear in `included` on a webhook notification response.
+         */
+        webhook_notification_included: components["schemas"]["webhook"] | components["schemas"]["tracking_request"] | components["schemas"]["transport_event"] | components["schemas"]["estimated_event"] | components["schemas"]["container_updated_event"] | components["schemas"]["container_pod_terminal_changed_event"] | components["schemas"]["container_created_event"] | components["schemas"]["document"] | components["schemas"]["document_representation"] | components["schemas"]["document_email_submission"] | components["schemas"]["document_observation"] | components["schemas"]["link"] | components["schemas"]["shipment"] | components["schemas"]["container"] | components["schemas"]["port"] | components["schemas"]["metro_area"] | components["schemas"]["terminal"] | components["schemas"]["vessel"] | components["schemas"]["shipping_line"] | components["schemas"]["account"];
         /** Feature availability */
         feature_availability: {
             /**
@@ -4789,7 +4802,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["webhook_notification"];
-                        included?: (components["schemas"]["webhook"] | components["schemas"]["tracking_request"] | components["schemas"]["transport_event"] | components["schemas"]["estimated_event"] | components["schemas"]["container_updated_event"] | components["schemas"]["document"] | components["schemas"]["document_representation"] | components["schemas"]["document_email_submission"])[];
+                        included?: components["schemas"]["webhook_notification_included"][];
                     };
                 };
             };
@@ -4819,7 +4832,7 @@ export interface operations {
                         data?: components["schemas"]["webhook_notification"][];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
-                        included?: (components["schemas"]["webhook"] | components["schemas"]["tracking_request"] | components["schemas"]["transport_event"] | components["schemas"]["estimated_event"] | components["schemas"]["container_updated_event"] | components["schemas"]["document"] | components["schemas"]["document_representation"] | components["schemas"]["document_email_submission"])[];
+                        included?: components["schemas"]["webhook_notification_included"][];
                     };
                 };
             };
@@ -4827,9 +4840,9 @@ export interface operations {
     };
     "get-webhook-notifications-example": {
         parameters: {
-            query?: {
+            query: {
                 /** @description The webhook notification event name you wish to see an example of */
-                event?: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "shipment.routing.filled" | "link.created";
+                event: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "shipment.routing.filled" | "link.created";
             };
             header?: never;
             path?: never;
@@ -4844,13 +4857,12 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data?: components["schemas"]["webhook_notification"][];
-                        links?: components["schemas"]["links"];
-                        meta?: components["schemas"]["meta"];
-                        included?: (components["schemas"]["webhook"] | components["schemas"]["tracking_request"] | components["schemas"]["transport_event"] | components["schemas"]["estimated_event"] | components["schemas"]["container_updated_event"] | components["schemas"]["document"] | components["schemas"]["document_representation"] | components["schemas"]["document_email_submission"] | components["schemas"]["container_created_event"] | components["schemas"]["link"] | components["schemas"]["document_observation"])[];
+                        data?: components["schemas"]["webhook_notification"];
+                        included?: components["schemas"]["webhook_notification_included"][];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
         };
     };
     "get-webhooks-ips": {
