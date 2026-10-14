@@ -1204,7 +1204,7 @@ export interface paths {
         head?: never;
         /**
          * Edit a document
-         * @description Updates manual extraction and classification fields.
+         * @description Updates the document type, classification notes, and manual extraction data.
          */
         patch: operations["patch-documents-id"];
         trace?: never;
@@ -3062,10 +3062,13 @@ export interface components {
                 id?: string;
                 /** @description Display name of the document. */
                 name?: string;
-                /** @description System-classified document type. */
+                /** @description Document type code. See `GET /documents/types` for allowed values. */
                 document_type?: string;
-                /** @description Document type set manually by a user, when available. */
-                document_type_manual?: string | null;
+                /**
+                 * @description Who set `document_type`: `customer` (set through the API or app), `admin` (Terminal49 staff) or `llm` (automatic classification).
+                 * @enum {string|null}
+                 */
+                document_type_source?: "customer" | "admin" | "llm" | null;
                 /** @description Additional notes captured during document classification. */
                 classification_notes?: string | null;
                 /**
@@ -8304,8 +8307,10 @@ export interface operations {
                         /** @enum {string} */
                         type: "document";
                         attributes: {
-                            /** @description Manually override the document type. */
-                            document_type_manual?: string;
+                            /** @description Document type code. Must be one of the codes from `GET /documents/types`. Setting it marks `document_type_source` as `customer`. The API does not validate unknown codes as a 422; it currently returns 500 for them. */
+                            document_type?: string;
+                            /** @description Notes about how the document was classified. */
+                            classification_notes?: string | null;
                             /** @description Manually provide extracted key/value data. Set to null to clear manual values. */
                             extracted_data_manual?: {
                                 [key: string]: unknown;
@@ -8340,6 +8345,7 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-documents-id-download_url": {

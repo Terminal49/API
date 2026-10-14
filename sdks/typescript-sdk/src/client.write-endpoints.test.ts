@@ -219,7 +219,7 @@ describe('documents', () => {
       data: {
         type: 'document',
         attributes: {
-          document_type_manual: 'bill_of_lading',
+          document_type: 'bill_of_lading',
           extracted_data_manual: null,
         },
       },

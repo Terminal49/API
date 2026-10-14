@@ -121,7 +121,7 @@ export class DocumentManager extends BaseManager {
   ): Promise<any> {
     const attributes: DocumentUpdateAttributes = {};
     if (params.documentTypeManual !== undefined) {
-      attributes.document_type_manual = params.documentTypeManual;
+      attributes.document_type = params.documentTypeManual;
     }
     if (params.extractedDataManual !== undefined) {
       attributes.extracted_data_manual = params.extractedDataManual;

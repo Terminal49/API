@@ -13655,7 +13655,7 @@
       },
       "patch": {
         "summary": "Edit a document",
-        "description": "Updates manual extraction and classification fields.",
+        "description": "Updates the document type, classification notes, and manual extraction data.",
         "tags": [
           "Documents"
         ],
@@ -13693,9 +13693,14 @@
                       "attributes": {
                         "type": "object",
                         "properties": {
-                          "document_type_manual": {
+                          "document_type": {
                             "type": "string",
-                            "description": "Manually override the document type."
+                            "description": "Document type code. Must be one of the codes from `GET /documents/types`. Setting it marks `document_type_source` as `customer`. The API does not validate unknown codes as a 422; it currently returns 500 for them."
+                          },
+                          "classification_notes": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Notes about how the document was classified."
                           },
                           "extracted_data_manual": {
                             "type": "object",
@@ -13790,6 +13795,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "operationId": "patch-documents-id"
@@ -19484,12 +19492,17 @@
                 "type": "string"
               },
               "document_type": {
-                "description": "System-classified document type.",
+                "description": "Document type code. See `GET /documents/types` for allowed values.",
                 "type": "string"
               },
-              "document_type_manual": {
-                "description": "Document type set manually by a user, when available.",
+              "document_type_source": {
+                "description": "Who set `document_type`: `customer` (set through the API or app), `admin` (Terminal49 staff) or `llm` (automatic classification).",
                 "type": "string",
+                "enum": [
+                  "customer",
+                  "admin",
+                  "llm"
+                ],
                 "nullable": true
               },
               "classification_notes": {
