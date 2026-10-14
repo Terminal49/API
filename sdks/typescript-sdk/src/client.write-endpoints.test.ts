@@ -399,6 +399,12 @@ describe('resource methods on the client', () => {
     ]);
   });
 
+  it('clamps page[size] to the API maximum', async () => {
+    const { client, calls } = buildClient();
+    await client.parties.list({ pageSize: 500 });
+    expect(calls[0].query).toEqual({ 'page[size]': '100' });
+  });
+
   it('returns the response body the API served', async () => {
     const { client } = buildClient();
     await expect(client.webhooks.get('w-1')).resolves.toEqual({
