@@ -2284,7 +2284,8 @@
                                 "properties": {
                                   "self": {
                                     "type": "string",
-                                    "format": "uri"
+                                    "format": "uri-reference",
+                                    "description": "Path of this resource, relative to the API host (for example `/v2/shipments/{id}`)."
                                   }
                                 }
                               }
@@ -15460,7 +15461,8 @@
             "properties": {
               "self": {
                 "type": "string",
-                "format": "uri"
+                "format": "uri-reference",
+                "description": "Path of this resource, relative to the API host (for example `/v2/shipments/{id}`)."
               }
             },
             "required": [
@@ -15494,7 +15496,7 @@
         "properties": {
           "self": {
             "type": "string",
-            "format": "uri"
+            "description": "Absolute URL of the request, including its query string as sent. On a create, this is the collection URL the request was posted to, not the URL of the new resource."
           }
         }
       },
@@ -15502,27 +15504,26 @@
         "title": "links",
         "type": "object",
         "properties": {
-          "last": {
-            "type": "string",
-            "format": "uri"
+          "self": {
+            "type": "string"
           },
-          "next": {
-            "type": "string",
-            "format": "uri"
-          },
-          "prev": {
-            "type": "string",
-            "format": "uri"
+          "current": {
+            "type": "string"
           },
           "first": {
-            "type": "string",
-            "format": "uri"
+            "type": "string"
           },
-          "self": {
-            "type": "string",
-            "format": "uri"
+          "prev": {
+            "type": "string"
+          },
+          "next": {
+            "type": "string"
+          },
+          "last": {
+            "type": "string"
           }
-        }
+        },
+        "description": "Pagination links. Each value is an absolute URL. `self` repeats the request URL as sent, including its query string and its encoding. `current`, `first`, `prev`, `next`, and `last` repeat the request's query parameters, with `page[number]` and `page[size]` in unencoded brackets."
       },
       "container": {
         "title": "Container model",

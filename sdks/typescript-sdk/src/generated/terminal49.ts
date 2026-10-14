@@ -1550,7 +1550,10 @@ export interface components {
             /** @enum {string} */
             type: "shipment";
             links: {
-                /** Format: uri */
+                /**
+                 * Format: uri-reference
+                 * @description Path of this resource, relative to the API host (for example `/v2/shipments/{id}`).
+                 */
                 self: string;
             };
         };
@@ -1561,21 +1564,20 @@ export interface components {
         };
         /** link */
         "link-self": {
-            /** Format: uri */
+            /** @description Absolute URL of the request, including its query string as sent. On a create, this is the collection URL the request was posted to, not the URL of the new resource. */
             self?: string;
         };
-        /** links */
+        /**
+         * links
+         * @description Pagination links. Each value is an absolute URL. `self` repeats the request URL as sent, including its query string and its encoding. `current`, `first`, `prev`, `next`, and `last` repeat the request's query parameters, with `page[number]` and `page[size]` in unencoded brackets.
+         */
         links: {
-            /** Format: uri */
-            last?: string;
-            /** Format: uri */
-            next?: string;
-            /** Format: uri */
-            prev?: string;
-            /** Format: uri */
-            first?: string;
-            /** Format: uri */
             self?: string;
+            current?: string;
+            first?: string;
+            prev?: string;
+            next?: string;
+            last?: string;
         };
         /**
          * Container model
@@ -3867,7 +3869,10 @@ export interface operations {
                             /** @enum {string} */
                             type?: "shipment";
                             links?: {
-                                /** Format: uri */
+                                /**
+                                 * Format: uri-reference
+                                 * @description Path of this resource, relative to the API host (for example `/v2/shipments/{id}`).
+                                 */
                                 self?: string;
                             };
                         })[];
