@@ -309,3 +309,100 @@ describe('search', () => {
     });
   });
 });
+
+describe('resource methods on the client', () => {
+  it('sends the documented method, path, query, and body', async () => {
+    const { client, calls } = buildClient();
+    const body = { data: { attributes: { name: 'n' } } };
+
+    await client.webhooks.list({ page: 2, pageSize: 5 });
+    await client.webhooks.get('w 1');
+    await client.webhooks.create(body);
+    await client.webhooks.update('w-1', body);
+    await client.webhooks.delete('w-1');
+    await client.webhooks.ips();
+    await client.webhookNotifications.list({ page: 3 });
+    await client.webhookNotifications.get('n-1');
+    await client.webhookNotifications.examples('container.created');
+    await client.webhookNotifications.examples();
+    await client.vessels.get('v-1');
+    await client.vessels.getByImo('9876543');
+    await client.vessels.futurePositions('v-1');
+    await client.vessels.futurePositionsWithCoords('v-1');
+    await client.ports.get('p-1');
+    await client.terminals.get('t-1');
+    await client.parties.list({ pageSize: 10 });
+    await client.parties.get('pa-1');
+    await client.metroAreas.get('m-1');
+    await client.customFieldDefinitions.get('d-1');
+    await client.customFieldDefinitions.create(body);
+    await client.customFieldDefinitions.update('d-1', body);
+    await client.customFieldDefinitions.delete('d-1');
+    await client.customFieldOptions.list('d-1', { page: 1, pageSize: 20 });
+    await client.customFieldOptions.get('d-1', 'o-1');
+    await client.customFieldOptions.create('d-1', body);
+    await client.customFieldOptions.update('d-1', 'o-1', body);
+    await client.customFieldOptions.delete('d-1', 'o-1');
+    await client.customFields.get('cf-1');
+    await client.customFields.create(body);
+    await client.customFields.update('cf-1', body);
+    await client.customFields.delete('cf-1');
+
+    expect(calls.map((c) => [c.method, c.path, c.query, c.body])).toEqual([
+      [
+        'GET',
+        '/webhooks',
+        { 'page[number]': '2', 'page[size]': '5' },
+        undefined,
+      ],
+      ['GET', '/webhooks/w%201', {}, undefined],
+      ['POST', '/webhooks', {}, body],
+      ['PATCH', '/webhooks/w-1', {}, body],
+      ['DELETE', '/webhooks/w-1', {}, undefined],
+      ['GET', '/webhooks/ips', {}, undefined],
+      ['GET', '/webhook_notifications', { 'page[number]': '3' }, undefined],
+      ['GET', '/webhook_notifications/n-1', {}, undefined],
+      [
+        'GET',
+        '/webhook_notifications/examples',
+        { event: 'container.created' },
+        undefined,
+      ],
+      ['GET', '/webhook_notifications/examples', {}, undefined],
+      ['GET', '/vessels/v-1', {}, undefined],
+      ['GET', '/vessels/9876543', {}, undefined],
+      ['GET', '/vessels/v-1/future_positions', {}, undefined],
+      ['GET', '/vessels/v-1/future_positions_with_coordinates', {}, undefined],
+      ['GET', '/ports/p-1', {}, undefined],
+      ['GET', '/terminals/t-1', {}, undefined],
+      ['GET', '/parties', { 'page[size]': '10' }, undefined],
+      ['GET', '/parties/pa-1', {}, undefined],
+      ['GET', '/metro_areas/m-1', {}, undefined],
+      ['GET', '/custom_field_definitions/d-1', {}, undefined],
+      ['POST', '/custom_field_definitions', {}, body],
+      ['PATCH', '/custom_field_definitions/d-1', {}, body],
+      ['DELETE', '/custom_field_definitions/d-1', {}, undefined],
+      [
+        'GET',
+        '/custom_field_definitions/d-1/options',
+        { 'page[number]': '1', 'page[size]': '20' },
+        undefined,
+      ],
+      ['GET', '/custom_field_definitions/d-1/options/o-1', {}, undefined],
+      ['POST', '/custom_field_definitions/d-1/options', {}, body],
+      ['PATCH', '/custom_field_definitions/d-1/options/o-1', {}, body],
+      ['DELETE', '/custom_field_definitions/d-1/options/o-1', {}, undefined],
+      ['GET', '/custom_fields/cf-1', {}, undefined],
+      ['POST', '/custom_fields', {}, body],
+      ['PATCH', '/custom_fields/cf-1', {}, body],
+      ['DELETE', '/custom_fields/cf-1', {}, undefined],
+    ]);
+  });
+
+  it('returns the response body the API served', async () => {
+    const { client } = buildClient();
+    await expect(client.webhooks.get('w-1')).resolves.toEqual({
+      data: { id: 'x', type: 'stub' },
+    });
+  });
+});
