@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vite-plus/test';
 import { Terminal49Client } from './client.js';
+import { mapContainerRoute } from './client/mappers.js';
 import { createMockFetch, jsonResponse } from './test/mock-fetch.js';
 
 const baseUrl = 'https://api.test/v2';
@@ -112,120 +113,6 @@ describe('Terminal49Client mapping helpers', () => {
       expect(mapped?.notes).toBe(withNotes.attributes?.notes);
     }
   });
-
-  itIf(hasFixture('containers.route'))(
-    'maps container route with ports and vessel legs',
-    async () => {
-      const fixture = loadFixture('containers.route');
-      const { fetchImpl } = createMockFetch({
-        '/containers/cont-1/route?include=port,vessel,route_location': () =>
-          jsonResponse(fixture),
-      });
-
-      const client = new Terminal49Client({
-        apiToken: 'token-123',
-        apiBaseUrl: baseUrl,
-        fetchImpl,
-      });
-
-      const result = (await client.getContainerRoute('cont-1', {
-        format: 'mapped',
-      })) as any;
-
-      expect(result.totalLegs).toBe(result.locations.length);
-
-      const routeLocationRef =
-        fixture?.data?.relationships?.route_locations?.data?.[0];
-      const routeLocation = routeLocationRef
-        ? findIncluded(fixture, 'route_location', routeLocationRef.id)
-        : null;
-      if (!routeLocation) return;
-
-      // The port for a route leg lives under the `location` relationship of a
-      // route_location (type port|terminal), NOT a `port` relationship.
-      const locationId = routeLocation?.relationships?.location?.data?.id;
-      const port = locationId
-        ? findIncluded(fixture, 'port', locationId)
-        : null;
-      if (port) {
-        // Regression guard: the leg must resolve its port, not be null.
-        expect(result.locations[0]?.port).toBeTruthy();
-        expectIfDefined(result.locations[0]?.port?.code, port.attributes?.code);
-        expectIfDefined(result.locations[0]?.port?.name, port.attributes?.name);
-        expectIfDefined(result.locations[0]?.port?.city, port.attributes?.city);
-        expectIfDefined(
-          result.locations[0]?.port?.countryCode,
-          port.attributes?.country_code,
-        );
-      }
-
-      expectIfDefined(
-        result.locations[0]?.inbound?.mode,
-        routeLocation.attributes?.inbound_mode,
-      );
-      expectIfDefined(
-        result.locations[0]?.inbound?.carrierScac,
-        routeLocation.attributes?.inbound_scac,
-      );
-      expectIfDefined(
-        result.locations[0]?.inbound?.eta,
-        routeLocation.attributes?.inbound_eta_at,
-      );
-      expectIfDefined(
-        result.locations[0]?.inbound?.ata,
-        routeLocation.attributes?.inbound_ata_at,
-      );
-
-      expectIfDefined(
-        result.locations[0]?.outbound?.mode,
-        routeLocation.attributes?.outbound_mode,
-      );
-      expectIfDefined(
-        result.locations[0]?.outbound?.carrierScac,
-        routeLocation.attributes?.outbound_scac,
-      );
-      expectIfDefined(
-        result.locations[0]?.outbound?.etd,
-        routeLocation.attributes?.outbound_etd_at,
-      );
-      expectIfDefined(
-        result.locations[0]?.outbound?.atd,
-        routeLocation.attributes?.outbound_atd_at,
-      );
-
-      const inboundVesselId =
-        routeLocation?.relationships?.inbound_vessel?.data?.id;
-      const inboundVessel = inboundVesselId
-        ? findIncluded(fixture, 'vessel', inboundVesselId)
-        : null;
-      if (inboundVessel) {
-        expectIfDefined(
-          result.locations[0]?.inbound?.vessel?.name,
-          inboundVessel.attributes?.name,
-        );
-        expectIfDefined(
-          result.locations[0]?.inbound?.vessel?.imo,
-          inboundVessel.attributes?.imo,
-        );
-      }
-
-      const outboundVesselId =
-        routeLocation?.relationships?.outbound_vessel?.data?.id;
-      const outboundVessel = outboundVesselId
-        ? findIncluded(fixture, 'vessel', outboundVesselId)
-        : null;
-      if (outboundVessel) {
-        expectIfDefined(
-          result.locations[0]?.outbound?.vessel?.name,
-          outboundVessel.attributes?.name,
-        );
-        expectIfDefined(
-          result.locations[0]?.outbound?.vessel?.imo,
-          outboundVessel.attributes?.imo,
-        );
-      }
-    },
-  );
 
   it('maps tracking request fields from base response', async () => {
     const fixture = loadFixture('tracking-requests.get.base');
@@ -623,42 +510,152 @@ describe('Terminal49Client mapping helpers', () => {
     expect(shipments.items).toEqual([]);
   });
 
-  it('resolves every route leg port from the `location` relationship', async () => {
-    const fixture = loadFixture('containers.route');
+  it('maps the map_geojson route into ordered ports and the current vessel', async () => {
+    const fixture = loadFixture('containers.map_geojson');
     const { fetchImpl } = createMockFetch({
-      '/containers/cont-1/route?include=port,vessel,route_location': () =>
-        jsonResponse(fixture),
+      '/containers/cont-1/map_geojson': () => jsonResponse(fixture),
     });
-
     const client = new Terminal49Client({
       apiToken: 'token-123',
       apiBaseUrl: baseUrl,
       fetchImpl,
     });
 
-    const result = (await client.getContainerRoute('cont-1', {
+    const result = await client.containers.route('cont-1', {
       format: 'mapped',
-    })) as any;
+    });
 
-    expect(result.totalLegs).toBe(2);
-    expect(result.locations.length).toBe(2);
+    expect(result).toEqual({
+      ports: [
+        {
+          locationId: 'c5adae24-6fd4-4720-8813-976cf206feb1',
+          name: 'Laem Chabang',
+          countryCode: 'TH',
+          label: 'POL',
+          sequence: 1,
+          coordinates: { longitude: 100.896831042, latitude: 13.065302386 },
+          inbound: { eta: null, ata: null },
+          outbound: { etd: null, atd: '2025-11-08T00:44:52Z' },
+        },
+        {
+          locationId: 'ed64d446-9098-420c-ab08-c127e62509fe',
+          name: 'Xiamen',
+          countryCode: 'CN',
+          label: 'TS1',
+          sequence: 2,
+          coordinates: { longitude: 118.0293, latitude: 24.50318 },
+          inbound: { eta: null, ata: '2025-11-15T16:00:00Z' },
+          outbound: { etd: null, atd: '2025-11-19T16:00:00Z' },
+        },
+        {
+          locationId: '6129528d-846e-4571-ae16-b5328a4285ab',
+          name: 'Savannah',
+          countryCode: 'US',
+          label: 'POD',
+          sequence: 3,
+          coordinates: { longitude: -81.140998396, latitude: 32.128923976 },
+          inbound: { eta: '2025-12-31T05:00:00Z', ata: null },
+          outbound: { etd: null, atd: null },
+        },
+      ],
+      currentVessel: {
+        name: 'ZIM BANGKOK',
+        imo: '9936525',
+        voyage: '13E',
+        coordinates: { longitude: -131.128473333, latitude: 31.023033333 },
+        heading: 108,
+        speed: 21,
+        departurePortId: 'ed64d446-9098-420c-ab08-c127e62509fe',
+        arrivalPortId: '6129528d-846e-4571-ae16-b5328a4285ab',
+      },
+      totalPorts: 3,
+    });
+  });
 
-    // Each leg must carry a non-null port resolved via `location`.
-    expect(result.locations[0]?.port?.code).toBe('CNSHA');
-    expect(result.locations[0]?.port?.name).toBe('Shanghai');
-    expect(result.locations[0]?.port?.city).toBe('Shanghai');
-    expect(result.locations[0]?.port?.countryCode).toBe('CN');
+  it('keeps the GeoJSON body as the raw half and serves map() as an alias', async () => {
+    const fixture = loadFixture('containers.map_geojson');
+    const { fetchImpl, calls } = createMockFetch({
+      '/containers/cont-1/map_geojson': () => jsonResponse(fixture),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
 
-    expect(result.locations[1]?.port?.code).toBe('USLAX');
-    expect(result.locations[1]?.port?.name).toBe('Los Angeles');
-    expect(result.locations[1]?.port?.countryCode).toBe('US');
+    const both = await client.containers.route('cont-1', { format: 'both' });
+    const viaMap = await client.containers.map('cont-1', { format: 'mapped' });
 
-    // Outbound leg + vessel resolution sanity.
-    expect(result.locations[0]?.outbound?.carrierScac).toBe('MAEU');
-    expect(result.locations[0]?.outbound?.vessel?.name).toBe(
-      'MAERSK EDINBURGH',
-    );
-    expect(result.locations[1]?.inbound?.vessel?.imo).toBe('9456769');
+    expect(both.raw).toEqual(fixture);
+    expect(viaMap).toEqual(both.mapped);
+    expect(calls.map((c) => c.url.pathname)).toEqual([
+      '/v2/containers/cont-1/map_geojson',
+      '/v2/containers/cont-1/map_geojson',
+    ]);
+  });
+
+  it('orders ports by sequence and maps absent properties to null', () => {
+    const result = mapContainerRoute({
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [-81.1, 32.1] },
+          properties: { feature_type: 'port', ports_sequence: 2, name: 'B' },
+        },
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [1, 2],
+              [3, 4],
+            ],
+          },
+          properties: { feature_type: 'port' },
+        },
+        {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [] },
+          properties: { feature_type: 'port', ports_sequence: 1, name: 'A' },
+        },
+        {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [10, 20] },
+          properties: { feature_type: 'current_vessel' },
+        },
+      ],
+    });
+
+    expect(result.ports.map((p) => p.name)).toEqual(['A', 'B', null]);
+    expect(result.ports[0].coordinates).toBeNull();
+    expect(result.ports[2]).toEqual({
+      locationId: null,
+      name: null,
+      countryCode: null,
+      label: null,
+      sequence: null,
+      coordinates: null,
+      inbound: { eta: null, ata: null },
+      outbound: { etd: null, atd: null },
+    });
+    expect(result.currentVessel).toEqual({
+      name: null,
+      imo: null,
+      voyage: null,
+      coordinates: { longitude: 10, latitude: 20 },
+      heading: null,
+      speed: null,
+      departurePortId: null,
+      arrivalPortId: null,
+    });
+    expect(result.totalPorts).toBe(3);
+  });
+
+  it('maps an empty FeatureCollection to an empty route', () => {
+    expect(
+      mapContainerRoute({ type: 'FeatureCollection', features: [] }),
+    ).toEqual({ ports: [], currentVessel: null, totalPorts: 0 });
   });
 
   it('maps port `code` into the shipment locode fields', async () => {

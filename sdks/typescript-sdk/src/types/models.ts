@@ -136,34 +136,45 @@ export interface Shipment {
   [key: string]: any;
 }
 
-/** Simplified container route model returned by mapped SDK responses. */
-export interface Route {
-  id?: string;
-  totalLegs: number;
-  locations: Array<{
-    port?: {
-      code?: string | null;
-      name?: string | null;
-      city?: string | null;
-      countryCode?: string | null;
-    } | null;
-    inbound: {
-      mode?: string | null;
-      carrierScac?: string | null;
-      eta?: string | null;
-      ata?: string | null;
-      vessel?: { name?: string | null; imo?: string | null } | null;
-    };
-    outbound: {
-      mode?: string | null;
-      carrierScac?: string | null;
-      etd?: string | null;
-      atd?: string | null;
-      vessel?: { name?: string | null; imo?: string | null } | null;
-    };
-  }>;
-  createdAt?: string | null;
-  updatedAt?: string | null;
+/** A `[longitude, latitude]` GeoJSON point, named so the axis order cannot be swapped. */
+export interface RouteCoordinates {
+  longitude: number;
+  latitude: number;
+}
+
+/** One port on a container route, from a `port` feature of `GET /containers/{id}/map_geojson`. */
+export interface RoutePort {
+  locationId: string | null;
+  name: string | null;
+  countryCode: string | null;
+  /** `POL`, `POD`, or `TS1`, `TS2`, and so on for transshipment ports. */
+  label: string | null;
+  /** Position in the route: 1 is the POL, the last is the POD. */
+  sequence: number | null;
+  coordinates: RouteCoordinates | null;
+  inbound: { eta: string | null; ata: string | null };
+  outbound: { etd: string | null; atd: string | null };
+}
+
+/** The vessel carrying the container right now. Present only while it is at sea. */
+export interface RouteVessel {
+  name: string | null;
+  imo: string | null;
+  voyage: string | null;
+  coordinates: RouteCoordinates | null;
+  /** Degrees, 0-360. */
+  heading: number | null;
+  /** Knots. */
+  speed: number | null;
+  departurePortId: string | null;
+  arrivalPortId: string | null;
+}
+
+/** Mapped container route: ports in route order plus the current vessel. */
+export interface ContainerRoute {
+  ports: RoutePort[];
+  currentVessel: RouteVessel | null;
+  totalPorts: number;
 }
 
 /** Simplified tracking request model returned by mapped SDK responses. */

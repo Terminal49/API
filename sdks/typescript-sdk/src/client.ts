@@ -462,7 +462,7 @@ export class Terminal49Client {
     return this.containers.events(id, options);
   }
 
-  /** Fetch routing details for a container. This may require a paid Terminal49 feature. */
+  /** Fetch a container's route (ports, current vessel, tracks). Requires the Routing Data feature. */
   async getContainerRoute(id: string, options?: CallOptions): Promise<any> {
     return this.containers.route(id, options);
   }

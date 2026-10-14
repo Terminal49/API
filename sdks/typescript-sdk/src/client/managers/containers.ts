@@ -10,8 +10,8 @@ import type {
 } from '../../types/options.js';
 import {
   mapContainerList,
+  mapContainerRoute,
   mapCustomFields,
-  mapRoute,
   mapTransportEvents,
 } from '../mappers.js';
 import {
@@ -137,32 +137,23 @@ export class ContainerManager extends BaseManager {
   }
 
   /**
-   * @deprecated `GET /containers/{id}/route` is no longer part of the public
-   * Terminal49 API and is expected to return `NotFoundError`. Use
-   * {@link ContainerManager.map} for routing geometry instead.
+   * Fetch the container's route: ports, the current vessel, and vessel tracks.
+   * The raw format is the GeoJSON FeatureCollection; the mapped format is a
+   * `ContainerRoute`. Requires the Routing Data feature, otherwise the API
+   * returns 403.
    */
   async route(id: string, options?: CallOptions): Promise<any> {
-    // The route path is absent from current OpenAPI, although this SDK already
-    // supports it. Keep the existing client/middleware path while regenerating
-    // types from the actual source, rather than hand-editing generated types.
-    const raw = await this.transport.execute(() =>
-      this.transport.client.GET('/containers/{id}/route' as any, {
-        params: {
-          path: { id },
-          query: { include: 'port,vessel,route_location' } as any,
-        },
-      }),
-    );
-    return this.formatResult(raw, options?.format, mapRoute);
-  }
-
-  async map(id: string, options?: CallOptions): Promise<any> {
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/containers/{id}/map_geojson', {
         params: { path: { id } },
       }),
     );
-    return this.formatResult(raw, options?.format);
+    return this.formatResult(raw, options?.format, mapContainerRoute);
+  }
+
+  /** @deprecated Use {@link ContainerManager.route}. */
+  async map(id: string, options?: CallOptions): Promise<any> {
+    return this.route(id, options);
   }
 
   /** Create a custom field value on a container. */

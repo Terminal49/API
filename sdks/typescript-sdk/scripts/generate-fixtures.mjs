@@ -294,15 +294,6 @@ async function main() {
     writeFixture('containers.get.include', containerGetInclude);
 
     try {
-      const route = await fetchJson(
-        `/containers/${containerId}/route?include=port,vessel,route_location`,
-      );
-      writeFixture('containers.route', route);
-    } catch (error) {
-      console.warn(`Skipping route fixture: ${error.message}`);
-    }
-
-    try {
       const events = await fetchJson(
         `/containers/${containerId}/transport_events?include=location,terminal`,
       );
