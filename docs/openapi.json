@@ -19566,7 +19566,8 @@
         "required": [
           "id",
           "type",
-          "attributes"
+          "attributes",
+          "relationships"
         ],
         "properties": {
           "id": {
@@ -19647,12 +19648,22 @@
                             "account"
                           ]
                         }
-                      }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ]
                     }
                   }
-                }
+                },
+                "required": [
+                  "data"
+                ]
               }
-            }
+            },
+            "required": [
+              "accounts"
+            ]
           }
         }
       }

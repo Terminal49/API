@@ -3221,14 +3221,14 @@ export interface components {
                 /** @description `true` only for Terminal49 staff. */
                 admin: boolean;
             };
-            relationships?: {
+            relationships: {
                 /** @description Every open account this user can select with `x-account-id`. */
-                accounts?: {
-                    data?: {
+                accounts: {
+                    data: {
                         /** Format: uuid */
-                        id?: string;
+                        id: string;
                         /** @enum {string} */
-                        type?: "account";
+                        type: "account";
                     }[];
                 };
             };

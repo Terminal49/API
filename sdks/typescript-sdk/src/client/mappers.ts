@@ -561,11 +561,12 @@ export function mapCurrentCredential(doc: any): CurrentCredential {
       );
     }
     const userAttrs = userResource.attributes;
-    const accountRefs: any[] = Array.isArray(
-      userResource.relationships?.accounts?.data,
-    )
-      ? userResource.relationships.accounts.data
-      : [];
+    const accountRefs = userResource.relationships?.accounts?.data;
+    if (!Array.isArray(accountRefs)) {
+      throw new Error(
+        'Invalid /me response: linked user must include account-list linkage',
+      );
+    }
     user = {
       id: userResource.id,
       email: userAttrs.email,
