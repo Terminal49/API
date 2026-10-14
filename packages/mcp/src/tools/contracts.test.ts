@@ -1,5 +1,6 @@
 import {
   FeatureNotEnabledError,
+  mapContainerRoute,
   NotFoundError,
   type Terminal49Client,
 } from '@terminal49/sdk';
@@ -14,6 +15,7 @@ import { executeListTrackingRequests } from './list-tracking-requests.js';
 import { executeSearchContainer } from './search-container.js';
 import { executeTrackContainer } from './track-container.js';
 import { buildListContract } from '../server.js';
+import { EXPECTED_ROUTE_SUMMARY, routeFixture } from '../test/route-fixture.js';
 
 function asClient(client: unknown): Terminal49Client {
   return client as Terminal49Client;
@@ -992,49 +994,27 @@ describe('MCP tool contracts', () => {
     expect(resultB.shipping_lines[0]?.scac).toBe('MAEU');
   });
 
-  it('get_container_route returns route summary when route data exists', async () => {
-    const route = vi.fn().mockResolvedValue({
-      raw: {
-        data: {
-          id: 'route-1',
-          type: 'route',
-          attributes: {
-            created_at: '2025-01-01T00:00:00Z',
-            updated_at: '2025-01-02T00:00:00Z',
-          },
-          relationships: {
-            route_locations: {
-              data: [{ id: 'rl-1', type: 'route_location' }],
-            },
-          },
-        },
-        included: [
-          {
-            id: 'rl-1',
-            type: 'route_location',
-            attributes: {
-              inbound_mode: 'vessel',
-              outbound_mode: 'vessel',
-            },
-            relationships: {
-              port: { data: { id: 'port-1', type: 'port' } },
-            },
-          },
-          {
-            id: 'port-1',
-            type: 'port',
-            attributes: {
-              code: 'USLAX',
-              name: 'Los Angeles',
-            },
-          },
-        ],
-      },
-      mapped: { id: 'route-1' },
-    });
+  it('get_container_route summarizes ports, ETAs, and the current vessel', async () => {
+    const route = vi.fn().mockResolvedValue(mapContainerRoute(routeFixture));
+    const client = asClient({ containers: { route } });
+
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(route).toHaveBeenCalledWith('container-1', { format: 'mapped' });
+    expect(result).toEqual(EXPECTED_ROUTE_SUMMARY);
+  });
+
+  it('get_container_route returns a NoRouteData soft result for an empty route', async () => {
     const client = asClient({
       containers: {
-        route,
+        route: vi
+          .fn()
+          .mockResolvedValue(
+            mapContainerRoute({ type: 'FeatureCollection', features: [] }),
+          ),
       },
     });
 
@@ -1043,10 +1023,28 @@ describe('MCP tool contracts', () => {
       client,
     );
 
-    expect(result.route_id).toBe('route-1');
-    expect(result.total_legs).toBe(1);
-    expect(result.route_locations[0].port).toMatchObject({ code: 'USLAX' });
-    expect(route).toHaveBeenCalledWith('container-1', { format: 'raw' });
+    expect(result).toMatchObject({
+      error: 'NoRouteData',
+      alternative: expect.stringContaining('get_container_transport_events'),
+    });
+  });
+
+  it('get_container_route returns a NotFound soft result for an unknown container', async () => {
+    const client = asClient({
+      containers: {
+        route: vi.fn().mockRejectedValue(new NotFoundError('not found')),
+      },
+    });
+
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(result).toMatchObject({
+      error: 'NotFound',
+      alternative: expect.stringContaining('search_container'),
+    });
   });
 
   it('get_container_route returns feature-not-enabled contract instead of throwing', async () => {
@@ -1065,6 +1063,7 @@ describe('MCP tool contracts', () => {
 
     expect(result).toMatchObject({
       error: 'FeatureNotEnabled',
+      message: expect.stringContaining('sales@terminal49.com'),
       alternative: expect.stringContaining('get_container_transport_events'),
     });
   });

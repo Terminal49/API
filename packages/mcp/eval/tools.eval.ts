@@ -323,7 +323,7 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
-    it('get_container_route returns route data or a graceful not-found', async ({
+    it('get_container_route returns ports or an explained gate', async ({
       skip,
     }) => {
       if (!fixtures.containerId) return skip();
@@ -333,16 +333,17 @@ if (!cfg) {
         {
           predicates: [
             {
-              name: 'route payload or explained not-found',
+              name: 'route payload, feature gate, or no route data yet',
               test: (p) =>
                 isRecord(p) &&
-                (Array.isArray(p.route_locations) ||
-                  'total_legs' in p ||
-                  (typeof p.error === 'string' &&
+                ((Array.isArray(p.ports) &&
+                  typeof p.total_ports === 'number') ||
+                  ((p.error === 'FeatureNotEnabled' ||
+                    p.error === 'NoRouteData') &&
                     typeof p.alternative === 'string')),
               detail: (p) =>
                 isRecord(p) && typeof p.error === 'string'
-                  ? 'graceful not-found'
+                  ? `soft error ${p.error}`
                   : 'route data',
             },
           ],

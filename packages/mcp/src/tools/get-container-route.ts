@@ -1,14 +1,10 @@
-/**
- * get_container_route tool
- * Retrieves detailed routing information for a container
- * NOTE: This is a PAID FEATURE in Terminal49 API
- */
-
 import {
   FeatureNotEnabledError,
   NotFoundError,
   Terminal49Client,
+  type ContainerRoute,
 } from '@terminal49/sdk';
+import { z } from 'zod';
 import { logMcpEvent } from '../logging.js';
 
 export interface FeatureNotEnabledResult {
@@ -23,33 +19,69 @@ export interface NotFoundResult {
   alternative: string;
 }
 
+export interface NoRouteDataResult {
+  error: 'NoRouteData';
+  message: string;
+  alternative: string;
+}
+
+type SoftError = FeatureNotEnabledResult | NotFoundResult | NoRouteDataResult;
+
 export interface GetContainerRouteArgs {
   id: string;
 }
 
-export const getContainerRouteTool = {
-  name: 'get_container_route',
-  description:
-    'Get detailed routing and vessel itinerary for a container including all ports, vessels, and ETAs. ' +
-    'Shows complete multi-leg journey (origin → transshipment ports → destination). ' +
-    'NOTE: This is a paid feature and may not be available for all accounts. ' +
-    'Use for questions about routing, transshipments, or detailed vessel itinerary.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      id: {
-        type: 'string',
-        description: 'The Terminal49 container ID (UUID format)',
-      },
-    },
-    required: ['id'],
-  },
-};
+const portRefSchema = z
+  .object({ name: z.string().nullable(), label: z.string().nullable() })
+  .nullable();
+
+const routeSummarySchema = z.object({
+  total_ports: z.number(),
+  ports: z.array(
+    z.object({
+      sequence: z.number().nullable(),
+      label: z.string().nullable(),
+      name: z.string().nullable(),
+      country_code: z.string().nullable(),
+      inbound: z.object({
+        eta: z.string().nullable(),
+        ata: z.string().nullable(),
+      }),
+      outbound: z.object({
+        etd: z.string().nullable(),
+        atd: z.string().nullable(),
+      }),
+    }),
+  ),
+  current_vessel: z
+    .object({
+      name: z.string().nullable(),
+      imo: z.string().nullable(),
+      voyage: z.string().nullable(),
+      latitude: z.number().nullable(),
+      longitude: z.number().nullable(),
+      heading: z.number().nullable(),
+      speed_knots: z.number().nullable(),
+      departure_port: portRefSchema,
+      arrival_port: portRefSchema,
+    })
+    .nullable(),
+});
+
+export type RouteSummary = z.infer<typeof routeSummarySchema>;
+
+export const routeSummaryOrSoftErrorSchema = routeSummarySchema
+  .partial()
+  .extend({
+    error: z.string().optional(),
+    message: z.string().optional(),
+    alternative: z.string().optional(),
+  });
 
 export async function executeGetContainerRoute(
   args: GetContainerRouteArgs,
   client: Terminal49Client,
-): Promise<any> {
+): Promise<RouteSummary | SoftError> {
   if (!args.id || args.id.trim() === '') {
     throw new Error('Container ID is required');
   }
@@ -63,11 +95,14 @@ export async function executeGetContainerRoute(
   });
 
   try {
-    // The handler builds a curated route response entirely from JSON:API data;
-    // requesting the mapped representation as well only duplicates SDK work.
-    const result = await client.containers.route(args.id, { format: 'raw' });
-    const raw = (result as any)?.raw ?? result;
+    const route: ContainerRoute = await client.containers.route(args.id, {
+      format: 'mapped',
+    });
     const duration = Date.now() - startTime;
+
+    if (route.ports.length === 0 && route.currentVessel === null) {
+      return logSoftError(args.id, duration, NO_ROUTE_DATA);
+    }
 
     logMcpEvent({
       event: 'tool.execute.complete',
@@ -77,8 +112,7 @@ export async function executeGetContainerRoute(
       timestamp: new Date().toISOString(),
     });
 
-    const summary = formatRouteResponse(raw);
-    return summary;
+    return formatRoute(route);
   } catch (error) {
     const duration = Date.now() - startTime;
     const err = error as any;
@@ -87,11 +121,11 @@ export async function executeGetContainerRoute(
       err instanceof FeatureNotEnabledError ||
       (err?.status === 403 && /not enabled|feature/i.test(err.message))
     ) {
-      return handleFeatureNotEnabled(args.id, duration);
+      return logSoftError(args.id, duration, FEATURE_NOT_ENABLED);
     }
 
     if (err instanceof NotFoundError || err?.status === 404) {
-      return handleRouteNotFound(args.id, duration);
+      return logSoftError(args.id, duration, NOT_FOUND);
     }
 
     logMcpEvent({
@@ -108,132 +142,79 @@ export async function executeGetContainerRoute(
   }
 }
 
-function handleFeatureNotEnabled(
+const FEATURE_NOT_ENABLED: FeatureNotEnabledResult = {
+  error: 'FeatureNotEnabled',
+  message:
+    'Route data is a paid feature (Routing Data) and is not enabled for this Terminal49 account. ' +
+    'Contact sales@terminal49.com to enable it.',
+  alternative:
+    'Use get_container_transport_events to see historical movement, or get_container for the POL, POD, and ETA.',
+};
+
+const NOT_FOUND: NotFoundResult = {
+  error: 'NotFound',
+  message:
+    'No container was found with this ID, so there is no route to return.',
+  alternative:
+    'Use search_container to find the correct container ID, or get_container for basic details.',
+};
+
+const NO_ROUTE_DATA: NoRouteDataResult = {
+  error: 'NoRouteData',
+  message:
+    'Terminal49 has no route data for this container yet. This is common before the container is loaded on a vessel.',
+  alternative:
+    'Use get_container_transport_events to see milestones so far, or get_container for the POL, POD, and ETA.',
+};
+
+function logSoftError<T extends SoftError>(
   containerId: string,
   duration: number,
-): FeatureNotEnabledResult {
-  const friendlyMessage =
-    'Route tracking is a paid feature and is not enabled for this Terminal49 account. ' +
-    'Contact support@terminal49.com to enable route data, or use get_container / get_container_transport_events for partial context.';
-
+  result: T,
+): T {
   logMcpEvent({
     event: 'tool.execute.error',
     tool: 'get_container_route',
     container_id: containerId,
-    error: 'FeatureNotEnabled',
-    message: friendlyMessage,
+    error: result.error,
+    message: result.message,
     duration_ms: duration,
     timestamp: new Date().toISOString(),
   });
-
-  return {
-    error: 'FeatureNotEnabled',
-    message: friendlyMessage,
-    alternative:
-      'Use get_container_transport_events to see historical movement, or get_container for basic routing info.',
-  };
+  return { ...result };
 }
 
-function handleRouteNotFound(
-  containerId: string,
-  duration: number,
-): NotFoundResult {
-  const friendlyMessage =
-    'Route data was not found for this container. The container ID may be incorrect or route data is unavailable.';
-
-  logMcpEvent({
-    event: 'tool.execute.error',
-    tool: 'get_container_route',
-    container_id: containerId,
-    error: 'NotFound',
-    message: friendlyMessage,
-    duration_ms: duration,
-    timestamp: new Date().toISOString(),
-  });
-
-  return {
-    error: 'NotFound',
-    message: friendlyMessage,
-    alternative:
-      'Use search_container to find the correct container ID, or get_container for basic details.',
+function formatRoute({
+  ports,
+  currentVessel,
+  totalPorts,
+}: ContainerRoute): RouteSummary {
+  const portRef = (id: string | null) => {
+    const port =
+      id === null ? undefined : ports.find((p) => p.locationId === id);
+    return port ? { name: port.name, label: port.label } : null;
   };
-}
-
-function formatRouteResponse(apiResponse: any): any {
-  const route = apiResponse.data?.attributes || {};
-  const relationships = apiResponse.data?.relationships || {};
-  const included = apiResponse.included || [];
-
-  // Extract route locations
-  const routeLocationRefs = relationships.route_locations?.data || [];
-  const routeLocations = routeLocationRefs
-    .map((ref: any) => {
-      const location = included.find(
-        (item: any) => item.id === ref.id && item.type === 'route_location',
-      );
-      if (!location) return null;
-
-      const attrs = location.attributes || {};
-      const rels = location.relationships || {};
-
-      // Find port info
-      const portId = rels.port?.data?.id;
-      const port = included.find(
-        (item: any) => item.id === portId && item.type === 'port',
-      );
-
-      // Find vessel info
-      const inboundVesselId = rels.inbound_vessel?.data?.id;
-      const outboundVesselId = rels.outbound_vessel?.data?.id;
-      const inboundVessel = included.find(
-        (item: any) => item.id === inboundVesselId && item.type === 'vessel',
-      );
-      const outboundVessel = included.find(
-        (item: any) => item.id === outboundVesselId && item.type === 'vessel',
-      );
-
-      return {
-        port: port
-          ? {
-              code: port.attributes?.code,
-              name: port.attributes?.name,
-              city: port.attributes?.city,
-              country_code: port.attributes?.country_code,
-            }
-          : null,
-        inbound: {
-          mode: attrs.inbound_mode,
-          carrier_scac: attrs.inbound_scac,
-          eta: attrs.inbound_eta_at,
-          ata: attrs.inbound_ata_at,
-          vessel: inboundVessel
-            ? {
-                name: inboundVessel.attributes?.name,
-                imo: inboundVessel.attributes?.imo,
-              }
-            : null,
-        },
-        outbound: {
-          mode: attrs.outbound_mode,
-          carrier_scac: attrs.outbound_scac,
-          etd: attrs.outbound_etd_at,
-          atd: attrs.outbound_atd_at,
-          vessel: outboundVessel
-            ? {
-                name: outboundVessel.attributes?.name,
-                imo: outboundVessel.attributes?.imo,
-              }
-            : null,
-        },
-      };
-    })
-    .filter((loc: any) => loc !== null);
 
   return {
-    route_id: apiResponse.data?.id,
-    total_legs: routeLocations.length,
-    route_locations: routeLocations,
-    created_at: route.created_at,
-    updated_at: route.updated_at,
+    total_ports: totalPorts,
+    ports: ports.map((port) => ({
+      sequence: port.sequence,
+      label: port.label,
+      name: port.name,
+      country_code: port.countryCode,
+      inbound: port.inbound,
+      outbound: port.outbound,
+    })),
+    current_vessel: currentVessel && {
+      name: currentVessel.name,
+      imo: currentVessel.imo,
+      voyage: currentVessel.voyage,
+      latitude: currentVessel.coordinates?.latitude ?? null,
+      longitude: currentVessel.coordinates?.longitude ?? null,
+      heading: currentVessel.heading,
+      speed_knots: currentVessel.speed,
+      departure_port: portRef(currentVessel.departurePortId),
+      arrival_port: portRef(currentVessel.arrivalPortId),
+    },
   };
 }

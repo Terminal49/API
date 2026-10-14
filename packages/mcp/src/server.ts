@@ -17,6 +17,7 @@ import { executeGetShipmentDetails } from './tools/get-shipment-details.js';
 import { executeGetContainerTransportEvents } from './tools/get-container-transport-events.js';
 import { executeGetSupportedShippingLines } from './tools/get-supported-shipping-lines.js';
 import {
+  routeSummaryOrSoftErrorSchema,
   executeGetContainerRoute,
   type FeatureNotEnabledResult,
 } from './tools/get-container-route.js';
@@ -99,7 +100,7 @@ Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and bookin
 
 Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete or overwrite data.
 
-Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for multi-leg routing if the account has it). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links.`;
+Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for ports, ETAs, and the current vessel if the account has Routing Data). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links.`;
 
 type ResponseDisplayColumn = {
   key: string;
@@ -1328,9 +1329,9 @@ export function createTerminal49McpServer(
     {
       title: 'Get Container Route',
       description:
-        'Get detailed routing and vessel itinerary for a container including all ports, vessels, and ETAs. ' +
-        'Shows complete multi-leg journey (origin → transshipment ports → destination). ' +
-        'This paid feature may not be available for every account.',
+        'Get the ocean route for a container: ports in order (POL, transshipment ports, POD) with ETA/ATA and ETD/ATD, ' +
+        'plus the vessel carrying it now (name, IMO, voyage, position, speed) while it is at sea. ' +
+        'This paid feature (Routing Data) may not be available for every account.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1342,56 +1343,7 @@ export function createTerminal49McpServer(
           .uuid()
           .describe('The Terminal49 container ID (UUID format)'),
       }),
-      // Keep a single permissive schema because this tool can return either
-      // route fields or feature-gating fields depending on account capability.
-      outputSchema: z.object({
-        route_id: z.string().optional(),
-        total_legs: z.number().optional(),
-        route_locations: z
-          .array(
-            z.object({
-              port: z
-                .object({
-                  code: z.string().nullable().optional(),
-                  name: z.string().nullable().optional(),
-                  city: z.string().nullable().optional(),
-                  country_code: z.string().nullable().optional(),
-                })
-                .nullable(),
-              inbound: z.object({
-                mode: z.string().nullable().optional(),
-                carrier_scac: z.string().nullable().optional(),
-                eta: z.string().nullable().optional(),
-                ata: z.string().nullable().optional(),
-                vessel: z
-                  .object({
-                    name: z.string().nullable().optional(),
-                    imo: z.string().nullable().optional(),
-                  })
-                  .nullable(),
-              }),
-              outbound: z.object({
-                mode: z.string().nullable().optional(),
-                carrier_scac: z.string().nullable().optional(),
-                etd: z.string().nullable().optional(),
-                atd: z.string().nullable().optional(),
-                vessel: z
-                  .object({
-                    name: z.string().nullable().optional(),
-                    imo: z.string().nullable().optional(),
-                  })
-                  .nullable(),
-              }),
-            }),
-          )
-          .optional(),
-        created_at: z.string().nullable().optional(),
-        updated_at: z.string().nullable().optional(),
-        // Feature gating / errors
-        error: z.string().optional(),
-        message: z.string().optional(),
-        alternative: z.string().optional(),
-      }),
+      outputSchema: routeSummaryOrSoftErrorSchema,
     },
     wrapTool('get_container_route', async ({ id }) =>
       executeGetContainerRoute({ id }, client),
