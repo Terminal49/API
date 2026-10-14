@@ -13,7 +13,7 @@ async function fixture(url) {
   const path = new URL(url).pathname.replace('/docs/', '');
   if (path === 'llms.txt')
     return Object.keys(pairs)
-      .map((page) => '/docs/coverage/' + page)
+      .map((page) => `[${page}](/docs/coverage/${page})`)
       .join('\n');
   if (path.startsWith('coverage/')) {
     const page = path.split('/').at(-1).replace(/\.md$/, '');
@@ -32,12 +32,19 @@ async function fixture(url) {
         ).replaceAll('](/data/coverage/', '](/docs/data/coverage/') +
           '\n' +
           links
-      : links;
+      : ['json', 'csv']
+          .map(
+            (extension) =>
+              `<a href="/docs/data/coverage/${pairs[page]}.${extension}">${extension}</a>`,
+          )
+          .join('\n');
   }
-  return readFile(
-    new URL('../docs/' + path.replace(/\.md$/, '.mdx'), import.meta.url),
-    'utf8',
-  );
+  return (
+    await readFile(
+      new URL('../docs/' + path.replace(/\.md$/, '.mdx'), import.meta.url),
+      'utf8',
+    )
+  ).replaceAll('](/data/coverage/', '](/docs/data/coverage/');
 }
 const fetchFixture =
   (transform = (body) => body) =>
@@ -139,7 +146,8 @@ test('checks distinct URLs for the same download type', async () => {
         return new Response('', { status: 404 });
       let body = await fixture(url);
       if (String(url).endsWith('/coverage/rail'))
-        body += '\n[JSON](https://broken.example/rail-carriers.json)';
+        body +=
+          '\n<a href="https://broken.example/rail-carriers.json">JSON</a>';
       return new Response(body);
     },
   });
@@ -150,4 +158,128 @@ test('checks distinct URLs for the same download type', async () => {
         check.error === 'HTTP 404',
     ),
   );
+});
+
+test('requires actual rendered JSON and CSV anchors independently of Markdown', async () => {
+  for (const html of [
+    '<p>No downloads</p>',
+    '[JSON](/docs/data/coverage/rail-carriers.json) [CSV](/docs/data/coverage/rail-carriers.csv)',
+    '<a href="/docs/data/coverage/rail-carriers.json">JSON only</a>',
+    '<a data-href="/docs/data/coverage/rail-carriers.json">JSON</a><a data-href="/docs/data/coverage/rail-carriers.csv">CSV</a>',
+    `<a title=' href="/docs/data/coverage/rail-carriers.json"'>JSON</a><a title=' href="/docs/data/coverage/rail-carriers.csv"'>CSV</a>`,
+    '<script><a href="/docs/data/coverage/rail-carriers.json">JSON</a><a href="/docs/data/coverage/rail-carriers.csv">CSV</a></script>',
+  ]) {
+    const report = await verifyDeployedCoverage({
+      fetchImpl: fetchFixture((body, url) =>
+        url.endsWith('/coverage/rail') ? html : body,
+      ),
+    });
+    assert.ok(
+      report.checks.some(
+        (check) => check.url.endsWith('/coverage/rail') && !check.passed,
+      ),
+    );
+  }
+});
+
+test('accepts exact Markdown index destinations and quoted HTML anchors', async () => {
+  const report = await verifyDeployedCoverage({
+    fetchImpl: fetchFixture((body, url) => {
+      if (url.endsWith('llms.txt')) return body.replaceAll(')', '.md)');
+      if (url.endsWith('/coverage/rail')) return body.replaceAll('"', "'");
+      return body;
+    }),
+  });
+  assert.equal(report.passed, true);
+});
+
+test('checks download URLs linked only from data references', async () => {
+  const report = await verifyDeployedCoverage({
+    fetchImpl: async (url) => {
+      if (String(url).includes('broken.example'))
+        return new Response('', { status: 404 });
+      const body = await fixture(url);
+      return new Response(
+        String(url).endsWith('/data/coverage/rail-carriers.md')
+          ? body.replace(
+              '](/docs/data/coverage/rail-carriers.json)',
+              '](https://broken.example/rail-carriers.json)',
+            )
+          : body,
+      );
+    },
+  });
+  assert.ok(
+    report.checks.some(
+      (check) =>
+        check.url.includes('broken.example') && check.error === 'HTTP 404',
+    ),
+  );
+});
+
+test('rejects unexpected JSON and CSV filenames without dropping their URLs', async () => {
+  for (const extension of ['json', 'csv']) {
+    const report = await verifyDeployedCoverage({
+      fetchImpl: async (url) => {
+        if (String(url).includes('rail-carriers-old.'))
+          return new Response('stale');
+        let body = await fixture(url);
+        if (String(url).endsWith('/coverage/rail'))
+          body += `<a href="/docs/data/coverage/rail-carriers-old.${extension}">Old download</a>`;
+        return new Response(body);
+      },
+    });
+    assert.ok(
+      report.checks.some(
+        (check) =>
+          check.url.endsWith(`rail-carriers-old.${extension}`) &&
+          check.error?.includes('Unexpected download filename'),
+      ),
+    );
+  }
+});
+
+test('detects renamed, removed and swapped entity headings', async () => {
+  for (const change of [
+    (body) => body.replace('## BNSF Railway', '## Incorrect Railway'),
+    (body) => body.replace('## BNSF Railway', ''),
+    (body) =>
+      body
+        .replace('## BNSF Railway', '## TEMP')
+        .replace('## Union Pacific', '## BNSF Railway')
+        .replace('## TEMP', '## Union Pacific'),
+  ]) {
+    const report = await verifyDeployedCoverage({
+      fetchImpl: fetchFixture((body, url) =>
+        url.endsWith('/data/coverage/rail-carriers.md') ? change(body) : body,
+      ),
+    });
+    assert.ok(
+      report.checks.some(
+        (check) =>
+          check.url.endsWith('/data/coverage/rail-carriers.md') &&
+          !check.passed,
+      ),
+    );
+  }
+});
+
+test('agent index requires exact link destinations, not host or path prefixes', async () => {
+  for (const destination of [
+    'https://wrong.example/docs/coverage/rail',
+    '/docs/coverage/rail-old.md',
+  ]) {
+    const report = await verifyDeployedCoverage({
+      fetchImpl: fetchFixture((body, url) =>
+        url.endsWith('llms.txt')
+          ? body.replace('/docs/coverage/rail', destination)
+          : body,
+      ),
+    });
+    assert.ok(
+      report.checks.some(
+        (check) => check.url.endsWith('llms.txt') && !check.passed,
+      ),
+    );
+  }
 });

@@ -17,9 +17,31 @@ const tableRows = (text) =>
     .filter(
       (line) =>
         (line.startsWith('|') && !/^[| :-]+$/.test(line)) ||
+        /^#{2,6} /.test(line) ||
         line.startsWith('SCAC `') ||
         line.includes('SMDG code:'),
     );
+
+const markdownLinks = (body) =>
+  [...body.matchAll(/(?<!!)\]\(([^)]+)\)/g)].map((match) => match[1]);
+const htmlLinks = (body) =>
+  [
+    ...body
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .matchAll(/<a\b((?:[^"'>]|"[^"]*"|'[^']*')*)>/gi),
+  ].flatMap((tag) => {
+    const attributes = [
+      ...tag[1].matchAll(
+        /([^\s=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g,
+      ),
+    ];
+    const href = attributes.find(
+      (attribute) => attribute[1].toLowerCase() === 'href',
+    );
+    const value = href?.[2] ?? href?.[3] ?? href?.[4];
+    return typeof value === 'string' ? [value.replaceAll('&amp;', '&')] : [];
+  });
 
 export async function verifyDeployedCoverage({
   baseUrl = 'https://terminal49.com/docs/',
@@ -41,9 +63,16 @@ export async function verifyDeployedCoverage({
     }
   }
   await check(new URL('llms.txt', base), (body) => {
+    const destinations = new Set(
+      markdownLinks(body).map((link) => String(new URL(link, base))),
+    );
     for (const [page] of pages) {
-      const route = new URL('coverage/' + page, base).pathname;
-      if (!body.includes(route)) throw new Error('Agent index missing ' + page);
+      const destination = String(new URL('coverage/' + page, base));
+      if (
+        !destinations.has(destination) &&
+        !destinations.has(destination + '.md')
+      )
+        throw new Error('Agent index missing ' + page);
     }
   });
   await Promise.all(
@@ -52,40 +81,48 @@ export async function verifyDeployedCoverage({
       const markdownUrl = new URL(pageUrl + '.md');
       const htmlDownloads = new Map();
       const markdownDownloads = new Map();
-      function findDownloads(body, downloads, required = true) {
+      const referenceDownloads = new Map();
+      function findDownloads(
+        links,
+        downloads,
+        sourceUrl,
+        required = ['json', 'csv'],
+      ) {
         const extensions = new Set();
-        const links = [...body.matchAll(/href="([^"]+)"|\]\(([^)]+)\)/g)];
-        for (const match of links) {
-          const url = new URL(match[1] ?? match[2], pageUrl);
-          for (const extension of ['json', 'csv']) {
-            if (url.pathname.endsWith('/' + slug + '.' + extension)) {
-              downloads.set(String(url), url);
+        for (const link of links) {
+          const url = new URL(link, sourceUrl);
+          const extension = url.pathname.match(/\.(json|csv)$/)?.[1];
+          if (extension) {
+            downloads.set(String(url), url);
+            if (url.pathname.endsWith('/' + slug + '.' + extension))
               extensions.add(extension);
-            }
           }
         }
-        for (const extension of ['json', 'csv']) {
-          if (required && !extensions.has(extension))
+        for (const extension of required) {
+          if (!extensions.has(extension))
             throw new Error('Missing ' + extension + ' download link');
         }
       }
-      await check(pageUrl, (body) => findDownloads(body, htmlDownloads, false));
+      await check(pageUrl, (body) =>
+        findDownloads(htmlLinks(body), htmlDownloads, pageUrl),
+      );
       async function verifyMarkdown(url, file, downloads) {
         const expected = await readFile(resolve(root, file), 'utf8');
         await check(url, (body) => {
           const rows = tableRows(expected);
           if (!rows.length || !isDeepStrictEqual(tableRows(body), rows))
             throw new Error('Literal feature tables differ from this checkout');
-          for (const line of expected
-            .split('\n')
-            .filter(
-              (line) =>
-                line.startsWith('SCAC `') || line.includes('SMDG code:'),
-            )) {
-            if (!body.includes(line))
-              throw new Error('Missing identifier ' + line);
-          }
-          if (downloads) findDownloads(body, downloads);
+          const required = [
+            ...new Set(
+              markdownLinks(expected)
+                .map(
+                  (link) =>
+                    new URL(link, url).pathname.match(/\.(json|csv)$/)?.[1],
+                )
+                .filter(Boolean),
+            ),
+          ];
+          findDownloads(markdownLinks(body), downloads, url, required);
         });
       }
       await verifyMarkdown(
@@ -96,25 +133,24 @@ export async function verifyDeployedCoverage({
       await verifyMarkdown(
         new URL('data/coverage/' + slug + '.md', base),
         'docs/data/coverage/' + slug + '.mdx',
+        referenceDownloads,
       );
-      const urls = new Map(
-        [...htmlDownloads, ...markdownDownloads].map(([, url]) => [
-          String(url),
-          url,
-        ]),
-      );
-      for (const [, url] of htmlDownloads) urls.set(String(url), url);
+      const urls = new Map([
+        ...htmlDownloads,
+        ...markdownDownloads,
+        ...referenceDownloads,
+      ]);
       await Promise.all(
         [...urls.values()].map(async (url) => {
-          const expected = await readFile(
-            resolve(
-              root,
-              'docs/data/coverage/',
-              url.pathname.split('/').at(-1),
-            ),
-            'utf8',
-          );
-          await check(url, (body) => {
+          await check(url, async (body) => {
+            const filename = url.pathname.split('/').at(-1);
+            const extension = filename.split('.').at(-1);
+            if (filename !== slug + '.' + extension)
+              throw new Error('Unexpected download filename ' + filename);
+            const expected = await readFile(
+              resolve(root, 'docs/data/coverage/', filename),
+              'utf8',
+            );
             if (url.pathname.endsWith('.json')) {
               if (!isDeepStrictEqual(JSON.parse(body), JSON.parse(expected)))
                 throw new Error('JSON snapshot differs from this checkout');
