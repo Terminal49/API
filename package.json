@@ -13,7 +13,7 @@
     "check": "vp check && npm run build --workspace @terminal49/sdk && npm run type-check:api && vp run -r type-check",
     "format": "vp fmt --write api packages sdks",
     "lint:api": "vp lint api && vp fmt --check api",
-    "test": "vp run -r test",
+    "test": "node --test tools/postman-generation.test.mjs && vp run -r test",
     "test:coverage": "node --test tools/generate-coverage.test.mjs tools/generate-rail-terminals.test.mjs && node tools/generate-coverage.mjs --check && node tools/generate-rail-terminals.mjs --check",
     "type-check:api": "tsc --noEmit -p tsconfig.json",
     "sdk:docs": "npm run docs --workspace @terminal49/sdk"
