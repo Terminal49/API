@@ -8,6 +8,9 @@ import {
   generateFiles,
   updateAgentCoverage,
   validateCoverage,
+  validateTerminalCapabilities,
+  applyShippingLineOverrides,
+  validateShippingLineOverrides,
 } from './generate-coverage.mjs';
 
 const data = JSON.parse(
@@ -37,11 +40,11 @@ test('only approved public entities and complete feature assessments are exporte
   assert.equal(data.terminals.length, 138);
   assert.equal(
     data.shippingLines.filter((row) => row.access === 'public').length,
-    36,
+    34,
   );
   assert.equal(
     data.shippingLines.filter((row) => row.access === 'account').length,
-    2,
+    1,
   );
   assert.equal(data.railCarriers.length, 6);
   assert.equal(data.featureCatalog.railCarriers.length, 13);
@@ -97,7 +100,7 @@ test('static references include every feature and preserve credential requiremen
   const files = generateFiles(data);
   const shipping = files.get('docs/data/coverage/shipping-lines.mdx');
   const rail = files.get('docs/data/coverage/rail-carriers.mdx');
-  assert.equal((shipping.match(/^\| (?!---|Section)/gm) ?? []).length, 38 * 61);
+  assert.equal((shipping.match(/^\| (?!---|Section)/gm) ?? []).length, 35 * 61);
   assert.equal((rail.match(/^\| (?!---|Section)/gm) ?? []).length, 6 * 13);
   assert.ok(rail.includes('Carrier credentials required'));
   assert.ok(rail.includes('requires the Rail Plan'));
@@ -295,14 +298,6 @@ async function importFixture(t, mutate = () => {}) {
       scac,
     ),
   }));
-  await writeFile(
-    path.join(directory, 'docs/snippets/data-sources/coverage-data.mdx'),
-    'export const terminals = ' +
-      JSON.stringify(terminals) +
-      ';\nexport const carriers = ' +
-      JSON.stringify(carriers) +
-      ';\n',
-  );
   for (const page of ['terminals', 'ocean-carriers', 'rail'])
     await writeFile(
       path.join(directory, 'docs/coverage', page + '.mdx'),
@@ -391,6 +386,12 @@ async function importFixture(t, mutate = () => {}) {
       'USXXX:Named terminal': { smdgCode: 'NAM', firmsCode: '' },
     },
     omitFile: false,
+    capabilities: {},
+    omitCapabilities: false,
+    shippingOverrides: {},
+    omitShippingOverrides: false,
+    carriers,
+    terminals,
   };
   mutate(hex, identifierOptions);
   if (!identifierOptions.omitFile) {
@@ -400,6 +401,28 @@ async function importFixture(t, mutate = () => {}) {
       JSON.stringify(identifierOptions.identifiers),
     );
   }
+  if (!identifierOptions.omitCapabilities) {
+    await mkdir(path.join(directory, 'tools/data'), { recursive: true });
+    await writeFile(
+      path.join(directory, 'tools/data/terminal-capabilities.json'),
+      JSON.stringify(identifierOptions.capabilities),
+    );
+  }
+  if (!identifierOptions.omitShippingOverrides) {
+    await mkdir(path.join(directory, 'tools/data'), { recursive: true });
+    await writeFile(
+      path.join(directory, 'tools/data/shipping-line-overrides.json'),
+      JSON.stringify(identifierOptions.shippingOverrides),
+    );
+  }
+  await writeFile(
+    path.join(directory, 'docs/snippets/data-sources/coverage-data.mdx'),
+    'export const terminals = ' +
+      JSON.stringify(terminals) +
+      ';\nexport const carriers = ' +
+      JSON.stringify(carriers) +
+      ';\n',
+  );
   const filename = path.join(directory, 'source.json');
   await writeFile(filename, JSON.stringify(hex));
   const result = spawnSync(
@@ -529,7 +552,10 @@ test('CLI imports fresh terminal assessments and capture date without generated 
   const check = spawnSync(
     process.execPath,
     ['tools/generate-coverage.mjs', '--check'],
-    { cwd: fixture.directory, encoding: 'utf8' },
+    {
+      cwd: fixture.directory,
+      encoding: 'utf8',
+    },
   );
   assert.equal(check.status, 0, check.stderr);
 });
@@ -566,7 +592,13 @@ test('canonical tracking identifiers follow approved lookup admission for every 
     ),
     'carriers',
   );
-  for (const approved of registry) {
+  const overrides = JSON.parse(
+    await readFile(
+      new URL('./data/shipping-line-overrides.json', import.meta.url),
+      'utf8',
+    ),
+  );
+  for (const approved of applyShippingLineOverrides(registry, overrides)) {
     const row = data.shippingLines.find(({ scac }) => scac === approved.scac);
     for (const key of ['billOfLading', 'bookingNumber', 'containerNumber'])
       assert.equal(
@@ -631,7 +663,9 @@ test('terminal identifiers export separately while coverage keys retain source i
   );
   assert.deepEqual(
     exportedValue(snippet, 'terminalFeatureCoverage')[stableKey],
-    { features: entity.features },
+    {
+      features: entity.features,
+    },
   );
   const identity = exportedValue(snippet, 'terminalCoverageEntities').find(
     (row) => row.name === entity.name,
@@ -780,6 +814,211 @@ test('CLI rejects missing or malformed identifier mapping before publishing', as
       fixture.result.stderr,
       /ENOENT|Invalid (terminal identifier mapping|SMDG|FIRMS) code|Invalid terminal identifier mapping/,
     );
+    await assert.rejects(fixture.read('docs/data/coverage/coverage.json'), {
+      code: 'ENOENT',
+    });
+  }
+});
+
+test('canonical reviewed capabilities survive independent traffic classifications', async () => {
+  const declarations = JSON.parse(
+    await readFile(
+      new URL('./data/terminal-capabilities.json', import.meta.url),
+      'utf8',
+    ),
+  );
+  validateTerminalCapabilities(declarations);
+  for (const [key, declaration] of Object.entries(declarations)) {
+    const matching = data.terminals.filter(
+      (row) => `${row.locode}:${row.smdgCode}` === key,
+    );
+    assert.equal(matching.length, 1, key);
+    for (const [feature, status] of Object.entries(declaration.features))
+      assert.equal(matching[0].features[feature], status, `${key} ${feature}`);
+  }
+});
+
+test('reviewed capability import uses verified port and SMDG identity and overrides low-volume observations', async (t) => {
+  const fixture = await importFixture(t, (hex, options) => {
+    options.capabilities = {
+      'USXXX:ABC': {
+        features: { lastFreeDay: 'supported', vesselDischarged: 'supported' },
+      },
+      'USYYY:NAM': { features: { lastFreeDay: 'supported' } },
+      'USXXX:CD34': { features: { lastFreeDay: 'supported' } },
+    };
+    hex.terminals[0].features['Vessel Discharged'] = 'unknown';
+  });
+  assert.equal(fixture.result.status, 0, fixture.result.stderr);
+  const imported = JSON.parse(
+    await fixture.read('docs/data/coverage/coverage.json'),
+  );
+  assert.equal(imported.terminals[0].features.lastFreeDay, 'supported');
+  assert.equal(imported.terminals[0].features.vesselDischarged, 'supported');
+  assert.equal(imported.terminals[0].features.availableForPickup, 'limited');
+  assert.equal(imported.terminals[1].features.lastFreeDay, 'unknown');
+  assert.equal(imported.terminals[2].features.lastFreeDay, 'unknown');
+});
+
+test('CLI requires a valid reviewed capability file before publishing', async (t) => {
+  for (const capabilities of [
+    [],
+    null,
+    { 'USXXX:ABC': { features: { invented: 'supported' } } },
+    { 'USXXX:ABC': { features: { lastFreeDay: 'yes' } } },
+    { 'USXXX:': { features: { lastFreeDay: 'supported' } } },
+    { 'USXXX:Named terminal': { features: { lastFreeDay: 'supported' } } },
+    { 'USXXX:ABC': { features: {} } },
+    {
+      'USXXX:ABC': { features: { lastFreeDay: 'supported' }, private: 'value' },
+    },
+  ]) {
+    const fixture = await importFixture(t, (_hex, options) => {
+      options.capabilities = capabilities;
+    });
+    assert.notEqual(fixture.result.status, 0);
+    assert.match(fixture.result.stderr, /Invalid terminal capability mapping/);
+    await assert.rejects(fixture.read('docs/data/coverage/coverage.json'), {
+      code: 'ENOENT',
+    });
+  }
+  const missing = await importFixture(t, (_hex, options) => {
+    options.omitCapabilities = true;
+  });
+  assert.notEqual(missing.result.status, 0);
+  assert.match(missing.result.stderr, /ENOENT/);
+});
+
+test('terminals sharing an SMDG code in different ports cannot inherit a declaration', async (t) => {
+  const fixture = await importFixture(t, (_hex, options) => {
+    options.capabilities = {
+      'USXXX:ABC': { features: { lastFreeDay: 'supported' } },
+    };
+    options.terminals[1].locode = 'USYYY';
+    options.identifiers['USYYY:Named terminal'] = {
+      smdgCode: 'ABC',
+      firmsCode: '',
+    };
+  });
+  assert.equal(fixture.result.status, 0, fixture.result.stderr);
+  const imported = JSON.parse(
+    await fixture.read('docs/data/coverage/coverage.json'),
+  );
+  assert.equal(imported.terminals[0].features.lastFreeDay, 'supported');
+  assert.equal(imported.terminals[1].smdgCode, 'ABC');
+  assert.equal(imported.terminals[1].features.lastFreeDay, 'unknown');
+});
+
+test('reviewed carrier state survives fresh observations and overrides historical admission', async (t) => {
+  const fixture = await importFixture(t, (hex, options) => {
+    for (const scac of ['SAFM', 'SEJJ', 'SQQY', 'SMLU', 'TRBR']) {
+      options.carriers.push({
+        ...options.carriers[0],
+        scac,
+        access: 'account',
+        containerNumber: false,
+      });
+      if (scac !== 'SMLU')
+        hex.shipping_lines.push({
+          scac,
+          features: {
+            'Container Number': 'supported',
+            'POD ETA': 'supported',
+          },
+        });
+    }
+    options.shippingOverrides = {
+      SAFM: { enabled: false },
+      SEJJ: { enabled: false },
+      SQQY: { enabled: false },
+      SMLU: {
+        access: 'public',
+        trackingIdentifiers: { containerNumber: true },
+      },
+    };
+  });
+  assert.equal(fixture.result.status, 0, fixture.result.stderr);
+  const imported = JSON.parse(
+    await fixture.read('docs/data/coverage/coverage.json'),
+  );
+  for (const scac of ['SAFM', 'SEJJ', 'SQQY']) {
+    assert.ok(!imported.shippingLines.some((row) => row.scac === scac));
+    assert.ok(
+      !JSON.parse(
+        await fixture.read('docs/data/coverage/shipping-lines.json'),
+      ).shippingLines.some((row) => row.scac === scac),
+    );
+  }
+  const seaboard = imported.shippingLines.find((row) => row.scac === 'SMLU');
+  assert.equal(seaboard.access, 'public');
+  assert.equal(seaboard.features.containerNumber, 'supported');
+  assert.equal(seaboard.features.podEta, 'unknown');
+  const turkon = imported.shippingLines.find((row) => row.scac === 'TRBR');
+  assert.equal(turkon.access, 'account');
+  assert.equal(turkon.features.containerNumber, 'unsupported');
+});
+
+test('shipping overrides require exact primary SCACs and reviewed field types', () => {
+  const registry = [
+    {
+      scac: 'SMLU',
+      alternativeScacs: ['ALIA'],
+      access: 'account',
+      containerNumber: false,
+    },
+  ];
+  for (const overrides of [
+    null,
+    [],
+    { ALIA: { enabled: false } },
+    { XXXX: { enabled: false } },
+    { SMLU: {} },
+    { SMLU: { name: 'Changed' } },
+    { SMLU: { enabled: 'false' } },
+    { SMLU: { access: 'private' } },
+    { SMLU: { trackingIdentifiers: [] } },
+    { SMLU: { trackingIdentifiers: {} } },
+    { SMLU: { trackingIdentifiers: { podEta: true } } },
+    { SMLU: { trackingIdentifiers: { containerNumber: 'true' } } },
+  ])
+    assert.throws(
+      () => validateShippingLineOverrides(overrides, registry),
+      /Invalid shipping line/,
+    );
+  assert.deepEqual(applyShippingLineOverrides(registry, {}), registry);
+  assert.deepEqual(
+    applyShippingLineOverrides(
+      registry,
+      Object.create({ SMLU: { enabled: false } }),
+    ),
+    registry,
+  );
+  assert.deepEqual(
+    applyShippingLineOverrides(registry, {
+      SMLU: {
+        access: 'public',
+        trackingIdentifiers: { containerNumber: true },
+      },
+    }),
+    [{ ...registry[0], access: 'public', containerNumber: true }],
+  );
+  assert.deepEqual(
+    applyShippingLineOverrides(registry, { SMLU: { enabled: false } }),
+    [],
+  );
+});
+
+test('CLI requires the shipping override file and rejects invalid review state', async (t) => {
+  for (const mutate of [
+    (_hex, options) => {
+      options.omitShippingOverrides = true;
+    },
+    (_hex, options) => {
+      options.shippingOverrides = { ALIA: { enabled: false } };
+    },
+  ]) {
+    const fixture = await importFixture(t, mutate);
+    assert.notEqual(fixture.result.status, 0);
     await assert.rejects(fixture.read('docs/data/coverage/coverage.json'), {
       code: 'ENOENT',
     });

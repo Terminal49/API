@@ -1,0 +1,20 @@
+{
+  "AUBNE:DPBNE": {
+    "features": {
+      "lastFreeDay": "supported",
+      "vesselDischarged": "supported"
+    }
+  },
+  "AUFRE:CONFR": {
+    "features": {
+      "lastFreeDay": "supported",
+      "vesselDischarged": "supported"
+    }
+  },
+  "AUSYD:CTLPB": {
+    "features": {
+      "lastFreeDay": "supported",
+      "vesselDischarged": "supported"
+    }
+  }
+}

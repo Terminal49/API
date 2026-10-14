@@ -10,34 +10,23 @@ const pairs = {
   'inland-rail-terminals': 'inland-rail-terminals',
 };
 async function fixture(url) {
-  const path = new URL(url).pathname.replace('/docs/', '');
+  const path = new URL(url).pathname.split('/docs/').at(-1);
   if (path === 'llms.txt')
     return Object.keys(pairs)
       .map((page) => `[${page}](/docs/coverage/${page})`)
       .join('\n');
   if (path.startsWith('coverage/')) {
     const page = path.split('/').at(-1).replace(/\.md$/, '');
-    const links = ['json', 'csv']
-      .map(
-        (extension) =>
-          `[${extension}](/docs/data/coverage/${pairs[page]}.${extension})`,
+    const source = (
+      await readFile(
+        new URL('../docs/coverage/' + page + '.mdx', import.meta.url),
+        'utf8',
       )
+    ).replaceAll('](/data/coverage/', '](/docs/data/coverage/');
+    if (path.endsWith('.md')) return source;
+    return [...source.matchAll(/\]\(([^)]+\.(?:json|csv))\)/g)]
+      .map((match) => `<a href="${match[1]}">Download</a>`)
       .join('\n');
-    return path.endsWith('.md')
-      ? (
-          await readFile(
-            new URL('../docs/coverage/' + page + '.mdx', import.meta.url),
-            'utf8',
-          )
-        ).replaceAll('](/data/coverage/', '](/docs/data/coverage/') +
-          '\n' +
-          links
-      : ['json', 'csv']
-          .map(
-            (extension) =>
-              `<a href="/docs/data/coverage/${pairs[page]}.${extension}">${extension}</a>`,
-          )
-          .join('\n');
   }
   return (
     await readFile(
@@ -202,7 +191,7 @@ test('checks download URLs linked only from data references', async () => {
       return new Response(
         String(url).endsWith('/data/coverage/rail-carriers.md')
           ? body.replace(
-              '](/docs/data/coverage/rail-carriers.json)',
+              /\]\([^)]*\/rail-carriers\.json\)/,
               '](https://broken.example/rail-carriers.json)',
             )
           : body,
