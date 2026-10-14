@@ -57,9 +57,14 @@ for (const path of ['/documents/types', '/documents/types/{code}']) {
     assert.ok(item, `Missing generated request for ${operation.summary}`);
     for (const [status, response] of Object.entries(operation.responses)) {
       const declared = response.content['application/json'].examples;
-      const generated = item.response.find((example) => example.code === Number(status));
+      const generated = item.response.find(
+        (example) => example.code === Number(status),
+      );
       assert.ok(generated, `Missing generated ${status} example`);
-      assert.deepEqual(JSON.parse(generated.body), Object.values(declared)[0].value);
+      assert.deepEqual(
+        JSON.parse(generated.body),
+        Object.values(declared)[0].value,
+      );
       assert.equal(generated.body.includes('<Circular reference'), false);
     }
   });
