@@ -299,7 +299,9 @@ Gnosis's `demurrage_amount` maps to a `demurrage` entry in `fees_at_pod_terminal
 - `pickup_lfd_terminal`: the terminal's LFD (demurrage deadline) — the equivalent of Gnosis's `last_free_demurrage_day_dt`
 - `pickup_lfd_rail`: the rail carrier's LFD at the inland destination
 
-Each has its own webhook event, so you can alert on whichever source your operation cares about. Gnosis's `gnosis_estimated_last_free_demurrage_day_dt` is a predictive estimate; Terminal49 has no equivalent, since `import_deadlines` only carries dates the terminal or line has actually published.
+Each has its own webhook event, so you can alert on whichever source your operation cares about.
+
+Gnosis's `gnosis_estimated_last_free_demurrage_day_dt` is a predictive estimate. The Terminal49 equivalent is the calculated LFD, a tariff-based estimate for the port of discharge, available to accounts opted into Smart LFD.
 
 ### Release readiness
 
@@ -393,7 +395,7 @@ Worth knowing before you commit.
 
 **No customs milestone tracking.** Gnosis exposes customs milestones and a `customs_clearance_dt` field directly. Terminal49 has no direct equivalent beyond the `customs` entry on `holds_at_pod_terminal`, which tells you whether a customs hold is currently blocking pickup, not a full customs event timeline.
 
-**No predictive fee or ETA estimates.** Gnosis publishes `gnosis_estimated_*` fields for demurrage, detention, next-day demurrage, and LFD, plus a `gnosis_vessel_eta_dt` predictive ETA. Terminal49 reports what carriers and terminals have actually posted — `pod_eta_at`, `fees_at_pod_terminal`, and `import_deadlines` — and does not predict future values.
+**No predictive fee or ETA estimates.** Gnosis publishes `gnosis_estimated_*` fields for demurrage, detention, and next-day demurrage, plus a `gnosis_vessel_eta_dt` predictive ETA. Terminal49 reports the fees and ETAs that carriers and terminals have actually posted (`pod_eta_at` and `fees_at_pod_terminal`) and does not predict them. The exception is the LFD: Terminal49 offers an opt-in calculated POD LFD (see [Last free day](#last-free-day)).
 
 **Carrier count.** Terminal49 integrates directly with 36 ocean carriers, plus 2 more enabled on request, as of 14 August 2026. Check your carrier mix against the [ocean carrier list](/coverage/ocean-carriers) before cutover, and read the known issues section there. We publish the per-carrier field gaps.
 
