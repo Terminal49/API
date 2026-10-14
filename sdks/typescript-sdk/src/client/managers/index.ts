@@ -4,4 +4,3 @@ export * from './shipments.js';
 export * from './shipping-lines.js';
 export * from './tracking-requests.js';
 export * from './documents.js';
-export type { PartyRoleName } from './entity-subresources.js';

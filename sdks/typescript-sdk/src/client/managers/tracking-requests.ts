@@ -1,3 +1,4 @@
+import type { components } from '../../generated/terminal49.js';
 import type { TrackingRequest } from '../../types/models.js';
 import type {
   CallOptions,
@@ -13,12 +14,8 @@ import {
 } from '../mappers.js';
 import { copyStringParams, normalizeInclude } from '../query.js';
 import { BaseManager } from './base.js';
-import {
-  createCustomField,
-  deleteCustomField,
-  listCustomFields,
-  updateCustomField,
-} from './entity-subresources.js';
+
+type CustomFieldValue = components['schemas']['custom_field_value'];
 
 export type TrackingRequestType =
   | 'container'
@@ -113,7 +110,10 @@ export class TrackingRequestManager extends BaseManager {
 
   /** List custom field values set on a tracking request, with their definitions. */
   async customFields(id: string, options?: CallOptions): Promise<any> {
-    const raw = await listCustomFields(this.transport, 'tracking_requests', id);
+    // The spec omits include=definition, but mapCustomFields reads the included definitions.
+    const raw = await this.transport.executeManual(
+      `${this.transport.baseUrl}/tracking_requests/${encodeURIComponent(id)}/custom_fields?include=definition`,
+    );
     return this.formatResult(raw, options?.format, mapCustomFields);
   }
 
@@ -121,15 +121,22 @@ export class TrackingRequestManager extends BaseManager {
   async setCustomField(
     id: string,
     apiSlug: string,
-    value: unknown,
+    value: CustomFieldValue,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await createCustomField(
-      this.transport,
-      'tracking_requests',
-      id,
-      apiSlug,
-      value,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.POST(
+        '/tracking_requests/{tracking_request_id}/custom_fields',
+        {
+          params: { path: { tracking_request_id: id } },
+          body: {
+            data: {
+              type: 'custom_field',
+              attributes: { api_slug: apiSlug, value },
+            },
+          },
+        },
+      ),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -138,15 +145,17 @@ export class TrackingRequestManager extends BaseManager {
   async updateCustomField(
     id: string,
     apiSlug: string,
-    value: unknown,
+    value: CustomFieldValue,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await updateCustomField(
-      this.transport,
-      'tracking_requests',
-      id,
-      apiSlug,
-      value,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.PATCH(
+        '/tracking_requests/{tracking_request_id}/custom_fields/{api_slug}',
+        {
+          params: { path: { tracking_request_id: id, api_slug: apiSlug } },
+          body: { data: { type: 'custom_field', attributes: { value } } },
+        },
+      ),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -157,11 +166,13 @@ export class TrackingRequestManager extends BaseManager {
     apiSlug: string,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await deleteCustomField(
-      this.transport,
-      'tracking_requests',
-      id,
-      apiSlug,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.DELETE(
+        '/tracking_requests/{tracking_request_id}/custom_fields/{api_slug}',
+        {
+          params: { path: { tracking_request_id: id, api_slug: apiSlug } },
+        },
+      ),
     );
     return this.formatResult(raw, options?.format);
   }

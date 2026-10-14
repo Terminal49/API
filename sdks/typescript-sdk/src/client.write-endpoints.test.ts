@@ -70,14 +70,33 @@ describe('entity custom fields', () => {
 });
 
 describe('party roles', () => {
-  it.each(['containers', 'shipments'] as const)(
-    '%s exposes list/add/remove',
-    async (collection) => {
+  it.each([
+    {
+      collection: 'containers',
+      role: 'pickup_dray_carrier',
+      addRole: (client: Terminal49Client) =>
+        client.containers.addPartyRole('id-1', {
+          role: 'pickup_dray_carrier',
+          partyId: 'party-9',
+        }),
+    },
+    {
+      collection: 'shipments',
+      role: 'consignee',
+      addRole: (client: Terminal49Client) =>
+        client.shipments.addPartyRole('id-1', {
+          role: 'consignee',
+          partyId: 'party-9',
+        }),
+    },
+  ] as const)(
+    '$collection exposes list/add/remove',
+    async ({ collection, role, addRole }) => {
       const { client, calls } = buildClient();
       const m = client[collection];
 
       await m.partyRoles('id-1');
-      await m.addPartyRole('id-1', 'consignee', 'party-9');
+      await addRole(client);
       await m.removePartyRole('id-1', 'role-3');
 
       expect(calls.map((c) => [c.method, c.path])).toEqual([
@@ -88,7 +107,7 @@ describe('party roles', () => {
       expect(calls[1].body).toEqual({
         data: {
           type: 'party_role',
-          attributes: { role: 'consignee' },
+          attributes: { role },
           relationships: { party: { data: { type: 'party', id: 'party-9' } } },
         },
       });
