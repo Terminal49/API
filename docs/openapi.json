@@ -1590,6 +1590,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         }
       }
@@ -1627,6 +1636,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         }
       }
@@ -2281,6 +2299,9 @@
                 "examples": {}
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "404": {
             "description": "Not Found",
@@ -2964,6 +2985,9 @@
               }
             }
           },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -3030,6 +3054,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "description": "Update a tracking request",
@@ -3137,6 +3164,12 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -3236,6 +3269,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -3343,6 +3379,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "description": "Update a single webhook",
@@ -3469,8 +3508,11 @@
         "summary": "Delete a webhook",
         "operationId": "delete-webhooks-id",
         "responses": {
-          "200": {
-            "description": "OK"
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "description": "Delete a webhook",
@@ -3789,6 +3831,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         }
       },
@@ -8449,6 +8494,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-containers-id",
@@ -9747,6 +9795,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-containers-id-map-geojson",
@@ -10889,6 +10940,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -10949,10 +11006,20 @@
           "Custom Field Definitions"
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
-        }
+        },
+        "description": "Deletes a custom field definition. A definition that has values, or a template other accounts use, returns 422; archive it instead."
       }
     },
     "/custom_field_definitions/{definition_id}/options": {
@@ -11024,6 +11091,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -11118,6 +11191,9 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       },
@@ -11145,6 +11221,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -11193,8 +11275,14 @@
           "Custom Field Options"
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -11299,6 +11387,12 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -11455,6 +11549,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -11502,8 +11599,11 @@
           "Custom Fields"
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -11577,6 +11677,12 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -11676,6 +11782,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -11838,7 +11947,7 @@
             }
           },
           "404": {
-            "description": "Not Found"
+            "$ref": "#/components/responses/NotFound"
           }
         }
       },
@@ -12045,7 +12154,7 @@
             }
           },
           "404": {
-            "description": "Not Found"
+            "$ref": "#/components/responses/NotFound"
           },
           "422": {
             "description": "Unprocessable Entity",
@@ -12145,7 +12254,7 @@
             }
           },
           "404": {
-            "description": "Not Found"
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -12219,6 +12328,12 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -12318,6 +12433,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -12480,7 +12598,7 @@
             }
           },
           "404": {
-            "description": "Not Found"
+            "$ref": "#/components/responses/NotFound"
           }
         }
       },
@@ -12681,7 +12799,7 @@
             }
           },
           "404": {
-            "description": "Not Found"
+            "$ref": "#/components/responses/NotFound"
           },
           "422": {
             "description": "Unprocessable Entity",
@@ -12796,7 +12914,7 @@
             }
           },
           "404": {
-            "description": "Not Found"
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -16135,10 +16253,7 @@
             "nullable": true,
             "additionalProperties": true
           }
-        },
-        "required": [
-          "title"
-        ]
+        }
       },
       "metro_area": {
         "title": "Metro area model",
@@ -19664,6 +19779,119 @@
             "required": [
               "accounts"
             ]
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/error"
+                  }
+                }
+              }
+            },
+            "example": {
+              "errors": [
+                {
+                  "status": "400",
+                  "title": "Bad Request",
+                  "source": {
+                    "parameter": "include"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized. The API token is missing or invalid, or the account may not perform this action.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/error"
+                  }
+                }
+              }
+            },
+            "example": {
+              "errors": [
+                {
+                  "detail": "You are not allowed to perform this action"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not Found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/error"
+                  }
+                }
+              }
+            },
+            "example": {
+              "errors": [
+                {
+                  "status": "404",
+                  "title": "Not Found"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "Unprocessable Entity",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/error"
+                  }
+                }
+              }
+            },
+            "example": {
+              "errors": [
+                {
+                  "status": "422",
+                  "source": {
+                    "pointer": "/data/attributes/label"
+                  },
+                  "title": "Unprocessable Entity",
+                  "detail": "Label can't be blank",
+                  "code": "blank"
+                }
+              ]
+            }
           }
         }
       }

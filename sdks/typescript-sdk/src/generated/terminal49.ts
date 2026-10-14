@@ -820,7 +820,10 @@ export interface paths {
         get: operations["get-custom-field-definitions-id"];
         put?: never;
         post?: never;
-        /** Delete a custom field definition */
+        /**
+         * Delete a custom field definition
+         * @description Deletes a custom field definition. A definition that has values, or a template other accounts use, returns 422; archive it instead.
+         */
         delete: operations["delete-custom-field-definitions-id"];
         options?: never;
         head?: never;
@@ -1803,7 +1806,7 @@ export interface components {
         /** Error model */
         error: {
             detail?: string | null;
-            title: string | null;
+            title?: string | null;
             source?: {
                 pointer?: string | null;
                 parameter?: string | null;
@@ -3234,7 +3237,99 @@ export interface components {
             };
         };
     };
-    responses: never;
+    responses: {
+        /** @description Bad Request */
+        BadRequest: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "errors": [
+                 *         {
+                 *           "status": "400",
+                 *           "title": "Bad Request",
+                 *           "source": {
+                 *             "parameter": "include"
+                 *           }
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    errors?: components["schemas"]["error"][];
+                };
+            };
+        };
+        /** @description Unauthorized. The API token is missing or invalid, or the account may not perform this action. */
+        Unauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "errors": [
+                 *         {
+                 *           "detail": "You are not allowed to perform this action"
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    errors?: components["schemas"]["error"][];
+                };
+            };
+        };
+        /** @description Not Found */
+        NotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "errors": [
+                 *         {
+                 *           "status": "404",
+                 *           "title": "Not Found"
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    errors?: components["schemas"]["error"][];
+                };
+            };
+        };
+        /** @description Unprocessable Entity */
+        UnprocessableEntity: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "errors": [
+                 *         {
+                 *           "status": "422",
+                 *           "source": {
+                 *             "pointer": "/data/attributes/label"
+                 *           },
+                 *           "title": "Unprocessable Entity",
+                 *           "detail": "Label can't be blank",
+                 *           "code": "blank"
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    errors?: components["schemas"]["error"][];
+                };
+            };
+        };
+    };
     parameters: never;
     requestBodies: never;
     headers: never;
@@ -3659,6 +3754,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "patch-shipments-id-resume-tracking": {
@@ -3683,6 +3781,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-tracking-requests": {
@@ -3741,6 +3842,7 @@ export interface operations {
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             /** @description Not Found */
             404: {
                 headers: {
@@ -4048,6 +4150,7 @@ export interface operations {
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             /** @description Not Found */
             404: {
                 headers: {
@@ -4098,6 +4201,7 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-tracking-requests-custom-fields": {
@@ -4175,6 +4279,8 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "delete-tracking-requests-custom-fields-api-slug": {
@@ -4238,6 +4344,7 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-webhooks-id": {
@@ -4275,13 +4382,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-webhooks-id": {
@@ -4333,6 +4441,7 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-webhooks": {
@@ -4410,6 +4519,7 @@ export interface operations {
                     "application/xml": components["schemas"]["webhook"];
                 };
             };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-webhooks-events": {
@@ -5715,6 +5825,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-containers-id": {
@@ -5882,6 +5993,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-containers-id-refresh": {
@@ -6463,13 +6575,16 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "patch-custom-field-definitions-id": {
@@ -6514,6 +6629,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-field-options": {
@@ -6581,6 +6698,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-field-options-id": {
@@ -6609,6 +6728,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     "delete-custom-field-options-id": {
@@ -6625,13 +6745,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-custom-field-options-id": {
@@ -6673,6 +6795,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-fields": {
@@ -6771,6 +6895,8 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-fields-id": {
@@ -6811,13 +6937,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-custom-fields-id": {
@@ -6856,6 +6983,7 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-shipments-custom-fields": {
@@ -6933,6 +7061,8 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "delete-shipments-custom-fields-api-slug": {
@@ -6996,6 +7126,7 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-shipments-party-roles": {
@@ -7035,13 +7166,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     "post-shipments-party-roles": {
@@ -7127,13 +7252,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
             /** @description Unprocessable Entity */
             422: {
                 headers: {
@@ -7179,13 +7298,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-containers-custom-fields": {
@@ -7263,6 +7376,8 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "delete-containers-custom-fields-api-slug": {
@@ -7326,6 +7441,7 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-containers-party-roles": {
@@ -7365,13 +7481,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     "post-containers-party-roles": {
@@ -7457,13 +7567,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
             /** @description Unprocessable Entity */
             422: {
                 headers: {
@@ -7509,13 +7613,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-parties-id": {
