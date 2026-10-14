@@ -69,3 +69,13 @@ for (const path of ['/documents/types', '/documents/types/{code}']) {
     }
   });
 }
+
+test('schema-based webhook edit request bodies survive response example generation', () => {
+  const item = requests(collection.item).find(
+    (candidate) => candidate.name === 'Edit a webhook',
+  );
+  assert.ok(item, 'Missing generated webhook edit request');
+  const body = JSON.parse(item.request.body.raw);
+  assert.equal(body.data.type, 'webhook');
+  assert.equal(typeof body.data.attributes.url, 'string');
+});
