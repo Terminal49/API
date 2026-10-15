@@ -41,6 +41,21 @@ import {
   executeListParties,
   listPartiesInputSchema,
 } from './tools/list-parties.js';
+import {
+  AssistantSqlError,
+  DESCRIBE_VIEWS_DESCRIPTION,
+  describeViewsInputSchema,
+  executeDescribeViews,
+  executeGetQueryResult,
+  executeQuery,
+  executeQueryGuide,
+  GET_QUERY_RESULT_DESCRIPTION,
+  getQueryResultInputSchema,
+  QUERY_DESCRIPTION,
+  QUERY_GUIDE_DESCRIPTION,
+  queryGuideInputSchema,
+  queryInputSchema,
+} from './tools/assistant-sql.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
@@ -100,7 +115,7 @@ Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and bookin
 
 Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete or overwrite data.
 
-Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for ports, ETAs, and the current vessel if the account has Routing Data). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links.`;
+Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for ports, ETAs, and the current vessel if the account has Routing Data). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. For other account-wide counts, comparisons, trends and reports, accounts with Terminal49 SQL access can use query: read query_guide topic method first, look up columns with describe_views, then page stored results with get_query_result. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links.`;
 
 type ResponseDisplayColumn = {
   key: string;
@@ -826,6 +841,15 @@ function wrapTool<TArgs>(
         structuredContent,
       };
     } catch (error) {
+      // Expected backend refusals (no SQL access, query mistakes, rate
+      // limits) carry a message meant for the model; they are not failures.
+      if (error instanceof AssistantSqlError) {
+        return {
+          content: [{ type: 'text', text: error.toolText() }],
+          structuredContent: error.body,
+          isError: true,
+        };
+      }
       const err = error as Error;
       captureMcpException(error);
       await flushMcpEvents();
@@ -1528,7 +1552,66 @@ export function createTerminal49McpServer(
     ),
   );
 
-  // Tool 11: Search Docs
+  // Tools 11-14: AskT49 SQL. Rails decides who may use them (OAuth MCP
+  // clients on accounts with assistant-sql) and returns 401/403 otherwise.
+  const assistantApi = { apiToken, apiBaseUrl, accountId };
+  const assistantAnnotations = {
+    readOnlyHint: true,
+    destructiveHint: false,
+    openWorldHint: false,
+  };
+
+  server.registerTool(
+    'query',
+    {
+      title: 'Query Account Data (SQL)',
+      description: QUERY_DESCRIPTION,
+      annotations: assistantAnnotations,
+      inputSchema: z.preprocess(stripLegacyIntent, queryInputSchema),
+    },
+    wrapTool('query', async (args) => executeQuery(args, assistantApi)),
+  );
+
+  server.registerTool(
+    'get_query_result',
+    {
+      title: 'Get Query Result Rows',
+      description: GET_QUERY_RESULT_DESCRIPTION,
+      annotations: assistantAnnotations,
+      inputSchema: z.preprocess(stripLegacyIntent, getQueryResultInputSchema),
+    },
+    wrapTool('get_query_result', async (args) =>
+      executeGetQueryResult(args, assistantApi),
+    ),
+  );
+
+  server.registerTool(
+    'describe_views',
+    {
+      title: 'Describe Queryable Views',
+      description: DESCRIBE_VIEWS_DESCRIPTION,
+      annotations: assistantAnnotations,
+      inputSchema: z.preprocess(stripLegacyIntent, describeViewsInputSchema),
+    },
+    wrapTool('describe_views', async (args) =>
+      executeDescribeViews(args, assistantApi),
+    ),
+  );
+
+  server.registerTool(
+    'query_guide',
+    {
+      title: 'Read Query Guide',
+      description: QUERY_GUIDE_DESCRIPTION,
+      annotations: assistantAnnotations,
+      inputSchema: z.preprocess(stripLegacyIntent, queryGuideInputSchema),
+    },
+    wrapTool('query_guide', async (args) =>
+      executeQueryGuide(args, assistantApi),
+    ),
+  );
+
+  // Tool 15: Search Docs
   server.registerTool(
     'search_docs',
     {

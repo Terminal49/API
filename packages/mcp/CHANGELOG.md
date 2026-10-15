@@ -5,6 +5,11 @@ All notable changes to the Terminal49 MCP Server (TypeScript) will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- AskT49 SQL tools for OAuth-connected clients on accounts with SQL access: `query` (one read-only SELECT over the `assistant_*` views), `get_query_result` (page a stored result), `describe_views` (views, columns and named metrics) and `query_guide` (method and measure guides). Backend refusals (no SQL access, query mistakes, rate limits with `retry_after`) are returned as tool errors the model can act on.
+
 ## [1.1.1] - 2026-10-08
 
 ### Fixed
