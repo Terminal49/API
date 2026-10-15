@@ -1424,7 +1424,7 @@ export function createTerminal49McpServer(
         'Count containers grouped by POD terminal, status, shipping line, port of discharge, hold type, LFD date or POD arrival date, using the same filters as list_containers. ' +
         'Use it for "how many" and "break down by" questions; use list_containers for "which ones". ' +
         'Like the dashboard, only actively tracked containers are counted unless include_stopped_tracking is true. ' +
-        'hold_type counts each active hold, so a container with two holds counts twice; dates are UTC calendar days. A null key means the container has no value (no hold, no LFD, no arrival). ' +
+        'hold_type counts each distinct current POD hold name, including pending holds, so a container with two holds counts twice; dates follow dashboard display timezones, falling back to UTC when missing or invalid. A null key means the container has no value (no hold, no LFD, no arrival). ' +
         'Report the total, and say so when truncated is true (more than 200 groups).',
       annotations: {
         readOnlyHint: true,

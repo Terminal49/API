@@ -36,7 +36,7 @@ export const summarizeContainersInputSchema = filterSchema.extend({
   group_by: z
     .enum(GROUP_BY)
     .describe(
-      'Dimension to count by. Terminals and ports are labeled by name, shipping lines by SCAC. hold_type counts each active hold (a container with two holds counts twice); dates are UTC calendar days.',
+      'Dimension to count by. Terminals and ports are labeled by name, shipping lines by SCAC. hold_type counts each distinct current POD hold name, including pending holds (a container with two holds counts twice); dates follow dashboard display timezones, falling back to UTC when missing or invalid.',
     ),
 });
 export type SummarizeContainersArgs = z.input<
