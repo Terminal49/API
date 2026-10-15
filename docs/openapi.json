@@ -7516,7 +7516,7 @@
             "in": "query",
             "name": "group_by",
             "required": true,
-            "description": "Dimension to count by. `pod_terminal` and `port_of_discharge` groups are keyed by ID and labeled by name; `shipping_line` groups are keyed by ID and labeled by SCAC; `current_status` groups are keyed and labeled by status. `pickup_lfd_date` and `pod_arrival_date` groups are keyed by UTC calendar day (`YYYY-MM-DD`). `hold_type` counts each active POD terminal hold by name, so a container with two holds counts twice and group counts can add up to more than `total`. A null key means the container has no value for the dimension."
+            "description": "Dimension to count by. `pod_terminal` and `port_of_discharge` groups are keyed by ID and labeled by name; `shipping_line` groups are keyed by ID and labeled by SCAC; `current_status` groups are keyed and labeled by status. `pickup_lfd_date` and `pod_arrival_date` groups are keyed by display-local calendar day (`YYYY-MM-DD`), using UTC when the display timezone is missing or invalid. Arrival dates use the POD timezone. LFD dates use the destination timezone for rail LFD unless a visible shipping-line LFD takes precedence; otherwise they use the POD timezone. `hold_type` counts each distinct current POD terminal hold name, including pending holds, so a container with two holds counts twice and group counts can add up to more than `total`. A null key means the container has no value for the dimension."
           },
           {
             "in": "query",
