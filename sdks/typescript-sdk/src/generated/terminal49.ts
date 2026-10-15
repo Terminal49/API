@@ -1799,7 +1799,7 @@ export interface components {
                         id?: string;
                         /** @enum {string} */
                         type?: "terminal";
-                    };
+                    } | null;
                 };
                 transport_events?: {
                     data?: {

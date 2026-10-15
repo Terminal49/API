@@ -16634,7 +16634,8 @@
                           "terminal"
                         ]
                       }
-                    }
+                    },
+                    "nullable": true
                   }
                 }
               },
