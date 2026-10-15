@@ -30,6 +30,8 @@ import {
 } from './quality.js';
 import { formatScorecard, writeReport, type EvalRow } from './report.js';
 
+import { fixtureItems, fixtureListArgs } from './fixtures.js';
+
 const cfg = resolveConfig();
 
 if (!cfg) {
@@ -82,13 +84,10 @@ if (!cfg) {
 
       // Discover real ids to feed the detail tools.
       const ships = await client.callTool('list_shipments', {
-        page_size: 10,
+        ...fixtureListArgs,
         include_containers: true,
       });
-      const shipItems =
-        isRecord(ships.payload) && Array.isArray(ships.payload.items)
-          ? ships.payload.items
-          : [];
+      const shipItems = fixtureItems('list_shipments', ships);
       for (const shipment of shipItems) {
         if (!isRecord(shipment) || typeof shipment.id !== 'string') continue;
         fixtures.shipmentId ??= shipment.id;
@@ -108,14 +107,11 @@ if (!cfg) {
       }
 
       if (!fixtures.containerId) {
-        const containersList = await client.callTool('list_containers', {
-          page_size: 5,
-        });
-        const items =
-          isRecord(containersList.payload) &&
-          Array.isArray(containersList.payload.items)
-            ? containersList.payload.items
-            : [];
+        const containersList = await client.callTool(
+          'list_containers',
+          fixtureListArgs,
+        );
+        const items = fixtureItems('list_containers', containersList);
         const first = items.find(
           (c) => isRecord(c) && typeof c.id === 'string',
         );
