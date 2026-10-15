@@ -2,22 +2,16 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { vi } from 'vite-plus/test';
-import { createProgram } from '../src/index.js';
-
-class ProcessExit extends Error {
-  constructor(readonly code: number | string | null | undefined) {
-    super(`process.exit(${String(code)})`);
-  }
-}
+import { main } from '../src/index.js';
 
 export type RunResult = { status: number; stdout: string; stderr: string };
 
+/** Runs the CLI the way bin/t49.ts does, capturing stdout, stderr, and the exit code. */
 export async function runProgram(args: string[]): Promise<RunResult> {
   const stdout: string[] = [];
   const stderr: string[] = [];
   const originalWrite = process.stdout.write;
   const originalErrorWrite = process.stderr.write;
-  const originalExit = process.exit;
   process.stdout.write = ((chunk: unknown) => {
     stdout.push(String(chunk));
     return true;
@@ -26,33 +20,24 @@ export async function runProgram(args: string[]): Promise<RunResult> {
     stderr.push(String(chunk));
     return true;
   }) as typeof process.stderr.write;
-  process.exit = ((code?: number | string | null) => {
-    throw new ProcessExit(code);
-  }) as typeof process.exit;
 
   try {
-    const program = createProgram();
-    program.exitOverride();
-    await program.parseAsync(args, { from: 'user' });
-    return { status: 0, stdout: stdout.join(''), stderr: stderr.join('') };
-  } catch (error) {
-    if (error instanceof ProcessExit) {
-      const status = typeof error.code === 'number' ? error.code : 1;
-      return { status, stdout: stdout.join(''), stderr: stderr.join('') };
-    }
-    throw error;
+    await main(['node', 't49', ...args]);
+    const status = Number(process.exitCode ?? 0);
+    return { status, stdout: stdout.join(''), stderr: stderr.join('') };
   } finally {
+    process.exitCode = undefined;
     process.stdout.write = originalWrite;
     process.stderr.write = originalErrorWrite;
-    process.exit = originalExit;
   }
 }
 
 export type RecordedRequest = { method: string; url: URL; body: unknown };
 
 /**
- * Points the CLI at a fake API: `respond` answers every request, and each
- * request is recorded with its parsed JSON body.
+ * Points the CLI at a fake API: `respond` answers every request with a JSON
+ * body or a whole `Response`, and each request is recorded with its parsed
+ * JSON body.
  */
 export function stubApi(
   respond: (request: RecordedRequest) => unknown,
@@ -67,7 +52,9 @@ export function stubApi(
       body: text ? JSON.parse(text) : undefined,
     };
     requests.push(recorded);
-    return new Response(JSON.stringify(respond(recorded)), {
+    const answer = respond(recorded);
+    if (answer instanceof Response) return answer;
+    return new Response(JSON.stringify(answer), {
       status: 200,
       headers: { 'Content-Type': 'application/vnd.api+json' },
     });

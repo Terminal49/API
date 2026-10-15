@@ -79,7 +79,7 @@ Resolution precedence:
 - `--base-url <url>` overrides the API base URL.
 - `--account-id <id>` sends an account id for user-scoped bearer tokens.
 - `--timeout <ms>` sets request timeout in milliseconds.
-- `--max-retries <n>` sets retry attempts for 429/5xx responses.
+- `--max-retries <n>` sets retry attempts for 429/5xx responses. `0` disables retries.
 
 `--json` and `--table` are mutually exclusive. Without either flag, the CLI prints tables to a TTY and JSON to pipes.
 
@@ -139,7 +139,7 @@ Error output:
 }
 ```
 
-`details`, `retryable`, and `retryAfterMs` are omitted when unavailable. Rate-limit errors use `retryable: true` and include `retryAfterMs` when exposed by the SDK.
+`details`, `retryable`, and `retryAfterMs` are omitted when unavailable. With `--json`, or when stderr is not a terminal, stderr carries only this JSON. Otherwise a terminal gets one `CODE: message` line, and usage errors add a `(run --help for usage)` line. A bad value for a global option (`--format`, `--max-retries`, `--timeout`, and so on) that comes before `--json` is reported before `--json` is read, so a terminal gets the line form. Rate-limit errors use `retryable: true` and include `retryAfterMs` when exposed by the SDK.
 
 ## Exit Codes
 

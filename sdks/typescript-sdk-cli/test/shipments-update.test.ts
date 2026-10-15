@@ -135,7 +135,7 @@ describe('shipments update --attr', () => {
       'ref_numbers={"a":"b"}',
       '--attr ref_numbers must be a string or an array of strings: {"a":"b"}',
     ],
-  ])('rejects --attr %s before calling the API', async (pair, message) => {
+  ])('rejects --attr %s before calling the API', async (pair, reason) => {
     const requests = stubApi(() => shipment);
 
     const result = await runProgram([
@@ -146,8 +146,14 @@ describe('shipments update --attr', () => {
       pair,
     ]);
 
-    expect(result.status).not.toBe(0);
-    expect(result.stderr).toContain(message);
+    expect(result.status).toBe(2);
+    expect(JSON.parse(result.stderr)).toEqual({
+      ok: false,
+      error: {
+        code: 'USAGE_ERROR',
+        message: `error: option '--attr <key=value...>' argument '${pair}' is invalid. ${reason}`,
+      },
+    });
     expect(requests).toEqual([]);
   });
 });

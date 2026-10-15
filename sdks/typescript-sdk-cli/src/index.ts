@@ -6,7 +6,12 @@
  */
 
 import { createRequire } from 'node:module';
-import { Command, InvalidArgumentError, Option } from 'commander';
+import {
+  Command,
+  CommanderError,
+  InvalidArgumentError,
+  Option,
+} from 'commander';
 import { registerCommandsCommand } from './commands/commands.js';
 import { registerConfigCommand } from './commands/config.js';
 import { registerContainersCommand } from './commands/containers.js';
@@ -25,7 +30,8 @@ import { registerTrackingRequestsCommand } from './commands/tracking-requests.js
 import { registerVesselsCommand } from './commands/vessels.js';
 import { registerWebhookNotificationsCommand } from './commands/webhook-notifications.js';
 import { registerWebhooksCommand } from './commands/webhooks.js';
-import { positiveInt } from './util/input.js';
+import { getExitCode, printError, writesJsonErrors } from './errors.js';
+import { nonNegativeInt, positiveInt } from './util/input.js';
 
 function loadPackageVersion(): string {
   const require = createRequire(import.meta.url);
@@ -72,8 +78,8 @@ export function createProgram(): Command {
     )
     .option(
       '--max-retries <n>',
-      'Retry attempts for 429/5xx responses',
-      positiveInt('--max-retries'),
+      'Retry attempts for 429/5xx responses (0 disables retries)',
+      nonNegativeInt('--max-retries'),
     );
 
   program.hook('preAction', (_command: Command, actionCommand: Command) => {
@@ -112,9 +118,59 @@ export function createProgram(): Command {
     register(program);
   }
 
-  program
-    .showHelpAfterError('(run --help for usage)')
-    .showSuggestionAfterError();
+  program.showSuggestionAfterError();
 
   return program;
+}
+
+function configureCommanderErrors(command: Command, program: Command): void {
+  command.exitOverride();
+  command.configureOutput({
+    // printError reports every parse error, as JSON when stderr expects it.
+    outputError: () => {},
+    // Commander writes a bare group's help here; JSON stderr gets only main()'s usage error.
+    writeErr: (text) => {
+      if (!writesJsonErrors(program)) process.stderr.write(text);
+    },
+  });
+  for (const subcommand of command.commands) {
+    configureCommanderErrors(subcommand, program);
+  }
+}
+
+/** Commander reports `t49 shipments` (a group without its subcommand) as help with a non-zero exit code. */
+function toUsageError(error: unknown): unknown {
+  return error instanceof CommanderError &&
+    error.code === 'commander.help' &&
+    error.exitCode !== 0
+    ? new CommanderError(
+        2,
+        'commander.missingSubcommand',
+        'error: missing subcommand',
+      )
+    : error;
+}
+
+/** Runs the CLI for `argv` (node path, script path, then arguments) and sets a non-zero `process.exitCode` on error. */
+export async function main(argv: string[]): Promise<void> {
+  const program = createProgram();
+  configureCommanderErrors(program, program);
+
+  try {
+    await program.parseAsync(argv);
+  } catch (caught) {
+    const error = toUsageError(caught);
+    if (
+      error instanceof CommanderError &&
+      (error.code === 'commander.help' ||
+        error.code === 'commander.helpDisplayed' ||
+        error.code === 'commander.version')
+    ) {
+      process.exitCode = error.exitCode;
+      return;
+    }
+
+    printError(error, { command: program });
+    process.exitCode = getExitCode(error);
+  }
 }
