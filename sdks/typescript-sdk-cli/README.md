@@ -160,7 +160,7 @@ Stable error codes include `USAGE_ERROR`, `NETWORK_ERROR`, `AUTH_ERROR`, `RATE_L
 - `t49 containers get|list|events|route|map|raw-events|refresh|demurrage|rail|custom-fields|set-custom-field` (`map` is deprecated: with `--json` it prints the raw GeoJSON FeatureCollection, the same as `route --format raw --json`. In table mode both print only the collection type. In table mode, `route` prints the ports and a Current vessel table.)
 - `t49 tracking-requests list|get|create|update|infer|create-from-infer`
 - `t49 track <number>`
-- `t49 shipping-lines list`
+- `t49 shipping-lines list [--search <text>]`. The API has no search parameter, so `--search` fetches every line and keeps those whose SCAC, alternative SCACs, name, or short name contain the text, ignoring case.
 - `t49 webhooks list|get|create|update|delete|ips`
 - `t49 webhook-notifications list|get|examples`. `examples` requires `--event <event>`, a webhook event name such as `container.transport.vessel_arrived`.
 - `t49 vessels get|get-by-imo|future-positions|future-positions-coords`. `future-positions` requires `--port-id` and `--previous-port-id`. `future-positions-coords` also requires `--latitude` and `--longitude`.

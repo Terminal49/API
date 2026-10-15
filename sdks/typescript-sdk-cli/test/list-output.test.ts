@@ -152,3 +152,32 @@ describe('list output', () => {
     },
   );
 });
+
+describe('shipping-lines list --search', () => {
+  it('fetches every line and keeps the matches', async () => {
+    const line = (scac: string, name: string) => ({
+      id: scac,
+      type: 'shipping_line',
+      attributes: { scac, name, short_name: null, alternative_scacs: [] },
+    });
+    const requests = stubApi(() => ({
+      data: [line('HLCU', 'Hapag-Lloyd'), line('MAEU', 'Maersk')],
+    }));
+
+    const result = await runProgram([
+      '--json',
+      'shipping-lines',
+      'list',
+      '--search',
+      'HAPAG',
+    ]);
+
+    expect(result.status).toBe(0);
+    expect(requests.map(({ url }) => url.href)).toEqual([
+      'https://api.test/v2/shipping_lines',
+    ]);
+    expect(JSON.parse(result.stdout).data).toEqual([
+      { scac: 'HLCU', name: 'Hapag-Lloyd', alternativeScacs: [] },
+    ]);
+  });
+});
