@@ -24,7 +24,7 @@ search_container({ query: "CAIU1234567" })
 search_container({ query: "MAEU123456789" })  // Booking
 ```
 
-**Returns**: List of matching containers and shipments
+**Returns**: `containers`, `shipments`, and `tracking_requests` (`id`, `request_number`, `status`, `failed_reason` when the request failed, `scac`, `shipment_id` when tracking was stopped), plus `total_results` counting all three
 
 **When to Use**: User provides a container number or booking number to look up
 

@@ -166,7 +166,7 @@ Find containers by container number, BL, booking, or your own reference. This is
   "params": {
     "name": "search_container",
     "arguments": {
-      "query": "CAIU1234567"
+      "query": "MSKU4330011"
     }
   }
 }
@@ -179,17 +179,32 @@ Find containers by container number, BL, booking, or your own reference. This is
   "containers": [
     {
       "id": "abc-123-uuid",
-      "containerNumber": "CAIU1234567",
-      "status": "in_transit",
-      "shippingLine": "Maersk",
-      "podTerminal": "APM Terminals",
-      "destination": "Los Angeles"
+      "container_number": "MSKU4330011",
+      "status": "unknown",
+      "shipping_line": "MAEU"
     }
   ],
   "shipments": [],
-  "totalResults": 1
+  "tracking_requests": [
+    {
+      "id": "def-456-uuid",
+      "request_number": "MSKU4330011",
+      "status": "pending",
+      "scac": "MAEU"
+    },
+    {
+      "id": "jkl-012-uuid",
+      "request_number": "MSKU4330011",
+      "status": "failed",
+      "failed_reason": "not_found",
+      "scac": "HLCU"
+    }
+  ],
+  "total_results": 3
 }
 ```
+
+`total_results` counts containers, shipments, and tracking requests. The search API returns no status for a container hit, so `status` is `unknown`. Use `get_container` for the current status. `pod_terminal`, `pol_terminal`, and `destination` appear only when the search API returns them. Only a request whose tracking was stopped (status `tracking_stopped`) has `shipment_id`. A failed request has `failed_reason`. `not_found` and `invalid_number` mean the carrier rejected the number, so check the number and carrier before you track it again. `retries_exhausted` and `expired` can succeed on a later request with the same values. `duplicate` means the shipment already exists. See [failed reasons](/api-docs/in-depth-guides/tracking-request-lifecycle#permanent-reasons) for the full list. Requests that succeeded (status `created`) never appear in `tracking_requests`. Search returns the tracked container under `containers`, or the tracked shipment under `shipments` for a bill of lading or booking number. A tracking request whose number matches a returned shipment's number is left out.
 </Accordion>
 
 **Good for**
