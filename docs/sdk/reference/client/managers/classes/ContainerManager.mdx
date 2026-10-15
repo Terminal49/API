@@ -342,12 +342,17 @@ Update container attributes such as `ref_numbers`.
 
 #### Parameters
 
-| Parameter | Type |
-| ------ | ------ |
-| `id` | `string` |
-| `attrs` | \{ `ref_numbers?`: `string`[]; \} |
-| `attrs.ref_numbers?` | `string`[] |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `id` | `string` | - |
+| `attrs` | \{ `equipment_height?`: `"standard"` \| `"high_cube"` \| `"flexible"`; `equipment_length?`: `20` \| `40` \| `45` \| `24` \| `48` \| `53`; `equipment_type?`: `"dry"` \| `"reefer"` \| `"tank"` \| `"flat_rack"` \| `"open_top"` \| `"pallet_wide"` \| `"hard_top"`; `ref_numbers?`: `string`[]; `seal_number?`: `string` \| `null`; `weight_in_lbs?`: `number` \| `null`; \} | - |
+| `attrs.equipment_height?` | `"standard"` \| `"high_cube"` \| `"flexible"` | - |
+| `attrs.equipment_length?` | `20` \| `40` \| `45` \| `24` \| `48` \| `53` | - |
+| `attrs.equipment_type?` | `"dry"` \| `"reefer"` \| `"tank"` \| `"flat_rack"` \| `"open_top"` \| `"pallet_wide"` \| `"hard_top"` | - |
+| `attrs.ref_numbers?` | `string`[] | - |
+| `attrs.seal_number?` | `string` \| `null` | **Example** `SEAL1234567` |
+| `attrs.weight_in_lbs?` | `number` \| `null` | - |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) | - |
 
 #### Returns
 

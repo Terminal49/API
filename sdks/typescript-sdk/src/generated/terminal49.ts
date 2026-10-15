@@ -454,7 +454,7 @@ export interface paths {
         head?: never;
         /**
          * Edit a container
-         * @description Update a container
+         * @description Update a container's reference numbers, seal number, equipment type, length, and height, or weight. The container number cannot be edited: sending a different `number` returns 422. Equipment type, length, and height are validated together. When any of them changes, all three must have a value, or the request returns 422. A value outside the listed equipment enums also returns 422.
          */
         patch: operations["patch-containers-id"];
         trace?: never;
@@ -6190,6 +6190,15 @@ export interface operations {
                         type: "container";
                         attributes: {
                             ref_numbers?: string[];
+                            /** @example SEAL1234567 */
+                            seal_number?: string | null;
+                            /** @enum {string} */
+                            equipment_type?: "dry" | "flat_rack" | "open_top" | "reefer" | "tank" | "pallet_wide" | "hard_top";
+                            /** @enum {integer} */
+                            equipment_length?: 20 | 24 | 40 | 45 | 48 | 53;
+                            /** @enum {string} */
+                            equipment_height?: "standard" | "high_cube" | "flexible";
+                            weight_in_lbs?: number | null;
                         };
                     };
                 };
@@ -6207,6 +6216,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-containers-id-raw_events": {

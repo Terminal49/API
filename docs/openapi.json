@@ -8586,9 +8586,18 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
-        "description": "Update a container",
+        "description": "Update a container's reference numbers, seal number, equipment type, length, and height, or weight. The container number cannot be edited: sending a different `number` returns 422. Equipment type, length, and height are validated together. When any of them changes, all three must have a value, or the request returns 422. A value outside the listed equipment enums also returns 422.",
         "tags": [
           "Containers"
         ],
@@ -8624,6 +8633,46 @@
                               "type": "string",
                               "example": "REF-12345"
                             }
+                          },
+                          "seal_number": {
+                            "type": "string",
+                            "nullable": true,
+                            "example": "SEAL1234567"
+                          },
+                          "equipment_type": {
+                            "type": "string",
+                            "enum": [
+                              "dry",
+                              "flat_rack",
+                              "open_top",
+                              "reefer",
+                              "tank",
+                              "pallet_wide",
+                              "hard_top"
+                            ]
+                          },
+                          "equipment_length": {
+                            "type": "integer",
+                            "enum": [
+                              20,
+                              24,
+                              40,
+                              45,
+                              48,
+                              53
+                            ]
+                          },
+                          "equipment_height": {
+                            "type": "string",
+                            "enum": [
+                              "standard",
+                              "high_cube",
+                              "flexible"
+                            ]
+                          },
+                          "weight_in_lbs": {
+                            "type": "number",
+                            "nullable": true
                           }
                         }
                       }
