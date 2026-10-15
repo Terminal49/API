@@ -164,6 +164,19 @@ describe('AskT49 SQL tool requests', () => {
     ]);
   });
 
+  it('stops reading a response over the byte limit', async () => {
+    // 400k three-byte characters: under the limit in characters, over it in bytes.
+    const body = JSON.stringify({ rows: [['€'.repeat(400_000)]] });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(body, { status: 200 })),
+    );
+
+    await expect(executeQuery({ sql: 'SELECT 1' }, config)).rejects.toThrow(
+      /exceeds 1000000 bytes/,
+    );
+  });
+
   it('rejects names that could leave the assistant routes', () => {
     expect(() =>
       executeDescribeViews({ view: '../containers' }, config),
@@ -243,7 +256,10 @@ describe('AskT49 SQL tools over MCP', () => {
       expect(query).toMatch(/get_query_result/);
       expect(query).toMatch(/retry_after/);
       expect(query).toMatch(/Never run the same query twice in parallel/);
-      expect(byName.get('get_query_result')?.description).toMatch(/\.csv/);
+      const csv =
+        'https://api.example.com/v2/assistant_queries/{result_id}.csv';
+      expect(query).toContain(`CSV link ${csv}`);
+      expect(byName.get('get_query_result')?.description).toContain(csv);
       expect(
         Object.keys(byName.get('query')?.inputSchema.properties ?? {}),
       ).toEqual(['sql']);
