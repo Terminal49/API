@@ -181,6 +181,19 @@ const commandColumns: Record<string, ColumnDef[]> = {
     { key: 'details', title: 'Details' },
     { key: 'score', title: 'Score' },
   ],
+  commands: [
+    { key: 'name', title: 'Command' },
+    { key: 'description', title: 'Description' },
+    {
+      title: 'Subcommands',
+      value: (row) => {
+        const subcommands = row.subcommands;
+        return Array.isArray(subcommands)
+          ? subcommands.map((subcommand) => asRecord(subcommand)?.name)
+          : undefined;
+      },
+    },
+  ],
   'shipping-lines.list': [
     { key: 'scac', title: 'SCAC' },
     { key: 'name', title: 'Name' },
@@ -736,7 +749,11 @@ function isSearchCommand(command: string): boolean {
 }
 
 function isDetailCommand(command: string): boolean {
-  return command.endsWith('.get') || command.endsWith('.get-by-imo');
+  return (
+    command.endsWith('.get') ||
+    command.endsWith('.get-by-imo') ||
+    command.startsWith('config.')
+  );
 }
 
 function unwrapDetailObject(
@@ -806,7 +823,71 @@ function renderDetail(data: unknown): string | undefined {
   return `${table.toString()}\n`;
 }
 
-export function renderTable(command: string, data: unknown): string {
+/** The value at `parts`, collected across every array the path passes through. */
+function valuesAtPath(value: unknown, parts: string[]): unknown {
+  if (parts.length === 0 || value === null || value === undefined) return value;
+  if (Array.isArray(value))
+    return value.flatMap((item) => valuesAtPath(item, parts) ?? []);
+  const record = asRecord(value);
+  if (!record) return undefined;
+  const [head, ...tail] = parts;
+  return valuesAtPath(record[head], tail);
+}
+
+/**
+ * The table for a `--fields` projection: one column per field path, titled by
+ * the path as typed. Rows are the first array the paths share, starting from
+ * the rows `projectFields` projected (a list's array or `items`), so
+ * `--fields data.id` on a raw list and `--fields ports.name` on a route both
+ * give one row per element.
+ */
+function renderProjected(data: unknown, fields: string[]): string {
+  if (!hasRenderableValue(data)) return 'No rows.\n';
+  const paths = fields.map((field) => field.split('.'));
+  const shared = paths.reduce((prefix, parts) => {
+    const mismatch = prefix.findIndex((part, index) => parts[index] !== part);
+    return mismatch === -1 ? prefix : prefix.slice(0, mismatch);
+  });
+
+  const maxDepth = Math.min(
+    shared.length,
+    ...paths.map((parts) => parts.length - 1),
+  );
+
+  const itemsRoot = asRecord(data)?.items;
+  let rows: unknown = Array.isArray(itemsRoot) ? itemsRoot : data;
+  let depth = 0;
+  while (!Array.isArray(rows) && depth < maxDepth) {
+    const next = asRecord(rows)?.[shared[depth]];
+    if (!Array.isArray(next) && !asRecord(next)) break;
+    rows = next;
+    depth += 1;
+  }
+  if (!Array.isArray(rows)) {
+    rows = [data];
+    depth = 0;
+  }
+
+  return renderRows(
+    rows as Record<string, unknown>[],
+    paths.map((parts, index) => ({
+      title: fields[index],
+      value: (row) => valuesAtPath(row, parts.slice(depth)),
+    })),
+  );
+}
+
+/**
+ * Renders `data` for a TTY. Pass the `--fields` paths when they narrowed the
+ * data, so the table shows those fields instead of the command's columns.
+ */
+export function renderTable(
+  command: string,
+  data: unknown,
+  { fields = [] }: { fields?: string[] } = {},
+): string {
+  if (fields.length > 0) return renderProjected(data, fields);
+
   if (isDetailCommand(command)) {
     const detail = renderDetail(data);
     if (detail) return detail;

@@ -8,7 +8,7 @@
  * Supports dot notation for nested fields: "ports.portOfDischarge.eta"
  */
 
-function normalizePathList(fields?: string): string[] {
+export function normalizePathList(fields?: string): string[] {
   if (!fields || typeof fields !== 'string') return [];
   return fields
     .split(',')

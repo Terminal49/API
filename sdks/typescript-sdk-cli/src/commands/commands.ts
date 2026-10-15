@@ -117,11 +117,7 @@ export function registerCommandsCommand(program: Command): void {
       withErrorHandling(
         'commands',
         async (_options: { json?: boolean }, command: Command) => {
-          const opts = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: Boolean(opts.json),
-            compact: opts.compact,
-          });
+          const formatter = createFormatter(command.optsWithGlobals());
           formatter.output('commands', {
             command: 'commands',
             globalOptions: collectOptions(program.options),

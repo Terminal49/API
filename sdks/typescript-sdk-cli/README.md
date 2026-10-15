@@ -73,7 +73,7 @@ Resolution precedence:
 - `--json` emits JSON envelopes.
 - `--table` forces table output.
 - `--compact` minifies JSON output.
-- `--fields <fields>` projects comma-separated fields from JSON output.
+- `--fields <fields>` projects comma-separated fields. JSON output keeps only those fields, except that when the output has an `items` array, as `commands` does, it projects each entry in `items` and keeps the other top-level keys. A table shows one column per field path, named by the path as you typed it. When the paths share an array, such as `ports.name` on `containers route` or `data.id` on a `--format raw` list, the table prints one row per element.
 - `--format <raw|mapped|both>` selects SDK response format.
 - `--token <token>` overrides auth config.
 - `--base-url <url>` overrides the API base URL.
@@ -82,6 +82,8 @@ Resolution precedence:
 - `--max-retries <n>` sets retry attempts for 429/5xx responses.
 
 `--json` and `--table` are mutually exclusive. Without either flag, the CLI prints tables to a TTY and JSON to pipes.
+
+Every command, including `config` and `commands`, honors `--json`, `--table`, `--compact`, and `--fields`. The one exception is `--all`, which always prints whole rows as newline-delimited JSON and ignores `--table`, `--compact`, `--fields`, and `--format`.
 
 `--quiet`, `--verbose`, and `--no-color` were removed.
 

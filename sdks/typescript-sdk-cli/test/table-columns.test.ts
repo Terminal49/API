@@ -163,4 +163,258 @@ describe('table columns', () => {
       ].join('\n'),
     );
   });
+
+  it('--fields picks the table columns instead of the command defaults', async () => {
+    const output = await table(
+      ['shipments', 'list', '--fields', 'id,billOfLading'],
+      {
+        data: [
+          {
+            id: 's-1',
+            type: 'shipment',
+            attributes: {
+              bill_of_lading_number: 'BL1',
+              shipping_line_scac: 'MAEU',
+              customer_name: 'Acme',
+            },
+          },
+        ],
+      },
+    );
+
+    expect(output).toBe(
+      [
+        '┌─────┬──────────────┐',
+        '│ id  │ billOfLading │',
+        '├─────┼──────────────┤',
+        '│ s-1 │ BL1          │',
+        '└─────┴──────────────┘',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  it('--fields keeps nested paths as columns for raw custom field options', async () => {
+    const output = await table(
+      [
+        'custom-field-options',
+        'list',
+        'def-1',
+        '--fields',
+        'id,attributes.label',
+      ],
+      {
+        data: [
+          {
+            id: 'opt-1',
+            type: 'custom_field_option',
+            attributes: { label: 'High', value: 'high', position: 1 },
+          },
+        ],
+      },
+    );
+
+    expect(output).toBe(
+      [
+        '┌───────┬──────────────────┐',
+        '│ id    │ attributes.label │',
+        '├───────┼──────────────────┤',
+        '│ opt-1 │ High             │',
+        '└───────┴──────────────────┘',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  it('--fields on containers route prints one row per port', async () => {
+    const output = await table(
+      ['--fields', 'ports.name', 'containers', 'route', 'c-1'],
+      {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [100.88, 13.08] },
+            properties: {
+              feature_type: 'port',
+              name: 'Laem Chabang',
+              location_type: 'port_of_lading',
+            },
+          },
+          {
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [-81.1, 32.1] },
+            properties: {
+              feature_type: 'port',
+              name: 'Savannah',
+              location_type: 'port_of_discharge',
+            },
+          },
+        ],
+      },
+    );
+
+    expect(output).toBe(
+      [
+        '┌──────────────┐',
+        '│ ports.name   │',
+        '├──────────────┤',
+        '│ Laem Chabang │',
+        '├──────────────┤',
+        '│ Savannah     │',
+        '└──────────────┘',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  it('--fields on vessels future-positions prints one row per position', async () => {
+    const output = await table(
+      [
+        '--fields',
+        'positions.timestamp,positions.latitude',
+        'vessels',
+        'future-positions',
+        'v-1',
+        '--port-id',
+        'p-2',
+        '--previous-port-id',
+        'p-1',
+      ],
+      {
+        data: {
+          id: 'v-1',
+          type: 'vessel',
+          attributes: {
+            name: 'EVER GIVEN',
+            positions: [
+              {
+                latitude: 13.07,
+                longitude: -100.84,
+                timestamp: '2026-10-15T00:00:00Z',
+              },
+              {
+                latitude: 14.1,
+                longitude: -101.2,
+                timestamp: '2026-10-16T00:00:00Z',
+              },
+            ],
+          },
+        },
+      },
+    );
+
+    expect(output).toBe(
+      [
+        '┌──────────────────────┬────────────────────┐',
+        '│ positions.timestamp  │ positions.latitude │',
+        '├──────────────────────┼────────────────────┤',
+        '│ 2026-10-15T00:00:00Z │ 13.07              │',
+        '├──────────────────────┼────────────────────┤',
+        '│ 2026-10-16T00:00:00Z │ 14.1               │',
+        '└──────────────────────┴────────────────────┘',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  const shipmentsDocument = {
+    data: [
+      {
+        id: 's-1',
+        type: 'shipment',
+        attributes: { bill_of_lading_number: 'BL1' },
+      },
+      {
+        id: 's-2',
+        type: 'shipment',
+        attributes: { bill_of_lading_number: 'BL2' },
+      },
+    ],
+    links: {},
+    meta: {},
+  };
+
+  it('--format both prints the default columns from the mapped rows', async () => {
+    const output = await table(
+      ['--format', 'both', 'shipments', 'list'],
+      shipmentsDocument,
+    );
+
+    expect(output).toBe(
+      [
+        '┌─────┬─────┬──────┬──────────┬─────┬─────────┬──────────────────┐',
+        '│ ID  │ BOL │ SCAC │ Customer │ POD │ POD ETA │ Tracking Stopped │',
+        '├─────┼─────┼──────┼──────────┼─────┼─────────┼──────────────────┤',
+        '│ s-1 │ BL1 │      │          │     │         │                  │',
+        '├─────┼─────┼──────┼──────────┼─────┼─────────┼──────────────────┤',
+        '│ s-2 │ BL2 │      │          │     │         │                  │',
+        '└─────┴─────┴──────┴──────────┴─────┴─────────┴──────────────────┘',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  it('--format both --fields mapped.id prints one row per mapped row', async () => {
+    const output = await table(
+      [
+        '--format',
+        'both',
+        '--fields',
+        'mapped.id,mapped.billOfLading',
+        'shipments',
+        'list',
+      ],
+      shipmentsDocument,
+    );
+
+    expect(output).toBe(
+      [
+        '┌───────────┬─────────────────────┐',
+        '│ mapped.id │ mapped.billOfLading │',
+        '├───────────┼─────────────────────┤',
+        '│ s-1       │ BL1                 │',
+        '├───────────┼─────────────────────┤',
+        '│ s-2       │ BL2                 │',
+        '└───────────┴─────────────────────┘',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  it('--fields that match nothing print no rows', async () => {
+    const output = await table(
+      ['--format', 'both', '--fields', 'id', 'shipments', 'list'],
+      shipmentsDocument,
+    );
+
+    expect(output).toBe('No rows.\n');
+  });
+
+  it('--format raw --fields names each column by the path as typed', async () => {
+    const output = await table(
+      [
+        '--format',
+        'raw',
+        '--fields',
+        'data.id,data.attributes.bill_of_lading_number',
+        'shipments',
+        'list',
+      ],
+      shipmentsDocument,
+    );
+
+    expect(output).toBe(
+      [
+        '┌─────────┬───────────────────────────────────────┐',
+        '│ data.id │ data.attributes.bill_of_lading_number │',
+        '├─────────┼───────────────────────────────────────┤',
+        '│ s-1     │ BL1                                   │',
+        '├─────────┼───────────────────────────────────────┤',
+        '│ s-2     │ BL2                                   │',
+        '└─────────┴───────────────────────────────────────┘',
+        '',
+      ].join('\n'),
+    );
+  });
 });
