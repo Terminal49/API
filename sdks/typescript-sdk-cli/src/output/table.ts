@@ -8,10 +8,10 @@
 
 import Table from 'cli-table3';
 
-interface ColumnDef {
-  key: string | string[];
-  title: string;
-}
+/** A column reads the first renderable `key` path, or computes its cell with `value`. */
+type ColumnDef =
+  | { title: string; key: string | string[] }
+  | { title: string; value: (row: Record<string, unknown>) => unknown };
 
 const ROUTE_PORT_COLUMNS: ColumnDef[] = [
   { key: 'sequence', title: 'Seq' },
@@ -43,15 +43,83 @@ const FUTURE_POSITION_COLUMNS: ColumnDef[] = [
   { key: 'estimated', title: 'Estimated' },
 ];
 
+const WEBHOOK_COLUMNS: ColumnDef[] = [
+  { key: 'id', title: 'ID' },
+  { key: 'attributes.url', title: 'URL' },
+  { key: 'attributes.active', title: 'Active' },
+  {
+    title: 'Events',
+    value: (row) => {
+      const events = valueAtPath(row, 'attributes.events');
+      return Array.isArray(events) ? events.length : undefined;
+    },
+  },
+];
+
+/**
+ * Mapped `CustomField` rows from the entity custom-fields commands, or raw
+ * `custom_field` resources with their included definition (see `withDefinitions`).
+ */
+const CUSTOM_FIELD_COLUMNS: ColumnDef[] = [
+  { key: 'id', title: 'ID' },
+  { key: ['slug', 'attributes.api_slug'], title: 'Slug' },
+  { key: ['name', 'definition.attributes.display_name'], title: 'Name' },
+  {
+    key: [
+      'displayValue',
+      'attributes.display_value',
+      'value',
+      'attributes.value',
+    ],
+    title: 'Value',
+  },
+  { key: ['dataType', 'definition.attributes.data_type'], title: 'Data Type' },
+];
+
+/** Raw `custom_field` resources, which carry no definition name or data type. */
+const CUSTOM_FIELD_RECORD_COLUMNS: ColumnDef[] = [
+  { key: 'id', title: 'ID' },
+  { key: 'attributes.api_slug', title: 'Slug' },
+  {
+    key: ['attributes.display_value', 'attributes.value'],
+    title: 'Value',
+  },
+  { key: 'attributes.updated_at', title: 'Updated' },
+];
+
+const CUSTOM_FIELD_OPTION_COLUMNS: ColumnDef[] = [
+  { key: 'id', title: 'ID' },
+  { key: 'attributes.label', title: 'Label' },
+  { key: 'attributes.value', title: 'Value' },
+  { key: 'attributes.position', title: 'Position' },
+];
+
 const commandColumns: Record<string, ColumnDef[]> = {
   'shipments.list': [
     { key: 'id', title: 'ID' },
     { key: 'billOfLading', title: 'BOL' },
     { key: 'shippingLineScac', title: 'SCAC' },
-    { key: 'status', title: 'Status' },
     { key: 'customerName', title: 'Customer' },
-    { key: 'tracking.lineTrackingStoppedReason', title: 'Tracking' },
+    {
+      key: ['portOfDischargeName', 'ports.portOfDischarge.name'],
+      title: 'POD',
+    },
+    { key: ['podEtaAt', 'ports.portOfDischarge.eta'], title: 'POD ETA' },
+    { key: 'tracking.lineTrackingStoppedReason', title: 'Tracking Stopped' },
   ],
+  'webhooks.list': WEBHOOK_COLUMNS,
+  'webhooks.create': WEBHOOK_COLUMNS,
+  'webhooks.update': WEBHOOK_COLUMNS,
+  'shipments.custom-fields': CUSTOM_FIELD_COLUMNS,
+  'containers.custom-fields': CUSTOM_FIELD_COLUMNS,
+  'shipments.set-custom-field': CUSTOM_FIELD_RECORD_COLUMNS,
+  'containers.set-custom-field': CUSTOM_FIELD_RECORD_COLUMNS,
+  'custom-fields.list': CUSTOM_FIELD_RECORD_COLUMNS,
+  'custom-fields.create': CUSTOM_FIELD_RECORD_COLUMNS,
+  'custom-fields.update': CUSTOM_FIELD_RECORD_COLUMNS,
+  'custom-field-options.list': CUSTOM_FIELD_OPTION_COLUMNS,
+  'custom-field-options.create': CUSTOM_FIELD_OPTION_COLUMNS,
+  'custom-field-options.update': CUSTOM_FIELD_OPTION_COLUMNS,
   'containers.list': [
     { key: 'id', title: 'ID' },
     { key: 'number', title: 'Number' },
@@ -135,6 +203,9 @@ const unknownColumnCandidates: ColumnDef[] = [
   { key: 'attributes.api_slug', title: 'Slug' },
   { key: 'attributes.display_name', title: 'Display Name' },
   { key: 'attributes.data_type', title: 'Data Type' },
+  { key: 'attributes.label', title: 'Label' },
+  { key: 'attributes.url', title: 'URL' },
+  { key: ['attributes.display_value', 'attributes.value'], title: 'Value' },
   { key: 'attributes.number', title: 'Number' },
   { key: 'attributes.name', title: 'Name' },
   { key: 'attributes.company_name', title: 'Company' },
@@ -156,6 +227,7 @@ function valueForColumn(
   row: Record<string, unknown>,
   column: ColumnDef,
 ): unknown {
+  if ('value' in column) return column.value(row);
   const keys = Array.isArray(column.key) ? column.key : [column.key];
   for (const key of keys) {
     const value = valueAtPath(row, key);
@@ -598,11 +670,33 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
     : undefined;
 }
 
+/** Rows of the mapped half of a `{ raw, mapped }` pair, or of the data itself. */
 function tableRows(data: unknown): Record<string, unknown>[] {
-  const mapped = asRecord(data)?.mapped;
-  return Array.isArray(mapped)
-    ? (mapped as Record<string, unknown>[])
-    : normalizeRows(data);
+  const record = asRecord(data);
+  return normalizeRows(
+    record && 'raw' in record && 'mapped' in record ? record.mapped : data,
+  );
+}
+
+/** Attaches each raw `custom_field` row's included `custom_field_definition` as `definition`. */
+function withDefinitions(
+  data: unknown,
+  rows: Record<string, unknown>[],
+): Record<string, unknown>[] {
+  const included = asRecord(data)?.included;
+  if (!Array.isArray(included)) return rows;
+  const definitions = new Map(
+    included
+      .map(asRecord)
+      .filter((resource) => resource?.type === 'custom_field_definition')
+      .map((resource) => [resource?.id, resource]),
+  );
+  return rows.map((row) => {
+    const definition = definitions.get(
+      valueAtPath(row, 'relationships.definition.data.id'),
+    );
+    return definition ? { ...row, definition } : row;
+  });
 }
 
 /** Ports table plus a current-vessel table, from a `{ ports }` route or a `{ raw, mapped }` pair; undefined for raw GeoJSON. */
@@ -734,7 +828,9 @@ export function renderTable(command: string, data: unknown): string {
   const rows = tableRows(data);
   const renderedRows = isSearchCommand(command)
     ? rows.map(enrichSearchRow)
-    : rows;
+    : command.endsWith('.custom-fields')
+      ? withDefinitions(data, rows)
+      : rows;
   return renderRows(
     renderedRows,
     commandColumns[command] ?? inferUnknownColumns(renderedRows),
