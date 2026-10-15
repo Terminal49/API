@@ -228,7 +228,7 @@ T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio 2>&1 | head -20
 | `get_container_route` | Get ports in route order with ETAs and the current vessel (paid feature) | `id: uuid` |
 | `list_shipments` | List shipments with filters + pagination | `status?`, `port?`, `carrier?`, `updated_after?`, `include_containers?`, `page?`, `page_size?` |
 | `list_containers` | List containers with filters + pagination | `status?`, `port?`, `carrier?`, `updated_after?`, `include?`, `page?`, `page_size?` |
-| `list_tracking_requests` | List tracking requests with filters | `filters?`, `status?`, `request_type?`, `page?`, `page_size?` |
+| `list_tracking_requests` | List tracking requests with filters | `request_number?`, `status?` (`pending`, `created`, `failed`, or `cancelled`), `scac?`, `page?`, `page_size?` |
 | `whoami` | Identify the credential, its account, and available features | none |
 
 ### Prompts
