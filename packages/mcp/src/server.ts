@@ -885,6 +885,9 @@ function formatToolError(
     ) {
       return `Container number ${number} fails the ISO 6346 check digit.`;
     }
+    if (err.name === 'TrackContainerInputError' && err.message) {
+      return err.message;
+    }
   }
 
   if (err.name === 'NotFoundError' || err.status === 404) {
@@ -1071,7 +1074,8 @@ export function createTerminal49McpServer(
       description:
         'Track a container, bill of lading, or booking number. ' +
         'Uses inference to choose the carrier/type when possible, creates a tracking request, ' +
-        'and returns detailed container information. If a newly created request is still pending, ' +
+        'and returns detailed container information. When the carrier cannot be inferred it asks for scac; ' +
+        'a container prefix names the equipment owner, not the carrier. If a newly created request is still pending, ' +
         'use list_tracking_requests to check its status.',
       annotations: {
         readOnlyHint: false,
@@ -1119,7 +1123,7 @@ export function createTerminal49McpServer(
           .regex(/^[A-Za-z]{4}$/)
           .optional()
           .describe(
-            'Optional four-letter shipping-line SCAC (e.g., MAEU for Maersk)',
+            'Four-letter shipping-line SCAC (e.g., MAEU for Maersk). Optional, but required when Terminal49 cannot infer the carrier.',
           ),
         refNumbers: z
           .array(z.string().trim().min(1).max(64))

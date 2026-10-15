@@ -59,11 +59,6 @@ function normalizeNumberType(value: string | undefined): string | undefined {
   return normalized;
 }
 
-function inferScacFromPrefix(number: string): string | undefined {
-  const match = number.match(/^([A-Za-z]{4})/);
-  return match ? match[1].toUpperCase() : undefined;
-}
-
 function inferNumberTypeFromPattern(number: string): string | undefined {
   if (/^[A-Z]{4}\d{7}$/.test(number)) {
     return 'container';
@@ -106,6 +101,40 @@ class ContainerCheckDigitError extends Error {
     super(`Container number ${number} fails the ISO 6346 check digit`);
     this.name = 'ContainerCheckDigitError';
   }
+}
+
+/** A track_container input the caller must supply because inference could not. */
+export class TrackContainerInputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TrackContainerInputError';
+  }
+}
+
+function inputRequiredError(
+  error: unknown,
+  number: string,
+): TrackContainerInputError | undefined {
+  const message = (error as Error).message ?? '';
+  if (message.startsWith('Unable to infer carrier SCAC')) {
+    return new TrackContainerInputError(
+      `Terminal49 could not infer the carrier for ${number}; scac is required.`,
+    );
+  }
+  if (message.startsWith('Unable to infer tracking number type')) {
+    return new TrackContainerInputError(
+      `Terminal49 could not tell whether ${number} is a container, bill of lading, or booking number; ` +
+        'numberType is required (container, bill_of_lading, or booking_number).',
+    );
+  }
+  return undefined;
+}
+
+function submittedScac(
+  trackingRequest: any,
+  requestedScac: string | undefined,
+): string | undefined {
+  return trackingRequest?.data?.attributes?.scac || requestedScac;
 }
 
 function hasValidIso6346CheckDigit(number: string): boolean {
@@ -197,7 +226,6 @@ export async function executeTrackContainer(
           : undefined),
   );
   const requestedScac = normalizeText(args.scac);
-  const heuristicScac = inferScacFromPrefix(number);
   const inferredNumberType =
     numberTypeOverride || inferNumberTypeFromPattern(number);
 
@@ -206,7 +234,7 @@ export async function executeTrackContainer(
     event: 'tool.execute.start',
     tool: 'track_container',
     number,
-    scac: requestedScac || heuristicScac,
+    scac: requestedScac,
     timestamp: new Date().toISOString(),
   });
 
@@ -239,21 +267,19 @@ export async function executeTrackContainer(
         tracking_request_created: false,
         infer_result: {
           inferred_type: inferredNumberType,
-          selected_scac:
-            requestedScac || existingContainer.shippingLine || heuristicScac,
+          selected_scac: requestedScac || existingContainer.shippingLine,
           source: 'search_match',
         },
       };
     }
 
-    const selectedScac = requestedScac || heuristicScac;
     let infer: any;
     let trackingRequest: any;
 
     // Step 1: Infer + create tracking request
     try {
       const inferResult = await client.createTrackingRequestFromInfer(number, {
-        scac: selectedScac,
+        scac: requestedScac,
         numberType: numberTypeOverride,
         refNumbers: args.refNumbers,
       });
@@ -263,7 +289,7 @@ export async function executeTrackContainer(
       const message = (error as Error).message;
       const pointer = parseValidationPointer(message);
       const canFallbackToDirectCreate = Boolean(
-        inferredNumberType && selectedScac,
+        inferredNumberType && requestedScac,
       );
 
       if (
@@ -273,18 +299,18 @@ export async function executeTrackContainer(
         infer = {
           fallback: 'create_tracking_request',
           inferred_type: inferredNumberType,
-          selected_scac: selectedScac,
+          selected_scac: requestedScac,
           reason:
             'infer endpoint returned validation error; used direct create_tracking_request flow',
         };
         trackingRequest = await client.createTrackingRequest({
           requestType: inferredNumberType as any,
           requestNumber: number,
-          scac: selectedScac,
+          scac: requestedScac,
           refNumbers: args.refNumbers,
         });
       } else {
-        throw error;
+        throw inputRequiredError(error, number) ?? error;
       }
     }
 
@@ -296,7 +322,7 @@ export async function executeTrackContainer(
         event: 'tracking_request.pending',
         number,
         numberType: numberTypeOverride,
-        scac: requestedScac || heuristicScac,
+        scac: submittedScac(trackingRequest, requestedScac),
         timestamp: new Date().toISOString(),
       });
 
@@ -306,7 +332,7 @@ export async function executeTrackContainer(
         tracking_request: {
           request_number: number,
           number_type: inferredNumberType,
-          scac: requestedScac || heuristicScac,
+          scac: submittedScac(trackingRequest, requestedScac),
         },
       };
     }
@@ -335,7 +361,7 @@ export async function executeTrackContainer(
         tracking_request: {
           request_number: number,
           number_type: inferredNumberType,
-          scac: requestedScac || heuristicScac,
+          scac: submittedScac(trackingRequest, requestedScac),
           container_id: containerId,
         },
       };
@@ -365,7 +391,7 @@ export async function executeTrackContainer(
         event: 'tracking_request.not_found',
         number,
         numberType: inferredNumberType,
-        scac: requestedScac || heuristicScac,
+        scac: requestedScac,
         duration_ms: duration,
         timestamp: new Date().toISOString(),
       });
@@ -374,25 +400,6 @@ export async function executeTrackContainer(
         message: `No container found for identifier ${number}. Verify the number and carrier SCAC.`,
         tracking_request_created: false,
       };
-    }
-
-    if (
-      /Unable to infer/.test(message) ||
-      /SCAC/.test(message) ||
-      /request_number/.test(message) ||
-      /request type/.test(message) ||
-      /\/data\/attributes\/number/.test(message)
-    ) {
-      logMcpEvent({
-        event: 'tracking_request.hint',
-        number,
-        message,
-        timestamp: new Date().toISOString(),
-      });
-      throw new Error(
-        `${message}. Automatic inference is currently unavailable for this input. Provide numberType (` +
-          'container | booking_number | bill_of_lading) and scac, or use search_container/get_container if it is already tracked.',
-      );
     }
 
     logMcpEvent({
