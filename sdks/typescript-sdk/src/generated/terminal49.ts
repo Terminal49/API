@@ -2767,9 +2767,9 @@ export interface components {
             coordinates: number[];
         };
         /** @description Raw custom field value (type depends on definition) */
-        custom_field_value: (string | number | boolean | string[] | {
+        custom_field_value: (string | null) | number | boolean | string[] | {
             [key: string]: unknown;
-        }) | null;
+        };
         /** Custom field */
         custom_field: {
             /** Format: uuid */

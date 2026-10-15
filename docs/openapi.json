@@ -19066,10 +19066,10 @@
       },
       "custom_field_value": {
         "description": "Raw custom field value (type depends on definition)",
-        "nullable": true,
         "oneOf": [
           {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           {
             "type": "number"
