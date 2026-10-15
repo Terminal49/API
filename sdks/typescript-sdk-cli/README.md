@@ -159,6 +159,7 @@ Stable error codes include `USAGE_ERROR`, `NETWORK_ERROR`, `AUTH_ERROR`, `RATE_L
 ## Commands
 
 - `t49 shipments get|list|update|stop-tracking|resume-tracking|custom-fields|set-custom-field`
+  - `shipments update <id> --attr key=value...` splits each pair on its first `=`. A value that starts with `[`, `{`, or `"` is parsed as JSON, and so are `true`, `false`, and `null` on keys other than `ref_numbers` and `tags`. Other values stay strings. `ref_numbers` and `tags` are arrays of strings: a plain value, including `true`, `false`, or `null`, adds one string element, and repeated pairs add more, as in `--attr tags=urgent --attr tags=hazmat` or `--attr 'ref_numbers=["PO-1","PO-2"]'`. A JSON value for them must be a string or an array of strings, and `--attr tags=[]` sends an empty array. An `--attr` key replaces the same key from `--payload`.
 - `t49 containers get|list|events|route|map|raw-events|refresh|demurrage|rail|custom-fields|set-custom-field` (`map` is deprecated: with `--json` it prints the raw GeoJSON FeatureCollection, the same as `route --format raw --json`. In table mode both print only the collection type. In table mode, `route` prints the ports and a Current vessel table.)
 - `t49 tracking-requests list|get|create|update|infer|create-from-infer`
 - `t49 track <number>`
