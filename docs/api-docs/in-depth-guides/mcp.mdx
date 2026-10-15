@@ -226,8 +226,8 @@ T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio 2>&1 | head -20
 | `get_container_transport_events` | Get event timeline | `id: uuid` |
 | `get_supported_shipping_lines` | List carriers with SCAC codes | `search?: string` |
 | `get_container_route` | Get ports in route order with ETAs and the current vessel (paid feature) | `id: uuid` |
-| `list_shipments` | List shipments with filters + pagination | `status?`, `port?`, `carrier?`, `updated_after?`, `include_containers?`, `page?`, `page_size?` |
-| `list_containers` | List containers with filters + pagination | `status?`, `port?`, `carrier?`, `updated_after?`, `include?`, `page?`, `page_size?` |
+| `list_shipments` | List shipments with filters + pagination | `number?`, `tracking_stopped?`, `actively_tracked?`, `voyage_status?`, `pod_code?`, `pol_code?`, `pod_arrival?`, `created_at?`, `tags?`, `advanced_filters?`, `include_stopped_tracking?`, `sort?`, `include_containers?`, `page?`, `page_size?` |
+| `list_containers` | List containers with filters + pagination | `number?`, `current_status?`, `pod_code?`, `pol_code?`, `shipping_line_scac?`, `has_holds?`, `has_fees?`, `requires_attention?`, `actively_tracked?`, `arrival?`, `pickup_lfd?`, `tags?`, `advanced_filters?`, `include_stopped_tracking?`, `sort?`, `include?: ['shipment', 'pod_terminal']`, `view?`, `page?`, `page_size?` |
 | `list_tracking_requests` | List tracking requests with filters | `request_number?`, `status?` (`pending`, `created`, `failed`, or `cancelled`), `scac?`, `page?`, `page_size?` |
 | `whoami` | Identify the credential, its account, and available features | none |
 

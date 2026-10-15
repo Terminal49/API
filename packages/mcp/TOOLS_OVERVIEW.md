@@ -236,14 +236,14 @@ It does not return track geometry, port codes, transport mode, carrier SCAC, or 
 ---
 
 ### 8. `list_shipments` ✅
-**Purpose**: List shipments with optional status, port, and carrier filters
+**Purpose**: List shipments with optional voyage status, port, arrival, and tag filters
 
 **Usage**:
 ```typescript
 list_shipments({
-  status: "in_transit",
-  port: "USLAX",
-  carrier: "MAEU"
+  voyage_status: "on_ship",
+  pod_code: "USLAX",
+  pod_arrival: "<=7.days.from_now"
 })
 ```
 
@@ -262,9 +262,10 @@ list_shipments({
 **Usage**:
 ```typescript
 list_containers({
-  status: "available_for_pickup",
-  port: "USLAX",
-  include: "shipment,pod_terminal"
+  current_status: "available",
+  pod_code: "USLAX",
+  shipping_line_scac: "MAEU",
+  include: ["shipment", "pod_terminal"]
 })
 ```
 
@@ -481,9 +482,9 @@ get_container_transport_events({ id: "abc-123" })
  ### Workflow 2: Demurrage Management
  ```
  1. User: "Which containers are past LFD?"
-2. LLM: list_containers({ status: "arrived" })
+2. LLM: list_containers({ current_status: "available", pickup_lfd: "<today" })
  3. For each: get_container(id)
- 4. Filter where pickup_lfd < now
+ 4. Confirm pickup_lfd < now
  5. Present with urgency (days overdue, estimated charges)
  ```
 
