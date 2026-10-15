@@ -163,7 +163,7 @@ Stable error codes include `USAGE_ERROR`, `NETWORK_ERROR`, `AUTH_ERROR`, `RATE_L
 - `t49 shipping-lines list [--search <text>]`. The API has no search parameter, so `--search` fetches every line and keeps those whose SCAC, alternative SCACs, name, or short name contain the text, ignoring case.
 - `t49 webhooks list|get|create|update|delete|ips`
 - `t49 webhook-notifications list|get|examples`. `examples` requires `--event <event>`, a webhook event name such as `container.transport.vessel_arrived`.
-- `t49 vessels get|get-by-imo|future-positions|future-positions-coords`. `future-positions` requires `--port-id` and `--previous-port-id`. `future-positions-coords` also requires `--latitude` and `--longitude`.
+- `t49 vessels get|get-by-imo|future-positions|future-positions-coords`. `future-positions` requires `--port-id` and `--previous-port-id`. `future-positions-coords` also requires `--latitude` and `--longitude`. In table mode both print the vessel name and IMO, then one row per estimated position.
 - `t49 ports get`
 - `t49 terminals get`
 - `t49 parties list|get`

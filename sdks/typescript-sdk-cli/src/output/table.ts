@@ -35,6 +35,14 @@ const ROUTE_VESSEL_COLUMNS: ColumnDef[] = [
   { key: 'positionAt', title: 'Position At' },
 ];
 
+const FUTURE_POSITION_COLUMNS: ColumnDef[] = [
+  { key: 'timestamp', title: 'Timestamp' },
+  { key: 'latitude', title: 'Latitude' },
+  { key: 'longitude', title: 'Longitude' },
+  { key: 'heading', title: 'Heading' },
+  { key: 'estimated', title: 'Estimated' },
+];
+
 const commandColumns: Record<string, ColumnDef[]> = {
   'shipments.list': [
     { key: 'id', title: 'ID' },
@@ -612,6 +620,23 @@ function renderRoute(data: unknown): string | undefined {
   return `${ports}Current vessel\n${renderRows([vessel], ROUTE_VESSEL_COLUMNS)}`;
 }
 
+/** A positions table under a vessel line, from a mapped vessel, a `{ raw, mapped }` pair, or the raw document. */
+function renderFuturePositions(data: unknown): string | undefined {
+  const record = asRecord(data);
+  const mapped = asRecord(record?.mapped) ?? record;
+  const vessel = asRecord(asRecord(mapped?.data)?.attributes) ?? mapped;
+  if (!Array.isArray(vessel?.positions)) return undefined;
+
+  const imo = hasRenderableValue(vessel.imo)
+    ? ` (IMO ${formatCell(vessel.imo)})`
+    : '';
+  const header = `Vessel ${formatCell(vessel.name)}${imo}\n`;
+  return `${header}${renderRows(
+    vessel.positions as Record<string, unknown>[],
+    FUTURE_POSITION_COLUMNS,
+  )}`;
+}
+
 function isSearchCommand(command: string): boolean {
   return command === 'search' || command.startsWith('search.');
 }
@@ -696,6 +721,14 @@ export function renderTable(command: string, data: unknown): string {
   if (command === 'containers.route') {
     const route = renderRoute(data);
     if (route) return route;
+  }
+
+  if (
+    command === 'vessels.future-positions' ||
+    command === 'vessels.future-positions-coords'
+  ) {
+    const positions = renderFuturePositions(data);
+    if (positions) return positions;
   }
 
   const rows = tableRows(data);
