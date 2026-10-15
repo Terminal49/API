@@ -36,7 +36,10 @@ import {
   CONTAINER_FILTER_KEYS,
   listResponseMetadataSchema,
 } from './tools/list-filters.js';
-import { executeListTrackingRequests } from './tools/list-tracking-requests.js';
+import {
+  executeListTrackingRequests,
+  TRACKING_REQUEST_STATUS_FILTERS,
+} from './tools/list-tracking-requests.js';
 import {
   executeListParties,
   listPartiesInputSchema,
@@ -1489,7 +1492,7 @@ export function createTerminal49McpServer(
     {
       title: 'List Tracking Requests',
       description:
-        'Return one intentionally requested page of tracking requests, optionally filtered by request identifier, status, or carrier SCAC. Page size is capped at 25. For succeeded requests, use search_container to resolve the tracked identifier into container or shipment UUIDs. Identifier fields must never contain user messages or conversation history.',
+        'Return one intentionally requested page of tracking requests, optionally filtered by request identifier, status, or carrier SCAC. Page size is capped at 25. A request whose status is created has succeeded; its shipment.id is the shipment UUID for get_shipment_details. Identifier fields must never contain user messages or conversation history.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1509,9 +1512,13 @@ export function createTerminal49McpServer(
                 'One tracking request identifier (maximum 64 characters). Never pass conversation text.',
               ),
             status: z
-              .enum(['created', 'pending', 'succeeded', 'failed'])
+              .enum(TRACKING_REQUEST_STATUS_FILTERS)
               .optional()
-              .describe('Filter by request status (mapped to filter[status])'),
+              .describe(
+                'Filter by request status: pending (still being processed), created (succeeded: the shipment was created), failed, or cancelled. ' +
+                  'This filter cannot select awaiting_manifest (still being processed while the carrier manifest is pending) or tracking_stopped; ' +
+                  'to find those, pass request_number without status.',
+              ),
             scac: z
               .string()
               .trim()

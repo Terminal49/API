@@ -323,7 +323,7 @@ function configureHappyPath(toolName: ToolName): void {
             id: 'tracking-request-1',
             requestNumber: 'CAIU1234567',
             requestType: 'container',
-            status: 'succeeded',
+            status: 'created',
             scac: 'MAEU',
             createdAt: '2026-08-20T12:00:00Z',
             updatedAt: '2026-08-20T12:05:00Z',
@@ -359,7 +359,7 @@ function argumentsFor(toolName: ToolName): Record<string, unknown> {
     case 'list_containers':
       return { page: 1, page_size: 10 };
     case 'list_tracking_requests':
-      return { status: 'succeeded', page: 1, page_size: 10 };
+      return { status: 'created', page: 1, page_size: 10 };
     case 'whoami':
       return {};
     default: {
@@ -457,7 +457,7 @@ function expectedOutputFor(toolName: ToolName): Record<string, unknown> {
         items: [
           expect.objectContaining({
             requestNumber: 'CAIU1234567',
-            status: 'succeeded',
+            status: 'created',
           }),
         ],
       };

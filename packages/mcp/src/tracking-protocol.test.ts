@@ -225,3 +225,70 @@ describe('track_container carrier selection', () => {
     }
   });
 });
+
+describe('list_tracking_requests status filter', () => {
+  it('rejects succeeded, which the API would silently treat as pending', async () => {
+    const requests = stubApi({});
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'list_tracking_requests',
+        arguments: { status: 'succeeded' },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(textOf(result)).toContain('status');
+      expect(requests).toEqual([]);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('sends cancelled and returns each request with its tracked shipment id', async () => {
+    const requests = stubApi({
+      'GET /tracking_requests': () => ({
+        data: [
+          {
+            id: 'tr-9',
+            type: 'tracking_request',
+            attributes: {
+              request_number: 'MAEU123456789',
+              request_type: 'bill_of_lading',
+              scac: 'MAEU',
+              status: 'cancelled',
+              failed_reason: 'Cancelled by user',
+            },
+            relationships: {
+              tracked_object: { data: { id: 'shipment-9', type: 'shipment' } },
+            },
+          },
+        ],
+        links: { self: 'https://api.test/v2/tracking_requests' },
+      }),
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'list_tracking_requests',
+        arguments: { status: 'cancelled' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(requests[0]?.url.searchParams.get('filter[status]')).toBe(
+        'cancelled',
+      );
+      expect(result.structuredContent).toMatchObject({
+        items: [
+          {
+            id: 'tr-9',
+            requestNumber: 'MAEU123456789',
+            status: 'cancelled',
+            shipment: { id: 'shipment-9' },
+          },
+        ],
+      });
+    } finally {
+      await client.close();
+    }
+  });
+});
