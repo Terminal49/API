@@ -8,7 +8,7 @@ import {
   positiveInt,
   splitCommaList,
 } from '../util/input.js';
-import { action } from './action.js';
+import { action, listAction } from './action.js';
 
 type PayloadOptions = {
   active?: boolean;
@@ -49,12 +49,12 @@ export function registerWebhooksCommand(program: Command): void {
     .option('--page <number>', 'Page number', positiveInt('--page'))
     .option('--page-size <number>', 'Page size', positiveInt('--page-size'));
   listCommand.action(
-    action('webhooks.list', async ({ client, globals }) => {
+    listAction('webhooks.list', async ({ client, format }) => {
       const options = localOptions<PayloadOptions>(listCommand);
       return client.webhooks.list({
         page: options.page,
         pageSize: options.pageSize,
-        format: globals.format,
+        format,
       });
     }),
   );

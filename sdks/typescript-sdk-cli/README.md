@@ -109,6 +109,14 @@ Success output in JSON mode:
 
 `pagination` and `meta` are omitted when unavailable.
 
+Every list command shapes `data` the same way:
+
+- `--format mapped` prints the array of mapped rows.
+- `--format raw` prints the whole JSON:API document, including `included`, `links`, and `meta`. Project its rows with paths such as `--fields data.id`.
+- `--format both` prints `{ "raw": <document>, "mapped": <rows> }`.
+
+List commands also copy the document's `links` and `meta` into `pagination`.
+
 Error output:
 
 ```json

@@ -5,7 +5,7 @@
  */
 
 import type { Command } from 'commander';
-import { action } from './action.js';
+import { listAction } from './action.js';
 
 type ShippingLinesListOptions = {
   search?: string;
@@ -22,11 +22,9 @@ export function registerShippingLinesCommand(program: Command): void {
     .description('List shipping lines')
     .option('--search <text>', 'Search shipping lines by name or code');
   listCommand.action(
-    action('shipping-lines.list', async ({ client, globals }) => {
+    listAction('shipping-lines.list', async ({ client, format }) => {
       const options = listCommand.opts() as ShippingLinesListOptions;
-      return client.shippingLines.list(options.search, {
-        format: globals.format,
-      });
+      return client.shippingLines.list(options.search, { format });
     }),
   );
 }

@@ -8,7 +8,7 @@ import { type Terminal49Client, ValidationError } from '@terminal49/sdk';
 import type { Command } from 'commander';
 import { InvalidArgumentError } from 'commander';
 import { parseJsonObjectPayload, splitCommaList } from '../util/input.js';
-import { action, addListOptions, cliEnvelope, listAction } from './action.js';
+import { action, addListOptions, listAction } from './action.js';
 import {
   formatCreateFromInferResult,
   formatInferResult,
@@ -51,13 +51,6 @@ type TrackingInferOptions = {
   shipmentTags?: string;
 };
 
-type PaginationEnvelope = {
-  pagination?: {
-    links?: unknown;
-    meta?: unknown;
-  };
-};
-
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -66,32 +59,6 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 
 function localOptions<T>(command: Command): T {
   return command.opts() as T;
-}
-
-function paginationFrom(result: unknown): PaginationEnvelope | undefined {
-  const record = asRecord(result);
-  const mapped = asRecord(record?.mapped);
-  const raw = asRecord(record?.raw);
-  const links = record?.links ?? mapped?.links ?? raw?.links;
-  const meta = record?.meta ?? mapped?.meta ?? raw?.meta;
-  if (links === undefined && meta === undefined) return undefined;
-  return { pagination: { links, meta } };
-}
-
-function listDataFrom(result: unknown): unknown {
-  const record = asRecord(result);
-  if (record?.raw || record?.mapped) {
-    const raw = asRecord(record.raw);
-    const mapped = asRecord(record.mapped);
-    return {
-      raw: raw?.data ?? record.raw,
-      mapped: mapped?.items ?? record.mapped,
-    };
-  }
-
-  if (Array.isArray(record?.items)) return record.items;
-  if (record && 'data' in record) return record.data;
-  return result;
 }
 
 function optionalList(value: string | undefined): string[] | undefined {
@@ -205,7 +172,7 @@ export function registerTrackingRequestsCommand(program: Command): void {
             format: globals.format,
           },
         );
-        return cliEnvelope(listDataFrom(result), paginationFrom(result));
+        return result;
       },
       ({ client, globals }) => {
         const options = localOptions<TrackingListOptions>(listCommand);

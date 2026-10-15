@@ -1,4 +1,4 @@
-import type { Terminal49Client } from '@terminal49/sdk';
+import type { ResponseFormat, Terminal49Client } from '@terminal49/sdk';
 import { type Command, InvalidArgumentError } from 'commander';
 import { createClient } from '../client-factory.js';
 import { withErrorHandling } from '../errors.js';
@@ -10,7 +10,7 @@ export interface GlobalOptions {
   table?: boolean;
   compact?: boolean;
   fields?: string;
-  format?: 'raw' | 'mapped' | 'both';
+  format?: ResponseFormat;
   token?: string;
   baseUrl?: string;
   maxRetries?: number;
@@ -25,27 +25,17 @@ type CommanderGlobalOptions = GlobalOptions & {
   timeout?: number;
 };
 
-type ActionContext = {
+export type ActionContext = {
   client: Terminal49Client;
   globals: GlobalOptions;
+  /** The format the SDK answers in: `--format`, then config `defaultFormat`, then `mapped`. */
+  format: ResponseFormat;
 };
 
-/** Internal CLI list envelope — not a JSON:API document. */
-export type EnvelopeResult = {
-  readonly __cliEnvelope: true;
+type ListOutput = {
   data: unknown;
-  meta?: {
-    pagination?: unknown;
-    meta?: unknown;
-  };
+  pagination?: { links?: unknown; meta?: unknown };
 };
-
-export function cliEnvelope(
-  data: unknown,
-  meta?: EnvelopeResult['meta'],
-): EnvelopeResult {
-  return { __cliEnvelope: true, data, meta };
-}
 
 export function resolveGlobals(command: Command): GlobalOptions {
   const opts = command.optsWithGlobals() as CommanderGlobalOptions;
@@ -64,6 +54,19 @@ export function resolveGlobals(command: Command): GlobalOptions {
   };
 }
 
+async function createContext(command: Command): Promise<ActionContext> {
+  const globals = resolveGlobals(command);
+  const { client, format } = await createClient({
+    token: globals.token,
+    baseUrl: globals.baseUrl,
+    format: globals.format,
+    maxRetries: globals.maxRetries,
+    accountId: globals.accountId,
+    timeoutMs: globals.timeoutMs,
+  });
+  return { client, globals, format };
+}
+
 export function action<TArgs extends unknown[]>(
   name: string,
   run: (ctx: ActionContext, ...args: TArgs) => Promise<unknown>,
@@ -73,31 +76,75 @@ export function action<TArgs extends unknown[]>(
     const positional = args.slice(0, -1) as TArgs;
 
     const handler = withErrorHandling<unknown[]>(async () => {
-      const globals = resolveGlobals(command);
-      const formatter = createFormatter({
-        json: globals.json,
-        table: globals.table,
-        compact: globals.compact,
-        fields: globals.fields,
-      });
-      const client = await createClient({
-        token: globals.token,
-        baseUrl: globals.baseUrl,
-        format: globals.format,
-        maxRetries: globals.maxRetries,
-        accountId: globals.accountId,
-        timeoutMs: globals.timeoutMs,
-      });
-
-      // Pass SDK/API results through as-is. Do not unwrap objects that happen
-      // to have a top-level `data` key — that is the JSON:API shape for
-      // `--format raw` and would drop `included` / `links` / `meta`.
-      // List commands that need pagination meta use listAction + cliEnvelope.
-      const result = await run({ client, globals }, ...positional);
-      formatter.output(name, result);
+      const ctx = await createContext(command);
+      const formatter = createFormatter(ctx.globals);
+      // Single-resource results pass through as-is, so `--format raw` keeps
+      // the whole JSON:API document (`included`, `links`, `meta`).
+      formatter.output(name, await run(ctx, ...positional));
     });
     await handler.apply(undefined, args);
   };
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+/** The rows of a mapped list: a mapped array, a `PaginatedResult`, or a JSON:API document when the SDK has no mapper. */
+function rowsOf(value: unknown): unknown {
+  if (Array.isArray(value)) return value;
+  const record = asRecord(value);
+  if (Array.isArray(record?.items)) return record.items;
+  if (Array.isArray(record?.data)) return record.data;
+  return value;
+}
+
+function paginationOf(value: unknown): ListOutput['pagination'] {
+  const record = asRecord(value);
+  if (record?.links === undefined && record?.meta === undefined) {
+    return undefined;
+  }
+  return { links: record.links, meta: record.meta };
+}
+
+/**
+ * The one output shape every list command shares. `raw` is the whole JSON:API
+ * document, `mapped` is the row array, and `both` pairs them.
+ */
+export function listOutput(
+  result: unknown,
+  format: ResponseFormat,
+): ListOutput {
+  switch (format) {
+    case 'raw':
+      return { data: result, pagination: paginationOf(result) };
+    case 'mapped':
+      return { data: rowsOf(result), pagination: paginationOf(result) };
+    case 'both': {
+      const pair = asRecord(result);
+      return {
+        data: { raw: pair?.raw, mapped: rowsOf(pair?.mapped) },
+        pagination: paginationOf(pair?.raw),
+      };
+    }
+    default: {
+      const exhaustive: never = format;
+      return exhaustive;
+    }
+  }
+}
+
+export function warnUnsupportedFilters(result: unknown): void {
+  const record = asRecord(result);
+  const unsupportedFilters =
+    record?.unsupportedFilters ?? asRecord(record?.mapped)?.unsupportedFilters;
+  if (!Array.isArray(unsupportedFilters) || unsupportedFilters.length === 0)
+    return;
+  process.stderr.write(
+    `Warning: unsupported filters ignored by SDK: ${unsupportedFilters.join(', ')}\n`,
+  );
 }
 
 export function addListOptions(command: Command): Command {
@@ -117,27 +164,19 @@ export function addListOptions(command: Command): Command {
     .option('--page-size <n>', 'Page size', positiveInt('--page-size'));
 }
 
+/** Runs a list command: `run` returns the SDK list result, which `listOutput` shapes. */
 export function listAction(
   name: string,
-  run: (ctx: ActionContext) => Promise<EnvelopeResult>,
+  run: (ctx: ActionContext) => Promise<unknown>,
   iterate?: (ctx: ActionContext) => AsyncIterable<unknown>,
 ) {
   return async (...args: unknown[]): Promise<void> => {
     const command = args[args.length - 1] as Command;
 
     const handler = withErrorHandling<unknown[]>(async () => {
-      const globals = resolveGlobals(command);
-      const client = await createClient({
-        token: globals.token,
-        baseUrl: globals.baseUrl,
-        format: globals.format,
-        maxRetries: globals.maxRetries,
-        accountId: globals.accountId,
-        timeoutMs: globals.timeoutMs,
-      });
-      const ctx = { client, globals };
+      const ctx = await createContext(command);
 
-      if (globals.all) {
+      if (ctx.globals.all) {
         if (!iterate) {
           throw new InvalidArgumentError(
             '--all is not supported for this command',
@@ -150,14 +189,12 @@ export function listAction(
         return;
       }
 
-      const formatter = createFormatter({
-        json: globals.json,
-        table: globals.table,
-        compact: globals.compact,
-        fields: globals.fields,
-      });
-      const result = await run(ctx);
-      formatter.output(name, result.data, result.meta);
+      const output = listOutput(await run(ctx), ctx.format);
+      createFormatter(ctx.globals).output(
+        name,
+        output.data,
+        output.pagination && { pagination: output.pagination },
+      );
     });
     await handler.apply(undefined, args);
   };

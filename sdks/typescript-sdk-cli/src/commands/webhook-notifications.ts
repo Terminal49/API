@@ -5,7 +5,7 @@
 import type { WebhookEvent } from '@terminal49/sdk';
 import type { Command } from 'commander';
 import { positiveInt } from '../util/input.js';
-import { action } from './action.js';
+import { action, listAction } from './action.js';
 
 type ListOptions = {
   page?: number;
@@ -33,12 +33,12 @@ export function registerWebhookNotificationsCommand(program: Command): void {
     .option('--page <number>', 'Page number', positiveInt('--page'))
     .option('--page-size <number>', 'Page size', positiveInt('--page-size'));
   listCommand.action(
-    action('webhook-notifications.list', async ({ client, globals }) => {
+    listAction('webhook-notifications.list', async ({ client, format }) => {
       const options = localOptions<ListOptions>(listCommand);
       return client.webhookNotifications.list({
         page: options.page,
         pageSize: options.pageSize,
-        format: globals.format,
+        format,
       });
     }),
   );
