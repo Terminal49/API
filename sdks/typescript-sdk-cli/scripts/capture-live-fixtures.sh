@@ -43,15 +43,15 @@ run_json "containers.list.json" containers list --page-size 2
 run_json "tracking-requests.list.json" tracking-requests list --page-size 2
 run_json "shipping-lines.list.json" shipping-lines list --search HLCU
 
-shipment_id="$(read_id "$API_FIXTURES/shipments.list.json" "data.items.0.id")"
-container_id="$(read_id "$API_FIXTURES/containers.list.json" "data.items.0.id")"
-tracking_id="$(read_id "$API_FIXTURES/tracking-requests.list.json" "data.items.0.id")"
-shipment_bol="$(read_id "$API_FIXTURES/shipments.list.json" "data.items.0.billOfLading")"
-container_number="$(read_id "$API_FIXTURES/containers.list.json" "data.items.0.number")"
-tracking_number="$(read_id "$API_FIXTURES/tracking-requests.list.json" "data.items.0.requestNumber")"
-terminal_id="$(read_id "$API_FIXTURES/containers.list.json" "data.items.0.terminals.podTerminal.id")"
-vessel_imo="$(read_id "$API_FIXTURES/shipments.list.json" "data.items.0.vesselAtPod.imo")"
-port_code="$(read_id "$API_FIXTURES/shipments.list.json" "data.items.0.ports.portOfLading.code")"
+shipment_id="$(read_id "$API_FIXTURES/shipments.list.json" "data.0.id")"
+container_id="$(read_id "$API_FIXTURES/containers.list.json" "data.0.id")"
+tracking_id="$(read_id "$API_FIXTURES/tracking-requests.list.json" "data.0.id")"
+shipment_bol="$(read_id "$API_FIXTURES/shipments.list.json" "data.0.billOfLading")"
+container_number="$(read_id "$API_FIXTURES/containers.list.json" "data.0.number")"
+tracking_number="$(read_id "$API_FIXTURES/tracking-requests.list.json" "data.0.requestNumber")"
+terminal_id="$(read_id "$API_FIXTURES/containers.list.json" "data.0.terminals.podTerminal.id")"
+vessel_imo="$(read_id "$API_FIXTURES/shipments.list.json" "data.0.vesselAtPod.imo")"
+port_code="$(read_id "$API_FIXTURES/shipments.list.json" "data.0.ports.portOfLading.code")"
 search_number="${T49_FIXTURE_SEARCH_NUMBER:-$container_number}"
 
 run_json "shipments.get.json" shipments get "$shipment_id"
