@@ -9,6 +9,7 @@ import {
 import { jsonResponse } from './test/mock-fetch.js';
 
 const baseUrl = 'https://api.test/v2';
+const EMPTY_ROUTE = { type: 'FeatureCollection', features: [] };
 
 describe('Terminal49Client transport resilience', () => {
   it('normalizes a thrown network error and retries it like a 5xx', async () => {
@@ -20,7 +21,7 @@ describe('Terminal49Client transport resilience', () => {
         if (attempt === 1) {
           throw new TypeError('fetch failed');
         }
-        return jsonResponse({ data: { id: 'route-1' } });
+        return jsonResponse(EMPTY_ROUTE);
       });
 
       const client = new Terminal49Client({
@@ -34,7 +35,7 @@ describe('Terminal49Client transport resilience', () => {
       await vi.advanceTimersByTimeAsync(500);
       const result = await resultPromise;
 
-      expect(result.data.id).toBe('route-1');
+      expect(result).toEqual(EMPTY_ROUTE);
       expect(attempt).toBe(2);
     } finally {
       vi.useRealTimers();
@@ -114,7 +115,7 @@ describe('Terminal49Client transport resilience', () => {
         if (attempt === 2) {
           return jsonResponse({ errors: [{ detail: 'server error' }] }, 500);
         }
-        return jsonResponse({ data: { id: 'route-1' } });
+        return jsonResponse(EMPTY_ROUTE);
       });
 
       const client = new Terminal49Client({
@@ -128,7 +129,7 @@ describe('Terminal49Client transport resilience', () => {
       await vi.advanceTimersByTimeAsync(2000);
       const result = await resultPromise;
 
-      expect(result.data.id).toBe('route-1');
+      expect(result).toEqual(EMPTY_ROUTE);
       expect(attempt).toBe(3);
     } finally {
       vi.useRealTimers();
@@ -146,7 +147,7 @@ describe('Terminal49Client transport resilience', () => {
             'Retry-After': '3',
           });
         }
-        return jsonResponse({ data: { id: 'route-1' } });
+        return jsonResponse(EMPTY_ROUTE);
       });
 
       const client = new Terminal49Client({
@@ -165,7 +166,7 @@ describe('Terminal49Client transport resilience', () => {
 
       await vi.advanceTimersByTimeAsync(1000);
       const result = await resultPromise;
-      expect(result.data.id).toBe('route-1');
+      expect(result).toEqual(EMPTY_ROUTE);
       expect(attempt).toBe(2);
     } finally {
       vi.useRealTimers();

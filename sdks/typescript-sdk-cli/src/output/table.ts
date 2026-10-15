@@ -13,6 +13,28 @@ interface ColumnDef {
   title: string;
 }
 
+const ROUTE_PORT_COLUMNS: ColumnDef[] = [
+  { key: 'sequence', title: 'Seq' },
+  { key: 'label', title: 'Label' },
+  { key: 'name', title: 'Port' },
+  { key: 'countryCode', title: 'Country' },
+  { key: 'inbound.eta', title: 'Inbound ETA' },
+  { key: 'inbound.ata', title: 'Inbound ATA' },
+  { key: 'outbound.etd', title: 'Outbound ETD' },
+  { key: 'outbound.atd', title: 'Outbound ATD' },
+];
+
+const ROUTE_VESSEL_COLUMNS: ColumnDef[] = [
+  { key: 'name', title: 'Vessel' },
+  { key: 'imo', title: 'IMO' },
+  { key: 'voyage', title: 'Voyage' },
+  { key: 'coordinates.latitude', title: 'Latitude' },
+  { key: 'coordinates.longitude', title: 'Longitude' },
+  { key: 'heading', title: 'Heading' },
+  { key: 'speed', title: 'Speed (kn)' },
+  { key: 'positionAt', title: 'Position At' },
+];
+
 const commandColumns: Record<string, ColumnDef[]> = {
   'shipments.list': [
     { key: 'id', title: 'ID' },
@@ -50,21 +72,6 @@ const commandColumns: Record<string, ColumnDef[]> = {
     { key: ['event', 'attributes.event'], title: 'Event' },
     { key: ['dataSource', 'attributes.data_source'], title: 'Source' },
     { key: ['value', 'attributes.value'], title: 'Value' },
-  ],
-  'containers.route': [
-    { key: ['port.name', 'port.code', 'location.name'], title: 'Port' },
-    { key: ['inbound.mode', 'attributes.inbound_mode'], title: 'Inbound' },
-    { key: ['inbound.eta', 'attributes.inbound_eta_at'], title: 'Inbound ETA' },
-    { key: ['inbound.ata', 'attributes.inbound_ata_at'], title: 'Inbound ATA' },
-    { key: ['outbound.mode', 'attributes.outbound_mode'], title: 'Outbound' },
-    {
-      key: ['outbound.etd', 'attributes.outbound_etd_at'],
-      title: 'Outbound ETD',
-    },
-    {
-      key: ['outbound.atd', 'attributes.outbound_atd_at'],
-      title: 'Outbound ATD',
-    },
   ],
   'containers.demurrage': [
     { key: 'container_id', title: 'Container ID' },
@@ -577,32 +584,32 @@ function enrichSearchRow(
   return enriched;
 }
 
-function rowsForCommand(
-  command: string,
-  data: unknown,
-): Record<string, unknown>[] {
-  const record =
-    data && typeof data === 'object' && !Array.isArray(data)
-      ? (data as Record<string, unknown>)
-      : undefined;
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
 
-  if (Array.isArray(record?.mapped)) {
-    return record.mapped as Record<string, unknown>[];
-  }
+function tableRows(data: unknown): Record<string, unknown>[] {
+  const mapped = asRecord(data)?.mapped;
+  return Array.isArray(mapped)
+    ? (mapped as Record<string, unknown>[])
+    : normalizeRows(data);
+}
 
-  if (command === 'containers.route') {
-    const mapped = record?.mapped;
-    if (mapped && typeof mapped === 'object' && !Array.isArray(mapped)) {
-      const locations = (mapped as Record<string, unknown>).locations;
-      if (Array.isArray(locations))
-        return locations as Record<string, unknown>[];
-    }
-    if (Array.isArray(record?.locations)) {
-      return record.locations as Record<string, unknown>[];
-    }
-  }
+/** Ports table plus a current-vessel table, from a `{ ports }` route or a `{ raw, mapped }` pair; undefined for raw GeoJSON. */
+function renderRoute(data: unknown): string | undefined {
+  const record = asRecord(data);
+  const route = asRecord(record?.mapped) ?? record;
+  if (!Array.isArray(route?.ports)) return undefined;
 
-  return normalizeRows(data);
+  const ports = renderRows(
+    route.ports as Record<string, unknown>[],
+    ROUTE_PORT_COLUMNS,
+  );
+  const vessel = asRecord(route.currentVessel);
+  if (!vessel) return ports;
+  return `${ports}Current vessel\n${renderRows([vessel], ROUTE_VESSEL_COLUMNS)}`;
 }
 
 function isSearchCommand(command: string): boolean {
@@ -686,15 +693,28 @@ export function renderTable(command: string, data: unknown): string {
     if (detail) return detail;
   }
 
-  const rows = rowsForCommand(command, data);
-  const baseCols = commandColumns[command];
-  const commandIsSearch = isSearchCommand(command);
+  if (command === 'containers.route') {
+    const route = renderRoute(data);
+    if (route) return route;
+  }
+
+  const rows = tableRows(data);
+  const renderedRows = isSearchCommand(command)
+    ? rows.map(enrichSearchRow)
+    : rows;
+  return renderRows(
+    renderedRows,
+    commandColumns[command] ?? inferUnknownColumns(renderedRows),
+  );
+}
+
+function renderRows(
+  rows: Record<string, unknown>[],
+  cols: ColumnDef[],
+): string {
   if (rows.length === 0) {
     return 'No rows.\n';
   }
-
-  const renderedRows = commandIsSearch ? rows.map(enrichSearchRow) : rows;
-  const cols = baseCols ?? inferUnknownColumns(renderedRows);
 
   const table = new Table({
     head: cols.map((c) => c.title),
@@ -702,7 +722,7 @@ export function renderTable(command: string, data: unknown): string {
     wordWrap: true,
   });
 
-  renderedRows.forEach((row) => {
+  rows.forEach((row) => {
     table.push(cols.map((column) => formatCell(valueForColumn(row, column))));
   });
 

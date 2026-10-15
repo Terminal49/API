@@ -9,18 +9,19 @@ import {
 import { createMockFetch, jsonResponse } from './test/mock-fetch.js';
 
 const baseUrl = 'https://api.test/v2';
+const EMPTY_ROUTE = { type: 'FeatureCollection', features: [] };
 
 describe('Terminal49Client', () => {
   it('retries on 500 and succeeds on second attempt', async () => {
     vi.useFakeTimers();
     let attempt = 0;
     const { fetchImpl, calls } = createMockFetch({
-      '/containers/abc/route?include=port,vessel,route_location': () => {
+      '/containers/abc/map_geojson': () => {
         attempt += 1;
         if (attempt === 1) {
           return jsonResponse({ errors: [{ detail: 'server error' }] }, 500);
         }
-        return jsonResponse({ data: { id: 'route-1' } });
+        return jsonResponse(EMPTY_ROUTE);
       },
     });
 
@@ -36,7 +37,7 @@ describe('Terminal49Client', () => {
       await vi.advanceTimersByTimeAsync(500);
       const result = await resultPromise;
 
-      expect(result.data.id).toBe('route-1');
+      expect(result).toEqual(EMPTY_ROUTE);
       expect(calls.length).toBe(2);
     } finally {
       vi.useRealTimers();
@@ -213,6 +214,45 @@ describe('Terminal49Client', () => {
       },
     });
   });
+
+  it.each([
+    [{ bookingNumber: 'BK123' }, 'booking_number', 'BK123'],
+    [{ billOfLading: 'MAEU123456789' }, 'bill_of_lading', 'MAEU123456789'],
+    [
+      {
+        containerNumber: 'MSCU1234567',
+        bookingNumber: 'BK123',
+        billOfLading: 'B1',
+      },
+      'container',
+      'MSCU1234567',
+    ],
+    [{ bookingNumber: 'BK123', billOfLading: 'B1' }, 'booking_number', 'BK123'],
+  ])(
+    'sends the matching request_type for %o',
+    async (number, requestType, requestNumber) => {
+      let capturedBody: any = null;
+      const { fetchImpl } = createMockFetch({
+        '/tracking_requests': (init) => {
+          capturedBody = JSON.parse(String(init?.body));
+          return jsonResponse({ data: { id: 'tr-1', attributes: {} } }, 201);
+        },
+      });
+      const client = new Terminal49Client({
+        apiToken: 'token-123',
+        apiBaseUrl: baseUrl,
+        fetchImpl,
+      });
+
+      await client.trackContainer({ ...number, scac: 'MAEU' });
+
+      expect(capturedBody.data.attributes).toEqual({
+        request_type: requestType,
+        request_number: requestNumber,
+        scac: 'MAEU',
+      });
+    },
+  );
 
   it('uses deserialize helper to flatten JSON:API with included', async () => {
     const doc = {
@@ -405,8 +445,19 @@ describe('Terminal49Client', () => {
 
   it('maps 403 feature gating to FeatureNotEnabledError', async () => {
     const { fetchImpl } = createMockFetch({
-      '/containers/abc/route?include=port,vessel,route_location': () =>
-        jsonResponse({ errors: [{ detail: 'Feature not enabled' }] }, 403),
+      '/containers/abc/map_geojson': () =>
+        jsonResponse(
+          {
+            errors: [
+              {
+                status: '403',
+                title: 'Forbidden',
+                detail: 'Routing data feature is not enabled for this account',
+              },
+            ],
+          },
+          403,
+        ),
     });
 
     const client = new Terminal49Client({

@@ -1,7 +1,11 @@
+import type { paths } from '../generated/terminal49.js';
 import type {
   Container,
+  ContainerRoute,
   CustomField,
-  Route,
+  RouteCoordinates,
+  RoutePort,
+  RouteVessel,
   Shipment,
   ShippingLine,
   TrackingRequest,
@@ -74,72 +78,102 @@ export function mapTransportEvents(doc: any) {
   });
 }
 
-export function mapRoute(doc: any): Route {
-  const apiDoc = new JsonApiDocument(doc);
-  const route = apiDoc.getAttributes(apiDoc.data, false);
-  const routeLocations =
-    apiDoc.getRelationship(apiDoc.data, 'route_locations') || [];
+type ContainerMapGeojson =
+  paths['/containers/{id}/map_geojson']['get']['responses'][200]['content']['application/json'];
+type RouteFeature = ContainerMapGeojson['features'][number];
+type RouteFeatureProperties = RouteFeature['properties'];
+type FeatureProperties<K extends RouteFeatureProperties['feature_type']> =
+  Extract<RouteFeatureProperties, { feature_type: K }>;
 
-  const locations = (
-    Array.isArray(routeLocations) ? routeLocations : [routeLocations]
-  )
-    .map((location: any) => {
-      if (!location) return null;
+function pointCoordinates(
+  geometry: RouteFeature['geometry'],
+): RouteCoordinates | null {
+  if (geometry.type !== 'Point' || geometry.coordinates.length < 2) {
+    return null;
+  }
+  const [longitude, latitude] = geometry.coordinates;
+  return { longitude, latitude };
+}
 
-      const attrs = location.attributes || {};
-      // A route leg's port lives under the `location` relationship
-      // (type port|terminal); there is no `port` relationship.
-      const port = apiDoc.getRelationship(location, 'location');
-      const inboundVessel = apiDoc.getRelationship(location, 'inbound_vessel');
-      const outboundVessel = apiDoc.getRelationship(
-        location,
-        'outbound_vessel',
-      );
-
-      return {
-        port: port
-          ? {
-              code: port.attributes?.code,
-              name: port.attributes?.name,
-              city: port.attributes?.city,
-              countryCode: port.attributes?.country_code,
-            }
-          : null,
-        inbound: {
-          mode: attrs.inbound_mode,
-          carrierScac: attrs.inbound_scac,
-          eta: attrs.inbound_eta_at,
-          ata: attrs.inbound_ata_at,
-          vessel: inboundVessel
-            ? {
-                name: inboundVessel.attributes?.name,
-                imo: inboundVessel.attributes?.imo,
-              }
-            : null,
-        },
-        outbound: {
-          mode: attrs.outbound_mode,
-          carrierScac: attrs.outbound_scac,
-          etd: attrs.outbound_etd_at,
-          atd: attrs.outbound_atd_at,
-          vessel: outboundVessel
-            ? {
-                name: outboundVessel.attributes?.name,
-                imo: outboundVessel.attributes?.imo,
-              }
-            : null,
-        },
-      };
-    })
-    .filter((loc: any) => loc !== null);
-
+function mapRoutePort(
+  props: FeatureProperties<'port'>,
+  geometry: RouteFeature['geometry'],
+): RoutePort {
   return {
-    id: apiDoc.data?.id,
-    totalLegs: locations.length,
-    locations: locations as any,
-    createdAt: route.created_at,
-    updatedAt: route.updated_at,
+    locationId: props.location_id ?? null,
+    name: props.name ?? null,
+    countryCode: props.country_code ?? null,
+    label: props.label ?? null,
+    sequence: props.ports_sequence ?? null,
+    coordinates: pointCoordinates(geometry),
+    inbound: {
+      eta: props.inbound_eta_at ?? null,
+      ata: props.inbound_ata_at ?? null,
+    },
+    outbound: {
+      etd: props.outbound_etd_at ?? null,
+      atd: props.outbound_atd_at ?? null,
+    },
   };
+}
+
+function mapRouteVessel(
+  props: FeatureProperties<'current_vessel'>,
+  geometry: RouteFeature['geometry'],
+): RouteVessel {
+  return {
+    name: props.vessel_name ?? null,
+    imo: props.vessel_imo ?? null,
+    voyage: props.voyage_number ?? null,
+    coordinates: pointCoordinates(geometry),
+    heading: props.vessel_location_heading ?? null,
+    speed: props.vessel_location_speed ?? null,
+    positionAt: props.vessel_location_timestamp ?? null,
+    departurePort: {
+      locationId: props.departure_port_id ?? null,
+      name: props.departure_port_name ?? null,
+      label: props.departure_port_label ?? null,
+    },
+    arrivalPort: {
+      locationId: props.arrival_port_id ?? null,
+      name: props.arrival_port_name ?? null,
+      label: props.arrival_port_label ?? null,
+    },
+  };
+}
+
+/** Map a `map_geojson` FeatureCollection to ports in route order plus the current vessel. */
+export function mapContainerRoute(doc: ContainerMapGeojson): ContainerRoute {
+  const ports: RoutePort[] = [];
+  let currentVessel: RouteVessel | null = null;
+
+  for (const feature of doc.features) {
+    const props = feature.properties;
+    switch (props.feature_type) {
+      case 'port':
+        ports.push(mapRoutePort(props, feature.geometry));
+        break;
+      case 'current_vessel':
+        currentVessel = mapRouteVessel(props, feature.geometry);
+        break;
+      case 'past_vessel_locations':
+      case 'estimated_full_legs':
+      case 'estimated_partial_leg':
+        break;
+      default: {
+        const _exhaustive: never = props;
+        void _exhaustive;
+      }
+    }
+  }
+
+  ports.sort(
+    (a, b) =>
+      (a.sequence ?? Number.MAX_SAFE_INTEGER) -
+      (b.sequence ?? Number.MAX_SAFE_INTEGER),
+  );
+
+  return { ports, currentVessel, totalPorts: ports.length };
 }
 
 export function mapShippingLines(doc: any): ShippingLine[] {

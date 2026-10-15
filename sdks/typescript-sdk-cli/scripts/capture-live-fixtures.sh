@@ -83,7 +83,7 @@ if [[ -n "$port_code" ]]; then
 fi
 
 set +e
-run_dev containers route "$container_id" --json > /tmp/t49.route.out 2> "$API_FIXTURES/containers.route.error.json"
+run_dev containers route "$container_id" --json > "$API_FIXTURES/containers.route.json" 2> /tmp/t49.route.err
 run_dev containers map "$container_id" --json > /tmp/t49.map.out 2> "$API_FIXTURES/containers.map.error.json"
 run_dev custom-fields list --page-size 2 --json > /tmp/t49.custom-fields.out 2> "$API_FIXTURES/custom-fields.list.error.json"
 run_dev webhook-notifications examples --json > /tmp/t49.webhook-examples.out 2> "$API_FIXTURES/webhook-notifications.examples.error.json"

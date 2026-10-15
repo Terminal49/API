@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { AuthenticationError, NetworkError } from '@terminal49/sdk';
 import { Command, InvalidArgumentError } from 'commander';
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { listFilters } from '../src/commands/tracking-requests.js';
 import { getExitCode } from '../src/errors.js';
 import { createProgram } from '../src/index.js';
@@ -21,6 +21,7 @@ class ProcessExit extends Error {
 }
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   restoreEnv('T49_API_TOKEN', originalEnv.T49_API_TOKEN);
   restoreEnv('T49_API_BASE_URL', originalEnv.T49_API_BASE_URL);
   restoreEnv('XDG_CONFIG_HOME', originalEnv.XDG_CONFIG_HOME);
@@ -175,5 +176,159 @@ describe('CLI regressions', () => {
       links: { self: '/containers/c1' },
     };
     expect('__cliEnvelope' in jsonApi).toBe(false);
+  });
+
+  it('vessels future-positions requires both port ids', async () => {
+    process.env.T49_API_TOKEN = 'token-123';
+    const result = await runProgram([
+      '--json',
+      'vessels',
+      'future-positions',
+      'v-1',
+      '--port-id',
+      'port-2',
+    ]);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain(
+      "required option '--previous-port-id <id>' not specified",
+    );
+  });
+
+  it('vessels future-positions-coords rejects a non-numeric latitude', async () => {
+    process.env.T49_API_TOKEN = 'token-123';
+    const result = await runProgram([
+      '--json',
+      'vessels',
+      'future-positions-coords',
+      'v-1',
+      '--port-id',
+      'port-2',
+      '--previous-port-id',
+      'port-1',
+      '--latitude',
+      'north',
+      '--longitude',
+      '-100.84',
+    ]);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('--latitude must be a number');
+  });
+
+  it('vessels future-positions-coords sends the spec query params', async () => {
+    const urls: string[] = [];
+    vi.stubGlobal('fetch', async (input: Request | URL | string) => {
+      urls.push(input instanceof Request ? input.url : String(input));
+      return new Response(JSON.stringify({ data: null }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    process.env.T49_API_TOKEN = 'token-123';
+    process.env.T49_API_BASE_URL = 'https://api.test/v2';
+    process.env.XDG_CONFIG_HOME = mkdtempSync(join(tmpdir(), 't49-cli-'));
+
+    const result = await runProgram([
+      '--json',
+      'vessels',
+      'future-positions-coords',
+      'v-1',
+      '--port-id',
+      'port-2',
+      '--previous-port-id',
+      'port-1',
+      '--latitude',
+      '13.07',
+      '--longitude',
+      '-100.84',
+    ]);
+
+    expect(result.status).toBe(0);
+    expect(urls).toEqual([
+      'https://api.test/v2/vessels/v-1/future_positions_with_coordinates?port_id=port-2&previous_port_id=port-1&latitude=13.07&longitude=-100.84',
+    ]);
+  });
+
+  it('containers route prints mapped ports and map prints the unmapped GeoJSON', async () => {
+    const collection = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [121.5, 31.2] },
+          properties: {
+            feature_type: 'port',
+            location_id: 'loc-1',
+            name: 'Shanghai',
+            ports_sequence: 1,
+          },
+        },
+      ],
+    };
+    const paths: string[] = [];
+    vi.stubGlobal('fetch', async (input: Request | URL | string) => {
+      paths.push(
+        new URL(input instanceof Request ? input.url : String(input)).pathname,
+      );
+      return new Response(JSON.stringify(collection), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    process.env.T49_API_TOKEN = 'token-123';
+    process.env.T49_API_BASE_URL = 'https://api.test/v2';
+    process.env.XDG_CONFIG_HOME = mkdtempSync(join(tmpdir(), 't49-cli-'));
+
+    const route = await runProgram(['--json', 'containers', 'route', 'c-1']);
+    const map = await runProgram(['--json', 'containers', 'map', 'c-1']);
+    const mapBoth = await runProgram([
+      '--json',
+      '--format',
+      'both',
+      'containers',
+      'map',
+      'c-1',
+    ]);
+    const mapTable = await runProgram(['--table', 'containers', 'map', 'c-1']);
+
+    expect([route.status, map.status, mapBoth.status, mapTable.status]).toEqual(
+      [0, 0, 0, 0],
+    );
+    expect(JSON.parse(mapBoth.stdout).data).toEqual({
+      raw: collection,
+      mapped: collection,
+    });
+    expect(mapTable.stdout).toBe(
+      [
+        '┌───────────────────┐',
+        '│ Type              │',
+        '├───────────────────┤',
+        '│ FeatureCollection │',
+        '└───────────────────┘',
+        '',
+      ].join('\n'),
+    );
+    expect(JSON.parse(route.stdout).data).toEqual({
+      ports: [
+        {
+          locationId: 'loc-1',
+          name: 'Shanghai',
+          countryCode: null,
+          label: null,
+          sequence: 1,
+          coordinates: { latitude: 31.2, longitude: 121.5 },
+          inbound: { eta: null, ata: null },
+          outbound: { etd: null, atd: null },
+        },
+      ],
+      currentVessel: null,
+      totalPorts: 1,
+    });
+    expect(JSON.parse(map.stdout).data).toEqual(collection);
+    expect(paths).toEqual([
+      '/v2/containers/c-1/map_geojson',
+      '/v2/containers/c-1/map_geojson',
+      '/v2/containers/c-1/map_geojson',
+      '/v2/containers/c-1/map_geojson',
+    ]);
   });
 });

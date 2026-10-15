@@ -81,9 +81,9 @@ export class Transport {
   }
 
   /**
-   * Run a request that has no entry in the generated OpenAPI types (currently
-   * only `search()`) through the same Auth -> Retry -> ErrorMapping pipeline the
-   * typed client uses, including the timeout-wrapped fetch. Successful bodies are
+   * Run a hand-built request (routes or query params the OpenAPI spec does not
+   * describe) through the same Auth -> Retry -> ErrorMapping pipeline the typed
+   * client uses, including the timeout-wrapped fetch. Successful bodies are
    * read with {@link readSuccessBody} so a non-JSON success body is surfaced
    * rather than silently collapsed to `undefined`.
    */

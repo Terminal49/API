@@ -53,11 +53,12 @@ async function main() {
   });
   console.log(`Container has ${events.length} events`);
 
-  // 5) Get routing details (vessels, ports, legs)
+  // 5) Get the route: ports in order and the current vessel.
+  // Requires the Routing Data feature; otherwise this throws FeatureNotEnabledError.
   const route = await client.containers.route(containerId, {
     format: 'mapped',
   });
-  console.log(`Route has ${route.locations.length} locations`);
+  console.log(`Route has ${route.totalPorts} ports`);
 }
 
 main();
@@ -71,7 +72,7 @@ main();
 
 **Events** are individual milestones: gate out, vessel departure, discharge, and more. Each event has a timestamp, location, and description.
 
-**Routes** show the planned and actual journey, broken into locations with inbound and outbound legs.
+**Routes** list the ports a container visits, in order, with arrival and departure times for each port. When the container is at sea, the route also includes the current vessel.
 
 ## Next steps
 

@@ -4,7 +4,9 @@ import {
 } from '@modelcontextprotocol/client';
 import { createMcpHandler } from '@modelcontextprotocol/server';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { mapContainerRoute } from '@terminal49/sdk';
 import { createTerminal49McpServer } from './server.js';
+import { EXPECTED_ROUTE_SUMMARY, routeFixture } from './test/route-fixture.js';
 
 vi.mock('@sentry/node', () => ({
   captureException: vi.fn(),
@@ -27,7 +29,9 @@ const sdk = vi.hoisted(() => ({
   trackingRequestsList: vi.fn(),
 }));
 
-vi.mock('@terminal49/sdk', () => ({
+vi.mock('@terminal49/sdk', async (importOriginal) => ({
+  mapContainerRoute: (await importOriginal<typeof import('@terminal49/sdk')>())
+    .mapContainerRoute,
   Terminal49Client: class Terminal49Client {
     search = sdk.search;
     createTrackingRequestFromInfer = sdk.createTrackingRequestFromInfer;
@@ -184,49 +188,6 @@ function eventsRaw() {
   };
 }
 
-function routeRaw() {
-  return {
-    data: {
-      id: 'route-1',
-      type: 'route',
-      attributes: {
-        created_at: '2026-07-01T00:00:00Z',
-        updated_at: '2026-08-21T05:00:00Z',
-      },
-      relationships: {
-        route_locations: {
-          data: [{ id: 'route-location-1', type: 'route_location' }],
-        },
-      },
-    },
-    included: [
-      {
-        id: 'route-location-1',
-        type: 'route_location',
-        attributes: {
-          inbound_mode: 'vessel',
-          inbound_scac: 'MAEU',
-          inbound_eta_at: '2026-08-18T10:00:00Z',
-          outbound_mode: 'truck',
-        },
-        relationships: {
-          port: { data: { id: 'port-1', type: 'port' } },
-        },
-      },
-      {
-        id: 'port-1',
-        type: 'port',
-        attributes: {
-          code: 'USLAX',
-          name: 'Los Angeles',
-          city: 'Los Angeles',
-          country_code: 'US',
-        },
-      },
-    ],
-  };
-}
-
 async function connectClient() {
   const handler = createMcpHandler(
     () => createTerminal49McpServer('fixture-token', 'https://api.test'),
@@ -295,7 +256,7 @@ function configureHappyPath(toolName: ToolName): void {
       ]);
       return;
     case 'get_container_route':
-      sdk.containersRoute.mockResolvedValue({ raw: routeRaw() });
+      sdk.containersRoute.mockResolvedValue(mapContainerRoute(routeFixture));
       return;
     case 'list_shipments':
       sdk.shipmentsList.mockResolvedValue({
@@ -435,15 +396,7 @@ function expectedOutputFor(toolName: ToolName): Record<string, unknown> {
         ],
       };
     case 'get_container_route':
-      return {
-        route_id: 'route-1',
-        total_legs: 1,
-        route_locations: [
-          expect.objectContaining({
-            port: expect.objectContaining({ code: 'USLAX' }),
-          }),
-        ],
-      };
+      return EXPECTED_ROUTE_SUMMARY;
     case 'list_shipments':
       return {
         items: [

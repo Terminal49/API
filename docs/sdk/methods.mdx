@@ -29,6 +29,13 @@ The SDK exposes a `Terminal49Client` with methods grouped by resource type. Each
 | `client.shipments.update(id, attrs, options?)` | Update shipment attributes like reference numbers or tags. |
 | `client.shipments.stopTracking(id, options?)` | Stop tracking a shipment and its containers. |
 | `client.shipments.resumeTracking(id, options?)` | Resume tracking a previously stopped shipment. |
+| `client.shipments.customFields(id, options?)` | `GET /shipments/{id}/custom_fields`. List the custom field values set on the shipment, with their definitions. |
+| `client.shipments.setCustomField(id, apiSlug, value, options?)` | `POST /shipments/{id}/custom_fields`. Set a custom field value on the shipment. |
+| `client.shipments.updateCustomField(id, apiSlug, value, options?)` | `PATCH /shipments/{id}/custom_fields/{api_slug}`. Update an existing custom field value on the shipment. |
+| `client.shipments.deleteCustomField(id, apiSlug, options?)` | `DELETE /shipments/{id}/custom_fields/{api_slug}`. Remove a custom field value from the shipment. |
+| `client.shipments.partyRoles(id, options?)` | `GET /shipments/{id}/party_roles`. List the party roles assigned to the shipment. |
+| `client.shipments.addPartyRole(id, { role, partyId }, options?)` | `POST /shipments/{id}/party_roles`. Assign a party to the shipment in the given role. |
+| `client.shipments.removePartyRole(id, partyRoleId, options?)` | `DELETE /shipments/{id}/party_roles/{id}`. Remove a party role assignment from the shipment. |
 
 ### Containers
 
@@ -37,9 +44,17 @@ The SDK exposes a `Terminal49Client` with methods grouped by resource type. Each
 | `client.containers.get(id, include?, options?)` | Fetch a container by ID. `include` is an array of related resources. |
 | `client.containers.list(filters?, options?)` | List containers matching filter criteria. |
 | `client.containers.events(id, options?)` | Get transport events for a container. |
-| `client.containers.route(id, options?)` | Get routing details: vessels, ports, and journey legs. |
+| `client.containers.route(id, options?)` | Get the container's route from `GET /containers/{id}/map_geojson`. `raw` returns the GeoJSON FeatureCollection. `mapped` returns `{ ports, currentVessel, totalPorts }`, with ports in route order and their arrival and departure times. Requires the Routing Data feature. `client.containers.map` is deprecated. It returns the GeoJSON FeatureCollection without mapping, so `both` returns `{ raw, mapped }` with the FeatureCollection in each half. |
 | `client.containers.rawEvents(id, options?)` | Get unprocessed events as received from carriers. |
 | `client.containers.refresh(id, options?)` | Request an immediate data refresh from the carrier. |
+| `client.containers.update(id, attrs, options?)` | `PATCH /containers/{id}`. Update container attributes such as `ref_numbers`. |
+| `client.containers.customFields(id, options?)` | `GET /containers/{id}/custom_fields`. List the custom field values set on the container, with their definitions. |
+| `client.containers.setCustomField(id, apiSlug, value, options?)` | `POST /containers/{id}/custom_fields`. Set a custom field value on the container. |
+| `client.containers.updateCustomField(id, apiSlug, value, options?)` | `PATCH /containers/{id}/custom_fields/{api_slug}`. Update an existing custom field value on the container. |
+| `client.containers.deleteCustomField(id, apiSlug, options?)` | `DELETE /containers/{id}/custom_fields/{api_slug}`. Remove a custom field value from the container. |
+| `client.containers.partyRoles(id, options?)` | `GET /containers/{id}/party_roles`. List the party roles assigned to the container. |
+| `client.containers.addPartyRole(id, { role, partyId }, options?)` | `POST /containers/{id}/party_roles`. Assign a party to the container in the given role. |
+| `client.containers.removePartyRole(id, partyRoleId, options?)` | `DELETE /containers/{id}/party_roles/{id}`. Remove a party role assignment from the container. |
 
 ### Tracking requests
 
@@ -51,18 +66,129 @@ The SDK exposes a `Terminal49Client` with methods grouped by resource type. Each
 | `client.trackingRequests.create(params)` | Create a tracking request with an explicit request type and SCAC. |
 | `client.trackingRequests.inferNumber(number)` | Detect whether a number is a container, booking, or bill of lading. |
 | `client.trackingRequests.createFromInfer(number, options?)` | Create a tracking request with automatic number type detection. |
+| `client.trackingRequests.customFields(id, options?)` | `GET /tracking_requests/{id}/custom_fields`. List the custom field values set on the tracking request, with their definitions. |
+| `client.trackingRequests.setCustomField(id, apiSlug, value, options?)` | `POST /tracking_requests/{id}/custom_fields`. Set a custom field value on the tracking request. |
+| `client.trackingRequests.updateCustomField(id, apiSlug, value, options?)` | `PATCH /tracking_requests/{id}/custom_fields/{api_slug}`. Update an existing custom field value on the tracking request. |
+| `client.trackingRequests.deleteCustomField(id, apiSlug, options?)` | `DELETE /tracking_requests/{id}/custom_fields/{api_slug}`. Remove a custom field value from the tracking request. |
+
+### Vessels
+
+| Method | Description |
+|--------|-------------|
+| `client.vessels.get(id, options?)` | Fetch a vessel by ID. |
+| `client.vessels.getByImo(imo, options?)` | Fetch a vessel by IMO number. |
+| `client.vessels.futurePositions(id, { portId, previousPortId }, options?)` | Get the vessel's estimated positions between the previous port and the destination port. Requires the Routing Data feature. |
+| `client.vessels.futurePositionsWithCoords(id, { portId, previousPortId, latitude, longitude }, options?)` | Get the vessel's estimated positions from a starting coordinate to the destination port. Requires the Routing Data feature. |
 
 ### Shipping lines
 
 | Method | Description |
 |--------|-------------|
 | `client.shippingLines.list(search?, options?)` | List carriers. Use `search` to filter by name or SCAC. |
+| `client.shippingLines.get(id, options?)` | Fetch a carrier by ID. |
+
+### Webhooks
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `client.webhooks.list(options?)` | `GET /webhooks` | List webhooks. Supports pagination. |
+| `client.webhooks.get(id, options?)` | `GET /webhooks/{id}` | Fetch a webhook. |
+| `client.webhooks.create(payload, options?)` | `POST /webhooks` | Create a webhook. `payload` is the JSON:API request body. |
+| `client.webhooks.update(id, payload, options?)` | `PATCH /webhooks/{id}` | Update a webhook. `payload` is the JSON:API request body. |
+| `client.webhooks.delete(id, options?)` | `DELETE /webhooks/{id}` | Delete a webhook. |
+| `client.webhooks.ips(options?)` | `GET /webhooks/ips` | List the IP ranges that webhook deliveries come from. |
+| `client.webhooks.events(options?)` | `GET /webhooks/events` | List the event names a webhook can subscribe to. |
+| `client.webhooks.trigger({ url, event, secret?, documentType? }, options?)` | `POST /webhooks/trigger` | Send a test delivery with an example payload for `event` to `url`. Set `secret` to sign the request. Set `documentType` for `document_representation.*` events. |
+
+### Webhook notifications
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `client.webhookNotifications.list(options?)` | `GET /webhook_notifications` | List webhook notifications. Supports pagination and `options.include`. |
+| `client.webhookNotifications.get(id, options?)` | `GET /webhook_notifications/{id}` | Fetch a webhook notification. Pass `options.include` to sideload relationships. |
+| `client.webhookNotifications.examples(event?, options?)` | `GET /webhook_notifications/examples` | Get example notification payloads. Set `event` to get the examples for one event. |
+
+### Ports, terminals, and metro areas
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `client.ports.get(id, options?)` | `GET /ports/{id}` | Fetch a port. |
+| `client.terminals.get(id, options?)` | `GET /terminals/{id}` | Fetch a terminal. |
+| `client.metroAreas.get(id, options?)` | `GET /metro_areas/{id}` | Fetch a metro area. |
+
+### Parties
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `client.parties.list(options?)` | `GET /parties` | List parties. Supports pagination. |
+| `client.parties.get(id, options?)` | `GET /parties/{id}` | Fetch a party. |
+| `client.parties.create(attributes, options?)` | `POST /parties` | Create a party, such as `{ company_name: 'ACME' }`. |
+| `client.parties.update(id, attributes, options?)` | `PATCH /parties/{id}` | Update a party's attributes. |
+
+### Custom field definitions
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `client.customFieldDefinitions.list(options?)` | `GET /custom_field_definitions` | List definitions. Filter with `options.filters` by `entityType`, `dataType`, or `displayName`. |
+| `client.customFieldDefinitions.get(id, options?)` | `GET /custom_field_definitions/{id}` | Fetch a definition. |
+| `client.customFieldDefinitions.create(payload, options?)` | `POST /custom_field_definitions` | Create a definition. `payload` is the JSON:API request body. |
+| `client.customFieldDefinitions.update(id, payload, options?)` | `PATCH /custom_field_definitions/{id}` | Update a definition. `payload` is the JSON:API request body. |
+| `client.customFieldDefinitions.delete(id, options?)` | `DELETE /custom_field_definitions/{id}` | Delete a definition. |
+
+### Custom field options
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `client.customFieldOptions.list(definitionId, options?)` | `GET /custom_field_definitions/{id}/options` | List the options of a definition. Supports pagination. |
+| `client.customFieldOptions.get(definitionId, optionId, options?)` | `GET /custom_field_definitions/{id}/options/{option_id}` | Fetch an option. |
+| `client.customFieldOptions.create(definitionId, payload, options?)` | `POST /custom_field_definitions/{id}/options` | Create an option. `payload` is the JSON:API request body. |
+| `client.customFieldOptions.update(definitionId, optionId, payload, options?)` | `PATCH /custom_field_definitions/{id}/options/{option_id}` | Update an option. `payload` is the JSON:API request body. |
+| `client.customFieldOptions.delete(definitionId, optionId, options?)` | `DELETE /custom_field_definitions/{id}/options/{option_id}` | Delete an option. |
+
+### Custom fields
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `client.customFields.list(options?)` | `GET /custom_fields` | List custom field values. Filter with `options.filters` by `entityType`, `entityId`, or `definitionId`. |
+| `client.customFields.get(id, options?)` | `GET /custom_fields/{id}` | Fetch a custom field value. |
+| `client.customFields.create(payload, options?)` | `POST /custom_fields` | Create a custom field value. `payload` is the JSON:API request body. |
+| `client.customFields.update(id, payload, options?)` | `PATCH /custom_fields/{id}` | Update a custom field value. `payload` is the JSON:API request body. |
+| `client.customFields.delete(id, options?)` | `DELETE /custom_fields/{id}` | Delete a custom field value. |
+
+### Documents
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `client.documents.list(filters?, options?)` | `GET /documents` | List documents. Filter by `filename`, `reference`, or `documentTypes`, and set `sort` and `include`. |
+| `client.documents.get(id, options?)` | `GET /documents/{id}` | Fetch a document. Pass `options.include` to sideload relationships. |
+| `client.documents.create({ name, attachedDocument }, options?)` | `POST /documents` | Create a document from a direct-uploaded blob. `attachedDocument` is the signed blob ID. |
+| `client.documents.update(id, { documentTypeManual?, extractedDataManual? }, options?)` | `PATCH /documents/{id}` | Override the document type or the extracted data. Pass `extractedDataManual: null` to clear manually provided extracted data. |
+| `client.documents.delete(id, options?)` | `DELETE /documents/{id}` | Delete a document. |
+| `client.documents.types(options?)` | `GET /documents/types` | List the document types Terminal49 can classify. |
+| `client.documents.downloadUrl(id, options?)` | `GET /documents/{id}/download_url` | Get a short-lived download URL for the document's file. |
+| `client.documents.reextract(id, options?)` | `POST /documents/{id}/reextract` | Run data extraction again. |
+| `client.documents.reclassify(id, options?)` | `POST /documents/{id}/reclassify` | Run classification again. |
+| `client.documents.relink(id, options?)` | `POST /documents/{id}/relink` | Link the document to shipments and containers again. |
+| `client.documents.rotate(id, degrees, options?)` | `POST /documents/{id}/rotate` | Rotate the pages by `90`, `180`, or `270` degrees. |
+
+### Email submissions
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `client.emailSubmissions.list(options?)` | `GET /email_submissions` | List documents sent to your Terminal49 inbox. Supports pagination and `options.include`. |
+| `client.emailSubmissions.get(id, options?)` | `GET /email_submissions/{id}` | Fetch an email submission. Pass `options.include` to sideload relationships. |
+
+### Document schemas
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `client.documentSchemas.get(id, options?)` | `GET /document_schemas/{id}` | Fetch an extraction schema by its versioned id, `<document_type>@<version>`, such as `commercial_invoice@2026-03-23`. |
 
 ## Helpers and aliases
 
 | Method | Description |
 |--------|-------------|
-| `client.trackContainer(params)` | Convenience helper that creates a tracking request using a container or booking number. |
+| `client.trackContainer(params)` | Convenience helper that creates a tracking request from `containerNumber`, `bookingNumber`, or `billOfLading`. It sends `request_type` `container`, `booking_number`, or `bill_of_lading` to match. |
 | `client.listTrackRequests(filters?, options?)` | Alias for `client.trackingRequests.list`. |
 | `client.getDemurrage(containerId)` | Returns a subset of demurrage-related fields for a container. See [holds, fees, and release readiness](/api-docs/in-depth-guides/holds-and-fees) for context. |
 | `client.getRailMilestones(containerId)` | Returns rail milestones derived from transport events. |
@@ -70,7 +196,7 @@ The SDK exposes a `Terminal49Client` with methods grouped by resource type. Each
 
 ## Direct method equivalents
 
-All namespace methods are also available as direct methods on the client:
+The namespace methods in this table are also available as direct methods on the client. Other namespace methods, such as `client.shippingLines.get` and the `client.documents`, `client.emailSubmissions`, and `client.documentSchemas` methods, have no direct method.
 
 | Namespace method | Direct method |
 |------------------|--------------|
@@ -92,6 +218,43 @@ All namespace methods are also available as direct methods on the client:
 | `client.trackingRequests.inferNumber` | `client.inferTrackingNumber` |
 | `client.trackingRequests.createFromInfer` | `client.createTrackingRequestFromInfer` |
 | `client.shippingLines.list` | `client.listShippingLines` |
+| `client.vessels.get` | `client.getVessel` |
+| `client.vessels.getByImo` | `client.getVesselByImo` |
+| `client.vessels.futurePositions` | `client.getVesselFuturePositions` |
+| `client.vessels.futurePositionsWithCoords` | `client.getVesselFuturePositionsWithCoords` |
+| `client.webhooks.list` | `client.listWebhooks` |
+| `client.webhooks.get` | `client.getWebhook` |
+| `client.webhooks.create` | `client.createWebhook` |
+| `client.webhooks.update` | `client.updateWebhook` |
+| `client.webhooks.delete` | `client.deleteWebhook` |
+| `client.webhooks.ips` | `client.getWebhookIps` |
+| `client.webhooks.events` | `client.listWebhookEvents` |
+| `client.webhooks.trigger` | `client.triggerWebhook` |
+| `client.webhookNotifications.list` | `client.listWebhookNotifications` |
+| `client.webhookNotifications.get` | `client.getWebhookNotification` |
+| `client.webhookNotifications.examples` | `client.getWebhookNotificationExamples` |
+| `client.ports.get` | `client.getPort` |
+| `client.terminals.get` | `client.getTerminal` |
+| `client.metroAreas.get` | `client.getMetroArea` |
+| `client.parties.list` | `client.listParties` |
+| `client.parties.get` | `client.getParty` |
+| `client.parties.create` | `client.createParty` |
+| `client.parties.update` | `client.updateParty` |
+| `client.customFieldDefinitions.list` | `client.listCustomFieldDefinitions` |
+| `client.customFieldDefinitions.get` | `client.getCustomFieldDefinition` |
+| `client.customFieldDefinitions.create` | `client.createCustomFieldDefinition` |
+| `client.customFieldDefinitions.update` | `client.updateCustomFieldDefinition` |
+| `client.customFieldDefinitions.delete` | `client.deleteCustomFieldDefinition` |
+| `client.customFieldOptions.list` | `client.listCustomFieldOptions` |
+| `client.customFieldOptions.get` | `client.getCustomFieldOption` |
+| `client.customFieldOptions.create` | `client.createCustomFieldOption` |
+| `client.customFieldOptions.update` | `client.updateCustomFieldOption` |
+| `client.customFieldOptions.delete` | `client.deleteCustomFieldOption` |
+| `client.customFields.list` | `client.listCustomFields` |
+| `client.customFields.get` | `client.getCustomField` |
+| `client.customFields.create` | `client.createCustomField` |
+| `client.customFields.update` | `client.updateCustomField` |
+| `client.customFields.delete` | `client.deleteCustomField` |
 
 ## Common options
 

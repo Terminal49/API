@@ -1,5 +1,6 @@
 import type { ContainerListFilters } from '../../generated/list-filters.js';
 import { serializeListQuery } from '../filter-validation.js';
+import type { components, paths } from '../../generated/terminal49.js';
 import type { Container } from '../../types/models.js';
 import type {
   CallOptions,
@@ -9,8 +10,8 @@ import type {
 } from '../../types/options.js';
 import {
   mapContainerList,
+  mapContainerRoute,
   mapCustomFields,
-  mapRoute,
   mapTransportEvents,
 } from '../mappers.js';
 import {
@@ -19,7 +20,22 @@ import {
   MAX_CONTAINER_PAGE_SIZE,
   normalizeInclude,
 } from '../query.js';
+import { callerPayload, type JsonBody } from '../spec.js';
 import { BaseManager } from './base.js';
+
+type ContainerUpdateAttributes = NonNullable<
+  JsonBody<paths['/containers/{id}']['patch']>['data']
+>['attributes'];
+type CustomFieldValue = components['schemas']['custom_field_value'];
+type PartyRoleData = JsonBody<
+  paths['/containers/{container_id}/party_roles']['post']
+>['data'];
+
+/** Parameters for `addPartyRole`; `role` is limited to what the spec accepts on this route. */
+interface AddPartyRoleParams {
+  role: PartyRoleData['attributes']['role'];
+  partyId: PartyRoleData['relationships']['party']['data']['id'];
+}
 
 const DEFAULT_CONTAINER_INCLUDES = [
   'shipment',
@@ -49,7 +65,23 @@ export class ContainerManager extends BaseManager {
     return this.formatResult(raw, options?.format);
   }
 
+  /** Update container attributes such as `ref_numbers`. */
+  async update(
+    id: string,
+    attrs: ContainerUpdateAttributes,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.PATCH('/containers/{id}', {
+        params: { path: { id } },
+        body: { data: { type: 'container', id, attributes: attrs } },
+      }),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
   async customFields(id: string, options?: CallOptions): Promise<any> {
+    // The spec omits include=definition, but mapCustomFields reads the included definitions.
     const raw = await this.transport.executeManual(
       `${this.transport.baseUrl}/containers/${encodeURIComponent(id)}/custom_fields?include=definition`,
     );
@@ -101,53 +133,135 @@ export class ContainerManager extends BaseManager {
     return this.formatResult(raw, options?.format, mapTransportEvents);
   }
 
+  /**
+   * Fetch the container's route: ports, the current vessel, and vessel tracks.
+   * The raw format is the GeoJSON FeatureCollection; the mapped format is a
+   * `ContainerRoute`. Requires the Routing Data feature, otherwise the API
+   * returns 403.
+   */
   async route(id: string, options?: CallOptions): Promise<any> {
-    // The route path is absent from current OpenAPI, although this SDK already
-    // supports it. Keep the existing client/middleware path while regenerating
-    // types from the actual source, rather than hand-editing generated types.
-    const raw = await this.transport.execute(() =>
-      this.transport.client.GET('/containers/{id}/route' as any, {
-        params: {
-          path: { id },
-          query: { include: 'port,vessel,route_location' } as any,
-        },
-      }),
-    );
-    return this.formatResult(raw, options?.format, mapRoute);
-  }
-
-  async map(id: string, options?: CallOptions): Promise<any> {
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/containers/{id}/map_geojson', {
         params: { path: { id } },
       }),
     );
+    return this.formatResult(raw, options?.format, mapContainerRoute);
+  }
+
+  /**
+   * @deprecated Use {@link ContainerManager.route}. Returns the GeoJSON
+   * FeatureCollection unmapped: `raw` and `mapped` return it as is, and
+   * `both` returns `{ raw, mapped }` with the FeatureCollection in each half.
+   */
+  async map(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.route(id, { format: 'raw' });
     return this.formatResult(raw, options?.format);
   }
 
+  /** Create a custom field value on a container. */
   async setCustomField(
     id: string,
-    fieldId: string,
+    apiSlug: string,
     value: unknown,
     options?: CallOptions,
   ): Promise<any> {
-    const encodedId = encodeURIComponent(id);
-    const payload = {
-      data: {
-        type: 'custom_field',
-        attributes: {
-          api_slug: fieldId,
-          value,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.POST('/containers/{container_id}/custom_fields', {
+        params: { path: { container_id: id } },
+        body: {
+          data: {
+            type: 'custom_field',
+            attributes: {
+              api_slug: apiSlug,
+              value: callerPayload<CustomFieldValue>(value),
+            },
+          },
         },
-      },
-    };
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/containers/${encodedId}/custom_fields`,
-      {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' },
-      },
+      }),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Update an existing custom field value on a container. */
+  async updateCustomField(
+    id: string,
+    apiSlug: string,
+    value: CustomFieldValue,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.PATCH(
+        '/containers/{container_id}/custom_fields/{api_slug}',
+        {
+          params: { path: { container_id: id, api_slug: apiSlug } },
+          body: { data: { type: 'custom_field', attributes: { value } } },
+        },
+      ),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Remove a custom field value from a container. */
+  async deleteCustomField(
+    id: string,
+    apiSlug: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.DELETE(
+        '/containers/{container_id}/custom_fields/{api_slug}',
+        {
+          params: { path: { container_id: id, api_slug: apiSlug } },
+        },
+      ),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** List the party roles assigned to a container. */
+  async partyRoles(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/containers/{container_id}/party_roles', {
+        params: { path: { container_id: id } },
+      }),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Assign a party to a container in the given role. */
+  async addPartyRole(
+    id: string,
+    { role, partyId }: AddPartyRoleParams,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.POST('/containers/{container_id}/party_roles', {
+        params: { path: { container_id: id } },
+        body: {
+          data: {
+            type: 'party_role',
+            attributes: { role },
+            relationships: { party: { data: { type: 'party', id: partyId } } },
+          },
+        },
+      }),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Remove a party role assignment from a container. */
+  async removePartyRole(
+    id: string,
+    partyRoleId: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.DELETE(
+        '/containers/{container_id}/party_roles/{id}',
+        {
+          params: { path: { container_id: id, id: partyRoleId } },
+        },
+      ),
     );
     return this.formatResult(raw, options?.format);
   }

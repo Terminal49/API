@@ -1,3 +1,4 @@
+import type { components } from '../../generated/terminal49.js';
 import type { TrackingRequest } from '../../types/models.js';
 import type {
   CallOptions,
@@ -6,9 +7,15 @@ import type {
   TrackingRequestInclude,
 } from '../../types/options.js';
 import { ValidationError } from '../errors.js';
-import { mapTrackingRequest, mapTrackingRequestList } from '../mappers.js';
+import {
+  mapCustomFields,
+  mapTrackingRequest,
+  mapTrackingRequestList,
+} from '../mappers.js';
 import { copyStringParams, normalizeInclude } from '../query.js';
 import { BaseManager } from './base.js';
+
+type CustomFieldValue = components['schemas']['custom_field_value'];
 
 export type TrackingRequestType =
   | 'container'
@@ -99,6 +106,75 @@ export class TrackingRequestManager extends BaseManager {
     );
 
     return this.formatResult(raw, options?.format, mapTrackingRequest);
+  }
+
+  /** List custom field values set on a tracking request, with their definitions. */
+  async customFields(id: string, options?: CallOptions): Promise<any> {
+    // The spec omits include=definition, but mapCustomFields reads the included definitions.
+    const raw = await this.transport.executeManual(
+      `${this.transport.baseUrl}/tracking_requests/${encodeURIComponent(id)}/custom_fields?include=definition`,
+    );
+    return this.formatResult(raw, options?.format, mapCustomFields);
+  }
+
+  /** Create a custom field value on a tracking request. */
+  async setCustomField(
+    id: string,
+    apiSlug: string,
+    value: CustomFieldValue,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.POST(
+        '/tracking_requests/{tracking_request_id}/custom_fields',
+        {
+          params: { path: { tracking_request_id: id } },
+          body: {
+            data: {
+              type: 'custom_field',
+              attributes: { api_slug: apiSlug, value },
+            },
+          },
+        },
+      ),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Update an existing custom field value on a tracking request. */
+  async updateCustomField(
+    id: string,
+    apiSlug: string,
+    value: CustomFieldValue,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.PATCH(
+        '/tracking_requests/{tracking_request_id}/custom_fields/{api_slug}',
+        {
+          params: { path: { tracking_request_id: id, api_slug: apiSlug } },
+          body: { data: { type: 'custom_field', attributes: { value } } },
+        },
+      ),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Remove a custom field value from a tracking request. */
+  async deleteCustomField(
+    id: string,
+    apiSlug: string,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.DELETE(
+        '/tracking_requests/{tracking_request_id}/custom_fields/{api_slug}',
+        {
+          params: { path: { tracking_request_id: id, api_slug: apiSlug } },
+        },
+      ),
+    );
+    return this.formatResult(raw, options?.format);
   }
 
   async create(params: {

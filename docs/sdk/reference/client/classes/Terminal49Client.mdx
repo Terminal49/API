@@ -50,11 +50,16 @@ data from Node.js applications.
 | `customFields.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | `customFields.list` | `public` | (`options?`) => `Promise`\<`any`\> |
 | `customFields.update` | `public` | (`id`, `payload`, `options?`) => `Promise`\<`any`\> |
+| <a id="property-documents"></a> `documents` | `public` | [`DocumentManager`](/sdk/reference/client/managers/classes/DocumentManager) |
+| <a id="property-documentschemas"></a> `documentSchemas` | `public` | [`DocumentSchemaManager`](/sdk/reference/client/managers/classes/DocumentSchemaManager) |
+| <a id="property-emailsubmissions"></a> `emailSubmissions` | `public` | [`EmailSubmissionManager`](/sdk/reference/client/managers/classes/EmailSubmissionManager) |
 | <a id="property-metroareas"></a> `metroAreas` | `public` | `object` |
 | `metroAreas.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | <a id="property-parties"></a> `parties` | `public` | `object` |
+| `parties.create` | `public` | (`attributes`, `options?`) => `Promise`\<`any`\> |
 | `parties.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | `parties.list` | `public` | (`options?`) => `Promise`\<`any`\> |
+| `parties.update` | `public` | (`id`, `attributes`, `options?`) => `Promise`\<`any`\> |
 | <a id="property-ports"></a> `ports` | `public` | `object` |
 | `ports.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | <a id="property-shipments"></a> `shipments` | `public` | [`ShipmentManager`](/sdk/reference/client/managers/classes/ShipmentManager) |
@@ -63,8 +68,8 @@ data from Node.js applications.
 | `terminals.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | <a id="property-trackingrequests"></a> `trackingRequests` | `public` | [`TrackingRequestManager`](/sdk/reference/client/managers/classes/TrackingRequestManager) |
 | <a id="property-vessels"></a> `vessels` | `public` | `object` |
-| `vessels.futurePositions` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
-| `vessels.futurePositionsWithCoords` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| `vessels.futurePositions` | `public` | (`id`, `params`, `options?`) => `Promise`\<`any`\> |
+| `vessels.futurePositionsWithCoords` | `public` | (`id`, `params`, `options?`) => `Promise`\<`any`\> |
 | `vessels.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | `vessels.getByImo` | `public` | (`imo`, `options?`) => `Promise`\<`any`\> |
 | <a id="property-webhooknotifications"></a> `webhookNotifications` | `public` | `object` |
@@ -74,9 +79,11 @@ data from Node.js applications.
 | <a id="property-webhooks"></a> `webhooks` | `public` | `object` |
 | `webhooks.create` | `public` | (`payload`, `options?`) => `Promise`\<`any`\> |
 | `webhooks.delete` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
+| `webhooks.events` | `public` | (`options?`) => `Promise`\<`any`\> |
 | `webhooks.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | `webhooks.ips` | `public` | (`options?`) => `Promise`\<`any`\> |
 | `webhooks.list` | `public` | (`options?`) => `Promise`\<`any`\> |
+| `webhooks.trigger` | `public` | (`params`, `options?`) => `Promise`\<`any`\> |
 | `webhooks.update` | `public` | (`id`, `payload`, `options?`) => `Promise`\<`any`\> |
 
 ## Methods
@@ -132,6 +139,26 @@ Create a custom field option.
 | `definitionId` | `string` |
 | `payload` | `Record`\<`string`, `unknown`\> |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### createParty()
+
+> **createParty**(`attributes`, `options?`): `Promise`\<`any`\>
+
+Create a party.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `attributes` | \{ `company_name?`: `string`; \} | - |
+| `attributes.company_name?` | `string` | **Description** The name of the company **Example** `COMPANY NAME` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) | - |
 
 #### Returns
 
@@ -351,7 +378,7 @@ Fetch raw carrier/terminal events for a container.
 
 > **getContainerRoute**(`id`, `options?`): `Promise`\<`any`\>
 
-Fetch routing details for a container. This may require a paid Terminal49 feature.
+Fetch a container's route (ports, current vessel, tracks). Requires the Routing Data feature.
 
 #### Parameters
 
@@ -634,15 +661,16 @@ Fetch a vessel by IMO number.
 
 ### getVesselFuturePositions()
 
-> **getVesselFuturePositions**(`id`, `options?`): `Promise`\<`any`\>
+> **getVesselFuturePositions**(`id`, `params`, `options?`): `Promise`\<`any`\>
 
-Fetch future vessel positions.
+Fetch a vessel's estimated positions between two ports. Requires the Routing Data feature.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
+| `params` | [`VesselFuturePositionsParams`](/sdk/reference/client/interfaces/VesselFuturePositionsParams) |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
@@ -653,15 +681,16 @@ Fetch future vessel positions.
 
 ### getVesselFuturePositionsWithCoords()
 
-> **getVesselFuturePositionsWithCoords**(`id`, `options?`): `Promise`\<`any`\>
+> **getVesselFuturePositionsWithCoords**(`id`, `params`, `options?`): `Promise`\<`any`\>
 
-Fetch future vessel positions with coordinates.
+Fetch a vessel's estimated positions from a starting coordinate. Requires the Routing Data feature.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
+| `params` | [`VesselFuturePositionsWithCoordsParams`](/sdk/reference/client/interfaces/VesselFuturePositionsWithCoordsParams) |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
@@ -718,7 +747,7 @@ Fetch a webhook notification by ID.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| `options?` | [`WebhookNotificationGetOptions`](/sdk/reference/client/interfaces/WebhookNotificationGetOptions) |
 
 #### Returns
 
@@ -792,7 +821,7 @@ List custom field definitions.
 
 | Parameter | Type |
 | ------ | ------ |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) & `object` |
 
 #### Returns
 
@@ -829,7 +858,7 @@ List custom field assignments.
 
 | Parameter | Type |
 | ------ | ------ |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) & `object` |
 
 #### Returns
 
@@ -931,6 +960,24 @@ Alias for [listTrackingRequests](#listtrackingrequests).
 
 ***
 
+### listWebhookEvents()
+
+> **listWebhookEvents**(`options?`): `Promise`\<`any`\>
+
+List the event names a webhook can subscribe to.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### listWebhookNotifications()
 
 > **listWebhookNotifications**(`options?`): `Promise`\<`any`\>
@@ -941,7 +988,7 @@ List webhook notifications.
 
 | Parameter | Type |
 | ------ | ------ |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| `options?` | [`WebhookNotificationListOptions`](/sdk/reference/client/interfaces/WebhookNotificationListOptions) |
 
 #### Returns
 
@@ -1046,18 +1093,38 @@ Stop tracking a shipment and its containers.
 
 > **trackContainer**(`params`): `Promise`\<`any`\>
 
-Convenience helper for creating a tracking request from a container or booking number.
+Convenience helper for creating a tracking request from a container, booking, or bill of lading number.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `params` | \{ `autoDetectVoccScac?`: `boolean`; `bookingNumber?`: `string`; `containerNumber?`: `string`; `refNumbers?`: `string`[]; `scac?`: `string`; \} |
+| `params` | \{ `autoDetectVoccScac?`: `boolean`; `billOfLading?`: `string`; `bookingNumber?`: `string`; `containerNumber?`: `string`; `refNumbers?`: `string`[]; `scac?`: `string`; \} |
 | `params.autoDetectVoccScac?` | `boolean` |
+| `params.billOfLading?` | `string` |
 | `params.bookingNumber?` | `string` |
 | `params.containerNumber?` | `string` |
 | `params.refNumbers?` | `string`[] |
 | `params.scac?` | `string` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### triggerWebhook()
+
+> **triggerWebhook**(`params`, `options?`): `Promise`\<`any`\>
+
+Send a test webhook delivery with an example payload to a URL.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `params` | [`TriggerWebhookParams`](/sdk/reference/client/interfaces/TriggerWebhookParams) |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -1119,6 +1186,27 @@ Update a custom field option.
 | `optionId` | `string` |
 | `payload` | `Record`\<`string`, `unknown`\> |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### updateParty()
+
+> **updateParty**(`id`, `attributes`, `options?`): `Promise`\<`any`\>
+
+Update a party.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `id` | `string` | - |
+| `attributes` | \{ `company_name?`: `string`; \} | - |
+| `attributes.company_name?` | `string` | **Description** The name of the company **Example** `COMPANY NAME` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) | - |
 
 #### Returns
 

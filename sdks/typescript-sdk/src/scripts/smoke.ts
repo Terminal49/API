@@ -36,7 +36,7 @@ async function main() {
     const route = await client.containers.route(containerId, {
       format: 'mapped',
     });
-    console.log('Route legs:', (route as any)?.totalLegs ?? 'n/a');
+    console.log('Route ports:', route?.totalPorts ?? 'n/a');
   }
 
   if (shipmentId) {

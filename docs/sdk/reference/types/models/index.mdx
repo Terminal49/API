@@ -1,6 +1,6 @@
 ---
 title: "types/models: Terminal49 SDK mapped response models"
-description: "Mapped response models in the Terminal49 TypeScript SDK: Container, Shipment, ShippingLine, TrackingRequest, Route, PaginatedResult, and PaginationLinks."
+description: "Mapped response models in the Terminal49 TypeScript SDK: Container, Shipment, ShippingLine, TrackingRequest, ContainerRoute, PaginatedResult, and PaginationLinks."
 ---
 
 # types/models
@@ -10,10 +10,14 @@ description: "Mapped response models in the Terminal49 TypeScript SDK: Container
 | Interface | Description |
 | ------ | ------ |
 | [Container](/sdk/reference/types/models/interfaces/Container) | Simplified container model returned by mapped SDK responses. |
+| [ContainerRoute](/sdk/reference/types/models/interfaces/ContainerRoute) | Mapped container route: ports in route order plus the current vessel. |
 | [CustomField](/sdk/reference/types/models/interfaces/CustomField) | Account-defined custom field value on a container, shipment, or tracking request. |
 | [PaginatedResult](/sdk/reference/types/models/interfaces/PaginatedResult) | Mapped list response containing records plus pagination metadata. |
 | [PaginationLinks](/sdk/reference/types/models/interfaces/PaginationLinks) | Pagination links returned by Terminal49 list endpoints. |
-| [Route](/sdk/reference/types/models/interfaces/Route) | Simplified container route model returned by mapped SDK responses. |
+| [RouteCoordinates](/sdk/reference/types/models/interfaces/RouteCoordinates) | A `[longitude, latitude]` GeoJSON point, named so the axis order cannot be swapped. |
+| [RoutePort](/sdk/reference/types/models/interfaces/RoutePort) | One port on a container route, from a `port` feature of `GET /containers/{id}/map_geojson`. |
+| [RouteVessel](/sdk/reference/types/models/interfaces/RouteVessel) | The vessel carrying the container right now. Present only while it is at sea. |
+| [RouteVesselPort](/sdk/reference/types/models/interfaces/RouteVesselPort) | A port the current vessel left or is heading to, as the `current_vessel` feature names it. |
 | [Shipment](/sdk/reference/types/models/interfaces/Shipment) | Simplified shipment model returned by mapped SDK responses. |
 | [ShippingLine](/sdk/reference/types/models/interfaces/ShippingLine) | Simplified shipping line returned by mapped SDK responses. |
 | [TrackingRequest](/sdk/reference/types/models/interfaces/TrackingRequest) | Simplified tracking request model returned by mapped SDK responses. |

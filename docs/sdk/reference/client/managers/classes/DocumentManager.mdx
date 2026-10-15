@@ -1,0 +1,240 @@
+---
+title: "Class: DocumentManager"
+---
+
+# Class: DocumentManager
+
+## Extends
+
+- [`BaseManager`](/sdk/reference/client/managers/classes/BaseManager)
+
+## Constructors
+
+### Constructor
+
+> **new DocumentManager**(`transport`, `defaultFormat?`): `DocumentManager`
+
+#### Parameters
+
+| Parameter | Type | Default value |
+| ------ | ------ | ------ |
+| `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
+| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+
+#### Returns
+
+`DocumentManager`
+
+#### Inherited from
+
+[`BaseManager`](/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/sdk/reference/client/managers/classes/BaseManager#constructor)
+
+## Methods
+
+### create()
+
+> **create**(`params`, `options?`): `Promise`\<`any`\>
+
+Create a document from a previously direct-uploaded blob.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `params` | [`CreateDocumentParams`](/sdk/reference/client/managers/interfaces/CreateDocumentParams) |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### delete()
+
+> **delete**(`id`, `options?`): `Promise`\<`any`\>
+
+Delete a document.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### downloadUrl()
+
+> **downloadUrl**(`id`, `options?`): `Promise`\<`any`\>
+
+Get a short-lived download URL for a document's file.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### get()
+
+> **get**(`id`, `options?`): `Promise`\<`any`\>
+
+Fetch a document by ID.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### list()
+
+> **list**(`filters?`, `options?`): `Promise`\<`any`\>
+
+List documents with optional filters and pagination.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `filters` | [`DocumentListFilters`](/sdk/reference/client/managers/interfaces/DocumentListFilters) |
+| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### reclassify()
+
+> **reclassify**(`id`, `options?`): `Promise`\<`any`\>
+
+Re-run classification on a document.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### reextract()
+
+> **reextract**(`id`, `options?`): `Promise`\<`any`\>
+
+Re-run data extraction on a document.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### relink()
+
+> **relink**(`id`, `options?`): `Promise`\<`any`\>
+
+Re-run shipment/container linking on a document.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### rotate()
+
+> **rotate**(`id`, `degrees`, `options?`): `Promise`\<`any`\>
+
+Rotate a document's pages by 90, 180, or 270 degrees.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `degrees` | [`DocumentRotation`](/sdk/reference/client/managers/type-aliases/DocumentRotation) |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### types()
+
+> **types**(`options?`): `Promise`\<`any`\>
+
+List the document types Terminal49 can classify.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### update()
+
+> **update**(`id`, `params`, `options?`): `Promise`\<`any`\>
+
+Override a document's type or extracted data.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `params` | [`UpdateDocumentParams`](/sdk/reference/client/managers/interfaces/UpdateDocumentParams) |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>

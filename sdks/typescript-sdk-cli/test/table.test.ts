@@ -114,4 +114,106 @@ describe('renderTable', () => {
     expect(output).toContain('in_transit');
     expect(output).toContain('unknown');
   });
+
+  const route = {
+    ports: [
+      {
+        sequence: 1,
+        label: 'POL',
+        name: 'Laem Chabang',
+        countryCode: 'TH',
+        inbound: { eta: null, ata: null },
+        outbound: { etd: null, atd: '2025-11-08T00:44:52Z' },
+      },
+      {
+        sequence: 2,
+        label: 'TS1',
+        name: 'Xiamen',
+        countryCode: 'CN',
+        inbound: { eta: '2025-11-20T00:00:00Z', ata: '2025-11-21T00:00:00Z' },
+        outbound: { etd: '2025-11-22T00:00:00Z', atd: '2025-11-23T00:00:00Z' },
+      },
+      {
+        sequence: 3,
+        label: 'POD',
+        name: 'Savannah',
+        countryCode: 'US',
+        inbound: { eta: '2025-12-31T05:00:00Z', ata: null },
+        outbound: { etd: null, atd: null },
+      },
+    ],
+    currentVessel: null,
+    totalPorts: 3,
+  };
+
+  const geojson = {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [100.88, 13.08] },
+        properties: { feature_type: 'port', name: 'Laem Chabang' },
+      },
+    ],
+  };
+
+  it.each([
+    ['mapped', route],
+    ['both', { raw: geojson, mapped: route }],
+  ])('renders containers route ports from %s output', (_format, data) => {
+    expect(renderTable('containers.route', data)).toBe(
+      [
+        '┌─────┬───────┬──────────────┬─────────┬──────────────────────┬──────────────────────┬──────────────────────┬──────────────────────┐',
+        '│ Seq │ Label │ Port         │ Country │ Inbound ETA          │ Inbound ATA          │ Outbound ETD         │ Outbound ATD         │',
+        '├─────┼───────┼──────────────┼─────────┼──────────────────────┼──────────────────────┼──────────────────────┼──────────────────────┤',
+        '│ 1   │ POL   │ Laem Chabang │ TH      │                      │                      │                      │ 2025-11-08T00:44:52Z │',
+        '├─────┼───────┼──────────────┼─────────┼──────────────────────┼──────────────────────┼──────────────────────┼──────────────────────┤',
+        '│ 2   │ TS1   │ Xiamen       │ CN      │ 2025-11-20T00:00:00Z │ 2025-11-21T00:00:00Z │ 2025-11-22T00:00:00Z │ 2025-11-23T00:00:00Z │',
+        '├─────┼───────┼──────────────┼─────────┼──────────────────────┼──────────────────────┼──────────────────────┼──────────────────────┤',
+        '│ 3   │ POD   │ Savannah     │ US      │ 2025-12-31T05:00:00Z │                      │                      │                      │',
+        '└─────┴───────┴──────────────┴─────────┴──────────────────────┴──────────────────────┴──────────────────────┴──────────────────────┘',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  it('renders the current vessel under the route ports', () => {
+    const table = renderTable('containers.route', {
+      ...route,
+      currentVessel: {
+        name: 'ZIM BANGKOK',
+        imo: '9936525',
+        voyage: '13E',
+        coordinates: { longitude: -131.128473333, latitude: 31.023033333 },
+        heading: 108,
+        speed: 21,
+        positionAt: '2025-12-11T11:46:03Z',
+        departurePort: { locationId: null, name: null, label: null },
+        arrivalPort: { locationId: null, name: null, label: null },
+      },
+    });
+    const lines = table.split('\n');
+    const title = lines.indexOf('Current vessel');
+    expect(title).toBeGreaterThan(
+      lines.findIndex((line) => line.includes('Savannah')),
+    );
+    expect(lines[title + 2]).toMatch(
+      /Vessel.*IMO.*Voyage.*Latitude.*Longitude.*Heading.*Speed \(kn\).*Position At/,
+    );
+    expect(lines[title + 4]).toMatch(
+      /ZIM BANGKOK.*9936525.*13E.*31\.023033333.*-131\.128473333.*108.*21.*2025-12-11T11:46:03Z/,
+    );
+  });
+
+  it('renders raw containers route GeoJSON like containers map', () => {
+    const table = renderTable('containers.route', geojson);
+    expect(table).toBe(renderTable('containers.map', geojson));
+    expect(table).toMatch(/│ FeatureCollection │/);
+  });
+
+  it('does not render containers map GeoJSON as route ports', () => {
+    const table = renderTable('containers.map', geojson);
+    expect(table).toMatch(/│ FeatureCollection │/);
+    expect(table).not.toMatch(/Seq.*Label/);
+  });
 });

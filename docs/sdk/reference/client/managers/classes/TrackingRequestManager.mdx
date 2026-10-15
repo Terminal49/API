@@ -71,6 +71,45 @@ description: "TrackingRequestManager in the Terminal49 TypeScript SDK, used to c
 
 ***
 
+### customFields()
+
+> **customFields**(`id`, `options?`): `Promise`\<`any`\>
+
+List custom field values set on a tracking request, with their definitions.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### deleteCustomField()
+
+> **deleteCustomField**(`id`, `apiSlug`, `options?`): `Promise`\<`any`\>
+
+Remove a custom field value from a tracking request.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `apiSlug` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### get()
 
 > **get**(`id`, `options?`): `Promise`\<`any`\>
@@ -138,6 +177,27 @@ description: "TrackingRequestManager in the Terminal49 TypeScript SDK, used to c
 
 ***
 
+### setCustomField()
+
+> **setCustomField**(`id`, `apiSlug`, `value`, `options?`): `Promise`\<`any`\>
+
+Create a custom field value on a tracking request.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `apiSlug` | `string` |
+| `value` | `string` \| `number` \| `boolean` \| `string`[] \| \{\[`key`: `string`\]: `unknown`; \} \| `null` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### update()
 
 > **update**(`id`, `attrs`, `options?`): `Promise`\<`any`\>
@@ -148,6 +208,27 @@ description: "TrackingRequestManager in the Terminal49 TypeScript SDK, used to c
 | ------ | ------ |
 | `id` | `string` |
 | `attrs` | `Record`\<`string`, `any`\> |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### updateCustomField()
+
+> **updateCustomField**(`id`, `apiSlug`, `value`, `options?`): `Promise`\<`any`\>
+
+Update an existing custom field value on a tracking request.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `apiSlug` | `string` |
+| `value` | `string` \| `number` \| `boolean` \| `string`[] \| \{\[`key`: `string`\]: `unknown`; \} \| `null` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns

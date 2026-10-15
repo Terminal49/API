@@ -413,11 +413,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /**
-         * Edit a container
-         * @description Update a container
-         */
-        patch: operations["patch-containers-id"];
+        patch?: never;
         trace?: never;
     };
     "/containers/{id}": {
@@ -439,7 +435,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Edit a container
+         * @description Update a container
+         */
+        patch: operations["patch-containers-id"];
         trace?: never;
     };
     "/containers/{id}/raw_events": {
@@ -2616,7 +2616,9 @@ export interface components {
             coordinates: number[];
         };
         /** @description Raw custom field value (type depends on definition) */
-        custom_field_value: (string | number | boolean | string[] | Record<string, never>) | null;
+        custom_field_value: (string | number | boolean | string[] | {
+            [key: string]: unknown;
+        }) | null;
         /** Custom field */
         custom_field: {
             /** Format: uuid */
@@ -5160,38 +5162,6 @@ export interface operations {
             };
         };
     };
-    "patch-containers-id": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    data?: {
-                        attributes: {
-                            ref_numbers?: string[];
-                        };
-                    };
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data?: components["schemas"]["container"];
-                    };
-                };
-            };
-        };
-    };
     "get-containers-id": {
         parameters: {
             query?: {
@@ -5215,6 +5185,44 @@ export interface operations {
                     "application/json": {
                         data?: components["schemas"]["container"];
                         included?: (components["schemas"]["shipment"] | components["schemas"]["terminal"] | components["schemas"]["transport_event"])[];
+                    };
+                };
+            };
+        };
+    };
+    "patch-containers-id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type: "container";
+                        attributes: {
+                            ref_numbers?: string[];
+                        };
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["container"];
                     };
                 };
             };
@@ -5771,6 +5779,8 @@ export interface operations {
             content: {
                 "application/json": {
                     data?: {
+                        /** @enum {string} */
+                        type: "party";
                         attributes: {
                             /**
                              * @description The name of the company
@@ -7019,6 +7029,8 @@ export interface operations {
             content: {
                 "application/json": {
                     data?: {
+                        /** @enum {string} */
+                        type: "party";
                         attributes: {
                             /**
                              * @description The name of the company

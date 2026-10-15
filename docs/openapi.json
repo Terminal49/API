@@ -7489,63 +7489,6 @@
             ]
           }
         ]
-      },
-      "patch": {
-        "summary": "Edit a container",
-        "operationId": "patch-containers-id",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/container"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "description": "Update a container",
-        "tags": [
-          "Containers"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "required": [
-                      "attributes",
-                      "type"
-                    ],
-                    "properties": {
-                      "attributes": {
-                        "type": "object",
-                        "properties": {
-                          "ref_numbers": {
-                            "type": "array",
-                            "items": {
-                              "type": "string",
-                              "example": "REF-12345"
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/containers/{id}": {
@@ -7734,6 +7677,73 @@
             "description": "Comma delimited list of relations to include"
           }
         ]
+      },
+      "patch": {
+        "summary": "Edit a container",
+        "operationId": "patch-containers-id",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/container"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Update a container",
+        "tags": [
+          "Containers"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "attributes",
+                      "type"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "container"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "ref_numbers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "example": "REF-12345"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/containers/{id}/raw_events": {
@@ -9811,9 +9821,16 @@
                   "data": {
                     "type": "object",
                     "required": [
+                      "type",
                       "attributes"
                     ],
                     "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "party"
+                        ]
+                      },
                       "attributes": {
                         "type": "object",
                         "properties": {
@@ -12110,9 +12127,16 @@
                   "data": {
                     "type": "object",
                     "required": [
+                      "type",
                       "attributes"
                     ],
                     "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "party"
+                        ]
+                      },
                       "attributes": {
                         "type": "object",
                         "properties": {
@@ -17170,7 +17194,8 @@
             }
           },
           {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": true
           }
         ]
       },

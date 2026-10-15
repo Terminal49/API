@@ -373,10 +373,17 @@ List carriers supported by Terminal49 with their SCAC codes.
 
 ### `get_container_route`
 
-Get detailed multi-leg routing with vessel itinerary.
+Get a container's route: the ports in order with their arrival and departure times, and the vessel carrying the container while it is at sea.
+
+The tool returns:
+- `ports`: each port's sequence, label (`POL`, `TS1`, `POD`), name, country code, `inbound` ETA and ATA, and `outbound` ETD and ATD.
+- `current_vessel`: name, IMO, voyage, position, heading, speed in knots, and the departure and arrival ports. It is `null` when the container is not at sea.
+- `total_ports`: the number of ports on the route.
+
+If Terminal49 has no route data for the container yet, the tool returns a `NoRouteData` result with a suggested alternative instead of an error.
 
 <Warning>
-This is a **paid feature**. If not enabled for your account, use `get_container_transport_events` for historical movement data instead.
+This is a **paid feature**. If it is not enabled for your account, the tool returns a `FeatureNotEnabled` result. Use `get_container_transport_events` for historical movement data instead.
 
 See [Entitlements and Paid Features](/api-docs/useful-info/entitlements) for the related Routing Data entitlement.
 </Warning>
@@ -387,9 +394,9 @@ See [Entitlements and Paid Features](/api-docs/useful-info/entitlements) for the
 **Good for**
 - "What's the routing for this container?"
 - "Which transshipment ports?"
-- "What vessel is it on?"
+- "What vessel is it on, and where is it now?"
 
-**REST equivalent**: [GET /containers/{id}](/api-docs/api-reference/containers/get-a-container) (route data is included with the container)
+**REST equivalent**: [GET /containers/{id}/map_geojson](/api-docs/api-reference/containers/get-container-map-geojson)
 
 ---
 
