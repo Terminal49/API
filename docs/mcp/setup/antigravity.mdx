@@ -1,12 +1,11 @@
 ---
 title: "Connect Antigravity to Terminal49"
 sidebarTitle: "Antigravity"
-description: "Add the Terminal49 MCP server to Google Antigravity and sign in with your Terminal49 account, or connect Gemini CLI with an API key."
+description: "Add the Terminal49 MCP server to Google Antigravity and sign in with your Terminal49 account."
 keywords:
   - "Terminal49 MCP server"
   - "Google Antigravity"
   - "Gemini"
-  - "Gemini CLI"
   - "mcp_config.json"
   - "OAuth"
   - "container tracking"
@@ -62,18 +61,6 @@ Start a new conversation in Antigravity and ask:
 > "Using Terminal49, list 3 of my containers and their current status."
 
 Antigravity asks for permission the first time it calls each Terminal49 tool, for example `terminal49/list_containers`. See the [tools reference](/mcp/home#tools-reference) for the full list, and [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
-
-## Gemini CLI
-
-Gemini CLI connects with an API key. Create one in the [developer portal](https://app.terminal49.com/developers/api-keys), then run:
-
-```bash
-gemini mcp add --transport http --scope user \
-  --header "Authorization: Token YOUR_API_KEY" \
-  terminal49 https://mcp.terminal49.com
-```
-
-Gemini CLI turns off MCP servers in folders you haven't trusted. If `/mcp list` shows the server as **Disabled**, run `/permissions trust` in that folder.
 
 ## Troubleshooting
 
