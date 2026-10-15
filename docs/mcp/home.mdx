@@ -526,6 +526,28 @@ List tracking requests with optional filters and pagination.
 
 ---
 
+### SQL tools: `query`, `describe_views`, `query_guide`, `get_query_result`
+
+Answer account-wide questions (counts, comparisons, trends, reports) with read-only SQL over your account's data views. These are the same tools AskT49 uses in the dashboard.
+
+<Note>
+The SQL tools work only when you connect through OAuth at `https://mcp.terminal49.com`, and only for accounts with SQL access enabled. Otherwise they return an error such as `Assistant SQL is not enabled for this account`, which your assistant can relay. Contact Terminal49 about enabling SQL access.
+</Note>
+
+- `query_guide` *(topic optional)* - reads guidance for answering data questions. Topic `method` explains how to define a measure and check results; other topics cover specific measures such as dwell time and last free days. Omit `topic` to list the topics.
+- `describe_views` *(view, columns and search optional)* - without `view`, lists every view with its columns and named metrics. With a `view` such as `assistant_containers`, returns each column's type and description (meaning, units, time zone, what NULL means).
+- `query` *(sql required)* - runs one read-only PostgreSQL `SELECT`. Returns the columns, a sample of the rows (`rows`, sized by bytes), `row_count`, `total_count` and a `result_id`. The full result is stored for 24 hours.
+- `get_query_result` *(result_id required, offset and limit optional)* - reads more rows of a stored result, up to 100 at a time, with `next_offset` for the next page.
+
+The tool descriptions tell your assistant the method: read the `method` guide first, look up columns before writing SQL, state the definition and timeframe it used, and wait `retry_after` seconds when rate limited.
+
+**Good for**
+
+- "How many containers did we pick up from each terminal last month?"
+- "What was our average dwell time at Los Angeles by week this quarter?"
+
+---
+
 ## Prompts reference
 
 Prompts are pre-built workflows that guide the AI through multi-step analysis.

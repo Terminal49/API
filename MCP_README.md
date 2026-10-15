@@ -60,7 +60,7 @@ Search for bill of lading 123456789
 
 ---
 
-## 🛠️ Available Tools (10)
+## 🛠️ Available Tools
 
 | Tool | Description |
 |------|-------------|
@@ -74,6 +74,10 @@ Search for bill of lading 123456789
 | `list_containers` | Browse all tracked containers |
 | `list_shipments` | Browse all shipments |
 | `list_tracking_requests` | Browse tracking requests |
+| `query` | Run one read-only SQL SELECT over the account's data views (OAuth connections, accounts with SQL access) |
+| `get_query_result` | Page through a stored `query` result |
+| `describe_views` | List the queryable views, their columns and named metrics |
+| `query_guide` | Read the method and measure guides for writing queries |
 
 ### 🎯 Workflow Prompts (3)
 
