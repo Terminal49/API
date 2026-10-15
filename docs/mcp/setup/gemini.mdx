@@ -1,0 +1,75 @@
+---
+title: "Connect Gemini to Terminal49"
+sidebarTitle: "Gemini"
+description: "Add the Terminal49 MCP server as a custom app in the Gemini app and sign in with your Terminal49 account."
+keywords:
+  - "Terminal49 MCP server"
+  - "Gemini"
+  - "Gemini app"
+  - "custom app"
+  - "Connected Apps"
+  - "OAuth"
+  - "container tracking"
+---
+Add the Terminal49 MCP server as a custom app in Gemini so it can answer questions with live container and shipment tracking data, at gemini.google.com and in the Gemini mobile app.
+
+<Warning>
+**Personal Google accounts only.** Google currently supports custom apps only for personal Google accounts, for users 18 or older in the US, in English. They aren't available with work or school (Google Workspace) accounts. On a work account, use [Antigravity](/mcp/setup/antigravity) instead.
+</Warning>
+
+<Note>
+**No API key required.** The Terminal49 MCP server supports OAuth 2.1 with Dynamic Client Registration, so Gemini registers itself and you sign in with your Terminal49 credentials in the browser.
+</Note>
+
+## Prerequisites
+
+- A personal Google account that meets Google's requirements above, with **Keep Activity** turned on. Custom apps are unavailable when it's off.
+- A Terminal49 account.
+
+## Add the server
+
+<Steps>
+  <Step title="Open Connected Apps">
+    On your computer, go to [gemini.google.com](https://gemini.google.com). At the bottom, select **Settings**, then **Connected Apps**.
+  </Step>
+  <Step title="Add a custom app">
+    Under **Custom apps**, select **Add a custom app** and enter:
+
+    ```
+    https://mcp.terminal49.com
+    ```
+
+    Then select **Next**. You don't need anything under **Advanced features**.
+  </Step>
+  <Step title="Sign in to Terminal49">
+    Follow the on-screen instructions. A Terminal49 sign-in page opens. Log in, choose your organization under **Organization access**, and select **Allow access**.
+  </Step>
+</Steps>
+
+## Test your connection
+
+In a new chat, type `@`, select the Terminal49 app, and ask:
+
+> "List 3 of my containers and their current status."
+
+See the [tools reference](/mcp/home#tools-reference) for the full list, and [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+
+## Disconnect or remove
+
+In **Settings → Connected Apps**, under **Custom apps**, turn off Terminal49 to disconnect it.
+
+## Troubleshooting
+
+| Symptom | How to fix |
+|---------|------------|
+| No **Custom apps** section in Connected Apps | You're signed in with a work or school account, or outside the US. Use [Antigravity](/mcp/setup/antigravity) instead |
+| Custom apps are unavailable | Turn on **Keep Activity** in your Gemini settings |
+| Gemini doesn't use Terminal49 | Type `@` and select the Terminal49 app in your prompt |
+| Tool calls return no data | Check that you chose the right organization when you allowed access. Remove the app and add it again to pick another one |
+
+## Related guides
+
+- [Antigravity](/mcp/setup/antigravity) – Google Antigravity (works with work accounts)
+- [MCP Overview](/mcp/home) – Tools, prompts, and resources reference
+- [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, including API-key and local stdio options
+- [Other MCP clients](/mcp/setup/other-clients) – Generic configuration for any client

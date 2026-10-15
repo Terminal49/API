@@ -1,0 +1,81 @@
+---
+title: "Connect Antigravity to Terminal49"
+sidebarTitle: "Antigravity"
+description: "Add the Terminal49 MCP server to Google Antigravity and sign in with your Terminal49 account."
+keywords:
+  - "Terminal49 MCP server"
+  - "Google Antigravity"
+  - "Gemini"
+  - "mcp_config.json"
+  - "OAuth"
+  - "container tracking"
+---
+Connect Google Antigravity to the Terminal49 MCP server so its Gemini agent can answer questions with live container and shipment tracking data. Antigravity works with both personal and work Google accounts; for the Gemini app, see [Gemini](/mcp/setup/gemini).
+
+<Note>
+**No API key required for Antigravity.** The Terminal49 MCP server supports OAuth 2.1 with Dynamic Client Registration. Antigravity registers itself automatically, and you sign in with your Terminal49 credentials in the browser.
+</Note>
+
+## Prerequisites
+
+- [Google Antigravity](https://antigravity.google) installed and signed in with your Google account.
+- A Terminal49 account.
+
+## Add the server to Antigravity
+
+<Steps>
+  <Step title="Add the server to your MCP config">
+    Open `~/.gemini/config/mcp_config.json` (create it if it doesn't exist) and add Terminal49 to the `mcpServers` object:
+
+    ```json
+    {
+      "mcpServers": {
+        "terminal49": {
+          "serverUrl": "https://mcp.terminal49.com",
+          "oauth": {}
+        }
+      }
+    }
+    ```
+
+    You can also open this file from Antigravity: go to **Customizations → Installed**, and under **MCP Servers** select **Copy Config File Path**.
+  </Step>
+  <Step title="Authenticate">
+    In Antigravity, go to **Customizations → Installed**. `terminal49` appears under **MCP Servers** with an **Unauthorized** error until you sign in. Select **Authenticate**.
+  </Step>
+  <Step title="Sign in to Terminal49">
+    A browser window opens the Terminal49 sign-in page. Log in, choose your organization under **Organization access**, and select **Allow access**.
+  </Step>
+  <Step title="Paste the authorization code">
+    The browser shows an authorization code. Select **Copy to Clipboard**, paste the code into the field under `terminal49` in Antigravity, and select **Submit**.
+  </Step>
+  <Step title="Confirm the connection">
+    `terminal49` shows a green status with **Sign out** and the number of tools enabled.
+  </Step>
+</Steps>
+
+## Test your connection
+
+Start a new conversation in Antigravity and ask:
+
+> "Using Terminal49, list 3 of my containers and their current status."
+
+Antigravity asks for permission the first time it calls each Terminal49 tool, for example `terminal49/list_containers`. See the [tools reference](/mcp/home#tools-reference) for the full list, and [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
+
+## Troubleshooting
+
+| Symptom | How to fix |
+|---------|------------|
+| `terminal49` doesn't appear under **MCP Servers** | Check that `~/.gemini/config/mcp_config.json` is valid JSON and uses `serverUrl` (not `url`), then reopen **Customizations → Installed** |
+| `Unauthorized` error on `terminal49` | Select **Authenticate** and complete the sign-in. If it persists, select **Sign out** and authenticate again |
+| Authorization code is rejected | Codes are single-use. Select **Authenticate** again and paste the new code |
+| Tool calls return no data | Check that you chose the right organization when you allowed access. Sign out and authenticate again to pick another one |
+
+## Related guides
+
+- [Gemini](/mcp/setup/gemini) – Gemini app custom apps (personal Google accounts)
+- [Claude Code](/mcp/setup/claude-code) – `claude mcp add` for Claude Code
+- [VS Code](/mcp/setup/vs-code) – GitHub Copilot agent mode
+- [MCP Overview](/mcp/home) – Tools, prompts, and resources reference
+- [MCP Server Quickstart](/api-docs/in-depth-guides/mcp) – Full setup, including API-key and local stdio options
+- [Other MCP clients](/mcp/setup/other-clients) – Generic configuration for any client
