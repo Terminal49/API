@@ -7,6 +7,7 @@
 import { type Command, InvalidArgumentError } from 'commander';
 import { parseJsonObjectPayload, parseJsonValue } from '../util/input.js';
 import { action, defineList, warnUnsupportedFilters } from './action.js';
+import { customFieldSlug } from './custom-field-slug.js';
 
 type ShipmentListOptions = {
   include?: string;
@@ -232,8 +233,10 @@ export function registerShipmentsCommand(program: Command): void {
     );
 
   const setCustomFieldCommand = cmd
-    .command('set-custom-field <id> <field-id>')
-    .description('Set a shipment custom field value')
+    .command('set-custom-field <id> <api-slug>')
+    .description(
+      'Set a shipment custom field value by its definition api_slug (a definition id also works)',
+    )
     .requiredOption(
       '--value <json>',
       'Custom field JSON value',
@@ -242,13 +245,18 @@ export function registerShipmentsCommand(program: Command): void {
   setCustomFieldCommand.action(
     action(
       'shipments.set-custom-field',
-      async ({ client, globals }, id: string, fieldId: string) => {
+      async ({ client, globals }, id: string, apiSlug: string) => {
         const options = localOptions<SetCustomFieldOptions>(
           setCustomFieldCommand,
         );
-        return client.shipments.setCustomField(id, fieldId, options.value, {
-          format: globals.format,
-        });
+        return client.shipments.setCustomField(
+          id,
+          await customFieldSlug(client, apiSlug),
+          options.value,
+          {
+            format: globals.format,
+          },
+        );
       },
     ),
   );
