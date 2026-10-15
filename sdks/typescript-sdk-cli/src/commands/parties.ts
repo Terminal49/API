@@ -3,7 +3,7 @@
  */
 
 import type { Command } from 'commander';
-import { action, addListOptions, listAction } from './action.js';
+import { action, defineList, iterateDocumentPages } from './action.js';
 
 type PartyListOptions = {
   page?: number;
@@ -13,19 +13,31 @@ type PartyListOptions = {
 export function registerPartiesCommand(program: Command): void {
   const cmd = program.command('parties').description('List and get parties');
 
-  const listCommand = addListOptions(
-    cmd.command('list').description('List parties'),
-  );
-  listCommand.action(
-    listAction('parties.list', async ({ client, globals }) => {
-      const options = listCommand.opts() as PartyListOptions;
+  const listCommand = cmd.command('list').description('List parties');
+  defineList(listCommand, {
+    name: 'parties.list',
+    paginated: true,
+    run: ({ client, format }) => {
+      const options = listCommand.opts<PartyListOptions>();
       return client.parties.list({
         page: options.page,
         pageSize: options.pageSize,
-        format: globals.format,
+        format,
       });
-    }),
-  );
+    },
+    iterate: ({ client, globals }) => {
+      const options = listCommand.opts<PartyListOptions>();
+      return iterateDocumentPages(
+        (page) =>
+          client.parties.list({
+            page,
+            pageSize: options.pageSize,
+            format: 'raw',
+          }),
+        globals,
+      );
+    },
+  });
 
   cmd
     .command('get <id>')

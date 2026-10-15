@@ -4,7 +4,7 @@
 
 import type { Command } from 'commander';
 import { parseJsonObjectPayload } from '../util/input.js';
-import { action, listAction } from './action.js';
+import { action, defineList } from './action.js';
 
 type PayloadOptions = {
   payload: Record<string, unknown>;
@@ -18,14 +18,14 @@ export function registerCustomFieldOptionsCommand(program: Command): void {
   const listCommand = cmd
     .command('list <definition-id>')
     .description('List options for a custom field definition');
-  listCommand.action(
-    listAction('custom-field-options.list', async ({ client, globals }) => {
+  defineList(listCommand, {
+    name: 'custom-field-options.list',
+    paginated: false,
+    run: ({ client, format }) => {
       const [definitionId] = listCommand.processedArgs as [string];
-      return client.customFieldOptions.list(definitionId, {
-        format: globals.format,
-      });
-    }),
-  );
+      return client.customFieldOptions.list(definitionId, { format });
+    },
+  });
 
   cmd
     .command('get <definition-id> <option-id>')

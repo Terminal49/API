@@ -8,7 +8,7 @@ import { type Terminal49Client, ValidationError } from '@terminal49/sdk';
 import type { Command } from 'commander';
 import { InvalidArgumentError } from 'commander';
 import { parseJsonObjectPayload, splitCommaList } from '../util/input.js';
-import { action, addListOptions, listAction } from './action.js';
+import { action, defineList } from './action.js';
 import {
   formatCreateFromInferResult,
   formatInferResult,
@@ -146,44 +146,38 @@ export function registerTrackingRequestsCommand(program: Command): void {
     .alias('tracking_requests')
     .description('Tracking request commands');
 
-  const listCommand = addListOptions(
-    cmd
-      .command('list')
-      .description('List tracking requests')
-      .option('--status <status>', 'Filter by status')
-      .option('--request-number <number>', 'Filter by request number')
-      .option('--scac <scac>', 'Filter by shipping line SCAC')
-      .option('--created-after <iso>', 'Filter by created_at start')
-      .option('--created-before <iso>', 'Filter by created_at end')
-      .option('--updated-after <iso>', 'Filter by updated_at start')
-      .option('--updated-before <iso>', 'Filter by updated_at end')
-      .option('--include <resources>', 'Comma-separated include list'),
-  );
-  listCommand.action(
-    listAction(
-      'tracking-requests.list',
-      async ({ client, globals }) => {
-        const options = localOptions<TrackingListOptions>(listCommand);
-        const result = await client.trackingRequests.list(
-          listFilters(options),
-          {
-            page: options.page,
-            pageSize: options.pageSize,
-            format: globals.format,
-          },
-        );
-        return result;
-      },
-      ({ client, globals }) => {
-        const options = localOptions<TrackingListOptions>(listCommand);
-        return client.trackingRequests.iterate(listFilters(options), {
-          pageSize: options.pageSize,
-          maxPages: globals.maxPages,
-          maxRows: globals.maxRows,
-        });
-      },
-    ),
-  );
+  const listCommand = cmd
+    .command('list')
+    .description('List tracking requests')
+    .option('--status <status>', 'Filter by status')
+    .option('--request-number <number>', 'Filter by request number')
+    .option('--scac <scac>', 'Filter by shipping line SCAC')
+    .option('--created-after <iso>', 'Filter by created_at start')
+    .option('--created-before <iso>', 'Filter by created_at end')
+    .option('--updated-after <iso>', 'Filter by updated_at start')
+    .option('--updated-before <iso>', 'Filter by updated_at end')
+    .option('--include <resources>', 'Comma-separated include list');
+  defineList(listCommand, {
+    name: 'tracking-requests.list',
+    paginated: true,
+    run: async ({ client, globals }) => {
+      const options = localOptions<TrackingListOptions>(listCommand);
+      const result = await client.trackingRequests.list(listFilters(options), {
+        page: options.page,
+        pageSize: options.pageSize,
+        format: globals.format,
+      });
+      return result;
+    },
+    iterate: ({ client, globals }) => {
+      const options = localOptions<TrackingListOptions>(listCommand);
+      return client.trackingRequests.iterate(listFilters(options), {
+        pageSize: options.pageSize,
+        maxPages: globals.maxPages,
+        maxRows: globals.maxRows,
+      });
+    },
+  });
 
   const getCommand = cmd
     .command('get <id>')

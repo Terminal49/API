@@ -4,7 +4,7 @@
 
 import type { Command } from 'commander';
 import { parseJsonObjectPayload } from '../util/input.js';
-import { action, listAction } from './action.js';
+import { action, defineList } from './action.js';
 
 type PayloadOptions = {
   payload: Record<string, unknown>;
@@ -22,15 +22,17 @@ export function registerCustomFieldDefinitionsCommand(program: Command): void {
       '--templates',
       'List the Terminal49 templates you can copy with template_id instead of your account definitions',
     );
-  listCommand.action(
-    listAction('custom-field-definitions.list', async ({ client, globals }) => {
+  defineList(listCommand, {
+    name: 'custom-field-definitions.list',
+    paginated: false,
+    run: ({ client, format }) => {
       const { templates } = listCommand.opts() as { templates?: boolean };
       return client.customFieldDefinitions.list({
-        format: globals.format,
+        format,
         scope: templates ? 'templates' : 'account',
       });
-    }),
-  );
+    },
+  });
 
   cmd
     .command('get <id>')

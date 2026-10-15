@@ -85,13 +85,18 @@ Resolution precedence:
 
 `--quiet`, `--verbose`, and `--no-color` were removed.
 
-List commands may also support:
+Paginated list commands (`containers`, `shipments`, `tracking-requests`, `parties`, `webhooks`, and `webhook-notifications`) support:
+
+- `--page <n>` selects a page for normal list output.
+- `--page-size <n>` selects page size for normal list output and `--all`.
+
+`containers list`, `shipments list`, `tracking-requests list`, and `parties list` also support:
 
 - `--all` emits all pages as newline-delimited JSON, one item per line, without the normal JSON envelope.
 - `--max-pages <n>` limits pages fetched by `--all`.
 - `--max-rows <n>` limits rows emitted by `--all`.
-- `--page <n>` selects a page for normal list output.
-- `--page-size <n>` selects page size for normal list output and `--all`.
+
+The API returns `shipping-lines`, `custom-fields`, `custom-field-definitions`, and `custom-field-options` lists whole, so those commands have no paging flags.
 
 ## JSON Output
 

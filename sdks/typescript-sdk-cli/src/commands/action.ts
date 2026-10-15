@@ -1,4 +1,9 @@
-import type { ResponseFormat, Terminal49Client } from '@terminal49/sdk';
+import {
+  DEFAULT_ITERATE_MAX_PAGES,
+  DEFAULT_ITERATE_MAX_ROWS,
+  type ResponseFormat,
+  type Terminal49Client,
+} from '@terminal49/sdk';
 import { type Command, InvalidArgumentError } from 'commander';
 import { createClient } from '../client-factory.js';
 import { withErrorHandling } from '../errors.js';
@@ -147,55 +152,87 @@ export function warnUnsupportedFilters(result: unknown): void {
   );
 }
 
-export function addListOptions(command: Command): Command {
-  return command
-    .option('--all', 'Emit all pages as newline-delimited JSON')
-    .option(
-      '--max-pages <n>',
-      'Maximum pages to fetch with --all',
-      positiveInt('--max-pages'),
-    )
-    .option(
-      '--max-rows <n>',
-      'Maximum rows to emit with --all',
-      positiveInt('--max-rows'),
-    )
-    .option('--page <n>', 'Page number', positiveInt('--page'))
-    .option('--page-size <n>', 'Page size', positiveInt('--page-size'));
-}
+type ListSpec = {
+  name: string;
+  /** Calls the SDK list method in `ctx.format`; `listOutput` shapes the result. */
+  run: (ctx: ActionContext) => Promise<unknown>;
+} & (
+  | { paginated: false }
+  | {
+      paginated: true;
+      /** Yields every row for `--all`. Without it the command has no `--all`. */
+      iterate?: (ctx: ActionContext) => AsyncIterable<unknown>;
+    }
+);
 
-/** Runs a list command: `run` returns the SDK list result, which `listOutput` shapes. */
-export function listAction(
-  name: string,
-  run: (ctx: ActionContext) => Promise<unknown>,
-  iterate?: (ctx: ActionContext) => AsyncIterable<unknown>,
-) {
-  return async (...args: unknown[]): Promise<void> => {
-    const command = args[args.length - 1] as Command;
+/**
+ * Registers a list command's paging flags and action together, so a command
+ * only advertises `--page` when the API pages it and `--all` when it can
+ * iterate.
+ */
+export function defineList(command: Command, spec: ListSpec): Command {
+  const iterate = spec.paginated ? spec.iterate : undefined;
+  if (spec.paginated) {
+    command
+      .option('--page <n>', 'Page number', positiveInt('--page'))
+      .option('--page-size <n>', 'Page size', positiveInt('--page-size'));
+  }
+  if (iterate) {
+    command
+      .option('--all', 'Emit all pages as newline-delimited JSON')
+      .option(
+        '--max-pages <n>',
+        'Maximum pages to fetch with --all',
+        positiveInt('--max-pages'),
+      )
+      .option(
+        '--max-rows <n>',
+        'Maximum rows to emit with --all',
+        positiveInt('--max-rows'),
+      );
+  }
 
-    const handler = withErrorHandling<unknown[]>(async () => {
-      const ctx = await createContext(command);
+  return command.action(
+    withErrorHandling<unknown[]>(async (...args: unknown[]) => {
+      const ctx = await createContext(args[args.length - 1] as Command);
 
-      if (ctx.globals.all) {
-        if (!iterate) {
-          throw new InvalidArgumentError(
-            '--all is not supported for this command',
-          );
-        }
-
+      if (iterate && ctx.globals.all) {
         for await (const item of iterate(ctx)) {
           process.stdout.write(`${JSON.stringify(item)}\n`);
         }
         return;
       }
 
-      const output = listOutput(await run(ctx), ctx.format);
+      const output = listOutput(await spec.run(ctx), ctx.format);
       createFormatter(ctx.globals).output(
-        name,
+        spec.name,
         output.data,
         output.pagination && { pagination: output.pagination },
       );
-    });
-    await handler.apply(undefined, args);
-  };
+    }),
+  );
+}
+
+/**
+ * Walks a paginated JSON:API list for commands whose SDK manager has no
+ * `iterate`, yielding each resource until `links.next` runs out or a cap hits.
+ */
+export async function* iterateDocumentPages(
+  fetchPage: (page: number) => Promise<unknown>,
+  options: { maxPages?: number; maxRows?: number },
+): AsyncGenerator<unknown, void, unknown> {
+  const maxPages = options.maxPages ?? DEFAULT_ITERATE_MAX_PAGES;
+  const maxRows = options.maxRows ?? DEFAULT_ITERATE_MAX_ROWS;
+  let rows = 0;
+  for (let page = 1; page <= maxPages; page++) {
+    const doc = asRecord(await fetchPage(page));
+    const data = Array.isArray(doc?.data) ? doc.data : [];
+    for (const row of data.slice(0, maxRows - rows)) {
+      yield row;
+      rows++;
+    }
+    if (rows >= maxRows || data.length === 0 || !asRecord(doc?.links)?.next) {
+      return;
+    }
+  }
 }

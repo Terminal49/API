@@ -6,12 +6,7 @@
 
 import type { Command } from 'commander';
 import { parseJsonValue } from '../util/input.js';
-import {
-  action,
-  addListOptions,
-  listAction,
-  warnUnsupportedFilters,
-} from './action.js';
+import { action, defineList, warnUnsupportedFilters } from './action.js';
 
 type ContainerListOptions = {
   include?: string;
@@ -112,44 +107,41 @@ export function registerContainersCommand(program: Command): void {
     }),
   );
 
-  const listCommand = addListOptions(
-    cmd
-      .command('list')
-      .description('List containers')
-      .option(
-        '--include <resources>',
-        'Comma-separated include list for each container',
-      ),
-  );
-  listCommand.action(
-    listAction(
-      'containers.list',
-      async ({ client, globals }) => {
-        const options = localOptions<ContainerListOptions>(listCommand);
-        const result = await client.containers.list(
-          { include: options.include },
-          {
-            page: options.page,
-            pageSize: options.pageSize,
-            format: globals.format,
-          },
-        );
-        warnUnsupportedFilters(result);
-        return result;
-      },
-      ({ client, globals }) => {
-        const options = localOptions<ContainerListOptions>(listCommand);
-        return client.containers.iterate(
-          { include: options.include },
-          {
-            pageSize: options.pageSize,
-            maxPages: globals.maxPages,
-            maxRows: globals.maxRows,
-          },
-        );
-      },
-    ),
-  );
+  const listCommand = cmd
+    .command('list')
+    .description('List containers')
+    .option(
+      '--include <resources>',
+      'Comma-separated include list for each container',
+    );
+  defineList(listCommand, {
+    name: 'containers.list',
+    paginated: true,
+    run: async ({ client, globals }) => {
+      const options = localOptions<ContainerListOptions>(listCommand);
+      const result = await client.containers.list(
+        { include: options.include },
+        {
+          page: options.page,
+          pageSize: options.pageSize,
+          format: globals.format,
+        },
+      );
+      warnUnsupportedFilters(result);
+      return result;
+    },
+    iterate: ({ client, globals }) => {
+      const options = localOptions<ContainerListOptions>(listCommand);
+      return client.containers.iterate(
+        { include: options.include },
+        {
+          pageSize: options.pageSize,
+          maxPages: globals.maxPages,
+          maxRows: globals.maxRows,
+        },
+      );
+    },
+  });
 
   cmd
     .command('events <id>')

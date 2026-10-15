@@ -6,12 +6,7 @@
 
 import type { Command } from 'commander';
 import { parseJsonObjectPayload, parseJsonValue } from '../util/input.js';
-import {
-  action,
-  addListOptions,
-  listAction,
-  warnUnsupportedFilters,
-} from './action.js';
+import { action, defineList, warnUnsupportedFilters } from './action.js';
 
 type ShipmentListOptions = {
   include?: string;
@@ -78,67 +73,64 @@ export function registerShipmentsCommand(program: Command): void {
     }),
   );
 
-  const listCommand = addListOptions(
-    cmd
-      .command('list')
-      .description('List shipments')
-      .option('--number <number>', 'Filter by original tracking request number')
-      .option(
-        '--tracking-stopped',
-        'Only include shipments with tracking stopped',
-      )
-      .option(
-        '--no-tracking-stopped',
-        'Only include shipments still being tracked',
-      )
-      .option(
-        '--include <resources>',
-        'Comma-separated include list for each shipment',
-      )
-      .option(
-        '--no-include-containers',
-        'Exclude container fields for each shipment',
-      ),
-  );
-  listCommand.action(
-    listAction(
-      'shipments.list',
-      async ({ client, globals }) => {
-        const options = localOptions<ShipmentListOptions>(listCommand);
-        const result = await client.shipments.list(
-          {
-            include: options.include,
-            includeContainers: options.includeContainers ?? true,
-            number: options.number,
-            trackingStopped: options.trackingStopped,
-          },
-          {
-            page: options.page,
-            pageSize: options.pageSize,
-            format: globals.format,
-          },
-        );
-        warnUnsupportedFilters(result);
-        return result;
-      },
-      ({ client, globals }) => {
-        const options = localOptions<ShipmentListOptions>(listCommand);
-        return client.shipments.iterate(
-          {
-            include: options.include,
-            includeContainers: options.includeContainers ?? true,
-            number: options.number,
-            trackingStopped: options.trackingStopped,
-          },
-          {
-            pageSize: options.pageSize,
-            maxPages: globals.maxPages,
-            maxRows: globals.maxRows,
-          },
-        );
-      },
-    ),
-  );
+  const listCommand = cmd
+    .command('list')
+    .description('List shipments')
+    .option('--number <number>', 'Filter by original tracking request number')
+    .option(
+      '--tracking-stopped',
+      'Only include shipments with tracking stopped',
+    )
+    .option(
+      '--no-tracking-stopped',
+      'Only include shipments still being tracked',
+    )
+    .option(
+      '--include <resources>',
+      'Comma-separated include list for each shipment',
+    )
+    .option(
+      '--no-include-containers',
+      'Exclude container fields for each shipment',
+    );
+  defineList(listCommand, {
+    name: 'shipments.list',
+    paginated: true,
+    run: async ({ client, globals }) => {
+      const options = localOptions<ShipmentListOptions>(listCommand);
+      const result = await client.shipments.list(
+        {
+          include: options.include,
+          includeContainers: options.includeContainers ?? true,
+          number: options.number,
+          trackingStopped: options.trackingStopped,
+        },
+        {
+          page: options.page,
+          pageSize: options.pageSize,
+          format: globals.format,
+        },
+      );
+      warnUnsupportedFilters(result);
+      return result;
+    },
+    iterate: ({ client, globals }) => {
+      const options = localOptions<ShipmentListOptions>(listCommand);
+      return client.shipments.iterate(
+        {
+          include: options.include,
+          includeContainers: options.includeContainers ?? true,
+          number: options.number,
+          trackingStopped: options.trackingStopped,
+        },
+        {
+          pageSize: options.pageSize,
+          maxPages: globals.maxPages,
+          maxRows: globals.maxRows,
+        },
+      );
+    },
+  });
 
   const updateCommand = cmd
     .command('update <id>')

@@ -4,7 +4,7 @@
 
 import type { Command } from 'commander';
 import { parseJsonObjectPayload } from '../util/input.js';
-import { action, listAction } from './action.js';
+import { action, defineList } from './action.js';
 
 type PayloadOptions = {
   payload: Record<string, unknown>;
@@ -15,16 +15,11 @@ export function registerCustomFieldsCommand(program: Command): void {
     .command('custom-fields')
     .description('Manage custom fields');
 
-  const listCommand = cmd
-    .command('list')
-    .description('List custom field assignments');
-  listCommand.action(
-    listAction('custom-fields.list', async ({ client, globals }) => {
-      return client.customFields.list({
-        format: globals.format,
-      });
-    }),
-  );
+  defineList(cmd.command('list').description('List custom field assignments'), {
+    name: 'custom-fields.list',
+    paginated: false,
+    run: ({ client, format }) => client.customFields.list({ format }),
+  });
 
   cmd
     .command('get <id>')
