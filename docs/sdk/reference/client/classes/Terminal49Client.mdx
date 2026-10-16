@@ -73,7 +73,7 @@ data from Node.js applications.
 | `vessels.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | `vessels.getByImo` | `public` | (`imo`, `options?`) => `Promise`\<`any`\> |
 | <a id="property-webhooknotifications"></a> `webhookNotifications` | `public` | `object` |
-| `webhookNotifications.examples` | `public` | (`event?`, `options?`) => `Promise`\<`any`\> |
+| `webhookNotifications.examples` | `public` | (`event`, `options?`) => `Promise`\<`any`\> |
 | `webhookNotifications.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | `webhookNotifications.list` | `public` | (`options?`) => `Promise`\<`any`\> |
 | <a id="property-webhooks"></a> `webhooks` | `public` | `object` |
@@ -757,15 +757,15 @@ Fetch a webhook notification by ID.
 
 ### getWebhookNotificationExamples()
 
-> **getWebhookNotificationExamples**(`event?`, `options?`): `Promise`\<`any`\>
+> **getWebhookNotificationExamples**(`event`, `options?`): `Promise`\<`any`\>
 
-Fetch example webhook notification payloads.
+Fetch the example webhook notification payload for `event`. The API answers 400 without one.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `event?` | `string` |
+| `event` | `"container.transport.vessel_arrived"` \| `"container.transport.estimated.vessel_arrived"` \| `"container.transport.vessel_discharged"` \| `"container.transport.vessel_loaded"` \| `"container.transport.vessel_departed"` \| `"container.transport.estimated.vessel_departed"` \| `"container.transport.rail_departed"` \| `"container.transport.rail_arrived"` \| `"container.transport.rail_loaded"` \| `"container.transport.rail_unloaded"` \| `"container.transport.transshipment_arrived"` \| `"container.transport.transshipment_discharged"` \| `"container.transport.transshipment_loaded"` \| `"container.transport.transshipment_departed"` \| `"container.transport.feeder_arrived"` \| `"container.transport.feeder_discharged"` \| `"container.transport.feeder_loaded"` \| `"container.transport.feeder_departed"` \| `"container.transport.empty_out"` \| `"container.transport.full_in"` \| `"container.transport.full_out"` \| `"container.transport.empty_in"` \| `"container.transport.vessel_berthed"` \| `"shipment.estimated.arrival"` \| `"tracking_request.succeeded"` \| `"tracking_request.failed"` \| `"tracking_request.awaiting_manifest"` \| `"tracking_request.tracking_stopped"` \| `"container.created"` \| `"container.updated"` \| `"container.pod_terminal_changed"` \| `"container.transport.arrived_at_inland_destination"` \| `"container.transport.estimated.arrived_at_inland_destination"` \| `"container.pickup_lfd.changed"` \| `"container.pickup_lfd_line.changed"` \| `"container.pickup_lfd_terminal.changed"` \| `"container.pickup_lfd_rail.changed"` \| `"container.pickup_appointment.changed"` \| `"container.transport.available"` \| `"container.transport.not_available"` \| `"container.transport.delivered"` \| `"document_representation.created"` \| `"document_representation.failed"` \| `"container.detention_lfd_line.changed"` \| `"container.delivery_appointment.changed"` \| `"shipment.routing.filled"` \| `"link.created"` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns

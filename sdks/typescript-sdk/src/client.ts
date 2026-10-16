@@ -65,9 +65,9 @@ export {
   ValidationError,
 };
 
-type WebhookEvent = NonNullable<
-  paths['/webhook_notifications/examples']['get']['parameters']['query']
->['event'];
+/** A webhook event name accepted by `webhookNotifications.examples`. */
+export type WebhookEvent =
+  paths['/webhook_notifications/examples']['get']['parameters']['query']['event'];
 type WebhookNotificationListQuery = NonNullable<
   paths['/webhook_notifications']['get']['parameters']['query']
 >;
@@ -247,7 +247,7 @@ export class Terminal49Client {
       this.listWebhookNotifications(options),
     get: (id: string, options?: WebhookNotificationGetOptions) =>
       this.getWebhookNotification(id, options),
-    examples: (event?: string, options?: CallOptions) =>
+    examples: (event: WebhookEvent, options?: CallOptions) =>
       this.getWebhookNotificationExamples(event, options),
   };
 
@@ -734,14 +734,14 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
-  /** Fetch example webhook notification payloads. */
+  /** Fetch the example webhook notification payload for `event`. The API answers 400 without one. */
   async getWebhookNotificationExamples(
-    event?: string,
+    event: WebhookEvent,
     options?: CallOptions,
   ): Promise<any> {
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/webhook_notifications/examples', {
-        params: { query: { event: callerPayload<WebhookEvent>(event) } },
+        params: { query: { event } },
       }),
     );
     return this.formatResult(raw, options?.format);

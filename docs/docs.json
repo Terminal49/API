@@ -424,7 +424,8 @@
                   "sdk/reference/client/interfaces/VesselFuturePositionsWithCoordsParams",
                   "sdk/reference/client/interfaces/WebhookNotificationGetOptions",
                   "sdk/reference/client/interfaces/WebhookNotificationListOptions",
-                  "sdk/reference/client/type-aliases/PartyAttributes"
+                  "sdk/reference/client/type-aliases/PartyAttributes",
+                  "sdk/reference/client/type-aliases/WebhookEvent"
                 ]
               },
               {

@@ -50,7 +50,7 @@ see the SDK quickstart in the docs site: `docs/api-docs/getting-started/sdk-quic
 - `listWebhooks(options?)`, `getWebhook(id)`, `createWebhook(payload)`, `updateWebhook(id, payload)`, `deleteWebhook(id)`, `getWebhookIps()`
 - `listWebhookEvents()`: the event names a webhook can subscribe to
 - `triggerWebhook({ url, event, secret?, documentType? })`: sends a test delivery with an example payload
-- `listWebhookNotifications(options?)`, `getWebhookNotification(id, options?)`, `getWebhookNotificationExamples(event?)`
+- `listWebhookNotifications(options?)`, `getWebhookNotification(id, options?)`, `getWebhookNotificationExamples(event)`
 - `getVessel(id)`, `getVesselByImo(imo)`, `getPort(id)`, `getTerminal(id)`, `getMetroArea(id)`
 - `listParties(options?)`, `getParty(id)`, `createParty(attributes)`, `updateParty(id, attributes)`
 - `listCustomFieldDefinitions(options?)`, `getCustomFieldDefinition(id)`, `createCustomFieldDefinition(payload)`, `updateCustomFieldDefinition(id, payload)`, `deleteCustomFieldDefinition(id)`

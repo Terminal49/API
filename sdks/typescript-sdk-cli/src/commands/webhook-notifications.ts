@@ -2,6 +2,7 @@
  * t49 webhook-notifications <action>
  */
 
+import type { WebhookEvent } from '@terminal49/sdk';
 import type { Command } from 'commander';
 import { positiveInt } from '../util/input.js';
 import { action } from './action.js';
@@ -12,7 +13,8 @@ type ListOptions = {
 };
 
 type ExamplesOptions = {
-  event?: string;
+  /** Validated by the API, which answers 400 for an unknown event. */
+  event: WebhookEvent;
 };
 
 function localOptions<T>(command: Command): T {
@@ -54,8 +56,11 @@ export function registerWebhookNotificationsCommand(program: Command): void {
 
   const examplesCommand = cmd
     .command('examples')
-    .description('Get webhook payload examples')
-    .option('--event <event>', 'Filter by event type');
+    .description('Get the example webhook payload for an event')
+    .requiredOption(
+      '--event <event>',
+      'Webhook event name, for example container.created',
+    );
   examplesCommand.action(
     action('webhook-notifications.examples', async ({ client, globals }) => {
       const options = localOptions<ExamplesOptions>(examplesCommand);

@@ -460,7 +460,6 @@ describe('resource methods on the client', () => {
     await client.webhookNotifications.list({ page: 3 });
     await client.webhookNotifications.get('n-1');
     await client.webhookNotifications.examples('container.created');
-    await client.webhookNotifications.examples();
     await client.vessels.get('v-1');
     await client.vessels.getByImo('9876543');
     await client.vessels.futurePositions('v-1', {
@@ -512,7 +511,6 @@ describe('resource methods on the client', () => {
         { event: 'container.created' },
         undefined,
       ],
-      ['GET', '/webhook_notifications/examples', {}, undefined],
       ['GET', '/vessels/v-1', {}, undefined],
       ['GET', '/vessels/9876543', {}, undefined],
       [
@@ -761,7 +759,8 @@ describe('return values', () => {
     [
       'GET',
       '/webhook_notifications/examples',
-      (c: Terminal49Client) => c.webhookNotifications.examples(),
+      (c: Terminal49Client) =>
+        c.webhookNotifications.examples('container.created'),
     ],
     ['GET', '/vessels/v-1', (c: Terminal49Client) => c.vessels.get('v-1')],
     [
