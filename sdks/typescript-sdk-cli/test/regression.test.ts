@@ -1,4 +1,4 @@
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { AuthenticationError, NetworkError } from '@terminal49/sdk';
@@ -111,6 +111,36 @@ describe('CLI regressions', () => {
     );
   });
 
+  it('vessels future-positions sends --port-id and --previous-port-id as their own params', async () => {
+    const urls: string[] = [];
+    vi.stubGlobal('fetch', async (input: Request | URL | string) => {
+      urls.push(input instanceof Request ? input.url : String(input));
+      return new Response(JSON.stringify({ data: null }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    process.env.T49_API_TOKEN = 'token-123';
+    process.env.T49_API_BASE_URL = 'https://api.test/v2';
+    process.env.XDG_CONFIG_HOME = mkdtempSync(join(tmpdir(), 't49-cli-'));
+
+    const result = await runProgram([
+      '--json',
+      'vessels',
+      'future-positions',
+      'v-1',
+      '--port-id',
+      'port-2',
+      '--previous-port-id',
+      'port-1',
+    ]);
+
+    expect(result.status).toBe(0);
+    expect(urls).toEqual([
+      'https://api.test/v2/vessels/v-1/future_positions?port_id=port-2&previous_port_id=port-1',
+    ]);
+  });
+
   it('vessels future-positions-coords rejects a non-numeric latitude', async () => {
     process.env.T49_API_TOKEN = 'token-123';
     const result = await runProgram([
@@ -161,6 +191,32 @@ describe('CLI regressions', () => {
       'https://api.test/v2/accounts/current/custom_field_definitions',
       'https://api.test/v2/custom_field_definitions',
     ]);
+  });
+
+  it('vessels future-positions-coords rejects an empty latitude without a request', async () => {
+    const urls: string[] = [];
+    vi.stubGlobal('fetch', async (input: Request | URL | string) => {
+      urls.push(input instanceof Request ? input.url : String(input));
+      return new Response('{}', { status: 200 });
+    });
+    process.env.T49_API_TOKEN = 'token-123';
+    const result = await runProgram([
+      '--json',
+      'vessels',
+      'future-positions-coords',
+      'v-1',
+      '--port-id',
+      'p',
+      '--previous-port-id',
+      'q',
+      '--latitude',
+      '',
+      '--longitude',
+      '1',
+    ]);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('--latitude must be a number');
+    expect(urls).toEqual([]);
   });
 
   it('vessels future-positions-coords sends the spec query params', async () => {
@@ -279,5 +335,50 @@ describe('CLI regressions', () => {
       '/v2/containers/c-1/map_geojson',
       '/v2/containers/c-1/map_geojson',
     ]);
+  });
+
+  it('containers route --table prints the ports and vessel the SDK maps from map_geojson', async () => {
+    const geojson = readFileSync(
+      new URL(
+        '../../typescript-sdk/src/fixtures/containers.map_geojson.json',
+        import.meta.url,
+      ),
+      'utf8',
+    );
+    vi.stubGlobal(
+      'fetch',
+      async () =>
+        new Response(geojson, {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    );
+    process.env.T49_API_TOKEN = 'token-123';
+    process.env.T49_API_BASE_URL = 'https://api.test/v2';
+    process.env.XDG_CONFIG_HOME = mkdtempSync(join(tmpdir(), 't49-cli-'));
+
+    const result = await runProgram(['--table', 'containers', 'route', 'c-1']);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toBe(
+      [
+        '┌─────┬───────┬──────────────┬─────────┬──────────────────────┬──────────────────────┬──────────────┬──────────────────────┐',
+        '│ Seq │ Label │ Port         │ Country │ Inbound ETA          │ Inbound ATA          │ Outbound ETD │ Outbound ATD         │',
+        '├─────┼───────┼──────────────┼─────────┼──────────────────────┼──────────────────────┼──────────────┼──────────────────────┤',
+        '│ 1   │ POL   │ Laem Chabang │ TH      │                      │                      │              │ 2025-11-08T00:44:52Z │',
+        '├─────┼───────┼──────────────┼─────────┼──────────────────────┼──────────────────────┼──────────────┼──────────────────────┤',
+        '│ 2   │ TS1   │ Xiamen       │ CN      │                      │ 2025-11-15T16:00:00Z │              │ 2025-11-19T16:00:00Z │',
+        '├─────┼───────┼──────────────┼─────────┼──────────────────────┼──────────────────────┼──────────────┼──────────────────────┤',
+        '│ 3   │ POD   │ Savannah     │ US      │ 2025-12-31T05:00:00Z │                      │              │                      │',
+        '└─────┴───────┴──────────────┴─────────┴──────────────────────┴──────────────────────┴──────────────┴──────────────────────┘',
+        'Current vessel',
+        '┌─────────────┬─────────┬────────┬──────────────┬────────────────┬─────────┬────────────┬──────────────────────┐',
+        '│ Vessel      │ IMO     │ Voyage │ Latitude     │ Longitude      │ Heading │ Speed (kn) │ Position At          │',
+        '├─────────────┼─────────┼────────┼──────────────┼────────────────┼─────────┼────────────┼──────────────────────┤',
+        '│ ZIM BANGKOK │ 9936525 │ 13E    │ 31.023033333 │ -131.128473333 │ 108     │ 21         │ 2025-12-11T11:46:03Z │',
+        '└─────────────┴─────────┴────────┴──────────────┴────────────────┴─────────┴────────────┴──────────────────────┘',
+        '',
+      ].join('\n'),
+    );
   });
 });
