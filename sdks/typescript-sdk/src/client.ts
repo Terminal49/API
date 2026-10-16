@@ -30,6 +30,7 @@ import type {
   TrackingRequestType,
   TrackingRequestUpdateAttributes,
 } from './client/managers/tracking-requests.js';
+import type { ShipmentUpdateAttributes } from './client/managers/shipments.js';
 import { applyTypedPagination, normalizeInclude } from './client/query.js';
 import { mapVessel, mapVesselFuturePositions } from './client/mappers.js';
 import { callerPayload, type JsonBody } from './client/spec.js';
@@ -492,7 +493,7 @@ export class Terminal49Client {
   /** Update shipment attributes such as reference numbers or tags. */
   async updateShipment(
     id: string,
-    attrs: Record<string, any>,
+    attrs: ShipmentUpdateAttributes,
     options?: CallOptions,
   ): Promise<any> {
     return this.shipments.update(id, attrs, options);

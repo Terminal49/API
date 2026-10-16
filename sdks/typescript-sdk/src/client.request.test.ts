@@ -509,7 +509,10 @@ describe('Terminal49Client request building', () => {
       fetchImpl,
     });
 
-    await client.updateShipment('ship-1', { status: 'paused' });
+    await client.updateShipment('ship-1', {
+      ref_numbers: ['PO-1'],
+      tags: ['hot', 'priority'],
+    });
     await client.stopTrackingShipment('ship-1');
     await client.resumeTrackingShipment('ship-1');
 
@@ -517,7 +520,7 @@ describe('Terminal49Client request building', () => {
       data: {
         type: 'shipment',
         id: 'ship-1',
-        attributes: { status: 'paused' },
+        attributes: { ref_numbers: ['PO-1'], tags: ['hot', 'priority'] },
       },
     });
     expect(stopBody).toBe('');

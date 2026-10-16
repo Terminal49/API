@@ -17,6 +17,10 @@ import {
 import { callerPayload, type JsonBody } from '../spec.js';
 import { BaseManager } from './base.js';
 
+/** Writable shipment attributes. Each list replaces the existing one. */
+export type ShipmentUpdateAttributes = NonNullable<
+  JsonBody<paths['/shipments/{id}']['patch']>['data']
+>['attributes'];
 type PartyRoleData = JsonBody<
   paths['/shipments/{shipment_id}/party_roles']['post']
 >['data'];
@@ -116,7 +120,7 @@ export class ShipmentManager extends BaseManager {
 
   async update(
     id: string,
-    attrs: Record<string, any>,
+    attrs: ShipmentUpdateAttributes,
     options?: CallOptions,
   ): Promise<any> {
     const payload = {
@@ -130,7 +134,7 @@ export class ShipmentManager extends BaseManager {
     const raw = await this.transport.execute(() =>
       this.transport.client.PATCH('/shipments/{id}', {
         params: { path: { id } },
-        body: payload as any,
+        body: payload,
       }),
     );
 
