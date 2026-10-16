@@ -703,6 +703,9 @@ describe('MCP tool contracts', () => {
       asClient({ containers: { get } }),
     );
     expect(result.events?.latest_event).toMatchObject(event.attributes);
+    expect(result.events?.latest_event?.value).toBe(event.attributes.value);
+    expect(result.events?.latest_event?.data_source).toBe('shipping_line');
+    expect(result.events?.latest_event?.invalidated_at).toBeNull();
     expect(result.demurrage.pickup_lfd).toBe('2099-01-10');
   });
 

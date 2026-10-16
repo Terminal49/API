@@ -16,10 +16,7 @@ export const getContainerTransportEventsTool = {
     'Get detailed transport event timeline for a container. Returns all milestones and movements ' +
     '(vessel loaded, departed, arrived, discharged, rail movements, delivery). ' +
     'Use this for questions about journey history, "what happened", timeline analysis, rail tracking. ' +
-    'For reported deadline changes, including container.detention_lfd_line.changed (empty-return LFD), ' +
-    'read value as the deadline, not timestamp. value is preserved as reported and may be null or non-date JSON. ' +
-    'data_source identifies provenance; invalidated_at marks withdrawn events that must not be treated as current. ' +
-    'A missing value is not a deadline; never substitute pickup LFD for empty-return LFD. ' +
+    'For deadline changes, value is the reported deadline; timestamp is when it was reported. ' +
     'More efficient than get_container with transport_events when you only need event data.',
   inputSchema: {
     type: 'object',
@@ -203,7 +200,10 @@ function formatTransportEventsResponse(
   });
 
   // Categorize events
-  const categorized = categorizeEvents(sortedEvents);
+  const activeEvents = sortedEvents.filter(
+    (event: any) => !event.attributes?.invalidated_at,
+  );
+  const categorized = categorizeEvents(activeEvents);
 
   // Format events with location context
   const formattedEvents = sortedEvents.map((event: any) => {
@@ -238,7 +238,7 @@ function formatTransportEventsResponse(
     total_events: events.length,
     event_categories: categorized,
     timeline: formattedEvents,
-    milestones: extractKeyMilestones(sortedEvents),
+    milestones: extractKeyMilestones(activeEvents),
     _metadata: metadata,
   };
 }

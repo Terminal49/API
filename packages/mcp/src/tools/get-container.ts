@@ -107,6 +107,9 @@ export interface ContainerStatus {
     latest_event?: {
       event: string;
       timestamp: string;
+      value: unknown;
+      data_source: string | null;
+      invalidated_at: string | null;
       location?: string;
     };
     rail_events_count?: number;
@@ -359,8 +362,12 @@ function isTrackingStopped(shipment: any): boolean {
   );
 }
 
-function formatEventsData(events: any[]): any {
-  if (!events || events.length === 0) {
+function formatEventsData(
+  events: any[],
+): NonNullable<ContainerStatus['events']> {
+  // Summaries describe active events; the timeline retains withdrawn history.
+  events = events.filter((event: any) => !event.attributes?.invalidated_at);
+  if (events.length === 0) {
     return { count: 0 };
   }
 
