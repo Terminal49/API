@@ -4,6 +4,7 @@ import type { ShipmentManager } from './client/managers/shipments.js';
 import type { TrackingRequestManager } from './client/managers/tracking-requests.js';
 import type { components } from './generated/terminal49.js';
 import type { Terminal49Client } from './client.js';
+import type { Transport } from './client/transport.js';
 import type { TrackingRequestInclude } from './types/options.js';
 
 describe('generated spec types', () => {
@@ -67,5 +68,22 @@ describe('generated spec types', () => {
     >;
 
     expectTypeOf<TrackingRequestInclude>().toEqualTypeOf<SpecRelationship>();
+  });
+
+  it('types execute as the success body, or undefined for a bodyless success', () => {
+    const run = (transport: Transport) => ({
+      deleted: transport.execute(() =>
+        transport.client.DELETE('/webhooks/{id}', {
+          params: { path: { id: 'webhook-id' } },
+        }),
+      ),
+      me: transport.execute(() => transport.client.GET('/me')),
+    });
+    type Results = ReturnType<typeof run>;
+
+    expectTypeOf<Awaited<Results['deleted']>>().toEqualTypeOf<undefined>();
+    expectTypeOf<
+      Awaited<Results['me']>['data']['type']
+    >().toEqualTypeOf<'credential'>();
   });
 });

@@ -32,23 +32,23 @@ description: "Transport class in the Terminal49 TypeScript SDK, the low-level HT
 
 ### execute()
 
-> **execute**\<`T`\>(`fn`): `Promise`\<`T`\>
+> **execute**\<`R`\>(`fn`): `Promise`\<`Extract`\<`R`, \{ `data`: `unknown`; \}\>\[`"data"`\]\>
 
 #### Type Parameters
 
-| Type Parameter | Default type |
-| ------ | ------ |
-| `T` | `any` |
+| Type Parameter |
+| ------ |
+| `R` *extends* `object` |
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `fn` | () => `Promise`\<`FetchResponse`\<`any`, `any`, `any`\>\> |
+| `fn` | () => `Promise`\<`R`\> |
 
 #### Returns
 
-`Promise`\<`T`\>
+`Promise`\<`Extract`\<`R`, \{ `data`: `unknown`; \}\>\[`"data"`\]\>
 
 ***
 

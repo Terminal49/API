@@ -1,8 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import createClient, {
-  type FetchResponse,
-  type MiddlewareCallbackParams,
-} from 'openapi-fetch';
+import createClient, { type MiddlewareCallbackParams } from 'openapi-fetch';
 import type { paths } from '../generated/terminal49.js';
 import { readSuccessBody } from './body.js';
 import { toNetworkError } from './errors.js';
@@ -73,11 +70,14 @@ export class Transport {
     this.client.use(interceptor);
   }
 
-  public async execute<T = any>(
-    fn: () => Promise<FetchResponse<any, any, any>>,
-  ): Promise<T> {
+  public async execute<R extends { data?: unknown }>(
+    fn: () => Promise<R>,
+  ): Promise<Extract<R, { data: unknown }>['data']> {
     const { data } = await fn();
-    return data as T;
+    // SAFETY: ErrorMappingInterceptor throws on every non-2xx response, so a
+    // call that returns here is openapi-fetch's success branch, whose data is
+    // undefined for an operation the spec gives no response body.
+    return data as Extract<R, { data: unknown }>['data'];
   }
 
   /**

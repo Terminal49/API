@@ -31,9 +31,7 @@ export class ShippingLineManager extends BaseManager {
     const raw = needle
       ? {
           ...doc,
-          data: doc.data?.filter((line: ShippingLineResource) =>
-            matchesSearch(line, needle),
-          ),
+          data: doc.data?.filter((line) => matchesSearch(line, needle)),
         }
       : doc;
     return this.formatResult(raw, options?.format, mapShippingLines);
