@@ -363,7 +363,6 @@ describe('custom field list filters', () => {
       },
     });
     await client.customFieldDefinitions.list({
-      pageSize: 5,
       filters: { entityType: 'Shipment', dataType: 'enum', displayName: 'PO' },
     });
 
@@ -373,7 +372,6 @@ describe('custom field list filters', () => {
       'filter[definition_id]': 'def-1',
     });
     expect(calls[1].query).toEqual({
-      'page[size]': '5',
       'filter[entity_type]': 'Shipment',
       'filter[data_type]': 'enum',
       'filter[display_name]': 'PO',

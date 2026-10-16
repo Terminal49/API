@@ -4,15 +4,10 @@
 
 import type { Command } from 'commander';
 import { parseJsonObjectPayload } from '../util/input.js';
-import { action, addListOptions, cliEnvelope, listAction } from './action.js';
+import { action, cliEnvelope, listAction } from './action.js';
 
 type PayloadOptions = {
   payload: Record<string, unknown>;
-};
-
-type CustomFieldDefinitionListOptions = {
-  page?: number;
-  pageSize?: number;
 };
 
 type PaginationEnvelope = {
@@ -59,20 +54,20 @@ export function registerCustomFieldDefinitionsCommand(program: Command): void {
     .command('custom-field-definitions')
     .description('Manage custom field definitions');
 
-  const listCommand = addListOptions(
-    cmd.command('list').description('List custom field definitions'),
-  );
-  listCommand.action(
-    listAction('custom-field-definitions.list', async ({ client, globals }) => {
-      const options = listCommand.opts() as CustomFieldDefinitionListOptions;
-      const result = await client.customFieldDefinitions.list({
-        page: options.page,
-        pageSize: options.pageSize,
-        format: globals.format,
-      });
-      return cliEnvelope(listDataFrom(result), paginationFrom(result));
-    }),
-  );
+  cmd
+    .command('list')
+    .description('List custom field definitions')
+    .action(
+      listAction(
+        'custom-field-definitions.list',
+        async ({ client, globals }) => {
+          const result = await client.customFieldDefinitions.list({
+            format: globals.format,
+          });
+          return cliEnvelope(listDataFrom(result), paginationFrom(result));
+        },
+      ),
+    );
 
   cmd
     .command('get <id>')

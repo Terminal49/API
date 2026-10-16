@@ -70,7 +70,7 @@ run_json "webhooks.list.json" webhooks list --page-size 2
 run_json "webhooks.ips.json" webhooks ips
 run_json "webhook-notifications.list.json" webhook-notifications list --page-size 2
 run_json "parties.list.json" parties list --page-size 2
-run_json "custom-field-definitions.list.json" custom-field-definitions list --page-size 2
+run_json "custom-field-definitions.list.json" custom-field-definitions list
 
 if [[ -n "$terminal_id" ]]; then
   run_json "terminals.get.json" terminals get "$terminal_id"
@@ -85,7 +85,7 @@ fi
 set +e
 run_dev containers route "$container_id" --json > "$API_FIXTURES/containers.route.json" 2> /tmp/t49.route.err
 run_dev containers map "$container_id" --json > /tmp/t49.map.out 2> "$API_FIXTURES/containers.map.error.json"
-run_dev custom-fields list --page-size 2 --json > /tmp/t49.custom-fields.out 2> "$API_FIXTURES/custom-fields.list.error.json"
+run_dev custom-fields list --json > /tmp/t49.custom-fields.out 2> "$API_FIXTURES/custom-fields.list.error.json"
 run_dev webhook-notifications examples --json > /tmp/t49.webhook-examples.out 2> "$API_FIXTURES/webhook-notifications.examples.error.json"
 set -e
 
@@ -94,7 +94,7 @@ run_table "containers.list.txt" containers list --page-size 2
 run_table "tracking-requests.list.txt" tracking-requests list --page-size 2
 run_table "shipping-lines.list.txt" shipping-lines list --search HLCU
 run_table "search.container-number.txt" search "$search_number"
-run_table "custom-field-definitions.list.txt" custom-field-definitions list --page-size 2
+run_table "custom-field-definitions.list.txt" custom-field-definitions list
 run_table "parties.list.txt" parties list --page-size 2
 if [[ -n "$terminal_id" ]]; then
   run_table "terminals.get.txt" terminals get "$terminal_id"

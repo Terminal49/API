@@ -4,15 +4,10 @@
 
 import type { Command } from 'commander';
 import { parseJsonObjectPayload } from '../util/input.js';
-import { action, addListOptions, cliEnvelope, listAction } from './action.js';
+import { action, cliEnvelope, listAction } from './action.js';
 
 type PayloadOptions = {
   payload: Record<string, unknown>;
-};
-
-type CustomFieldListOptions = {
-  page?: number;
-  pageSize?: number;
 };
 
 type PaginationEnvelope = {
@@ -59,20 +54,17 @@ export function registerCustomFieldsCommand(program: Command): void {
     .command('custom-fields')
     .description('Manage custom fields');
 
-  const listCommand = addListOptions(
-    cmd.command('list').description('List custom field assignments'),
-  );
-  listCommand.action(
-    listAction('custom-fields.list', async ({ client, globals }) => {
-      const options = listCommand.opts() as CustomFieldListOptions;
-      const result = await client.customFields.list({
-        page: options.page,
-        pageSize: options.pageSize,
-        format: globals.format,
-      });
-      return cliEnvelope(listDataFrom(result), paginationFrom(result));
-    }),
-  );
+  cmd
+    .command('list')
+    .description('List custom field assignments')
+    .action(
+      listAction('custom-fields.list', async ({ client, globals }) => {
+        const result = await client.customFields.list({
+          format: globals.format,
+        });
+        return cliEnvelope(listDataFrom(result), paginationFrom(result));
+      }),
+    );
 
   cmd
     .command('get <id>')

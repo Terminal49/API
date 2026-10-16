@@ -29,11 +29,7 @@ import type {
   TrackingRequestListFilters,
   TrackingRequestType,
 } from './client/managers/tracking-requests.js';
-import {
-  applyTypedPagination,
-  normalizeInclude,
-  type PaginatedQuery,
-} from './client/query.js';
+import { applyTypedPagination, normalizeInclude } from './client/query.js';
 import { mapVessel, mapVesselFuturePositions } from './client/mappers.js';
 import { callerPayload, type JsonBody } from './client/spec.js';
 import { mapCurrentCredential } from './client/mappers.js';
@@ -75,15 +71,12 @@ type WebhookEvent = NonNullable<
 type WebhookNotificationListQuery = NonNullable<
   paths['/webhook_notifications']['get']['parameters']['query']
 >;
-// The API ignores page[*] on these routes, but accepts it, and the CLI forwards --page.
 type CustomFieldDefinitionListQuery = NonNullable<
   paths['/accounts/{account_id}/custom_field_definitions']['get']['parameters']['query']
-> &
-  PaginatedQuery;
+>;
 type CustomFieldListQuery = NonNullable<
   paths['/custom_fields']['get']['parameters']['query']
-> &
-  PaginatedQuery;
+>;
 type TriggerWebhookBody = JsonBody<paths['/webhooks/trigger']['post']>;
 /** Party attributes for `parties.create` and `parties.update`. */
 export type PartyAttributes = NonNullable<
@@ -147,7 +140,7 @@ export interface CustomFieldDefinitionListFilters {
 }
 
 /** Options for `customFieldDefinitions.list`. */
-export interface CustomFieldDefinitionListOptions extends ListOptions {
+export interface CustomFieldDefinitionListOptions extends CallOptions {
   filters?: CustomFieldDefinitionListFilters;
   /**
    * `account`, the default, lists the definitions configured for your account.
@@ -332,7 +325,7 @@ export class Terminal49Client {
   };
 
   public customFields = {
-    list: (options?: ListOptions & { filters?: CustomFieldListFilters }) =>
+    list: (options?: CallOptions & { filters?: CustomFieldListFilters }) =>
       this.listCustomFields(options),
     get: (id: string, options?: CallOptions) =>
       this.getCustomField(id, options),
@@ -893,19 +886,19 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
-  /** List your account's custom field definitions, or the Terminal49 templates. */
+  /**
+   * List your account's custom field definitions, or the Terminal49 templates.
+   * The API does not paginate this list.
+   */
   async listCustomFieldDefinitions(
     options?: CustomFieldDefinitionListOptions,
   ): Promise<any> {
     const filters = options?.filters;
-    const query = applyTypedPagination<CustomFieldDefinitionListQuery>(
-      {
-        'filter[entity_type]': filters?.entityType,
-        'filter[data_type]': filters?.dataType,
-        'filter[display_name]': filters?.displayName,
-      },
-      options,
-    );
+    const query: CustomFieldDefinitionListQuery = {
+      'filter[entity_type]': filters?.entityType,
+      'filter[data_type]': filters?.dataType,
+      'filter[display_name]': filters?.displayName,
+    };
     const raw = await this.transport.execute(() =>
       options?.scope === 'templates'
         ? this.transport.client.GET('/custom_field_definitions', {
@@ -1085,19 +1078,18 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
-  /** List custom field assignments. */
+  /**
+   * List custom field assignments. The API does not paginate this list.
+   */
   async listCustomFields(
-    options?: ListOptions & { filters?: CustomFieldListFilters },
+    options?: CallOptions & { filters?: CustomFieldListFilters },
   ): Promise<any> {
     const filters = options?.filters;
-    const query = applyTypedPagination<CustomFieldListQuery>(
-      {
-        'filter[entity_type]': filters?.entityType,
-        'filter[entity_id]': filters?.entityId,
-        'filter[definition_id]': filters?.definitionId,
-      },
-      options,
-    );
+    const query: CustomFieldListQuery = {
+      'filter[entity_type]': filters?.entityType,
+      'filter[entity_id]': filters?.entityId,
+      'filter[definition_id]': filters?.definitionId,
+    };
     const raw = await this.transport.execute(() =>
       this.transport.client.GET('/custom_fields', { params: { query } }),
     );

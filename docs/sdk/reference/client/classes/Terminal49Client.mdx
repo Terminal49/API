@@ -816,6 +816,7 @@ List containers with optional filters and pagination.
 > **listCustomFieldDefinitions**(`options?`): `Promise`\<`any`\>
 
 List your account's custom field definitions, or the Terminal49 templates.
+The API does not paginate this list.
 
 #### Parameters
 
@@ -853,13 +854,13 @@ this list.
 
 > **listCustomFields**(`options?`): `Promise`\<`any`\>
 
-List custom field assignments.
+List custom field assignments. The API does not paginate this list.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) & `object` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` |
 
 #### Returns
 
