@@ -558,6 +558,22 @@ List tracking requests with optional filters and pagination.
 
 ---
 
+### `search_docs`
+
+Search the public Terminal49 documentation: API guides, webhooks, container statuses, holds and Last Free Day rules, DataSync, the SDK, and this MCP server. It returns matching sections with a title, link, and excerpt. It does not read account data.
+
+**Parameters**
+
+- `query` *(string, required)* - a short documentation search query, such as `webhook retries`.
+- `limit` *(number, optional)* - most results to return, from 1 to 10. Default 5.
+
+**Good for**
+
+- "How do I verify webhook signatures?"
+- "What does the last free day mean?"
+
+---
+
 ### `whoami`
 
 Identify the caller: API key or signed-in user, the account the session is scoped to, and which gated features that credential can use there.
@@ -630,6 +646,8 @@ Resources provide static or dynamic data that AI clients can read.
 |--------------|-------------|
 | `terminal49://container/{id}` | Container data in markdown format |
 | `terminal49://docs/milestone-glossary` | Event/milestone reference documentation |
+| `terminal49://docs/mcp-query-guidance` | Playbooks that map common container questions to tools and output shape |
+| `terminal49://docs/list-display-columns` | Column catalog for `list_containers`, `list_shipments`, and `list_tracking_requests` results. The list tools point to it through `column_catalog_resource`. |
 
 <Accordion title="Example resources/read request">
 ```json

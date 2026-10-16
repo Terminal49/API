@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Terminal49 MCP Server now provides **10 specialized tools** and **2 MCP resources** for comprehensive container tracking and shipment management.
+The Terminal49 MCP Server now provides **13 specialized tools** and **4 MCP resources** for comprehensive container tracking and shipment management.
 
 ### Design Philosophy
 
@@ -298,7 +298,66 @@ list_tracking_requests({
 
 ---
 
-### 11. `whoami`
+### 11. `summarize_containers`
+**Purpose**: Count containers grouped by one dimension, for "how many" and "break down by" questions
+
+**Usage**:
+```typescript
+summarize_containers({
+  group_by: "pod_terminal", // pod_terminal | current_status | shipping_line | port_of_discharge | hold_type | pickup_lfd_date | pod_arrival_date
+  has_holds: true
+})
+```
+
+Accepts the `list_containers` filters except `sort`, `include`, `view`, `page`, and `page_size`. Only actively tracked containers are counted unless `include_stopped_tracking` is true.
+
+**Returns**:
+- `total` and `groups` (`key`, `label`, `count`), ordered by count
+- `truncated` when there are more than 200 groups
+- `applied_filters`
+
+**When to Use**: Counts and breakdowns. Use `list_containers` to list the containers themselves.
+
+---
+
+### 12. `list_parties`
+**Purpose**: Find the companies on the account's shipments by name and return their IDs
+
+**Usage**:
+```typescript
+list_parties({
+  search: "acme",
+  limit: 25 // 1-50
+})
+```
+
+**Returns**:
+- `parties` (`id`, `name`) and `total_matched`
+- `truncated` when the list does not hold every match
+
+**When to Use**: Before `list_containers` or `summarize_containers` when a question names a company. Filter with `advanced_filters.parties`, keyed by role, such as `{ customer: "<id>" }`.
+
+---
+
+### 13. `search_docs`
+**Purpose**: Search the public Terminal49 documentation
+
+**Usage**:
+```typescript
+search_docs({
+  query: "webhook retries",
+  limit: 5 // 1-10
+})
+```
+
+**Returns**:
+- `results` with `title`, `url`, `page`, and an excerpt in `content`
+
+**When to Use**: How-to and definition questions. It does not read account data.
+
+---
+
+### 14. `whoami`
 **Purpose**: Identify the caller, the account the session is scoped to, and which gated features that credential can use
 
 **Usage**:
@@ -347,6 +406,20 @@ whoami()
 1. User: "What does rail_loaded mean?"
 2. LLM reads `terminal49://docs/milestone-glossary`
 3. LLM responds: "rail_loaded means the container has been loaded onto a rail car at the port. This typically happens 1-2 days after discharge and indicates the start of the inland journey by rail."
+
+---
+
+### 3. `terminal49://docs/mcp-query-guidance`
+**Purpose**: Playbooks that map common container logistics questions to tools and output shape
+
+**When to Use**: The client needs help choosing a tool for a user question
+
+---
+
+### 4. `terminal49://docs/list-display-columns`
+**Purpose**: Column catalog for `list_containers`, `list_shipments`, and `list_tracking_requests` results
+
+**When to Use**: Read it once. The list tools name it in `column_catalog_resource` instead of repeating the catalog in every response.
 
 ---
 
@@ -517,7 +590,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 10 tools and 2 resources, the LLM can:
+With these 14 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

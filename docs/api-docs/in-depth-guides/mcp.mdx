@@ -170,7 +170,7 @@ Once configured, verify everything works:
   <Step title="Ask Claude to list tools">
     > "List the tools available in the Terminal49 MCP server."
 
-    Claude should respond with a list of 10 tools including `search_container`, `track_container`, and list tools.
+    Claude should respond with a list of 14 tools including `search_container`, `track_container`, and list tools.
   </Step>
   <Step title="Search for a test container">
     > "Using the Terminal49 MCP server, search for container TCLU1234567 and summarize its status."
@@ -228,7 +228,10 @@ T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio 2>&1 | head -20
 | `get_container_route` | Get ports in route order with ETAs and the current vessel (paid feature) | `id: uuid` |
 | `list_shipments` | List shipments with filters + pagination | `number?`, `tracking_stopped?`, `actively_tracked?`, `voyage_status?`, `pod_code?`, `pol_code?`, `pod_arrival?`, `created_at?`, `tags?`, `advanced_filters?`, `include_stopped_tracking?`, `sort?`, `include_containers?`, `page?`, `page_size?` |
 | `list_containers` | List containers with filters + pagination | `number?`, `current_status?`, `pod_code?`, `pol_code?`, `shipping_line_scac?`, `has_holds?`, `has_fees?`, `requires_attention?`, `actively_tracked?`, `arrival?`, `pickup_lfd?`, `tags?`, `advanced_filters?`, `include_stopped_tracking?`, `sort?`, `include?: ['shipment', 'pod_terminal']`, `view?`, `page?`, `page_size?` |
+| `summarize_containers` | Count containers grouped by one dimension | `group_by` (`pod_terminal`, `current_status`, `shipping_line`, `port_of_discharge`, `hold_type`, `pickup_lfd_date`, or `pod_arrival_date`), plus the `list_containers` filters except `sort`, `include`, `view`, `page`, and `page_size` |
+| `list_parties` | Find parties by company name and return their IDs | `search?`, `limit?` (default 25, maximum 50) |
 | `list_tracking_requests` | List tracking requests with filters | `request_number?`, `status?` (`pending`, `created`, `failed`, or `cancelled`), `scac?`, `page?`, `page_size?` |
+| `search_docs` | Search the public Terminal49 documentation | `query: string`, `limit?` (1-10, default 5) |
 | `whoami` | Identify the credential, its account, and available features | none |
 
 ### Prompts
@@ -245,6 +248,8 @@ T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio 2>&1 | head -20
 |-----|-------------|
 | `terminal49://container/{id}` | Container data as resource |
 | `terminal49://docs/milestone-glossary` | Event/milestone reference |
+| `terminal49://docs/mcp-query-guidance` | Playbooks that map common container questions to tools and output shape |
+| `terminal49://docs/list-display-columns` | Column catalog for `list_containers`, `list_shipments`, and `list_tracking_requests` results. The list tools point to it through `column_catalog_resource`. |
 
 For detailed examples and response formats, see [MCP Overview → Tools Reference](/mcp/home#tools-reference).
 
