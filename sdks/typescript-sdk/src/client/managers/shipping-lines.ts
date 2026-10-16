@@ -7,9 +7,14 @@ type ShippingLineResource = components['schemas']['shipping_line'];
 
 function matchesSearch(line: ShippingLineResource, needle: string): boolean {
   const { scac, name, short_name, alternative_scacs } = line.attributes;
-  return [scac, name, short_name, ...alternative_scacs].some((value) =>
-    value.toLowerCase().includes(needle),
-  );
+  // The backing columns for name, short_name, and alternative_scacs are nullable.
+  const values: Array<string | null> = [
+    scac,
+    name,
+    short_name,
+    ...(alternative_scacs ?? []),
+  ];
+  return values.some((value) => value?.toLowerCase().includes(needle));
 }
 
 export class ShippingLineManager extends BaseManager {

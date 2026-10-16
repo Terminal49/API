@@ -142,6 +142,45 @@ describe('Terminal49Client mapping helpers', () => {
     expect(calls.map((call) => call.url.search)).toEqual(['', '', '', '', '']);
   });
 
+  it('searches shipping lines whose nullable columns are null', async () => {
+    const { fetchImpl } = createMockFetch({
+      '/shipping_lines': () =>
+        jsonResponse({
+          data: [
+            {
+              id: 'sl-1',
+              type: 'shipping_line',
+              attributes: {
+                scac: 'ZZZU',
+                name: null,
+                short_name: null,
+                alternative_scacs: null,
+              },
+            },
+            {
+              id: 'sl-2',
+              type: 'shipping_line',
+              attributes: {
+                scac: 'MAEU',
+                name: 'Maersk',
+                short_name: null,
+                alternative_scacs: [],
+              },
+            },
+          ],
+        }),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    const result = await client.listShippingLines('maersk');
+
+    expect(result.data.map((line: any) => line.id)).toEqual(['sl-2']);
+  });
+
   it('maps the tracked_object shipment on a tracking request', async () => {
     const fixture = loadFixture('tracking-requests.get.base');
     const { fetchImpl } = createMockFetch({
