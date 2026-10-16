@@ -10,5 +10,6 @@ Attributes accepted by [DocumentManager.update](/sdk/reference/client/managers/c
 
 | Property | Type | Description |
 | ------ | ------ | ------ |
-| <a id="property-documenttypemanual"></a> `documentTypeManual?` | `string` | Manually override the classified document type. |
+| <a id="property-classificationnotes"></a> `classificationNotes?` | `string` \| `null` | Notes about how the document was classified. Pass `null` to clear them. |
+| <a id="property-documenttype"></a> `documentType?` | `string` | Override the classified document type with a code from `documents.types()`. |
 | <a id="property-extracteddatamanual"></a> `extractedDataManual?` | \{\[`key`: `string`\]: `unknown`; \} \| `null` | Manually provide extracted key/value data. Pass `null` to clear manual values. |

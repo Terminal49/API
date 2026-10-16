@@ -38,8 +38,10 @@ export interface CreateDocumentParams {
 
 /** Attributes accepted by {@link DocumentManager.update}. */
 export interface UpdateDocumentParams {
-  /** Manually override the classified document type. */
-  documentTypeManual?: string;
+  /** Override the classified document type with a code from `documents.types()`. */
+  documentType?: string;
+  /** Notes about how the document was classified. Pass `null` to clear them. */
+  classificationNotes?: DocumentUpdateAttributes['classification_notes'];
   /** Manually provide extracted key/value data. Pass `null` to clear manual values. */
   extractedDataManual?: DocumentUpdateAttributes['extracted_data_manual'];
 }
@@ -113,15 +115,18 @@ export class DocumentManager extends BaseManager {
     return this.formatResult(raw, options?.format);
   }
 
-  /** Override a document's type or extracted data. */
+  /** Override a document's type, classification notes, or extracted data. */
   async update(
     id: string,
     params: UpdateDocumentParams,
     options?: CallOptions,
   ): Promise<any> {
     const attributes: DocumentUpdateAttributes = {};
-    if (params.documentTypeManual !== undefined) {
-      attributes.document_type = params.documentTypeManual;
+    if (params.documentType !== undefined) {
+      attributes.document_type = params.documentType;
+    }
+    if (params.classificationNotes !== undefined) {
+      attributes.classification_notes = params.classificationNotes;
     }
     if (params.extractedDataManual !== undefined) {
       attributes.extracted_data_manual = params.extractedDataManual;

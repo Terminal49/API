@@ -199,7 +199,12 @@ describe('documents', () => {
     await docs.create({ name: 'BOL.pdf', attachedDocument: 'blob-1' });
     await docs.get('d-1', { include: 'shipments' });
     await docs.update('d-1', {
-      documentTypeManual: 'bill_of_lading',
+      documentType: 'bill_of_lading',
+      classificationNotes: 'Reviewed by ops',
+      extractedDataManual: { bill_of_lading_number: 'BL-1' },
+    });
+    await docs.update('d-1', {
+      classificationNotes: null,
       extractedDataManual: null,
     });
     await docs.delete('d-1');
@@ -208,11 +213,12 @@ describe('documents', () => {
     await docs.reextract('d-1');
     await docs.reclassify('d-1');
     await docs.relink('d-1');
-    await docs.rotate('d-1', 90);
+    await docs.rotate('d-1', 270);
 
     expect(calls.map((c) => [c.method, c.path])).toEqual([
       ['POST', '/documents'],
       ['GET', '/documents/d-1'],
+      ['PATCH', '/documents/d-1'],
       ['PATCH', '/documents/d-1'],
       ['DELETE', '/documents/d-1'],
       ['GET', '/documents/types'],
@@ -234,11 +240,18 @@ describe('documents', () => {
         type: 'document',
         attributes: {
           document_type: 'bill_of_lading',
-          extracted_data_manual: null,
+          classification_notes: 'Reviewed by ops',
+          extracted_data_manual: { bill_of_lading_number: 'BL-1' },
         },
       },
     });
-    expect(calls[9].body).toEqual({ degrees: 90 });
+    expect(calls[3].body).toEqual({
+      data: {
+        type: 'document',
+        attributes: { classification_notes: null, extracted_data_manual: null },
+      },
+    });
+    expect(calls[10].body).toEqual({ degrees: 270 });
   });
 
   it('rejects create without required attributes', async () => {
@@ -246,6 +259,9 @@ describe('documents', () => {
     await expect(
       client.documents.create({ name: '', attachedDocument: 'blob-1' }),
     ).rejects.toThrow('name is required');
+    await expect(
+      client.documents.create({ name: 'BOL.pdf', attachedDocument: '' }),
+    ).rejects.toThrow('attached_document is required');
     expect(calls).toHaveLength(0);
   });
 });
@@ -623,7 +639,7 @@ describe('return values', () => {
       'PATCH',
       '/documents/d-1',
       (c: Terminal49Client) =>
-        c.documents.update('d-1', { documentTypeManual: 'bill_of_lading' }),
+        c.documents.update('d-1', { documentType: 'bill_of_lading' }),
     ],
     ['GET', '/documents/types', (c: Terminal49Client) => c.documents.types()],
     [
