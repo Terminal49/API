@@ -339,22 +339,16 @@ export function mapShipment(doc: any): Shipment {
     ...attrCamel,
   };
 
-  const containerRelationships = apiDoc.getRelationship(data, 'containers');
-  const containers = Array.isArray(containerRelationships)
-    ? containerRelationships
-    : containerRelationships
-      ? [containerRelationships]
-      : [];
-
-  shipment.containers = containers
-    .map((c: any) => {
-      if (!c) return null;
-      return {
-        id: c.id,
-        number: c.attributes?.number || c.attributes?.container_number,
-      };
-    })
-    .filter(Boolean) as Array<{ id: string; number?: string }>;
+  const containerRefs = data?.relationships?.containers?.data;
+  shipment.containers = (Array.isArray(containerRefs) ? containerRefs : []).map(
+    (ref: { id: string; type: string }) => {
+      const container = apiDoc.getIncluded(ref.type, ref.id);
+      const number =
+        container?.attributes?.number ||
+        container?.attributes?.container_number;
+      return number ? { id: ref.id, number } : { id: ref.id };
+    },
+  );
 
   shipment.refNumbers = attrs.ref_numbers;
   shipment.tags = attrs.tags;

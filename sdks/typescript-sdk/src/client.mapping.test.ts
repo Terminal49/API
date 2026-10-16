@@ -387,6 +387,35 @@ describe('Terminal49Client mapping helpers', () => {
     }
   });
 
+  it('keeps shipment container ids whether or not the containers are included', async () => {
+    const included = loadFixture('shipments.get.include');
+    const list = loadFixture('shipments.list');
+    const { fetchImpl } = createMockFetch({
+      '/shipments/shipment-1?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal':
+        () => jsonResponse(included),
+      '/shipments?include=pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal':
+        () => jsonResponse(list),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+      defaultFormat: 'mapped',
+    });
+
+    const withContainers = await client.getShipment('shipment-1');
+    const withoutContainers = await client.listShipments({
+      includeContainers: false,
+    });
+
+    expect(withContainers.containers).toEqual([
+      { id: 'container-1', number: 'RMCU74210c6' },
+    ]);
+    expect(withoutContainers.items[0].containers).toEqual([
+      { id: 'container-1' },
+    ]);
+  });
+
   it('maps containers.get and containers.update in mapped and both formats', async () => {
     const fixture = loadFixture('containers.get.include');
     const { fetchImpl } = createMockFetch({
