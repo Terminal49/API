@@ -35,6 +35,11 @@ export type TrackingRequestType =
 
 export interface CreateTrackingRequestFromInferOptions {
   scac?: string;
+  /**
+   * Number type to send instead of the inferred one: `container`,
+   * `bill_of_lading`, or `booking_number` (`booking` is also accepted).
+   * Any other value throws a ValidationError before a request is sent.
+   */
   numberType?: string;
   refNumbers?: string[];
   shipmentTags?: string[];
@@ -269,11 +274,17 @@ export class TrackingRequestManager extends BaseManager {
     number: string,
     options: CreateTrackingRequestFromInferOptions = {},
   ): Promise<{ infer: any; trackingRequest: any }> {
+    const overrideType = this.normalizeInferNumberType(options.numberType);
+    if (options.numberType && !overrideType) {
+      throw new ValidationError(
+        `Invalid numberType "${options.numberType}". Use container, bill_of_lading, or booking_number.`,
+      );
+    }
+
     const infer = await this.inferNumber(number);
     const attrs = infer?.data?.attributes || {};
-    const numberType = this.normalizeInferNumberType(
-      attrs.number_type || options.numberType,
-    );
+    const numberType =
+      overrideType ?? this.normalizeInferNumberType(attrs.number_type);
     const shippingLine = attrs.shipping_line || {};
     const selected = shippingLine.selected || null;
     const candidates = Array.isArray(shippingLine.candidates)

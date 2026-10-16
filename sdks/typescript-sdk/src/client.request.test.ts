@@ -436,6 +436,104 @@ describe('Terminal49Client request building', () => {
     expect(captured.data.attributes.scac).toBe('CAND');
   });
 
+  it('sends the caller numberType instead of the inferred one', async () => {
+    let captured: any = null;
+    const { fetchImpl } = createMockFetch({
+      '/tracking_requests/infer_number': () =>
+        jsonResponse({
+          data: {
+            attributes: {
+              number_type: 'bill_of_lading',
+              shipping_line: { selected: { scac: 'MAEU' }, candidates: [] },
+            },
+          },
+        }),
+      '/tracking_requests': (init) => {
+        captured = JSON.parse(String(init?.body));
+        return jsonResponse({ data: { id: 'tr-3' } }, 201);
+      },
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.createTrackingRequestFromInfer('255123456', {
+      numberType: 'booking_number',
+    });
+    expect(captured.data.attributes).toMatchObject({
+      request_type: 'booking_number',
+      request_number: '255123456',
+      scac: 'MAEU',
+    });
+  });
+
+  it('uses the caller numberType when infer reports an unknown type', async () => {
+    let captured: any = null;
+    const { fetchImpl } = createMockFetch({
+      '/tracking_requests/infer_number': () =>
+        jsonResponse({
+          data: {
+            attributes: {
+              number_type: 'unknown',
+              shipping_line: { selected: { scac: 'MAEU' }, candidates: [] },
+            },
+          },
+        }),
+      '/tracking_requests': (init) => {
+        captured = JSON.parse(String(init?.body));
+        return jsonResponse({ data: { id: 'tr-4' } }, 201);
+      },
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.createTrackingRequestFromInfer('MAEU123456789', {
+      numberType: 'bill_of_lading',
+    });
+    expect(captured.data.attributes.request_type).toBe('bill_of_lading');
+  });
+
+  it('rejects an unrecognized numberType override by name', async () => {
+    let created = false;
+    const { fetchImpl } = createMockFetch({
+      '/tracking_requests/infer_number': () =>
+        jsonResponse({
+          data: {
+            attributes: {
+              number_type: 'bill_of_lading',
+              shipping_line: { selected: { scac: 'MAEU' }, candidates: [] },
+            },
+          },
+        }),
+      '/tracking_requests': () => {
+        created = true;
+        return jsonResponse({ data: { id: 'tr-5' } }, 201);
+      },
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await expect(
+      client.createTrackingRequestFromInfer('MAEU123456789', {
+        numberType: 'BOL',
+      }),
+    ).rejects.toThrow(
+      'Invalid numberType "BOL". Use container, bill_of_lading, or booking_number.',
+    );
+    expect(created).toBe(false);
+  });
+
   it('throws when infer does not provide number type', async () => {
     const { fetchImpl } = createMockFetch({
       '/tracking_requests/infer_number': () =>
