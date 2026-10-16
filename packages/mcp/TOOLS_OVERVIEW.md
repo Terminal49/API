@@ -31,17 +31,17 @@ search_container({ query: "MAEU123456789" })  // Booking
 ---
 
 ### 2. `track_container`
-**Purpose**: Create a tracking request for a new container
+**Purpose**: Start tracking a container, bill of lading, or booking number
 
 **Usage**:
 ```typescript
 track_container({
-  containerNumber: "CAIU1234567",
-  scac: "MAEU"
+  number: "MSKU4330011",
+  scac: "MAEU" // optional; required when the carrier cannot be inferred
 })
 ```
 
-**Returns**: Tracking request details
+**Returns**: The tool first searches for the number. If a container already tracks it, the tool returns that container's details. If a tracking request for it is still in progress (status `pending` or `awaiting_manifest`, under the same SCAC when `scac` is given), it returns that request and its status. Otherwise it creates a tracking request and returns it. If the API reports that the number is already tracked, the tool returns `source: "duplicate"` with the existing `tracking_request.id`, `shipment_id` when one exists, and the API's message, which can name a different number that the request is stored under. In these three cases `tracking_request_created` is `false`. Container numbers must pass the ISO 6346 check digit before the tool calls the API.
 
 **When to Use**: User wants to start tracking a container not yet in the system
 
@@ -282,8 +282,7 @@ list_containers({
 **Usage**:
 ```typescript
 list_tracking_requests({
-  status: "succeeded",
-  request_type: "manual",
+  status: "created", // pending | created | failed | cancelled; created means succeeded and still tracking. The filter cannot select awaiting_manifest (still processing, manifest pending) or tracking_stopped; look those up by request_number without status
   page: 1,
   page_size: 25
 })
