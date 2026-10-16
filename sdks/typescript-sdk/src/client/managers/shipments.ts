@@ -137,22 +137,18 @@ export class ShipmentManager extends BaseManager {
   }
 
   async stopTracking(id: string, options?: CallOptions): Promise<any> {
-    const payload = { data: { type: 'shipment' as const, id } };
     const raw = await this.transport.execute(() =>
       this.transport.client.PATCH('/shipments/{id}/stop_tracking', {
         params: { path: { id } },
-        body: payload as any,
       }),
     );
     return this.formatResult(raw, options?.format, mapShipment);
   }
 
   async resumeTracking(id: string, options?: CallOptions): Promise<any> {
-    const payload = { data: { type: 'shipment' as const, id } };
     const raw = await this.transport.execute(() =>
       this.transport.client.PATCH('/shipments/{id}/resume_tracking', {
         params: { path: { id } },
-        body: payload as any,
       }),
     );
     return this.formatResult(raw, options?.format, mapShipment);

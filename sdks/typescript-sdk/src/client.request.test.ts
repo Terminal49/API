@@ -481,10 +481,10 @@ describe('Terminal49Client request building', () => {
     ).rejects.toBeInstanceOf(ValidationError);
   });
 
-  it('sends JSON:API payloads for shipment updates and tracking controls', async () => {
+  it('sends a JSON:API update body and bodiless tracking controls', async () => {
     let updatePayload: any = null;
-    let stopPayload: any = null;
-    let resumePayload: any = null;
+    let stopBody: unknown = null;
+    let resumeBody: unknown = null;
 
     const { fetchImpl, calls } = createMockFetch({
       '/shipments/ship-1': (init) => {
@@ -492,11 +492,11 @@ describe('Terminal49Client request building', () => {
         return jsonResponse({ data: { id: 'ship-1' } });
       },
       '/shipments/ship-1/stop_tracking': (init) => {
-        stopPayload = JSON.parse(String(init?.body));
+        stopBody = init?.body;
         return jsonResponse({ data: { id: 'ship-1' } });
       },
       '/shipments/ship-1/resume_tracking': (init) => {
-        resumePayload = JSON.parse(String(init?.body));
+        resumeBody = init?.body;
         return jsonResponse({ data: { id: 'ship-1' } });
       },
     });
@@ -518,12 +518,8 @@ describe('Terminal49Client request building', () => {
         attributes: { status: 'paused' },
       },
     });
-    expect(stopPayload).toEqual({
-      data: { type: 'shipment', id: 'ship-1' },
-    });
-    expect(resumePayload).toEqual({
-      data: { type: 'shipment', id: 'ship-1' },
-    });
+    expect(stopBody).toBe('');
+    expect(resumeBody).toBe('');
 
     expect(calls[0].init?.method).toBe('PATCH');
     expect(calls[1].init?.method).toBe('PATCH');
