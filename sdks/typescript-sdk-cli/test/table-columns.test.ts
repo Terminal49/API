@@ -164,6 +164,159 @@ describe('table columns', () => {
     );
   });
 
+  it('shipments list --format raw fills every column from the attributes', async () => {
+    const output = await table(['--format', 'raw', 'shipments', 'list'], {
+      data: [
+        {
+          id: 's-1',
+          type: 'shipment',
+          attributes: {
+            bill_of_lading_number: 'BL1',
+            shipping_line_scac: 'MAEU',
+            customer_name: 'Acme',
+            port_of_discharge_name: 'Oakland',
+            pod_eta_at: '2026-10-20',
+            line_tracking_stopped_reason: 'expired',
+          },
+        },
+      ],
+    });
+
+    expect(output).toBe(
+      [
+        '┌─────┬─────┬──────┬──────────┬─────────┬────────────┬──────────────────┐',
+        '│ ID  │ BOL │ SCAC │ Customer │ POD     │ POD ETA    │ Tracking Stopped │',
+        '├─────┼─────┼──────┼──────────┼─────────┼────────────┼──────────────────┤',
+        '│ s-1 │ BL1 │ MAEU │ Acme     │ Oakland │ 2026-10-20 │ expired          │',
+        '└─────┴─────┴──────┴──────────┴─────────┴────────────┴──────────────────┘',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  const containersDocument = {
+    data: [
+      {
+        id: 'c-1',
+        type: 'container',
+        attributes: {
+          number: 'MSCU1234567',
+          current_status: 'available',
+          equipment_type: 'dry',
+          equipment_length: 40,
+          location_at_pod_terminal: 'Yard',
+        },
+        relationships: {
+          pod_terminal: { data: { id: 't-1', type: 'terminal' } },
+        },
+      },
+    ],
+    included: [
+      { id: 't-1', type: 'terminal', attributes: { name: 'Pier 400' } },
+    ],
+  };
+
+  it('containers list fills every column from the mapped row', async () => {
+    const output = await table(['containers', 'list'], containersDocument);
+
+    expect(output).toBe(
+      [
+        '┌─────┬─────────────┬───────────┬──────┬─────┬──────────┬──────────────┐',
+        '│ ID  │ Number      │ Status    │ Type │ Len │ Location │ POD Terminal │',
+        '├─────┼─────────────┼───────────┼──────┼─────┼──────────┼──────────────┤',
+        '│ c-1 │ MSCU1234567 │ available │ dry  │ 40  │ Yard     │ Pier 400     │',
+        '└─────┴─────────────┴───────────┴──────┴─────┴──────────┴──────────────┘',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  it('containers list --format raw fills every column from the attributes', async () => {
+    const output = await table(
+      ['--format', 'raw', 'containers', 'list'],
+      containersDocument,
+    );
+
+    expect(output).toBe(
+      [
+        '┌─────┬─────────────┬───────────┬──────┬─────┬──────────┬──────────────┐',
+        '│ ID  │ Number      │ Status    │ Type │ Len │ Location │ POD Terminal │',
+        '├─────┼─────────────┼───────────┼──────┼─────┼──────────┼──────────────┤',
+        '│ c-1 │ MSCU1234567 │ available │ dry  │ 40  │ Yard     │              │',
+        '└─────┴─────────────┴───────────┴──────┴─────┴──────────┴──────────────┘',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  const trackingRequestsDocument = {
+    data: [
+      {
+        id: 'tr-1',
+        type: 'tracking_request',
+        attributes: {
+          request_type: 'bill_of_lading',
+          request_number: 'BL1',
+          scac: 'MAEU',
+          status: 'created',
+        },
+      },
+    ],
+  };
+  const trackingRequestsTable = [
+    '┌──────┬────────────────┬────────┬──────┬─────────┐',
+    '│ ID   │ Type           │ Number │ SCAC │ Status  │',
+    '├──────┼────────────────┼────────┼──────┼─────────┤',
+    '│ tr-1 │ bill_of_lading │ BL1    │ MAEU │ created │',
+    '└──────┴────────────────┴────────┴──────┴─────────┘',
+    '',
+  ].join('\n');
+
+  it('tracking-requests list fills every column from the mapped row', async () => {
+    const output = await table(
+      ['tracking-requests', 'list'],
+      trackingRequestsDocument,
+    );
+
+    expect(output).toBe(trackingRequestsTable);
+  });
+
+  it('tracking-requests list --format raw fills every column from the attributes', async () => {
+    const output = await table(
+      ['--format', 'raw', 'tracking-requests', 'list'],
+      trackingRequestsDocument,
+    );
+
+    expect(output).toBe(trackingRequestsTable);
+  });
+
+  it('shipping-lines list --format raw fills every column from the attributes', async () => {
+    const output = await table(['--format', 'raw', 'shipping-lines', 'list'], {
+      data: [
+        {
+          id: 'sl-1',
+          type: 'shipping_line',
+          attributes: {
+            scac: 'MAEU',
+            name: 'Maersk',
+            short_name: 'Maersk Line',
+          },
+        },
+      ],
+    });
+
+    expect(output).toBe(
+      [
+        '┌──────┬────────┬─────────────┐',
+        '│ SCAC │ Name   │ Short Name  │',
+        '├──────┼────────┼─────────────┤',
+        '│ MAEU │ Maersk │ Maersk Line │',
+        '└──────┴────────┴─────────────┘',
+        '',
+      ].join('\n'),
+    );
+  });
+
   it('--fields picks the table columns instead of the command defaults', async () => {
     const output = await table(
       ['shipments', 'list', '--fields', 'id,billOfLading'],

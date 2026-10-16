@@ -97,15 +97,31 @@ const CUSTOM_FIELD_OPTION_COLUMNS: ColumnDef[] = [
 const commandColumns: Record<string, ColumnDef[]> = {
   'shipments.list': [
     { key: 'id', title: 'ID' },
-    { key: 'billOfLading', title: 'BOL' },
-    { key: 'shippingLineScac', title: 'SCAC' },
-    { key: 'customerName', title: 'Customer' },
+    { key: ['billOfLading', 'attributes.bill_of_lading_number'], title: 'BOL' },
     {
-      key: ['portOfDischargeName', 'ports.portOfDischarge.name'],
+      key: ['shippingLineScac', 'attributes.shipping_line_scac'],
+      title: 'SCAC',
+    },
+    { key: ['customerName', 'attributes.customer_name'], title: 'Customer' },
+    {
+      key: [
+        'portOfDischargeName',
+        'ports.portOfDischarge.name',
+        'attributes.port_of_discharge_name',
+      ],
       title: 'POD',
     },
-    { key: ['podEtaAt', 'ports.portOfDischarge.eta'], title: 'POD ETA' },
-    { key: 'tracking.lineTrackingStoppedReason', title: 'Tracking Stopped' },
+    {
+      key: ['podEtaAt', 'ports.portOfDischarge.eta', 'attributes.pod_eta_at'],
+      title: 'POD ETA',
+    },
+    {
+      key: [
+        'tracking.lineTrackingStoppedReason',
+        'attributes.line_tracking_stopped_reason',
+      ],
+      title: 'Tracking Stopped',
+    },
   ],
   'webhooks.list': WEBHOOK_COLUMNS,
   'webhooks.create': WEBHOOK_COLUMNS,
@@ -122,11 +138,14 @@ const commandColumns: Record<string, ColumnDef[]> = {
   'custom-field-options.update': CUSTOM_FIELD_OPTION_COLUMNS,
   'containers.list': [
     { key: 'id', title: 'ID' },
-    { key: 'number', title: 'Number' },
-    { key: 'status', title: 'Status' },
-    { key: 'equipment.type', title: 'Type' },
-    { key: 'equipment.length', title: 'Len' },
-    { key: 'location.currentLocation', title: 'Location' },
+    { key: ['number', 'attributes.number'], title: 'Number' },
+    { key: ['status', 'attributes.current_status'], title: 'Status' },
+    { key: ['equipment.type', 'attributes.equipment_type'], title: 'Type' },
+    { key: ['equipment.length', 'attributes.equipment_length'], title: 'Len' },
+    {
+      key: ['location.currentLocation', 'attributes.location_at_pod_terminal'],
+      title: 'Location',
+    },
     { key: 'terminals.podTerminal.name', title: 'POD Terminal' },
   ],
   'containers.events': [
@@ -168,10 +187,10 @@ const commandColumns: Record<string, ColumnDef[]> = {
   ],
   'tracking-requests.list': [
     { key: 'id', title: 'ID' },
-    { key: 'requestType', title: 'Type' },
-    { key: 'requestNumber', title: 'Number' },
-    { key: 'scac', title: 'SCAC' },
-    { key: 'status', title: 'Status' },
+    { key: ['requestType', 'attributes.request_type'], title: 'Type' },
+    { key: ['requestNumber', 'attributes.request_number'], title: 'Number' },
+    { key: ['scac', 'attributes.scac'], title: 'SCAC' },
+    { key: ['status', 'attributes.status'], title: 'Status' },
   ],
   search: [
     { key: 'match', title: 'Match' },
@@ -195,9 +214,9 @@ const commandColumns: Record<string, ColumnDef[]> = {
     },
   ],
   'shipping-lines.list': [
-    { key: 'scac', title: 'SCAC' },
-    { key: 'name', title: 'Name' },
-    { key: 'shortName', title: 'Short Name' },
+    { key: ['scac', 'attributes.scac'], title: 'SCAC' },
+    { key: ['name', 'attributes.name'], title: 'Name' },
+    { key: ['shortName', 'attributes.short_name'], title: 'Short Name' },
   ],
 };
 
