@@ -154,6 +154,26 @@ describe('containers', () => {
   });
 });
 
+describe('tracking requests', () => {
+  it('cancels a tracking request without a body', async () => {
+    const { client, calls } = buildClient();
+
+    const result = await client.trackingRequests.cancel('tr 1');
+
+    expect(calls).toEqual([
+      {
+        method: 'PATCH',
+        path: '/tracking_requests/tr%201/cancel',
+        query: {},
+        body: undefined,
+      },
+    ]);
+    expect(result).toEqual({
+      data: { id: 'PATCH /tracking_requests/tr%201/cancel', type: 'stub' },
+    });
+  });
+});
+
 describe('shipping lines', () => {
   it('fetches a shipping line by id', async () => {
     const { client, calls } = buildClient();

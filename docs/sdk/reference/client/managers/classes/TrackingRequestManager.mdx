@@ -32,6 +32,25 @@ description: "TrackingRequestManager in the Terminal49 TypeScript SDK, used to c
 
 ## Methods
 
+### cancel()
+
+> **cancel**(`id`): `Promise`\<`any`\>
+
+Cancel a tracking request that is still `pending` or `awaiting_manifest`.
+It moves to status `cancelled`. Any other status returns 422.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### create()
 
 > **create**(`params`): `Promise`\<`any`\>
