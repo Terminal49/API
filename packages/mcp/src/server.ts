@@ -888,7 +888,7 @@ function formatToolError(
     ) {
       return `Container number ${number} fails the ISO 6346 check digit.`;
     }
-    if (err.name === 'TrackContainerInputError' && err.message) {
+    if (err.name === 'TrackContainerError' && err.message) {
       return err.message;
     }
   }
@@ -926,10 +926,6 @@ function formatToolError(
       return `${err.message.replace(/[.\s]*$/, '.')} Use the filter values and operators documented in the tool schema.`;
     }
     return 'Invalid or unsupported list filter. Use the names, values, and operators documented in the tool schema.';
-  }
-
-  if (toolName === 'track_container' && err.name === 'ValidationError') {
-    return `Tracking identifier ${number} is invalid. Verify the identifier type and carrier SCAC.`;
   }
 
   return 'The Terminal49 request could not be completed. Contact support if the problem persists.';
@@ -1021,7 +1017,7 @@ export function createTerminal49McpServer(
       title: 'Search Containers',
       description:
         'Search for containers, shipments, and tracking information by container number, ' +
-        'booking number, bill of lading, or reference number. Returns matching private-account records. ' +
+        'booking number, bill of lading, or reference number. Returns matching private-account containers, shipments, and tracking requests. Only a request whose tracking was stopped (status tracking_stopped) carries shipment_id. Succeeded requests appear as their container or shipment, and a request whose number matches a returned shipment is omitted. ' +
         'Use get_container or get_shipment_details with a returned UUID for a detailed snapshot. ' +
         'Pass exactly one identifier, never a user message or conversation history. ' +
         'Examples: CAIU2885402, MAEU123456789, or a customer reference number.',
@@ -1059,6 +1055,16 @@ export function createTerminal49McpServer(
             ref_numbers: z.array(z.string()),
             shipping_line: z.string(),
             container_count: z.number(),
+          }),
+        ),
+        tracking_requests: z.array(
+          z.object({
+            id: z.string(),
+            request_number: z.string(),
+            status: z.string(),
+            failed_reason: z.string().optional(),
+            scac: z.string().optional(),
+            shipment_id: z.string().optional(),
           }),
         ),
         total_results: z.number(),

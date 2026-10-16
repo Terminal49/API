@@ -59,7 +59,9 @@ function stubApi(routes: Record<string, (body: any) => unknown>) {
         headers: { 'content-type': 'application/vnd.api+json' },
       });
     }
-    return new Response(JSON.stringify(route(body)), {
+    const answer = route(body);
+    if (answer instanceof Response) return answer;
+    return new Response(JSON.stringify(answer), {
       status: request.method === 'POST' ? 201 : 200,
       headers: { 'content-type': 'application/vnd.api+json' },
     });
@@ -200,6 +202,66 @@ describe('track_container carrier selection', () => {
     }
   });
 
+  it('sends the caller numberType when infer reports another type', async () => {
+    const requests = stubApi({
+      'GET /search': () => ({ data: [] }),
+      'POST /tracking_requests/infer_number': () => {
+        const response = inferResponse('MAEU255123456', 'MAEU');
+        response.data.attributes.number_type = 'bill_of_lading';
+        return response;
+      },
+      'POST /tracking_requests': createdTrackingRequest,
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MAEU255123456', numberType: 'booking_number' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      const create = requests.find(
+        (r) =>
+          r.method === 'POST' && r.url.pathname === '/v2/tracking_requests',
+      );
+      expect(create?.body.data.attributes).toEqual({
+        request_type: 'booking_number',
+        request_number: 'MAEU255123456',
+        scac: 'MAEU',
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('creates the request when numberType is supplied after inference fails', async () => {
+    const requests = stubApi({
+      'GET /search': () => ({ data: [] }),
+      'POST /tracking_requests/infer_number': () => {
+        const response = inferResponse('ABC123456', 'MAEU');
+        response.data.attributes.number_type = 'unknown';
+        return response;
+      },
+      'POST /tracking_requests': createdTrackingRequest,
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'ABC123456', numberType: 'bill_of_lading' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      const create = requests.find(
+        (r) =>
+          r.method === 'POST' && r.url.pathname === '/v2/tracking_requests',
+      );
+      expect(create?.body.data.attributes.request_type).toBe('bill_of_lading');
+    } finally {
+      await client.close();
+    }
+  });
+
   it('sends a user-supplied SCAC when inference has no prediction', async () => {
     const requests = stubApi({
       'GET /search': () => ({ data: [] }),
@@ -220,6 +282,462 @@ describe('track_container carrier selection', () => {
           r.method === 'POST' && r.url.pathname === '/v2/tracking_requests',
       );
       expect(create?.body.data.attributes.scac).toBe('OOLU');
+    } finally {
+      await client.close();
+    }
+  });
+});
+
+function unprocessable(body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status: 422,
+    headers: { 'content-type': 'application/vnd.api+json' },
+  });
+}
+
+function rejectedCreate(body: unknown) {
+  return stubApi({
+    'GET /search': () => ({ data: [] }),
+    'POST /tracking_requests/infer_number': () =>
+      inferResponse('MSKU4330011', 'MAEU'),
+    'POST /tracking_requests': () => unprocessable(body),
+  });
+}
+
+describe('track_container when the API refuses the tracking request', () => {
+  it('passes the account limit message through instead of calling the number invalid', async () => {
+    rejectedCreate({
+      errors:
+        'You have exceeded your tracking request limit. Please contact support@terminal49.com to increase.',
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330011' },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(textOf(result)).toBe(
+        'You have exceeded your tracking request limit. Please contact support@terminal49.com to increase.',
+      );
+    } finally {
+      await client.close();
+    }
+  });
+
+  it.each(['tracking_slot_limit_reached', 'insufficient_credits'])(
+    'passes the %s detail through',
+    async (code) => {
+      rejectedCreate({
+        errors: [
+          {
+            status: '422',
+            title: 'Unprocessable Entity',
+            code,
+            detail: `Detail for ${code}.`,
+            source: { pointer: '/data/attributes/failed_reason' },
+          },
+        ],
+      });
+      const client = await connect();
+      try {
+        const result = await client.callTool({
+          name: 'track_container',
+          arguments: { number: 'MSKU4330011' },
+        });
+
+        expect(result.isError).toBe(true);
+        expect(textOf(result)).toBe(`Detail for ${code}.`);
+      } finally {
+        await client.close();
+      }
+    },
+  );
+
+  it('returns the existing request and shipment for a duplicate', async () => {
+    rejectedCreate({
+      errors: [
+        {
+          status: '422',
+          title: 'Unprocessable Entity',
+          code: 'duplicate',
+          detail: "'MSKU4330011' (MAEU) is already being tracked.",
+          source: { pointer: '/data/attributes/request_number' },
+          meta: { tracking_request_id: 'tr-existing', shipment_id: 'ship-1' },
+        },
+      ],
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330011' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toEqual({
+        tracking_request_created: false,
+        source: 'duplicate',
+        message: "'MSKU4330011' (MAEU) is already being tracked.",
+        tracking_request: { id: 'tr-existing' },
+        shipment_id: 'ship-1',
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('returns the API detail naming the number a duplicate is stored under', async () => {
+    stubApi({
+      'GET /search': () => ({ data: [] }),
+      'POST /tracking_requests/infer_number': () => {
+        const response = inferResponse('MAEU123456789', 'MAEU');
+        response.data.attributes.number_type = 'bill_of_lading';
+        return response;
+      },
+      'POST /tracking_requests': () =>
+        unprocessable({
+          errors: [
+            {
+              status: '422',
+              title: 'Unprocessable Entity',
+              code: 'duplicate',
+              detail:
+                "'MAEU123456789' is already being tracked as '123456789' (MAEU).",
+              source: { pointer: '/data/attributes/request_number' },
+              meta: { tracking_request_id: 'tr-old', shipment_id: null },
+            },
+          ],
+        }),
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MAEU123456789' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toEqual({
+        tracking_request_created: false,
+        source: 'duplicate',
+        message:
+          "'MAEU123456789' is already being tracked as '123456789' (MAEU).",
+        tracking_request: { id: 'tr-old' },
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('calls the identifier invalid only when the API points at it', async () => {
+    rejectedCreate({
+      errors: [
+        {
+          status: '422',
+          title: 'Unprocessable Entity',
+          code: 'not_recognized',
+          detail: "'XXXX' is not recognized",
+          source: { pointer: '/data/attributes/scac' },
+        },
+      ],
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330011' },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(textOf(result)).toBe(
+        'Tracking identifier MSKU4330011 is invalid. Verify the identifier type and carrier SCAC.',
+      );
+    } finally {
+      await client.close();
+    }
+  });
+
+  it.each([
+    {
+      code: 'container_number_tracking_disabled',
+      pointer: '/data/attributes/request_type',
+      detail: 'Container-number tracking is disabled for this account.',
+    },
+    {
+      code: 'no_integration',
+      pointer: '/data/attributes/scac',
+      detail:
+        "'MAEU' is not supported. We do not currently integrate with Maersk",
+    },
+    {
+      code: 'no_container_request_type_support',
+      pointer: '/data/attributes/scac',
+      detail:
+        '(MAEU) tracking by container number is not supported. Try tracking by master bill of lading or booking number instead. Contact support@terminal49.com if you need help.',
+    },
+  ])(
+    'passes the $code refusal through instead of calling the number invalid',
+    async ({ code, pointer, detail }) => {
+      rejectedCreate({
+        errors: [
+          {
+            status: '422',
+            title: 'Unprocessable Entity',
+            code,
+            detail,
+            source: { pointer },
+          },
+        ],
+      });
+      const client = await connect();
+      try {
+        const result = await client.callTool({
+          name: 'track_container',
+          arguments: { number: 'MSKU4330011' },
+        });
+
+        expect(result.isError).toBe(true);
+        expect(textOf(result)).toBe(detail);
+      } finally {
+        await client.close();
+      }
+    },
+  );
+
+  it('passes a refusal that does not point at the identifier through', async () => {
+    rejectedCreate({
+      errors: [
+        {
+          status: '422',
+          title: 'Unprocessable Entity',
+          detail: 'Party must belong to your account',
+          source: { pointer: '/data/relationships/customer' },
+        },
+      ],
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330011' },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(textOf(result)).toBe('Party must belong to your account');
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('calls the identifier invalid when infer_number rejects the number', async () => {
+    const requests = stubApi({
+      'GET /search': () => ({ data: [] }),
+      'POST /tracking_requests/infer_number': () =>
+        unprocessable({
+          errors: [{ detail: 'This reference number is not valid.' }],
+        }),
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'ABC' },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(textOf(result)).toBe(
+        'Tracking identifier ABC is invalid. Verify the identifier type and carrier SCAC.',
+      );
+      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+        'GET /v2/search',
+        'POST /v2/tracking_requests/infer_number',
+      ]);
+    } finally {
+      await client.close();
+    }
+  });
+});
+
+function trackingRequestSearchHit(
+  status: string,
+  scac: string | null,
+  number = 'ZZQU4330040',
+) {
+  return {
+    data: [
+      {
+        id: 'tr-earlier',
+        type: 'search_result',
+        attributes: {
+          entity_type: 'tracking_request',
+          number,
+          scac,
+          status,
+          shipment_id: null,
+        },
+      },
+    ],
+  };
+}
+
+describe('track_container when search finds a tracking request', () => {
+  it('returns the pending request instead of creating a duplicate', async () => {
+    const requests = stubApi({
+      'GET /search': () => trackingRequestSearchHit('pending', 'OOLU'),
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'zzqu4330040' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+        'GET /v2/search',
+      ]);
+      expect(result.structuredContent).toEqual({
+        tracking_request_created: false,
+        source: 'search_match',
+        message: 'ZZQU4330040 already has a tracking request in progress.',
+        tracking_request: {
+          id: 'tr-earlier',
+          status: 'pending',
+          request_number: 'ZZQU4330040',
+          scac: 'OOLU',
+        },
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('returns a request awaiting the carrier manifest instead of creating one', async () => {
+    const requests = stubApi({
+      'GET /search': () =>
+        trackingRequestSearchHit('awaiting_manifest', 'MAEU', 'MAEU12345678'),
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MAEU12345678', scac: 'MAEU' },
+      });
+
+      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+        'GET /v2/search',
+      ]);
+      expect(result.structuredContent).toEqual({
+        tracking_request_created: false,
+        source: 'search_match',
+        message: 'MAEU12345678 already has a tracking request in progress.',
+        tracking_request: {
+          id: 'tr-earlier',
+          status: 'awaiting_manifest',
+          request_number: 'MAEU12345678',
+          scac: 'MAEU',
+        },
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('returns a pending request under the requested SCAC', async () => {
+    const requests = stubApi({
+      'GET /search': () => trackingRequestSearchHit('pending', 'OOLU'),
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'ZZQU4330040', scac: 'oolu' },
+      });
+
+      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+        'GET /v2/search',
+      ]);
+      expect(result.structuredContent).toMatchObject({
+        tracking_request_created: false,
+        source: 'search_match',
+        tracking_request: { id: 'tr-earlier', scac: 'OOLU' },
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it.each([
+    ['a failed request', 'failed', 'OOLU', {}],
+    ['a cancelled request', 'cancelled', 'OOLU', {}],
+    [
+      'a pending request under another SCAC',
+      'pending',
+      'MAEU',
+      { scac: 'OOLU' },
+    ],
+    ['a pending request with no SCAC yet', 'pending', null, { scac: 'OOLU' }],
+  ])(
+    'creates a new request when search finds %s',
+    async (_label, status, foundScac, extraArgs) => {
+      const requests = stubApi({
+        'GET /search': () => trackingRequestSearchHit(status, foundScac),
+        'POST /tracking_requests/infer_number': () =>
+          inferResponse('ZZQU4330040', 'OOLU'),
+        'POST /tracking_requests': createdTrackingRequest,
+      });
+      const client = await connect();
+      try {
+        const result = await client.callTool({
+          name: 'track_container',
+          arguments: { number: 'ZZQU4330040', ...extraArgs },
+        });
+
+        expect(result.isError).not.toBe(true);
+        expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+          'GET /v2/search',
+          'POST /v2/tracking_requests/infer_number',
+          'POST /v2/tracking_requests',
+        ]);
+        expect(result.structuredContent).toMatchObject({
+          tracking_request_created: true,
+          tracking_request: {
+            request_number: 'ZZQU4330040',
+            number_type: 'container',
+            scac: 'OOLU',
+          },
+        });
+      } finally {
+        await client.close();
+      }
+    },
+  );
+  it('creates a new request when search finds a pending request for a longer number', async () => {
+    const requests = stubApi({
+      'GET /search': () =>
+        trackingRequestSearchHit('pending', 'OOLU', 'ZZQU43300401'),
+      'POST /tracking_requests/infer_number': () =>
+        inferResponse('ZZQU4330040', 'OOLU'),
+      'POST /tracking_requests': createdTrackingRequest,
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'ZZQU4330040' },
+      });
+
+      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+        'GET /v2/search',
+        'POST /v2/tracking_requests/infer_number',
+        'POST /v2/tracking_requests',
+      ]);
+      expect(result.structuredContent).toMatchObject({
+        tracking_request_created: true,
+        tracking_request: { request_number: 'ZZQU4330040', scac: 'OOLU' },
+      });
     } finally {
       await client.close();
     }
@@ -286,6 +804,91 @@ describe('list_tracking_requests status filter', () => {
             shipment: { id: 'shipment-9' },
           },
         ],
+      });
+    } finally {
+      await client.close();
+    }
+  });
+});
+
+describe('search_container', () => {
+  it('returns tracking request hits with their shipment and counts them', async () => {
+    stubApi({
+      'GET /search': () => ({
+        data: [
+          {
+            id: 'cargo-1',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'cargo',
+              number: 'TSTU4330035',
+              scac: 'HLCU',
+              status: null,
+              port_of_lading_name: null,
+              port_of_discharge_name: null,
+            },
+          },
+          {
+            id: 'tr-linked',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'tracking_request',
+              number: 'HLCUSHA123456',
+              scac: 'HLCU',
+              status: 'pending',
+              failed_reason: null,
+              shipment_id: 'ship-9',
+            },
+          },
+          {
+            id: 'tr-failed',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'tracking_request',
+              number: 'HLCUSHA654321',
+              scac: 'HLCU',
+              status: 'failed',
+              failed_reason: 'not_found',
+            },
+          },
+        ],
+      }),
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'search_container',
+        arguments: { query: 'TSTU4330035' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toEqual({
+        containers: [
+          {
+            id: 'cargo-1',
+            container_number: 'TSTU4330035',
+            status: 'unknown',
+            shipping_line: 'HLCU',
+          },
+        ],
+        shipments: [],
+        tracking_requests: [
+          {
+            id: 'tr-linked',
+            request_number: 'HLCUSHA123456',
+            status: 'pending',
+            scac: 'HLCU',
+            shipment_id: 'ship-9',
+          },
+          {
+            id: 'tr-failed',
+            request_number: 'HLCUSHA654321',
+            status: 'failed',
+            failed_reason: 'not_found',
+            scac: 'HLCU',
+          },
+        ],
+        total_results: 3,
       });
     } finally {
       await client.close();

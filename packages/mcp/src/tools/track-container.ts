@@ -3,7 +3,12 @@
  * Creates a tracking request for a container/BL/booking number and returns the container details
  */
 
-import { NotFoundError, Terminal49Client } from '@terminal49/sdk';
+import {
+  NotFoundError,
+  Terminal49Client,
+  ValidationError,
+} from '@terminal49/sdk';
+import { z } from 'zod';
 import { logMcpEvent } from '../logging.js';
 import { executeGetContainer } from './get-container.js';
 import { executeSearchContainer } from './search-container.js';
@@ -103,31 +108,150 @@ class ContainerCheckDigitError extends Error {
   }
 }
 
-/** A track_container input the caller must supply because inference could not. */
-export class TrackContainerInputError extends Error {
+/** A track_container failure whose message is written for the caller. */
+export class TrackContainerError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'TrackContainerInputError';
+    this.name = 'TrackContainerError';
   }
 }
 
 function inputRequiredError(
   error: unknown,
   number: string,
-): TrackContainerInputError | undefined {
+): TrackContainerError | undefined {
   const message = (error as Error).message ?? '';
   if (message.startsWith('Unable to infer carrier SCAC')) {
-    return new TrackContainerInputError(
+    return new TrackContainerError(
       `Terminal49 could not infer the carrier for ${number}; scac is required.`,
     );
   }
   if (message.startsWith('Unable to infer tracking number type')) {
-    return new TrackContainerInputError(
+    return new TrackContainerError(
       `Terminal49 could not tell whether ${number} is a container, bill of lading, or booking number; ` +
         'numberType is required (container, bill_of_lading, or booking_number).',
     );
   }
   return undefined;
+}
+
+const rejectionBodySchema = z.object({
+  errors: z.union([
+    z.string(),
+    z.array(
+      z.object({
+        code: z.string().nullish(),
+        detail: z.string().nullish(),
+        source: z.object({ pointer: z.string().nullish() }).nullish(),
+        meta: z
+          .object({
+            tracking_request_id: z.string().nullish(),
+            shipment_id: z.string().nullish(),
+          })
+          .nullish(),
+      }),
+    ),
+  ]),
+});
+
+/** Why the API refused to create a tracking request, parsed from its 4xx body. */
+type TrackingRequestRejection =
+  | {
+      kind: 'duplicate';
+      detail: string;
+      trackingRequestId?: string;
+      shipmentId?: string;
+    }
+  /** Quota, credit, party, and other refusals whose detail is written for the user. */
+  | { kind: 'refused'; detail: string }
+  | { kind: 'invalid_identifier' };
+
+const ACCOUNT_REJECTION_CODES = new Set([
+  'tracking_slot_limit_reached',
+  'insufficient_credits',
+]);
+const IDENTIFIER_POINTER =
+  /^\/data\/attributes\/(?:request_number|request_type|number|scac)$/;
+/**
+ * Codes that mean the number, type, or SCAC itself is wrong. Other codes on
+ * the same attributes are account or carrier refusals, such as
+ * container_number_tracking_disabled or no_container_request_type_support,
+ * whose detail tells the user what to do instead.
+ */
+const IDENTIFIER_CODES = new Set([
+  'blank',
+  'too_short',
+  'invalid_chars',
+  'invalid_format',
+  'invalid_container',
+  'invalid_container_for_bl',
+  'invalid_request_type',
+  'not_recognized',
+]);
+
+function parseRejection(error: unknown): TrackingRequestRejection | undefined {
+  if (!(error instanceof ValidationError)) {
+    return undefined;
+  }
+  const body = rejectionBodySchema.safeParse(error.details);
+  if (!body.success) {
+    return undefined;
+  }
+  const { errors } = body.data;
+  if (typeof errors === 'string') {
+    return { kind: 'refused', detail: errors };
+  }
+  for (const entry of errors) {
+    if (entry.code === 'duplicate') {
+      return {
+        kind: 'duplicate',
+        detail: entry.detail ?? 'This number is already being tracked.',
+        trackingRequestId: entry.meta?.tracking_request_id ?? undefined,
+        shipmentId: entry.meta?.shipment_id ?? undefined,
+      };
+    }
+    if (entry.code && ACCOUNT_REJECTION_CODES.has(entry.code) && entry.detail) {
+      return { kind: 'refused', detail: entry.detail };
+    }
+  }
+  if (
+    errors.some(
+      (entry) =>
+        IDENTIFIER_POINTER.test(entry.source?.pointer ?? '') &&
+        (!entry.code || IDENTIFIER_CODES.has(entry.code)),
+    )
+  ) {
+    return { kind: 'invalid_identifier' };
+  }
+  // infer_number rejects an unusable number with a bare detail: no code, no pointer.
+  if (
+    errors.length > 0 &&
+    errors.every((entry) => !entry.code && !entry.source?.pointer)
+  ) {
+    return { kind: 'invalid_identifier' };
+  }
+  const details = errors.flatMap((entry) =>
+    entry.detail ? [entry.detail] : [],
+  );
+  return details.length > 0
+    ? { kind: 'refused', detail: details.join(' ') }
+    : undefined;
+}
+
+/**
+ * The existing request can be stored under a different number than the one
+ * submitted (the API names it in the detail), so the result carries only its id.
+ */
+function duplicateResult(
+  rejection: Extract<TrackingRequestRejection, { kind: 'duplicate' }>,
+) {
+  return {
+    tracking_request_created: false,
+    source: 'duplicate',
+    message: rejection.detail,
+    tracking_request: { id: rejection.trackingRequestId },
+    shipment_id: rejection.shipmentId,
+  };
 }
 
 function submittedScac(
@@ -169,19 +293,43 @@ function isNotFound(error: unknown): boolean {
   );
 }
 
-async function findExistingTrackedContainer(
+type ExistingTracking =
+  | { kind: 'container'; id: string; shippingLine?: string }
+  | {
+      kind: 'pending_request';
+      id: string;
+      status: string;
+      requestNumber: string;
+      scac?: string;
+    };
+
+/**
+ * Tracking request statuses the API still treats as in progress: it rejects a
+ * new request for the same number while one is in either status. Search never
+ * returns `created` requests, so a succeeded request surfaces as its container.
+ */
+const IN_PROGRESS_REQUEST_STATUSES: ReadonlySet<string> = new Set([
+  'pending',
+  'awaiting_manifest',
+]);
+
+/**
+ * Finds a container, or an in-progress tracking request, that already tracks
+ * `number`. The API rejects a second request for a number only under the
+ * same carrier, so an in-progress request under another SCAC is ignored when
+ * the caller names one: retracking under the right carrier must reach the API.
+ */
+async function findExistingTracking(
   number: string,
+  requestedScac: string | undefined,
   client: Terminal49Client,
-): Promise<{ id: string; shippingLine?: string } | null> {
+): Promise<ExistingTracking | null> {
   if (typeof (client as any).search !== 'function') {
     return null;
   }
 
   try {
     const result = await executeSearchContainer({ query: number }, client);
-    if (!Array.isArray(result.containers) || result.containers.length === 0) {
-      return null;
-    }
 
     const exactMatch = result.containers.find(
       (container) =>
@@ -190,14 +338,30 @@ async function findExistingTrackedContainer(
     const match =
       exactMatch ??
       (result.containers.length === 1 ? result.containers[0] : null);
-    if (!match?.id) {
-      return null;
+    if (match?.id) {
+      return {
+        kind: 'container',
+        id: match.id,
+        shippingLine: normalizeText(match.shipping_line),
+      };
     }
 
-    return {
-      id: match.id,
-      shippingLine: normalizeText(match.shipping_line),
-    };
+    const pending = result.tracking_requests.find(
+      (request) =>
+        IN_PROGRESS_REQUEST_STATUSES.has(request.status) &&
+        normalizeTrackingNumber(request.request_number) === number &&
+        (!requestedScac || normalizeText(request.scac) === requestedScac),
+    );
+    if (pending) {
+      return {
+        kind: 'pending_request',
+        id: pending.id,
+        status: pending.status,
+        requestNumber: pending.request_number,
+        scac: pending.scac,
+      };
+    }
+    return null;
   } catch {
     return null;
   }
@@ -239,15 +403,25 @@ export async function executeTrackContainer(
   });
 
   try {
-    const existingContainer = await findExistingTrackedContainer(
-      number,
-      client,
-    );
-    if (existingContainer?.id) {
+    const existing = await findExistingTracking(number, requestedScac, client);
+    if (existing?.kind === 'pending_request') {
+      return {
+        tracking_request_created: false,
+        source: 'search_match',
+        message: `${number} already has a tracking request in progress.`,
+        tracking_request: {
+          id: existing.id,
+          status: existing.status,
+          request_number: existing.requestNumber,
+          scac: existing.scac,
+        },
+      };
+    }
+    if (existing?.kind === 'container') {
       let containerDetails: Awaited<ReturnType<typeof executeGetContainer>>;
       try {
         containerDetails = await executeGetContainer(
-          { id: existingContainer.id },
+          { id: existing.id },
           client,
         );
       } catch (error) {
@@ -259,7 +433,7 @@ export async function executeTrackContainer(
           message:
             'A tracked container matched this number, but its details are not available yet. Retry the container lookup shortly.',
           tracking_request_created: false,
-          container: { id: existingContainer.id },
+          container: { id: existing.id },
         };
       }
       return {
@@ -267,7 +441,7 @@ export async function executeTrackContainer(
         tracking_request_created: false,
         infer_result: {
           inferred_type: inferredNumberType,
-          selected_scac: requestedScac || existingContainer.shippingLine,
+          selected_scac: requestedScac || existing.shippingLine,
           source: 'search_match',
         },
       };
@@ -402,6 +576,18 @@ export async function executeTrackContainer(
       };
     }
 
+    const rejection = parseRejection(error);
+    if (rejection?.kind === 'duplicate') {
+      logMcpEvent({
+        event: 'tracking_request.duplicate',
+        number,
+        tracking_request_id: rejection.trackingRequestId,
+        duration_ms: duration,
+        timestamp: new Date().toISOString(),
+      });
+      return duplicateResult(rejection);
+    }
+
     logMcpEvent({
       event: 'tool.execute.error',
       tool: 'track_container',
@@ -412,7 +598,16 @@ export async function executeTrackContainer(
       timestamp: new Date().toISOString(),
     });
 
-    throw error;
+    switch (rejection?.kind) {
+      case 'refused':
+        throw new TrackContainerError(rejection.detail);
+      case 'invalid_identifier':
+        throw new TrackContainerError(
+          `Tracking identifier ${number} is invalid. Verify the identifier type and carrier SCAC.`,
+        );
+      default:
+        throw error;
+    }
   }
 }
 
