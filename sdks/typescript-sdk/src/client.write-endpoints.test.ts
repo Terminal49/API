@@ -124,7 +124,14 @@ describe('party roles', () => {
 describe('containers', () => {
   it('updates a container by id', async () => {
     const { client, calls } = buildClient();
-    await client.containers.update('c-1', { ref_numbers: ['REF-1'] });
+    await client.containers.update('c-1', {
+      ref_numbers: ['REF-1'],
+      seal_number: 'SEAL-1',
+      equipment_type: 'reefer',
+      equipment_length: 40,
+      equipment_height: 'high_cube',
+      weight_in_lbs: 1000,
+    });
     expect(calls[0]).toMatchObject({
       method: 'PATCH',
       path: '/containers/c-1',
@@ -132,7 +139,14 @@ describe('containers', () => {
         data: {
           type: 'container',
           id: 'c-1',
-          attributes: { ref_numbers: ['REF-1'] },
+          attributes: {
+            ref_numbers: ['REF-1'],
+            seal_number: 'SEAL-1',
+            equipment_type: 'reefer',
+            equipment_length: 40,
+            equipment_height: 'high_cube',
+            weight_in_lbs: 1000,
+          },
         },
       },
     });

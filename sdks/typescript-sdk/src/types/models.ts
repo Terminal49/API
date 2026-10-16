@@ -1,3 +1,5 @@
+import type { components } from '../generated/terminal49.js';
+
 /** Simplified shipping line returned by mapped SDK responses. */
 export interface ShippingLine {
   scac: string;
@@ -200,6 +202,9 @@ export interface TrackingRequest {
   container?: Container | null;
   [key: string]: any;
 }
+
+/** Value accepted when setting a custom field; its shape depends on the field's data type. */
+export type CustomFieldValue = components['schemas']['custom_field_value'];
 
 /** Account-defined custom field value on a container, shipment, or tracking request. */
 export interface CustomField {

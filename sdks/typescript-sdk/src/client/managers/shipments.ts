@@ -1,7 +1,7 @@
 import type { ShipmentListFilters } from '../../generated/list-filters.js';
 import { serializeListQuery } from '../filter-validation.js';
-import type { components, paths } from '../../generated/terminal49.js';
-import type { Shipment } from '../../types/models.js';
+import type { paths } from '../../generated/terminal49.js';
+import type { CustomFieldValue, Shipment } from '../../types/models.js';
 import type {
   CallOptions,
   IncludeParam,
@@ -17,13 +17,12 @@ import {
 import { callerPayload, type JsonBody } from '../spec.js';
 import { BaseManager } from './base.js';
 
-type CustomFieldValue = components['schemas']['custom_field_value'];
 type PartyRoleData = JsonBody<
   paths['/shipments/{shipment_id}/party_roles']['post']
 >['data'];
 
 /** Parameters for `addPartyRole`; `role` is limited to what the spec accepts on this route. */
-interface AddPartyRoleParams {
+export interface ShipmentAddPartyRoleParams {
   role: PartyRoleData['attributes']['role'];
   partyId: PartyRoleData['relationships']['party']['data']['id'];
 }
@@ -232,7 +231,7 @@ export class ShipmentManager extends BaseManager {
   /** Assign a party to a shipment in the given role. */
   async addPartyRole(
     id: string,
-    { role, partyId }: AddPartyRoleParams,
+    { role, partyId }: ShipmentAddPartyRoleParams,
     options?: CallOptions,
   ): Promise<any> {
     const raw = await this.transport.execute(() =>

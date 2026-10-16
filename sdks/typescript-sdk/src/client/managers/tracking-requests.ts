@@ -1,5 +1,4 @@
-import type { components } from '../../generated/terminal49.js';
-import type { TrackingRequest } from '../../types/models.js';
+import type { CustomFieldValue, TrackingRequest } from '../../types/models.js';
 import type {
   CallOptions,
   IncludeParam,
@@ -14,8 +13,6 @@ import {
 } from '../mappers.js';
 import { copyStringParams, normalizeInclude } from '../query.js';
 import { BaseManager } from './base.js';
-
-type CustomFieldValue = components['schemas']['custom_field_value'];
 
 export type TrackingRequestType =
   | 'container'
