@@ -419,7 +419,7 @@ describe('resource methods on the client', () => {
     await client.customFieldDefinitions.create(body);
     await client.customFieldDefinitions.update('d-1', body);
     await client.customFieldDefinitions.delete('d-1');
-    await client.customFieldOptions.list('d-1', { page: 1, pageSize: 20 });
+    await client.customFieldOptions.list('d-1');
     await client.customFieldOptions.get('d-1', 'o-1');
     await client.customFieldOptions.create('d-1', body);
     await client.customFieldOptions.update('d-1', 'o-1', body);
@@ -478,12 +478,7 @@ describe('resource methods on the client', () => {
       ['POST', '/custom_field_definitions', {}, body],
       ['PATCH', '/custom_field_definitions/d-1', {}, body],
       ['DELETE', '/custom_field_definitions/d-1', {}, undefined],
-      [
-        'GET',
-        '/custom_field_definitions/d-1/options',
-        { 'page[number]': '1', 'page[size]': '20' },
-        undefined,
-      ],
+      ['GET', '/custom_field_definitions/d-1/options', {}, undefined],
       ['GET', '/custom_field_definitions/d-1/options/o-1', {}, undefined],
       ['POST', '/custom_field_definitions/d-1/options', {}, body],
       ['PATCH', '/custom_field_definitions/d-1/options/o-1', {}, body],

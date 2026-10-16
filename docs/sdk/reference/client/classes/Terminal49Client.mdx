@@ -833,14 +833,15 @@ List custom field definitions.
 
 > **listCustomFieldOptions**(`definitionId`, `options?`): `Promise`\<`any`\>
 
-List options for a custom field definition.
+List every option of a custom field definition. The API does not paginate
+this list.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
 | `definitionId` | `string` |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 

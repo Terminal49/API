@@ -297,7 +297,7 @@ export class Terminal49Client {
   };
 
   public customFieldOptions = {
-    list: (definitionId: string, options?: ListOptions) =>
+    list: (definitionId: string, options?: CallOptions) =>
       this.listCustomFieldOptions(definitionId, options),
     get: (definitionId: string, optionId: string, options?: CallOptions) =>
       this.getCustomFieldOption(definitionId, optionId, options),
@@ -956,20 +956,19 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
-  /** List options for a custom field definition. */
+  /**
+   * List every option of a custom field definition. The API does not paginate
+   * this list.
+   */
   async listCustomFieldOptions(
     definitionId: string,
-    options?: ListOptions,
+    options?: CallOptions,
   ): Promise<any> {
-    // The spec omits page[*] on this route, but the response is paginated and the CLI forwards --page.
-    const query = new URLSearchParams(
-      Object.entries(applyTypedPagination({}, options)).map(
-        ([key, value]): [string, string] => [key, String(value)],
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET(
+        '/custom_field_definitions/{definition_id}/options',
+        { params: { path: { definition_id: definitionId } } },
       ),
-    );
-    const suffix = query.size > 0 ? `?${query}` : '';
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/custom_field_definitions/${encodeURIComponent(definitionId)}/options${suffix}`,
     );
     return this.formatResult(raw, options?.format);
   }
