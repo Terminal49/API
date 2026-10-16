@@ -14,7 +14,10 @@ import { executeGetContainer } from './tools/get-container.js';
 import { executeTrackContainer } from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
 import { executeGetShipmentDetails } from './tools/get-shipment-details.js';
-import { executeGetContainerTransportEvents } from './tools/get-container-transport-events.js';
+import {
+  executeGetContainerTransportEvents,
+  getContainerTransportEventsTool,
+} from './tools/get-container-transport-events.js';
 import { executeGetSupportedShippingLines } from './tools/get-supported-shipping-lines.js';
 import {
   routeSummaryOrSoftErrorSchema,
@@ -1260,10 +1263,7 @@ export function createTerminal49McpServer(
     'get_container_transport_events',
     {
       title: 'Get Container Transport Events',
-      description:
-        'Get detailed transport event timeline for a container. Returns all milestones and movements ' +
-        '(vessel loaded, departed, arrived, discharged, rail movements, delivery). ' +
-        'Provides journey history, timeline analysis, and rail tracking without loading the full container snapshot.',
+      description: getContainerTransportEventsTool.description,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,

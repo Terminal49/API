@@ -626,6 +626,86 @@ describe('MCP tool contracts', () => {
     expect(result._mapped).toBeUndefined();
   });
 
+  describe.each(['primary', 'fallback'] as const)(
+    'event values via %s',
+    (path) => {
+      it.each([
+        ['deadline', '2099-01-20T04:00:00Z'],
+        ['null', null],
+        ['absent', undefined],
+        ['zero', 0],
+        ['false', false],
+        ['empty string', ''],
+        ['structured', { amount: 25, currency: 'USD' }],
+        ['array', ['reported', 0]],
+      ])(
+        'preserves %s without interpreting it as the event timestamp',
+        async (_label, value) => {
+          const event = {
+            id: 'event-deadline',
+            type: 'transport_event',
+            attributes: {
+              event: 'container.detention_lfd_line.changed',
+              timestamp: '2099-01-02T00:00:00Z',
+              ...(value === undefined ? {} : { value }),
+              data_source: 'shipping_line',
+              invalidated_at: '2099-01-03T00:00:00Z',
+            },
+          };
+          const events =
+            path === 'primary'
+              ? vi.fn().mockResolvedValue({ raw: { data: [event] } })
+              : vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
+          const get = vi.fn().mockResolvedValue({
+            data: { id: 'container-1', type: 'container' },
+            included: [event],
+          });
+          const result = await executeGetContainerTransportEvents(
+            { id: 'container-1' },
+            asClient({ containers: { events, get } }),
+          );
+          expect(result.timeline[0]).toMatchObject({
+            event: 'container.detention_lfd_line.changed',
+            timestamp: '2099-01-02T00:00:00.000Z',
+            value: value ?? null,
+            data_source: 'shipping_line',
+            invalidated_at: '2099-01-03T00:00:00Z',
+          });
+          expect(result._metadata.source).toBe(
+            path === 'primary'
+              ? 'transport_events_subresource'
+              : 'container_include_fallback',
+          );
+          if (path === 'primary') expect(get).not.toHaveBeenCalled();
+        },
+      );
+    },
+  );
+
+  it('preserves latest-event deadline metadata in the compact container snapshot without replacing pickup LFD', async () => {
+    const raw = buildContainerRaw();
+    const event = {
+      id: 'deadline',
+      type: 'transport_event',
+      attributes: {
+        event: 'container.detention_lfd_line.changed',
+        timestamp: '2099-01-02T00:00:00Z',
+        value: '2099-01-20T04:00:00Z',
+        data_source: 'shipping_line',
+        invalidated_at: null,
+      },
+    };
+    const get = vi
+      .fn()
+      .mockResolvedValue({ ...raw, included: [...raw.included, event] });
+    const result = await executeGetContainer(
+      { id: 'container-1', include: ['transport_events'] },
+      asClient({ containers: { get } }),
+    );
+    expect(result.events?.latest_event).toMatchObject(event.attributes);
+    expect(result.demurrage.pickup_lfd).toBe('2099-01-10');
+  });
+
   it('get_container_transport_events returns timeline and milestone summary', async () => {
     const events = vi.fn().mockResolvedValue({
       raw: {
@@ -679,6 +759,9 @@ describe('MCP tool contracts', () => {
     expect(result.total_events).toBe(2);
     expect(result.timeline[0]).toMatchObject({
       event: 'container.transport.vessel_loaded',
+      value: null,
+      data_source: null,
+      invalidated_at: null,
     });
     expect(result.milestones).toMatchObject({
       vessel_loaded_at: '2025-01-01T00:00:00.000Z',
@@ -749,6 +832,9 @@ describe('MCP tool contracts', () => {
     expect(result.total_events).toBe(2);
     expect(result.timeline[0]).toMatchObject({
       event: 'container.transport.vessel_loaded',
+      value: null,
+      data_source: null,
+      invalidated_at: null,
     });
     // The movement location must survive the fallback even though the related
     // port resource is not side-loaded — resolve it from location_locode.

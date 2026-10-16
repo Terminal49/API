@@ -385,6 +385,9 @@ function formatEventsData(events: any[]): any {
       ? {
           event: latestEvent.event,
           timestamp: latestEvent.timestamp,
+          value: latestEvent.value ?? null,
+          data_source: latestEvent.data_source ?? null,
+          invalidated_at: latestEvent.invalidated_at ?? null,
           location: latestEvent.location_name || latestEvent.port_name,
         }
       : undefined,
