@@ -637,7 +637,9 @@ export class Terminal49Client {
    * scoped to, and which gated features it can use there. Works for free-plan API keys too.
    */
   async me(options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(this.endpoint('/me'));
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/me'),
+    );
     return this.formatResult(raw, options?.format, mapCurrentCredential);
   }
 
