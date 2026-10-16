@@ -13,6 +13,14 @@ describe('generated spec types', () => {
     >().toEqualTypeOf<'container'>();
   });
 
+  it('lets a container have no POD terminal', () => {
+    type PodTerminal = NonNullable<
+      components['schemas']['container']['relationships']
+    >['pod_terminal'];
+
+    expectTypeOf<{ data: null }>().toExtend<NonNullable<PodTerminal>>();
+  });
+
   it('accepts a non-empty object as a custom field value in every setter', () => {
     type ObjectValue = { id: string; type: string };
 

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vite-plus/test';
 import { Terminal49Client } from './client.js';
 import { mapContainerRoute } from './client/mappers.js';
+import type { components } from './generated/terminal49.js';
 import { createMockFetch, jsonResponse } from './test/mock-fetch.js';
 
 const baseUrl = 'https://api.test/v2';
@@ -624,6 +625,36 @@ describe('Terminal49Client mapping helpers', () => {
     expect(updated).toMatchObject(expected);
     expect(both.raw).toEqual(fixture);
     expect(both.mapped).toMatchObject(expected);
+  });
+
+  it('maps a container without a POD terminal', async () => {
+    const container: components['schemas']['container'] = {
+      id: 'container-2',
+      type: 'container',
+      attributes: { number: 'MSKU4330011' },
+      relationships: {
+        pod_terminal: { data: null },
+        pickup_facility: { data: null },
+      },
+    };
+    const { fetchImpl } = createMockFetch({
+      '/containers/container-2?include=shipment,pod_terminal,pickup_facility':
+        () => jsonResponse({ data: container }),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+      defaultFormat: 'mapped',
+    });
+
+    const mapped = await client.containers.get('container-2');
+
+    expect(mapped).toMatchObject({
+      id: 'container-2',
+      number: 'MSKU4330011',
+      terminals: { podTerminal: null, destinationTerminal: null },
+    });
   });
 
   it('maps container list items from base fixture', async () => {
