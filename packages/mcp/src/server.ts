@@ -1672,7 +1672,7 @@ export function createTerminal49McpServer(
       argsSchema: z.object({
         container_number: z
           .string()
-          .describe('Container number (e.g., CAIU1234567)'),
+          .describe('Container number (e.g., MSKU4330011)'),
         // Autocompletes from the live supported-carrier list (SCAC codes).
         // `completable` must wrap the INNER string so the MCP SDK (which
         // unwraps ZodOptional before checking isCompletable) advertises the
