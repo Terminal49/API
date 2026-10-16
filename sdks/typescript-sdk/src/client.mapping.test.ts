@@ -416,6 +416,104 @@ describe('Terminal49Client mapping helpers', () => {
     ]);
   });
 
+  it('maps vessels and their estimated future positions', async () => {
+    const vesselAttributes = {
+      name: 'EVER GIVEN',
+      imo: '9811000',
+      mmsi: '353136000',
+      latitude: 25.29845,
+      longitude: 121.217,
+      nautical_speed_knots: 14,
+      navigational_heading_degrees: 194,
+      position_timestamp: '2026-10-01T14:01:37Z',
+    };
+    const vessel = {
+      data: { id: 'v-1', type: 'vessel', attributes: vesselAttributes },
+    };
+    const withPositions = {
+      data: {
+        id: 'v-1',
+        type: 'vessel',
+        attributes: {
+          ...vesselAttributes,
+          positions: [
+            {
+              latitude: 1.5,
+              longitude: 104.5,
+              heading: 51,
+              timestamp: '2026-10-02T00:00:00Z',
+              estimated: true,
+            },
+            {
+              latitude: 2.5,
+              longitude: 105.5,
+              timestamp: '2026-10-03T00:00:00Z',
+              estimated: false,
+            },
+          ],
+        },
+      },
+      links: { self: '/v2/vessels/v-1/future_positions' },
+    };
+    const { fetchImpl } = createMockFetch({
+      '/vessels/v-1': () => jsonResponse(vessel),
+      '/vessels/9811000': () => jsonResponse(vessel),
+      '/vessels/v-1/future_positions?port_id=p-2&previous_port_id=p-1': () =>
+        jsonResponse(withPositions),
+      '/vessels/v-1/future_positions_with_coordinates?port_id=p-2&previous_port_id=p-1&latitude=1&longitude=2':
+        () => jsonResponse(withPositions),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+      defaultFormat: 'mapped',
+    });
+
+    const current = {
+      id: 'v-1',
+      name: 'EVER GIVEN',
+      imo: '9811000',
+      mmsi: '353136000',
+      latitude: 25.29845,
+      longitude: 121.217,
+      speedKnots: 14,
+      headingDegrees: 194,
+      positionAt: '2026-10-01T14:01:37Z',
+    };
+    const positions = [
+      {
+        latitude: 1.5,
+        longitude: 104.5,
+        heading: 51,
+        timestamp: '2026-10-02T00:00:00Z',
+        estimated: true,
+      },
+      {
+        latitude: 2.5,
+        longitude: 105.5,
+        heading: null,
+        timestamp: '2026-10-03T00:00:00Z',
+        estimated: false,
+      },
+    ];
+    const ports = { portId: 'p-2', previousPortId: 'p-1' };
+
+    expect(await client.vessels.get('v-1')).toEqual(current);
+    expect(await client.vessels.getByImo('9811000')).toEqual(current);
+    expect(await client.vessels.futurePositions('v-1', ports)).toEqual({
+      ...current,
+      positions,
+    });
+    expect(
+      await client.vessels.futurePositionsWithCoords(
+        'v-1',
+        { ...ports, latitude: 1, longitude: 2 },
+        { format: 'both' },
+      ),
+    ).toEqual({ raw: withPositions, mapped: { ...current, positions } });
+  });
+
   it('maps containers.get and containers.update in mapped and both formats', async () => {
     const fixture = loadFixture('containers.get.include');
     const { fetchImpl } = createMockFetch({

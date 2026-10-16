@@ -502,6 +502,9 @@
                   "sdk/reference/types/models/interfaces/ShippingLine",
                   "sdk/reference/types/models/interfaces/TrackingRequest",
                   "sdk/reference/types/models/interfaces/TrackingSlots",
+                  "sdk/reference/types/models/interfaces/Vessel",
+                  "sdk/reference/types/models/interfaces/VesselPosition",
+                  "sdk/reference/types/models/interfaces/VesselWithFuturePositions",
                   "sdk/reference/types/models/type-aliases/CustomFieldValue"
                 ]
               },

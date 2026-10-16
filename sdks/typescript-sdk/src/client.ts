@@ -34,6 +34,7 @@ import {
   normalizeInclude,
   type PaginatedQuery,
 } from './client/query.js';
+import { mapVessel, mapVesselFuturePositions } from './client/mappers.js';
 import { callerPayload, type JsonBody } from './client/spec.js';
 import { mapCurrentCredential } from './client/mappers.js';
 import { Transport } from './client/transport.js';
@@ -744,7 +745,7 @@ export class Terminal49Client {
         params: { path: { id } },
       }),
     );
-    return this.formatResult(raw, options?.format);
+    return this.formatResult(raw, options?.format, mapVessel);
   }
 
   /** Fetch a vessel by IMO number. */
@@ -754,7 +755,7 @@ export class Terminal49Client {
         params: { path: { imo } },
       }),
     );
-    return this.formatResult(raw, options?.format);
+    return this.formatResult(raw, options?.format, mapVessel);
   }
 
   /** Fetch a vessel's estimated positions between two ports. Requires the Routing Data feature. */
@@ -774,7 +775,7 @@ export class Terminal49Client {
         },
       }),
     );
-    return this.formatResult(raw, options?.format);
+    return this.formatResult(raw, options?.format, mapVesselFuturePositions);
   }
 
   /** Fetch a vessel's estimated positions from a starting coordinate. Requires the Routing Data feature. */
@@ -799,7 +800,7 @@ export class Terminal49Client {
         },
       ),
     );
-    return this.formatResult(raw, options?.format);
+    return this.formatResult(raw, options?.format, mapVesselFuturePositions);
   }
 
   /** Fetch a port by ID. */

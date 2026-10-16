@@ -12,6 +12,9 @@ import type {
   CurrentAccount,
   CurrentCredential,
   CurrentUser,
+  Vessel,
+  VesselPosition,
+  VesselWithFuturePositions,
 } from '../types/models.js';
 import { JsonApiDocument, omitKeys } from './jsonapi.js';
 
@@ -177,6 +180,52 @@ export function mapContainerRoute(doc: ContainerMapGeojson): ContainerRoute {
   );
 
   return { ports, currentVessel, totalPorts: ports.length };
+}
+
+type VesselDocument =
+  paths['/vessels/{id}']['get']['responses'][200]['content']['application/json'];
+type VesselFuturePositionsDocument =
+  paths['/vessels/{id}/future_positions']['get']['responses'][200]['content']['application/json'];
+type VesselData = NonNullable<
+  VesselDocument['data'] | VesselFuturePositionsDocument['data']
+>;
+
+function mapVesselData(data: VesselData | undefined): Vessel {
+  const attrs = data?.attributes;
+  return {
+    id: data?.id ?? '',
+    name: attrs?.name ?? null,
+    imo: attrs?.imo ?? null,
+    mmsi: attrs?.mmsi ?? null,
+    latitude: attrs?.latitude ?? null,
+    longitude: attrs?.longitude ?? null,
+    speedKnots: attrs?.nautical_speed_knots ?? null,
+    headingDegrees: attrs?.navigational_heading_degrees ?? null,
+    positionAt: attrs?.position_timestamp ?? null,
+  };
+}
+
+/** Map `GET /vessels/{id}` or `GET /vessels/{imo}` to a `Vessel`. */
+export function mapVessel(doc: VesselDocument): Vessel {
+  return mapVesselData(doc.data);
+}
+
+/** Map a vessel future-positions document to the vessel and its estimated positions. */
+export function mapVesselFuturePositions(
+  doc: VesselFuturePositionsDocument,
+): VesselWithFuturePositions {
+  return {
+    ...mapVesselData(doc.data),
+    positions: (doc.data?.attributes.positions ?? []).map(
+      (position): VesselPosition => ({
+        latitude: position.latitude,
+        longitude: position.longitude,
+        heading: position.heading ?? null,
+        timestamp: position.timestamp,
+        estimated: position.estimated,
+      }),
+    ),
+  };
 }
 
 export function mapShippingLines(doc: any): ShippingLine[] {

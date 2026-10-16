@@ -190,6 +190,38 @@ export interface ContainerRoute {
   totalPorts: number;
 }
 
+/** One estimated future position of a vessel. */
+export interface VesselPosition {
+  latitude: number;
+  longitude: number;
+  /** Degrees clockwise from north. */
+  heading: number | null;
+  timestamp: string;
+  estimated: boolean;
+}
+
+/** Simplified vessel model returned by mapped vessel methods. */
+export interface Vessel {
+  id: string;
+  name: string | null;
+  imo: string | null;
+  mmsi: string | null;
+  /** Last reported latitude. */
+  latitude: number | null;
+  /** Last reported longitude. */
+  longitude: number | null;
+  speedKnots: number | null;
+  /** Degrees clockwise from north. */
+  headingDegrees: number | null;
+  /** When the last position was reported. */
+  positionAt: string | null;
+}
+
+/** A vessel with its estimated future positions, returned by the mapped future-position methods. */
+export interface VesselWithFuturePositions extends Vessel {
+  positions: VesselPosition[];
+}
+
 /** Simplified tracking request model returned by mapped SDK responses. */
 export interface TrackingRequest {
   id: string;
