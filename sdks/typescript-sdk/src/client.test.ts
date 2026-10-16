@@ -148,14 +148,10 @@ describe('Terminal49Client', () => {
     expect(headers.get('x-account-id')).toBe('account-123');
   });
 
-  it('sets include params on shipment and lists shipping lines with search', async () => {
+  it('sets include params on shipment', async () => {
     const { fetchImpl, calls } = createMockFetch({
       '/shipments/ship-1?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal':
         () => jsonResponse({ data: { id: 'ship-1' } }),
-      '/shipping_lines?search=MAEU': () =>
-        jsonResponse({
-          data: [{ attributes: { scac: 'MAEU', name: 'Maersk' } }],
-        }),
     });
 
     const client = new Terminal49Client({
@@ -165,7 +161,6 @@ describe('Terminal49Client', () => {
     });
 
     await client.getShipment('ship-1');
-    await client.listShippingLines('MAEU');
 
     const includeCall = calls.find((c) =>
       c.url.pathname.endsWith('/shipments/ship-1'),
@@ -174,12 +169,6 @@ describe('Terminal49Client', () => {
     expect(includeCall?.url.searchParams.get('include')).toContain(
       'containers',
     );
-
-    const shippingCall = calls.find((c) =>
-      c.url.pathname.endsWith('/shipping_lines'),
-    );
-    expect(shippingCall).toBeDefined();
-    expect(shippingCall?.url.searchParams.get('search')).toBe('MAEU');
   });
 
   it('sends JSON:API payload when tracking container', async () => {

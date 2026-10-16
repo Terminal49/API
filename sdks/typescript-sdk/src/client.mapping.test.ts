@@ -108,6 +108,40 @@ describe('Terminal49Client mapping helpers', () => {
     }
   });
 
+  it('filters shipping lines on the client and sends no search param', async () => {
+    const fixture = loadFixture('shipping-lines.list');
+    const { fetchImpl, calls } = createMockFetch({
+      '/shipping_lines': () => jsonResponse(fixture),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    const byName = (await client.listShippingLines('Hapag', {
+      format: 'mapped',
+    })) as any[];
+    const byAlternativeScac = (await client.shippingLines.list('medu', {
+      format: 'mapped',
+    })) as any[];
+    const byScac = (await client.shippingLines.list('hlcu', {
+      format: 'mapped',
+    })) as any[];
+    const byShortName = (await client.shippingLines.list('culines', {
+      format: 'mapped',
+    })) as any[];
+    const raw = await client.listShippingLines('hapag');
+
+    expect(byName.map((line) => line.scac)).toEqual(['HLCU']);
+    expect(byAlternativeScac.map((line) => line.scac)).toEqual(['MSCU']);
+    expect(byScac.map((line) => line.scac)).toEqual(['HLCU']);
+    expect(byShortName.map((line) => line.scac)).toEqual(['CULU']);
+    expect(raw.data.map((line: any) => line.attributes.scac)).toEqual(['HLCU']);
+    expect(raw.links).toEqual(fixture.links);
+    expect(calls.map((call) => call.url.search)).toEqual(['', '', '', '', '']);
+  });
+
   it('maps the tracked_object shipment on a tracking request', async () => {
     const fixture = loadFixture('tracking-requests.get.base');
     const { fetchImpl } = createMockFetch({

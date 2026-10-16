@@ -55,6 +55,10 @@ Fetch a shipping line by ID.
 
 > **list**(`search?`, `options?`): `Promise`\<`any`\>
 
+List the shipping lines the account can track. The API has no search
+parameter, so `search` filters the full list here: a case-insensitive
+substring match on SCAC, alternative SCACs, name, and short name.
+
 #### Parameters
 
 | Parameter | Type |
