@@ -387,6 +387,45 @@ describe('Terminal49Client mapping helpers', () => {
     }
   });
 
+  it('maps containers.get and containers.update in mapped and both formats', async () => {
+    const fixture = loadFixture('containers.get.include');
+    const { fetchImpl } = createMockFetch({
+      '/containers/container-1?include=shipment,pod_terminal,pickup_facility':
+        () => jsonResponse(fixture),
+      '/containers/container-1': () => jsonResponse(fixture),
+    });
+    const mappedClient = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+      defaultFormat: 'mapped',
+    });
+
+    const mapped = await mappedClient.containers.get('container-1');
+    const both = await mappedClient.containers.get('container-1', undefined, {
+      format: 'both',
+    });
+    const updated = await mappedClient.containers.update('container-1', {
+      ref_numbers: ['REF-1'],
+    });
+
+    const expected = {
+      id: 'container-1',
+      number: 'RMCU74210c6',
+      currentStatus: 'picked_up',
+      equipment: expect.objectContaining({ type: 'tank' }),
+      shipment: expect.objectContaining({ id: 'shipment-1' }),
+      terminals: expect.objectContaining({
+        podTerminal: expect.objectContaining({ id: 'terminal-1' }),
+        destinationTerminal: null,
+      }),
+    };
+    expect(mapped).toMatchObject(expected);
+    expect(updated).toMatchObject(expected);
+    expect(both.raw).toEqual(fixture);
+    expect(both.mapped).toMatchObject(expected);
+  });
+
   it('maps container list items from base fixture', async () => {
     const fixture = loadFixture('containers.list');
     const { fetchImpl } = createMockFetch({

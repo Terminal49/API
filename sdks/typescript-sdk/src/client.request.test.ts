@@ -530,7 +530,7 @@ describe('Terminal49Client request building', () => {
     expect(calls[2].init?.method).toBe('PATCH');
   });
 
-  it('derives demurrage fields from container attributes', async () => {
+  it('derives demurrage fields from raw container attributes under a mapped default', async () => {
     const { fetchImpl } = createMockFetch({
       '/containers/cont-1?include=pod_terminal': () =>
         jsonResponse({
@@ -553,6 +553,7 @@ describe('Terminal49Client request building', () => {
       apiToken: 'token-123',
       apiBaseUrl: baseUrl,
       fetchImpl,
+      defaultFormat: 'mapped',
     });
 
     const demurrage = await client.getDemurrage('cont-1');
@@ -568,7 +569,7 @@ describe('Terminal49Client request building', () => {
     });
   });
 
-  it('filters rail milestones to rail events only', async () => {
+  it('filters rail milestones to rail events under a mapped default', async () => {
     const { fetchImpl } = createMockFetch({
       '/containers/cont-1?include=transport_events': () =>
         jsonResponse({
@@ -610,6 +611,7 @@ describe('Terminal49Client request building', () => {
       apiToken: 'token-123',
       apiBaseUrl: baseUrl,
       fetchImpl,
+      defaultFormat: 'mapped',
     });
 
     const result = await client.getRailMilestones('cont-1');

@@ -502,7 +502,9 @@ export class Terminal49Client {
 
   /** Return a demurrage-focused subset of container fields. */
   async getDemurrage(containerId: string): Promise<any> {
-    const data = await this.containers.get(containerId, ['pod_terminal']);
+    const data = await this.containers.get(containerId, ['pod_terminal'], {
+      format: 'raw',
+    });
     const container = data.data?.attributes || {};
     return {
       container_id: containerId,
@@ -539,7 +541,9 @@ export class Terminal49Client {
 
   /** Return rail milestone fields and rail transport events for a container. */
   async getRailMilestones(containerId: string): Promise<any> {
-    const data = await this.containers.get(containerId, ['transport_events']);
+    const data = await this.containers.get(containerId, ['transport_events'], {
+      format: 'raw',
+    });
     const container = data.data?.attributes || {};
     const included = data.included || [];
 

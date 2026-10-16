@@ -11,6 +11,7 @@ import type {
   ListOptions,
 } from '../../types/options.js';
 import {
+  mapContainer,
   mapContainerList,
   mapContainerRoute,
   mapCustomFields,
@@ -115,7 +116,7 @@ export class ContainerManager extends BaseManager {
         },
       }),
     );
-    return this.formatResult(raw, options?.format);
+    return this.formatResult(raw, options?.format, mapContainer);
   }
 
   /** Update a container's `ref_numbers`, `seal_number`, equipment type, length, and height, or `weight_in_lbs`. */
@@ -130,7 +131,7 @@ export class ContainerManager extends BaseManager {
         body: { data: { type: 'container', id, attributes: attrs } },
       }),
     );
-    return this.formatResult(raw, options?.format);
+    return this.formatResult(raw, options?.format, mapContainer);
   }
 
   async customFields(id: string, options?: CallOptions): Promise<any> {
