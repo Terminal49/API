@@ -449,7 +449,8 @@
                   "sdk/reference/client/managers/interfaces/UpdateDocumentParams",
                   "sdk/reference/client/managers/type-aliases/ContainerUpdateAttributes",
                   "sdk/reference/client/managers/type-aliases/DocumentRotation",
-                  "sdk/reference/client/managers/type-aliases/TrackingRequestType"
+                  "sdk/reference/client/managers/type-aliases/TrackingRequestType",
+                  "sdk/reference/client/managers/type-aliases/TrackingRequestUpdateAttributes"
                 ]
               },
               {

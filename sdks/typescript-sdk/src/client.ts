@@ -28,6 +28,7 @@ import type {
   CreateTrackingRequestFromInferOptions,
   TrackingRequestListFilters,
   TrackingRequestType,
+  TrackingRequestUpdateAttributes,
 } from './client/managers/tracking-requests.js';
 import { applyTypedPagination, normalizeInclude } from './client/query.js';
 import { mapVessel, mapVesselFuturePositions } from './client/mappers.js';
@@ -1173,7 +1174,7 @@ export class Terminal49Client {
   /** Update tracking request attributes. */
   async updateTrackingRequest(
     id: string,
-    attrs: Record<string, any>,
+    attrs: TrackingRequestUpdateAttributes,
     options?: CallOptions,
   ): Promise<any> {
     return this.trackingRequests.update(id, attrs, options);

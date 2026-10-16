@@ -1,3 +1,4 @@
+import type { paths } from '../../generated/terminal49.js';
 import type { CustomFieldValue, TrackingRequest } from '../../types/models.js';
 import type {
   CallOptions,
@@ -12,7 +13,20 @@ import {
   mapTrackingRequestList,
 } from '../mappers.js';
 import { copyStringParams, normalizeInclude } from '../query.js';
+import type { JsonBody } from '../spec.js';
 import { BaseManager } from './base.js';
+
+type TrackingRequestCreateBody = JsonBody<paths['/tracking_requests']['post']>;
+type TrackingRequestCreateAttributes = NonNullable<
+  NonNullable<TrackingRequestCreateBody['data']>['attributes']
+>;
+type TrackingRequestUpdateBody = JsonBody<
+  paths['/tracking_requests/{id}']['patch']
+>;
+/** Writable tracking request attributes. `ref_numbers` replaces the existing list. */
+export type TrackingRequestUpdateAttributes = NonNullable<
+  TrackingRequestUpdateBody['data']
+>['attributes'];
 
 export type TrackingRequestType =
   | 'container'
@@ -84,7 +98,7 @@ export class TrackingRequestManager extends BaseManager {
 
   async update(
     id: string,
-    attrs: Record<string, any>,
+    attrs: TrackingRequestUpdateAttributes,
     options?: CallOptions,
   ): Promise<any> {
     const payload = {
@@ -98,7 +112,7 @@ export class TrackingRequestManager extends BaseManager {
     const raw = await this.transport.execute(() =>
       this.transport.client.PATCH('/tracking_requests/{id}', {
         params: { path: { id } },
-        body: payload as any,
+        body: payload,
       }),
     );
 
@@ -212,7 +226,7 @@ export class TrackingRequestManager extends BaseManager {
       );
     }
 
-    const attributes: Record<string, unknown> = {
+    const attributes: TrackingRequestCreateAttributes = {
       request_type: params.requestType,
       request_number: params.requestNumber,
       scac: params.scac ?? '',
@@ -230,11 +244,11 @@ export class TrackingRequestManager extends BaseManager {
         type: 'tracking_request' as const,
         attributes,
       },
-    };
+    } satisfies TrackingRequestCreateBody;
 
     return this.transport.execute(() =>
       this.transport.client.POST('/tracking_requests', {
-        body: payload as any,
+        body: payload,
       }),
     );
   }
@@ -246,7 +260,7 @@ export class TrackingRequestManager extends BaseManager {
 
     return this.transport.execute(() =>
       this.transport.client.POST('/tracking_requests/infer_number', {
-        body: { number } as any,
+        body: { number },
       }),
     );
   }

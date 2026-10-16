@@ -367,13 +367,15 @@ describe('Terminal49Client request building', () => {
       fetchImpl,
     });
 
-    await client.updateTrackingRequest('tr-1', { status: 'paused' });
+    await client.updateTrackingRequest('tr-1', {
+      ref_numbers: ['PO-1', 'PO-2'],
+    });
 
     expect(captured).toEqual({
       data: {
         type: 'tracking_request',
         id: 'tr-1',
-        attributes: { status: 'paused' },
+        attributes: { ref_numbers: ['PO-1', 'PO-2'] },
       },
     });
   });
