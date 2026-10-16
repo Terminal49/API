@@ -116,6 +116,8 @@ Success output in JSON mode:
 
 `pagination` and `meta` are omitted when unavailable.
 
+`data` holds the SDK result in the selected `--format`. With the default `mapped` format, `containers get`, `vessels get`, `vessels get-by-imo`, `vessels future-positions`, and `vessels future-positions-coords` print the SDK's mapped model with camelCase fields, such as `data.number` or `data.positions`. Earlier releases printed the JSON:API document, such as `data.data.attributes.number`. Pass `--format raw` to get the JSON:API document. `containers route` prints a `ContainerRoute` (`ports`, `currentVessel`, `totalPorts`) instead of a `Route`, and `--format raw` prints the GeoJSON FeatureCollection from `GET /containers/{id}/map_geojson`.
+
 Every list command shapes `data` the same way:
 
 - `--format mapped` prints the array of mapped rows.
