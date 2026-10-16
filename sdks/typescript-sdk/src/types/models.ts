@@ -198,8 +198,8 @@ export interface TrackingRequest {
   status?: string;
   scac?: string;
   refNumbers?: string[];
+  /** The tracked shipment, from the `tracked_object` relationship. */
   shipment?: Shipment | null;
-  container?: Container | null;
   [key: string]: any;
 }
 

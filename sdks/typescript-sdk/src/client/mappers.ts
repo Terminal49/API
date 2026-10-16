@@ -443,9 +443,6 @@ export function mapTrackingRequest(doc: any): TrackingRequest {
   const data = apiDoc.data;
   const attrs = data?.attributes || {};
 
-  const shipment = apiDoc.getRelationship(data, 'shipment');
-  const container = apiDoc.getRelationship(data, 'container');
-
   return {
     id: data?.id,
     requestType: attrs.request_type,
@@ -453,26 +450,24 @@ export function mapTrackingRequest(doc: any): TrackingRequest {
     status: attrs.status,
     scac: attrs.scac,
     refNumbers: attrs.ref_numbers,
-    shipment: shipment
-      ? {
-          id: shipment.id,
-          billOfLading:
-            shipment.attributes?.bill_of_lading_number ||
-            shipment.attributes?.bill_of_lading ||
-            shipment.attributes?.bl_number,
-          shippingLineScac: shipment.attributes?.shipping_line_scac,
-        }
-      : null,
-    container: container
-      ? {
-          id: container.id,
-          number:
-            container.attributes?.number ||
-            container.attributes?.container_number,
-          status: container.attributes?.status,
-        }
-      : null,
+    shipment: mapTrackedShipment(apiDoc, data),
     ...apiDoc.getAttributes(data),
+  };
+}
+
+/** The API serializes a tracking request's shipment as the polymorphic `tracked_object`. */
+function mapTrackedShipment(apiDoc: JsonApiDocument, data: any) {
+  const ref = data?.relationships?.tracked_object?.data;
+  if (ref?.type !== 'shipment') return null;
+  const shipment = apiDoc.getIncluded(ref.type, ref.id);
+  if (!shipment) return { id: ref.id };
+  return {
+    id: shipment.id,
+    billOfLading:
+      shipment.attributes?.bill_of_lading_number ||
+      shipment.attributes?.bill_of_lading ||
+      shipment.attributes?.bl_number,
+    shippingLineScac: shipment.attributes?.shipping_line_scac,
   };
 }
 

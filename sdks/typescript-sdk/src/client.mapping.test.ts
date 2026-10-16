@@ -11,14 +11,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const fixturesDir = path.resolve(__dirname, 'fixtures');
 
-const itIf = (condition: boolean) => (condition ? it : it.skip);
-
 function fixturePath(name: string) {
   return path.resolve(fixturesDir, `${name}.json`);
-}
-
-function hasFixture(name: string) {
-  return fs.existsSync(fixturePath(name));
 }
 
 function loadFixture<T = any>(name: string): T {
@@ -114,89 +108,100 @@ describe('Terminal49Client mapping helpers', () => {
     }
   });
 
-  it('maps tracking request fields from base response', async () => {
+  it('maps the tracked_object shipment on a tracking request', async () => {
     const fixture = loadFixture('tracking-requests.get.base');
-    const trackingId = fixture?.data?.id || 'tr-1';
     const { fetchImpl } = createMockFetch({
-      [`/tracking_requests/${trackingId}`]: () => jsonResponse(fixture),
+      '/tracking_requests/tracking_request-1': () => jsonResponse(fixture),
     });
-
     const client = new Terminal49Client({
       apiToken: 'token-123',
       apiBaseUrl: baseUrl,
       fetchImpl,
     });
 
-    const result = (await client.getTrackingRequest(trackingId, {
+    const result = (await client.getTrackingRequest('tracking_request-1', {
       format: 'mapped',
     })) as any;
 
-    const attrs = fixture?.data?.attributes || {};
-    expectIfDefined(result.requestType, attrs.request_type);
-    expectIfDefined(result.requestNumber, attrs.request_number);
-    expectIfDefined(result.status, attrs.status);
-    expectIfDefined(result.scac, attrs.scac);
-
-    if (Array.isArray(attrs.ref_numbers)) {
-      expect(result.refNumbers).toEqual(attrs.ref_numbers);
-    }
-
-    if (!fixture?.included || fixture.included.length === 0) {
-      expect(result.shipment).toBeNull();
-      expect(result.container).toBeNull();
-    }
+    expect(result).toMatchObject({
+      id: 'tracking_request-1',
+      requestType: 'bill_of_lading',
+      requestNumber: 'HLCUSEL251063157',
+      status: 'created',
+      scac: 'HLCU',
+      refNumbers: [],
+    });
+    expect(result.shipment).toEqual({
+      id: 'shipment-1',
+      billOfLading: 'HLCUSEL251063ad5',
+      shippingLineScac: 'HLCU',
+    });
   });
 
-  itIf(hasFixture('tracking-requests.get.include'))(
-    'maps tracking request with shipment and container',
-    async () => {
-      const fixture = loadFixture('tracking-requests.get.include');
-      const trackingId = fixture?.data?.id || 'tr-1';
-      const { fetchImpl } = createMockFetch({
-        [`/tracking_requests/${trackingId}`]: () => jsonResponse(fixture),
-      });
+  it('maps tracked_object shipments on each listed tracking request', async () => {
+    const fixture = loadFixture('tracking-requests.list');
+    const { fetchImpl } = createMockFetch({
+      '/tracking_requests': () => jsonResponse(fixture),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
 
-      const client = new Terminal49Client({
-        apiToken: 'token-123',
-        apiBaseUrl: baseUrl,
-        fetchImpl,
-      });
+    const result = (await client.listTrackingRequests(
+      {},
+      { format: 'mapped' },
+    )) as any;
 
-      const result = (await client.getTrackingRequest(trackingId, {
-        format: 'mapped',
-      })) as any;
+    expect(result.items.map((item: any) => item.shipment)).toEqual([
+      {
+        id: 'shipment-1',
+        billOfLading: 'HLCUSEL251063ad5',
+        shippingLineScac: 'HLCU',
+      },
+    ]);
+  });
 
-      const shipmentRef = fixture?.data?.relationships?.shipment?.data;
-      const containerRef = fixture?.data?.relationships?.container?.data;
-      const shipment = shipmentRef
-        ? findIncluded(fixture, 'shipment', shipmentRef.id)
-        : null;
-      const container = containerRef
-        ? findIncluded(fixture, 'container', containerRef.id)
-        : null;
+  it('keeps the tracked shipment id when the shipment is not included', async () => {
+    const { fetchImpl } = createMockFetch({
+      '/tracking_requests/tr-1': () =>
+        jsonResponse({
+          data: {
+            id: 'tr-1',
+            type: 'tracking_request',
+            attributes: { request_number: 'MSCU1234567' },
+            relationships: {
+              tracked_object: { data: { type: 'shipment', id: 'ship-1' } },
+            },
+          },
+        }),
+      '/tracking_requests/tr-2': () =>
+        jsonResponse({
+          data: {
+            id: 'tr-2',
+            type: 'tracking_request',
+            attributes: { request_number: 'MSCU7654321', status: 'pending' },
+            relationships: { tracked_object: { data: null } },
+          },
+        }),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
 
-      if (shipment) {
-        const expectedBill =
-          shipment.attributes?.bill_of_lading_number ||
-          shipment.attributes?.bill_of_lading ||
-          shipment.attributes?.bl_number;
-        expectIfDefined(result.shipment?.billOfLading, expectedBill);
-        expectIfDefined(
-          result.shipment?.shippingLineScac,
-          shipment.attributes?.shipping_line_scac,
-        );
-      }
+    const tracked = (await client.getTrackingRequest('tr-1', {
+      format: 'mapped',
+    })) as any;
+    const pending = (await client.getTrackingRequest('tr-2', {
+      format: 'mapped',
+    })) as any;
 
-      if (container) {
-        expectIfDefined(
-          result.container?.number,
-          container.attributes?.number ||
-            container.attributes?.container_number,
-        );
-        expectIfDefined(result.container?.status, container.attributes?.status);
-      }
-    },
-  );
+    expect(tracked.shipment).toEqual({ id: 'ship-1' });
+    expect(pending.shipment).toBeNull();
+  });
 
   it('maps shipment ports, terminals, tracking, and container references', async () => {
     const fixture = loadFixture('shipments.get.include');

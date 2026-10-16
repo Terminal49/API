@@ -287,56 +287,6 @@ describe('Terminal49Client', () => {
     expect(simplified.shipment?.bill_of_lading_number).toBe('BL123');
   });
 
-  it('maps tracking request with linked shipment/container', async () => {
-    const doc = {
-      data: {
-        id: 'tr-1',
-        type: 'tracking_request',
-        attributes: {
-          request_type: 'container',
-          request_number: 'MSCU1234567',
-          status: 'created',
-          scac: 'MSCU',
-        },
-        relationships: {
-          shipment: { data: { type: 'shipment', id: 'ship-1' } },
-          container: { data: { type: 'container', id: 'cont-1' } },
-        },
-      },
-      included: [
-        {
-          id: 'ship-1',
-          type: 'shipment',
-          attributes: {
-            bill_of_lading_number: 'BL123',
-            shipping_line_scac: 'MSCU',
-          },
-        },
-        {
-          id: 'cont-1',
-          type: 'container',
-          attributes: { number: 'MSCU1234567', status: 'in_transit' },
-        },
-      ],
-    };
-
-    const { fetchImpl } = createMockFetch({
-      '/tracking_requests/tr-1': () => jsonResponse(doc),
-    });
-
-    const client = new Terminal49Client({
-      apiToken: 'token-123',
-      apiBaseUrl: baseUrl,
-      fetchImpl,
-    });
-
-    const result = await client.getTrackingRequest('tr-1', {
-      format: 'mapped',
-    });
-    expect((result as any).shipment?.id).toBe('ship-1');
-    expect((result as any).container?.number).toBe('MSCU1234567');
-  });
-
   it('maps container list with equipment and terminals when included', async () => {
     const doc = {
       data: [
