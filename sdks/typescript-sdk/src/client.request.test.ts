@@ -263,12 +263,12 @@ describe('Terminal49Client request building', () => {
   it('accepts comma-separated tracking request include strings', async () => {
     const search = buildSearchParams([
       ['filter[status]', 'pending'],
-      ['include', 'shipment,container'],
+      ['include', 'tracked_object,customer'],
     ]);
 
     const { fetchImpl, calls } = createMockFetch({
       [`/tracking_requests?${search}`]: () => jsonResponse({ data: [] }),
-      '/tracking_requests/tr-1?include=shipment,container': () =>
+      '/tracking_requests/tr-1?include=tracked_object,customer': () =>
         jsonResponse({ data: { id: 'tr-1' } }),
     });
 
@@ -280,14 +280,18 @@ describe('Terminal49Client request building', () => {
 
     await client.listTrackingRequests({
       'filter[status]': 'pending',
-      include: 'shipment,container',
+      include: 'tracked_object,customer',
     });
     await client.getTrackingRequest('tr-1', {
-      include: 'shipment,container',
+      include: 'tracked_object,customer',
     });
 
-    expect(calls[0].url.searchParams.get('include')).toBe('shipment,container');
-    expect(calls[1].url.searchParams.get('include')).toBe('shipment,container');
+    expect(calls[0].url.searchParams.get('include')).toBe(
+      'tracked_object,customer',
+    );
+    expect(calls[1].url.searchParams.get('include')).toBe(
+      'tracked_object,customer',
+    );
   });
 
   it('sends explicit scac when creating tracking request', async () => {
