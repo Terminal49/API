@@ -15,7 +15,7 @@ function servedBody(method: string, pathname: string) {
   };
 }
 
-function buildClient() {
+function buildClient(config: { accountId?: string } = {}) {
   const calls: RecordedCall[] = [];
   const fetchImpl: typeof fetch = async (input, init) => {
     const request = input instanceof Request ? input : new Request(input, init);
@@ -35,6 +35,7 @@ function buildClient() {
     apiBaseUrl: 'https://api.test/v2',
     fetchImpl,
     maxRetries: 0,
+    ...config,
   });
   return { client, calls };
 }
@@ -371,6 +372,50 @@ describe('custom field list filters', () => {
   });
 });
 
+describe('account custom field definitions', () => {
+  it('lists and creates account definitions on the account route', async () => {
+    const { client, calls } = buildClient();
+    const { client: scoped, calls: scopedCalls } = buildClient({
+      accountId: 'acct-1',
+    });
+    const body = { data: { type: 'custom_field_definition', attributes: {} } };
+
+    await client.customFieldDefinitions.list({
+      filters: { entityType: 'Cargo' },
+    });
+    await client.customFieldDefinitions.create(body);
+    await scoped.customFieldDefinitions.list();
+    await scoped.customFieldDefinitions.create(body);
+
+    expect(calls.map((c) => [c.method, c.path, c.query, c.body])).toEqual([
+      [
+        'GET',
+        '/accounts/current/custom_field_definitions',
+        { 'filter[entity_type]': 'Cargo' },
+        undefined,
+      ],
+      ['POST', '/accounts/current/custom_field_definitions', {}, body],
+    ]);
+    expect(scopedCalls.map((c) => [c.method, c.path])).toEqual([
+      ['GET', '/accounts/acct-1/custom_field_definitions'],
+      ['POST', '/accounts/acct-1/custom_field_definitions'],
+    ]);
+  });
+
+  it('lists Terminal49 templates on the top-level route', async () => {
+    const { client, calls } = buildClient({ accountId: 'acct-1' });
+
+    await client.customFieldDefinitions.list({
+      scope: 'templates',
+      filters: { dataType: 'enum' },
+    });
+
+    expect(calls.map((c) => [c.method, c.path, c.query])).toEqual([
+      ['GET', '/custom_field_definitions', { 'filter[data_type]': 'enum' }],
+    ]);
+  });
+});
+
 describe('search', () => {
   it('runs through the typed client', async () => {
     const { client, calls } = buildClient();
@@ -475,7 +520,7 @@ describe('resource methods on the client', () => {
       ['GET', '/parties/pa-1', {}, undefined],
       ['GET', '/metro_areas/m-1', {}, undefined],
       ['GET', '/custom_field_definitions/d-1', {}, undefined],
-      ['POST', '/custom_field_definitions', {}, body],
+      ['POST', '/accounts/current/custom_field_definitions', {}, body],
       ['PATCH', '/custom_field_definitions/d-1', {}, body],
       ['DELETE', '/custom_field_definitions/d-1', {}, undefined],
       ['GET', '/custom_field_definitions/d-1/options', {}, undefined],
@@ -680,7 +725,7 @@ describe('return values', () => {
     ['GET', '/custom_fields', (c: Terminal49Client) => c.customFields.list()],
     [
       'GET',
-      '/custom_field_definitions',
+      '/accounts/current/custom_field_definitions',
       (c: Terminal49Client) => c.customFieldDefinitions.list(),
     ],
     ['GET', '/webhooks', (c: Terminal49Client) => c.webhooks.list()],
@@ -742,7 +787,7 @@ describe('return values', () => {
     ],
     [
       'POST',
-      '/custom_field_definitions',
+      '/accounts/current/custom_field_definitions',
       (c: Terminal49Client) => c.customFieldDefinitions.create({ data: {} }),
     ],
     [

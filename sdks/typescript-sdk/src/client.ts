@@ -77,7 +77,7 @@ type WebhookNotificationListQuery = NonNullable<
 >;
 // The API ignores page[*] on these routes, but accepts it, and the CLI forwards --page.
 type CustomFieldDefinitionListQuery = NonNullable<
-  paths['/custom_field_definitions']['get']['parameters']['query']
+  paths['/accounts/{account_id}/custom_field_definitions']['get']['parameters']['query']
 > &
   PaginatedQuery;
 type CustomFieldListQuery = NonNullable<
@@ -146,6 +146,21 @@ export interface CustomFieldDefinitionListFilters {
   displayName?: string;
 }
 
+/** Options for `customFieldDefinitions.list`. */
+export interface CustomFieldDefinitionListOptions extends ListOptions {
+  filters?: CustomFieldDefinitionListFilters;
+  /**
+   * `account`, the default, lists the definitions configured for your account.
+   * `templates` lists the Terminal49 templates you can copy with `template_id`.
+   */
+  scope?: 'account' | 'templates';
+}
+
+// The API scopes the account definition routes to the authenticated account
+// and ignores the account_id path value, so a client without an accountId
+// sends this placeholder.
+const CURRENT_ACCOUNT_ID = 'current';
+
 /** Options for {@link Terminal49Client.getWebhookNotification}. */
 export interface WebhookNotificationGetOptions extends CallOptions {
   /** Related resources to sideload. */
@@ -162,7 +177,7 @@ export interface WebhookNotificationListOptions extends ListOptions {
 export interface Terminal49ClientConfig {
   /** Terminal49 API token. Pass either the raw token or a value prefixed with `Token ` or `Bearer `. */
   apiToken: string;
-  /** Account id to send as `x-account-id` for user-scoped bearer tokens. */
+  /** Account id to send as `x-account-id` for user-scoped bearer tokens. Also fills `{account_id}` in the account custom field definition routes. */
   accountId?: string;
   /** API base URL. Defaults to `https://api.terminal49.com/v2`. */
   apiBaseUrl?: string;
@@ -205,6 +220,7 @@ function normalizeBaseUrl(input?: string): string {
 export class Terminal49Client {
   private transport: Transport;
   private jsona: Jsona;
+  private accountId: string;
   private defaultFormat: ResponseFormat;
 
   public shipments: ShipmentManager;
@@ -280,9 +296,8 @@ export class Terminal49Client {
   };
 
   public customFieldDefinitions = {
-    list: (
-      options?: ListOptions & { filters?: CustomFieldDefinitionListFilters },
-    ) => this.listCustomFieldDefinitions(options),
+    list: (options?: CustomFieldDefinitionListOptions) =>
+      this.listCustomFieldDefinitions(options),
     get: (id: string, options?: CallOptions) =>
       this.getCustomFieldDefinition(id, options),
     create: (payload: Record<string, unknown>, options?: CallOptions) =>
@@ -340,6 +355,7 @@ export class Terminal49Client {
     const baseUrl = normalizeBaseUrl(config.apiBaseUrl);
     const defaultFormat = config.defaultFormat ?? 'raw';
     this.defaultFormat = defaultFormat;
+    this.accountId = config.accountId ?? CURRENT_ACCOUNT_ID;
 
     this.transport = new Transport({
       apiToken: config.apiToken,
@@ -877,9 +893,9 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
-  /** List custom field definitions. */
+  /** List your account's custom field definitions, or the Terminal49 templates. */
   async listCustomFieldDefinitions(
-    options?: ListOptions & { filters?: CustomFieldDefinitionListFilters },
+    options?: CustomFieldDefinitionListOptions,
   ): Promise<any> {
     const filters = options?.filters;
     const query = applyTypedPagination<CustomFieldDefinitionListQuery>(
@@ -891,9 +907,14 @@ export class Terminal49Client {
       options,
     );
     const raw = await this.transport.execute(() =>
-      this.transport.client.GET('/custom_field_definitions', {
-        params: { query },
-      }),
+      options?.scope === 'templates'
+        ? this.transport.client.GET('/custom_field_definitions', {
+            params: { query },
+          })
+        : this.transport.client.GET(
+            '/accounts/{account_id}/custom_field_definitions',
+            { params: { path: { account_id: this.accountId }, query } },
+          ),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -911,17 +932,23 @@ export class Terminal49Client {
     return this.formatResult(raw, options?.format);
   }
 
-  /** Create a custom field definition. */
+  /** Create a custom field definition for your account. Set `data.attributes.template_id` to copy a Terminal49 template. */
   async createCustomFieldDefinition(
     payload: Record<string, unknown>,
     options?: CallOptions,
   ): Promise<any> {
     const raw = await this.transport.execute(() =>
-      this.transport.client.POST('/custom_field_definitions', {
-        body: callerPayload<
-          JsonBody<paths['/custom_field_definitions']['post']>
-        >(payload),
-      }),
+      this.transport.client.POST(
+        '/accounts/{account_id}/custom_field_definitions',
+        {
+          params: { path: { account_id: this.accountId } },
+          body: callerPayload<
+            JsonBody<
+              paths['/accounts/{account_id}/custom_field_definitions']['post']
+            >
+          >(payload),
+        },
+      ),
     );
     return this.formatResult(raw, options?.format);
   }

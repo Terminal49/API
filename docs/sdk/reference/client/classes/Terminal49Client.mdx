@@ -111,7 +111,7 @@ Create a custom field assignment.
 
 > **createCustomFieldDefinition**(`payload`, `options?`): `Promise`\<`any`\>
 
-Create a custom field definition.
+Create a custom field definition for your account. Set `data.attributes.template_id` to copy a Terminal49 template.
 
 #### Parameters
 
@@ -815,13 +815,13 @@ List containers with optional filters and pagination.
 
 > **listCustomFieldDefinitions**(`options?`): `Promise`\<`any`\>
 
-List custom field definitions.
+List your account's custom field definitions, or the Terminal49 templates.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) & `object` |
+| `options?` | [`CustomFieldDefinitionListOptions`](/sdk/reference/client/interfaces/CustomFieldDefinitionListOptions) |
 
 #### Returns
 

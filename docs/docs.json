@@ -417,6 +417,7 @@
                   "sdk/reference/client/classes/Terminal49Client",
                   "sdk/reference/client/interfaces/Terminal49ClientConfig",
                   "sdk/reference/client/interfaces/CustomFieldDefinitionListFilters",
+                  "sdk/reference/client/interfaces/CustomFieldDefinitionListOptions",
                   "sdk/reference/client/interfaces/CustomFieldListFilters",
                   "sdk/reference/client/interfaces/TriggerWebhookParams",
                   "sdk/reference/client/interfaces/VesselFuturePositionsParams",
