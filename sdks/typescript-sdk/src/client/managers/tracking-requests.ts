@@ -107,9 +107,16 @@ export class TrackingRequestManager extends BaseManager {
 
   /** List custom field values set on a tracking request, with their definitions. */
   async customFields(id: string, options?: CallOptions): Promise<any> {
-    // The spec omits include=definition, but mapCustomFields reads the included definitions.
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/tracking_requests/${encodeURIComponent(id)}/custom_fields?include=definition`,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET(
+        '/tracking_requests/{tracking_request_id}/custom_fields',
+        {
+          params: {
+            path: { tracking_request_id: id },
+            query: { include: 'definition' },
+          },
+        },
+      ),
     );
     return this.formatResult(raw, options?.format, mapCustomFields);
   }

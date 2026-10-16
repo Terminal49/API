@@ -69,9 +69,10 @@ export class ShipmentManager extends BaseManager {
   }
 
   async customFields(id: string, options?: CallOptions): Promise<any> {
-    // The spec omits include=definition, but mapCustomFields reads the included definitions.
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/shipments/${encodeURIComponent(id)}/custom_fields?include=definition`,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/shipments/{shipment_id}/custom_fields', {
+        params: { path: { shipment_id: id }, query: { include: 'definition' } },
+      }),
     );
     return this.formatResult(raw, options?.format, mapCustomFields);
   }
