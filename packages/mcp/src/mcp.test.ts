@@ -9,7 +9,7 @@ import {
   createTerminal49McpServer,
   TERMINAL49_SERVER_INSTRUCTIONS,
 } from './server.js';
-import { defaultTools } from './tools/registry.js';
+import { defaultTools, TOOL_REGISTRY } from './tools/registry.js';
 
 vi.mock('@sentry/node', () => ({
   captureException: vi.fn(),
@@ -386,7 +386,7 @@ describe('MCP server wiring', () => {
     expect(resourceTemplates).toContain('container');
   });
 
-  it('does not advertise intent and strips it from legacy tool arguments', () => {
+  it('does not advertise intent, strips it from legacy read arguments and rejects it on writes', () => {
     const server = createTerminal49McpServer('token');
     const tools = (server as any)._registeredTools as Record<
       string,
@@ -416,11 +416,44 @@ describe('MCP server wiring', () => {
       search_docs: { query: 'webhooks' },
       whoami: {},
     };
+    const target = { entity_type: 'shipment', entity_id: id };
+    const writeArgs: Record<string, Record<string, unknown>> = {
+      stop_shipment_tracking: { shipment_id: id },
+      resume_shipment_tracking: { shipment_id: id },
+      cancel_tracking_request: { tracking_request_id: id },
+      add_reference_numbers: { ...target, add: ['PO-1'] },
+      remove_reference_numbers: { ...target, remove: ['PO-1'] },
+      assign_party: { ...target, role: 'customer', party_id: id },
+      unassign_party: { ...target, party_role_id: id },
+      set_custom_field: { ...target, api_slug: 'po_number', value: 'PO-1' },
+      update_custom_field: { ...target, api_slug: 'po_number', clear: true },
+      relink_document: { id },
+      update_document: { id, action: 'reclassify' },
+    };
+    const newWrites = new Set<string>(
+      TOOL_REGISTRY.filter(
+        (tool) => tool.tier !== 'read' && !(tool.name in legacyArgs),
+      ).map((tool) => tool.name),
+    );
 
     for (const [name, tool] of Object.entries(tools)) {
       expect(_objectSchemaHasProperty(tool.inputSchema, 'intent'), name).toBe(
         false,
       );
+      if (newWrites.has(name)) {
+        // Write tools were added after intent was retired, so no legacy
+        // client sends it, and they reject every unknown key.
+        expect(tool.inputSchema.parse(writeArgs[name]), name).toBeTruthy();
+        expect(
+          () =>
+            tool.inputSchema.parse({
+              ...writeArgs[name],
+              intent: 'legacy routing telemetry',
+            }),
+          name,
+        ).toThrow();
+        continue;
+      }
       expect(
         tool.inputSchema.parse({
           ...legacyArgs[name],

@@ -172,14 +172,7 @@ describe('MCP tool annotations', () => {
     const optIn = REGISTRY.filter(
       (tool) => !DEFAULT_TOOLSETS.includes(tool.toolset),
     ).map((tool) => tool.name);
-    expect(optIn).toEqual(
-      expect.arrayContaining([
-        'relink_document',
-        'update_document',
-        'list_webhooks',
-        'list_webhook_notifications',
-      ]),
-    );
+    expect(optIn).toEqual(['list_webhooks', 'list_webhook_notifications']);
 
     for (const file of [
       'chatgpt-app-submission.json',

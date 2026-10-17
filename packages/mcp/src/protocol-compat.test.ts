@@ -313,12 +313,11 @@ describe('MCP protocol compatibility', () => {
       expect(resources).toHaveLength(3);
       expect(resourceTemplates).toHaveLength(1);
 
+      const registered = new Map<string, unknown>(
+        defaultTools().map((tool) => [tool.name, tool.annotations]),
+      );
       for (const tool of tools) {
-        expect(tool.annotations).toMatchObject({
-          readOnlyHint: tool.name !== 'track_container',
-          destructiveHint: false,
-          openWorldHint: tool.name === 'search_docs',
-        });
+        expect(tool.annotations, tool.name).toEqual(registered.get(tool.name));
       }
     },
   );

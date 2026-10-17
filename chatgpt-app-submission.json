@@ -259,6 +259,138 @@
         "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
+    },
+    "stop_shipment_tracking": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Stops carrier and terminal updates for one shipment in the user's Terminal49 account.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "Ends updates for the shipment and its containers. The tool returns a preview first and makes the change only when called again with the confirmation token from that preview. resume_shipment_tracking starts tracking again."
+      }
+    },
+    "resume_shipment_tracking": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Starts tracking a stopped shipment again in the user's Terminal49 account.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "Restarts updates for one shipment and does not delete or overwrite existing data."
+      }
+    },
+    "cancel_tracking_request": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Cancels one pending tracking request in the user's Terminal49 account.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "A cancelled tracking request cannot be restored. The tool returns a preview first and makes the change only when called again with the confirmation token from that preview. It cancels only a request that is still pending."
+      }
+    },
+    "add_reference_numbers": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Adds reference numbers to one container, shipment or tracking request in the user's Terminal49 account.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "Keeps every reference number already on the record and only adds new ones. remove_reference_numbers undoes the change."
+      }
+    },
+    "remove_reference_numbers": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Removes reference numbers from one container, shipment or tracking request in the user's Terminal49 account.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "Removes the named reference numbers from the record. The tool returns a preview first and makes the change only when called again with the confirmation token from that preview."
+      }
+    },
+    "assign_party": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Links a party, such as a customer or dray carrier, to one container or shipment in the user's Terminal49 account, and can create the party when the user names one that does not exist.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "Adds one party role and keeps the parties already on the record. unassign_party undoes the change."
+      }
+    },
+    "unassign_party": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Removes one party role from a container or shipment in the user's Terminal49 account.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "Removes the link between the party and the record and keeps the party itself. The tool returns a preview first and makes the change only when called again with the confirmation token from that preview."
+      }
+    },
+    "set_custom_field": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Fills an empty custom field on one container, shipment or tracking request in the user's Terminal49 account.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "Writes only to a field that has no value. When the field has a value, it returns that value and changes nothing."
+      }
+    },
+    "update_custom_field": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Replaces or clears a custom field value on one container, shipment or tracking request in the user's Terminal49 account.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "Overwrites or clears the current value. The tool returns a preview first and makes the change only when called again with the confirmation token from that preview."
+      }
+    },
+    "relink_document": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Asks Terminal49 to match one document in the user's account to its shipments and containers again.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "Runs reference matching again in the background. It does not delete or edit the document, its type or its extracted data."
+      }
+    },
+    "update_document": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Sets the type of one document in the user's Terminal49 account, or has Terminal49 classify or extract it again.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "Replaces the document's type or extracted data. The tool returns a preview first and makes the change only when called again with the confirmation token from that preview."
+      }
     }
   },
   "test_cases": [

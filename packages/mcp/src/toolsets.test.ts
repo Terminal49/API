@@ -64,7 +64,7 @@ describe('resolveToolSelection', () => {
     const selection = resolveToolSelection({
       env: {},
       credentialType: 'api_key',
-      toolsetsHeader: 'operations,developer',
+      toolsetsHeader: 'developer',
     });
 
     expect(selection.toolsets).toEqual([]);

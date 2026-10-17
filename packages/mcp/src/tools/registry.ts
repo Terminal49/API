@@ -245,7 +245,12 @@ export type RegisteredTool = (typeof TOOL_REGISTRY)[number];
 export type ToolName = RegisteredTool['name'];
 
 /** Toolsets served when the operator sets no `T49_MCP_TOOLSETS`. */
-export const DEFAULT_TOOLSETS: readonly Toolset[] = ['core', 'documents'];
+export const DEFAULT_TOOLSETS: readonly Toolset[] = [
+  'core',
+  'documents',
+  'operations',
+  'documents_write',
+];
 
 export interface ToolSelection {
   toolsets: readonly Toolset[];

@@ -22,6 +22,9 @@
     "icon": "public/store-icons/terminal49-light.png",
     "icon_dark": "public/store-icons/terminal49-dark.png",
     "tool_names": [
+      "add_reference_numbers",
+      "assign_party",
+      "cancel_tracking_request",
       "get_container",
       "get_container_route",
       "get_container_transport_events",
@@ -38,10 +41,18 @@
       "list_parties",
       "list_shipments",
       "list_tracking_requests",
+      "relink_document",
+      "remove_reference_numbers",
+      "resume_shipment_tracking",
       "search_container",
       "search_docs",
+      "set_custom_field",
+      "stop_shipment_tracking",
       "summarize_containers",
       "track_container",
+      "unassign_party",
+      "update_custom_field",
+      "update_document",
       "whoami"
     ]
   },
