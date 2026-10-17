@@ -39,8 +39,8 @@ const steps = [
     ? []
     : [
         {
-          name: 'Workspace tests',
-          command: ['npx', '--no-install', 'vp', 'run', 'test'],
+          name: 'Policy and workspace tests',
+          command: ['npm', 'test'],
         },
       ]),
   {
