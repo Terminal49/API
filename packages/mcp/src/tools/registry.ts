@@ -70,6 +70,7 @@ export const TOOL_REGISTRY = [
       openWorldHint: false,
     },
   },
+  readTool('identify_tracking_number', 'Identify Tracking Number'),
   readTool('get_container', 'Get Container Details'),
   readTool('get_shipment_details', 'Get Shipment Details'),
   readTool('get_container_transport_events', 'Get Container Transport Events'),

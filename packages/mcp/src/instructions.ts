@@ -70,6 +70,9 @@ const PARAGRAPHS: readonly Paragraph[] = [
         text: ' Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container.',
       },
       {
+        text: " Use identify_tracking_number to learn a number's type and likely carrier, and whether it is already tracked, without creating a tracking request.",
+      },
+      {
         text: ' Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties.',
       },
       {

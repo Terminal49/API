@@ -187,6 +187,18 @@
         "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
+    },
+    "identify_tracking_number": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Predicts a number's type and carrier and checks existing tracking without creating a tracking request.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
     }
   },
   "test_cases": [

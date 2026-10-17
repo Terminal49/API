@@ -54,6 +54,11 @@ import {
   getTrackingRequestInputSchema,
   getTrackingRequestOutputSchema,
 } from './tools/get-tracking-request.js';
+import {
+  executeIdentifyTrackingNumber,
+  identifyTrackingNumberInputSchema,
+  identifyTrackingNumberOutputSchema,
+} from './tools/identify-tracking-number.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
@@ -940,6 +945,10 @@ function formatToolError(
     }
   }
 
+  if (toolName === 'identify_tracking_number' && err.status === 422) {
+    return 'Terminal49 could not identify this number. Pass one container, Bill of Lading, or booking number.';
+  }
+
   if (err.name === 'NotFoundError' || err.status === 404) {
     switch (toolName) {
       case 'get_container':
@@ -1262,6 +1271,20 @@ export function createTerminal49McpServer(
           },
           client,
         ),
+    ),
+    identify_tracking_number: tool(
+      {
+        description:
+          'Identify a container, Bill of Lading, or booking number without tracking it. Returns the number type, whether the format and check digit are valid, ' +
+          'the predicted carrier SCAC with its confidence and decision (auto_select, needs_confirmation, or no_prediction), ' +
+          'and whether this account already tracks the number (containers or shipments with exactly that number, or an in-progress tracking request). ' +
+          'already_tracked null means none was found. If the check could not run, already_tracked_note says so; do not read that as untracked. ' +
+          'It creates nothing and adds no tracking volume. Carrier prediction is a beta feature. ' +
+          'If Terminal49 limits the request rate, the result has error rate_limited.',
+        inputSchema: identifyTrackingNumberInputSchema,
+        outputSchema: identifyTrackingNumberOutputSchema,
+      },
+      async (args) => executeIdentifyTrackingNumber(args, client),
     ),
     get_container: tool(
       {

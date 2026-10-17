@@ -396,6 +396,7 @@ describe('MCP server wiring', () => {
     const legacyArgs: Record<string, Record<string, unknown>> = {
       search_container: { query: 'CAIU1234567' },
       track_container: { number: 'CAIU1234567' },
+      identify_tracking_number: { number: 'CAIU1234567' },
       get_container: { id },
       get_shipment_details: { id },
       get_container_transport_events: { id },
