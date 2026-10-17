@@ -22229,7 +22229,7 @@
           "company_state": {
             "type": "string",
             "description": "Two-letter US state of the importer; exact match.",
-            "maxLength": 2,
+            "pattern": "^[A-Za-z]{2}$",
             "example": "IL",
             "nullable": true
           },
@@ -22257,7 +22257,7 @@
           "scac": {
             "type": "string",
             "description": "Carrier SCAC; exact match.",
-            "maxLength": 4,
+            "pattern": "^[A-Za-z]{4}$",
             "example": "MAEU",
             "nullable": true
           },
@@ -22306,7 +22306,7 @@
           "dest_state": {
             "type": "string",
             "description": "Two-letter destination US state; exact match.",
-            "maxLength": 2,
+            "pattern": "^[A-Za-z]{2}$",
             "example": "TX",
             "nullable": true
           },
@@ -22535,7 +22535,7 @@
           "state": {
             "type": "string",
             "description": "US state code of the importer.",
-            "maxLength": 2,
+            "pattern": "^[A-Za-z]{2}$",
             "example": "FL",
             "nullable": true
           },
@@ -22699,7 +22699,7 @@
           "company_state": {
             "type": "string",
             "description": "Restrict to one state; omit for all states.",
-            "maxLength": 2,
+            "pattern": "^[A-Za-z]{2}$",
             "example": "IL",
             "nullable": true
           },
@@ -22946,7 +22946,7 @@
           "hs4": {
             "type": "string",
             "description": "4-digit HS heading: rank importers of containers carrying it. Any other value returns `400`. Use `commodities/search` to find one.",
-            "maxLength": 10,
+            "pattern": "^\\d{4}$",
             "example": "0306",
             "nullable": true
           },
