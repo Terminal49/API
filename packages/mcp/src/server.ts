@@ -89,6 +89,11 @@ import {
 } from './tools/get-document.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
+import {
+  executeResumeShipmentTracking,
+  resumeShipmentTrackingInputSchema,
+  resumeShipmentTrackingOutputSchema,
+} from './tools/resume-shipment-tracking.js';
 import { credentialHash, usableConfirmationSecret } from './tools/write-kit.js';
 import {
   createToolContext,
@@ -1000,6 +1005,8 @@ function formatToolError(
         return `No document found with id ${id ?? '(missing)'}.`;
       case 'get_vessel':
         return `No vessel found with id ${id ?? '(missing)'}.`;
+      case 'resume_shipment_tracking':
+        return `No shipment found with id ${typeof input.shipment_id === 'string' ? input.shipment_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
       default:
@@ -1680,6 +1687,18 @@ export function createTerminal49McpServer(
         outputSchema: getDocumentOutputSchema,
       },
       async (args) => executeGetDocument(args, client),
+    ),
+    resume_shipment_tracking: tool(
+      {
+        description:
+          'Start tracking a shipment again after its tracking was stopped, so its containers get carrier and terminal updates again. ' +
+          'Returns resumed with the shipment, or already_tracking when it was never stopped. ' +
+          'Updates the carrier published while tracking was stopped may be missing, and a resumed shipment can count against tracking limits.',
+        inputSchema: resumeShipmentTrackingInputSchema,
+        outputSchema: resumeShipmentTrackingOutputSchema,
+      },
+      async (args, context) =>
+        executeResumeShipmentTracking(args, client, context),
     ),
     search_docs: tool(
       {

@@ -20,6 +20,7 @@ type WriteTool = Exclude<RegisteredTool, { tier: 'read' }>;
 /** What each write tool changes, as the guide words it. */
 const WRITE_EFFECTS = {
   track_container: 'creates a tracking request to begin monitoring a number',
+  resume_shipment_tracking: 'starts tracking a stopped shipment again',
 } satisfies Record<WriteTool['name'], string>;
 
 const TIER_RULES = {

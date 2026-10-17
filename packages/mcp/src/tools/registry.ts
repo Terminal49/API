@@ -89,6 +89,18 @@ export const TOOL_REGISTRY = [
   readTool('list_documents', 'List Documents', 'documents'),
   readTool('get_document', 'Get Document', 'documents'),
   {
+    name: 'resume_shipment_tracking',
+    title: 'Resume Shipment Tracking',
+    toolset: 'operations',
+    tier: 'A',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
     name: 'search_docs',
     title: 'Search Terminal49 Docs',
     toolset: 'core',
