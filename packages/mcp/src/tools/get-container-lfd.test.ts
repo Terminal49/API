@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { readContainerResource } from '../resources/container.js';
 import { formatInZone } from '../lib/temporal.js';
 import { executeGetContainer } from './get-container.js';
+import { executeGetShipmentDetails } from './get-shipment-details.js';
 
 async function getDeadline(
   unified?: { current_value: string | null; current_selection: string | null },
@@ -190,6 +191,37 @@ describe('checked-in POD serializer contract projections', () => {
       expect(resource.text).not.toContain('2099-12-31');
       if (expected.value === null)
         expect(tool.demurrage.urgency).toBe('unknown');
+    },
+  );
+
+  it.each(fixtures)(
+    '$name uses the same selection in get_shipment_details container summaries',
+    async ({ response, expected }) => {
+      const shipmentResponse = {
+        data: {
+          id: 'shipment-1',
+          type: 'shipment',
+          attributes: {},
+          relationships: {
+            containers: {
+              data: [{ id: response.data.id, type: 'container' }],
+            },
+          },
+        },
+        included: [response.data],
+      };
+      // SAFETY: executeGetShipmentDetails only uses shipments.get without custom fields.
+      const client = {
+        shipments: { get: vi.fn().mockResolvedValue(shipmentResponse) },
+      } as unknown as Terminal49Client;
+      const result = await executeGetShipmentDetails(
+        { id: 'shipment-1' },
+        client,
+      );
+      expect(result.containers.containers[0]).toMatchObject({
+        pickup_lfd: expected.value,
+        pickup_lfd_source: expected.source,
+      });
     },
   );
 });
