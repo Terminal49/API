@@ -4032,6 +4032,16 @@ export interface operations {
                              *     ]
                              */
                             ref_numbers?: string[];
+                            /**
+                             * @description Master bill of lading number you provide for the shipment.
+                             * @example MEDUFR030802
+                             */
+                            user_provided_mbl_number?: string;
+                            /**
+                             * @description Booking number you provide for the shipment.
+                             * @example BK123456
+                             */
+                            user_provided_booking_number?: string;
                             /** @description Tags related to a shipment */
                             tags?: string[];
                         };

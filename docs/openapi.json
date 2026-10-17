@@ -1546,6 +1546,16 @@
                               "type": "string"
                             }
                           },
+                          "user_provided_mbl_number": {
+                            "type": "string",
+                            "example": "MEDUFR030802",
+                            "description": "Master bill of lading number you provide for the shipment."
+                          },
+                          "user_provided_booking_number": {
+                            "type": "string",
+                            "example": "BK123456",
+                            "description": "Booking number you provide for the shipment."
+                          },
                           "tags": {
                             "type": "array",
                             "x-stoplight": {
