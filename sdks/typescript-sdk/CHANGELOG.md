@@ -5,6 +5,29 @@ All notable changes to `@terminal49/sdk` are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0](https://github.com/Terminal49/API/compare/sdk-v-v0.6.0...sdk-v-v0.7.0) (2026-10-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **sdk:** documents.update no longer accepts documentTypeManual. Pass documentType instead.
+* **openapi:** in the exported `paths` type from @terminal49/sdk, DELETE /webhooks/{id}, /custom_fields/{id}, /custom_field_definitions/{id}, and /custom_field_definitions/{definition_id}/options/{option_id} answer 204 instead of 200, so their `responses[200]` keys become `responses[204]`. `components['schemas']['error'].title` becomes optional.
+
+### Features
+
+* **mcp:** whoami tool and GET /me contract (SDK client.me()) ([#420](https://github.com/Terminal49/API/issues/420)) ([e5dfc3f](https://github.com/Terminal49/API/commit/e5dfc3f2f47a50f54602a4964b044bf94ec0588b))
+
+
+### Bug Fixes
+
+* **mcp:** summarize_containers counts with one /v2/containers/summary call ([#418](https://github.com/Terminal49/API/issues/418)) ([6b56eae](https://github.com/Terminal49/API/commit/6b56eae5955d1b3241e845f4d28ffc3dde1f06a2))
+* **sdk:** apply the review and live-test fixes from [#433](https://github.com/Terminal49/API/issues/433) ([#439](https://github.com/Terminal49/API/issues/439)) ([375d216](https://github.com/Terminal49/API/commit/375d216e672b36a96b8b36ef8844f346f48a5eb5))
+
+
+### Documentation
+
+* **openapi:** match the spec to live API behavior ([#438](https://github.com/Terminal49/API/issues/438)) ([9059a19](https://github.com/Terminal49/API/commit/9059a19ba4ecc33aed91538603fd03d2d250e0a1))
+
 ## [0.6.0](https://github.com/Terminal49/API/compare/sdk-v-v0.5.0...sdk-v-v0.6.0) (2026-10-08)
 
 

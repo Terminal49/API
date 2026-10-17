@@ -1,4 +1,4 @@
 {
-  "sdks/typescript-sdk": "0.6.0",
-  "sdks/typescript-sdk-cli": "0.1.0"
+  "sdks/typescript-sdk": "0.7.0",
+  "sdks/typescript-sdk-cli": "0.2.0"
 }
