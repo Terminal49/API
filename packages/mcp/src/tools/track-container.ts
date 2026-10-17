@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { logMcpEvent } from '../logging.js';
 import { executeGetContainer } from './get-container.js';
 import { executeSearchContainer } from './search-container.js';
+import { httpStatus } from './soft-results.js';
 import type { WriteAuditSummary } from './write-kit.js';
 
 export interface TrackContainerArgs {
@@ -552,12 +553,12 @@ export async function executeTrackContainer(
     // Step 2: Get full container details using the ID. A newly-created request
     // can expose its relationship before the container read model is available.
     // Preserve the successful write state instead of misreporting the request as
-    // uncreated when that follow-up read briefly returns 404.
+    // uncreated when that follow-up read briefly returns 404 or is rate limited.
     let containerDetails: Awaited<ReturnType<typeof executeGetContainer>>;
     try {
       containerDetails = await executeGetContainer({ id: containerId }, client);
     } catch (error) {
-      if (!isNotFound(error)) {
+      if (!isNotFound(error) && httpStatus(error) !== 429) {
         throw error;
       }
       return {

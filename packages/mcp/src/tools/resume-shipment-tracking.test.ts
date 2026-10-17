@@ -122,6 +122,54 @@ describe('resume_shipment_tracking', () => {
     ]);
   });
 
+  it('returns rate_limited when Terminal49 limits the resume call', async () => {
+    const { client } = fakeApiClient({
+      [`GET /shipments/${SHIPMENT_ID}`]: { body: shipment(STOPPED_AT) },
+      [`PATCH /shipments/${SHIPMENT_ID}/resume_tracking`]: {
+        status: 429,
+        headers: { 'Retry-After': '20' },
+      },
+    });
+
+    const result = await executeResumeShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      writeContext(client),
+    );
+
+    expect(result).toEqual({
+      error: 'rate_limited',
+      message: expect.stringContaining('Nothing was changed.'),
+      alternative: 'Wait 20 seconds and try again.',
+      retry_after_s: 20,
+    });
+    expect(resumeShipmentTrackingOutputSchema.parse(result)).toEqual(result);
+    expect(auditEvents(logged)).toEqual([
+      expect.objectContaining({ outcome: 'rate_limited' }),
+    ]);
+  });
+
+  it('returns rate_limited when Terminal49 limits the read before the resume', async () => {
+    const { client, requests } = fakeApiClient({
+      [`GET /shipments/${SHIPMENT_ID}`]: {
+        status: 429,
+        headers: { 'Retry-After': '5' },
+      },
+    });
+
+    const result = await executeResumeShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      writeContext(client),
+    );
+
+    expect(result).toMatchObject({ error: 'rate_limited', retry_after_s: 5 });
+    expect(requests.map((request) => request.method)).toEqual(['GET']);
+    expect(auditEvents(logged)).toEqual([
+      expect.objectContaining({ outcome: 'rate_limited' }),
+    ]);
+  });
+
   it('changes nothing when the shipment is already tracked', async () => {
     const { client, requests } = fakeApiClient({
       [`GET /shipments/${SHIPMENT_ID}`]: { body: shipment(null) },

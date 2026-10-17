@@ -247,4 +247,36 @@ describe('tracking lifecycle tools over the MCP client transport', () => {
 
     expect(result.isError).toBe(true);
   });
+
+  it.each([
+    [
+      'resume_shipment_tracking',
+      { shipment_id: SHIPMENT_ID },
+      `GET /shipments/${SHIPMENT_ID}`,
+    ],
+    [
+      'cancel_tracking_request',
+      { tracking_request_id: REQUEST_ID },
+      `GET /tracking_requests/${REQUEST_ID}`,
+    ],
+  ])(
+    'returns rate_limited as a soft result when %s is limited on its read',
+    async (name, args, read) => {
+      const result = await callTool(
+        name,
+        args,
+        {
+          'GET /me': { body: meBody() },
+          [read]: { status: 429, headers: { 'Retry-After': '0' } },
+        },
+        CONFIRMING,
+      );
+
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        error: 'rate_limited',
+        retry_after_s: 0,
+      });
+    },
+  );
 });

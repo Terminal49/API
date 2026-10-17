@@ -327,7 +327,10 @@ describe('stop_shipment_tracking', () => {
     const { client } = fakeApiClient({
       'GET /me': { body: meBody(enabled) },
       [`GET /shipments/${SHIPMENT_ID}`]: { body: shipment(null) },
-      [`PATCH /shipments/${SHIPMENT_ID}/stop_tracking`]: { status: 429 },
+      [`PATCH /shipments/${SHIPMENT_ID}/stop_tracking`]: {
+        status: 429,
+        headers: { 'Retry-After': '30' },
+      },
     });
     const preview = await executeStopShipmentTracking(
       { shipment_id: SHIPMENT_ID },
@@ -344,8 +347,45 @@ describe('stop_shipment_tracking', () => {
         client,
         writeContext(client),
       ),
-    ).resolves.toMatchObject({ error: 'rate_limited' });
+    ).resolves.toEqual({
+      error: 'rate_limited',
+      message: expect.stringContaining('Nothing was changed.'),
+      alternative: 'Wait 30 seconds and try again.',
+      retry_after_s: 30,
+    });
   });
+
+  it.each([
+    ['the feature check', { 'GET /me': { status: 429 } }],
+    [
+      'the shipment read',
+      {
+        'GET /me': { body: meBody(enabled) },
+        [`GET /shipments/${SHIPMENT_ID}`]: {
+          status: 429,
+          headers: { 'Retry-After': '30' },
+        },
+      },
+    ],
+  ])(
+    'returns rate_limited when Terminal49 limits %s',
+    async (_step, routes: FakeRoutes) => {
+      const { client, requests } = fakeApiClient(routes);
+
+      const result = await executeStopShipmentTracking(
+        { shipment_id: SHIPMENT_ID },
+        client,
+        writeContext(client),
+      );
+
+      expect(result).toMatchObject({ error: 'rate_limited' });
+      expect(stopShipmentTrackingOutputSchema.parse(result)).toEqual(result);
+      expect(patches(requests)).toEqual([]);
+      expect(auditEvents(logged)).toEqual([
+        expect.objectContaining({ phase: 'preview', outcome: 'rate_limited' }),
+      ]);
+    },
+  );
 
   it.each([
     ['already_stopped', STOPPED_AT],

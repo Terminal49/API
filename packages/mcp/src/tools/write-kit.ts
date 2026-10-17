@@ -14,7 +14,7 @@
  */
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
-import type { SoftResult } from './soft-results.js';
+import { httpStatus, type SoftResult } from './soft-results.js';
 import { CONFIRMATION_TOKEN_PREFIX } from '../redaction.js';
 import { addMcpBreadcrumb } from '../sentry.js';
 import { captureMcpEvent } from '../posthog.js';
@@ -263,6 +263,7 @@ const softResultFields = {
   reason: z.string().optional(),
   message: z.string().optional(),
   alternative: z.string().optional(),
+  retry_after_s: z.number().optional(),
 };
 
 /**
@@ -290,15 +291,30 @@ export function confirmedWriteResultSchema<Fields extends z.ZodRawShape>(
   });
 }
 
-export type WriteRateLimited = SoftResult<'rate_limited'>;
+export interface WriteRateLimited extends SoftResult<'rate_limited'> {
+  /** Seconds Terminal49 asked the caller to wait, when it said. */
+  retry_after_s?: number;
+}
+
+const retryAfterSchema = z.object({ retryAfterMs: z.number().nonnegative() });
 
 /** Returned when Terminal49 answers a write with 429. */
-export const WRITE_RATE_LIMITED: WriteRateLimited = {
-  error: 'rate_limited',
-  message:
-    'Terminal49 is limiting how often this change can be made. Nothing was changed.',
-  alternative: 'Wait a minute and try again.',
-};
+export function writeRateLimited(error: unknown): WriteRateLimited {
+  const parsed = retryAfterSchema.safeParse(error);
+  const retryAfterS = parsed.success
+    ? Math.ceil(parsed.data.retryAfterMs / 1000)
+    : undefined;
+  return {
+    error: 'rate_limited',
+    message:
+      'Terminal49 is limiting how often this change can be made. Nothing was changed.',
+    alternative:
+      retryAfterS === undefined
+        ? 'Wait a minute and try again.'
+        : `Wait ${retryAfterS} seconds and try again.`,
+    ...(retryAfterS === undefined ? {} : { retry_after_s: retryAfterS }),
+  };
+}
 
 /** The confirmation_token input every tier C tool takes. */
 export const confirmationTokenInput = z
@@ -457,6 +473,22 @@ export interface WriteAuditSummary {
 }
 
 /**
+ * Audits a write that threw. A 429 from any of its requests, reads included,
+ * becomes the rate_limited soft result; anything else is rethrown.
+ */
+async function failedWrite(
+  error: unknown,
+  audit: (outcome: string) => Promise<void>,
+): Promise<WriteRateLimited> {
+  if (httpStatus(error) === 429) {
+    await audit('rate_limited');
+    return writeRateLimited(error);
+  }
+  await audit('error');
+  throw error;
+}
+
+/**
  * Runs a tier A write and emits its audit event. `summarize` reads the
  * outcome and record from the result, for a write whose record id is known
  * only after it runs.
@@ -468,7 +500,7 @@ export async function runWrite<Result>(
   summarize: (result: Result) => WriteAuditSummary = (result) => ({
     outcome: auditOutcome(result),
   }),
-): Promise<Result> {
+): Promise<Result | WriteRateLimited> {
   const audit = auditor(context, target, 'A');
   try {
     const result = await run();
@@ -480,8 +512,7 @@ export async function runWrite<Result>(
     );
     return result;
   } catch (error) {
-    await audit('execute', 'error');
-    throw error;
+    return failedWrite(error, (outcome) => audit('execute', outcome));
   }
 }
 
@@ -512,7 +543,8 @@ export type ConfirmedWriteResult<Preview, Stop, Done> =
   | ConfirmationRequiredResult<Preview>
   | StalePreviewResult<Preview>
   | InvalidConfirmationResult
-  | NotPermittedResult;
+  | NotPermittedResult
+  | WriteRateLimited;
 
 /**
  * Runs a tier C write. Without a token it returns a preview and a token.
@@ -581,7 +613,6 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
     await audit(phase, auditOutcome(done));
     return done;
   } catch (error) {
-    await audit(phase, 'error');
-    throw error;
+    return failedWrite(error, (outcome) => audit(phase, outcome));
   }
 }

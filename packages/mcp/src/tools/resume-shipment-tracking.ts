@@ -21,7 +21,6 @@ import {
 import { httpStatus, isFeatureNotEnabled } from './soft-results.js';
 import {
   runWrite,
-  WRITE_RATE_LIMITED,
   type WriteRateLimited,
   writeResultSchema,
 } from './write-kit.js';
@@ -91,7 +90,6 @@ export async function executeResumeShipmentTracking(
         };
       } catch (error) {
         if (isFeatureNotEnabled(error)) return { ...STOP_TRACKING_NOT_ENABLED };
-        if (httpStatus(error) === 429) return { ...WRITE_RATE_LIMITED };
         if (httpStatus(error) === 422) {
           const after = await readShipmentTracking(client, shipment_id);
           return after.tracking === 'active'

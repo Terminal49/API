@@ -19,8 +19,6 @@ import {
   type ConfirmedWriteResult,
   confirmedWriteResultSchema,
   runConfirmedWrite,
-  WRITE_RATE_LIMITED,
-  type WriteRateLimited,
 } from './write-kit.js';
 
 /** The only statuses the API lets a caller cancel. */
@@ -90,10 +88,7 @@ interface CancelUnchangedResult {
 export type CancelTrackingRequestResult = ConfirmedWriteResult<
   CancelPreview,
   NotCancellableResult,
-  | CancelledResult
-  | CancelUnchangedResult
-  | NotCancellableResult
-  | WriteRateLimited
+  CancelledResult | CancelUnchangedResult | NotCancellableResult
 >;
 
 function summarize(request: GetTrackingRequestResult): TrackingRequestSummary {
@@ -176,7 +171,6 @@ export async function executeCancelTrackingRequest(
             ? cancelUnchanged(after)
             : notCancellable(after);
         }
-        if (httpStatus(error) === 429) return { ...WRITE_RATE_LIMITED };
         throw error;
       }
       // The cancel response body is empty, so read the request again for

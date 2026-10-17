@@ -3,6 +3,7 @@ import { Terminal49Client } from '@terminal49/sdk';
 export interface FakeResponse {
   status?: number;
   body?: unknown;
+  headers?: Record<string, string>;
 }
 
 export interface FakeRequest {
@@ -49,7 +50,13 @@ export function fakeApiFetch(routes: FakeRoutes) {
         response.body ??
           (status >= 400 ? { errors: [{ status: String(status) }] } : {}),
       ),
-      { status, headers: { 'Content-Type': 'application/vnd.api+json' } },
+      {
+        status,
+        headers: {
+          'Content-Type': 'application/vnd.api+json',
+          ...response.headers,
+        },
+      },
     );
   };
   return { fetch, requests };

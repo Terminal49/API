@@ -252,6 +252,38 @@ describe('cancel_tracking_request', () => {
     });
   });
 
+  it('returns rate_limited without a wait when the API sends no Retry-After', async () => {
+    const { client } = request('pending', { status: 429 });
+    const preview = await call(client);
+
+    const result = await call(client, tokenOf(preview));
+
+    expect(result).toEqual({
+      error: 'rate_limited',
+      message: expect.stringContaining('Nothing was changed.'),
+      alternative: 'Wait a minute and try again.',
+    });
+    expect(cancelTrackingRequestOutputSchema.parse(result)).toEqual(result);
+  });
+
+  it('returns rate_limited when Terminal49 limits the read before the cancel', async () => {
+    const { client, requests } = fakeApiClient({
+      [`GET /tracking_requests/${REQUEST_ID}`]: {
+        status: 429,
+        headers: { 'Retry-After': '10' },
+      },
+    });
+
+    const result = await call(client, 'any-token');
+
+    expect(result).toMatchObject({ error: 'rate_limited', retry_after_s: 10 });
+    expect(cancelTrackingRequestOutputSchema.parse(result)).toEqual(result);
+    expect(patches(requests)).toEqual([]);
+    expect(auditEvents(logged)).toEqual([
+      expect.objectContaining({ phase: 'execute', outcome: 'rate_limited' }),
+    ]);
+  });
+
   it('refuses a token issued for another account', async () => {
     const { client, requests } = request();
     const preview = await call(client);

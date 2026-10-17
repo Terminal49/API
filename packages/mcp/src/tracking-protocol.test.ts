@@ -1173,6 +1173,94 @@ describe('track_container audit', () => {
   });
 });
 
+describe('track_container when Terminal49 limits the request rate', () => {
+  function auditOutcomes(lines: string[]): string[] {
+    return lines
+      .filter((line) => line.startsWith('{'))
+      .map((line) => JSON.parse(line))
+      .filter((event) => event.event === 'mcp.write.audit')
+      .map((event) => event.outcome);
+  }
+
+  async function track(): Promise<{
+    result: Awaited<ReturnType<Client['callTool']>>;
+    outcomes: string[];
+  }> {
+    const lines: string[] = [];
+    const spy = vi
+      .spyOn(console, 'error')
+      .mockImplementation((line: unknown) => {
+        lines.push(String(line));
+      });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330011' },
+      });
+      return { result, outcomes: auditOutcomes(lines) };
+    } finally {
+      await client.close();
+      spy.mockRestore();
+    }
+  }
+
+  it('returns rate_limited as a soft result when the create call answers 429', async () => {
+    stubApi({
+      'GET /search': () => ({ data: [] }),
+      'POST /tracking_requests/infer_number': () =>
+        inferResponse('MSKU4330011', 'MAEU'),
+      'POST /tracking_requests': () =>
+        new Response(JSON.stringify({ errors: [{ status: '429' }] }), {
+          status: 429,
+          headers: {
+            'content-type': 'application/vnd.api+json',
+            'Retry-After': '1',
+          },
+        }),
+    });
+
+    const { result, outcomes } = await track();
+
+    expect(result.isError).not.toBe(true);
+    expect(result.structuredContent).toMatchObject({
+      error: 'rate_limited',
+      retry_after_s: 1,
+    });
+    expect(outcomes).toEqual(['rate_limited']);
+  });
+
+  it('reports the created request when the container read after it answers 429', async () => {
+    const containerId = '7c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f';
+    stubApi({
+      'GET /search': () => ({ data: [] }),
+      'POST /tracking_requests/infer_number': () =>
+        inferResponse('MSKU4330011', 'MAEU'),
+      'POST /tracking_requests': (body) => ({
+        ...createdTrackingRequest(body),
+        included: [{ id: containerId, type: 'container', attributes: {} }],
+      }),
+      [`GET /containers/${containerId}`]: () =>
+        new Response(JSON.stringify({ errors: [{ status: '429' }] }), {
+          status: 429,
+          headers: {
+            'content-type': 'application/vnd.api+json',
+            'Retry-After': '0',
+          },
+        }),
+    });
+
+    const { result, outcomes } = await track();
+
+    expect(result.isError).not.toBe(true);
+    expect(result.structuredContent).toMatchObject({
+      tracking_request_created: true,
+      tracking_request: { id: 'tr-1', container_id: containerId },
+    });
+    expect(outcomes).toEqual(['created']);
+  });
+});
+
 describe('trackContainerAudit', () => {
   it.each([
     [

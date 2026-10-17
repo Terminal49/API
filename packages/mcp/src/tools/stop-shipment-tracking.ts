@@ -26,8 +26,6 @@ import {
   type ConfirmedWriteRead,
   type ConfirmedWriteResult,
   runConfirmedWrite,
-  WRITE_RATE_LIMITED,
-  type WriteRateLimited,
 } from './write-kit.js';
 
 export const stopShipmentTrackingInputSchema = z
@@ -67,10 +65,7 @@ interface StopOutcome {
   undo?: 'resume_shipment_tracking';
 }
 
-type StopSoftResult =
-  | TrackingUnchanged
-  | StopTrackingNotEnabled
-  | WriteRateLimited;
+type StopSoftResult = TrackingUnchanged | StopTrackingNotEnabled;
 
 function alreadyStopped(shipment: ShipmentTracking): StopOutcome {
   return {
@@ -143,7 +138,6 @@ export async function executeStopShipmentTracking(
         };
       } catch (error) {
         if (isFeatureNotEnabled(error)) return { ...STOP_TRACKING_NOT_ENABLED };
-        if (httpStatus(error) === 429) return { ...WRITE_RATE_LIMITED };
         if (httpStatus(error) === 422) {
           const after = await readShipmentTracking(client, shipment_id);
           return after.tracking === 'stopped'
