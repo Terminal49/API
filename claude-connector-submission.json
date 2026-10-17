@@ -27,6 +27,7 @@
       "get_container_transport_events",
       "get_shipment_details",
       "get_supported_shipping_lines",
+      "get_tracking_request",
       "list_containers",
       "list_parties",
       "list_shipments",

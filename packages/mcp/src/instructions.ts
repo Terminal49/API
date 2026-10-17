@@ -76,6 +76,9 @@ const PARAGRAPHS: readonly Paragraph[] = [
         text: ' Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.',
       },
       {
+        text: ' Call get_tracking_request with a request ID to check its status and get the shipment it created.',
+      },
+      {
         text: ' Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links.',
       },
       {

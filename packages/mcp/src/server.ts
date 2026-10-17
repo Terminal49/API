@@ -49,6 +49,11 @@ import {
   executeListParties,
   listPartiesInputSchema,
 } from './tools/list-parties.js';
+import {
+  executeGetTrackingRequest,
+  getTrackingRequestInputSchema,
+  getTrackingRequestOutputSchema,
+} from './tools/get-tracking-request.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
@@ -944,6 +949,8 @@ function formatToolError(
         return `No shipment found with id ${id ?? '(missing)'}.`;
       case 'get_container_route':
         return `No route found for container id ${id ?? '(missing)'}.`;
+      case 'get_tracking_request':
+        return `No tracking request found with id ${id ?? '(missing)'}.`;
       default:
         return 'The requested Terminal49 record was not found.';
     }
@@ -1515,6 +1522,17 @@ export function createTerminal49McpServer(
         }),
       },
       async (args) => executeListTrackingRequests(args, client),
+    ),
+    get_tracking_request: tool(
+      {
+        description:
+          'Get one tracking request by ID: its number, carrier SCAC, status, failed_reason, retry state, and the shipment_id it created. ' +
+          'Status pending or awaiting_manifest means Terminal49 is still working on it; created means it succeeded, so pass shipment_id to get_shipment_details; failed carries failed_reason. ' +
+          'Use it to follow up on a request you just created or found with list_tracking_requests.',
+        inputSchema: getTrackingRequestInputSchema,
+        outputSchema: getTrackingRequestOutputSchema,
+      },
+      async (args) => executeGetTrackingRequest(args, client),
     ),
     search_docs: tool(
       {
