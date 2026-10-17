@@ -190,6 +190,16 @@ describe('MCP tool annotations', () => {
     }
   });
 
+  it('describes the default write tools in the MCP Registry listing', () => {
+    const server = JSON.parse(
+      readFileSync(new URL('../../../server.json', import.meta.url), 'utf8'),
+    ) as { description: string };
+    // The registry schema caps the description at 100 characters.
+    expect(server.description.length).toBeLessThanOrEqual(100);
+    expect(server.description).toContain('stop or resume tracking');
+    expect(server.description).toContain('edit references, parties');
+  });
+
   it('lists exactly the default toolset tools, with live annotations, in the store submissions', () => {
     const tools = getRegisteredTools();
     const chatGpt = JSON.parse(
@@ -256,6 +266,13 @@ describe('MCP tool annotations', () => {
     );
     expect(triggered).toContain('summarize_containers');
     expect(triggered).toContain('list_parties');
+    // Reviewers check that a write which removes data waits for approval.
+    const confirmedWrite = chatGpt.test_cases.find((testCase) =>
+      testCase.tools_triggered.includes('remove_reference_numbers'),
+    );
+    expect(confirmedWrite?.expected_output).toContain(
+      'only after the user approves',
+    );
     for (const testCase of chatGpt.test_cases) {
       expect(testCase.description.trim()).not.toBe('');
       expect(testCase.user_prompt.trim()).not.toBe('');

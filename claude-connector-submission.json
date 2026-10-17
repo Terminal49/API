@@ -10,7 +10,7 @@
   "listing": {
     "name": "Terminal49",
     "tagline": "Track ocean shipments",
-    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, and create new tracking requests.",
+    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count container worklists, and inspect routes, transport events, and documents. At the user's request it can also track containers, stop or resume tracking, and edit reference numbers, parties, custom fields, and document types. Changes that remove or replace data show a preview first and run only after the user confirms.",
     "categories": [
       "Business"
     ],
@@ -66,9 +66,12 @@
     "primary_use_cases": [
       "Find and monitor ocean shipments and containers",
       "Filter and count container worklists by status, terminal, carrier, holds, last free day, or company",
-      "Inspect routes and transport events",
+      "Inspect routes, transport events, and documents",
       "Check supported shipping lines",
-      "Create new tracking requests"
+      "Create new tracking requests",
+      "Stop or resume shipment tracking and cancel pending tracking requests",
+      "Edit reference numbers, parties, and custom field values on containers and shipments",
+      "Fix a document's type, extraction, or links"
     ]
   }
 }

@@ -4,7 +4,7 @@
   "app_info": {
     "display_name": "Terminal49",
     "subtitle": "Track shipping containers",
-    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, and create new tracking requests through ChatGPT.",
+    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count container worklists, and inspect routes, transport events, and documents through ChatGPT. At the user's request it can also track containers, stop or resume tracking, and edit reference numbers, parties, custom fields, and document types. Changes that remove or replace data show a preview first and run only after the user confirms.",
     "category": "BUSINESS"
   },
   "tools": {
@@ -419,11 +419,11 @@
       "expected_output_url": null
     },
     {
-      "description": "List the 10 most recently updated shipments without nested containers.",
-      "user_prompt": "Show my 10 most recently updated shipments. Don’t include nested containers.",
+      "description": "Remove a reference number from a shipment only after the user approves a preview.",
+      "user_prompt": "Remove reference number PO-1234 from the shipment with Bill of Lading COSU6123456789 in my Terminal49 account.",
       "file_attachment_urls": null,
-      "tools_triggered": "list_shipments",
-      "expected_output": "Returns up to 10 of the most recently updated shipments with a page size of 10, include_containers=false, no carrier, status, or port filters, and no nested containers. Mentions pagination if present.",
+      "tools_triggered": "search_container, remove_reference_numbers",
+      "expected_output": "Finds the shipment, then calls remove_reference_numbers without a confirmation token and shows the preview of the reference numbers before and after. It removes PO-1234 only after the user approves, by calling again with the confirmation token from that preview. If the shipment does not have PO-1234, it reports that nothing was changed.",
       "expected_output_url": null
     },
     {
