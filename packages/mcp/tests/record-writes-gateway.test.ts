@@ -17,6 +17,7 @@ const C5 = '55555555-5555-4555-8555-555555555555';
 const C6 = '66666666-6666-4666-8666-666666666666';
 const ACCOUNT = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const DEFINITION = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+const PARTY = '99999999-9999-4999-8999-999999999999';
 const TIMED_OUT_MID_WRITE =
   'Ran out of time while saving. The change may or may not have been applied; check this record before calling again.';
 
@@ -157,6 +158,7 @@ class NodeResponse extends EventEmitter {
 
 function toolsCall(
   authorization: string,
+  name: 'set_custom_field' | 'set_party_role',
   args: Record<string, unknown>,
 ): Record<string, unknown> {
   return {
@@ -173,10 +175,18 @@ function toolsCall(
       jsonrpc: '2.0',
       id: 1,
       method: 'tools/call',
-      params: { name: 'set_custom_field', arguments: args },
+      params: { name, arguments: args },
     },
   };
 }
+
+const AUTH_MS = 12_000;
+const slowResolve: Route = {
+  delayMs: AUTH_MS,
+  body: {
+    data: { attributes: { access_token: 'oauth-access', account_id: ACCOUNT } },
+  },
+};
 
 const textOf = (body: any): string =>
   body.result.content.map((block: { text?: string }) => block.text).join('\n');
@@ -199,18 +209,8 @@ describe('record writes through the /mcp gateway', () => {
     vi.useFakeTimers();
     process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
     process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
-    const AUTH_MS = 12_000;
     const upstream = stubUpstream((method, path) => {
-      if (path === '/v2/connected-clients/resolve') {
-        return {
-          delayMs: AUTH_MS,
-          body: {
-            data: {
-              attributes: { access_token: 'oauth-access', account_id: ACCOUNT },
-            },
-          },
-        };
-      }
+      if (path === '/v2/connected-clients/resolve') return slowResolve;
       const id = path.split('/')[3] ?? '';
       if (method === 'GET') {
         return { delayMs: 3_000, body: customFieldsDoc(id, 'PO-OLD') };
@@ -226,7 +226,7 @@ describe('record writes through the /mcp gateway', () => {
     const res = new NodeResponse();
 
     const done = handler(
-      toolsCall('Bearer workos-access-token', {
+      toolsCall('Bearer workos-access-token', 'set_custom_field', {
         entity: 'container',
         ids: [C1, C2, C3, C4, C5, C6],
         api_slug: 'po_number',
@@ -259,6 +259,62 @@ describe('record writes through the /mcp gateway', () => {
     expect(
       upstream.some((call) => call.method === 'POST' && call.path.includes(C6)),
     ).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(CALL_BUDGET_MS);
+    await done;
+  });
+
+  it('holds set_party_role to the same request-wide deadline', async () => {
+    vi.useFakeTimers();
+    process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
+    process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
+    stubUpstream((method, path) => {
+      if (path === '/v2/connected-clients/resolve') return slowResolve;
+      const id = path.split('/')[3] ?? '';
+      if (method === 'GET') {
+        return { delayMs: id === C3 ? 9_000 : 3_000, body: { data: [] } };
+      }
+      return {
+        delayMs: id === C2 ? 10_000 : 3_000,
+        status: 201,
+        body: {
+          data: {
+            id: `pr-${id}`,
+            type: 'party_role',
+            attributes: { role: 'pickup_dray_carrier' },
+            relationships: { party: { data: { type: 'party', id: PARTY } } },
+          },
+        },
+      };
+    });
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const startedAt = Date.now();
+    const res = new NodeResponse();
+
+    const done = handler(
+      toolsCall('Bearer workos-access-token', 'set_party_role', {
+        container_ids: [C1, C2, C3],
+        role: 'pickup_dray_carrier',
+        party_id: PARTY,
+        action: 'add',
+      }) as any,
+      res as any,
+    );
+    await vi.advanceTimersByTimeAsync(CALL_BUDGET_MS);
+
+    expect(res.endedAt).toBeDefined();
+    expect(res.endedAt! - startedAt).toBeLessThanOrEqual(CALL_BUDGET_MS);
+    const body = res.body();
+    const expected = {
+      updated: [C1],
+      unchanged: [],
+      failed: [{ id: C2, error: TIMED_OUT_MID_WRITE }],
+      not_attempted: [C3],
+      summary:
+        'Assigned pickup_dray_carrier on 1 container; 0 already had it; 1 failed. Ran out of time before 1 more; call again with not_attempted.',
+    };
+    expect(body.result.structuredContent).toEqual(expected);
+    expect(JSON.parse(textOf(body))).toEqual(expected);
 
     await vi.advanceTimersByTimeAsync(CALL_BUDGET_MS);
     await done;
@@ -297,7 +353,7 @@ describe('record writes through the /mcp gateway', () => {
     const res = new NodeResponse();
 
     await handler(
-      toolsCall('Token YOUR_API_KEY', {
+      toolsCall('Token YOUR_API_KEY', 'set_custom_field', {
         entity: 'container',
         ids: [C1, C2, C3],
         api_slug: 'po_number',
