@@ -113,6 +113,11 @@ import {
   unassignPartyOutputSchema,
 } from './tools/unassign-party.js';
 import {
+  executeSetCustomField,
+  setCustomFieldInputSchema,
+  setCustomFieldOutputSchema,
+} from './tools/set-custom-field.js';
+import {
   cancelTrackingRequestInputSchema,
   cancelTrackingRequestOutputSchema,
   executeCancelTrackingRequest,
@@ -1051,6 +1056,7 @@ function formatToolError(
       case 'remove_reference_numbers':
       case 'assign_party':
       case 'unassign_party':
+      case 'set_custom_field':
         return `No ${entityLabel(input.entity_type)} found with id ${typeof input.entity_id === 'string' ? input.entity_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
@@ -1847,6 +1853,20 @@ export function createTerminal49McpServer(
         outputSchema: unassignPartyOutputSchema,
       },
       async (args, context) => executeUnassignParty(args, client, context),
+    ),
+    set_custom_field: tool(
+      {
+        description:
+          'Fill an empty custom field, such as a PO number or project manager, on a container, shipment, or tracking request. ' +
+          "Get the field's api_slug, data_type, and allowed values from the account's custom field definitions first. The value is checked against the data_type and options before anything is sent; a value that does not fit returns invalid_value with the expected form. " +
+          'When the field already has a value, it returns already_set with current_value and changes nothing. It checks before it writes but cannot block a write that lands at the same moment, so do not run two set_custom_field calls on the same field in parallel. ' +
+          'On a tracking request, Terminal49 copies the value to the shipment or containers the request creates. A later change on the tracking request does not reach those copies, so once the request has created its shipment this returns use_shipment_or_container with shipment_id; set the field on that shipment or its containers instead. ' +
+          'Returns set with the stored value, or unknown_field, field_not_applicable, or unsupported_field when the field cannot take this write. ' +
+          'Returns ambiguous_field with values when a tracking request holds one value per container for the field.',
+        inputSchema: setCustomFieldInputSchema,
+        outputSchema: setCustomFieldOutputSchema,
+      },
+      async (args, context) => executeSetCustomField(args, client, context),
     ),
     search_docs: tool(
       {

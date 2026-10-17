@@ -70,6 +70,8 @@ export interface ReferenceRecord {
   target: ReferenceTarget;
   /** Null when the record's list could not be read. */
   ref_numbers: string[] | null;
+  /** The shipment a tracking request created. Null for other records. */
+  shipment_id: string | null;
 }
 
 const rawRecordSchema = z.object({
@@ -88,6 +90,16 @@ const rawRecordSchema = z.object({
         bill_of_lading_number: null,
         request_number: null,
       }),
+    relationships: z
+      .object({
+        tracked_object: z
+          .object({
+            data: z.object({ type: z.string(), id: z.string() }).nullable(),
+          })
+          .nullish(),
+      })
+      .nullish()
+      .catch(null),
   }),
 });
 
@@ -111,6 +123,7 @@ function parseRecord(
 ): ReferenceRecord {
   const { data } = rawRecordSchema.parse(raw);
   const { attributes } = data;
+  const tracked = data.relationships?.tracked_object?.data;
   const label = {
     container: attributes.number,
     shipment: attributes.bill_of_lading_number,
@@ -119,6 +132,10 @@ function parseRecord(
   return {
     target: { entity_type: entityType, entity_id: data.id, label },
     ref_numbers: readRefNumbers(attributes.ref_numbers),
+    shipment_id:
+      tracked?.type === 'shipment' && entityType === 'tracking_request'
+        ? tracked.id
+        : null,
   };
 }
 

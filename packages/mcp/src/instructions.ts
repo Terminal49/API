@@ -33,6 +33,8 @@ const WRITE_EFFECTS = {
     'links a party such as a customer or dray carrier to a container or shipment in a role',
   unassign_party:
     'removes one party role from a container or shipment and keeps the party',
+  set_custom_field:
+    'fills an empty custom field on a container, shipment or tracking request',
 } satisfies Record<WriteTool['name'], string>;
 
 const TIER_RULES = {
@@ -94,6 +96,9 @@ const PARAGRAPHS: readonly Paragraph[] = [
       },
       {
         text: " Before unassign_party, read the record's party roles with get_container include ['party_roles'] or get_shipment_details include_party_roles to get the party_role_id.",
+      },
+      {
+        text: ' Before set_custom_field, call list_custom_field_definitions for the api_slug, data_type and allowed values of the field.',
       },
       {
         text: ' Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.',

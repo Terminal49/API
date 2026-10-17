@@ -173,6 +173,18 @@ export const TOOL_REGISTRY = [
     },
   },
   {
+    name: 'set_custom_field',
+    title: 'Set Custom Field',
+    toolset: 'operations',
+    tier: 'A',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
     name: 'search_docs',
     title: 'Search Terminal49 Docs',
     toolset: 'core',

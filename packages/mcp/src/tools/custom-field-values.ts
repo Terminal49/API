@@ -49,9 +49,9 @@ export const customFieldTargetInput = {
     ),
   api_slug: z
     .string()
-    .regex(/^[a-z0-9_]{1,64}$/)
+    .regex(/^[A-Za-z0-9_]{1,255}$/)
     .describe(
-      'The api_slug of the field, from list_custom_field_definitions, such as po_number.',
+      "The field's api_slug from the account's custom field definitions, such as po_number.",
     ),
 };
 
@@ -146,7 +146,7 @@ export function unknownField(
     error: 'unknown_field',
     message: `This account has no active custom field with api_slug ${apiSlug}. Nothing was changed.`,
     alternative:
-      'Call list_custom_field_definitions to find the api_slug of the field.',
+      "Look up the field's api_slug in the account's custom field definitions.",
     api_slug: apiSlug,
   };
 }
@@ -383,25 +383,30 @@ const rawFieldsSchema = z.object({
   ),
 });
 
-/** The field's value on the record, or undefined when it has none. */
-export async function readStoredValue(
+/**
+ * Every entry the record holds for the field. A tracking request holds one
+ * per container number when it staged a container field per container, and
+ * Terminal49 does not say which entry belongs to which container.
+ */
+export async function readStoredValues(
   client: Terminal49Client,
   entityType: ReferenceEntityType,
   id: string,
   apiSlug: string,
-): Promise<StoredValue | undefined> {
+): Promise<StoredValue[]> {
   const raw = await {
     container: () => client.containers.customFields(id, { format: 'raw' }),
     shipment: () => client.shipments.customFields(id, { format: 'raw' }),
     tracking_request: () =>
       client.trackingRequests.customFields(id, { format: 'raw' }),
   }[entityType]();
-  const field = rawFieldsSchema
+  return rawFieldsSchema
     .parse(raw)
-    .data.find(({ attributes }) => attributes.api_slug === apiSlug);
-  if (!field || !hasValue(field.attributes.value)) return undefined;
-  const { value, display_value } = field.attributes;
-  return { value, display_value };
+    .data.filter(({ attributes }) => attributes.api_slug === apiSlug)
+    .map(({ attributes: { value, display_value } }) => ({
+      value,
+      display_value,
+    }));
 }
 
 /**
@@ -446,24 +451,115 @@ export function sameValue(
 export interface FieldState {
   definition: FieldDefinition;
   record: ReferenceTarget;
+  /** Undefined when the field has no value on the record. */
   stored: StoredValue | undefined;
 }
 
-/** The record's label and the field's current value on it. */
+export interface FieldWriteTarget {
+  entity_type: ReferenceEntityType;
+  entity_id: string;
+  api_slug: string;
+}
+
+/** A reason a write stops before it reads the record. */
+export type FieldStop =
+  | FieldSoftResult<'unknown_field'>
+  | FieldNotApplicable
+  | InvalidValue
+  | UnsupportedField;
+
+/** The field's definition, or why this tool cannot write it on this kind of record. */
+export async function findWritableField(
+  client: Terminal49Client,
+  target: FieldWriteTarget,
+): Promise<{ definition: FieldDefinition } | { stop: FieldStop }> {
+  const definition = await findDefinition(client, target.api_slug);
+  if (!definition) return { stop: unknownField(target.api_slug) };
+  const notApplicable = fieldNotApplicable(definition, target.entity_type);
+  if (notApplicable) return { stop: notApplicable };
+  // A clear on a field no tool can write would leave no way to restore it.
+  if (!isSupported(definition.data_type)) {
+    return { stop: unsupportedField(definition) };
+  }
+  return { definition };
+}
+
+export interface AmbiguousField extends FieldSoftResult<'ambiguous_field'> {
+  record: ReferenceTarget;
+  values: StoredValue[];
+}
+
+export interface UseShipmentOrContainer extends FieldSoftResult<'use_shipment_or_container'> {
+  record: ReferenceTarget;
+  shipment_id: string;
+}
+
+/**
+ * Terminal49 copies a tracking request's value to its shipment or containers
+ * only when the value is first created. Once the shipment exists, a later
+ * change on the tracking request does not reach the copies, and a new value
+ * replaces theirs.
+ */
+function useShipmentOrContainer(
+  definition: FieldDefinition,
+  record: ReferenceTarget,
+  shipmentId: string,
+): UseShipmentOrContainer {
+  return {
+    error: 'use_shipment_or_container',
+    message: `This tracking request already created shipment ${shipmentId}. A change on the tracking request does not reach that shipment or its containers. Nothing was changed.`,
+    alternative:
+      definition.entity_type === 'container'
+        ? `Change the field on each container of shipment ${shipmentId}.`
+        : `Change the field on shipment ${shipmentId}.`,
+    api_slug: definition.api_slug,
+    record,
+    shipment_id: shipmentId,
+  };
+}
+
+/**
+ * The record's label and the field's current value on it. A tracking request
+ * that already created its shipment stops. So does a record with more than
+ * one entry for the field: Terminal49 changes one of them without saying
+ * which, so no single value can be checked or previewed.
+ */
 export async function readFieldState(
   client: Terminal49Client,
-  entityType: ReferenceEntityType,
-  id: string,
+  target: FieldWriteTarget,
   definition: FieldDefinition,
-): Promise<FieldState> {
-  const { target } = await readReferenceRecord(client, entityType, id);
-  const stored = await readStoredValue(
+): Promise<FieldState | { stop: AmbiguousField | UseShipmentOrContainer }> {
+  const { entity_type, entity_id, api_slug } = target;
+  const { target: record, shipment_id } = await readReferenceRecord(
     client,
-    entityType,
-    id,
-    definition.api_slug,
+    entity_type,
+    entity_id,
   );
-  return { definition, record: target, stored };
+  if (shipment_id) {
+    return { stop: useShipmentOrContainer(definition, record, shipment_id) };
+  }
+  const entries = await readStoredValues(
+    client,
+    entity_type,
+    entity_id,
+    api_slug,
+  );
+  if (entries.length > 1) {
+    return {
+      stop: {
+        error: 'ambiguous_field',
+        message: `This ${ENTITY_LABELS[entity_type]} holds ${entries.length} values for the custom field ${api_slug}, one per container. Nothing was changed.`,
+        alternative:
+          'Show values to the user, and change the field on each container or in the Terminal49 dashboard.',
+        api_slug,
+        record,
+        values: entries,
+      },
+    };
+  }
+  const [entry] = entries;
+  const stored = entry && hasValue(entry.value) ? entry : undefined;
+  return { definition, record, stored };
 }
 
 const rawWrittenFieldSchema = z.object({
@@ -499,5 +595,11 @@ export const customFieldResultFields = {
   expected: z.string().optional(),
   allowed_values: z.array(z.string()).optional(),
   field_entity_type: z.string().nullable().optional(),
+  values: z
+    .array(
+      z.object({ value: z.unknown(), display_value: z.string().nullable() }),
+    )
+    .optional(),
+  shipment_id: z.string().optional(),
   undo: z.string().optional(),
 };

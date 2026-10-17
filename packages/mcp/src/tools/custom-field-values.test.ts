@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { fakeApiClient } from '../test/fake-api.js';
+import { refContainer } from '../test/reference-record.js';
 import { meBody, writeContext } from '../test/write-context.js';
 import {
   checkValue,
@@ -9,7 +10,9 @@ import {
   type FieldDefinition,
   fieldNotApplicable,
   findDefinition,
-  readStoredValue,
+  findWritableField,
+  readFieldState,
+  readStoredValues,
   sameValue,
 } from './custom-field-values.js';
 
@@ -247,39 +250,105 @@ describe('findDefinition', () => {
   });
 });
 
-describe('readStoredValue', () => {
-  const fields = (value: unknown) => ({
-    [`GET /containers/${CONTAINER_ID}/custom_fields`]: {
-      body: {
-        data: [
-          {
-            id: 'cf-1',
-            type: 'custom_field',
-            attributes: { api_slug: 'other', value: 'x', display_value: 'x' },
-          },
-          {
-            id: 'cf-2',
-            type: 'custom_field',
-            attributes: { api_slug: 'priority', value, display_value: 'High' },
-          },
-        ],
+describe('findWritableField', () => {
+  it('stops on a data type no tool can write, so a clear cannot remove it', async () => {
+    const { client } = fakeApiClient({
+      'GET /accounts/current/custom_field_definitions': {
+        body: {
+          data: [
+            {
+              id: 'def-linked',
+              type: 'custom_field_definition',
+              attributes: {
+                api_slug: 'linked',
+                display_name: 'Linked record',
+                data_type: 'reference',
+                entity_type: 'Cargo',
+                discarded_at: null,
+              },
+            },
+          ],
+        },
       },
+    });
+
+    expect(
+      await findWritableField(client, {
+        entity_type: 'container',
+        entity_id: CONTAINER_ID,
+        api_slug: 'linked',
+      }),
+    ).toEqual({
+      stop: {
+        error: 'unsupported_field',
+        message:
+          'This tool cannot write custom fields of data_type reference. Nothing was changed.',
+        alternative: 'Change this field in the Terminal49 dashboard.',
+        api_slug: 'linked',
+        data_type: 'reference',
+      },
+    });
+  });
+});
+
+describe('readStoredValues and readFieldState', () => {
+  const entry = (api_slug: string, value: unknown) => ({
+    id: `cf-${api_slug}`,
+    type: 'custom_field',
+    attributes: { api_slug, value, display_value: value ? 'High' : null },
+  });
+  const routes = (...entries: unknown[]) => ({
+    [`GET /containers/${CONTAINER_ID}`]: { body: refContainer([]) },
+    [`GET /containers/${CONTAINER_ID}/custom_fields`]: {
+      body: { data: [entry('other', 'x'), ...entries] },
     },
   });
+  const target = {
+    entity_type: 'container' as const,
+    entity_id: CONTAINER_ID,
+    api_slug: 'priority',
+  };
 
-  it('reads the value of the requested field', async () => {
-    const { client, requests } = fakeApiClient(fields('high'));
+  it('reads every entry of the requested field', async () => {
+    const { client, requests } = fakeApiClient(
+      routes(entry('priority', 'high'), entry('priority', 'low')),
+    );
     expect(
-      await readStoredValue(client, 'container', CONTAINER_ID, 'priority'),
-    ).toEqual({ value: 'high', display_value: 'High' });
+      await readStoredValues(client, 'container', CONTAINER_ID, 'priority'),
+    ).toEqual([
+      { value: 'high', display_value: 'High' },
+      { value: 'low', display_value: 'High' },
+    ]);
     expect(requests[0]?.query.get('include')).toBe('definition');
   });
 
+  it('reads the value of a field with one entry', async () => {
+    const { client } = fakeApiClient(routes(entry('priority', 'high')));
+    expect(await readFieldState(client, target, priority)).toMatchObject({
+      stored: { value: 'high', display_value: 'High' },
+    });
+  });
+
   it.each([[''], [[]], [null]])('treats %j as no value', async (value) => {
-    const { client } = fakeApiClient(fields(value));
-    expect(
-      await readStoredValue(client, 'container', CONTAINER_ID, 'priority'),
-    ).toBe(undefined);
+    const { client } = fakeApiClient(routes(entry('priority', value)));
+    expect(await readFieldState(client, target, priority)).toMatchObject({
+      stored: undefined,
+    });
+  });
+
+  it('stops on a field with more than one entry', async () => {
+    const { client } = fakeApiClient(
+      routes(entry('priority', 'high'), entry('priority', 'low')),
+    );
+    expect(await readFieldState(client, target, priority)).toMatchObject({
+      stop: {
+        error: 'ambiguous_field',
+        values: [
+          { value: 'high', display_value: 'High' },
+          { value: 'low', display_value: 'High' },
+        ],
+      },
+    });
   });
 });
 
