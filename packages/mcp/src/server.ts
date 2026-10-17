@@ -91,6 +91,11 @@ import {
   MAX_EXTRACTED_DATA_CHARS,
 } from './tools/get-document.js';
 import {
+  executeListWebhookNotifications,
+  listWebhookNotificationsInputSchema,
+  listWebhookNotificationsOutputSchema,
+} from './tools/list-webhook-notifications.js';
+import {
   executeListWebhooks,
   listWebhooksInputSchema,
   listWebhooksOutputSchema,
@@ -1083,6 +1088,8 @@ function formatToolError(
         return `No ${entityLabel(input.entity_type)} found with id ${typeof input.entity_id === 'string' ? input.entity_id : '(missing)'}.`;
       case 'list_webhooks':
         return `No webhook found with id ${typeof input.webhook_id === 'string' ? input.webhook_id : '(missing)'}.`;
+      case 'list_webhook_notifications':
+        return `No webhook notification found with id ${typeof input.notification_id === 'string' ? input.notification_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
       default:
@@ -1988,6 +1995,18 @@ export function createTerminal49McpServer(
         outputSchema: listWebhooksOutputSchema,
       },
       async (args) => executeListWebhooks(args, client),
+    ),
+    list_webhook_notifications: tool(
+      {
+        description:
+          'List the webhook notifications Terminal49 created for this account, in the order the API returns them, or read one by notification_id. ' +
+          'Each row has the event, delivery_status (pending, succeeded, or failed), created_at, the webhook_id it was sent to, and the type and id of the record it is about. ' +
+          'Use it to check whether Terminal49 sent a notification for an event and whether the receiver accepted it. ' +
+          'It returns no payloads, and the API offers no filters: scan the rows, and if links.next exists, request the next page. Page size is capped at 25.',
+        inputSchema: listWebhookNotificationsInputSchema,
+        outputSchema: listWebhookNotificationsOutputSchema,
+      },
+      async (args) => executeListWebhookNotifications(args, client),
     ),
     whoami: tool(
       {

@@ -232,6 +232,11 @@ export const TOOL_REGISTRY = [
     },
   },
   readTool('list_webhooks', 'List Webhooks', 'developer'),
+  readTool(
+    'list_webhook_notifications',
+    'List Webhook Notifications',
+    'developer',
+  ),
   readTool('whoami', 'Who Am I'),
 ] as const satisfies readonly ToolDefinition[];
 

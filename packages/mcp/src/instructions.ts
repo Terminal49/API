@@ -128,6 +128,9 @@ const PARAGRAPHS: readonly Paragraph[] = [
         text: ' Use list_webhooks to check which webhooks the account has and which events each one receives. It shows the host and the first path segment of each webhook URL, with parts that may be keys replaced by [redacted], and never its secret, header values, or query string.',
       },
       {
+        text: ' Use list_webhook_notifications to check whether Terminal49 created a notification for an event and whether it was delivered.',
+      },
+      {
         text: ' Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links.',
       },
       {
