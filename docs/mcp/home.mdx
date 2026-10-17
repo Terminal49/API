@@ -1,7 +1,7 @@
 ---
 title: "Terminal49 MCP Server"
 sidebarTitle: "MCP Overview"
-description: "Connect Claude, ChatGPT, Cursor, or any MCP client to the Terminal49 MCP server to query live shipment tracking data with OAuth sign-in and no API key."
+description: "Connect Claude, ChatGPT, Cursor, or any MCP client to the Terminal49 MCP server to query live shipment tracking data and update shipments, with OAuth sign-in and no API key."
 keywords:
   - "Terminal49 MCP server"
   - "AI container tracking"
@@ -16,7 +16,7 @@ keywords:
   - "MCP config"
   - "shipment data assistant"
 ---
-Use the Terminal49 MCP server to let Claude, ChatGPT, Cursor, Microsoft Copilot, Gemini, or any MCP client answer questions with live container and shipment data—without writing custom glue code.
+Use the Terminal49 MCP server to let Claude, ChatGPT, Cursor, Microsoft Copilot, Gemini, or any MCP client answer questions with live container and shipment data, without writing custom glue code. When you ask, it can also change your account: stop or resume tracking, edit reference numbers, parties, and custom field values, and fix documents. See [Write tools](#write-tools).
 
 ## TL;DR – get started in 5 minutes
 
@@ -134,17 +134,19 @@ The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP end
 
 ### Limit the tools
 
+By default, the hosted server serves the `core`, `documents`, `operations`, and `documents_write` toolsets: 32 tools. Twelve of them change account data: `track_container` and the [write tools](#write-tools).
+
 Two optional request headers reduce the tools your client sees. They can only remove tools.
 
-- `X-T49-MCP-Read-Only: true` lists only read-only tools. It removes `track_container` and every write tool.
-- `X-T49-MCP-Toolsets` takes a comma-separated list of toolsets.
+- `X-T49-MCP-Read-Only: true` lists only read-only tools: 20 with the default toolsets. It removes `track_container` and every write tool. Use it to connect without write access.
+- `X-T49-MCP-Toolsets` takes a comma-separated list of toolsets. `core,documents` gives the 21 tools the hosted server served before the write tools.
 
 The toolset names are:
 
 - `core`: every tool except the document reads, the webhook reads, and the write tools below. `whoami` reports the toolsets a session serves.
 - `documents`: `list_documents` and `get_document`.
-- `operations`: `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field`, and `update_custom_field`. The hosted server at `mcp.terminal49.com` does not serve this toolset yet. A self-hosted server serves it when `T49_MCP_TOOLSETS` lists it.
-- `documents_write`: `relink_document` and `update_document`. The hosted server does not serve this toolset yet. A self-hosted server serves it when `T49_MCP_TOOLSETS` lists it.
+- `operations`: `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field`, and `update_custom_field`. Served by default.
+- `documents_write`: `relink_document` and `update_document`. Served by default.
 - `developer`: `list_webhooks` and `list_webhook_notifications`. The hosted server does not serve this toolset. A self-hosted server serves it when `T49_MCP_TOOLSETS` lists it.
 
 ```json
@@ -158,6 +160,8 @@ The toolset names are:
 ```
 
 The read-only header accepts `true`, `false`, `1` or `0`, in any case. Any other read-only value, an unknown toolset name, or a toolsets value made only of commas returns `400 Bad Request`.
+
+Clients that cannot send custom headers, such as Claude and ChatGPT, get the default toolsets. Most AI clients ask you before they run a tool that is not marked read-only.
 
 ---
 
@@ -178,7 +182,7 @@ Each call to a write tool, `track_container` included, logs one `mcp.write.audit
 ## Tools reference
 
 <Note>
-In the default toolsets, every tool is read-only except `track_container`, which creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one. The write tools in the `operations` and `documents_write` toolsets are described under [Write tools](#write-tools), and the webhook reads under [Developer tools](#developer-tools).
+The default toolsets include `track_container` and the write tools in `operations` and `documents_write`. Every other tool is read-only. `track_container` creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one. The write tools in the `operations` and `documents_write` toolsets are described under [Write tools](#write-tools), and the webhook reads under [Developer tools](#developer-tools).
 </Note>
 
 ### `search_container`
@@ -863,7 +867,7 @@ Extracted data and the source email are text that people outside your account wr
 
 ### Write tools
 
-The `operations` toolset holds nine tools that change your account's data, and the `documents_write` toolset holds two more. The hosted server does not serve either toolset yet. Each write tool has a tier:
+The `operations` toolset holds nine tools that change your account's data, and the `documents_write` toolset holds two more. The hosted server serves both toolsets by default. To connect without them, send `X-T49-MCP-Read-Only: true`, as described in [Limit the tools](#limit-the-tools). Each write tool has a tier:
 
 - **Tier A** tools run in one call. The result names the tool that undoes the change, when there is one.
 - **Tier C** tools need a confirmed preview. They are marked destructive, so most AI clients ask you before each call.
@@ -1346,7 +1350,7 @@ These Terminal49 API capabilities are available through the [SDK](/api-docs/in-d
 | Webhook setup | Create, edit, delete, or test webhooks | Configure via the [webhooks guide](/api-docs/in-depth-guides/webhooks) |
 
 <Info>
-Stopping and resuming shipment tracking, cancelling a tracking request, editing reference numbers, assigning parties, and setting custom field values are MCP tools in the `operations` toolset. Fixing a document's type, extraction, or links are tools in the `documents_write` toolset, and reading webhooks and their notifications are tools in the `developer` toolset. The hosted server does not serve these toolsets yet. Other shipment edits still need the REST API or the SDK.
+Stopping and resuming shipment tracking, cancelling a tracking request, editing reference numbers, assigning parties, and setting custom field values are MCP tools in the `operations` toolset. Fixing a document's type, extraction, or links are tools in the `documents_write` toolset. The hosted server serves both toolsets by default. Reading webhooks and their notifications are tools in the `developer` toolset, which the hosted server does not serve. Other shipment edits still need the REST API or the SDK.
 </Info>
 
 ---
