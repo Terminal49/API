@@ -59,6 +59,11 @@ import {
   identifyTrackingNumberInputSchema,
   identifyTrackingNumberOutputSchema,
 } from './tools/identify-tracking-number.js';
+import {
+  executeGetLocation,
+  getLocationInputSchema,
+  getLocationOutputSchema,
+} from './tools/get-location.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
@@ -945,6 +950,10 @@ function formatToolError(
     }
   }
 
+  if (err.name === 'ToolInputError' && err.message) {
+    return err.message;
+  }
+
   if (toolName === 'identify_tracking_number' && err.status === 422) {
     return 'Terminal49 could not identify this number. Pass one container, Bill of Lading, or booking number.';
   }
@@ -960,6 +969,8 @@ function formatToolError(
         return `No route found for container id ${id ?? '(missing)'}.`;
       case 'get_tracking_request':
         return `No tracking request found with id ${id ?? '(missing)'}.`;
+      case 'get_location':
+        return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
       default:
         return 'The requested Terminal49 record was not found.';
     }
@@ -1417,6 +1428,18 @@ export function createTerminal49McpServer(
         outputSchema: routeSummaryOrSoftErrorSchema,
       },
       async ({ id }) => executeGetContainerRoute({ id }, client),
+    ),
+    get_location: tool(
+      {
+        description:
+          'Get a port, terminal, or metro area by Terminal49 ID, or a port or metro area by UN/LOCODE. ' +
+          'A terminal returns its FIRMS code, SMDG and BIC facility codes, street address, and its port with the port time zone. ' +
+          'A port or metro area returns its UN/LOCODE, time zone, and coordinates. ' +
+          'Use it when a question needs a terminal address or FIRMS code, or the local time zone that last free day and appointment times use.',
+        inputSchema: getLocationInputSchema,
+        outputSchema: getLocationOutputSchema,
+      },
+      async (args) => executeGetLocation(args, client),
     ),
     list_shipments: tool(
       {

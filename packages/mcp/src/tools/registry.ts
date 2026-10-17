@@ -76,6 +76,7 @@ export const TOOL_REGISTRY = [
   readTool('get_container_transport_events', 'Get Container Transport Events'),
   readTool('get_supported_shipping_lines', 'Get Supported Shipping Lines'),
   readTool('get_container_route', 'Get Container Route'),
+  readTool('get_location', 'Get Location'),
   readTool('list_shipments', 'List Shipments'),
   readTool('list_containers', 'List Containers'),
   readTool('summarize_containers', 'Summarize Containers'),

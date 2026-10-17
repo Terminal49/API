@@ -25,6 +25,7 @@
       "get_container",
       "get_container_route",
       "get_container_transport_events",
+      "get_location",
       "get_shipment_details",
       "get_supported_shipping_lines",
       "get_tracking_request",
