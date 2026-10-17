@@ -250,6 +250,7 @@ describe('MCP protocol compatibility', () => {
             'pod_terminal',
             'transport_events',
             'custom_fields',
+            'party_roles',
           ],
         },
       },

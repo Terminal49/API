@@ -1328,6 +1328,7 @@ export function createTerminal49McpServer(
                 'pod_terminal',
                 'transport_events',
                 'custom_fields',
+                'party_roles',
               ]),
             )
             .optional()
@@ -1337,7 +1338,8 @@ export function createTerminal49McpServer(
                 '• shipment: Routing, BOL, line, ref numbers (lightweight, always useful) ' +
                 '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
                 '• transport_events: Active event summary (count, rail event count, and latest event); use get_container_transport_events for the full timeline ' +
-                '• custom_fields: Account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)',
+                '• custom_fields: Account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key) ' +
+                '• party_roles: Companies assigned to this container by role (customer, shipper, consignee, pickup_dray_carrier, ...), each with its party role id',
             ),
         }),
         outputSchema: z.object({}).passthrough(),
@@ -1369,14 +1371,17 @@ export function createTerminal49McpServer(
             .describe(
               'Include account-defined custom fields (e.g. PO number, project manager) set on this shipment. Needs a signed-in user, not an API key. Default: false',
             ),
+          include_party_roles: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe(
+              'Include the companies assigned to this shipment by role (customer, shipper, consignee, ...), each with its party role id. Default: false',
+            ),
         }),
         outputSchema: z.object({}).passthrough(),
       },
-      async ({ id, include_containers, include_custom_fields }) =>
-        executeGetShipmentDetails(
-          { id, include_containers, include_custom_fields },
-          client,
-        ),
+      async (args) => executeGetShipmentDetails(args, client),
     ),
     get_container_transport_events: tool(
       {
