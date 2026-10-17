@@ -22,18 +22,18 @@ import {
   isNotAuthorized,
 } from './soft-results.js';
 
-const ENTITY_TYPES = {
+export const ENTITY_TYPES = {
   container: 'Cargo',
   shipment: 'Shipment',
 } as const;
 
-type EntityType = keyof typeof ENTITY_TYPES;
+export type DefinitionEntityType = keyof typeof ENTITY_TYPES;
 
 export const CUSTOM_FIELD_OPTIONS_NOTE =
   'The allowed options for this field could not be loaded. Try again later.';
 
 /** Data types whose values must be one of the definition's options. */
-const OPTION_DATA_TYPES = new Set(['enum', 'enum_multi']);
+export const OPTION_DATA_TYPES = new Set(['enum', 'enum_multi']);
 
 export const listCustomFieldDefinitionsInputSchema = z.object({
   entity_type: z
@@ -58,6 +58,8 @@ const optionSchema = z.object({
   label: z.string().nullable(),
   value: z.string().nullable(),
 });
+
+export type CustomFieldOption = z.infer<typeof optionSchema>;
 
 const definitionSchema = z.object({
   id: z.string(),
@@ -85,9 +87,9 @@ export type ListCustomFieldDefinitionsResult = z.infer<
 >;
 type Definition = z.infer<typeof definitionSchema>;
 
-const rawDefinitionsSchema = z.object({ data: z.array(z.unknown()) });
+export const rawDefinitionsSchema = z.object({ data: z.array(z.unknown()) });
 
-const rawDefinitionSchema = z.object({
+export const rawDefinitionSchema = z.object({
   id: z.string(),
   attributes: z.object({
     api_slug: z.string(),
@@ -115,16 +117,18 @@ const rawOptionsSchema = z.object({
   ),
 });
 
-function entityType(apiType: string | null): EntityType | null {
+export function entityType(
+  apiType: string | null,
+): DefinitionEntityType | null {
   if (apiType === ENTITY_TYPES.container) return 'container';
   if (apiType === ENTITY_TYPES.shipment) return 'shipment';
   return null;
 }
 
-async function loadOptions(
+export async function loadOptions(
   definitionId: string,
   client: Terminal49Client,
-): Promise<Definition['options']> {
+): Promise<CustomFieldOption[]> {
   const { data } = rawOptionsSchema.parse(
     await client.customFieldOptions.list(definitionId, { format: 'raw' }),
   );
