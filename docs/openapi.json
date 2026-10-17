@@ -1774,7 +1774,7 @@
                           },
                           "title": "Unprocessable Entity",
                           "detail": "Scac 'XXXX' is not recognized",
-                          "code": "blank"
+                          "code": "not_recognized"
                         },
                         {
                           "status": "422",
@@ -1783,7 +1783,7 @@
                           },
                           "title": "Unprocessable Entity",
                           "detail": "Scac 'UALC' is not supported. We do not currently integrate with Universal Africa Lines",
-                          "code": "blank"
+                          "code": "no_integration"
                         },
                         {
                           "status": "422",
