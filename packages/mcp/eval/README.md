@@ -23,13 +23,14 @@ MCP_EVAL_ENDPOINT="http://localhost:4000/mcp" \
 MCP_EVAL_TOKEN="<key>" npm run eval --workspace @terminal49/mcp
 ```
 
-| Env var                 | Meaning                                                 | Default                          |
-| ----------------------- | ------------------------------------------------------- | -------------------------------- |
-| `MCP_EVAL_BEARER`       | OAuth 2.1 access token → `Authorization: Bearer`        | —                                |
-| `MCP_EVAL_TOKEN`        | Terminal49 API key → `Authorization: Token`             | —                                |
-| `MCP_EVAL_ENDPOINT`     | Gateway `/mcp` URL                                      | `https://mcp.terminal49.com/mcp` |
-| `MCP_EVAL_ENABLE_WRITE` | Opt in to the mutating `track_container` case           | unset (skipped)                  |
-| `MCP_EVAL_ALLOW_SPARSE` | Allow detail cases to skip when the account has no data | unset (strict)                   |
+| Env var                  | Meaning                                                 | Default                          |
+| ------------------------ | ------------------------------------------------------- | -------------------------------- |
+| `MCP_EVAL_BEARER`        | OAuth 2.1 access token → `Authorization: Bearer`        | —                                |
+| `MCP_EVAL_TOKEN`         | Terminal49 API key → `Authorization: Token`             | —                                |
+| `MCP_EVAL_ENDPOINT`      | Gateway `/mcp` URL                                      | `https://mcp.terminal49.com/mcp` |
+| `MCP_EVAL_ENABLE_WRITE`  | Opt in to `track_container` and the write evals         | unset (skipped)                  |
+| `MCP_EVAL_ALLOW_SPARSE`  | Allow detail cases to skip when the account has no data | unset (strict)                   |
+| `MCP_EVAL_SANDBOX_TOKEN` | API key of the sandbox account for the write evals      | unset (write evals skipped)      |
 
 > OAuth access tokens are short-lived (~5 min). For repeatable/CI runs, prefer a
 > `MCP_EVAL_TOKEN` API key — it does not expire.
@@ -68,6 +69,25 @@ number so it takes the idempotent search-match path and asserts
 `tracking_request_created === false`. Only enable it against an account you know
 already tracks the discovered container, since on an arbitrary account the call
 could create a real tracking request.
+
+## Write evals
+
+[`writes.eval.ts`](./writes.eval.ts) runs the write tools against a dedicated
+sandbox account. It runs only when `MCP_EVAL_ENABLE_WRITE=1` and
+`MCP_EVAL_SANDBOX_TOKEN` are both set, and it uses that token, never
+`MCP_EVAL_TOKEN`. Each case is a round trip that leaves the record as it found
+it:
+
+- stop a shipment with a confirmed preview, then resume it;
+- refuse a stop with an edited confirmation token.
+
+The cases skip when the gateway does not list the write tools, which happens
+when its toolsets leave out `operations`. They also skip when the sandbox key
+cannot stop tracking (`FeatureNotEnabled`) or the first shipment is already
+stopped. If an assertion fails after the stop, the case still resumes the
+shipment before it ends. `cancel_tracking_request` has no live
+case: a cancel cannot be undone and each run would need a new, billable
+tracking request. Fixture tests cover it.
 
 ## Output
 
