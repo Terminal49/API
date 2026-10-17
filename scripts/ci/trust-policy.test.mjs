@@ -865,6 +865,50 @@ test('scheduled reconciliation continues after a PR fails and reports the failur
   assert.match(failures[0], /10.*ambiguous CI attempts/);
 });
 
+test(
+  'a stalled PR request hits its deadline and the sweep reaches the next PR',
+  { timeout: 5_000 },
+  async () => {
+    const value = snapshot();
+    const { github, writes, summary } = fakeGithub(value);
+    const pullsGet = github.rest.pulls.get;
+    github.rest.repos.get = async () => ({ data: { default_branch: 'main' } });
+    const paginate = github.paginate;
+    github.paginate = async (endpoint, args) =>
+      endpoint === 'pulls' && args.base
+        ? [{ number: 10 }, { number: 11 }]
+        : paginate(endpoint, args);
+    const inspected = [];
+    let stalled;
+    github.rest.pulls.get = (args) => {
+      inspected.push(args.pull_number);
+      if (args.pull_number === 10) {
+        stalled = args;
+        return new Promise(() => {});
+      }
+      return pullsGet(args);
+    };
+    const failures = [];
+    await reconcileEvent({
+      github,
+      context: { repo: { owner: 'Terminal49', repo: 'API' }, payload: {} },
+      core: {
+        summary,
+        notice: () => {},
+        setFailed: (message) => failures.push(message),
+      },
+      pullDeadlineMs: 50,
+    });
+    assert.deepEqual(inspected, [10, 11, 11]);
+    assert.equal(stalled.request.signal.aborted, true);
+    assert.ok(writes.some(([, args]) => args.issue_number === 11));
+    assert.ok(writes.every(([, args]) => args.issue_number !== 10));
+    assert.deepEqual(failures, [
+      'PR #10: reconciliation exceeded the 50ms deadline',
+    ]);
+  },
+);
+
 test('targeted reconciliation still reports its individual failure', async () => {
   const { github, summary } = fakeGithub(snapshot());
   github.rest.repos.get = async () => ({ data: { default_branch: 'main' } });

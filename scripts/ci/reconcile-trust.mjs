@@ -4,14 +4,17 @@ import {
   CI_WORKFLOW,
 } from './trust-policy.mjs';
 
+const PULL_DEADLINE_MS = 60_000;
+
 export async function collectSnapshot(
   github,
   repository,
   number,
   defaultBranch,
+  signal,
 ) {
   const [owner, repo] = repository.split('/');
-  const params = { owner, repo };
+  const params = { owner, repo, request: { signal } };
   const { data: pull } = await github.rest.pulls.get({
     ...params,
     pull_number: number,
@@ -233,6 +236,7 @@ export async function reconcilePull({
   number,
   defaultBranch,
   summary,
+  signal,
 }) {
   if (!Number.isSafeInteger(number) || number < 1)
     throw new Error('A positive integer PR number is required');
@@ -241,6 +245,7 @@ export async function reconcilePull({
     repository,
     number,
     defaultBranch,
+    signal,
   );
   let decision = evaluateTrust(snapshot);
   const fresh = await collectSnapshot(
@@ -248,6 +253,7 @@ export async function reconcilePull({
     repository,
     number,
     defaultBranch,
+    signal,
   );
   if (JSON.stringify(snapshot) !== JSON.stringify(fresh)) {
     decision = {
@@ -263,7 +269,8 @@ export async function reconcilePull({
     };
   }
   const [owner, repo] = repository.split('/');
-  const params = { owner, repo, issue_number: number };
+  const request = { signal };
+  const params = { owner, repo, issue_number: number, request };
   const definitions = {
     low: {
       color: '2DA44E',
@@ -285,7 +292,7 @@ export async function reconcilePull({
   };
   const target = `risk:${decision.risk}`;
   try {
-    await github.rest.issues.getLabel({ owner, repo, name: target });
+    await github.rest.issues.getLabel({ owner, repo, name: target, request });
   } catch (error) {
     if (error.status !== 404) throw error;
     await github.rest.issues.createLabel({
@@ -293,6 +300,7 @@ export async function reconcilePull({
       repo,
       name: target,
       ...definitions[decision.risk],
+      request,
     });
   }
   const labels = await github.paginate(github.rest.issues.listLabelsOnIssue, {
@@ -316,7 +324,29 @@ export async function reconcilePull({
   return decision;
 }
 
-export async function reconcileEvent({ github, context, core }) {
+async function withDeadline(ms, run) {
+  const controller = new AbortController();
+  let timer;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const error = new Error(`reconciliation exceeded the ${ms}ms deadline`);
+      controller.abort(error);
+      reject(error);
+    }, ms);
+  });
+  try {
+    return await Promise.race([run(controller.signal), deadline]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function reconcileEvent({
+  github,
+  context,
+  core,
+  pullDeadlineMs = PULL_DEADLINE_MS,
+}) {
   const { owner, repo } = context.repo;
   const { data: repository } = await github.rest.repos.get({ owner, repo });
   const defaultBranch = repository.default_branch;
@@ -344,13 +374,16 @@ export async function reconcileEvent({ github, context, core }) {
   const failures = [];
   for (const number of new Set(numbers)) {
     try {
-      await reconcilePull({
-        github,
-        repository: `${owner}/${repo}`,
-        number,
-        defaultBranch,
-        summary: core.summary,
-      });
+      await withDeadline(pullDeadlineMs, (signal) =>
+        reconcilePull({
+          github,
+          repository: `${owner}/${repo}`,
+          number,
+          defaultBranch,
+          summary: core.summary,
+          signal,
+        }),
+      );
     } catch (error) {
       failures.push({
         number,
