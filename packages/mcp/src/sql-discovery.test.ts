@@ -3,7 +3,15 @@ import {
   StreamableHTTPClientTransport,
 } from '@modelcontextprotocol/client';
 import { createMcpHandler } from '@modelcontextprotocol/server';
-import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vite-plus/test';
 import { createAuthorizedTerminal49McpServer } from './server.js';
 
 const sqlTools = [
@@ -12,7 +20,16 @@ const sqlTools = [
   'query_guide',
   'get_query_result',
 ];
-afterEach(() => vi.unstubAllGlobals());
+const DISCOVERY_TTL_MS = 60_000;
+
+// Only Date is faked so the MCP transport keeps real timers; advancing the clock
+// expires cached discovery decisions between tests.
+beforeAll(() => vi.useFakeTimers({ toFake: ['Date'] }));
+afterAll(() => vi.useRealTimers());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.setSystemTime(Date.now() + DISCOVERY_TTL_MS + 1);
+});
 
 async function inventory(
   token: string,
@@ -78,61 +95,106 @@ describe('account-aware SQL discovery', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it('scopes every check by user and account and reflects revocation without a cached grant', async () => {
+  it('scopes every decision by user and account and reflects revocation after the cache window', async () => {
     let enabled = true;
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (request: Request) => {
-        expect(request.url).toBe('https://api.test/v2/assistant_views');
-        const allowed =
-          enabled &&
-          request.headers.get('x-account-id') === 'account-a' &&
-          request.headers.get('authorization') === 'Bearer user-a';
-        return Response.json(
-          allowed ? { views: [] } : { error: 'Unavailable' },
-          { status: allowed ? 200 : 403 },
-        );
-      }),
-    );
+    const fetch = vi.fn(async (request: Request) => {
+      expect(request.url).toBe('https://api.test/v2/assistant_views');
+      const allowed =
+        enabled &&
+        request.headers.get('x-account-id') === 'account-a' &&
+        request.headers.get('authorization') === 'Bearer user-a';
+      return Response.json(allowed ? { views: [] } : { error: 'Unavailable' }, {
+        status: allowed ? 200 : 403,
+      });
+    });
+    vi.stubGlobal('fetch', fetch);
     expect(await inventory('Bearer user-a', 'account-a')).toEqual(
       expect.arrayContaining(sqlTools),
     );
     expect(await inventory('Bearer user-a', 'account-b')).toHaveLength(14);
     expect(await inventory('Bearer user-b', 'account-a')).toHaveLength(14);
+    expect(fetch).toHaveBeenCalledTimes(3);
+
     enabled = false;
+    // Within the window the cached grant is reused without another probe;
+    // Rails still authorizes every SQL call.
+    expect(await inventory('Bearer user-a', 'account-a')).toEqual(
+      expect.arrayContaining(sqlTools),
+    );
+    expect(fetch).toHaveBeenCalledTimes(3);
+
+    vi.setSystemTime(Date.now() + DISCOVERY_TTL_MS + 1);
     expect(await inventory('Bearer user-a', 'account-a')).toHaveLength(14);
+    expect(fetch).toHaveBeenCalledTimes(4);
   });
 
-  it.each([401, 403, 404, 429, 500])(
-    'fails closed on %s without retries or breaking standard discovery',
+  it('shares one probe across concurrent requests for the same user and account', async () => {
+    const fetch = vi.fn(async () => Response.json({ views: [] }));
+    vi.stubGlobal('fetch', fetch);
+    const servers = await Promise.all([
+      createAuthorizedTerminal49McpServer(
+        'Bearer test-user',
+        'https://api.test',
+        'account-a',
+      ),
+      createAuthorizedTerminal49McpServer(
+        'Bearer test-user',
+        'https://api.test',
+        'account-a',
+      ),
+    ]);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    await Promise.all(servers.map((server) => server.close()));
+  });
+
+  it.each([401, 403, 404])(
+    'hides SQL on a %s denial without retries or breaking standard discovery',
     async (status) => {
       const fetch = vi.fn(async () =>
         Response.json({ error: 'Unavailable' }, { status }),
       );
       vi.stubGlobal('fetch', fetch);
-      const server = await createAuthorizedTerminal49McpServer(
-        'Bearer test-user',
-        'https://api.test',
-        'account-a',
-      );
-      expect(fetch).toHaveBeenCalledTimes(1);
-      await server.close();
       expect(await inventory('Bearer test-user', 'account-a')).toHaveLength(14);
+      expect(fetch).toHaveBeenCalledTimes(1);
     },
   );
 
-  it('fails closed on a malformed success or network error', async () => {
+  it('hides SQL on a malformed success', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => Response.json({})),
     );
     expect(await inventory('Bearer test-user', 'account-a')).toHaveLength(14);
+  });
+
+  it.each([429, 500, 503])(
+    'keeps SQL listed on a transient %s without caching it',
+    async (status) => {
+      const fetch = vi.fn(async () =>
+        Response.json({ error: 'Unavailable' }, { status }),
+      );
+      vi.stubGlobal('fetch', fetch);
+      expect(await inventory('Bearer test-user', 'account-a')).toEqual(
+        expect.arrayContaining(sqlTools),
+      );
+      // A transient result is not cached: every MCP request probes again
+      // (initialize and tools/list are separate stateless requests).
+      const probes = fetch.mock.calls.length;
+      expect(probes).toBeGreaterThan(1);
+      await inventory('Bearer test-user', 'account-a');
+      expect(fetch.mock.calls.length).toBeGreaterThan(probes);
+    },
+  );
+
+  it('keeps SQL listed on a network error', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => {
         throw new Error('Unavailable');
       }),
     );
-    expect(await inventory('Bearer test-user', 'account-a')).toHaveLength(14);
+    expect(await inventory('Bearer test-user', 'account-a')).toEqual(
+      expect.arrayContaining(sqlTools),
+    );
   });
 });

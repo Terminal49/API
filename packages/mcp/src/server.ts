@@ -2,6 +2,7 @@
  * Terminal49 MCP Server
  * Implementation using the MCP TypeScript SDK v2 McpServer API
  */
+import { createHash } from 'node:crypto';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import {
   completable,
@@ -9,7 +10,13 @@ import {
   ResourceTemplate,
 } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import { Terminal49Client } from '@terminal49/sdk';
+import {
+  NetworkError,
+  RateLimitError,
+  Terminal49Client,
+  TimeoutError,
+  UpstreamError,
+} from '@terminal49/sdk';
 import { registerSqlTools } from './tools/sql-query.js';
 import { executeGetContainer } from './tools/get-container.js';
 import { executeTrackContainer } from './tools/track-container.js';
@@ -972,31 +979,99 @@ export interface Terminal49McpServerTelemetry {
   authSource?: McpAuthSource;
 }
 
+const SQL_DISCOVERY_TTL_MS = 60_000;
+const SQL_DISCOVERY_MAX_ENTRIES = 1_000;
+const sqlDiscoveryCache = new Map<
+  string,
+  { expiresAt: number; decision: Promise<boolean> }
+>();
+
+// A transient failure says nothing about access. Rails authorizes every SQL call,
+// so keeping the tools listed is safe and avoids "unknown tool" mid-conversation.
+function isTransientDiscoveryError(error: unknown): boolean {
+  return (
+    error instanceof UpstreamError ||
+    error instanceof RateLimitError ||
+    error instanceof NetworkError ||
+    error instanceof TimeoutError
+  );
+}
+
+async function probeAssistantSql(
+  apiToken: string,
+  apiBaseUrl: string | undefined,
+  accountId: string,
+): Promise<boolean> {
+  const client = new Terminal49Client({
+    apiToken,
+    apiBaseUrl,
+    accountId,
+    maxRetries: 0,
+    timeoutMs: 5000,
+  });
+  const result = await client.assistantQueries.views();
+  return Array.isArray(result.views);
+}
+
 // Discovery uses the same read endpoint and authorization gates as SQL execution.
-// Fail closed without sharing feature decisions across credentials or accounts.
-// /me can replace this probe once its contract and backend are deployed.
+// Decisions are cached briefly per credential + account + API base (the key is a
+// hash, so no token is held as a map key) and never shared across them. Denials
+// (401/403/404, malformed responses) hide the tools; transient failures keep them
+// listed and are not cached. /me can replace this probe once it reports assistant-sql.
+function discoverAssistantSql(
+  apiToken: string,
+  apiBaseUrl: string | undefined,
+  accountId: string,
+): Promise<boolean> {
+  const key = createHash('sha256')
+    .update(JSON.stringify([apiToken, accountId, apiBaseUrl ?? '']))
+    .digest('hex');
+  const now = Date.now();
+  const cached = sqlDiscoveryCache.get(key);
+  if (cached && cached.expiresAt > now) return cached.decision;
+
+  const decision: Promise<boolean> = probeAssistantSql(
+    apiToken,
+    apiBaseUrl,
+    accountId,
+  ).catch((error: unknown) => {
+    if (!isTransientDiscoveryError(error)) return false;
+    if (sqlDiscoveryCache.get(key)?.decision === decision) {
+      sqlDiscoveryCache.delete(key);
+    }
+    return true;
+  });
+
+  sqlDiscoveryCache.delete(key);
+  if (sqlDiscoveryCache.size >= SQL_DISCOVERY_MAX_ENTRIES) {
+    for (const [staleKey, entry] of sqlDiscoveryCache) {
+      if (entry.expiresAt <= now) sqlDiscoveryCache.delete(staleKey);
+    }
+    if (sqlDiscoveryCache.size >= SQL_DISCOVERY_MAX_ENTRIES) {
+      const oldest = sqlDiscoveryCache.keys().next().value;
+      if (oldest !== undefined) sqlDiscoveryCache.delete(oldest);
+    }
+  }
+  sqlDiscoveryCache.set(key, {
+    expiresAt: now + SQL_DISCOVERY_TTL_MS,
+    decision,
+  });
+  return decision;
+}
+
 export async function createAuthorizedTerminal49McpServer(
   apiToken: string,
   apiBaseUrl?: string,
   accountId?: string,
   telemetry: Terminal49McpServerTelemetry = {},
 ): Promise<McpServer> {
-  let assistantSql = false;
-  if (accountId && /^Bearer\s+\S+/i.test(apiToken)) {
-    try {
-      const client = new Terminal49Client({
-        apiToken,
-        apiBaseUrl,
-        accountId,
-        maxRetries: 0,
-        timeoutMs: 5000,
-      });
-      const result = await client.assistantQueries.views();
-      assistantSql = Array.isArray(result.views);
-    } catch {
-      // An unavailable capability must not break the standard tool inventory.
-    }
-  }
+  // API keys and calls without an explicit active account never get SQL tools.
+  const assistantSql =
+    accountId !== undefined &&
+    accountId !== '' &&
+    /^Bearer\s+\S+/i.test(apiToken)
+      ? await discoverAssistantSql(apiToken, apiBaseUrl, accountId)
+      : false;
   return createTerminal49McpServer(apiToken, apiBaseUrl, accountId, telemetry, {
     assistantSql,
   });
