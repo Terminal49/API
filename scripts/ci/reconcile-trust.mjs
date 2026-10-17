@@ -373,6 +373,14 @@ export async function reconcileEvent({
     );
   const failures = [];
   for (const number of new Set(numbers)) {
+    const report = [];
+    const pullSummary = {
+      addRaw(text) {
+        report.push(text);
+        return pullSummary;
+      },
+      async write() {},
+    };
     try {
       await withDeadline(pullDeadlineMs, (signal) =>
         reconcilePull({
@@ -380,10 +388,11 @@ export async function reconcileEvent({
           repository: `${owner}/${repo}`,
           number,
           defaultBranch,
-          summary: core.summary,
+          summary: pullSummary,
           signal,
         }),
       );
+      await core.summary.addRaw(report.join('')).write();
     } catch (error) {
       failures.push({
         number,

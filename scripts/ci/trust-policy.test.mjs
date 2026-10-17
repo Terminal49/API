@@ -909,6 +909,48 @@ test(
   },
 );
 
+test('a PR that finishes after its deadline cannot add its report to the job summary', async () => {
+  const value = snapshot();
+  const { github } = fakeGithub(value);
+  github.rest.repos.get = async () => ({ data: { default_branch: 'main' } });
+  const paginate = github.paginate;
+  let releaseLabels;
+  github.paginate = async (endpoint, args) => {
+    if (endpoint === 'pulls' && args.base)
+      return [{ number: 10 }, { number: 11 }];
+    if (endpoint === 'labels' && args.issue_number === 10)
+      return new Promise((resolve) => {
+        releaseLabels = () =>
+          resolve([{ name: `risk:${evaluateTrust(value).risk}` }]);
+      });
+    return paginate(endpoint, args);
+  };
+  const reported = [];
+  const summary = {
+    addRaw: (text) => (reported.push(text), summary),
+    write: async () => {},
+  };
+  const failures = [];
+  await reconcileEvent({
+    github,
+    context: { repo: { owner: 'Terminal49', repo: 'API' }, payload: {} },
+    core: {
+      summary,
+      notice: () => {},
+      setFailed: (message) => failures.push(message),
+    },
+    pullDeadlineMs: 50,
+  });
+  releaseLabels();
+  await new Promise((resolve) => setImmediate(resolve));
+  const text = reported.join('');
+  assert.match(text, /Trust policy advisory for PR #11/);
+  assert.doesNotMatch(text, /PR #10/);
+  assert.deepEqual(failures, [
+    'PR #10: reconciliation exceeded the 50ms deadline',
+  ]);
+});
+
 test('targeted reconciliation still reports its individual failure', async () => {
   const { github, summary } = fakeGithub(snapshot());
   github.rest.repos.get = async () => ({ data: { default_branch: 'main' } });
