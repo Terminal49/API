@@ -2034,6 +2034,15 @@ export interface components {
                         type?: "account";
                     } | null;
                 };
+                /** @description User who created the tracking request, or `null` when the request has no linked user. */
+                user?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "user";
+                    } | null;
+                };
             };
         };
         /** webhook */
@@ -4124,7 +4133,7 @@ export interface operations {
                 "filter[updated_at][start]"?: string;
                 /** @description filter by tracking_requests `updated_at` before a certain ISO8601 timestamp */
                 "filter[updated_at][end]"?: string;
-                /** @description Comma delimited list of relations to include. 'tracked_object' is included by default. */
+                /** @description Comma-delimited list of relationships to include. Accepted values: `tracked_object`, `customer`, and `user`. `tracked_object` is included by default. */
                 include?: string;
                 "page[number]"?: number;
                 "page[size]"?: number;
@@ -4157,7 +4166,7 @@ export interface operations {
                                  */
                                 self?: string;
                             };
-                        })[];
+                        } | components["schemas"]["user"])[];
                     };
                 };
             };
@@ -4445,7 +4454,7 @@ export interface operations {
     "get-track-request-by-id": {
         parameters: {
             query?: {
-                /** @description Comma delimited list of relations to include. 'tracked_object' is included by default. */
+                /** @description Comma-delimited list of relationships to include. Accepted values: `tracked_object`, `customer`, and `user`. `tracked_object` is included by default. */
                 include?: string;
             };
             header?: never;
@@ -4465,7 +4474,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["tracking_request"];
-                        included?: (components["schemas"]["account"] | components["schemas"]["shipment"] | components["schemas"]["shipping_line"])[];
+                        included?: (components["schemas"]["account"] | components["schemas"]["shipment"] | components["schemas"]["shipping_line"] | components["schemas"]["user"])[];
                     };
                 };
             };

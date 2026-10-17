@@ -2306,6 +2306,9 @@
                               }
                             },
                             "description": ""
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
                           }
                         ]
                       }
@@ -2442,7 +2445,7 @@
             },
             "in": "query",
             "name": "include",
-            "description": "Comma delimited list of relations to include. 'tracked_object' is included by default."
+            "description": "Comma-delimited list of relationships to include. Accepted values: `tracked_object`, `customer`, and `user`. `tracked_object` is included by default."
           },
           {
             "schema": {
@@ -2779,6 +2782,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/shipping_line"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
                           }
                         ]
                       }
@@ -3051,7 +3057,7 @@
             },
             "in": "query",
             "name": "include",
-            "description": "Comma delimited list of relations to include. 'tracked_object' is included by default."
+            "description": "Comma-delimited list of relationships to include. Accepted values: `tracked_object`, `customer`, and `user`. `tracked_object` is included by default."
           }
         ],
         "x-internal": false
@@ -17322,6 +17328,28 @@
                         "type": "string",
                         "enum": [
                           "account"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "user": {
+                "type": "object",
+                "description": "User who created the tracking request, or `null` when the request has no linked user.",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "user"
                         ]
                       }
                     }
