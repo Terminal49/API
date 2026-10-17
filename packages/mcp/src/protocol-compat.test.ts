@@ -184,6 +184,67 @@ describe('MCP protocol compatibility', () => {
     }
   });
 
+  it('states the default window the API computes, in tools/list, the MCP docs and the OpenAPI spec', async () => {
+    // Without since, the trade-intel service (analytics._range) returns the
+    // N months ending with until, which defaults to the current, partial
+    // month: since = until - (N - 1). With until 2026-10, trends starts at
+    // 2024-11 and breakdown at 2025-11. "N months ago" would be N + 1 months.
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const spec = JSON.parse(
+      readFileSync(
+        new URL('../../../docs/openapi.json', import.meta.url),
+        'utf8',
+      ),
+    );
+    const windows = [
+      {
+        toolName: 'get_trade_trends',
+        path: '/trade_intel/trends',
+        request: 'TradeIntelTrendsRequest',
+        window: '24 months ending with',
+        since: '23 months before',
+      },
+      {
+        toolName: 'get_trade_breakdown',
+        path: '/trade_intel/breakdown',
+        request: 'TradeIntelBreakdownRequest',
+        window: '12 months ending with',
+        since: '11 months before',
+      },
+    ];
+
+    for (const { toolName, path, request, window, since } of windows) {
+      const tool = tools.find((candidate) => candidate.name === toolName);
+      const sinceDescriptions = {
+        'tools/list since': (tool?.inputSchema as AdvertisedInputSchema)
+          ?.properties?.since?.description,
+        'openapi since':
+          spec.components.schemas[request].properties.since.description,
+      };
+      const windowDescriptions = {
+        'tools/list description': tool?.description,
+        'docs/mcp/home.mdx': documentedToolSection(toolName),
+        'openapi operation': spec.paths[path].post.description,
+      };
+
+      for (const [surface, text] of Object.entries(sinceDescriptions)) {
+        expect(text, `${toolName} ${surface}`).toContain(since);
+      }
+      for (const [surface, text] of Object.entries(windowDescriptions)) {
+        expect(text, `${toolName} ${surface}`).toContain(window);
+      }
+      for (const [surface, text] of Object.entries({
+        ...sinceDescriptions,
+        ...windowDescriptions,
+      })) {
+        expect(text, `${toolName} ${surface}`).not.toMatch(
+          /\d+ months ago|about (?:a|two) years? back/,
+        );
+      }
+    }
+  });
+
   it('gives the tools/list count and names wherever the docs count tools', async () => {
     const client = await connectClient({ era: 'modern' });
     const { tools } = await client.listTools();
