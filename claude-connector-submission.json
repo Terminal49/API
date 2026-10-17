@@ -34,7 +34,8 @@
       "search_container",
       "search_docs",
       "summarize_containers",
-      "track_container"
+      "track_container",
+      "whoami"
     ]
   },
   "company": {

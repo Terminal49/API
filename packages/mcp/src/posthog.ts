@@ -47,7 +47,7 @@ type Environment = NodeJS.ProcessEnv;
 const DEFAULT_POSTHOG_HOST = 'https://f.terminal49.com';
 
 export const SERVER_NAME = 'terminal49-mcp';
-export const SERVER_VERSION = '1.1.1';
+export const SERVER_VERSION = '1.2.0';
 
 /**
  * Event properties stripped from every outgoing event.

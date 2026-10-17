@@ -47,3 +47,15 @@ for (const path of ['/shipments', '/containers']) {
     assert.equal(query.find(({ key }) => key === 'page[size]').value, '30');
   });
 }
+
+test('/me exposes the optional account selector in the generated request', () => {
+  const operation = spec.paths['/me'].get;
+  const item = requests(collection.item).find(
+    (candidate) => candidate.name === operation.summary,
+  );
+  assert.ok(item, 'Missing generated credential request');
+  const header = item.request.header.find(({ key }) => key === 'x-account-id');
+  assert.ok(header, 'Missing account-selection header');
+  assert.equal(header.disabled, true);
+  assert.equal(header.value, '<uuid>');
+});

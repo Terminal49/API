@@ -163,6 +163,18 @@
         "open_world_justification": "Does not publish content or change public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
+    },
+    "whoami": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads the caller's own credential, account, and feature availability without modifying data.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
     }
   },
   "test_cases": [

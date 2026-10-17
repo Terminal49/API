@@ -9,6 +9,9 @@ import type {
   Shipment,
   ShippingLine,
   TrackingRequest,
+  CurrentAccount,
+  CurrentCredential,
+  CurrentUser,
 } from '../types/models.js';
 import { JsonApiDocument, omitKeys } from './jsonapi.js';
 
@@ -504,4 +507,87 @@ export function mapCustomFields(doc: any): CustomField[] {
       updatedAt: attrs.updated_at ?? null,
     };
   });
+}
+
+function mapCurrentAccount(
+  resource: any,
+  trackingSlots: boolean,
+): CurrentAccount {
+  if (
+    typeof resource?.id !== 'string' ||
+    typeof resource?.attributes?.company_name !== 'string'
+  ) {
+    throw new Error(
+      'Invalid /me response: linked account must be included with its company name',
+    );
+  }
+  const attrs = resource.attributes;
+  const account: CurrentAccount = {
+    id: resource.id,
+    companyName: attrs.company_name,
+    companyType: attrs.company_type ?? undefined,
+    scac: attrs.scac ?? undefined,
+    abbrName: attrs.abbr_name ?? undefined,
+    city: attrs.city ?? undefined,
+    stateAbbr: attrs.state_abbr ?? undefined,
+    country: attrs.country ?? undefined,
+    plan: attrs.plan ?? undefined,
+  };
+  if (trackingSlots && 'tracking_slots' in attrs) {
+    account.trackingSlots = attrs.tracking_slots ?? null;
+  }
+  return account;
+}
+
+/** Map a `GET /me` document to a {@link CurrentCredential}. */
+export function mapCurrentCredential(doc: any): CurrentCredential {
+  const data = doc?.data || {};
+  const attrs = data.attributes || {};
+  const included: any[] = Array.isArray(doc?.included) ? doc.included : [];
+  const find = (type: string, id: string | undefined) =>
+    included.find((item) => item?.type === type && item?.id === id);
+
+  const accountRef = data.relationships?.account?.data;
+  const accountResource = find('account', accountRef?.id);
+  const account = mapCurrentAccount(accountResource, true);
+
+  const userRef = data.relationships?.user?.data;
+  let user: CurrentUser | null = null;
+  if (userRef?.id) {
+    const userResource = find('user', userRef.id);
+    if (typeof userResource?.attributes?.email !== 'string') {
+      throw new Error(
+        'Invalid /me response: linked user must be included with its email',
+      );
+    }
+    const userAttrs = userResource.attributes;
+    const accountRefs = userResource.relationships?.accounts?.data;
+    if (!Array.isArray(accountRefs)) {
+      throw new Error(
+        'Invalid /me response: linked user must include account-list linkage',
+      );
+    }
+    user = {
+      id: userResource.id,
+      email: userAttrs.email,
+      name: userAttrs.name ?? undefined,
+      role: userAttrs.role ?? undefined,
+      jobRole: userAttrs.job_role ?? undefined,
+      jobTitle: userAttrs.job_title ?? undefined,
+      admin: userAttrs.admin === true,
+      accounts: accountRefs.map((ref) =>
+        mapCurrentAccount(find('account', ref.id), ref.id === account.id),
+      ),
+    };
+  }
+
+  return {
+    id: data.id,
+    kind: attrs.kind,
+    channel: attrs.channel,
+    name: attrs.name ?? undefined,
+    features: attrs.features || {},
+    account,
+    user,
+  };
 }

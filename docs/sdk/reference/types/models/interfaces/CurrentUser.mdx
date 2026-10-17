@@ -1,0 +1,20 @@
+---
+title: "Interface: CurrentUser"
+---
+
+# Interface: CurrentUser
+
+The signed-in user as `GET /me` describes them.
+
+## Properties
+
+| Property | Type | Description |
+| ------ | ------ | ------ |
+| <a id="property-accounts"></a> `accounts` | [`CurrentAccount`](/sdk/reference/types/models/interfaces/CurrentAccount)[] | Every open account this user can select with `x-account-id`. |
+| <a id="property-admin"></a> `admin` | `boolean` | `true` only for Terminal49 staff. |
+| <a id="property-email"></a> `email` | `string` | - |
+| <a id="property-id"></a> `id` | `string` | - |
+| <a id="property-jobrole"></a> `jobRole?` | `string` | - |
+| <a id="property-jobtitle"></a> `jobTitle?` | `string` | - |
+| <a id="property-name"></a> `name?` | `string` | - |
+| <a id="property-role"></a> `role?` | `string` | - |
