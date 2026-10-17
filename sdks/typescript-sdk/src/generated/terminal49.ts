@@ -1581,7 +1581,7 @@ export interface paths {
          * Get import trends
          * @description Monthly, quarterly, or yearly series of containers, TEUs, or estimated value, optionally split by up to two dimensions (keeping the top N groups) and filtered by any dimension. Volume is physical containers, each counted once.
          *
-         *     **Defaults.** Without `since` the series starts 24 months ago, but history is available back to January 2022 (`facts_since_month` in `meta`). Without `until` the series ends with the current, partial month, which is flagged `partial`; exclude it from comparisons and compare like periods (the same months a year earlier).
+         *     **Defaults.** Without `since` the series covers the 24 months ending with `until`, so it starts 23 months before `until`, but history is available back to January 2022 (`facts_since_month` in `meta`). Without `until` the series ends with the current, partial month, which is flagged `partial`; exclude it from comparisons and compare like periods (the same months a year earlier).
          *
          *     **Filters.** `company` is a substring match, so `IKEA` also matches `IKEA SUPPLY AG`; for one company's own series use `companies/profile`. Countries, ports, and carriers use the manifests' spellings and carriers appear under variants, so filter with substrings and merge variants before computing shares. Market totals come from a series without a `company` filter; do not add volumes across HS codes or companies, since a container can carry several codes and companies can share containers.
          *
@@ -1607,7 +1607,7 @@ export interface paths {
          * Get an import breakdown
          * @description Nested totals over a dimension hierarchy (for example region > country > port, or HS2 > HS4), with a grand total at level 0 and subtotals at every level, keeping the top N children under each parent. Volume is physical containers, each counted once; estimated value is a modelled USD estimate.
          *
-         *     Defaults to the last 12 months including the current, partial month; set `since` and `until` to full months for comparisons. The `company` filter is a substring match. Countries, ports, and carriers use the manifests' spellings, so filter with substrings and merge carrier variants before computing shares. Do not add values across HS codes or companies; use a breakdown without a `company` filter for market totals.
+         *     Defaults to the 12 months ending with the current, partial month (`since` is 11 months before `until`); set `since` and `until` to full months for comparisons. The `company` filter is a substring match. Countries, ports, and carriers use the manifests' spellings, so filter with substrings and merge carrier variants before computing shares. Do not add values across HS codes or companies; use a breakdown without a `company` filter for market totals.
          */
         post: operations["post-trade-intel-breakdown"];
         delete?: never;
@@ -4239,7 +4239,7 @@ export interface components {
             filters?: components["schemas"]["TradeIntelFilters"];
             interval?: components["schemas"]["TradeIntelInterval"];
             /**
-             * @description First period, `YYYY-MM` inclusive. Defaults to 24 months ago; history is available back to January 2022 (`facts_since_month` in `meta`).
+             * @description First period, `YYYY-MM` inclusive. Defaults to 23 months before `until`, so the default series covers 24 months; history is available back to January 2022 (`facts_since_month` in `meta`).
              * @example 2024-01
              */
             since?: string | null;
@@ -4297,7 +4297,7 @@ export interface components {
             measure?: components["schemas"]["TradeIntelMeasure"];
             filters?: components["schemas"]["TradeIntelFilters"];
             /**
-             * @description First month, `YYYY-MM` inclusive. Defaults to 12 months ago.
+             * @description First month, `YYYY-MM` inclusive. Defaults to 11 months before `until`, so the default range covers 12 months.
              * @example 2025-10
              */
             since?: string | null;

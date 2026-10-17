@@ -1847,7 +1847,7 @@ export function createTerminal49McpServer(
       title: 'Get Trade Trends',
       description:
         'Time series of US ocean imports (containers, TEUs, or estimated value) by month, quarter, or year, optionally split by up to two dimensions (origin country, US port, coast, carrier, product, importer, and more) and filtered by any of them. ' +
-        'Default window: from about two years back through the current month, which is still incomplete (its points are marked partial), so a drop in the last period is usually that. Set until to the last full month and compare like periods. History goes back to January 2022; pass since for a longer view. ' +
+        'Default window: the 24 months ending with the current month, which is still incomplete (its points are marked partial), so a drop in the last period is usually that. Set until to the last full month and compare like periods. History goes back to January 2022; pass since for a longer view. ' +
         "The company filter is a substring match (IKEA also matches IKEA SUPPLY AG); for one company use get_importer_profile. Use this without a company filter for market totals, and don't add values across products or companies. " +
         'Countries and ports use the records\' spellings (filter "china", not "China"); merge carrier spelling variants before computing shares.',
       annotations: tradeIntelAnnotations,
@@ -1874,7 +1874,7 @@ export function createTerminal49McpServer(
       title: 'Get Trade Breakdown',
       description:
         'Nested totals of US ocean imports over one to three dimensions, such as region > country > US port or HS chapter > HS code, with a grand total (level 0) and subtotals at every level, keeping the largest children under each parent. Use it for mix and share questions. ' +
-        'Default window: from about a year back through the current, incomplete month, so it is not a clean 12 months; for an annual total set since and until to 12 full months. ' +
+        'Default window: the 12 months ending with the current, incomplete month, so it is not 12 full months; for an annual total set since and until to 12 full months. ' +
         "The company filter is a substring match. Don't add values across products or companies. Merge carrier spelling variants before computing shares. Values are estimates, not declared customs values.",
       annotations: tradeIntelAnnotations,
       inputSchema: z.preprocess(

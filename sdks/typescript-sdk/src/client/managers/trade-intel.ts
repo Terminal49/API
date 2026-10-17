@@ -146,8 +146,8 @@ export class TradeIntelManager extends BaseManager {
 
   /**
    * Time series of containers, TEUs, or estimated value, optionally split by
-   * up to two dimensions. Defaults to the last 24 months including the
-   * current, partial month.
+   * up to two dimensions. Defaults to the 24 months ending with the current,
+   * partial month.
    */
   async trends(
     request: TradeIntelTrendsRequest = {},
@@ -159,7 +159,8 @@ export class TradeIntelManager extends BaseManager {
 
   /**
    * Nested totals over a dimension hierarchy, with a grand total and
-   * subtotals at every level.
+   * subtotals at every level. Defaults to the 12 months ending with the
+   * current, partial month.
    */
   async breakdown(
     request: TradeIntelBreakdownRequest,

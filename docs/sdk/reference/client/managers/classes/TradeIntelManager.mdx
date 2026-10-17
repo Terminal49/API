@@ -52,7 +52,8 @@ importers use several names, so absent volume does not mean low volume.
 > **breakdown**(`request`): `Promise`\<\{ `dims`: (`"reefer"` \| `"carrier"` \| `"scac"` \| `"origin_country"` \| `"origin_region"` \| `"pod"` \| `"pod_coast"` \| `"dest_state"` \| `"pol"` \| `"pol_country"` \| `"container_type"` \| `"company"` \| `"company_state"` \| `"hs4"` \| `"hs2"`)[]; `fact`: `string`; `filters`: \{ `carrier?`: `string` \| `null`; `company?`: `string` \| `null`; `company_state?`: `string` \| `null`; `container_type?`: `string` \| `null`; `dest_state?`: `string` \| `null`; `hs2?`: `string` \| `null`; `hs4?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `origin_region?`: `string` \| `null`; `pod?`: `string` \| `null`; `pod_coast?`: `"EAST"` \| `"WEST"` \| `"GULF"` \| `null`; `pol?`: `string` \| `null`; `pol_country?`: `string` \| `null`; `reefer?`: `boolean` \| `null`; `scac?`: `string` \| `null`; \}; `measure`: `"containers"` \| `"teus"` \| `"estimated_value"`; `notes`: `string`[]; `rows`: `object` & `object`[]; `since`: `string`; `until`: `string`; \}\>
 
 Nested totals over a dimension hierarchy, with a grand total and
-subtotals at every level.
+subtotals at every level. Defaults to the 12 months ending with the
+current, partial month.
 
 #### Parameters
 
@@ -77,7 +78,7 @@ subtotals at every level.
 | `request.filters.reefer?` | `boolean` \| `null` | **Description** Only refrigerated (`true`) or only dry (`false`) containers. |
 | `request.filters.scac?` | `string` \| `null` | **Description** Carrier SCAC; exact match. **Example** `MAEU` |
 | `request.measure?` | `"containers"` \| `"teus"` \| `"estimated_value"` | - |
-| `request.since?` | `string` \| `null` | **Description** First month, `YYYY-MM` inclusive. Defaults to 12 months ago. **Example** `2025-10` |
+| `request.since?` | `string` \| `null` | **Description** First month, `YYYY-MM` inclusive. Defaults to 11 months before `until`, so the default range covers 12 months. **Example** `2025-10` |
 | `request.top?` | `number` | **Description** Top N children under each parent. **Default** `10` |
 | `request.until?` | `string` \| `null` | **Description** Last month, `YYYY-MM` inclusive. Defaults to the current, partial month. **Example** `2026-09` |
 
@@ -238,8 +239,8 @@ port of discharge, or origin country.
 > **trends**(`request?`): `Promise`\<\{ `fact`: `string`; `filters`: \{ `carrier?`: `string` \| `null`; `company?`: `string` \| `null`; `company_state?`: `string` \| `null`; `container_type?`: `string` \| `null`; `dest_state?`: `string` \| `null`; `hs2?`: `string` \| `null`; `hs4?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `origin_region?`: `string` \| `null`; `pod?`: `string` \| `null`; `pod_coast?`: `"EAST"` \| `"WEST"` \| `"GULF"` \| `null`; `pol?`: `string` \| `null`; `pol_country?`: `string` \| `null`; `reefer?`: `boolean` \| `null`; `scac?`: `string` \| `null`; \}; `group_by`: (`"reefer"` \| `"carrier"` \| `"scac"` \| `"origin_country"` \| `"origin_region"` \| `"pod"` \| `"pod_coast"` \| `"dest_state"` \| `"pol"` \| `"pol_country"` \| `"container_type"` \| `"company"` \| `"company_state"` \| `"hs4"` \| `"hs2"`)[]; `interval`: `"month"` \| `"quarter"` \| `"year"`; `measure`: `"containers"` \| `"teus"` \| `"estimated_value"`; `notes`: `string`[]; `series`: `object` & `object`[]; `since`: `string`; `until`: `string`; \}\>
 
 Time series of containers, TEUs, or estimated value, optionally split by
-up to two dimensions. Defaults to the last 24 months including the
-current, partial month.
+up to two dimensions. Defaults to the 24 months ending with the current,
+partial month.
 
 #### Parameters
 
@@ -265,7 +266,7 @@ current, partial month.
 | `request.group_by?` | (`"reefer"` \| `"carrier"` \| `"scac"` \| `"origin_country"` \| `"origin_region"` \| `"pod"` \| `"pod_coast"` \| `"dest_state"` \| `"pol"` \| `"pol_country"` \| `"container_type"` \| `"company"` \| `"company_state"` \| `"hs4"` \| `"hs2"`)[] | **Description** Split the series by up to two dimensions, keeping the top `top` groups. |
 | `request.interval?` | `"month"` \| `"quarter"` \| `"year"` | - |
 | `request.measure?` | `"containers"` \| `"teus"` \| `"estimated_value"` | - |
-| `request.since?` | `string` \| `null` | **Description** First period, `YYYY-MM` inclusive. Defaults to 24 months ago; history is available back to January 2022 (`facts_since_month` in `meta`). **Example** `2024-01` |
+| `request.since?` | `string` \| `null` | **Description** First period, `YYYY-MM` inclusive. Defaults to 23 months before `until`, so the default series covers 24 months; history is available back to January 2022 (`facts_since_month` in `meta`). **Example** `2024-01` |
 | `request.top?` | `number` | **Description** Keep the top N groups by total over the range. **Default** `10` |
 | `request.until?` | `string` \| `null` | **Description** Last period, `YYYY-MM` inclusive. Defaults to the current, partial month. **Example** `2026-09` |
 

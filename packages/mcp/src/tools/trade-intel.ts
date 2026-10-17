@@ -262,7 +262,7 @@ export const getTradeTrendsInputSchema = z.strictObject({
       'Period size. Month for a year or less, quarter for two to three years.',
     ),
   since: month(
-    'First month, YYYY-MM, inclusive. Default: about two years back. Data goes back to 2022-01. Set since and until explicitly when the number of periods matters.',
+    'First month, YYYY-MM, inclusive. Default: 23 months before until, so the default series covers 24 months. Data goes back to 2022-01. Set since and until explicitly when the number of periods matters.',
   ).optional(),
   until: month(
     'Last month, YYYY-MM, inclusive. Default: the current month, which is still incomplete. Set it to the last full month for any comparison.',
@@ -301,7 +301,7 @@ export const getTradeBreakdownInputSchema = z.strictObject({
   measure,
   filters: tradeFiltersSchema.optional(),
   since: month(
-    'First month, YYYY-MM, inclusive. Default: about a year back, so the default window is not a clean 12 months. For an annual total set since and until to 12 full months.',
+    'First month, YYYY-MM, inclusive. Default: 11 months before until, so the default window is the 12 months ending with the current, incomplete month, not 12 full months. For an annual total set since and until to 12 full months.',
   ).optional(),
   until: month(
     'Last month, YYYY-MM, inclusive. Default: the current month, which is still incomplete. Set it to the last full month for clean totals.',
