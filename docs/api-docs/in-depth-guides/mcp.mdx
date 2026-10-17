@@ -280,10 +280,10 @@ const container = await client.containers.get(
 // Search for containers
 const results = await client.search('CAIU1234567');
 
-// List shipments with filters (not available via MCP)
+// List shipments still on the vessel to Los Angeles
 const shipments = await client.shipments.list({
-  status: 'in_transit',
-  carrier: 'MAEU'
+  voyage_status: 'on_ship',
+  pod_code: 'USLAX'
 });
 ```
 
