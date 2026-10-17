@@ -60,7 +60,9 @@ Search for bill of lading 123456789
 
 ---
 
-## 🛠️ Available Tools (21 by default)
+## 🛠️ Available Tools (32 by default)
+
+The default toolsets serve 32 tools. Twelve of them change account data: `track_container` and the eleven write tools below. To serve only the 20 read-only tools, set `T49_MCP_READ_ONLY=true` or send the `X-T49-MCP-Read-Only: true` header.
 
 | Tool | Description |
 |------|-------------|
@@ -86,7 +88,7 @@ Search for bill of lading 123456789
 | `search_docs` | Search the public Terminal49 documentation |
 | `whoami` | Identify the credential, account, available features, and session toolsets |
 
-The opt-in `operations` toolset adds nine write tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists `operations`. `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `unassign_party` and `update_custom_field` return a preview first and change data only when called again with the confirmation token from that preview. See [Confirming writes](packages/mcp/README.md#confirming-writes).
+The `operations` toolset adds nine write tools and is in the default toolsets. Of the write tools, `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `unassign_party`, `update_custom_field` and `update_document` return a preview first and change data only when called again with the confirmation token from that preview. See [Confirming writes](packages/mcp/README.md#confirming-writes).
 
 | Tool | Description |
 |------|-------------|
@@ -100,7 +102,7 @@ The opt-in `operations` toolset adds nine write tools. A deployment serves them 
 | `set_custom_field` | Fill an empty custom field on a container, shipment, or tracking request |
 | `update_custom_field` | Replace or clear a custom field value, after a confirmed preview |
 
-Two more opt-in toolsets add four tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists them.
+The `documents_write` toolset adds two tools and is in the default toolsets. The `developer` toolset adds two reads. It is opt-in, so a deployment serves it only when `T49_MCP_TOOLSETS` lists `developer`.
 
 | Tool | Toolset | Description |
 |------|---------|-------------|
@@ -227,6 +229,7 @@ vercel deploy --prod
 **Environment Variables:**
 - `T49_API_TOKEN` - Your Terminal49 API token (required)
 - `T49_API_BASE_URL` - Optional (defaults to https://api.terminal49.com)
+- `T49_MCP_CONFIRMATION_SECRET` - At least 32 random characters. Required for the write tools that return a preview first, which the default toolsets serve
 - `SENTRY_DSN` - Optional; enables Sentry MCP Monitoring
 - `SENTRY_TRACES_SAMPLE_RATE` - Optional trace sample rate (`1.0` by default)
 - `SENTRY_MCP_RECORD_INPUTS` / `SENTRY_MCP_RECORD_OUTPUTS` - Optional; disabled by default to avoid storing shipment/customer payloads in Sentry

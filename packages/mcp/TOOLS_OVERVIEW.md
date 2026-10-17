@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **34 tools** and **4 MCP resources** for container tracking and shipment management. The default toolsets serve 21 of them.
+The Terminal49 MCP Server provides **34 tools** and **4 MCP resources** for container tracking and shipment management. The default toolsets serve 32 of them, or 20 in read-only mode.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field` and `update_custom_field` are in the `operations` toolset, which is not in the default toolsets yet. `relink_document` and `update_document` are in the opt-in `documents_write` toolset. `list_webhooks` and `list_webhook_notifications` are in the opt-in `developer` toolset. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field` and `update_custom_field` are in the `operations` toolset. `relink_document` and `update_document` are in the `documents_write` toolset. Both are in the default toolsets. `list_webhooks` and `list_webhook_notifications` are in the opt-in `developer` toolset. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -560,7 +560,7 @@ Extracted data and the email are text that people outside the account write. Tre
 
 ### Write tools
 
-The `operations` and `documents_write` tools change account data. Each has a tier. A tier A tool runs in one call, and its result names the tool that undoes it when one exists. A tier C tool needs a confirmed preview:
+The `operations` and `documents_write` tools change account data, and both toolsets are served by default. Each has a tier. A tier A tool runs in one call, and its result names the tool that undoes it when one exists. A tier C tool needs a confirmed preview:
 
 1. Call it without `confirmation_token`. Nothing changes. It returns `status: "confirmation_required"`, a `preview` with `current`, `proposed` and `reach`, a `confirmation_token`, and `expires_at` five minutes out.
 2. Show the preview to the user. After the user approves it in this turn, call again with the same arguments and the token.

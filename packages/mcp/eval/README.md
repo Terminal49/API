@@ -29,7 +29,7 @@ MCP_EVAL_TOKEN="<key>" npm run eval --workspace @terminal49/mcp
 | `MCP_EVAL_TOKEN`          | Terminal49 API key → `Authorization: Token`                                   | —                                 |
 | `MCP_EVAL_ENDPOINT`       | Gateway `/mcp` URL                                                            | `https://mcp.terminal49.com/mcp`  |
 | `MCP_EVAL_ENABLE_WRITE`   | Opt in to `track_container` and the write evals                               | unset (skipped)                   |
-| `MCP_EVAL_ALLOW_SPARSE`   | Allow detail cases to skip when the account has no data                       | unset (strict)                    |
+| `MCP_EVAL_ALLOW_SPARSE`   | Allow cases to skip when the account has no data or the gateway lacks tools   | unset (strict)                    |
 | `MCP_EVAL_SANDBOX_TOKEN`  | API key of the sandbox account for the write evals                            | unset (write evals skipped)       |
 | `MCP_EVAL_SANDBOX_BEARER` | OAuth access token of a sandbox account user, for the custom field write eval | unset (custom field case skipped) |
 
@@ -69,8 +69,9 @@ Negative cases assert error behavior: an unknown id and a missing required
 argument must produce tool errors, while a gibberish search must return an empty
 result set (not an error).
 
-`track_container` — the only mutating tool — is **skipped by default**. Set
-`MCP_EVAL_ENABLE_WRITE=1` to include it: it is driven with an already-tracked
+`track_container` is the only mutating tool that `tools.eval.ts` calls, and it
+is **skipped by default**. The other write tools run in the
+[write evals](#write-evals). Set `MCP_EVAL_ENABLE_WRITE=1` to include it: it is driven with an already-tracked
 number so it takes the idempotent search-match path and asserts
 `tracking_request_created === false`. Only enable it against an account you know
 already tracks the discovered container, since on an arbitrary account the call
@@ -102,12 +103,13 @@ leaves the record as it found it:
   Terminal49's matching and can add shipment or container links, and nothing
   removes them. A document fix cannot be undone exactly, so the case never
   confirms one. It depends on the `documents_write` toolset, not
-  `operations`. It skips when the gateway does not list those tools or the
-  account has no document.
+  `operations`. It skips when the account has no document.
 
-Every other case skips when the gateway does not list the write tools, which
-happens when its toolsets leave out `operations`, or when the sandbox account
-has no shipment. The two stop cases also skip when the sandbox key cannot stop
+The write suite is strict too. Its `beforeAll` fails when the gateway does not
+list every default write tool, so a gateway that lost `operations` or
+`documents_write` cannot pass with every case skipped.
+`MCP_EVAL_ALLOW_SPARSE=1` turns that failure into skips. Every other case
+skips when the sandbox account has no shipment. The two stop cases also skip when the sandbox key cannot stop
 tracking (`FeatureNotEnabled`) or the first shipment is already stopped. The
 reference number and party cases do not check either, so they run on a
 stopped shipment too. The party case skips when the account has no party, and
@@ -139,6 +141,23 @@ Terminal49 API key** stored as the `MCP_EVAL_TOKEN` repo secret.
 > (admin data skews latency/shape). Until the secret is set the step **skips and
 > exits 0** — CI stays green, so forks and unconfigured repos are unaffected. The
 > mutating `track_container` case stays off (no `MCP_EVAL_ENABLE_WRITE`).
+
+On pushes to `main`, the `mcp-sandbox-write-eval` job runs only
+`eval/writes.eval.ts` against production after the `mcp` job passes. It first
+waits until Vercel reports a successful production deployment of the pushed
+commit, so it never tests the build that production served before the push.
+Its concurrency group lets only one run edit the sandbox account at a time. It sets `MCP_EVAL_ENABLE_WRITE=1` and
+passes `MCP_EVAL_SANDBOX_TOKEN: ${{ secrets.MCP_EVAL_SANDBOX_TOKEN }}`. Store
+the API key of the dedicated sandbox account in that secret, never a customer
+account's key. Until the secret is set, the write suite skips and the step
+exits 0. CI does not set `MCP_EVAL_SANDBOX_BEARER`, because OAuth tokens expire
+in minutes, so the custom field case skips there. Run it by hand with a fresh
+token.
+
+`resolveSandboxConfig` in [`client.ts`](./client.ts) decides whether the write
+suite runs. Unit tests in [`sandbox-config.test.ts`](./sandbox-config.test.ts)
+check that it skips unless both settings are present, and that it never uses
+`MCP_EVAL_TOKEN` or `MCP_EVAL_BEARER`.
 
 ## Not covered here: subjective quality
 

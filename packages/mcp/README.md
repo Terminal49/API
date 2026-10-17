@@ -15,9 +15,11 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (21 by default, 34 in all)
+### 🛠️ Tools (32 by default, 34 in all)
 
-The default toolsets, `core` and `documents`, serve these 21 tools:
+The default toolsets, `core`, `documents`, `operations` and `documents_write`, serve 32 tools. Twelve of them change account data. With `T49_MCP_READ_ONLY=true`, the default toolsets serve 20 tools.
+
+The `core` and `documents` toolsets serve these 21 tools:
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -43,7 +45,7 @@ The default toolsets, `core` and `documents`, serve these 21 tools:
 | **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
 | **`whoami`** | Identify the credential, its account, the features it can use, and the session's toolsets | Explains empty or unauthorized results |
 
-The `operations` toolset adds nine write tools. It is not in the default toolsets yet, so a deployment serves them only when `T49_MCP_TOOLSETS` lists `operations`.
+The `operations` toolset adds nine write tools. It is in the default toolsets.
 
 | Tool | Description | Tier |
 |------|-------------|------|
@@ -57,7 +59,7 @@ The `operations` toolset adds nine write tools. It is not in the default toolset
 | **`set_custom_field`** | Fill an empty custom field on a container, shipment, or tracking request. A field with a value returns `already_set`. | A: runs in one call |
 | **`update_custom_field`** | Replace or clear a custom field value on a container, shipment, or tracking request | C: needs a confirmed preview |
 
-The `documents_write` toolset adds two document fixes, and the `developer` toolset adds two webhook reads. Both toolsets are opt-in, so a deployment serves them only when `T49_MCP_TOOLSETS` lists them.
+The `documents_write` toolset adds two document fixes and is in the default toolsets. The `developer` toolset adds two webhook reads. It is opt-in, so a deployment serves it only when `T49_MCP_TOOLSETS` lists `developer`.
 
 | Tool | Toolset | Description | Tier |
 |------|---------|-------------|------|
@@ -405,10 +407,10 @@ npm run lint
 |----------|----------|---------|-------------|
 | `T49_API_TOKEN` | ✅ Yes | - | Terminal49 API token |
 | `T49_API_BASE_URL` | No | `https://api.terminal49.com/v2` | API base URL |
-| `T49_MCP_TOOLSETS` | No | `core,documents` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
+| `T49_MCP_TOOLSETS` | No | `core,documents,operations,documents_write` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
 | `T49_MCP_READ_ONLY` | No | `false` | Serve only tools whose `readOnlyHint` is true. Accepts `true`, `false`, `1` or `0`, in any case. |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | `false` | Serve toolsets other than `core` when callers share `T49_API_TOKEN` |
-| `T49_MCP_CONFIRMATION_SECRET` | For tier C writes over HTTP | - | Signs confirmation tokens. At least 32 characters. See [Confirming writes](#confirming-writes). |
+| `T49_MCP_CONFIRMATION_SECRET` | Over HTTP, unless the server is read-only | - | Signs confirmation tokens. At least 32 characters. See [Confirming writes](#confirming-writes). |
 | `OPENAI_APPS_CHALLENGE` | Only for ChatGPT submission | - | Exact domain-verification token issued by the OpenAI submission portal |
 | `NODE_ENV` | No | `development` | Environment |
 | `LOG_LEVEL` | No | `info` | Logging level |
@@ -430,13 +432,14 @@ Signed URLs, such as the document download link that `get_document` returns, are
 
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. `list_documents` and `get_document` are in `documents`. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field` and `update_custom_field` are in `operations`. `relink_document` and `update_document` are in `documents_write`. `list_webhooks` and `list_webhook_notifications` are in `developer`. Every other tool today is in `core`. The default toolsets are `core` and `documents`. `whoami` reports the toolsets a session serves and whether it has write tools.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. `list_documents` and `get_document` are in `documents`. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field` and `update_custom_field` are in `operations`. `relink_document` and `update_document` are in `documents_write`. `list_webhooks` and `list_webhook_notifications` are in `developer`. Every other tool today is in `core`. The default toolsets are `core`, `documents`, `operations` and `documents_write`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
 - `X-T49-MCP-Read-Only: true` or `T49_MCP_READ_ONLY=true` removes every tool whose `readOnlyHint` is false, including `track_container`. Both accept `true`, `false`, `1` or `0`, in any case. Any other header value returns 400. The header cannot turn off read-only mode that the env turned on.
 - The server instructions name only the tools the session serves.
 - When the gateway uses one shared `T49_API_TOKEN`, it serves only `core` unless `T49_MCP_ALLOW_SHARED_TOKEN_WRITES=true`.
+- To serve only reads, set `T49_MCP_READ_ONLY=true`. To serve the 21 tools of the earlier default, set `T49_MCP_TOOLSETS=core,documents`.
 - Toolsets are never read from the connector URL. The OAuth resource stays the root origin.
 
 ### Confirming writes
