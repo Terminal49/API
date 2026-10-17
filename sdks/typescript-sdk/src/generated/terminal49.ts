@@ -1524,7 +1524,7 @@ export interface components {
                 bill_of_lading_number: string;
                 /** @description The normalized version of the shipment number used for querying the carrier */
                 normalized_number?: string;
-                ref_numbers?: string[] | null;
+                ref_numbers?: (string | null)[] | null;
                 /** Format: date-time */
                 created_at?: string;
                 tags?: string[];
