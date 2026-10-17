@@ -39,6 +39,12 @@ export function isFeatureNotEnabled(error: unknown): boolean {
   );
 }
 
+/** A 401, or a 403 that does not name a feature. */
+export function isNotAuthorized(error: unknown): boolean {
+  const status = httpStatus(error);
+  return status === 401 || (status === 403 && !isFeatureNotEnabled(error));
+}
+
 /**
  * An input the schema accepts but the handler rejects. formatToolError
  * returns its message unchanged, so it must never contain upstream text.

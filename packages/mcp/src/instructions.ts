@@ -37,6 +37,9 @@ const PARAGRAPHS: readonly Paragraph[] = [
       {
         text: ", loaded with get_container include ['custom_fields'] or get_shipment_details include_custom_fields",
       },
+      {
+        text: '; list_custom_field_definitions lists their slugs, types and allowed values',
+      },
       { text: '.' },
     ],
   },

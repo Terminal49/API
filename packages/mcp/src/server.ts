@@ -70,6 +70,11 @@ import {
   MAX_FUTURE_POSITIONS,
   getVesselOutputSchema,
 } from './tools/get-vessel.js';
+import {
+  executeListCustomFieldDefinitions,
+  listCustomFieldDefinitionsInputSchema,
+  listCustomFieldDefinitionsOutputSchema,
+} from './tools/list-custom-field-definitions.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
@@ -1544,6 +1549,17 @@ export function createTerminal49McpServer(
         }),
       },
       async (args) => executeListParties(args, client),
+    ),
+    list_custom_field_definitions: tool(
+      {
+        description:
+          "List this account's custom fields (for example PO number or project manager): the api_slug that names each field in custom field values, " +
+          'its display name, whether it applies to containers or shipments, its data type, validation rules, and, for enum and enum_multi fields, the allowed options. ' +
+          'Archived fields are left out unless include_archived is true. Needs a signed-in user; otherwise definitions is null and custom_fields_note explains why.',
+        inputSchema: listCustomFieldDefinitionsInputSchema,
+        outputSchema: listCustomFieldDefinitionsOutputSchema,
+      },
+      async (args) => executeListCustomFieldDefinitions(args, client),
     ),
     list_tracking_requests: tool(
       {

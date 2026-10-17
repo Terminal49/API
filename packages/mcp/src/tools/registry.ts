@@ -82,6 +82,7 @@ export const TOOL_REGISTRY = [
   readTool('list_containers', 'List Containers'),
   readTool('summarize_containers', 'Summarize Containers'),
   readTool('list_parties', 'List Parties'),
+  readTool('list_custom_field_definitions', 'List Custom Field Definitions'),
   readTool('list_tracking_requests', 'List Tracking Requests'),
   readTool('get_tracking_request', 'Get Tracking Request'),
   {

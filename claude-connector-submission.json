@@ -32,6 +32,7 @@
       "get_vessel",
       "identify_tracking_number",
       "list_containers",
+      "list_custom_field_definitions",
       "list_parties",
       "list_shipments",
       "list_tracking_requests",

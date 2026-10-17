@@ -408,6 +408,7 @@ describe('MCP server wiring', () => {
       list_containers: {},
       summarize_containers: { group_by: 'pod_terminal' },
       list_parties: { search: 'Acme' },
+      list_custom_field_definitions: {},
       list_tracking_requests: {},
       get_tracking_request: { id },
       search_docs: { query: 'webhooks' },
