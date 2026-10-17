@@ -15,7 +15,7 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (19 Available)
+### 🛠️ Tools (21 Available)
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -36,6 +36,8 @@
 | **`list_custom_field_definitions`** | List the account's custom fields, their types, and enum options | Needs a signed-in user |
 | **`list_tracking_requests`** | List tracking requests and statuses | Audit and monitoring |
 | **`get_tracking_request`** | Get one tracking request's status, failure reason, and shipment | Follow-up after tracking |
+| **`list_documents`** | Find documents by file name, reference, or type | Never returns extracted data or file links |
+| **`get_document`** | Get one document, with opt-in extracted data, source email, and download link | Untrusted content is labeled |
 | **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
 | **`whoami`** | Identify the credential, its account, the features it can use, and the session's toolsets | Explains empty or unauthorized results |
 
@@ -398,9 +400,11 @@ npm run lint
 
 Credential headers (`Authorization`, cookies, and any header whose name contains auth, token, secret, cookie, session, api-key, password, or signature) and request cookies are removed from every error and transaction event before it is sent, regardless of `SENTRY_SEND_DEFAULT_PII`.
 
+Signed URLs, such as the document download link that `get_document` returns, are replaced with `[REDACTED_URL]` in logs, Sentry events and PostHog events. This holds even when `SENTRY_MCP_RECORD_OUTPUTS` is on.
+
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. Every tool today is in `core`. `whoami` reports the toolsets a session serves and whether it has write tools.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. `list_documents` and `get_document` are in `documents`. Every other tool today is in `core`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.

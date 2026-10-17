@@ -60,7 +60,7 @@ Search for bill of lading 123456789
 
 ---
 
-## 🛠️ Available Tools (19)
+## 🛠️ Available Tools (21)
 
 | Tool | Description |
 |------|-------------|
@@ -81,6 +81,8 @@ Search for bill of lading 123456789
 | `list_custom_field_definitions` | List the account's custom fields |
 | `list_tracking_requests` | Browse tracking requests |
 | `get_tracking_request` | Get one tracking request |
+| `list_documents` | Find documents such as Bills of Lading and arrival notices |
+| `get_document` | Get one document, with opt-in extracted data, source email, and download link |
 | `search_docs` | Search the public Terminal49 documentation |
 | `whoami` | Identify the credential, account, available features, and session toolsets |
 
