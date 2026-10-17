@@ -166,12 +166,13 @@ describe('MCP protocol compatibility', () => {
 
   it('warns that estimated_value is not available by lane, in tools/list and the docs', async () => {
     // The API answers estimated_value with a lane dimension or lane filter
-    // (pol, pol_country, container_type) with a 400, so the measure an agent
-    // picks must carry that rule wherever it is offered.
+    // (pol, pol_country, container_type) with a 400: the trade-intel service
+    // checks every field used, grouped or filtered. The measure an agent picks
+    // must carry that rule, filters included, wherever it is offered.
     const client = await connectClient({ era: 'modern' });
     const { tools } = await client.listTools();
     const laneRule =
-      /estimated_value.*not available.*\bpol\b.*\bpol_country\b.*\bcontainer_type\b/s;
+      /estimated_value.*not available.*\bfilters?\b.*\bpol\b.*\bpol_country\b.*\bcontainer_type\b/s;
 
     for (const toolName of ['get_trade_trends', 'get_trade_breakdown']) {
       const schema = tools.find((tool) => tool.name === toolName)
