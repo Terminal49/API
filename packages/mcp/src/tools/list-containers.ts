@@ -4,6 +4,7 @@
  */
 
 import { Terminal49Client } from '@terminal49/sdk';
+import { resolvePodDeadline } from '../lib/pod-deadline.js';
 import { logMcpEvent } from '../logging.js';
 import { compactContainer } from './compact-rows.js';
 
@@ -16,6 +17,25 @@ import {
   getListResponseMetadata,
   type ListContainersArgs,
 } from './list-filters.js';
+
+// The SDK maps `demurrage.pickupLfd` from the legacy flat `pickup_lfd`, which
+// can be an inland or superseded deadline. Replace it with the API-selected POD
+// deadline so list rows match get_container, the container resource and
+// get_shipment_details. The mapper camelCases only top-level keys, so the
+// nested deadline block keeps the API's snake_case shape.
+function withSelectedPodDeadline(container: any) {
+  const { value, source } = resolvePodDeadline(
+    container?.importDeadlines || {},
+  );
+  return {
+    ...container,
+    demurrage: {
+      ...container?.demurrage,
+      pickupLfd: value,
+      pickupLfdSource: source,
+    },
+  };
+}
 
 export async function executeListContainers(
   args: ListContainersArgs,
@@ -67,10 +87,14 @@ export async function executeListContainers(
       timestamp: new Date().toISOString(),
     });
 
+    const rawItems = (result as any)?.items;
+    const mappedItems = Array.isArray(rawItems)
+      ? rawItems.map(withSelectedPodDeadline)
+      : rawItems;
     const items =
-      compact && Array.isArray((result as any)?.items)
-        ? (result as any).items.map(compactContainer)
-        : (result as any)?.items;
+      compact && Array.isArray(mappedItems)
+        ? mappedItems.map(compactContainer)
+        : mappedItems;
     return {
       ...result,
       items,

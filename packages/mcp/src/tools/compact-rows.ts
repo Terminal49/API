@@ -40,6 +40,7 @@ export function compactContainer(container: any) {
     pod_discharged_at: container?.location?.podDischargedAt,
     pod_full_out_at: container?.podFullOutAt,
     pickup_lfd: container?.demurrage?.pickupLfd,
+    pickup_lfd_source: container?.demurrage?.pickupLfdSource,
     pickup_appointment_at: container?.demurrage?.pickupAppointmentAt,
     shipment: shipment
       ? withoutEmpty({
