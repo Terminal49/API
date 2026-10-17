@@ -16,6 +16,10 @@ import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import type { SoftResult } from './soft-results.js';
 import { CONFIRMATION_TOKEN_PREFIX } from '../redaction.js';
+import { addMcpBreadcrumb } from '../sentry.js';
+import { captureMcpEvent } from '../posthog.js';
+import { MCP_CREDENTIAL_TYPES, type McpCredentialType } from './context.js';
+import { TOOL_REGISTRY, type ToolName } from './registry.js';
 
 /** How long a confirmation token stays valid. */
 export const CONFIRMATION_TTL_MS = 5 * 60 * 1000;
@@ -291,3 +295,102 @@ export const confirmationTokenInput = z
   .describe(
     'Leave this out on the first call to get a preview and a token. Pass the token back only after the user approves that preview in this turn.',
   );
+
+// ==================== Audit ====================
+
+export const AUDIT_ENTITY_TYPES = [
+  'container',
+  'shipment',
+  'tracking_request',
+  'document',
+] as const;
+
+export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
+
+/**
+ * `preview` is a tier C call without a token. `execute` is a tier C call
+ * with a token, or any tier A call.
+ */
+export type WritePhase = 'preview' | 'execute';
+
+export interface WriteAuditInput {
+  tool: ToolName;
+  tier: 'A' | 'C';
+  phase: WritePhase;
+  /** The result's status or soft-result code, or `error` for a thrown call. */
+  outcome: string;
+  entityType: AuditEntityType;
+  entityId: string;
+  accountId: string | undefined;
+  credentialType: McpCredentialType;
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const writeAuditEventSchema = z.object({
+  tool: z
+    .enum([...TOOL_REGISTRY.map((tool) => tool.name), 'unknown'])
+    .catch('unknown'),
+  tier: z.enum(['A', 'C']).catch('C'),
+  phase: z.enum(['preview', 'execute']).catch('execute'),
+  outcome: z
+    .string()
+    .regex(/^[A-Za-z][A-Za-z_]{0,39}$/)
+    .catch('unknown'),
+  entity_type: z.enum([...AUDIT_ENTITY_TYPES, 'unknown']).catch('unknown'),
+  entity_id: z.string().regex(UUID).nullable().catch(null),
+  account_id: z.string().regex(UUID).nullable().catch(null),
+  credential_type: z
+    .enum([...MCP_CREDENTIAL_TYPES, 'unknown'])
+    .catch('unknown'),
+});
+
+export type WriteAuditEvent = z.infer<typeof writeAuditEventSchema>;
+
+/**
+ * The audit event for one write call. It is built from named fields only and
+ * each value must match its expected form, so values, reference numbers,
+ * party names, URLs, tokens and payloads cannot reach a sink through it.
+ */
+export function buildWriteAuditEvent(input: WriteAuditInput): WriteAuditEvent {
+  return writeAuditEventSchema.parse({
+    tool: input.tool,
+    tier: input.tier,
+    phase: input.phase,
+    outcome: input.outcome,
+    entity_type: input.entityType,
+    entity_id: input.entityId,
+    account_id: input.accountId ?? null,
+    credential_type: input.credentialType,
+  });
+}
+
+export const WRITE_AUDIT_EVENT = 'mcp.write.audit';
+
+/** Sends the audit event to the log, a Sentry breadcrumb and PostHog. */
+export function emitWriteAudit(input: WriteAuditInput): void {
+  const audit = buildWriteAuditEvent(input);
+  // logMcpEvent redacts every *_id key, and this event needs the entity and
+  // account ids, which the schema above has already checked are UUIDs.
+  console.error(
+    JSON.stringify({
+      event: WRITE_AUDIT_EVENT,
+      ...audit,
+      timestamp: new Date().toISOString(),
+    }),
+  );
+  addMcpBreadcrumb(WRITE_AUDIT_EVENT, audit);
+  if (audit.account_id) {
+    captureMcpEvent('mcp_write', audit.account_id, audit);
+  }
+}
+
+/** The audit outcome for a result: its status, else its soft-result code. */
+export function auditOutcome(result: unknown): string {
+  const parsed = z
+    .object({ status: z.string() })
+    .or(z.object({ error: z.string() }))
+    .safeParse(result);
+  if (!parsed.success) return 'done';
+  return 'status' in parsed.data ? parsed.data.status : parsed.data.error;
+}

@@ -278,6 +278,35 @@ export function instrumentMcpServerWithPostHog<TServer extends McpServer>(
   return server;
 }
 
+/**
+ * Capture one server-side event for an account. The caller passes only
+ * properties it has already scrubbed. No-op when PostHog is not configured.
+ */
+export function captureMcpEvent(
+  event: string,
+  accountId: string,
+  properties: Record<string, string | null>,
+): void {
+  if (!client) {
+    return;
+  }
+
+  try {
+    client.capture({
+      distinctId: accountId,
+      event,
+      properties: {
+        ...properties,
+        mcp_server_name: SERVER_NAME,
+        mcp_server_version: SERVER_VERSION,
+      },
+      groups: { account: accountId },
+    });
+  } catch {
+    // Analytics must never fail a tool call.
+  }
+}
+
 /** Bound a promise so a slow/unreachable PostHog host cannot stall a request. */
 async function withTimeout(
   work: Promise<void>,

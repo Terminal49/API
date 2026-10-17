@@ -179,6 +179,16 @@ export function captureMcpException(error: unknown): void {
   }
 }
 
+/** Records a breadcrumb that later Sentry events in this request carry. */
+export function addMcpBreadcrumb(
+  category: string,
+  data: Record<string, string | null>,
+): void {
+  if (Sentry.isInitialized()) {
+    Sentry.addBreadcrumb({ category, level: 'info', data });
+  }
+}
+
 export async function flushMcpEvents(timeoutMs = 2000): Promise<void> {
   if (!Sentry.isInitialized()) {
     return;
