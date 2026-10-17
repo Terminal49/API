@@ -705,6 +705,7 @@ Keep these in mind when you read the answers:
 - A company can appear under several names and once per US state. Some importers keep their names off the records or ship under a forwarder, so low volume for a well-known company is a floor, not its size.
 - Forwarders and customs brokers appear among importers. A high `share_as_notify_party` suggests a logistics provider, but large cargo owners can also be listed mostly as notify party, so weigh the company name and product mix too.
 - Don't add volumes across products or companies. Carriers appear under spelling variants, so merge them before computing shares.
+- Lane fields (`pol`, `pol_country`, `container_type`) can't be combined with importer or product fields (`company`, `company_state`, `hs4`, `hs2`) in one request, and they don't support `estimated_value`. Use containers or TEUs for lane questions.
 
 ---
 
@@ -778,7 +779,7 @@ A time series of containers, TEUs, or estimated value by month, quarter, or year
 
 **Parameters**
 
-- `measure` *(string, optional)* - `containers` (default), `teus`, or `estimated_value`.
+- `measure` *(string, optional)* - `containers` (default), `teus`, or `estimated_value`. `estimated_value` is not available by lane: a request that also groups or filters by `pol`, `pol_country`, or `container_type` is rejected.
 - `group_by` *(array, optional)* - up to two dimensions, such as `origin_country` or `pod`.
 - `filters` *(object, optional)* - product, importer, origin, port, coast, carrier, state, and equipment filters. The `company` filter matches every name containing the text.
 - `interval` *(string, optional)* - `month` (default), `quarter`, or `year`.
@@ -798,7 +799,7 @@ Nested totals over one to three dimensions, such as region, country, and US port
 **Parameters**
 
 - `dims` *(array, required)* - one to three dimensions, outermost first.
-- `measure`, `filters`, `since`, `until` - as for `get_trade_trends`.
+- `measure`, `filters`, `since`, `until` - as for `get_trade_trends`. `estimated_value` is not available by lane: a request that also breaks down or filters by `pol`, `pol_country`, or `container_type` is rejected.
 - `top` *(number, optional)* - largest children under each parent, default 10, maximum 20.
 
 **Good for**
