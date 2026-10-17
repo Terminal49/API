@@ -14,7 +14,10 @@ import { executeGetContainer } from './tools/get-container.js';
 import { executeTrackContainer } from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
 import { executeGetShipmentDetails } from './tools/get-shipment-details.js';
-import { executeGetContainerTransportEvents } from './tools/get-container-transport-events.js';
+import {
+  executeGetContainerTransportEvents,
+  getContainerTransportEventsTool,
+} from './tools/get-container-transport-events.js';
 import { executeGetSupportedShippingLines } from './tools/get-supported-shipping-lines.js';
 import {
   routeSummaryOrSoftErrorSchema,
@@ -263,11 +266,31 @@ const METADATA_STEERING_FIELDS = new Set([
 
 /**
  * Defense in depth for tool executors that return factual `_metadata`.
- * Runtime responses must not carry model instructions or tool-routing hints.
+ * MCP-owned response metadata must not carry model instructions or tool-routing hints.
  */
-function stripResponseSteering(value: unknown, inMetadata = false): unknown {
+function stripResponseSteering(
+  value: unknown,
+  inMetadata = false,
+  path: (string | number)[] = [],
+  toolName?: string,
+): unknown {
+  // Only reported values at these two tool-owned paths are opaque data.
+  // Keep steering cleanup everywhere else, including MCP-owned metadata.
+  if (
+    path.length === 3 &&
+    path[2] === 'value' &&
+    ((toolName === 'get_container_transport_events' &&
+      path[0] === 'timeline' &&
+      typeof path[1] === 'number') ||
+      (toolName === 'get_container' &&
+        path[0] === 'events' &&
+        path[1] === 'latest_event'))
+  )
+    return value;
   if (Array.isArray(value)) {
-    return value.map((item) => stripResponseSteering(item, inMetadata));
+    return value.map((item, index) =>
+      stripResponseSteering(item, inMetadata, [...path, index], toolName),
+    );
   }
   if (!value || typeof value !== 'object') {
     return value;
@@ -284,6 +307,8 @@ function stripResponseSteering(value: unknown, inMetadata = false): unknown {
     sanitized[key] = stripResponseSteering(
       nestedValue,
       key === '_metadata' || inMetadata,
+      [...path, key],
+      toolName,
     );
   }
   return sanitized;
@@ -827,7 +852,12 @@ function wrapTool<TArgs>(
   return async (args: TArgs) => {
     try {
       const result = await handler(args);
-      const structuredContent = stripResponseSteering(result);
+      const structuredContent = stripResponseSteering(
+        result,
+        false,
+        [],
+        toolName,
+      );
       const content: ToolContent[] = buildContentPayload(structuredContent);
 
       if (buildResourceLinks) {
@@ -1224,7 +1254,7 @@ export function createTerminal49McpServer(
             "Optional related data to include. Default: ['shipment'] covers most use cases. " +
               '• shipment: Routing, BOL, line, ref numbers (lightweight, always useful) ' +
               '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
-              '• transport_events: Event summary (count, rail event count, and latest event); use get_container_transport_events for the full timeline ' +
+              '• transport_events: Active event summary (count, rail event count, and latest event); use get_container_transport_events for the full timeline ' +
               '• custom_fields: Account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)',
           ),
       }),
@@ -1286,10 +1316,7 @@ export function createTerminal49McpServer(
     'get_container_transport_events',
     {
       title: 'Get Container Transport Events',
-      description:
-        'Get detailed transport event timeline for a container. Returns all milestones and movements ' +
-        '(vessel loaded, departed, arrived, discharged, rail movements, delivery). ' +
-        'Provides journey history, timeline analysis, and rail tracking without loading the full container snapshot.',
+      description: getContainerTransportEventsTool.description,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
