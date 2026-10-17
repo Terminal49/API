@@ -23,14 +23,15 @@ MCP_EVAL_ENDPOINT="http://localhost:4000/mcp" \
 MCP_EVAL_TOKEN="<key>" npm run eval --workspace @terminal49/mcp
 ```
 
-| Env var                  | Meaning                                                 | Default                          |
-| ------------------------ | ------------------------------------------------------- | -------------------------------- |
-| `MCP_EVAL_BEARER`        | OAuth 2.1 access token → `Authorization: Bearer`        | —                                |
-| `MCP_EVAL_TOKEN`         | Terminal49 API key → `Authorization: Token`             | —                                |
-| `MCP_EVAL_ENDPOINT`      | Gateway `/mcp` URL                                      | `https://mcp.terminal49.com/mcp` |
-| `MCP_EVAL_ENABLE_WRITE`  | Opt in to `track_container` and the write evals         | unset (skipped)                  |
-| `MCP_EVAL_ALLOW_SPARSE`  | Allow detail cases to skip when the account has no data | unset (strict)                   |
-| `MCP_EVAL_SANDBOX_TOKEN` | API key of the sandbox account for the write evals      | unset (write evals skipped)      |
+| Env var                   | Meaning                                                                       | Default                           |
+| ------------------------- | ----------------------------------------------------------------------------- | --------------------------------- |
+| `MCP_EVAL_BEARER`         | OAuth 2.1 access token → `Authorization: Bearer`                              | —                                 |
+| `MCP_EVAL_TOKEN`          | Terminal49 API key → `Authorization: Token`                                   | —                                 |
+| `MCP_EVAL_ENDPOINT`       | Gateway `/mcp` URL                                                            | `https://mcp.terminal49.com/mcp`  |
+| `MCP_EVAL_ENABLE_WRITE`   | Opt in to `track_container` and the write evals                               | unset (skipped)                   |
+| `MCP_EVAL_ALLOW_SPARSE`   | Allow detail cases to skip when the account has no data                       | unset (strict)                    |
+| `MCP_EVAL_SANDBOX_TOKEN`  | API key of the sandbox account for the write evals                            | unset (write evals skipped)       |
+| `MCP_EVAL_SANDBOX_BEARER` | OAuth access token of a sandbox account user, for the custom field write eval | unset (custom field case skipped) |
 
 > OAuth access tokens are short-lived (~5 min). For repeatable/CI runs, prefer a
 > `MCP_EVAL_TOKEN` API key — it does not expire.
@@ -84,6 +85,13 @@ it:
   preview;
 - assign the first party as `notify_party` on a shipment, then unassign it
   with a confirmed preview.
+- set the first `short_text` shipment custom field on a shipment, then
+  overwrite it and clear it with confirmed previews. Terminal49 accepts custom
+  field changes only from a signed-in user, never from an API key. So this
+  case runs as the user in `MCP_EVAL_SANDBOX_BEARER` and skips when it is
+  unset. That token is short-lived, so set it just before the run. Before it
+  writes, the case calls `whoami` with both credentials and fails when the
+  bearer's account is not the `MCP_EVAL_SANDBOX_TOKEN` account.
 
 Every case skips when the gateway does not list the write tools, which
 happens when its toolsets leave out `operations`, or when the sandbox account
@@ -92,7 +100,10 @@ tracking (`FeatureNotEnabled`) or the first shipment is already stopped. The
 reference number and party cases do not check either, so they run on a
 stopped shipment too. The party case skips when the account has no party, and
 when the party already holds that role, so it never removes a role it did not
-create.
+create. The custom field case skips without `MCP_EVAL_SANDBOX_BEARER`, when
+the account has no shipment or no shipment `short_text` field, and when the
+field already has a value on the shipment. It fails when the user cannot load
+the account's custom field definitions.
 If an assertion fails after a change, the case still undoes the change before
 it ends. `cancel_tracking_request` has no live
 case: a cancel cannot be undone and each run would need a new, billable

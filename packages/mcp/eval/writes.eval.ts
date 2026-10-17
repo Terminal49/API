@@ -1,6 +1,6 @@
 /**
- * Live write evals for the tracking lifecycle, reference number and party
- * tools.
+ * Live write evals for the tracking lifecycle, reference number, party and
+ * custom field tools.
  *
  * These change account data, so they run only against a dedicated sandbox
  * account and only when both are set:
@@ -8,6 +8,12 @@
  *   MCP_EVAL_SANDBOX_TOKEN=<API key of the sandbox account>
  * The endpoint is MCP_EVAL_ENDPOINT, as for the read suite. Each case is a
  * round trip that leaves the record as it found it.
+ *
+ * Terminal49 accepts custom field changes only from a signed-in user, never
+ * from an API key. So the custom field case also needs
+ *   MCP_EVAL_SANDBOX_BEARER=<OAuth access token of a sandbox account user>
+ * and skips without it. It fails before any write when that user's account
+ * is not the MCP_EVAL_SANDBOX_TOKEN account.
  *
  * cancel_tracking_request has no live case: a cancel cannot be undone, and
  * every run would have to create a new, billable tracking request. Its
@@ -22,6 +28,7 @@ const enableWrite =
   process.env.MCP_EVAL_ENABLE_WRITE === '1' ||
   process.env.MCP_EVAL_ENABLE_WRITE === 'true';
 const sandboxToken = process.env.MCP_EVAL_SANDBOX_TOKEN?.trim();
+const sandboxBearer = process.env.MCP_EVAL_SANDBOX_BEARER?.trim();
 const endpoint =
   process.env.MCP_EVAL_ENDPOINT?.trim() || 'https://mcp.terminal49.com/mcp';
 
@@ -229,6 +236,111 @@ if (!enableWrite || !sandboxToken) {
         expect(unassigned.undo).toBe('assign_party');
       } finally {
         if (needsUnassign && typeof role.id === 'string') await unassign();
+      }
+    });
+
+    it('sets a custom field, then updates and clears it with confirmed previews', async ({
+      skip,
+    }) => {
+      if (!sandboxBearer) {
+        return skip(
+          'Custom fields reject API keys. Set MCP_EVAL_SANDBOX_BEARER to a sandbox user token.',
+        );
+      }
+      const user = new EvalClient({
+        endpoint,
+        scheme: 'Bearer',
+        token: sandboxBearer,
+      });
+      expect((await user.initialize()).http).toBe(200);
+      const tools = (await user.listTools()).map((tool) => tool.name);
+      if (!tools.includes('set_custom_field')) return skip();
+
+      // The bearer must not reach any account but the sandbox one.
+      const accountId = async (session: EvalClient) => {
+        const { account } = structured(await session.callTool('whoami', {}));
+        return isRecord(account) && typeof account.id === 'string'
+          ? account.id
+          : undefined;
+      };
+      const sandboxAccount = await accountId(client);
+      expect(sandboxAccount, 'whoami returned no sandbox account').toBeTypeOf(
+        'string',
+      );
+      expect(
+        await accountId(user),
+        'MCP_EVAL_SANDBOX_BEARER must belong to the MCP_EVAL_SANDBOX_TOKEN account',
+      ).toBe(sandboxAccount);
+
+      const shipments = await user.callTool('list_shipments', {
+        page_size: 1,
+      });
+      const shipment = fixtureItems('list_shipments', shipments).find(
+        (item) => isRecord(item) && typeof item.id === 'string',
+      );
+      if (!isRecord(shipment) || typeof shipment.id !== 'string') {
+        return skip();
+      }
+
+      const listed = structured(
+        await user.callTool('list_custom_field_definitions', {
+          entity_type: 'shipment',
+        }),
+      );
+      expect(
+        Array.isArray(listed.definitions),
+        String(listed.custom_fields_note),
+      ).toBe(true);
+      const definition = Array.isArray(listed.definitions)
+        ? listed.definitions.find(
+            (item) => isRecord(item) && item.data_type === 'short_text',
+          )
+        : undefined;
+      if (!isRecord(definition) || typeof definition.api_slug !== 'string') {
+        return skip();
+      }
+      const target = {
+        entity_type: 'shipment',
+        entity_id: shipment.id,
+        api_slug: definition.api_slug,
+      };
+      const value = `MCP-EVAL-${Date.now().toString(36).toUpperCase()}`;
+      const confirmedAsUser = async (args: Record<string, unknown>) => {
+        const preview = structured(
+          await user.callTool('update_custom_field', args),
+        );
+        if (preview.status !== 'confirmation_required') return preview;
+        return structured(
+          await user.callTool('update_custom_field', {
+            ...args,
+            confirmation_token: preview.confirmation_token,
+          }),
+        );
+      };
+
+      const set = structured(
+        await user.callTool('set_custom_field', { ...target, value }),
+      );
+      // Never touch a value this run did not set.
+      if (set.status === 'already_set') return skip();
+      let needsClear = set.status === 'set';
+      try {
+        expect(set.status).toBe('set');
+        expect(set.value).toBe(value);
+
+        const updated = await confirmedAsUser({
+          ...target,
+          value: `${value}-2`,
+        });
+        expect(updated.status).toBe('updated');
+        expect(updated.previous_value).toBe(value);
+
+        const cleared = await confirmedAsUser({ ...target, clear: true });
+        if (cleared.status === 'cleared') needsClear = false;
+        expect(cleared.status).toBe('cleared');
+        expect(cleared.undo).toBe('set_custom_field');
+      } finally {
+        if (needsClear) await confirmedAsUser({ ...target, clear: true });
       }
     });
   });
