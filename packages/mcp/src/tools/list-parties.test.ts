@@ -60,6 +60,33 @@ describe('list_parties', () => {
     ]);
   });
 
+  it('matches a search on the name or nickname, not only the company name', async () => {
+    const { client } = fakeClient([
+      [
+        {
+          id: '1',
+          type: 'party',
+          attributes: { company_name: 'Acme Holdings', nickname: 'Ray' },
+        },
+        party('2', 'Raymond Supply'),
+        { id: '3', type: 'party', attributes: { nickname: 'Rayco' } },
+        {
+          id: '4',
+          type: 'party',
+          attributes: { company_name: '  ', name: 'Ray Logistics' },
+        },
+      ],
+    ]);
+    const result = await executeListParties({ search: 'ray' }, client);
+    expect(result.parties).toEqual([
+      { id: '1', name: 'Acme Holdings' },
+      { id: '4', name: 'Ray Logistics' },
+      { id: '3', name: 'Rayco' },
+      { id: '2', name: 'Raymond Supply' },
+    ]);
+    expect(result.total_matched).toBe(4);
+  });
+
   it('lists alphabetically without a search and honors the limit', async () => {
     const { client } = fakeClient([
       [party('1', 'Zeta'), party('2', 'Alpha'), party('3', 'Mid')],

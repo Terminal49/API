@@ -11,7 +11,7 @@
 import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
 import { containerFilterShape } from '../generated/list-filter-schemas.js';
-import { partyAttributesSchema, partyName } from './party-roles.js';
+import { partyAttributesSchema, partyName, partyNames } from './party-roles.js';
 import { nullableString } from './api-fields.js';
 import { httpStatus } from './soft-results.js';
 
@@ -36,7 +36,7 @@ export const listPartiesInputSchema = z.strictObject({
     .min(1)
     .max(100)
     .describe(
-      'Company name or part of one, such as "Acme" or "ray drayage". Case and punctuation are ignored. Omit to list parties alphabetically.',
+      'Company name, name or nickname, or part of one, such as "Acme" or "ray drayage". Case and punctuation are ignored. Omit to list parties alphabetically.',
     )
     .optional(),
   limit: z
@@ -80,16 +80,36 @@ export interface PartySummary {
   name: string;
 }
 
-/** The parties matching a search, best match first, then by name. */
-export function rankParties(
-  parties: readonly PartySummary[],
+/** A loaded party with every name it goes by, display name first. */
+export interface LoadedParty extends PartySummary {
+  names: string[];
+}
+
+export const toPartySummary = ({ id, name }: PartySummary): PartySummary => ({
+  id,
+  name,
+});
+
+/** The best rank any of the party's names gets for this search. */
+function partyRank(party: LoadedParty, search: string): number | null {
+  const ranks = party.names
+    .map((alias) => matchRank(alias, search))
+    .filter((rank): rank is number => rank !== null);
+  return ranks.length > 0 ? Math.min(...ranks) : null;
+}
+
+/**
+ * The parties matching a search on any of their names, best match first,
+ * then by display name.
+ */
+export function rankParties<Party extends LoadedParty>(
+  parties: readonly Party[],
   search: string,
-): PartySummary[] {
+): Party[] {
   return parties
-    .map((party) => ({ party, score: matchRank(party.name, search) }))
+    .map((party) => ({ party, score: partyRank(party, search) }))
     .filter(
-      (match): match is { party: PartySummary; score: number } =>
-        match.score !== null,
+      (match): match is { party: Party; score: number } => match.score !== null,
     )
     .sort(
       (a, b) => a.score - b.score || a.party.name.localeCompare(b.party.name),
@@ -99,9 +119,7 @@ export function rankParties(
 
 const rawPartyRowSchema = z.object({
   id: z.string(),
-  attributes: z
-    .object({ company_name: nullableString, name: nullableString })
-    .catch({ company_name: null, name: null }),
+  attributes: partyAttributesSchema,
 });
 
 const rawPartyPageSchema = z.object({
@@ -115,8 +133,8 @@ const rawPartyPageSchema = z.object({
  */
 export async function loadParties(
   client: Terminal49Client,
-): Promise<{ parties: PartySummary[]; truncated: boolean }> {
-  const parties: PartySummary[] = [];
+): Promise<{ parties: LoadedParty[]; truncated: boolean }> {
+  const parties: LoadedParty[] = [];
   for (let page = 1; page <= MAX_PAGES; page++) {
     const { data, links } = rawPartyPageSchema.parse(
       await client.parties.list({ page, pageSize: PAGE_SIZE, format: 'raw' }),
@@ -124,11 +142,9 @@ export async function loadParties(
     for (const row of data) {
       const parsed = rawPartyRowSchema.safeParse(row);
       if (!parsed.success) continue;
-      const item = parsed.data;
-      const name = (
-        item.attributes.company_name ?? item.attributes.name
-      )?.trim();
-      if (name) parties.push({ id: item.id, name });
+      const names = partyNames(parsed.data.attributes);
+      const [name] = names;
+      if (name) parties.push({ id: parsed.data.id, name, names });
     }
     if (!links?.next || data.length === 0) {
       return { parties, truncated: false };
@@ -159,7 +175,7 @@ export async function executeListParties(
 
   return {
     total_matched: matches.length,
-    parties: matches.slice(0, limit),
+    parties: matches.slice(0, limit).map(toPartySummary),
     truncated: truncated || matches.length > limit,
     usage: usage(),
   };

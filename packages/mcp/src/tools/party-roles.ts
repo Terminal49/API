@@ -35,15 +35,21 @@ export const partyAttributesSchema = z
   })
   .catch({ company_name: null, name: null, nickname: null });
 
+/** A party's non-empty names, in the order its display name is chosen. */
+export function partyNames(
+  attributes: z.infer<typeof partyAttributesSchema>,
+): string[] {
+  const { company_name, name, nickname } = attributes;
+  return [company_name, name, nickname]
+    .map((text) => text?.trim())
+    .filter((text): text is string => Boolean(text));
+}
+
 /** A party's display name: its company name, else its name, else its nickname. */
 export function partyName(
   attributes: z.infer<typeof partyAttributesSchema>,
 ): string | null {
-  const { company_name, name, nickname } = attributes;
-  return (
-    [company_name, name, nickname].map((text) => text?.trim()).find(Boolean) ??
-    null
-  );
+  return partyNames(attributes)[0] ?? null;
 }
 
 const rawPartyRolesSchema = z.object({
