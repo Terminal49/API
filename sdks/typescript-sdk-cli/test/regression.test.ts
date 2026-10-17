@@ -214,6 +214,38 @@ describe('CLI regressions', () => {
     expect(result.stderr).toContain('--latitude must be a number');
   });
 
+  it('custom-field-definitions list reads the account definitions, or the templates with --templates', async () => {
+    const urls: string[] = [];
+    vi.stubGlobal('fetch', async (input: Request | URL | string) => {
+      urls.push(input instanceof Request ? input.url : String(input));
+      return new Response(JSON.stringify({ data: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    process.env.T49_API_TOKEN = 'token-123';
+    process.env.T49_API_BASE_URL = 'https://api.test/v2';
+    process.env.XDG_CONFIG_HOME = mkdtempSync(join(tmpdir(), 't49-cli-'));
+
+    const account = await runProgram([
+      '--json',
+      'custom-field-definitions',
+      'list',
+    ]);
+    const templates = await runProgram([
+      '--json',
+      'custom-field-definitions',
+      'list',
+      '--templates',
+    ]);
+
+    expect([account.status, templates.status]).toEqual([0, 0]);
+    expect(urls).toEqual([
+      'https://api.test/v2/accounts/current/custom_field_definitions',
+      'https://api.test/v2/custom_field_definitions',
+    ]);
+  });
+
   it('vessels future-positions-coords sends the spec query params', async () => {
     const urls: string[] = [];
     vi.stubGlobal('fetch', async (input: Request | URL | string) => {

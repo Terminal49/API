@@ -54,20 +54,23 @@ export function registerCustomFieldDefinitionsCommand(program: Command): void {
     .command('custom-field-definitions')
     .description('Manage custom field definitions');
 
-  cmd
+  const listCommand = cmd
     .command('list')
     .description('List custom field definitions')
-    .action(
-      listAction(
-        'custom-field-definitions.list',
-        async ({ client, globals }) => {
-          const result = await client.customFieldDefinitions.list({
-            format: globals.format,
-          });
-          return cliEnvelope(listDataFrom(result), paginationFrom(result));
-        },
-      ),
+    .option(
+      '--templates',
+      'List the Terminal49 templates you can copy with template_id instead of your account definitions',
     );
+  listCommand.action(
+    listAction('custom-field-definitions.list', async ({ client, globals }) => {
+      const { templates } = listCommand.opts() as { templates?: boolean };
+      const result = await client.customFieldDefinitions.list({
+        format: globals.format,
+        scope: templates ? 'templates' : 'account',
+      });
+      return cliEnvelope(listDataFrom(result), paginationFrom(result));
+    }),
+  );
 
   cmd
     .command('get <id>')

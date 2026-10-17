@@ -156,7 +156,7 @@ Stable error codes include `USAGE_ERROR`, `NETWORK_ERROR`, `AUTH_ERROR`, `RATE_L
 - `t49 parties list|get`
 - `t49 metro-areas get`
 - `t49 custom-fields list|get|create|update|delete`
-- `t49 custom-field-definitions list|get|create|update|delete`
+- `t49 custom-field-definitions list|get|create|update|delete`. `list` prints your account definitions, and `list --templates` prints the Terminal49 templates you can copy with `template_id`.
 - `t49 custom-field-options list|get|create|update|delete`
 - `t49 search <query>`
 - `t49 config path|get|set|list|clear|auth-status|client-check`
