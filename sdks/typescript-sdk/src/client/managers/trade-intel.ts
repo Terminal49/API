@@ -80,7 +80,7 @@ export class TradeIntelManager extends BaseManager {
    * cheapest way to check whether the account has trade intelligence enabled.
    */
   async meta(): Promise<TradeIntelMeta> {
-    return this.transport.execute<TradeIntelMeta>(() =>
+    return this.transport.execute(() =>
       this.transport.client.GET('/trade_intel/meta'),
     );
   }
@@ -92,7 +92,7 @@ export class TradeIntelManager extends BaseManager {
   async searchCompanies(
     request: TradeIntelCompanySearchRequest = {},
   ): Promise<TradeIntelCompanySearchResponse> {
-    return this.transport.execute<TradeIntelCompanySearchResponse>(() =>
+    return this.transport.execute(() =>
       this.transport.client.POST('/trade_intel/companies/search', {
         body: request,
       }),
@@ -109,7 +109,7 @@ export class TradeIntelManager extends BaseManager {
     if (!request.company_name?.trim()) {
       throw new ValidationError('company_name is required (/company_name)');
     }
-    return this.transport.execute<TradeIntelCompanyProfile>(() =>
+    return this.transport.execute(() =>
       this.transport.client.POST('/trade_intel/companies/profile', {
         body: request,
       }),
@@ -123,7 +123,7 @@ export class TradeIntelManager extends BaseManager {
     if (!request.query?.trim()) {
       throw new ValidationError('query is required (/query)');
     }
-    return this.transport.execute<TradeIntelCommoditySearchResponse>(() =>
+    return this.transport.execute(() =>
       this.transport.client.POST('/trade_intel/commodities/search', {
         body: request,
       }),
@@ -137,7 +137,7 @@ export class TradeIntelManager extends BaseManager {
   async topImporters(
     request: TradeIntelTopImportersRequest = {},
   ): Promise<TradeIntelTopImporters> {
-    return this.transport.execute<TradeIntelTopImporters>(() =>
+    return this.transport.execute(() =>
       this.transport.client.POST('/trade_intel/importers/top', {
         body: request,
       }),
@@ -152,7 +152,7 @@ export class TradeIntelManager extends BaseManager {
   async trends(
     request: TradeIntelTrendsRequest = {},
   ): Promise<TradeIntelTrends> {
-    return this.transport.execute<TradeIntelTrends>(() =>
+    return this.transport.execute(() =>
       this.transport.client.POST('/trade_intel/trends', { body: request }),
     );
   }
@@ -169,7 +169,7 @@ export class TradeIntelManager extends BaseManager {
         'dims must list at least one dimension (/dims)',
       );
     }
-    return this.transport.execute<TradeIntelBreakdown>(() =>
+    return this.transport.execute(() =>
       this.transport.client.POST('/trade_intel/breakdown', { body: request }),
     );
   }
@@ -187,7 +187,7 @@ export class TradeIntelManager extends BaseManager {
         'container_number is required (/container_number)',
       );
     }
-    return this.transport.execute<TradeIntelContainerLookup>(() =>
+    return this.transport.execute(() =>
       this.transport.client.POST('/trade_intel/containers/lookup', {
         body: { container_number: containerNumber },
       }),
@@ -206,7 +206,7 @@ export class TradeIntelManager extends BaseManager {
     if (!bolNumber?.trim()) {
       throw new ValidationError('bol_number is required (/bol_number)');
     }
-    return this.transport.execute<TradeIntelBillOfLadingLookup>(() =>
+    return this.transport.execute(() =>
       this.transport.client.POST('/trade_intel/bills_of_lading/lookup', {
         body:
           options.months === undefined
