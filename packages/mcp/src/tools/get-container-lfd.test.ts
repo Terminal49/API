@@ -1,10 +1,11 @@
 import { readFileSync } from 'node:fs';
-import { type Terminal49Client } from '@terminal49/sdk';
+import { mapContainerList, type Terminal49Client } from '@terminal49/sdk';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { readContainerResource } from '../resources/container.js';
 import { formatInZone } from '../lib/temporal.js';
 import { executeGetContainer } from './get-container.js';
 import { executeGetShipmentDetails } from './get-shipment-details.js';
+import { executeListContainers } from './list-containers.js';
 
 async function getDeadline(
   unified?: { current_value: string | null; current_selection: string | null },
@@ -222,6 +223,42 @@ describe('checked-in POD serializer contract projections', () => {
         pickup_lfd: expected.value,
         pickup_lfd_source: expected.source,
       });
+    },
+  );
+
+  it.each(['compact', 'full'] as const)(
+    'uses the same selections in %s list_containers rows',
+    async (view) => {
+      // Run the checked-in responses through the real SDK list mapper, which
+      // still maps the legacy flat pickup_lfd into demurrage.pickupLfd.
+      const listResponse = {
+        data: fixtures.map(({ response }, index) => ({
+          ...response.data,
+          id: `container-${index}`,
+        })),
+      };
+      // SAFETY: executeListContainers only uses containers.list in mapped format.
+      const client = {
+        containers: {
+          list: vi
+            .fn()
+            .mockResolvedValue({ items: mapContainerList(listResponse) }),
+        },
+      } as unknown as Terminal49Client;
+      const result = await executeListContainers({ view }, client);
+      const deadlines = result.items.map((item: any) =>
+        view === 'compact'
+          ? {
+              value: item.pickup_lfd ?? null,
+              source: item.pickup_lfd_source ?? null,
+            }
+          : {
+              value: item.demurrage.pickupLfd,
+              source: item.demurrage.pickupLfdSource,
+            },
+      );
+      expect(deadlines).toEqual(fixtures.map(({ expected }) => expected));
+      expect(JSON.stringify(result.items)).not.toContain('2099-12-31');
     },
   );
 });
