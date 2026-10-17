@@ -160,6 +160,56 @@ jobs:
       - name: Check API gateway (Vite+ and anti-slop)
         run: npm run lint:api
 
+  mcp-sandbox-write-eval:
+    name: MCP write evals on the sandbox account
+    needs: mcp
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Every run edits the same sandbox shipment, so runs must not overlap.
+    concurrency:
+      group: mcp-sandbox-write-eval
+      cancel-in-progress: false
+    runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install deps
+        run: npm ci
+      # The eval checks the default write tools, so it must not run against
+      # the build that production served before this push.
+      - name: Wait for this commit's Vercel production deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MCP_EVAL_SANDBOX_TOKEN: ${{ secrets.MCP_EVAL_SANDBOX_TOKEN }}
+          PRODUCTION_SHA: ${{ github.sha }}
+        run: |
+          if [[ -z "$MCP_EVAL_SANDBOX_TOKEN" ]]; then
+            echo "::notice::MCP_EVAL_SANDBOX_TOKEN is unset, so the write eval skips"
+            exit 0
+          fi
+          for attempt in {1..60}; do
+            state="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${PRODUCTION_SHA}/status" \
+              --jq '[.statuses[] | select(.context == "Vercel")][0].state // "pending"')"
+            if [[ "$state" == "success" ]]; then
+              exit 0
+            fi
+            if [[ "$state" == "failure" || "$state" == "error" ]]; then
+              echo "Vercel production deployment failed for ${PRODUCTION_SHA}"
+              exit 1
+            fi
+            sleep 10
+          done
+          echo "Timed out waiting for the Vercel production deployment of ${PRODUCTION_SHA}"
+          exit 1
+      - name: Eval MCP write tools (live; skips without MCP_EVAL_SANDBOX_TOKEN secret)
+        env:
+          MCP_EVAL_ENABLE_WRITE: '1'
+          MCP_EVAL_SANDBOX_TOKEN: ${{ secrets.MCP_EVAL_SANDBOX_TOKEN }}
+        run: npm run eval --workspace @terminal49/mcp -- eval/writes.eval.ts
+
   mcp-protocol-compat:
     name: MCP protocol ${{ matrix.protocol-version }}
     runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
