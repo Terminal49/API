@@ -164,6 +164,24 @@ describe('MCP protocol compatibility', () => {
     );
   });
 
+  it('documents when to call track_container using the advertised annotations', async () => {
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const annotations = new Map(
+      tools.map((tool) => [tool.name, tool.annotations]),
+    );
+    const trackSection = documentedToolSection('track_container');
+
+    expect(annotations.get('track_container')?.readOnlyHint).toBe(false);
+    expect(annotations.get('search_container')?.readOnlyHint).toBe(true);
+    expect(trackSection).toMatch(
+      /call `track_container` only when the user asks to track/,
+    );
+    expect(trackSection).toContain('`readOnlyHint: false`');
+    expect(trackSection).toMatch(/confirm with the user first/);
+    expect(trackSection).toMatch(/To look a number up, use `search_container`/);
+  });
+
   it('advertises bounded, identifier-only inputs in tools/list', async () => {
     const client = await connectClient({ era: 'modern' });
     const { tools } = await client.listTools();
