@@ -209,6 +209,18 @@ export const TOOL_REGISTRY = [
     },
   },
   {
+    name: 'update_document',
+    title: 'Update Document',
+    toolset: 'documents_write',
+    tier: 'C',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: false,
+    },
+  },
+  {
     name: 'search_docs',
     title: 'Search Terminal49 Docs',
     toolset: 'core',

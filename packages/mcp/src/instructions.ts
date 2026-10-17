@@ -39,6 +39,8 @@ const WRITE_EFFECTS = {
     'replaces or clears a custom field value on a container, shipment or tracking request',
   relink_document:
     'matches a document to shipments and containers again in the background',
+  update_document:
+    "sets a document's type, or has Terminal49 classify or extract it again, replacing the type or extracted data it has",
 } satisfies Record<WriteTool['name'], string>;
 
 const TIER_RULES = {

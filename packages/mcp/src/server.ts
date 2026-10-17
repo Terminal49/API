@@ -123,6 +123,11 @@ import {
   relinkDocumentOutputSchema,
 } from './tools/relink-document.js';
 import {
+  executeUpdateDocument,
+  updateDocumentInputSchema,
+  updateDocumentOutputSchema,
+} from './tools/update-document.js';
+import {
   executeUpdateCustomField,
   updateCustomFieldInputSchema,
   updateCustomFieldOutputSchema,
@@ -1055,6 +1060,7 @@ function formatToolError(
         return `No tracking request found with id ${id ?? '(missing)'}.`;
       case 'get_document':
       case 'relink_document':
+      case 'update_document':
         return `No document found with id ${id ?? '(missing)'}.`;
       case 'get_vessel':
         return `No vessel found with id ${id ?? '(missing)'}.`;
@@ -1905,6 +1911,21 @@ export function createTerminal49McpServer(
         outputSchema: relinkDocumentOutputSchema,
       },
       async (args, context) => executeRelinkDocument(args, client, context),
+    ),
+    update_document: tool(
+      {
+        description:
+          'Fix a misclassified document. action set_type sets document_type to a code you pass, and Terminal49 records that the account set it. ' +
+          'action reclassify has Terminal49 choose the type again, and reextract has it read the fields from the file again; both run in the background and return accepted. ' +
+          'Each action can replace the type or the extracted data, and Terminal49 keeps no copy of the old one. ' +
+          'Call it first without confirmation_token: it changes nothing and returns a preview (the document now and the change) with a confirmation_token. ' +
+          'Show the preview to the user, and call again with the token only after the user approves it. The token stops working if the document changes in the meantime. ' +
+          'set_type checks the code against the account document types first and returns unknown_document_type with allowed_types when it is not one of them, or unchanged when the account already set that type and the notes would not change. ' +
+          'Returns updated with previous_document_type for set_type, or noop when Terminal49 refuses the change.',
+        inputSchema: updateDocumentInputSchema,
+        outputSchema: updateDocumentOutputSchema,
+      },
+      async (args, context) => executeUpdateDocument(args, client, context),
     ),
     search_docs: tool(
       {
