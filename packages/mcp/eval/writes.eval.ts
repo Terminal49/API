@@ -1,5 +1,6 @@
 /**
- * Live write evals for the tracking lifecycle tools.
+ * Live write evals for the tracking lifecycle, reference number and party
+ * tools.
  *
  * These change account data, so they run only against a dedicated sandbox
  * account and only when both are set:
@@ -42,6 +43,19 @@ if (!enableWrite || !sandboxToken) {
   });
   let served: string[] = [];
   let shipmentId: string | undefined;
+  let partyId: string | undefined;
+
+  /** Previews a tier C call, then confirms it with the token it returned. */
+  const confirmed = async (tool: string, args: Record<string, unknown>) => {
+    const preview = structured(await client.callTool(tool, args));
+    if (preview.status !== 'confirmation_required') return preview;
+    return structured(
+      await client.callTool(tool, {
+        ...args,
+        confirmation_token: preview.confirmation_token,
+      }),
+    );
+  };
 
   describe('Terminal49 MCP write eval (sandbox account)', () => {
     beforeAll(async () => {
@@ -49,6 +63,17 @@ if (!enableWrite || !sandboxToken) {
       expect(init.http).toBe(200);
       served = (await client.listTools()).map((tool) => tool.name);
       if (!served.includes('stop_shipment_tracking')) return;
+
+      const parties = structured(
+        await client.callTool('list_parties', { limit: 1 }),
+      );
+      const firstParty = Array.isArray(parties.parties)
+        ? parties.parties.find(isRecord)
+        : undefined;
+      partyId =
+        firstParty && typeof firstParty.id === 'string'
+          ? firstParty.id
+          : undefined;
 
       // Takes the first shipment. The case skips if it is already stopped.
       const shipments = await client.callTool('list_shipments', {
@@ -133,6 +158,78 @@ if (!enableWrite || !sandboxToken) {
       });
       expect(result.isError).toBe(false);
       expect(structured(result).error).toBe('invalid_confirmation');
+    });
+
+    it('adds a reference number, then removes it with a confirmed preview', async ({
+      skip,
+    }) => {
+      if (!served.includes('add_reference_numbers') || !shipmentId) {
+        return skip();
+      }
+      const target = { entity_type: 'shipment', entity_id: shipmentId };
+      const refNumber = `MCP-EVAL-${Date.now().toString(36).toUpperCase()}`;
+
+      let needsRemove = false;
+      try {
+        const added = await client.callTool('add_reference_numbers', {
+          ...target,
+          add: [refNumber],
+        });
+        needsRemove = structured(added).status === 'added';
+        expect(added.isError).toBe(false);
+        expect(structured(added).status).toBe('added');
+        expect(structured(added).ref_numbers).toContain(refNumber);
+
+        const removed = await confirmed('remove_reference_numbers', {
+          ...target,
+          remove: [refNumber],
+        });
+        if (removed.status === 'removed') needsRemove = false;
+        expect(removed.status).toBe('removed');
+        expect(removed.ref_numbers).not.toContain(refNumber);
+      } finally {
+        // Leave the sandbox shipment's list as it was even when an assert failed.
+        if (needsRemove) {
+          await confirmed('remove_reference_numbers', {
+            ...target,
+            remove: [refNumber],
+          });
+        }
+      }
+    });
+
+    it('assigns a party, then unassigns it with a confirmed preview', async ({
+      skip,
+    }) => {
+      if (!served.includes('assign_party') || !shipmentId || !partyId) {
+        return skip();
+      }
+      const target = { entity_type: 'shipment', entity_id: shipmentId };
+
+      const assigned = structured(
+        await client.callTool('assign_party', {
+          ...target,
+          role: 'notify_party',
+          party_id: partyId,
+        }),
+      );
+      // Never remove a role this run did not create.
+      if (assigned.status === 'already_present') return skip();
+      expect(assigned.status).toBe('assigned');
+      const role = isRecord(assigned.party_role) ? assigned.party_role : {};
+      const unassign = () =>
+        confirmed('unassign_party', { ...target, party_role_id: role.id });
+
+      let needsUnassign = true;
+      try {
+        expect(typeof role.id).toBe('string');
+        const unassigned = await unassign();
+        if (unassigned.status === 'unassigned') needsUnassign = false;
+        expect(unassigned.status).toBe('unassigned');
+        expect(unassigned.undo).toBe('assign_party');
+      } finally {
+        if (needsUnassign && typeof role.id === 'string') await unassign();
+      }
     });
   });
 }
