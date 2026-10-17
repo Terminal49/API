@@ -47,6 +47,7 @@ const CONTAINER_ROLE_MESSAGE =
 // first one found; adding one to a shipment deletes the previous one; a second
 // shipment customer is rejected by a unique index. So `add` refuses when a
 // different party already holds one of these, and `replace` swaps it.
+const CUSTOMER_SWAP_HINT = 'Remove the current customer, then add the new one.';
 const SINGLE_PARTY_ROLES: readonly string[] = [
   'pickup_dray_carrier',
   'customer',
@@ -79,7 +80,7 @@ export const setPartyRoleInputSchema = z
       .enum(['add', 'replace', 'remove'])
       .describe(
         'add attaches the party in the role, beside any others; it fails on a record where a different party already holds pickup_dray_carrier or customer, which hold one party each. ' +
-          'replace makes the party the only one in the role, detaching any other (use it to change the drayage carrier). remove detaches the party.',
+          'replace makes the party the only one in the role, detaching any other (use it to change the drayage carrier); it does not replace a shipment customer: remove the current one, then add the new one. remove detaches the party.',
       ),
   })
   .refine((args) => !!args.container_ids !== !!args.shipment_ids, {
@@ -277,7 +278,9 @@ export async function executeSetPartyRole(
         if (matching.length > 0) return 'unchanged';
         if (others.length > 0 && SINGLE_PARTY_ROLES.includes(role)) {
           throw new RecordWriteError(
-            `Already has a different ${role}. Use action "replace" to swap it.`,
+            role === 'customer'
+              ? `Already has a different customer. ${CUSTOMER_SWAP_HINT}`
+              : `Already has a different ${role}. Use action "replace" to swap it.`,
           );
         }
         await addRole(id);
@@ -293,18 +296,22 @@ export async function executeSetPartyRole(
       // remove the current one first and could leave the shipment without one.
       if (role === 'customer') {
         throw new RecordWriteError(
-          'Replacing the customer is not supported. Remove the current customer, then add the new one.',
+          `Replacing the customer is not supported. ${CUSTOMER_SWAP_HINT}`,
         );
       }
       // Attach first so a failed add leaves the previous party in place.
-      if (matching.length === 0) await addRole(id);
+      const attached = matching.length === 0;
+      if (attached) await addRole(id);
       for (const assignment of others) {
         try {
           await manager.removePartyRole(id, assignment.id);
         } catch (error) {
           if (isNotFound(error)) continue; // Rails already replaced it.
+          const detail = `could not detach another party in ${role}: ${describeError(error)}`;
           throw new RecordWriteError(
-            `Attached the new party but could not detach the previous ${role}: ${describeError(error)}`,
+            attached
+              ? `Attached the new party but ${detail}`
+              : `Kept the party but ${detail}`,
           );
         }
       }

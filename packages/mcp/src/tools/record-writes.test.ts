@@ -268,7 +268,64 @@ describe('set_party_role', () => {
       {
         id: C1,
         error:
-          'Attached the new party but could not detach the previous pickup_dray_carrier: Not allowed to change this record.',
+          'Attached the new party but could not detach another party in pickup_dray_carrier: Not allowed to change this record.',
+      },
+    ]);
+  });
+
+  it('does not claim an attach it skipped when a detach fails', async () => {
+    const client = fakeClient();
+    client.shipments.partyRoles.mockResolvedValue(
+      partyRoleDoc(
+        { id: 'pr-keep', role: 'shipper', partyId: PARTY },
+        { id: 'pr-old', role: 'shipper', partyId: OTHER_PARTY },
+      ),
+    );
+    client.shipments.removePartyRole.mockRejectedValue(
+      Object.assign(new Error('Forbidden'), {
+        name: 'AuthorizationError',
+        status: 403,
+      }),
+    );
+
+    const result = await executeSetPartyRole(
+      {
+        shipment_ids: [C1],
+        role: 'shipper',
+        party_id: PARTY,
+        action: 'replace',
+      },
+      client,
+    );
+
+    expect(client.shipments.addPartyRole).not.toHaveBeenCalled();
+    expect(client.shipments.removePartyRole).toHaveBeenCalledWith(C1, 'pr-old');
+    expect(result.failed).toEqual([
+      {
+        id: C1,
+        error:
+          'Kept the party but could not detach another party in shipper: Not allowed to change this record.',
+      },
+    ]);
+  });
+
+  it('points a second shipment customer at remove-then-add, not replace', async () => {
+    const client = fakeClient();
+    client.shipments.partyRoles.mockResolvedValue(
+      partyRoleDoc({ id: 'pr-old', role: 'customer', partyId: OTHER_PARTY }),
+    );
+
+    const result = await executeSetPartyRole(
+      { shipment_ids: [C1], role: 'customer', party_id: PARTY, action: 'add' },
+      client,
+    );
+
+    expect(client.shipments.addPartyRole).not.toHaveBeenCalled();
+    expect(result.failed).toEqual([
+      {
+        id: C1,
+        error:
+          'Already has a different customer. Remove the current customer, then add the new one.',
       },
     ]);
   });
