@@ -100,13 +100,23 @@ describe('previousMonth', () => {
     expect(previousMonth('2026-10')).toBe('2026-09');
     expect(previousMonth('not a month')).toBeUndefined();
   });
+
+  it('accepts the first-of-month dates the service sends for index windows', () => {
+    expect(previousMonth('2026-10-01')).toBe('2026-09');
+    expect(previousMonth('2026-01-01')).toBe('2025-12');
+    expect(previousMonth('2026-13-01')).toBeUndefined();
+    expect(previousMonth('2026-10-01T00:00:00Z')).toBeUndefined();
+  });
 });
 
 describe('search_importers', () => {
   it('sends the filters with an uppercased state and compacts each row', async () => {
     const { client, tradeIntel } = fakeClient({
       searchCompanies: vi.fn().mockResolvedValue({
-        index: { since_month: '2025-09', until_month_exclusive: '2026-09' },
+        index: {
+          since_month: '2025-10-01',
+          until_month_exclusive: '2026-10-01',
+        },
         results: [
           {
             company_name: 'EXAMPLE OUTDOOR SUPPLY',
@@ -117,8 +127,8 @@ describe('search_importers', () => {
             teus: 2310.55,
             estimated_value: 48200000.4,
             reefer_share: 0.123,
-            first_month: '2025-09',
-            last_month: '2026-08',
+            first_month: '2025-10-01',
+            last_month: '2026-09-01',
             top_ports: named('PORT', 8),
             top_origins: named('ORIGIN', 2),
             top_carriers: named('CARRIER', 6),
@@ -146,11 +156,14 @@ describe('search_importers', () => {
       state: 'GA',
       limit: 10,
     });
-    expect(result).toMatchObject({
-      period: { from: '2025-09', to: '2026-08' },
+    expect((result as any).period).toMatchObject({
+      from: '2025-10',
+      to: '2026-09',
     });
     const row = (result as any).importers[0];
     expect(row).toMatchObject({
+      first_month: '2025-10',
+      last_month: '2026-09',
       state: null,
       share_as_notify_party: 0.05,
       teus: 2310.6,
@@ -224,7 +237,6 @@ describe('get_importer_profile', () => {
         company_name: 'EXAMPL OUTDOOR',
         company_state: null,
         since: '2025-10',
-        until: '2026-09',
         found: false,
       }),
     });
@@ -235,6 +247,7 @@ describe('get_importer_profile', () => {
     );
 
     expect(result.found).toBe(false);
+    expect(result.period.from).toBe('2025-10');
     expect(result.message).toMatch(/exact company_name from search_importers/);
     expect(result).not.toHaveProperty('totals');
   });
@@ -278,17 +291,29 @@ describe('search_commodities', () => {
 });
 
 describe('rank_importers', () => {
-  it('numbers the ranking and only reports value when the API gave one', async () => {
+  it('numbers the ranking and leaves out value when the API sends null', async () => {
     const { client, tradeIntel } = fakeClient({
       topImporters: vi.fn().mockResolvedValue({
         since: '2025-10',
         until: '2026-09',
         ranked_by: 'containers',
-        filters: { port_of_discharge: 'savannah' },
+        filters: { pod: 'savannah' },
         notes: [],
         importers: [
-          { company_name: 'A', states: ['GA'], containers: 9, teus: 17.01 },
-          { company_name: 'B', states: ['SC'], containers: 4, teus: 8 },
+          {
+            company_name: 'A',
+            states: ['GA'],
+            containers: 9,
+            teus: 17.01,
+            estimated_value: null,
+          },
+          {
+            company_name: 'B',
+            states: null,
+            containers: 4,
+            teus: 8,
+            estimated_value: null,
+          },
         ],
       }),
     });
@@ -303,14 +328,36 @@ describe('rank_importers', () => {
       months: 12,
       limit: 20,
     });
-    expect(result.importers[0]).toEqual({
-      rank: 1,
-      company_name: 'A',
-      states: ['GA'],
-      containers: 9,
-      teus: 17,
+    expect(result.importers).toStrictEqual([
+      { rank: 1, company_name: 'A', states: ['GA'], containers: 9, teus: 17 },
+      { rank: 2, company_name: 'B', states: null, containers: 4, teus: 8 },
+    ]);
+    expect(result.filters).toEqual({ pod: 'savannah' });
+  });
+
+  it('reports a rounded value when an hs4 ranking carries one', async () => {
+    const { client } = fakeClient({
+      topImporters: vi.fn().mockResolvedValue({
+        since: '2025-10',
+        until: '2026-09',
+        ranked_by: 'containers',
+        filters: { hs4: '9401' },
+        notes: [],
+        importers: [
+          {
+            company_name: 'A',
+            states: ['GA', 'CA'],
+            containers: 800,
+            teus: 1500,
+            estimated_value: 31000000.4,
+          },
+        ],
+      }),
     });
-    expect(result.importers[1].rank).toBe(2);
+
+    const result: any = await executeRankImporters({ hs4: '9401' }, client);
+
+    expect(result.importers[0].estimated_value_usd).toBe(31000000);
   });
 });
 
@@ -411,20 +458,21 @@ describe('get_trade_data_coverage', () => {
   it('states where history starts and which month is incomplete, without internals', async () => {
     const { client } = fakeClient({
       meta: vi.fn().mockResolvedValue({
-        since_month: '2025-09',
-        until_month_exclusive: '2026-09',
+        since_month: '2025-10-01',
+        until_month_exclusive: '2026-10-01',
         months: 12,
         min_containers: 5,
         companies: 250000,
         hs_codes: 1200,
-        facts_since_month: '2022-01',
-        facts_until_exclusive: '2026-11',
-        partial_month: '2026-10',
-        mode: 'local',
+        facts_since_month: '2022-01-01',
+        facts_until_exclusive: '2026-10-09',
+        partial_month: '2026-10-01',
+        mode: 'incremental',
         facts_hash: 'abc',
-        refreshed_since: '2026-10-01',
+        refreshed_since: '2026-07-01',
         fact_rows: { lane_month: 1 },
-        volume_measure: 'containers',
+        volume_measure:
+          'physical containers: distinct (container_number, imported_on)',
         built_at: '2026-10-08T06:12:44Z',
       }),
     });
@@ -438,7 +486,7 @@ describe('get_trade_data_coverage', () => {
       latest_month: '2026-10',
       latest_month_is_partial: true,
       last_full_month: '2026-09',
-      search_window: { from: '2025-09', to: '2026-08' },
+      search_window: { from: '2025-10', to: '2026-09' },
       importers_indexed: 250000,
       product_codes_indexed: 1200,
       volume_unit: 'physical containers, each counted once',

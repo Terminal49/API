@@ -1039,7 +1039,10 @@ describe('trade intelligence tools', () => {
 
   it('returns schema-valid compact results', async () => {
     tradeIntel.searchCompanies.mockResolvedValue({
-      index: { since_month: '2025-09', until_month_exclusive: '2026-09' },
+      index: {
+        since_month: '2025-10-01',
+        until_month_exclusive: '2026-10-01',
+      },
       results: [
         {
           company_name: 'EXAMPLE OUTDOOR SUPPLY',
@@ -1050,8 +1053,8 @@ describe('trade intelligence tools', () => {
           teus: 190.44,
           estimated_value: 1234567.89,
           reefer_share: 0,
-          first_month: '2025-09',
-          last_month: '2026-08',
+          first_month: '2025-10-01',
+          last_month: '2026-09-01',
           top_ports: [],
           top_origins: [],
           top_carriers: [],
@@ -1072,6 +1075,14 @@ describe('trade intelligence tools', () => {
     });
     expect(result.structuredContent.importers[0]).not.toHaveProperty('score');
     expect(result.structuredContent).not.toHaveProperty('index');
+    expect(result.structuredContent.period).toMatchObject({
+      from: '2025-10',
+      to: '2026-09',
+    });
+    expect(result.structuredContent.importers[0]).toMatchObject({
+      first_month: '2025-10',
+      last_month: '2026-09',
+    });
     expect(tool.outputSchema.safeParse(result.structuredContent).success).toBe(
       true,
     );

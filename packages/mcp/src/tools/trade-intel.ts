@@ -364,10 +364,24 @@ const round = (value: unknown, digits = 0): number | undefined => {
   return Math.round(value * factor) / factor;
 };
 
-/** The month before a YYYY-MM month, used to turn exclusive ends inclusive. */
+/**
+ * The service sends index dates (meta, search windows, first/last month) as
+ * the first day of the month, YYYY-MM-DD, and analytics periods as YYYY-MM.
+ * Results show both as YYYY-MM.
+ */
+const MONTH_OR_DATE =
+  /^(\d{4}-(?:0[1-9]|1[0-2]))(?:-(?:0[1-9]|[12]\d|3[01]))?$/;
+
+export function toMonth(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  return MONTH_OR_DATE.exec(value)?.[1];
+}
+
+/** The month before a YYYY-MM or YYYY-MM-DD month, used to turn exclusive ends inclusive. */
 export function previousMonth(value: unknown): string | undefined {
-  if (typeof value !== 'string' || !MONTH.test(value)) return undefined;
-  const [year, monthNumber] = value.split('-').map(Number);
+  const month = toMonth(value);
+  if (!month) return undefined;
+  const [year, monthNumber] = month.split('-').map(Number);
   const date = new Date(Date.UTC(year, monthNumber - 2, 1));
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
 }
@@ -431,7 +445,7 @@ export async function executeSearchImporters(
   const window = body.index;
   return {
     period: {
-      from: window?.since_month,
+      from: toMonth(window?.since_month),
       to: previousMonth(window?.until_month_exclusive),
       note: 'Volumes cover the 12-month search window from..to, which can end a month or two before the last full month. Use get_importer_profile for the latest full months.',
     },
@@ -458,8 +472,8 @@ export async function executeSearchImporters(
         teus: round(row.teus, 1),
         estimated_value_usd: round(row.estimated_value),
         reefer_share: round(row.reefer_share, 2),
-        first_month: row.first_month,
-        last_month: row.last_month,
+        first_month: toMonth(row.first_month),
+        last_month: toMonth(row.last_month),
         top_ports: list('top_ports', row.top_ports, named),
         top_origins: list('top_origins', row.top_origins, named),
         top_carriers: list('top_carriers', row.top_carriers, named),
@@ -586,7 +600,7 @@ export async function executeRankImporters(
       states: row.states,
       containers: row.containers,
       teus: round(row.teus, 1),
-      ...(row.estimated_value === undefined
+      ...(row.estimated_value == null
         ? {}
         : { estimated_value_usd: round(row.estimated_value) }),
     })),
@@ -739,12 +753,12 @@ export async function executeGetTradeDataCoverage(client: Terminal49Client) {
   return {
     source:
       'US ocean import bill-of-lading records (US Customs vessel manifests)',
-    history_starts: body.facts_since_month,
-    latest_month: body.partial_month,
+    history_starts: toMonth(body.facts_since_month),
+    latest_month: toMonth(body.partial_month),
     latest_month_is_partial: true,
     last_full_month: previousMonth(body.partial_month),
     search_window: {
-      from: body.since_month,
+      from: toMonth(body.since_month),
       to: previousMonth(body.until_month_exclusive),
     },
     importers_indexed: body.companies,
