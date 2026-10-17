@@ -29,6 +29,24 @@ test('classifies repository control planes and public runtime surfaces as high',
   }
 });
 
+test('every agent-trust verifier and its tests have high risk and explicit ownership', async () => {
+  const { readdir, readFile } = await import('node:fs/promises');
+  const verifiers = (await readdir(new URL('../../bin/', import.meta.url)))
+    .filter((name) => /^(agent-verify|check-.+)\.mjs$/.test(name))
+    .map((name) => `bin/${name}`);
+  assert.ok(verifiers.includes('bin/check-openapi-types.test.mjs'));
+  const owners = (
+    await readFile(new URL('../../.github/CODEOWNERS', import.meta.url), 'utf8')
+  ).split('\n');
+  for (const path of verifiers) {
+    assert.equal(classifyPath(path), 'high', path);
+    assert.ok(
+      owners.some((line) => line.startsWith(`/${path} `)),
+      `${path} has an explicit CODEOWNERS entry`,
+    );
+  }
+});
+
 test('classifies pure docs as low but capability docs conservatively', () => {
   assert.equal(
     classifyPath('docs/api-docs/in-depth-guides/routing.mdx'),

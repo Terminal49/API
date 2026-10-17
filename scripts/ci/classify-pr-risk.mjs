@@ -40,6 +40,7 @@ const AGENT_TRUST_FILES = new Set([
   'bin/check-agent-trust.mjs',
   'bin/check-agent-trust.test.mjs',
   'bin/check-openapi-types.mjs',
+  'bin/check-openapi-types.test.mjs',
 ]);
 
 const normalizePath = (filePath) =>
@@ -58,9 +59,7 @@ export function classifyPath(filePath) {
     SDK_PUBLIC_SURFACE_FILES.has(path) ||
     SDK_PUBLIC_SURFACE_PREFIXES.some((prefix) => path.startsWith(prefix)) ||
     AGENT_TRUST_FILES.has(path) ||
-    path === 'docs/openapi.json' ||
-    path === 'docs/risk-gates.md' ||
-    path === 'docs/risk-gates-trial.md'
+    path === 'docs/openapi.json'
   ) {
     return 'high';
   }
