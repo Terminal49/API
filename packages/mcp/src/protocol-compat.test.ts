@@ -183,6 +183,37 @@ describe('MCP protocol compatibility', () => {
     }
   });
 
+  it('gives the tools/list count and names wherever the docs count tools', async () => {
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const read = (path: string) =>
+      readFileSync(new URL(path, import.meta.url), 'utf8');
+    const docs = {
+      'packages/mcp/README.md': read('../README.md'),
+      'packages/mcp/TOOLS_OVERVIEW.md': read('../TOOLS_OVERVIEW.md'),
+      'docs/api-docs/in-depth-guides/mcp.mdx': read(
+        '../../../docs/api-docs/in-depth-guides/mcp.mdx',
+      ),
+    };
+
+    for (const [path, text] of Object.entries(docs)) {
+      const counts = [
+        ...text.matchAll(
+          /\b(\d+)\*{0,2} (?:specialized )?tools\b|Tools \((\d+) Available\)/gi,
+        ),
+      ].map((match) => Number(match[1] ?? match[2]));
+      expect(counts.length, path).toBeGreaterThan(0);
+      for (const count of counts) expect(count, path).toBe(tools.length);
+    }
+
+    const readmeTable = [
+      ...docs['packages/mcp/README.md'].matchAll(
+        /^\| \*\*`([a-z_]+)`\*\* \|/gm,
+      ),
+    ].map((match) => match[1]);
+    expect(readmeTable.sort()).toEqual(tools.map((tool) => tool.name).sort());
+  });
+
   it('advertises bounded, identifier-only inputs in tools/list', async () => {
     const client = await connectClient({ era: 'modern' });
     const { tools } = await client.listTools();
