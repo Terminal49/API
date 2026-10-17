@@ -84,26 +84,29 @@ const MAX_RETRY_AFTER_MS = 60_000;
 /**
  * Parse a `Retry-After` header into milliseconds. Supports both delta-seconds
  * (`"120"`) and an HTTP-date. Returns `undefined` when absent/unparseable, never
- * returns a negative delay, and clamps the result to {@link MAX_RETRY_AFTER_MS}.
+ * returns a negative delay, and clamps the result to `maxMs`.
  *
  * @param now - Reference time (ms since epoch) used for HTTP-date math; defaults
  *   to `Date.now()` and is injectable for deterministic tests.
+ * @param maxMs - Upper bound; defaults to {@link MAX_RETRY_AFTER_MS}, the cap on
+ *   a retry sleep.
  */
 export function parseRetryAfterMs(
   value: string | null | undefined,
   now: number = Date.now(),
+  maxMs: number = MAX_RETRY_AFTER_MS,
 ): number | undefined {
   if (value == null) return undefined;
   const trimmed = value.trim();
   if (trimmed === '') return undefined;
 
   if (/^\d+$/.test(trimmed)) {
-    return Math.min(Number(trimmed) * 1000, MAX_RETRY_AFTER_MS);
+    return Math.min(Number(trimmed) * 1000, maxMs);
   }
 
   const dateMs = Date.parse(trimmed);
   if (Number.isNaN(dateMs)) return undefined;
-  return Math.min(Math.max(0, dateMs - now), MAX_RETRY_AFTER_MS);
+  return Math.min(Math.max(0, dateMs - now), maxMs);
 }
 
 /** Base unit (ms) for exponential backoff: attempt 0 -> 500ms, 1 -> 1000ms, ... */
