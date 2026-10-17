@@ -1,10 +1,8 @@
 {
   "ok": false,
-  "command": "custom-fields.list",
   "error": {
     "code": "UPSTREAM_ERROR",
     "message": "Internal Server Error",
-    "status": 500,
     "details": {
       "errors": [
         {

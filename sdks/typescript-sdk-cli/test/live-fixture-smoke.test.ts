@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vite-plus/test';
@@ -17,6 +17,19 @@ function readFixture<T = unknown>(name: string): T {
 }
 
 describe('live fixture smoke', () => {
+  it('keeps every list fixture in the mapped list envelope', () => {
+    const listFixtures = readdirSync(fixtureDir).filter((name) =>
+      name.endsWith('.list.json'),
+    );
+    expect(listFixtures.length).toBeGreaterThan(0);
+
+    for (const name of listFixtures) {
+      const payload = readFixture<any>(name);
+      expect(payload.ok, name).toBe(true);
+      expect(Array.isArray(payload.data), name).toBe(true);
+    }
+  });
+
   it('renders high-signal search table rows from live payload', () => {
     const payload = readFixture<any>('search.container-number.json');
     expect(payload.ok).toBe(true);
@@ -30,7 +43,7 @@ describe('live fixture smoke', () => {
     expect(output).toContain('SCAC HLCU');
   });
 
-  it('renders useful columns for custom field definitions raw list', () => {
+  it('renders useful columns for the custom field definitions list', () => {
     const payload = readFixture<any>('custom-field-definitions.list.json');
     expect(payload.ok).toBe(true);
 
@@ -41,7 +54,7 @@ describe('live fixture smoke', () => {
     expect(output).toContain('Data Type');
   });
 
-  it('renders useful columns for parties raw list', () => {
+  it('renders useful columns for the parties list', () => {
     const payload = readFixture<any>('parties.list.json');
     expect(payload.ok).toBe(true);
 
@@ -67,6 +80,9 @@ describe('live fixture smoke', () => {
       'webhook-notifications.examples.error.json',
     );
 
+    for (const payload of [upstream, validation]) {
+      expect(Object.keys(payload)).toEqual(['ok', 'error']);
+    }
     expect(upstream.ok).toBe(false);
     expect(upstream.error.code).toBe('UPSTREAM_ERROR');
     expect(validation.ok).toBe(false);
