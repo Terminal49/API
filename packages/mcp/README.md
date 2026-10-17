@@ -15,7 +15,7 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (21 by default, 30 in all)
+### 🛠️ Tools (21 by default, 34 in all)
 
 The default toolsets, `core` and `documents`, serve these 21 tools:
 
@@ -56,6 +56,15 @@ The `operations` toolset adds nine write tools. It is not in the default toolset
 | **`unassign_party`** | Remove one party role from a container or shipment. The party stays. | C: needs a confirmed preview |
 | **`set_custom_field`** | Fill an empty custom field on a container, shipment, or tracking request. A field with a value returns `already_set`. | A: runs in one call |
 | **`update_custom_field`** | Replace or clear a custom field value on a container, shipment, or tracking request | C: needs a confirmed preview |
+
+The `documents_write` toolset adds two document fixes, and the `developer` toolset adds two webhook reads. Both toolsets are opt-in, so a deployment serves them only when `T49_MCP_TOOLSETS` lists them.
+
+| Tool | Toolset | Description | Tier |
+|------|---------|-------------|------|
+| **`relink_document`** | `documents_write` | Have Terminal49 match a document to shipments and containers again | A: runs in one call |
+| **`update_document`** | `documents_write` | Set a document's type, or have Terminal49 classify or extract it again | C: needs a confirmed preview |
+| **`list_webhooks`** | `developer` | List webhooks and their events. Never shows the secret, header values, or URL query string. | Read |
+| **`list_webhook_notifications`** | `developer` | List webhook notifications and whether each was delivered | Read |
 
 ### 🎯 Prompts (3 Workflows)
 
@@ -421,7 +430,7 @@ Signed URLs, such as the document download link that `get_document` returns, are
 
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. `list_documents` and `get_document` are in `documents`. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field` and `update_custom_field` are in `operations`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core` and `documents`. `whoami` reports the toolsets a session serves and whether it has write tools.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. `list_documents` and `get_document` are in `documents`. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field` and `update_custom_field` are in `operations`. `relink_document` and `update_document` are in `documents_write`. `list_webhooks` and `list_webhook_notifications` are in `developer`. Every other tool today is in `core`. The default toolsets are `core` and `documents`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
@@ -432,7 +441,7 @@ Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`
 
 ### Confirming writes
 
-Each write tool has a tier in the registry. A tier A tool, such as `resume_shipment_tracking` or `assign_party`, is additive or reversible and runs in one call. Its result names the tool that undoes it. A tier C tool, such as `stop_shipment_tracking`, `cancel_tracking_request` or `unassign_party`, has `destructiveHint: true` and needs a confirmed preview:
+Each write tool has a tier in the registry. A tier A tool, such as `resume_shipment_tracking` or `assign_party`, is additive or reversible and runs in one call. Its result names the tool that undoes it when one exists. A tier C tool, such as `stop_shipment_tracking`, `cancel_tracking_request` or `unassign_party`, has `destructiveHint: true` and needs a confirmed preview:
 
 1. Called without `confirmation_token`, the tool changes nothing. It reads the record and returns `status: "confirmation_required"`, a `preview` with `current`, `proposed` and `reach`, a `confirmation_token` and `expires_at`.
 2. Called again with the same arguments and that token, it reads the record again and writes only if the token still matches.
@@ -447,7 +456,7 @@ For an API key or the shared env token, the credential is a hash of the token. F
 
 The token proves that a preview of the current state was produced. It blocks blind one-shot calls and writes based on a stale read. It is not a security boundary, because a model can make both calls itself. The Terminal49 API still decides what each credential may do.
 
-The HTTP gateway reads `T49_MCP_CONFIRMATION_SECRET` and has no fallback, because serverless instances share no memory. Without a secret of at least 32 characters, tier C tools return `not_permitted` and the server logs `mcp.config.error`. Set it in Vercel before you serve `operations`. stdio uses the variable when it is set, and otherwise makes a random secret per process. Rotating the secret only means an open preview must be requested again.
+The HTTP gateway reads `T49_MCP_CONFIRMATION_SECRET` and has no fallback, because serverless instances share no memory. Without a secret of at least 32 characters, tier C tools return `not_permitted` and the server logs `mcp.config.error`. Set it in Vercel before you serve `operations` or `documents_write`. stdio uses the variable when it is set, and otherwise makes a random secret per process. Rotating the secret only means an open preview must be requested again.
 
 Each call to a write tool, `track_container` included, emits one `mcp.write.audit` event to the log and a Sentry breadcrumb, and to PostHog when the account is known. It carries the tool, tier, phase, outcome, entity type and ID, account ID and credential type, and nothing else. Values, reference numbers, party names, URLs and tokens never reach it. When `assign_party` creates a party, it emits a second event with entity type `party`, the new party ID and outcome `created`.
 

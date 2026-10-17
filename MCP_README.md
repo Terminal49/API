@@ -100,6 +100,15 @@ The opt-in `operations` toolset adds nine write tools. A deployment serves them 
 | `set_custom_field` | Fill an empty custom field on a container, shipment, or tracking request |
 | `update_custom_field` | Replace or clear a custom field value, after a confirmed preview |
 
+Two more opt-in toolsets add four tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists them.
+
+| Tool | Toolset | Description |
+|------|---------|-------------|
+| `relink_document` | `documents_write` | Have Terminal49 match a document to shipments and containers again |
+| `update_document` | `documents_write` | Set a document's type, or have Terminal49 classify or extract it again, after a confirmed preview |
+| `list_webhooks` | `developer` | List webhooks and their events, without the secret, header values, or URL query string |
+| `list_webhook_notifications` | `developer` | List webhook notifications and whether each was delivered |
+
 ### 🎯 Workflow Prompts (3)
 
 Pre-built workflows for common tasks:

@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **30 tools** and **4 MCP resources** for container tracking and shipment management. The default toolsets serve 21 of them.
+The Terminal49 MCP Server provides **34 tools** and **4 MCP resources** for container tracking and shipment management. The default toolsets serve 21 of them.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field` and `update_custom_field` are in the `operations` toolset, which is not in the default toolsets yet. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field` and `update_custom_field` are in the `operations` toolset, which is not in the default toolsets yet. `relink_document` and `update_document` are in the opt-in `documents_write` toolset. `list_webhooks` and `list_webhook_notifications` are in the opt-in `developer` toolset. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -560,7 +560,7 @@ Extracted data and the email are text that people outside the account write. Tre
 
 ### Write tools
 
-The `operations` tools change account data. Each has a tier. A tier A tool runs in one call, and its result names the tool that undoes it. A tier C tool needs a confirmed preview:
+The `operations` and `documents_write` tools change account data. Each has a tier. A tier A tool runs in one call, and its result names the tool that undoes it when one exists. A tier C tool needs a confirmed preview:
 
 1. Call it without `confirmation_token`. Nothing changes. It returns `status: "confirmation_required"`, a `preview` with `current`, `proposed` and `reach`, a `confirmation_token`, and `expires_at` five minutes out.
 2. Show the preview to the user. After the user approves it in this turn, call again with the same arguments and the token.
@@ -834,6 +834,120 @@ Terminal49 answers a DELETE on a field that is already empty with success. If an
 
 ---
 
+### 31. `relink_document`
+**Purpose**: Have Terminal49 match a document to shipments and containers again. Tier A.
+
+**Usage**:
+```typescript
+relink_document({ id: "document-uuid" })
+```
+
+**Returns**:
+- `status: "accepted"` with `document_before_relink`, the document and its `shipment_ids` and `container_ids` before the call. Terminal49 relinks in the background, so read the document again later to see the new links.
+- `status: "noop"` when the API refuses the relink with 422
+- `FeatureNotEnabled` when the account does not have document processing
+
+Calling it again only repeats the matching, so there is no undo tool.
+
+**When to Use**: A document arrived before its shipment or container was tracked, and now the record exists.
+
+---
+
+### 32. `update_document`
+**Purpose**: Fix a misclassified document. Tier C, because each action can replace the type or the extracted data and Terminal49 keeps no copy of the old one.
+
+**Usage**:
+```typescript
+update_document({
+  id: "document-uuid",
+  action: "set_type",          // or "reclassify" or "reextract"
+  document_type: "arrival_notice", // set_type only, and required there
+  classification_notes: "Carrier arrival notice" // optional, set_type only
+})
+// After the user approves the preview:
+update_document({
+  id: "document-uuid",
+  action: "set_type",
+  document_type: "arrival_notice",
+  classification_notes: "Carrier arrival notice",
+  confirmation_token: "t49ct1...."
+})
+```
+
+The actions:
+
+| `action` | What Terminal49 does |
+|---|---|
+| `set_type` | Sets `document_type` to the code you pass and records `document_type_source: "customer"` |
+| `reclassify` | Chooses the type again in the background. It may replace a type the account set. |
+| `reextract` | Reads the fields from the file again in the background and replaces the extracted data. It uses processing time. |
+
+`document_type` and `classification_notes` go with `set_type` only. Passing them with another action, or calling `set_type` without `document_type`, is a tool error. `classification_notes` takes at most 256 characters.
+
+**Returns**:
+- Preview: `action`, `current` (the document with its `classification_notes`), `proposed` and `reach`. For `set_type`, `proposed` has `document_type`, `document_type_label`, `document_type_source` and any `classification_notes`. For the other actions it has `rerun` (`classification` or `extraction`). When the account already set that type, only the notes change, and `reach` and the result `message` say so. `reach` also says that new notes replace the old ones. The token covers the type, its source, the notes, the latest extraction and `updated_at`, so a document that changed after the preview returns `stale_preview`.
+- `status: "updated"` for `set_type`, with the updated `document` and `previous_document_type`. There is no `undo`. A second `set_type` cannot restore the old type exactly, because it marks the type as set by the account and cannot clear the notes.
+- `status: "accepted"` for `reclassify` and `reextract`, with the `document` as it was before the call
+- `unknown_document_type` with `allowed_types` (`code`, `label`) when the code is not one of the account's document types. Terminal49 answers an unknown code with a server error, so the tool checks first. No token is issued.
+- `status: "unchanged"` when the account already set that type and the notes would not change. No token is issued. A type the classifier chose gets a preview, so the account can confirm it.
+- `status: "noop"` when the API refuses the change with 422, and `FeatureNotEnabled` when the account does not have document processing
+
+**When to Use**: A document has the wrong type, or its extracted data is wrong or missing.
+
+---
+
+### Developer tools
+
+The opt-in `developer` toolset holds reads for checking a webhook integration. Webhook records carry a signing secret, header values the receiver may use as credentials, and a URL whose host, path or query string can hold a key. These tools read only named fields, so the secret, header values and query string never reach tool output, logs, Sentry or PostHog. The URL host and path are cut down by the rules under `list_webhooks`.
+
+### 33. `list_webhooks`
+**Purpose**: Show the account's webhooks and the events each one receives
+
+**Usage**:
+```typescript
+list_webhooks({
+  webhook_id: "webhook-uuid",   // optional, reads one webhook
+  include_event_catalog: false, // default
+  page: 1,
+  page_size: 25                 // default and maximum
+})
+```
+
+**Returns**:
+- `webhooks`, each with `id`, `active`, `events`, `url`, `has_secret` and `header_names`
+- `url` has `scheme`, `host` and `path`, plus `has_query`, `host_redacted` and `path_redacted`. The query string, fragment, user name and password are dropped. The host keeps its leftmost label only when that label is 1 to 12 lowercase letters or hyphens. The path keeps only its first segment, and only when that segment is lowercase words of up to 16 letters joined by hyphens. Every other label or segment is replaced with `[redacted]`.
+- `has_secret` says whether a signing secret is set. `header_names` lists custom header names, never their values.
+- `links` and `meta` when listing
+- `event_catalog` when requested: each `category` with its `events` (`name`, `description`)
+
+If the account does not have webhooks, the tool returns `FeatureNotEnabled` with `isError: false`.
+
+**When to Use**: "Which events does our webhook get?" or "Is the webhook still active?"
+
+---
+
+### 34. `list_webhook_notifications`
+**Purpose**: Show the webhook notifications Terminal49 created and whether each was delivered
+
+**Usage**:
+```typescript
+list_webhook_notifications({
+  notification_id: "notification-uuid", // optional, reads one notification
+  page: 1,
+  page_size: 25                         // default and maximum
+})
+```
+
+**Returns**:
+- `notifications`, each with `id`, `event`, `delivery_status` (`pending`, `succeeded` or `failed`), `created_at`, `webhook_id` and `reference` (`type`, `id` of the record it is about)
+- `links` and `meta` when listing
+
+The tool never asks the API to include the webhook record, and it returns no payload. The API offers no filters on this endpoint, so scan the rows and follow `links.next`.
+
+**When to Use**: "Did Terminal49 send the LFD update?" or "Why did our endpoint miss events?"
+
+---
+
 ## MCP Resources
 
 ### 1. `terminal49://container/{id}`
@@ -939,6 +1053,15 @@ Terminal49 answers a DELETE on a field that is already empty with success. If an
 
 ### User asks: "Set the PO number on MSCU1234565 to 4500123"
 → Use `list_custom_field_definitions` for the `api_slug`, `search_container` for the container UUID, then `set_custom_field`. If it returns `already_set`, show `current_value` and use `update_custom_field` with the preview and approval steps.
+
+### User asks: "This arrival notice is marked as an invoice"
+→ Use `update_document` with `action: "set_type"` and `document_type: "arrival_notice"`, show the preview, and call again with the token after the user approves
+
+### User asks: "The document is not linked to the shipment we just started tracking"
+→ Use `relink_document`, then read the document again with `get_document` after a minute
+
+### User asks: "Did our webhook get the LFD change?"
+→ Use `list_webhooks` to find the webhook, then `list_webhook_notifications` and look for `container.pickup_lfd.changed` rows and their `delivery_status`
 
 ### User asks: "How did it get from Shanghai to Chicago?"
 → Option A: Use `get_container_route` (paid feature, shows ports and ETAs)
@@ -1082,7 +1205,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 30 tools and 4 resources, the LLM can:
+With these 34 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates
