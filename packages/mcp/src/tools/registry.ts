@@ -87,6 +87,7 @@ export const TOOL_REGISTRY = [
   readTool('list_tracking_requests', 'List Tracking Requests'),
   readTool('get_tracking_request', 'Get Tracking Request'),
   readTool('list_documents', 'List Documents', 'documents'),
+  readTool('get_document', 'Get Document', 'documents'),
   {
     name: 'search_docs',
     title: 'Search Terminal49 Docs',

@@ -412,6 +412,7 @@ describe('MCP server wiring', () => {
       list_tracking_requests: {},
       get_tracking_request: { id },
       list_documents: {},
+      get_document: { id },
       search_docs: { query: 'webhooks' },
       whoami: {},
     };
