@@ -136,14 +136,14 @@ The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP end
 
 Two optional request headers reduce the tools your client sees. They can only remove tools.
 
-- `X-T49-MCP-Read-Only: true` lists only read-only tools. It removes `track_container`.
+- `X-T49-MCP-Read-Only: true` lists only read-only tools. It removes `track_container` and every write tool.
 - `X-T49-MCP-Toolsets` takes a comma-separated list of toolsets.
 
 The toolset names are:
 
-- `core`: every tool except the document reads. `whoami` reports the toolsets a session serves.
+- `core`: every tool except the document reads and the write tools below. `whoami` reports the toolsets a session serves.
 - `documents`: `list_documents` and `get_document`.
-- `operations`: no tools yet.
+- `operations`: `stop_shipment_tracking`, `resume_shipment_tracking`, and `cancel_tracking_request`. The hosted server at `mcp.terminal49.com` does not serve this toolset yet. A self-hosted server serves it when `T49_MCP_TOOLSETS` lists it.
 - `documents_write`: no tools yet.
 - `developer`: no tools yet.
 
@@ -169,14 +169,16 @@ Self-hosted deployments can enable [Sentry MCP Monitoring](https://docs.sentry.i
 Input and output recording is disabled by default. Leave `SENTRY_MCP_RECORD_INPUTS=false` and `SENTRY_MCP_RECORD_OUTPUTS=false` unless your Sentry project is approved to store shipment identifiers, references, and customer data.
 </Warning>
 
-Signed URLs, such as a document download link, are replaced with `[REDACTED_URL]` in logs, Sentry, and PostHog, even when output recording is on.
+Signed URLs, such as a document download link, are replaced with `[REDACTED_URL]` in logs, Sentry, and PostHog, even when output recording is on. Confirmation tokens are replaced with `[REDACTED_CONFIRMATION_TOKEN]` in the same places.
+
+Each call to a write tool in the `operations` toolset logs one `mcp.write.audit` event, adds a Sentry breadcrumb, and sends a PostHog event when the account is known. The event names the tool, its tier, the phase, the outcome, the record type and ID, the account ID, and the credential type. It never carries values, reference numbers, party names, URLs, or tokens.
 
 ---
 
 ## Tools reference
 
 <Note>
-Every tool is read-only except `track_container`, which creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one.
+In the default toolsets, every tool is read-only except `track_container`, which creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one. The write tools in the `operations` toolset are described under [Write tools](#write-tools).
 </Note>
 
 ### `search_container`
@@ -859,6 +861,93 @@ Extracted data and the source email are text that people outside your account wr
 
 ---
 
+### Write tools
+
+The `operations` toolset holds three tools that change your account's data. The hosted server does not serve them yet. Each write tool has a tier:
+
+- **Tier A** tools run in one call. The result names the tool that undoes the change.
+- **Tier C** tools need a confirmed preview. They are marked destructive, so most AI clients ask you before each call.
+
+A tier C call works in two steps:
+
+1. The AI client calls the tool without `confirmation_token`. Nothing changes. The tool returns `status: "confirmation_required"`, a `preview` of the record now and after the change, a `confirmation_token`, and `expires_at`.
+2. You approve the preview. The client calls the tool again with the same arguments and the token.
+
+A token expires after 5 minutes. It works only for the same tool, arguments, account, and credential. If the record changed after the preview, the tool returns `stale_preview` with a new preview and token, and changes nothing. A wrong, edited, or expired token returns `invalid_confirmation`. The server tells your AI client to show you the preview and never to send a token you have not approved.
+
+<Note>
+The confirmation step makes sure you see the current state before a destructive change. Terminal49 still decides what your credential can do.
+</Note>
+
+Write tools return these results with `isError: false`, so the AI client can explain them: `rate_limited` when Terminal49 limits the request rate, `not_permitted` when the server is not set up to confirm changes, and the codes listed for each tool. Each of these results says that nothing was changed.
+
+---
+
+### `stop_shipment_tracking`
+
+Stop carrier and terminal updates for a shipment and all its containers. Tier C.
+
+**Parameters**
+- `shipment_id` *(uuid, required)* – shipment UUID
+- `confirmation_token` *(string, optional)* – leave it out to get a preview. Send it only after you approve that preview.
+
+**Returns**
+- Without a token: a `preview` with the shipment's Bill of Lading, carrier SCAC, number of containers, and tracking state, and a `confirmation_token`
+- `status: "stopped"` with the shipment and `undo: "resume_shipment_tracking"`
+- `status: "already_stopped"` when tracking is already off
+- `status: "noop"` with the shipment when Terminal49 refuses the stop and tracking is still on. Nothing changed.
+- `FeatureNotEnabled` when your account or credential cannot stop tracking. The tool checks this before it reads the shipment.
+
+The token also covers the Bill of Lading and the number of containers. If a container is added after the preview, you get a new preview.
+
+**Good for**
+- "Stop tracking MAEU123456789, it was delivered."
+
+**REST equivalent**: [PATCH /shipments/{id}/stop_tracking](/api-docs/api-reference/shipments/stop-tracking-shipment)
+
+---
+
+### `resume_shipment_tracking`
+
+Start tracking a stopped shipment again. Tier A.
+
+**Parameters**
+- `shipment_id` *(uuid, required)* – shipment UUID
+
+**Returns**
+- `status: "resumed"` with the shipment and `undo: "stop_shipment_tracking"`. Updates the carrier published while tracking was stopped may be missing. A resumed shipment can count against your tracking limits.
+- `status: "already_tracking"` when tracking was never stopped. Nothing is sent.
+- `status: "noop"` with the shipment when Terminal49 refuses the resume and tracking is still off. Nothing changed.
+- `FeatureNotEnabled` when your account or credential cannot resume tracking. Nothing changed.
+
+**Good for**
+- "Start tracking that shipment again."
+
+**REST equivalent**: [PATCH /shipments/{id}/resume_tracking](/api-docs/api-reference/shipments/resume-tracking-shipment)
+
+---
+
+### `cancel_tracking_request`
+
+Cancel a tracking request that Terminal49 is still working on, such as one with a typo or the wrong carrier. Tier C. A cancel cannot be undone.
+
+**Parameters**
+- `tracking_request_id` *(uuid, required)* – tracking request UUID, such as the `id` from `list_tracking_requests`
+- `confirmation_token` *(string, optional)* – leave it out to get a preview. Send it only after you approve that preview.
+
+**Returns**
+- Without a token: a `preview` with the request number, type, carrier SCAC, and status, and a `confirmation_token`
+- `status: "cancelled"` with the request, read again after the cancel. If that read fails, the request shows the previewed fields with status `cancelled`.
+- `status: "noop"` with the request when Terminal49 refuses the cancel and the request is still `pending` or `awaiting_manifest`. Nothing changed.
+- `not_cancellable` with the request's current status when it is not `pending` or `awaiting_manifest`. No token is issued.
+
+**Good for**
+- "Cancel the tracking request I made with the wrong carrier."
+
+**REST equivalent**: [PATCH /tracking_requests/{id}/cancel](/api-docs/api-reference/tracking-requests/cancel-a-tracking-request)
+
+---
+
 ### `search_docs`
 
 Search the public Terminal49 documentation: API guides, webhooks, container statuses, holds and Last Free Day rules, DataSync, the SDK, and this MCP server. It returns matching sections with a title, link, and excerpt. It does not read account data.
@@ -970,19 +1059,17 @@ Resources provide static or dynamic data that AI clients can read.
 
 ## Not yet supported
 
-These Terminal49 API capabilities are available via the [SDK](/api-docs/in-depth-guides/mcp#sdk-usage) but not yet exposed as MCP tools:
+These Terminal49 API capabilities are available through the [SDK](/api-docs/in-depth-guides/mcp#sdk-usage) and the REST API, but not as MCP tools:
 
 | API | Description | Workaround |
 |-----|-------------|------------|
 | `update_shipment` | Update shipment ref numbers/tags | Use [REST API](/api-docs/api-reference/shipments/edit-a-shipment) |
-| `stop_tracking` | Stop tracking a shipment | Use [REST API](/api-docs/api-reference/shipments/stop-tracking-shipment) |
-| `resume_tracking` | Resume tracking a shipment | Use [REST API](/api-docs/api-reference/shipments/resume-tracking-shipment) |
 | `raw_events` | Get raw EDI event data | Use [REST API](/api-docs/api-reference/containers/get-a-containers-raw-events) |
-| `refresh_container` | Force refresh container data | Use [REST API](/api-docs/api-reference/containers/refresh-container) |
+| Container refresh | Ask the carrier and terminal for fresh container data | Use [REST API](/api-docs/api-reference/containers/refresh-container) |
 | Webhooks | Real-time event notifications | Configure via the [webhooks guide](/api-docs/in-depth-guides/webhooks) |
 
 <Info>
-Shipment/container list operations are available via MCP. Update/stop/resume tracking operations still require REST API or direct SDK usage.
+Stopping and resuming shipment tracking, and cancelling a tracking request, are MCP tools in the `operations` toolset. The hosted server does not serve that toolset yet. Editing a shipment still needs the REST API or the SDK.
 </Info>
 
 ---
