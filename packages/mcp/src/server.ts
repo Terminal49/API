@@ -93,6 +93,11 @@ import {
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
+  addReferenceNumbersInputSchema,
+  addReferenceNumbersOutputSchema,
+  executeAddReferenceNumbers,
+} from './tools/add-reference-numbers.js';
+import {
   cancelTrackingRequestInputSchema,
   cancelTrackingRequestOutputSchema,
   executeCancelTrackingRequest,
@@ -1027,6 +1032,8 @@ function formatToolError(
         return `No shipment found with id ${typeof input.shipment_id === 'string' ? input.shipment_id : '(missing)'}.`;
       case 'cancel_tracking_request':
         return `No tracking request found with id ${typeof input.tracking_request_id === 'string' ? input.tracking_request_id : '(missing)'}.`;
+      case 'add_reference_numbers':
+        return `No ${entityLabel(input.entity_type)} found with id ${typeof input.entity_id === 'string' ? input.entity_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
       default:
@@ -1056,6 +1063,17 @@ function formatToolError(
   }
 
   return 'The Terminal49 request could not be completed. Contact support if the problem persists.';
+}
+
+function entityLabel(entityType: unknown): string {
+  switch (entityType) {
+    case 'shipment':
+      return 'shipment';
+    case 'tracking_request':
+      return 'tracking request';
+    default:
+      return 'container';
+  }
 }
 
 function safeStringify(value: unknown): string {
@@ -1758,6 +1776,19 @@ export function createTerminal49McpServer(
       },
       async (args, context) =>
         executeCancelTrackingRequest(args, client, context),
+    ),
+    add_reference_numbers: tool(
+      {
+        description:
+          'Add reference numbers, such as PO or job numbers, to a container, shipment, or tracking request. ' +
+          'It keeps every reference number already on the record and adds only the new ones, so calling it again with the same numbers changes nothing. ' +
+          'Returns added with the list before (previous) and after (ref_numbers), or already_present when every number was already there. ' +
+          'concurrent_change_detected is true when the list read back after the change differs from the list sent, which means someone else changed it at the same time.',
+        inputSchema: addReferenceNumbersInputSchema,
+        outputSchema: addReferenceNumbersOutputSchema,
+      },
+      async (args, context) =>
+        executeAddReferenceNumbers(args, client, context),
     ),
     search_docs: tool(
       {
