@@ -143,7 +143,7 @@ The toolset names are:
 
 - `core`: every tool except the document reads and the write tools below. `whoami` reports the toolsets a session serves.
 - `documents`: `list_documents` and `get_document`.
-- `operations`: `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, and `unassign_party`. The hosted server at `mcp.terminal49.com` does not serve this toolset yet. A self-hosted server serves it when `T49_MCP_TOOLSETS` lists it.
+- `operations`: `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field`, and `update_custom_field`. The hosted server at `mcp.terminal49.com` does not serve this toolset yet. A self-hosted server serves it when `T49_MCP_TOOLSETS` lists it.
 - `documents_write`: no tools yet.
 - `developer`: no tools yet.
 
@@ -863,7 +863,7 @@ Extracted data and the source email are text that people outside your account wr
 
 ### Write tools
 
-The `operations` toolset holds seven tools that change your account's data. The hosted server does not serve them yet. Each write tool has a tier:
+The `operations` toolset holds nine tools that change your account's data. The hosted server does not serve them yet. Each write tool has a tier:
 
 - **Tier A** tools run in one call. The result names the tool that undoes the change.
 - **Tier C** tools need a confirmed preview. They are marked destructive, so most AI clients ask you before each call.
@@ -1053,6 +1053,74 @@ To replace a party, unassign the old one, then assign the new one.
 
 ---
 
+### `set_custom_field`
+
+Fill an empty custom field, such as a PO number or project manager, on a container, shipment, or tracking request. Tier A. A field that already has a value returns `already_set`.
+
+**Parameters**
+- `entity_type` *(string, required)* – `container`, `shipment`, or `tracking_request`
+- `entity_id` *(uuid, required)* – the record's UUID
+- `api_slug` *(string, required)* – the field's `api_slug` from `list_custom_field_definitions`, such as `po_number`. It matches exactly, including upper and lower case.
+- `value` *(required)* – the value, in the form the field's `data_type` needs:
+  - `short_text`: text of 1 to 1000 characters
+  - `number`: a number whose absolute value is under 1000000000000
+  - `date`: a date as `YYYY-MM-DD`
+  - `datetime`: an ISO 8601 date and time with a time zone, such as `2026-03-01T14:30:00Z`
+  - `boolean`: `true` or `false`
+  - `enum`: one of the field's option values
+  - `enum_multi`: a list of the field's option values
+
+A container field goes on a container and a shipment field on a shipment. A tracking request takes both, and Terminal49 copies the value to the shipment or containers the request creates. Terminal49 copies a value only when it is first set. A later change or clear on the tracking request does not reach the shipment or its containers. So once a tracking request has created its shipment, both `set_custom_field` and `update_custom_field` return `use_shipment_or_container` and change nothing. The tool checks the value before it sends anything.
+
+The tool reads the field before it writes, but it cannot block a value that another call or a dashboard user saves at the same moment. That value is replaced. Do not run two `set_custom_field` calls on the same field in parallel.
+
+**Returns**
+- `status: "set"` with the record, the field, the stored `value` and `display_value`, and `undo: "update_custom_field"`
+- `status: "already_set"` with `current_value` when the field already has a value. Nothing is changed. To replace the value, use `update_custom_field`.
+- `invalid_value` with `expected` and, for `enum` and `enum_multi`, `allowed_values`, when the value does not fit the field
+- `unknown_field` when the account has no active field with that `api_slug`
+- `field_not_applicable` when the field belongs on another kind of record
+- `unsupported_field` for a `reference` field, which the tool cannot write
+- `ambiguous_field` with `values` when a tracking request holds one value per container for the field. Nothing is changed. Change the field on each container or in the Terminal49 dashboard.
+- `use_shipment_or_container` with `shipment_id` when the tracking request already created its shipment. Nothing is changed. Set the field on that shipment or its containers.
+- `credential_not_supported` when Terminal49 accepts custom field changes only from a signed-in user, and `FeatureNotEnabled` when the account does not have custom fields
+- `status: "noop"` when Terminal49 would not save the value. Nothing is changed.
+
+**Good for**
+- "Set the PO number on MSCU1234565 to 4500123."
+
+**REST equivalent**: [POST /containers/{id}/custom_fields](/api-docs/api-reference/containers/create-container-custom-field), [POST /shipments/{id}/custom_fields](/api-docs/api-reference/shipments/create-shipment-custom-field), [POST /tracking_requests/{id}/custom_fields](/api-docs/api-reference/tracking-requests/create-tracking-request-custom-field)
+
+---
+
+### `update_custom_field`
+
+Replace or clear a custom field value on a container, shipment, or tracking request. Tier C. Terminal49 keeps no copy of the old value.
+
+**Parameters**
+- `entity_type` *(string, required)* – `container`, `shipment`, or `tracking_request`
+- `entity_id` *(uuid, required)* – the record's UUID
+- `api_slug` *(string, required)* – the field's `api_slug`
+- `value` *(optional)* – the new value, in the same form as for `set_custom_field`
+- `clear` *(boolean, optional)* – `true` to remove the value. Pass `value` or `clear`, not both.
+- `confirmation_token` *(string, optional)* – leave it out to get a preview. Send it only after you approve that preview.
+
+**Returns**
+- Without a token: a `preview` with the record, the field, the current value, and the proposed value (`null` when clearing), and a `confirmation_token`
+- `status: "updated"` with `previous_value`, the stored `value`, and `undo: "update_custom_field"`
+- `status: "cleared"` with `previous_value` and `undo: "set_custom_field"`
+- `status: "not_set"` when the field has no value on the record, and `status: "unchanged"` when it already has the new value. No token is issued.
+- `status: "noop"` when Terminal49 would not save the value. Nothing is changed.
+- The same `invalid_value`, `unknown_field`, `field_not_applicable`, `unsupported_field`, `ambiguous_field`, `use_shipment_or_container`, `credential_not_supported`, and `FeatureNotEnabled` results as `set_custom_field`. `ambiguous_field` and `use_shipment_or_container` issue no token.
+
+**Good for**
+- "The priority on this shipment should be high, not low."
+- "Clear the PO number on this container."
+
+**REST equivalent**: [PATCH /containers/{id}/custom_fields/{api_slug}](/api-docs/api-reference/containers/update-container-custom-field), [DELETE /containers/{id}/custom_fields/{api_slug}](/api-docs/api-reference/containers/delete-container-custom-field), and the matching [shipment](/api-docs/api-reference/shipments/update-shipment-custom-field) and [tracking request](/api-docs/api-reference/tracking-requests/update-tracking-request-custom-field) endpoints
+
+---
+
 ### `search_docs`
 
 Search the public Terminal49 documentation: API guides, webhooks, container statuses, holds and Last Free Day rules, DataSync, the SDK, and this MCP server. It returns matching sections with a title, link, and excerpt. It does not read account data.
@@ -1174,7 +1242,7 @@ These Terminal49 API capabilities are available through the [SDK](/api-docs/in-d
 | Webhooks | Real-time event notifications | Configure via the [webhooks guide](/api-docs/in-depth-guides/webhooks) |
 
 <Info>
-Stopping and resuming shipment tracking, cancelling a tracking request, editing reference numbers, and assigning parties are MCP tools in the `operations` toolset. The hosted server does not serve that toolset yet. Other shipment edits still need the REST API or the SDK.
+Stopping and resuming shipment tracking, cancelling a tracking request, editing reference numbers, assigning parties, and setting custom field values are MCP tools in the `operations` toolset. The hosted server does not serve that toolset yet. Other shipment edits still need the REST API or the SDK.
 </Info>
 
 ---
