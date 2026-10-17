@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **24 tools** and **4 MCP resources** for container tracking and shipment management. The default toolsets serve 21 of them.
+The Terminal49 MCP Server provides **28 tools** and **4 MCP resources** for container tracking and shipment management. The default toolsets serve 21 of them.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `operations` toolset, which is not in the default toolsets yet. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party` and `unassign_party` are in the `operations` toolset, which is not in the default toolsets yet. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -346,7 +346,7 @@ list_parties({ id: "party-uuid" })
 - `parties` (`id`, `name`) and `total_matched`
 - `truncated` when the list does not hold every match
 
-With `id`, the tool reads that one party and ignores `search` and `limit`. An unknown ID returns no parties. A party with no company name comes back with its name, else its nickname, else its ID, as `name`.
+A `search` matches a party's company name, name or nickname. With `id`, the tool reads that one party and ignores `search` and `limit`. An unknown ID returns no parties. A party with no company name comes back with its name, else its nickname, else its ID, as `name`.
 
 **When to Use**: Before `list_containers` or `summarize_containers` when a question names a company. Filter with `advanced_filters.parties`, keyed by role, such as `{ customer: "<id>" }`.
 
@@ -567,7 +567,7 @@ The `operations` tools change account data. Each has a tier. A tier A tool runs 
 
 A token works only for the same tool, arguments, account and credential, before it expires, and while the record still matches the preview. Otherwise the call changes nothing and returns `invalid_confirmation` with a `reason` (`malformed`, `mismatch` or `expired`), or `stale_preview` with a new preview and token when the record changed. On a server with no confirmation secret, tier C tools return `not_permitted`. See [Confirming writes](README.md#confirming-writes).
 
-Every write tool returns these soft results with `isError: false`: `rate_limited` for a 429, with `retry_after_s` when Terminal49 sent a `Retry-After` header, and the tool's own codes below. All of them say that nothing was changed.
+Every write tool returns these soft results with `isError: false`: `rate_limited` for a 429, with `retry_after_s` when Terminal49 sent a `Retry-After` header, and the tool's own codes below. All of them say that nothing was changed. The one exception is `assign_party` after it created a party it could not link: its `noop`, `rate_limited` and `party_not_linked` results then carry `party_created: true` and `created_party` (`id`, `name`), and say the party exists but is not linked.
 
 ### 22. `stop_shipment_tracking`
 **Purpose**: Stop carrier and terminal updates for a shipment and all its containers. Tier C.
@@ -631,6 +631,120 @@ cancel_tracking_request({
 - When the API refuses the cancel with 422, the tool reads the request again. It returns `not_cancellable` if the status moved on, or else `status: "noop"` with `tracking_request` and an `alternative`.
 
 **When to Use**: A request was made with the wrong number or carrier and has not created a shipment yet.
+
+---
+
+### 25. `add_reference_numbers`
+**Purpose**: Add reference numbers, such as PO or job numbers, to a container, shipment, or tracking request. Tier A.
+
+**Usage**:
+```typescript
+add_reference_numbers({
+  entity_type: "container", // or "shipment" or "tracking_request"
+  entity_id: "container-uuid",
+  add: ["PO-4500123"] // 1 to 20, each up to 64 characters
+})
+```
+
+The API replaces the whole list on every change, and it has no version check. The tool reads the current list, sends that list plus the new numbers, and reads the record again. Matching is exact after trimming spaces from both the numbers passed and the numbers on the record.
+
+**Returns**:
+- `status: "added"` with `record` (`entity_type`, `entity_id` and `label`, which is the container number, Bill of Lading or request number), `previous`, `ref_numbers` (the list read back), `added`, `already_present`, `concurrent_change_detected` and `undo: "remove_reference_numbers"`
+- `status: "already_present"` when every number is already on the record. Nothing is sent, so a repeated call changes nothing.
+- `concurrent_change_detected: true` when the list read back differs from the list sent, which means someone else changed it at the same time. It is `null`, with `read_back_note`, when the record could not be read after the change; `ref_numbers` is then the list that was sent.
+- `status: "noop"` with an `alternative` when the API refuses the list with 422
+- `unreadable_reference_numbers` with `record` when the API returns a list the tool cannot read, such as one with a number or an object in it. Nothing is sent. Null entries hold no number, and the tool leaves them out of the list it sends.
+
+**When to Use**: Tag a record with a PO, job or customer reference so it can be found by it later.
+
+---
+
+### 26. `remove_reference_numbers`
+**Purpose**: Remove reference numbers from a container, shipment, or tracking request. Tier C, because searches, filters and integrations that use a removed number stop finding the record.
+
+**Usage**:
+```typescript
+remove_reference_numbers({
+  entity_type: "shipment",
+  entity_id: "shipment-uuid",
+  remove: ["PO-WRONG"]
+})
+// After the user approves the preview:
+remove_reference_numbers({
+  entity_type: "shipment",
+  entity_id: "shipment-uuid",
+  remove: ["PO-WRONG"],
+  confirmation_token: "t49ct1...."
+})
+```
+
+Each number can be up to 1000 characters, so a long number already on the record can be removed. Matching works as in `add_reference_numbers`.
+
+**Returns**:
+- Preview: `current` (`record` fields and `ref_numbers`), `proposed: { ref_numbers }`, `removing`, `not_present` and `reach`. The token covers the whole current list, so any change to the list after the preview returns `stale_preview`.
+- `status: "removed"` with `previous`, `ref_numbers`, `removed`, `not_present`, `concurrent_change_detected` and `undo: "add_reference_numbers"`. The read-back works as in `add_reference_numbers`.
+- `status: "not_present"` with `ref_numbers` when none of the numbers are on the record. No token is issued.
+- `status: "noop"` with an `alternative` when the API refuses the shorter list with 422
+- `unreadable_reference_numbers` as in `add_reference_numbers`. No token is issued.
+
+**When to Use**: A reference number was added to the wrong record or has a typo.
+
+---
+
+### 27. `assign_party`
+**Purpose**: Link a party, such as a customer, shipper or dray carrier, to a container or shipment in a role. Tier A.
+
+**Usage**:
+```typescript
+assign_party({
+  entity_type: "shipment", // or "container"
+  entity_id: "shipment-uuid",
+  role: "customer",
+  party_name: "Acme Imports" // or party_id: "party-uuid"
+})
+```
+
+`role` is one of `shipper`, `consignee`, `notify_party`, `customs_broker`, `customer`, `freight_forwarder` or `pickup_dray_carrier`. A container accepts only `pickup_dray_carrier`; any other role on a container returns a tool error before any request. Pass exactly one of `party_id` or `party_name`. A `party_name` must match one party's company name, name or nickname exactly, ignoring case and punctuation. These are the names `list_parties` searches. With `create_party_if_missing: true`, the tool creates the party when no party has that name as its company name, name or nickname. If the API refuses the create with 422, the tool looks the name up again and reuses the party that another call created. If it still finds none, it returns `party_not_found` and says that the party probably exists already.
+
+**Returns**:
+- `status: "assigned"` with `record`, `party_role` (`id`, `role`, `party_id`, `party_name`), `party_created`, `other_parties_in_role` and `undo: "unassign_party"`
+- `status: "already_present"` with the existing `party_role` when the party already has this role on the record. Nothing is sent, so a repeated call changes nothing.
+- `party_not_found` with up to 5 `candidates` when no party has the name and `create_party_if_missing` is off, or when no party has the `party_id`
+- `ambiguous_party` with `candidates` when more than one party has the name
+- `party_lookup_incomplete` with `candidates` when the account has more than 1000 parties. The tool reads only the first 1000, so it does not use or create a party by name. Call again with `party_id`.
+- When the API refuses the assignment with 422, the tool reads the roles again. It returns `already_present` if the role now exists, or else `status: "noop"` with an `alternative`.
+- When the tool created the party and another request linked it in this role at the same time, the result is `already_present` with `party_created: true` and `created_party`.
+- When the tool created the party and the assignment then fails, the result has `party_created: true` and `created_party`. It is `noop` after a 422, `rate_limited` after a 429, and `party_not_linked` after any other failure.
+
+**When to Use**: Set or add the customer, shipper or dray carrier on a record.
+
+---
+
+### 28. `unassign_party`
+**Purpose**: Remove one party role from a container or shipment. Tier C. Only the link is removed; the party and its other assignments stay.
+
+**Usage**:
+```typescript
+unassign_party({
+  entity_type: "shipment",
+  entity_id: "shipment-uuid",
+  party_role_id: "party-role-uuid" // from get_shipment_details include_party_roles
+})
+// After the user approves the preview:
+unassign_party({
+  entity_type: "shipment",
+  entity_id: "shipment-uuid",
+  party_role_id: "party-role-uuid",
+  confirmation_token: "t49ct1...."
+})
+```
+
+**Returns**:
+- Preview: `current: { party_role }`, `proposed: { party_role: null }` and `reach`. The token covers the role's id, role name and party, so a role that now links another party returns `stale_preview`.
+- `status: "unassigned"` with `record`, the removed `party_role` and `undo: "assign_party"`
+- `status: "not_assigned"` with the record's current `party_roles` when it has no role with that id. No token is issued. A delete that answers 404 because another call removed the role first returns the same result.
+
+**When to Use**: The wrong party is on a record. To replace a party, call `unassign_party`, then `assign_party`.
 
 ---
 
@@ -727,6 +841,15 @@ cancel_tracking_request({
 
 ### User asks: "Cancel the tracking request with the typo"
 → Use `list_tracking_requests` to find it, then `cancel_tracking_request` with the same preview and approval steps
+
+### User asks: "Tag MSCU1234565 with PO 4500123"
+→ Use `search_container` for the container UUID, then `add_reference_numbers`
+
+### User asks: "Make Ray Drayage the dray carrier on this container"
+→ Use `assign_party` with `role: "pickup_dray_carrier"` and `party_name`, or with the `party_id` from `list_parties`
+
+### User asks: "The customer on this shipment is wrong"
+→ Use `get_shipment_details` with `include_party_roles` for the `party_role_id`, then `unassign_party` with the preview and approval steps, then `assign_party` for the right customer
 
 ### User asks: "How did it get from Shanghai to Chicago?"
 → Option A: Use `get_container_route` (paid feature, shows ports and ETAs)
@@ -870,7 +993,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 24 tools and 4 resources, the LLM can:
+With these 28 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates
