@@ -22213,11 +22213,11 @@
           "hs4",
           "hs2"
         ],
-        "description": "A dimension to group or break down by. `pod` is the US port of discharge, `pol` the foreign port of lading, `pod_coast` is `EAST`, `WEST`, or `GULF`, `dest_state` is the destination US state, `company_state` the importer's state, `hs2` and `hs4` are HS chapter and heading codes, and `reefer` splits refrigerated from dry containers."
+        "description": "A dimension to group or break down by. `pod` is the US port of discharge, `pol` the foreign port of lading, `pod_coast` is `EAST`, `WEST`, or `GULF`, `dest_state` is the destination US state, `company_state` the importer's state, `hs2` and `hs4` are HS chapter and heading codes, and `reefer` splits refrigerated from dry containers. Lane dimensions (`pol`, `pol_country`, `container_type`) can't be combined with company or product dimensions (`company`, `company_state`, `hs4`, `hs2`) in one request, whether as dimensions or filters, and `estimated_value` isn't available by lane dimension; such requests return `400` with the reason."
       },
       "TradeIntelFilters": {
         "type": "object",
-        "description": "Filters for `trends` and `breakdown`. Name-like fields match case-insensitive substrings; codes (`hs4`, `hs2`, `pod_coast`, states, `scac`) match exactly. Omit a field to leave it unfiltered.",
+        "description": "Filters for `trends` and `breakdown`. Name-like fields match case-insensitive substrings; codes (`hs4`, `hs2`, `pod_coast`, states, `scac`) match exactly. Omit a field to leave it unfiltered. Lane dimensions (`pol`, `pol_country`, `container_type`) can't be combined with company or product dimensions (`company`, `company_state`, `hs4`, `hs2`) in one request, whether as dimensions or filters, and `estimated_value` isn't available by lane dimension; such requests return `400` with the reason.",
         "properties": {
           "company": {
             "type": "string",
