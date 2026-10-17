@@ -79,7 +79,7 @@ export const DIMENSIONS = [
 
 const DIMENSION_GUIDE =
   'company = importer; company_state = importer state; hs4 / hs2 = product code (4 or 2 digits); origin_country / origin_region = where goods come from; pol / pol_country = foreign port of loading and its country; pod = US port of discharge; pod_coast = EAST, WEST, or GULF; dest_state = final US state; carrier / scac = ocean carrier name or code; container_type; reefer = refrigerated or not. ' +
-  'pol, pol_country, and container_type cannot be combined with company or product (hs4, hs2) in one request.';
+  'pol, pol_country, and container_type cannot be combined with company or product (hs4, hs2) in one request, and cannot be used with measure estimated_value.';
 
 const dimension = z.enum(DIMENSIONS);
 
@@ -87,7 +87,8 @@ const measure = z
   .enum(['containers', 'teus', 'estimated_value'])
   .default('containers')
   .describe(
-    'containers = physical containers, each counted once (default); teus = twenty-foot equivalent units; estimated_value = modelled US dollar estimate, not the declared customs value.',
+    'containers = physical containers, each counted once (default); teus = twenty-foot equivalent units; estimated_value = modelled US dollar estimate, not the declared customs value. ' +
+      'estimated_value is not available by lane: requests that also group, break down, or filter by pol, pol_country, or container_type are rejected, so use containers or teus for those.',
   );
 
 export const tradeFiltersSchema = z
