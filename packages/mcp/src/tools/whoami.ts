@@ -6,7 +6,8 @@
  */
 
 import type { CurrentAccount } from '@terminal49/sdk';
-import type { ToolContext } from './context.js';
+import type { McpCredentialType, ToolContext } from './context.js';
+import type { Toolset } from './registry.js';
 
 export interface WhoamiTrackingSlots {
   limit: number;
@@ -52,6 +53,11 @@ export interface WhoamiResponse {
   /** Other open accounts the signed-in user can work in. Empty for API keys. */
   other_accounts: Array<{ id: string; company_name: string }>;
   features: Record<string, WhoamiFeature>;
+  /** How this MCP session signed in. */
+  credential_type: McpCredentialType;
+  enabled_toolsets: Toolset[];
+  /** False when the session serves only read-only tools. */
+  write_tools_available: boolean;
 }
 
 function location(account: CurrentAccount): string | null {
@@ -75,7 +81,7 @@ function toAccount(account: CurrentAccount): WhoamiAccount {
 }
 
 export async function executeWhoami(
-  context: Pick<ToolContext, 'me'>,
+  context: ToolContext,
 ): Promise<WhoamiResponse> {
   const me = await context.me();
 
@@ -103,5 +109,8 @@ export async function executeWhoami(
     user,
     other_accounts: otherAccounts,
     features: me.features ?? {},
+    credential_type: context.credentialType,
+    enabled_toolsets: [...context.toolsets],
+    write_tools_available: context.writeToolsAvailable,
   };
 }

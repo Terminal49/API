@@ -79,8 +79,10 @@ import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
   createToolContext,
+  MCP_CREDENTIAL_TYPES,
   type McpCredentialType,
   type ToolContext,
+  type ToolSession,
 } from './tools/context.js';
 import {
   DEFAULT_TOOLSETS,
@@ -88,6 +90,7 @@ import {
   selectTools,
   type ToolDefinition,
   type ToolName,
+  TOOLSETS,
   type ToolSelection,
   type Toolset,
 } from './tools/registry.js';
@@ -1072,11 +1075,18 @@ export function createTerminal49McpServer(
     defaultFormat: 'mapped',
   });
 
-  const credentialType = options.credentialType ?? 'api_key';
+  const toolsets = options.toolsets ?? DEFAULT_TOOLSETS;
   const selectedTools = selectTools({
-    toolsets: options.toolsets ?? DEFAULT_TOOLSETS,
+    toolsets,
     readOnly: options.readOnly ?? false,
   });
+  const session: ToolSession = {
+    credentialType: options.credentialType ?? 'api_key',
+    toolsets,
+    writeToolsAvailable: selectedTools.some(
+      (tool) => !tool.annotations.readOnlyHint,
+    ),
+  };
   const completeCarrierScac = createCarrierScacCompleter(client);
 
   // Observability wrapping, outermost last. Sentry's wrapper returns a wrapped
@@ -1142,7 +1152,7 @@ export function createTerminal49McpServer(
         wrapTool(
           definition.name,
           (args: StandardSchemaWithJSON.InferOutput<InputArgs>) =>
-            handler(args, createToolContext(client, credentialType)),
+            handler(args, createToolContext(client, session)),
           buildResourceLinks,
         ) as ToolCallback<InputArgs>,
       );
@@ -1675,7 +1685,9 @@ export function createTerminal49McpServer(
           'routing_data, rail_data, stop_tracking, trade_intel). Each feature carries a status: ' +
           'available, requires_paid_plan, requires_user_credential, or not_enabled. Call it when ' +
           'the user asks who they are or which account is connected, when another tool returns ' +
-          'nothing or an authorization error, or before relying on a gated feature. Takes no arguments.',
+          'nothing or an authorization error, or before relying on a gated feature. ' +
+          'It also reports how this MCP session signed in (credential_type: user, agent, api_key, or shared_token), ' +
+          'its enabled_toolsets, and write_tools_available, which is false when the session serves only read-only tools. Takes no arguments.',
         inputSchema: z.object({}),
         outputSchema: z.object({
           kind: z.enum(['api_key', 'user']),
@@ -1712,6 +1724,9 @@ export function createTerminal49McpServer(
             z.object({ id: z.string(), company_name: z.string() }),
           ),
           features: z.record(z.string(), z.object({ status: z.string() })),
+          credential_type: z.enum(MCP_CREDENTIAL_TYPES),
+          enabled_toolsets: z.array(z.enum(TOOLSETS)),
+          write_tools_available: z.boolean(),
         }),
       },
       async (_args, context) => executeWhoami(context),
