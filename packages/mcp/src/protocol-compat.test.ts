@@ -174,7 +174,7 @@ describe('MCP protocol compatibility', () => {
       ]),
     );
 
-    expect(tools).toHaveLength(14);
+    expect(tools).toHaveLength(16);
     for (const tool of tools) {
       expect(tool.name.length, tool.name).toBeLessThanOrEqual(64);
       expect(tool.inputSchema.properties, tool.name).not.toHaveProperty(
@@ -306,15 +306,21 @@ describe('MCP protocol compatibility', () => {
           client.listResourceTemplates(),
         ]);
 
-      expect(tools).toHaveLength(14);
+      expect(tools).toHaveLength(16);
       expect(prompts).toHaveLength(3);
       expect(resources).toHaveLength(3);
       expect(resourceTemplates).toHaveLength(1);
 
       for (const tool of tools) {
         expect(tool.annotations).toMatchObject({
-          readOnlyHint: tool.name !== 'track_container',
-          destructiveHint: false,
+          readOnlyHint: ![
+            'track_container',
+            'set_party_role',
+            'set_custom_field',
+          ].includes(tool.name),
+          destructiveHint: ['set_party_role', 'set_custom_field'].includes(
+            tool.name,
+          ),
           openWorldHint: tool.name === 'search_docs',
         });
       }

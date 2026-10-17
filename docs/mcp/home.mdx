@@ -147,7 +147,7 @@ Input and output recording is disabled by default. Leave `SENTRY_MCP_RECORD_INPU
 ## Tools reference
 
 <Note>
-Every tool is read-only except `track_container`, which creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one.
+Every tool is read-only except three. `set_party_role` and `set_custom_field` change parties and custom fields on your containers and shipments; repeating a call changes nothing more. Because they can detach a party or overwrite a field value, they are marked as destructive for MCP clients. `track_container` creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one.
 </Note>
 
 ### `search_container`
@@ -629,6 +629,44 @@ Find the companies on the account's shipments (customers, shippers, consignees, 
 
 - "How many containers does Acme have at the terminal?" (find Acme, then filter by `customer`)
 - "Which containers is Ray Drayage picking up?" (find the carrier, then filter by `pickup_dray_carrier`)
+
+---
+
+### `set_party_role`
+
+Attach a party to containers or shipments in a role, replace the party in that role, or detach it. Find the party ID with `list_parties` first.
+
+**Parameters**
+
+- `container_ids` or `shipment_ids` *(array of IDs)* - 1 to 50 records; pass one, not both.
+- `role` *(string)* - containers support `pickup_dray_carrier`; shipments also support `shipper`, `consignee`, `notify_party`, `customs_broker`, `customer`, and `freight_forwarder`.
+- `party_id` *(string)* - the party's ID.
+- `action` *(string)* - `add`, `replace`, or `remove`. `add` attaches the party beside any others in the role. A record holds one `pickup_dray_carrier` and one `customer`, so `add` fails on a record where a different party already holds one of those; use `replace` to swap it. `replace` makes the party the only one in the role and detaches the rest. It does not replace a shipment's `customer`: remove the current customer, then add the new one. `remove` detaches the party.
+
+Returns the records that changed, those that already matched, and any that failed. A call stops starting new records after about 20 seconds; any it did not reach are listed in `not_attempted`, unchanged, so you can call again with them.
+
+**Good for**
+
+- "Set the drayage carrier to Manzo Transport on these containers." (`replace`)
+
+---
+
+### `set_custom_field`
+
+Set or clear one of your account's custom fields on containers or shipments.
+
+**Parameters**
+
+- `entity` *(string)* - `container` or `shipment`.
+- `ids` *(array of IDs)* - 1 to 50 records.
+- `api_slug` *(string)* - the custom field's API slug.
+- `value` *(string, number, boolean, array of strings, or null)* - the new value; pass an array of option values for a multi-select field, and `null` to clear the field.
+
+Returns the records that changed, those that already matched, and any that failed. A call stops starting new records after about 20 seconds; any it did not reach are listed in `not_attempted`, unchanged, so you can call again with them.
+
+**Good for**
+
+- "Set Sales Rep to Sofia Cortina on these containers."
 
 ---
 

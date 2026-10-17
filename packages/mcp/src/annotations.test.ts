@@ -99,7 +99,8 @@ describe('MCP tool annotations', () => {
     'list_tracking_requests',
     'whoami',
   ];
-  const allTools = [...readTools, 'track_container'];
+  const writeTools = ['set_custom_field', 'set_party_role', 'track_container'];
+  const allTools = [...readTools, ...writeTools];
 
   it('marks fetch-only tools as read-only', () => {
     const tools = getRegisteredTools();
@@ -128,29 +129,41 @@ describe('MCP tool annotations', () => {
     expect(annotations?.idempotentHint).toBe(false);
   });
 
-  it('advertises track_container as the only write and no destructive tools', () => {
+  it('marks the record edit tools as idempotent writes', () => {
     const tools = getRegisteredTools();
-    const writeTools = Object.entries(tools)
+
+    for (const name of ['set_party_role', 'set_custom_field']) {
+      expect(tools[name]?.annotations?.readOnlyHint, name).toBe(false);
+      expect(tools[name]?.annotations?.idempotentHint, name).toBe(true);
+    }
+  });
+
+  it('advertises only the expected writes, and the record edits as destructive', () => {
+    // MCP: destructiveHint false means the tool only adds. set_party_role
+    // detaches parties (remove, replace) and set_custom_field overwrites or
+    // clears values, so both must say true. track_container only creates.
+    const tools = getRegisteredTools();
+    const writes = Object.entries(tools)
       .filter(([, tool]) => tool.annotations?.readOnlyHint === false)
       .map(([name]) => name);
     const destructiveTools = Object.entries(tools)
       .filter(([, tool]) => tool.annotations?.destructiveHint === true)
       .map(([name]) => name);
 
-    expect(writeTools).toEqual(['track_container']);
-    expect(destructiveTools).toEqual([]);
+    expect(writes.sort()).toEqual(writeTools);
+    expect(destructiveTools.sort()).toEqual([
+      'set_custom_field',
+      'set_party_role',
+    ]);
   });
 
-  it('marks every tool as private-account-only and non-destructive', () => {
+  it('marks every tool as private-account-only', () => {
     const tools = getRegisteredTools();
 
     for (const name of allTools) {
       const annotations = tools[name]?.annotations;
       expect(annotations, name).toBeDefined();
       expect(annotations?.openWorldHint, `${name}.openWorldHint`).toBe(false);
-      expect(annotations?.destructiveHint, `${name}.destructiveHint`).toBe(
-        false,
-      );
     }
   });
 

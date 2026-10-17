@@ -77,13 +77,18 @@ try {
   }
 
   const { tools } = await client.listTools();
+  const requiredTools = [
+    'search_docs',
+    'whoami',
+    'set_party_role',
+    'set_custom_field',
+  ];
   if (
-    tools.length !== 14 ||
-    !tools.some((tool) => tool.name === 'search_docs') ||
-    !tools.some((tool) => tool.name === 'whoami')
+    tools.length !== 16 ||
+    !requiredTools.every((name) => tools.some((tool) => tool.name === name))
   ) {
     throw new Error(
-      `Expected 14 preview tools including search_docs and whoami over ${protocolVersion}, received ${tools.length}`,
+      `Expected 16 preview tools including ${requiredTools.join(', ')} over ${protocolVersion}, received ${tools.length}`,
     );
   }
 
