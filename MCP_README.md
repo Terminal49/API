@@ -86,7 +86,7 @@ Search for bill of lading 123456789
 | `search_docs` | Search the public Terminal49 documentation |
 | `whoami` | Identify the credential, account, available features, and session toolsets |
 
-The opt-in `operations` toolset adds seven write tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists `operations`. `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers` and `unassign_party` return a preview first and change data only when called again with the confirmation token from that preview. See [Confirming writes](packages/mcp/README.md#confirming-writes).
+The opt-in `operations` toolset adds nine write tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists `operations`. `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `unassign_party` and `update_custom_field` return a preview first and change data only when called again with the confirmation token from that preview. See [Confirming writes](packages/mcp/README.md#confirming-writes).
 
 | Tool | Description |
 |------|-------------|
@@ -97,6 +97,8 @@ The opt-in `operations` toolset adds seven write tools. A deployment serves them
 | `remove_reference_numbers` | Remove reference numbers from a container, shipment, or tracking request, after a confirmed preview |
 | `assign_party` | Link a party to a container or shipment in a role, such as customer or dray carrier |
 | `unassign_party` | Remove one party role from a container or shipment, after a confirmed preview |
+| `set_custom_field` | Fill an empty custom field on a container, shipment, or tracking request |
+| `update_custom_field` | Replace or clear a custom field value, after a confirmed preview |
 
 ### 🎯 Workflow Prompts (3)
 

@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **28 tools** and **4 MCP resources** for container tracking and shipment management. The default toolsets serve 21 of them.
+The Terminal49 MCP Server provides **30 tools** and **4 MCP resources** for container tracking and shipment management. The default toolsets serve 21 of them.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party` and `unassign_party` are in the `operations` toolset, which is not in the default toolsets yet. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field` and `update_custom_field` are in the `operations` toolset, which is not in the default toolsets yet. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -748,6 +748,92 @@ unassign_party({
 
 ---
 
+### 29. `set_custom_field`
+**Purpose**: Fill an empty custom field, such as a PO number or project manager, on a container, shipment, or tracking request. Tier A.
+
+**Usage**:
+```typescript
+set_custom_field({
+  entity_type: "container", // or "shipment" or "tracking_request"
+  entity_id: "container-uuid",
+  api_slug: "po_number", // from list_custom_field_definitions
+  value: "PO-4500123"
+})
+```
+
+`api_slug` matches exactly and may contain upper and lower case letters, digits and underscores.
+
+The tool finds the account's active definition for `api_slug` and checks `value` against its `data_type` before it sends anything:
+
+| `data_type` | `value` |
+|---|---|
+| `short_text` | Text of 1 to 1000 characters |
+| `number` | A number whose absolute value is under 1000000000000 |
+| `date` | A date as `YYYY-MM-DD` |
+| `datetime` | An ISO 8601 date and time with a time zone, such as `2026-03-01T14:30:00Z` |
+| `boolean` | `true` or `false` |
+| `enum` | Exactly one option value |
+| `enum_multi` | A list of 1 to 50 option values |
+
+A container field goes on a container and a shipment field on a shipment. A tracking request takes both, and Terminal49 copies the value to the shipment or containers the request creates. Terminal49 copies a value only when it is first set. A later change or clear on the tracking request does not reach the shipment or its containers. So once a tracking request has created its shipment, both tools return `use_shipment_or_container` with `shipment_id` and change nothing. Set the field on that shipment or its containers instead. A tracking request can hold one value per container for a container field. Terminal49 does not say which value belongs to which container, so both tools return `ambiguous_field` for such a field and change nothing.
+
+**Returns**:
+- `status: "set"` with `record` (`entity_type`, `entity_id` and `label`), `field` (`api_slug`, `display_name`, `data_type`), the stored `value` and `display_value`, and `undo: "update_custom_field"`
+- `status: "already_set"` with `current_value` and `current_display_value` when the field already has a value. Nothing is sent. When the values differ, `alternative` points to `update_custom_field`.
+- `ambiguous_field` with `record` and `values` when a tracking request holds more than one value for the field. Nothing is sent.
+- `use_shipment_or_container` with `record` and `shipment_id` when the tracking request already created its shipment. Nothing is sent.
+- `invalid_value` with `data_type`, `expected` and, for `enum` and `enum_multi`, `allowed_values`
+- `unknown_field` when the account has no active field with that `api_slug`
+- `field_not_applicable` with `field_entity_type` when the field belongs on another kind of record
+- `unsupported_field` for a `reference` field, which the tool cannot write
+- `credential_not_supported` when Terminal49 refuses the request and `/me` says custom fields need a signed-in user. `FeatureNotEnabled` when `/me` says the account lacks custom fields.
+- `status: "noop"` with an `alternative` when the API refuses the value with 422
+
+An `enum` value that is not an option would make Terminal49 store an empty value, so the option check matters most there.
+
+The tool reads the field before it writes. Terminal49 has no create-only write, so a value that another call or a dashboard user saves between the read and the POST is replaced. Do not run two `set_custom_field` calls on the same field in parallel.
+
+**When to Use**: Fill in a PO number, project manager or other account field that is empty on a record.
+
+---
+
+### 30. `update_custom_field`
+**Purpose**: Replace or clear a custom field value on a container, shipment, or tracking request. Tier C, because Terminal49 keeps no copy of the old value.
+
+**Usage**:
+```typescript
+update_custom_field({
+  entity_type: "shipment",
+  entity_id: "shipment-uuid",
+  api_slug: "priority",
+  value: "high" // or clear: true
+})
+// After the user approves the preview:
+update_custom_field({
+  entity_type: "shipment",
+  entity_id: "shipment-uuid",
+  api_slug: "priority",
+  value: "high",
+  confirmation_token: "t49ct1...."
+})
+```
+
+Pass exactly one of `value` or `clear: true`; anything else is a tool error. A new value goes through the same checks as in `set_custom_field`.
+
+**Returns**:
+- Preview: `current` (`record`, `field`, `value`, `display_value`), `proposed: { value }` (`null` when clearing), `action` (`overwrite` or `clear`) and `reach`. The token covers the current value, so a value that changed after the preview returns `stale_preview`.
+- `status: "updated"` with `previous_value`, the stored `value` and `display_value`, and `undo: "update_custom_field"`
+- `status: "cleared"` with `previous_value`, `value: null` and `undo: "set_custom_field"`. The tool clears with DELETE.
+- `status: "not_set"` when the field has no value on the record. No token is issued. To fill an empty field, use `set_custom_field`.
+- `status: "unchanged"` when the field already has the new value. No token is issued.
+- `invalid_value`, `unknown_field`, `field_not_applicable`, `unsupported_field`, `ambiguous_field`, `use_shipment_or_container`, `credential_not_supported`, `FeatureNotEnabled` and `noop` as in `set_custom_field`
+
+Terminal49 answers a DELETE on a field that is already empty with success. If another call clears the field after the token is checked, the result is still `cleared`, and `previous_value` is the value the preview showed.
+
+**When to Use**: A custom field has the wrong value, or a value that should be removed.
+
+---
+
 ## MCP Resources
 
 ### 1. `terminal49://container/{id}`
@@ -850,6 +936,9 @@ unassign_party({
 
 ### User asks: "The customer on this shipment is wrong"
 → Use `get_shipment_details` with `include_party_roles` for the `party_role_id`, then `unassign_party` with the preview and approval steps, then `assign_party` for the right customer
+
+### User asks: "Set the PO number on MSCU1234565 to 4500123"
+→ Use `list_custom_field_definitions` for the `api_slug`, `search_container` for the container UUID, then `set_custom_field`. If it returns `already_set`, show `current_value` and use `update_custom_field` with the preview and approval steps.
 
 ### User asks: "How did it get from Shanghai to Chicago?"
 → Option A: Use `get_container_route` (paid feature, shows ports and ETAs)
@@ -993,7 +1082,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 28 tools and 4 resources, the LLM can:
+With these 30 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

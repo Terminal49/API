@@ -15,7 +15,7 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (21 by default, 28 in all)
+### 🛠️ Tools (21 by default, 30 in all)
 
 The default toolsets, `core` and `documents`, serve these 21 tools:
 
@@ -43,7 +43,7 @@ The default toolsets, `core` and `documents`, serve these 21 tools:
 | **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
 | **`whoami`** | Identify the credential, its account, the features it can use, and the session's toolsets | Explains empty or unauthorized results |
 
-The `operations` toolset adds seven write tools. It is not in the default toolsets yet, so a deployment serves them only when `T49_MCP_TOOLSETS` lists `operations`.
+The `operations` toolset adds nine write tools. It is not in the default toolsets yet, so a deployment serves them only when `T49_MCP_TOOLSETS` lists `operations`.
 
 | Tool | Description | Tier |
 |------|-------------|------|
@@ -54,6 +54,8 @@ The `operations` toolset adds seven write tools. It is not in the default toolse
 | **`remove_reference_numbers`** | Remove reference numbers from a container, shipment, or tracking request | C: needs a confirmed preview |
 | **`assign_party`** | Link a party, such as a customer or dray carrier, to a container or shipment in a role | A: runs in one call |
 | **`unassign_party`** | Remove one party role from a container or shipment. The party stays. | C: needs a confirmed preview |
+| **`set_custom_field`** | Fill an empty custom field on a container, shipment, or tracking request. A field with a value returns `already_set`. | A: runs in one call |
+| **`update_custom_field`** | Replace or clear a custom field value on a container, shipment, or tracking request | C: needs a confirmed preview |
 
 ### 🎯 Prompts (3 Workflows)
 
@@ -419,7 +421,7 @@ Signed URLs, such as the document download link that `get_document` returns, are
 
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. `list_documents` and `get_document` are in `documents`. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party` and `unassign_party` are in `operations`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core` and `documents`. `whoami` reports the toolsets a session serves and whether it has write tools.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. `list_documents` and `get_document` are in `documents`. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field` and `update_custom_field` are in `operations`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core` and `documents`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
