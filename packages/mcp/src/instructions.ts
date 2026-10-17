@@ -27,6 +27,8 @@ const WRITE_EFFECTS = {
     'cancels a tracking request that is still pending, which cannot be undone',
   add_reference_numbers:
     'adds reference numbers to a container, shipment or tracking request and keeps the ones already there',
+  remove_reference_numbers:
+    'removes reference numbers from a container, shipment or tracking request',
 } satisfies Record<WriteTool['name'], string>;
 
 const TIER_RULES = {

@@ -98,6 +98,11 @@ import {
   executeAddReferenceNumbers,
 } from './tools/add-reference-numbers.js';
 import {
+  executeRemoveReferenceNumbers,
+  removeReferenceNumbersInputSchema,
+  removeReferenceNumbersOutputSchema,
+} from './tools/remove-reference-numbers.js';
+import {
   cancelTrackingRequestInputSchema,
   cancelTrackingRequestOutputSchema,
   executeCancelTrackingRequest,
@@ -1033,6 +1038,7 @@ function formatToolError(
       case 'cancel_tracking_request':
         return `No tracking request found with id ${typeof input.tracking_request_id === 'string' ? input.tracking_request_id : '(missing)'}.`;
       case 'add_reference_numbers':
+      case 'remove_reference_numbers':
         return `No ${entityLabel(input.entity_type)} found with id ${typeof input.entity_id === 'string' ? input.entity_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
@@ -1789,6 +1795,19 @@ export function createTerminal49McpServer(
       },
       async (args, context) =>
         executeAddReferenceNumbers(args, client, context),
+    ),
+    remove_reference_numbers: tool(
+      {
+        description:
+          'Remove reference numbers from a container, shipment, or tracking request. Searches, filters, and integrations that use a removed number stop finding the record. ' +
+          'Call it first without confirmation_token: it changes nothing and returns a preview (the list now, the list after, and which numbers are not on the record) with a confirmation_token. ' +
+          'Show the preview to the user, and call again with the token only after the user approves it. The token stops working if the list changes in the meantime. ' +
+          'Returns removed with the list before (previous) and after (ref_numbers), or not_present when none of the numbers are on the record. concurrent_change_detected works as in add_reference_numbers.',
+        inputSchema: removeReferenceNumbersInputSchema,
+        outputSchema: removeReferenceNumbersOutputSchema,
+      },
+      async (args, context) =>
+        executeRemoveReferenceNumbers(args, client, context),
     ),
     search_docs: tool(
       {

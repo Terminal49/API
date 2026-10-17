@@ -137,6 +137,18 @@ export const TOOL_REGISTRY = [
     },
   },
   {
+    name: 'remove_reference_numbers',
+    title: 'Remove Reference Numbers',
+    toolset: 'operations',
+    tier: 'C',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
     name: 'search_docs',
     title: 'Search Terminal49 Docs',
     toolset: 'core',
