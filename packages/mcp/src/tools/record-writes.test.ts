@@ -10,6 +10,7 @@ const C1 = '11111111-1111-4111-8111-111111111111';
 const C2 = '22222222-2222-4222-8222-222222222222';
 const C3 = '33333333-3333-4333-8333-333333333333';
 const PARTY = '99999999-9999-4999-8999-999999999999';
+const OTHER_PARTY = '88888888-8888-4888-8888-888888888888';
 
 function fakeClient() {
   const manager = () => ({
@@ -105,6 +106,198 @@ describe('set_party_role', () => {
     expect(client.shipments.removePartyRole).toHaveBeenCalledTimes(1);
     expect(client.shipments.removePartyRole).toHaveBeenCalledWith(C1, 'pr-1');
     expect(result.updated).toEqual([C1]);
+  });
+
+  it('refuses to add a second drayage carrier beside a different one', async () => {
+    const client = fakeClient();
+    client.containers.partyRoles.mockResolvedValue(
+      partyRoleDoc({
+        id: 'pr-old',
+        role: 'pickup_dray_carrier',
+        partyId: OTHER_PARTY,
+      }),
+    );
+
+    const result = await executeSetPartyRole(
+      {
+        container_ids: [C1],
+        role: 'pickup_dray_carrier',
+        party_id: PARTY,
+        action: 'add',
+      },
+      client,
+    );
+
+    expect(client.containers.addPartyRole).not.toHaveBeenCalled();
+    expect(client.containers.removePartyRole).not.toHaveBeenCalled();
+    expect(result.updated).toEqual([]);
+    expect(result.failed).toEqual([
+      {
+        id: C1,
+        error:
+          'Already has a different pickup_dray_carrier. Use action "replace" to swap it.',
+      },
+    ]);
+  });
+
+  it('adds another party beside existing ones in a role that holds several', async () => {
+    const client = fakeClient();
+    client.shipments.partyRoles.mockResolvedValue(
+      partyRoleDoc({ id: 'pr-old', role: 'shipper', partyId: OTHER_PARTY }),
+    );
+
+    const result = await executeSetPartyRole(
+      { shipment_ids: [C1], role: 'shipper', party_id: PARTY, action: 'add' },
+      client,
+    );
+
+    expect(client.shipments.addPartyRole).toHaveBeenCalledWith(C1, {
+      role: 'shipper',
+      partyId: PARTY,
+    });
+    expect(client.shipments.removePartyRole).not.toHaveBeenCalled();
+    expect(result.updated).toEqual([C1]);
+  });
+
+  it('replaces the drayage carrier: attaches the new party, then detaches the old', async () => {
+    const client = fakeClient();
+    const calls: string[] = [];
+    client.containers.partyRoles.mockImplementation(async (id: string) =>
+      id === C2
+        ? partyRoleDoc({
+            id: 'pr-same',
+            role: 'pickup_dray_carrier',
+            partyId: PARTY,
+          })
+        : partyRoleDoc({
+            id: 'pr-old',
+            role: 'pickup_dray_carrier',
+            partyId: OTHER_PARTY,
+          }),
+    );
+    client.containers.addPartyRole.mockImplementation(async () => {
+      calls.push('add');
+    });
+    client.containers.removePartyRole.mockImplementation(
+      async (_id: string, roleId: string) => {
+        calls.push(`remove ${roleId}`);
+      },
+    );
+
+    const result = await executeSetPartyRole(
+      {
+        container_ids: [C1, C2],
+        role: 'pickup_dray_carrier',
+        party_id: PARTY,
+        action: 'replace',
+      },
+      client,
+    );
+
+    expect(calls).toEqual(['add', 'remove pr-old']);
+    expect(client.containers.addPartyRole).toHaveBeenCalledWith(C1, {
+      role: 'pickup_dray_carrier',
+      partyId: PARTY,
+    });
+    expect(result.updated).toEqual([C1]);
+    expect(result.unchanged).toEqual([C2]);
+    expect(result.summary).toBe(
+      'Set pickup_dray_carrier on 1 container; 1 already had only that party; 0 failed.',
+    );
+  });
+
+  it('keeps the new carrier when the old one is gone by the time it is detached', async () => {
+    // Rails replaces a shipment's pickup_dray_carrier itself when one is added,
+    // so the old assignment can already be deleted when the tool detaches it.
+    const client = fakeClient();
+    client.shipments.partyRoles.mockResolvedValue(
+      partyRoleDoc({
+        id: 'pr-old',
+        role: 'pickup_dray_carrier',
+        partyId: OTHER_PARTY,
+      }),
+    );
+    client.shipments.removePartyRole.mockRejectedValue(
+      Object.assign(new Error('Not found'), {
+        name: 'NotFoundError',
+        status: 404,
+      }),
+    );
+
+    const result = await executeSetPartyRole(
+      {
+        shipment_ids: [C1],
+        role: 'pickup_dray_carrier',
+        party_id: PARTY,
+        action: 'replace',
+      },
+      client,
+    );
+
+    expect(client.shipments.addPartyRole).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({ updated: [C1], failed: [] });
+  });
+
+  it('says so when the new carrier is attached but the old one cannot be detached', async () => {
+    const client = fakeClient();
+    client.containers.partyRoles.mockResolvedValue(
+      partyRoleDoc({
+        id: 'pr-old',
+        role: 'pickup_dray_carrier',
+        partyId: OTHER_PARTY,
+      }),
+    );
+    client.containers.removePartyRole.mockRejectedValue(
+      Object.assign(new Error('Forbidden'), {
+        name: 'AuthorizationError',
+        status: 403,
+      }),
+    );
+
+    const result = await executeSetPartyRole(
+      {
+        container_ids: [C1],
+        role: 'pickup_dray_carrier',
+        party_id: PARTY,
+        action: 'replace',
+      },
+      client,
+    );
+
+    expect(result.failed).toEqual([
+      {
+        id: C1,
+        error:
+          'Attached the new party but could not detach the previous pickup_dray_carrier: Not allowed to change this record.',
+      },
+    ]);
+  });
+
+  it('refuses to replace a shipment customer instead of risking a shipment with none', async () => {
+    const client = fakeClient();
+    client.shipments.partyRoles.mockResolvedValue(
+      partyRoleDoc({ id: 'pr-old', role: 'customer', partyId: OTHER_PARTY }),
+    );
+
+    const result = await executeSetPartyRole(
+      {
+        shipment_ids: [C1],
+        role: 'customer',
+        party_id: PARTY,
+        action: 'replace',
+      },
+      client,
+    );
+
+    expect(client.shipments.addPartyRole).not.toHaveBeenCalled();
+    expect(client.shipments.removePartyRole).not.toHaveBeenCalled();
+    expect(result.failed).toEqual([
+      {
+        id: C1,
+        error:
+          'Replacing the customer is not supported. Remove the current customer, then add the new one.',
+      },
+    ]);
   });
 
   it('rejects shipment-only roles on containers and mixed record types', async () => {

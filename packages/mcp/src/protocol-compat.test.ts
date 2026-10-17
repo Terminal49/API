@@ -318,7 +318,9 @@ describe('MCP protocol compatibility', () => {
             'set_party_role',
             'set_custom_field',
           ].includes(tool.name),
-          destructiveHint: false,
+          destructiveHint: ['set_party_role', 'set_custom_field'].includes(
+            tool.name,
+          ),
           openWorldHint: tool.name === 'search_docs',
         });
       }

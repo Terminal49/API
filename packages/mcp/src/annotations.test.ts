@@ -138,7 +138,10 @@ describe('MCP tool annotations', () => {
     }
   });
 
-  it('advertises only the expected writes and no destructive tools', () => {
+  it('advertises only the expected writes, and the record edits as destructive', () => {
+    // MCP: destructiveHint false means the tool only adds. set_party_role
+    // detaches parties (remove, replace) and set_custom_field overwrites or
+    // clears values, so both must say true. track_container only creates.
     const tools = getRegisteredTools();
     const writes = Object.entries(tools)
       .filter(([, tool]) => tool.annotations?.readOnlyHint === false)
@@ -148,19 +151,19 @@ describe('MCP tool annotations', () => {
       .map(([name]) => name);
 
     expect(writes.sort()).toEqual(writeTools);
-    expect(destructiveTools).toEqual([]);
+    expect(destructiveTools.sort()).toEqual([
+      'set_custom_field',
+      'set_party_role',
+    ]);
   });
 
-  it('marks every tool as private-account-only and non-destructive', () => {
+  it('marks every tool as private-account-only', () => {
     const tools = getRegisteredTools();
 
     for (const name of allTools) {
       const annotations = tools[name]?.annotations;
       expect(annotations, name).toBeDefined();
       expect(annotations?.openWorldHint, `${name}.openWorldHint`).toBe(false);
-      expect(annotations?.destructiveHint, `${name}.destructiveHint`).toBe(
-        false,
-      );
     }
   });
 

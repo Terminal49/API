@@ -114,7 +114,7 @@ export const TERMINAL49_SERVER_INSTRUCTIONS = `Terminal49 tracks ocean container
 
 Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered); custom fields = account-defined fields (PO number, project manager, etc.) on containers and shipments, loaded with get_container include ['custom_fields'] or get_shipment_details include_custom_fields.
 
-Three tools change Terminal49 account records and are marked non-read-only: track_container creates a tracking request to begin monitoring a number; set_party_role attaches or detaches a party (such as the drayage carrier) on containers or shipments; set_custom_field sets or clears an account custom field on containers or shipments. Call the two set_ tools only when the user asks to change those records. The other tools only fetch data and are marked read-only. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete records.
+Three tools change Terminal49 account records and are marked non-read-only: track_container creates a tracking request to begin monitoring a number; set_party_role attaches, replaces, or detaches a party (such as the drayage carrier) on containers or shipments; set_custom_field sets or clears an account custom field on containers or shipments. Call the two set_ tools only when the user asks to change those records. They can detach a party or overwrite or clear a field value, so they are marked destructive; neither deletes a container, shipment, or party. The other tools only fetch data and are marked read-only. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation.
 
 Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for ports, ETAs, and the current vessel if the account has Routing Data). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links. Call whoami to learn which account and credential this session is bound to and which features it can use: when the user asks who they are or which account is connected, when a lookup returns nothing or an authorization error, or before relying on a gated feature such as routing, custom fields, or stop tracking.`;
 
@@ -1537,13 +1537,13 @@ export function createTerminal49McpServer(
     {
       title: 'Set Party Role',
       description:
-        'Attach a party to containers or shipments in a role, or detach it, for example "set the drayage carrier to Manzo Transport on these containers". ' +
+        'Attach a party to containers or shipments in a role, replace the party in that role, or detach it, for example "set the drayage carrier to Manzo Transport on these containers" (action replace). ' +
         'Resolve the company to a party_id with list_parties first, and the records to IDs with search_container or list_containers. Up to 50 records per call. ' +
         'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
         'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
       annotations: {
         readOnlyHint: false,
-        destructiveHint: false,
+        destructiveHint: true,
         idempotentHint: true,
         openWorldHint: false,
       },
@@ -1567,7 +1567,7 @@ export function createTerminal49McpServer(
         'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
       annotations: {
         readOnlyHint: false,
-        destructiveHint: false,
+        destructiveHint: true,
         idempotentHint: true,
         openWorldHint: false,
       },

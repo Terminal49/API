@@ -42,6 +42,16 @@ const isContainerPartyRole = (role: string): role is ContainerPartyRole =>
 const CONTAINER_ROLE_MESSAGE =
   'Containers support only the pickup_dray_carrier role.';
 
+// Roles a record holds one party in. Rails accepts a second container
+// pickup_dray_carrier beside the first, but container displays read only the
+// first one found; adding one to a shipment deletes the previous one; a second
+// shipment customer is rejected by a unique index. So `add` refuses when a
+// different party already holds one of these, and `replace` swaps it.
+const SINGLE_PARTY_ROLES: readonly string[] = [
+  'pickup_dray_carrier',
+  'customer',
+];
+
 const recordIds = z.array(z.string().uuid()).min(1).max(MAX_RECORDS);
 
 export const setPartyRoleInputSchema = z
@@ -66,8 +76,11 @@ export const setPartyRoleInputSchema = z
       .uuid()
       .describe('Party ID from list_parties. Never pass a company name.'),
     action: z
-      .enum(['add', 'remove'])
-      .describe('add attaches the party in the role; remove detaches it.'),
+      .enum(['add', 'replace', 'remove'])
+      .describe(
+        'add attaches the party in the role, beside any others; it fails on a record where a different party already holds pickup_dray_carrier or customer, which hold one party each. ' +
+          'replace makes the party the only one in the role, detaching any other (use it to change the drayage carrier). remove detaches the party.',
+      ),
   })
   .refine((args) => !!args.container_ids !== !!args.shipment_ids, {
     message: 'Pass container_ids or shipment_ids, not both.',
@@ -126,11 +139,27 @@ export const recordWriteOutputSchema = z.object({
 
 type Outcome = 'updated' | 'unchanged';
 
+// A record the tool itself declined or only partly changed; the message is
+// written here, so it is safe to show as is.
+class RecordWriteError extends Error {}
+
+// Terminal49 SDK errors carry an optional name, status and message.
+type SdkErrorFields = { name?: string; status?: number; message?: string };
+
+const isNotFound = (error: unknown) => {
+  // SAFETY: every field is optional and read with ===, so a throw that is not
+  // an SDK error simply fails both checks.
+  const err = error as SdkErrorFields;
+  return err.name === 'NotFoundError' || err.status === 404;
+};
+
 // Messages from the API describe the record (validation, not found, access),
 // so they are safe to show; anything else gets a generic message.
 function describeError(error: unknown): string {
-  const err = error as { name?: string; status?: number; message?: string };
-  if (err.name === 'NotFoundError' || err.status === 404) {
+  if (error instanceof RecordWriteError) return error.message;
+  // SAFETY: as in isNotFound; message is used only after a typeof check.
+  const err = error as SdkErrorFields;
+  if (isNotFound(err)) {
     return 'Record not found in this account.';
   }
   if (err.name === 'AuthorizationError' || err.status === 403) {
@@ -229,27 +258,74 @@ export async function executeSetPartyRole(
       const { data } = partyRoleListSchema.parse(
         await manager.partyRoles(id, { format: 'raw' }),
       );
-      const matching = data.filter(
-        (assignment) =>
-          assignment.attributes.role === role &&
-          assignment.relationships.party.data?.id === party_id,
+      const inRole = data.filter(
+        (assignment) => assignment.attributes.role === role,
       );
+      const isParty = (assignment: (typeof inRole)[number]) =>
+        assignment.relationships.party.data?.id === party_id;
+      const matching = inRole.filter(isParty);
+      const others = inRole.filter((assignment) => !isParty(assignment));
+
+      if (action === 'remove') {
+        if (matching.length === 0) return 'unchanged';
+        for (const assignment of matching) {
+          await manager.removePartyRole(id, assignment.id);
+        }
+        return 'updated';
+      }
       if (action === 'add') {
+        if (matching.length > 0) return 'unchanged';
+        if (others.length > 0 && SINGLE_PARTY_ROLES.includes(role)) {
+          throw new RecordWriteError(
+            `Already has a different ${role}. Use action "replace" to swap it.`,
+          );
+        }
+        await addRole(id);
+        return 'updated';
+      }
+
+      if (others.length === 0) {
         if (matching.length > 0) return 'unchanged';
         await addRole(id);
         return 'updated';
       }
-      if (matching.length === 0) return 'unchanged';
-      for (const assignment of matching) {
-        await manager.removePartyRole(id, assignment.id);
+      // The unique index rejects a second customer, so a swap would have to
+      // remove the current one first and could leave the shipment without one.
+      if (role === 'customer') {
+        throw new RecordWriteError(
+          'Replacing the customer is not supported. Remove the current customer, then add the new one.',
+        );
+      }
+      // Attach first so a failed add leaves the previous party in place.
+      if (matching.length === 0) await addRole(id);
+      for (const assignment of others) {
+        try {
+          await manager.removePartyRole(id, assignment.id);
+        } catch (error) {
+          if (isNotFound(error)) continue; // Rails already replaced it.
+          throw new RecordWriteError(
+            `Attached the new party but could not detach the previous ${role}: ${describeError(error)}`,
+          );
+        }
       }
       return 'updated';
     },
     ({ updated, unchanged, failed }) =>
-      `${action === 'add' ? 'Assigned' : 'Removed'} ${role} on ${records(updated, noun)}; ` +
-      `${unchanged} already ${action === 'add' ? 'had it' : 'without it'}; ${failed} failed.`,
+      `${PARTY_ROLE_VERBS[action]} ${role} on ${records(updated, noun)}; ` +
+      `${unchanged} already ${PARTY_ROLE_UNCHANGED[action]}; ${failed} failed.`,
   );
 }
+
+const PARTY_ROLE_VERBS = {
+  add: 'Assigned',
+  replace: 'Set',
+  remove: 'Removed',
+} as const;
+const PARTY_ROLE_UNCHANGED = {
+  add: 'had it',
+  replace: 'had only that party',
+  remove: 'without it',
+} as const;
 
 // Multi-select values are sets: the same options in another order are unchanged.
 const comparable = (value: unknown) =>
