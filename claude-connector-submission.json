@@ -29,6 +29,7 @@
       "get_shipment_details",
       "get_supported_shipping_lines",
       "get_tracking_request",
+      "get_vessel",
       "identify_tracking_number",
       "list_containers",
       "list_parties",

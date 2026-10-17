@@ -82,6 +82,9 @@ const PARAGRAPHS: readonly Paragraph[] = [
         text: ' Use get_location for a terminal address and FIRMS code, or the time zone of a port or terminal.',
       },
       {
+        text: " Use get_vessel for a vessel's last reported position and, with Routing Data, its projected arrival at a port.",
+      },
+      {
         text: ' Call get_tracking_request with a request ID to check its status and get the shipment it created.',
       },
       {

@@ -403,6 +403,7 @@ describe('MCP server wiring', () => {
       get_supported_shipping_lines: { search: 'Maersk' },
       get_container_route: { id },
       get_location: { kind: 'port', id: 'USLAX' },
+      get_vessel: { id },
       list_shipments: {},
       list_containers: {},
       summarize_containers: { group_by: 'pod_terminal' },

@@ -19,6 +19,26 @@ export function httpStatus(error: unknown): number | undefined {
   return parsed.success ? parsed.data.status : undefined;
 }
 
+const errorSchema = z.object({
+  name: z.string().catch(''),
+  message: z.string().catch(''),
+});
+
+/**
+ * A 403 that names a feature, which the SDK raises as FeatureNotEnabledError.
+ * It checks the name and status instead of instanceof, so it still works
+ * where tests replace the SDK module.
+ */
+export function isFeatureNotEnabled(error: unknown): boolean {
+  const parsed = errorSchema.safeParse(error);
+  if (!parsed.success) return false;
+  return (
+    parsed.data.name === 'FeatureNotEnabledError' ||
+    (httpStatus(error) === 403 &&
+      /not enabled|feature/i.test(parsed.data.message))
+  );
+}
+
 /**
  * An input the schema accepts but the handler rejects. formatToolError
  * returns its message unchanged, so it must never contain upstream text.

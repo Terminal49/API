@@ -64,6 +64,12 @@ import {
   getLocationInputSchema,
   getLocationOutputSchema,
 } from './tools/get-location.js';
+import {
+  executeGetVessel,
+  getVesselInputSchema,
+  MAX_FUTURE_POSITIONS,
+  getVesselOutputSchema,
+} from './tools/get-vessel.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
@@ -969,6 +975,8 @@ function formatToolError(
         return `No route found for container id ${id ?? '(missing)'}.`;
       case 'get_tracking_request':
         return `No tracking request found with id ${id ?? '(missing)'}.`;
+      case 'get_vessel':
+        return `No vessel found with id ${id ?? '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
       default:
@@ -1440,6 +1448,19 @@ export function createTerminal49McpServer(
         outputSchema: getLocationOutputSchema,
       },
       async (args) => executeGetLocation(args, client),
+    ),
+    get_vessel: tool(
+      {
+        description:
+          'Get a vessel by Terminal49 ID: name, IMO, MMSI, and its last reported position, speed, and heading. ' +
+          'With eta_to, also project its track from the previous port to a destination port and estimate when it arrives; ' +
+          `the track is cut to at most ${MAX_FUTURE_POSITIONS} evenly spaced points. ` +
+          'The projection needs Routing Data, a paid feature. Without it, or when the API cannot project that port pair, the vessel still comes back with eta null and eta_note. ' +
+          'Get vessel_id from get_container_transport_events and port IDs from get_shipment_details.',
+        inputSchema: getVesselInputSchema,
+        outputSchema: getVesselOutputSchema,
+      },
+      async (args) => executeGetVessel(args, client),
     ),
     list_shipments: tool(
       {
