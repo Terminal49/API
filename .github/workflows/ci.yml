@@ -35,6 +35,8 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install workspace dependencies
         run: npm ci
+      - name: Check agent trust guards and generated OpenAPI artifacts
+        run: npm run check:agent-trust
       - name: Check root and every workspace
         run: npx vp run check
       - name: Test every workspace
