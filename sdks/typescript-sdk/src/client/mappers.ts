@@ -12,6 +12,9 @@ import type {
   CurrentAccount,
   CurrentCredential,
   CurrentUser,
+  Vessel,
+  VesselPosition,
+  VesselWithFuturePositions,
 } from '../types/models.js';
 import { JsonApiDocument, omitKeys } from './jsonapi.js';
 
@@ -179,6 +182,52 @@ export function mapContainerRoute(doc: ContainerMapGeojson): ContainerRoute {
   return { ports, currentVessel, totalPorts: ports.length };
 }
 
+type VesselDocument =
+  paths['/vessels/{id}']['get']['responses'][200]['content']['application/json'];
+type VesselFuturePositionsDocument =
+  paths['/vessels/{id}/future_positions']['get']['responses'][200]['content']['application/json'];
+type VesselData = NonNullable<
+  VesselDocument['data'] | VesselFuturePositionsDocument['data']
+>;
+
+function mapVesselData(data: VesselData | undefined): Vessel {
+  const attrs = data?.attributes;
+  return {
+    id: data?.id ?? '',
+    name: attrs?.name ?? null,
+    imo: attrs?.imo ?? null,
+    mmsi: attrs?.mmsi ?? null,
+    latitude: attrs?.latitude ?? null,
+    longitude: attrs?.longitude ?? null,
+    speedKnots: attrs?.nautical_speed_knots ?? null,
+    headingDegrees: attrs?.navigational_heading_degrees ?? null,
+    positionAt: attrs?.position_timestamp ?? null,
+  };
+}
+
+/** Map `GET /vessels/{id}` or `GET /vessels/{imo}` to a `Vessel`. */
+export function mapVessel(doc: VesselDocument): Vessel {
+  return mapVesselData(doc.data);
+}
+
+/** Map a vessel future-positions document to the vessel and its estimated positions. */
+export function mapVesselFuturePositions(
+  doc: VesselFuturePositionsDocument,
+): VesselWithFuturePositions {
+  return {
+    ...mapVesselData(doc.data),
+    positions: (doc.data?.attributes.positions ?? []).map(
+      (position): VesselPosition => ({
+        latitude: position.latitude,
+        longitude: position.longitude,
+        heading: position.heading ?? null,
+        timestamp: position.timestamp,
+        estimated: position.estimated,
+      }),
+    ),
+  };
+}
+
 export function mapShippingLines(doc: any): ShippingLine[] {
   const data = Array.isArray(doc?.data) ? doc.data : [];
   return data
@@ -339,22 +388,16 @@ export function mapShipment(doc: any): Shipment {
     ...attrCamel,
   };
 
-  const containerRelationships = apiDoc.getRelationship(data, 'containers');
-  const containers = Array.isArray(containerRelationships)
-    ? containerRelationships
-    : containerRelationships
-      ? [containerRelationships]
-      : [];
-
-  shipment.containers = containers
-    .map((c: any) => {
-      if (!c) return null;
-      return {
-        id: c.id,
-        number: c.attributes?.number || c.attributes?.container_number,
-      };
-    })
-    .filter(Boolean) as Array<{ id: string; number?: string }>;
+  const containerRefs = data?.relationships?.containers?.data;
+  shipment.containers = (Array.isArray(containerRefs) ? containerRefs : []).map(
+    (ref: { id: string; type: string }) => {
+      const container = apiDoc.getIncluded(ref.type, ref.id);
+      const number =
+        container?.attributes?.number ||
+        container?.attributes?.container_number;
+      return number ? { id: ref.id, number } : { id: ref.id };
+    },
+  );
 
   shipment.refNumbers = attrs.ref_numbers;
   shipment.tags = attrs.tags;
@@ -443,9 +486,6 @@ export function mapTrackingRequest(doc: any): TrackingRequest {
   const data = apiDoc.data;
   const attrs = data?.attributes || {};
 
-  const shipment = apiDoc.getRelationship(data, 'shipment');
-  const container = apiDoc.getRelationship(data, 'container');
-
   return {
     id: data?.id,
     requestType: attrs.request_type,
@@ -453,26 +493,24 @@ export function mapTrackingRequest(doc: any): TrackingRequest {
     status: attrs.status,
     scac: attrs.scac,
     refNumbers: attrs.ref_numbers,
-    shipment: shipment
-      ? {
-          id: shipment.id,
-          billOfLading:
-            shipment.attributes?.bill_of_lading_number ||
-            shipment.attributes?.bill_of_lading ||
-            shipment.attributes?.bl_number,
-          shippingLineScac: shipment.attributes?.shipping_line_scac,
-        }
-      : null,
-    container: container
-      ? {
-          id: container.id,
-          number:
-            container.attributes?.number ||
-            container.attributes?.container_number,
-          status: container.attributes?.status,
-        }
-      : null,
+    shipment: mapTrackedShipment(apiDoc, data),
     ...apiDoc.getAttributes(data),
+  };
+}
+
+/** The API serializes a tracking request's shipment as the polymorphic `tracked_object`. */
+function mapTrackedShipment(apiDoc: JsonApiDocument, data: any) {
+  const ref = data?.relationships?.tracked_object?.data;
+  if (ref?.type !== 'shipment') return null;
+  const shipment = apiDoc.getIncluded(ref.type, ref.id);
+  if (!shipment) return { id: ref.id };
+  return {
+    id: shipment.id,
+    billOfLading:
+      shipment.attributes?.bill_of_lading_number ||
+      shipment.attributes?.bill_of_lading ||
+      shipment.attributes?.bl_number,
+    shippingLineScac: shipment.attributes?.shipping_line_scac,
   };
 }
 

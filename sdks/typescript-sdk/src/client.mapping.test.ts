@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vite-plus/test';
 import { Terminal49Client } from './client.js';
 import { mapContainerRoute } from './client/mappers.js';
+import type { components } from './generated/terminal49.js';
 import { createMockFetch, jsonResponse } from './test/mock-fetch.js';
 
 const baseUrl = 'https://api.test/v2';
@@ -11,14 +12,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const fixturesDir = path.resolve(__dirname, 'fixtures');
 
-const itIf = (condition: boolean) => (condition ? it : it.skip);
-
 function fixturePath(name: string) {
   return path.resolve(fixturesDir, `${name}.json`);
-}
-
-function hasFixture(name: string) {
-  return fs.existsSync(fixturePath(name));
 }
 
 function loadFixture<T = any>(name: string): T {
@@ -114,89 +109,173 @@ describe('Terminal49Client mapping helpers', () => {
     }
   });
 
-  it('maps tracking request fields from base response', async () => {
-    const fixture = loadFixture('tracking-requests.get.base');
-    const trackingId = fixture?.data?.id || 'tr-1';
-    const { fetchImpl } = createMockFetch({
-      [`/tracking_requests/${trackingId}`]: () => jsonResponse(fixture),
+  it('filters shipping lines on the client and sends no search param', async () => {
+    const fixture = loadFixture('shipping-lines.list');
+    const { fetchImpl, calls } = createMockFetch({
+      '/shipping_lines': () => jsonResponse(fixture),
     });
-
     const client = new Terminal49Client({
       apiToken: 'token-123',
       apiBaseUrl: baseUrl,
       fetchImpl,
     });
 
-    const result = (await client.getTrackingRequest(trackingId, {
+    const byName = (await client.listShippingLines('Hapag', {
+      format: 'mapped',
+    })) as any[];
+    const byAlternativeScac = (await client.shippingLines.list('medu', {
+      format: 'mapped',
+    })) as any[];
+    const byScac = (await client.shippingLines.list('hlcu', {
+      format: 'mapped',
+    })) as any[];
+    const byShortName = (await client.shippingLines.list('culines', {
+      format: 'mapped',
+    })) as any[];
+    const raw = await client.listShippingLines('hapag');
+
+    expect(byName.map((line) => line.scac)).toEqual(['HLCU']);
+    expect(byAlternativeScac.map((line) => line.scac)).toEqual(['MSCU']);
+    expect(byScac.map((line) => line.scac)).toEqual(['HLCU']);
+    expect(byShortName.map((line) => line.scac)).toEqual(['CULU']);
+    expect(raw.data.map((line: any) => line.attributes.scac)).toEqual(['HLCU']);
+    expect(raw.links).toEqual(fixture.links);
+    expect(calls.map((call) => call.url.search)).toEqual(['', '', '', '', '']);
+  });
+
+  it('searches shipping lines whose nullable columns are null', async () => {
+    const { fetchImpl } = createMockFetch({
+      '/shipping_lines': () =>
+        jsonResponse({
+          data: [
+            {
+              id: 'sl-1',
+              type: 'shipping_line',
+              attributes: {
+                scac: 'ZZZU',
+                name: null,
+                short_name: null,
+                alternative_scacs: null,
+              },
+            },
+            {
+              id: 'sl-2',
+              type: 'shipping_line',
+              attributes: {
+                scac: 'MAEU',
+                name: 'Maersk',
+                short_name: null,
+                alternative_scacs: [],
+              },
+            },
+          ],
+        }),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    const result = await client.listShippingLines('maersk');
+
+    expect(result.data.map((line: any) => line.id)).toEqual(['sl-2']);
+  });
+
+  it('maps the tracked_object shipment on a tracking request', async () => {
+    const fixture = loadFixture('tracking-requests.get.base');
+    const { fetchImpl } = createMockFetch({
+      '/tracking_requests/tracking_request-1': () => jsonResponse(fixture),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    const result = (await client.getTrackingRequest('tracking_request-1', {
       format: 'mapped',
     })) as any;
 
-    const attrs = fixture?.data?.attributes || {};
-    expectIfDefined(result.requestType, attrs.request_type);
-    expectIfDefined(result.requestNumber, attrs.request_number);
-    expectIfDefined(result.status, attrs.status);
-    expectIfDefined(result.scac, attrs.scac);
-
-    if (Array.isArray(attrs.ref_numbers)) {
-      expect(result.refNumbers).toEqual(attrs.ref_numbers);
-    }
-
-    if (!fixture?.included || fixture.included.length === 0) {
-      expect(result.shipment).toBeNull();
-      expect(result.container).toBeNull();
-    }
+    expect(result).toMatchObject({
+      id: 'tracking_request-1',
+      requestType: 'bill_of_lading',
+      requestNumber: 'HLCUSEL251063157',
+      status: 'created',
+      scac: 'HLCU',
+      refNumbers: [],
+    });
+    expect(result.shipment).toEqual({
+      id: 'shipment-1',
+      billOfLading: 'HLCUSEL251063ad5',
+      shippingLineScac: 'HLCU',
+    });
   });
 
-  itIf(hasFixture('tracking-requests.get.include'))(
-    'maps tracking request with shipment and container',
-    async () => {
-      const fixture = loadFixture('tracking-requests.get.include');
-      const trackingId = fixture?.data?.id || 'tr-1';
-      const { fetchImpl } = createMockFetch({
-        [`/tracking_requests/${trackingId}`]: () => jsonResponse(fixture),
-      });
+  it('maps tracked_object shipments on each listed tracking request', async () => {
+    const fixture = loadFixture('tracking-requests.list');
+    const { fetchImpl } = createMockFetch({
+      '/tracking_requests': () => jsonResponse(fixture),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
 
-      const client = new Terminal49Client({
-        apiToken: 'token-123',
-        apiBaseUrl: baseUrl,
-        fetchImpl,
-      });
+    const result = (await client.listTrackingRequests(
+      {},
+      { format: 'mapped' },
+    )) as any;
 
-      const result = (await client.getTrackingRequest(trackingId, {
-        format: 'mapped',
-      })) as any;
+    expect(result.items.map((item: any) => item.shipment)).toEqual([
+      {
+        id: 'shipment-1',
+        billOfLading: 'HLCUSEL251063ad5',
+        shippingLineScac: 'HLCU',
+      },
+    ]);
+  });
 
-      const shipmentRef = fixture?.data?.relationships?.shipment?.data;
-      const containerRef = fixture?.data?.relationships?.container?.data;
-      const shipment = shipmentRef
-        ? findIncluded(fixture, 'shipment', shipmentRef.id)
-        : null;
-      const container = containerRef
-        ? findIncluded(fixture, 'container', containerRef.id)
-        : null;
+  it('keeps the tracked shipment id when the shipment is not included', async () => {
+    const { fetchImpl } = createMockFetch({
+      '/tracking_requests/tr-1': () =>
+        jsonResponse({
+          data: {
+            id: 'tr-1',
+            type: 'tracking_request',
+            attributes: { request_number: 'MSCU1234567' },
+            relationships: {
+              tracked_object: { data: { type: 'shipment', id: 'ship-1' } },
+            },
+          },
+        }),
+      '/tracking_requests/tr-2': () =>
+        jsonResponse({
+          data: {
+            id: 'tr-2',
+            type: 'tracking_request',
+            attributes: { request_number: 'MSCU7654321', status: 'pending' },
+            relationships: { tracked_object: { data: null } },
+          },
+        }),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
 
-      if (shipment) {
-        const expectedBill =
-          shipment.attributes?.bill_of_lading_number ||
-          shipment.attributes?.bill_of_lading ||
-          shipment.attributes?.bl_number;
-        expectIfDefined(result.shipment?.billOfLading, expectedBill);
-        expectIfDefined(
-          result.shipment?.shippingLineScac,
-          shipment.attributes?.shipping_line_scac,
-        );
-      }
+    const tracked = (await client.getTrackingRequest('tr-1', {
+      format: 'mapped',
+    })) as any;
+    const pending = (await client.getTrackingRequest('tr-2', {
+      format: 'mapped',
+    })) as any;
 
-      if (container) {
-        expectIfDefined(
-          result.container?.number,
-          container.attributes?.number ||
-            container.attributes?.container_number,
-        );
-        expectIfDefined(result.container?.status, container.attributes?.status);
-      }
-    },
-  );
+    expect(tracked.shipment).toEqual({ id: 'ship-1' });
+    expect(pending.shipment).toBeNull();
+  });
 
   it('maps shipment ports, terminals, tracking, and container references', async () => {
     const fixture = loadFixture('shipments.get.include');
@@ -380,6 +459,202 @@ describe('Terminal49Client mapping helpers', () => {
         container.attributes?.number || container.attributes?.container_number,
       );
     }
+  });
+
+  it('keeps shipment container ids whether or not the containers are included', async () => {
+    const included = loadFixture('shipments.get.include');
+    const list = loadFixture('shipments.list');
+    const { fetchImpl } = createMockFetch({
+      '/shipments/shipment-1?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal':
+        () => jsonResponse(included),
+      '/shipments?include=pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal':
+        () => jsonResponse(list),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+      defaultFormat: 'mapped',
+    });
+
+    const withContainers = await client.getShipment('shipment-1');
+    const withoutContainers = await client.listShipments({
+      includeContainers: false,
+    });
+
+    expect(withContainers.containers).toEqual([
+      { id: 'container-1', number: 'RMCU74210c6' },
+    ]);
+    expect(withoutContainers.items[0].containers).toEqual([
+      { id: 'container-1' },
+    ]);
+  });
+
+  it('maps vessels and their estimated future positions', async () => {
+    const vesselAttributes = {
+      name: 'EVER GIVEN',
+      imo: '9811000',
+      mmsi: '353136000',
+      latitude: 25.29845,
+      longitude: 121.217,
+      nautical_speed_knots: 14,
+      navigational_heading_degrees: 194,
+      position_timestamp: '2026-10-01T14:01:37Z',
+    };
+    const vessel = {
+      data: { id: 'v-1', type: 'vessel', attributes: vesselAttributes },
+    };
+    const withPositions = {
+      data: {
+        id: 'v-1',
+        type: 'vessel',
+        attributes: {
+          ...vesselAttributes,
+          positions: [
+            {
+              latitude: 1.5,
+              longitude: 104.5,
+              heading: 51,
+              timestamp: '2026-10-02T00:00:00Z',
+              estimated: true,
+            },
+            {
+              latitude: 2.5,
+              longitude: 105.5,
+              timestamp: '2026-10-03T00:00:00Z',
+              estimated: false,
+            },
+          ],
+        },
+      },
+      links: { self: '/v2/vessels/v-1/future_positions' },
+    };
+    const { fetchImpl } = createMockFetch({
+      '/vessels/v-1': () => jsonResponse(vessel),
+      '/vessels/9811000': () => jsonResponse(vessel),
+      '/vessels/v-1/future_positions?port_id=p-2&previous_port_id=p-1': () =>
+        jsonResponse(withPositions),
+      '/vessels/v-1/future_positions_with_coordinates?port_id=p-2&previous_port_id=p-1&latitude=1&longitude=2':
+        () => jsonResponse(withPositions),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+      defaultFormat: 'mapped',
+    });
+
+    const current = {
+      id: 'v-1',
+      name: 'EVER GIVEN',
+      imo: '9811000',
+      mmsi: '353136000',
+      latitude: 25.29845,
+      longitude: 121.217,
+      speedKnots: 14,
+      headingDegrees: 194,
+      positionAt: '2026-10-01T14:01:37Z',
+    };
+    const positions = [
+      {
+        latitude: 1.5,
+        longitude: 104.5,
+        heading: 51,
+        timestamp: '2026-10-02T00:00:00Z',
+        estimated: true,
+      },
+      {
+        latitude: 2.5,
+        longitude: 105.5,
+        heading: null,
+        timestamp: '2026-10-03T00:00:00Z',
+        estimated: false,
+      },
+    ];
+    const ports = { portId: 'p-2', previousPortId: 'p-1' };
+
+    expect(await client.vessels.get('v-1')).toEqual(current);
+    expect(await client.vessels.getByImo('9811000')).toEqual(current);
+    expect(await client.vessels.futurePositions('v-1', ports)).toEqual({
+      ...current,
+      positions,
+    });
+    expect(
+      await client.vessels.futurePositionsWithCoords(
+        'v-1',
+        { ...ports, latitude: 1, longitude: 2 },
+        { format: 'both' },
+      ),
+    ).toEqual({ raw: withPositions, mapped: { ...current, positions } });
+  });
+
+  it('maps containers.get and containers.update in mapped and both formats', async () => {
+    const fixture = loadFixture('containers.get.include');
+    const { fetchImpl } = createMockFetch({
+      '/containers/container-1?include=shipment,pod_terminal,pickup_facility':
+        () => jsonResponse(fixture),
+      '/containers/container-1': () => jsonResponse(fixture),
+    });
+    const mappedClient = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+      defaultFormat: 'mapped',
+    });
+
+    const mapped = await mappedClient.containers.get('container-1');
+    const both = await mappedClient.containers.get('container-1', undefined, {
+      format: 'both',
+    });
+    const updated = await mappedClient.containers.update('container-1', {
+      ref_numbers: ['REF-1'],
+    });
+
+    const expected = {
+      id: 'container-1',
+      number: 'RMCU74210c6',
+      currentStatus: 'picked_up',
+      equipment: expect.objectContaining({ type: 'tank' }),
+      shipment: expect.objectContaining({ id: 'shipment-1' }),
+      terminals: expect.objectContaining({
+        podTerminal: expect.objectContaining({ id: 'terminal-1' }),
+        destinationTerminal: null,
+      }),
+    };
+    expect(mapped).toMatchObject(expected);
+    expect(updated).toMatchObject(expected);
+    expect(both.raw).toEqual(fixture);
+    expect(both.mapped).toMatchObject(expected);
+  });
+
+  it('maps a container without a POD terminal', async () => {
+    const container: components['schemas']['container'] = {
+      id: 'container-2',
+      type: 'container',
+      attributes: { number: 'MSKU4330011' },
+      relationships: {
+        pod_terminal: { data: null },
+        pickup_facility: { data: null },
+      },
+    };
+    const { fetchImpl } = createMockFetch({
+      '/containers/container-2?include=shipment,pod_terminal,pickup_facility':
+        () => jsonResponse({ data: container }),
+    });
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+      defaultFormat: 'mapped',
+    });
+
+    const mapped = await client.containers.get('container-2');
+
+    expect(mapped).toMatchObject({
+      id: 'container-2',
+      number: 'MSKU4330011',
+      terminals: { podTerminal: null, destinationTerminal: null },
+    });
   });
 
   it('maps container list items from base fixture', async () => {

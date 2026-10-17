@@ -43,7 +43,7 @@ Assign a party to a shipment in the given role.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `__namedParameters` | `AddPartyRoleParams` |
+| `__namedParameters` | [`ShipmentAddPartyRoleParams`](/sdk/reference/client/managers/interfaces/ShipmentAddPartyRoleParams) |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
@@ -241,11 +241,15 @@ Create a custom field value on a shipment.
 
 #### Parameters
 
-| Parameter | Type |
-| ------ | ------ |
-| `id` | `string` |
-| `attrs` | `Record`\<`string`, `any`\> |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `id` | `string` | - |
+| `attrs` | \{ `ref_numbers?`: `string`[]; `tags?`: `string`[]; `user_provided_booking_number?`: `string`; `user_provided_mbl_number?`: `string`; \} | - |
+| `attrs.ref_numbers?` | `string`[] | **Description** Shipment ref numbers. **Example** `[ "REFNUMBER10" ]` |
+| `attrs.tags?` | `string`[] | **Description** Tags related to a shipment |
+| `attrs.user_provided_booking_number?` | `string` | **Description** Booking number you provide for the shipment. **Example** `BK123456` |
+| `attrs.user_provided_mbl_number?` | `string` | **Description** Master bill of lading number you provide for the shipment. **Example** `MEDUFR030802` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) | - |
 
 #### Returns
 

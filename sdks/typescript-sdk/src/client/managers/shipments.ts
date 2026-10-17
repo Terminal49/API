@@ -1,7 +1,7 @@
 import type { ShipmentListFilters } from '../../generated/list-filters.js';
 import { serializeListQuery } from '../filter-validation.js';
-import type { components, paths } from '../../generated/terminal49.js';
-import type { Shipment } from '../../types/models.js';
+import type { paths } from '../../generated/terminal49.js';
+import type { CustomFieldValue, Shipment } from '../../types/models.js';
 import type {
   CallOptions,
   IncludeParam,
@@ -17,13 +17,16 @@ import {
 import { callerPayload, type JsonBody } from '../spec.js';
 import { BaseManager } from './base.js';
 
-type CustomFieldValue = components['schemas']['custom_field_value'];
+/** Writable shipment attributes. Each list replaces the existing one. */
+export type ShipmentUpdateAttributes = NonNullable<
+  JsonBody<paths['/shipments/{id}']['patch']>['data']
+>['attributes'];
 type PartyRoleData = JsonBody<
   paths['/shipments/{shipment_id}/party_roles']['post']
 >['data'];
 
 /** Parameters for `addPartyRole`; `role` is limited to what the spec accepts on this route. */
-interface AddPartyRoleParams {
+export interface ShipmentAddPartyRoleParams {
   role: PartyRoleData['attributes']['role'];
   partyId: PartyRoleData['relationships']['party']['data']['id'];
 }
@@ -70,9 +73,10 @@ export class ShipmentManager extends BaseManager {
   }
 
   async customFields(id: string, options?: CallOptions): Promise<any> {
-    // The spec omits include=definition, but mapCustomFields reads the included definitions.
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/shipments/${encodeURIComponent(id)}/custom_fields?include=definition`,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/shipments/{shipment_id}/custom_fields', {
+        params: { path: { shipment_id: id }, query: { include: 'definition' } },
+      }),
     );
     return this.formatResult(raw, options?.format, mapCustomFields);
   }
@@ -116,7 +120,7 @@ export class ShipmentManager extends BaseManager {
 
   async update(
     id: string,
-    attrs: Record<string, any>,
+    attrs: ShipmentUpdateAttributes,
     options?: CallOptions,
   ): Promise<any> {
     const payload = {
@@ -130,7 +134,7 @@ export class ShipmentManager extends BaseManager {
     const raw = await this.transport.execute(() =>
       this.transport.client.PATCH('/shipments/{id}', {
         params: { path: { id } },
-        body: payload as any,
+        body: payload,
       }),
     );
 
@@ -138,22 +142,18 @@ export class ShipmentManager extends BaseManager {
   }
 
   async stopTracking(id: string, options?: CallOptions): Promise<any> {
-    const payload = { data: { type: 'shipment' as const, id } };
     const raw = await this.transport.execute(() =>
       this.transport.client.PATCH('/shipments/{id}/stop_tracking', {
         params: { path: { id } },
-        body: payload as any,
       }),
     );
     return this.formatResult(raw, options?.format, mapShipment);
   }
 
   async resumeTracking(id: string, options?: CallOptions): Promise<any> {
-    const payload = { data: { type: 'shipment' as const, id } };
     const raw = await this.transport.execute(() =>
       this.transport.client.PATCH('/shipments/{id}/resume_tracking', {
         params: { path: { id } },
-        body: payload as any,
       }),
     );
     return this.formatResult(raw, options?.format, mapShipment);
@@ -232,7 +232,7 @@ export class ShipmentManager extends BaseManager {
   /** Assign a party to a shipment in the given role. */
   async addPartyRole(
     id: string,
-    { role, partyId }: AddPartyRoleParams,
+    { role, partyId }: ShipmentAddPartyRoleParams,
     options?: CallOptions,
   ): Promise<any> {
     const raw = await this.transport.execute(() =>

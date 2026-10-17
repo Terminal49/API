@@ -43,7 +43,7 @@ Assign a party to a container in the given role.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `__namedParameters` | `AddPartyRoleParams` |
+| `__namedParameters` | [`ContainerAddPartyRoleParams`](/sdk/reference/client/managers/interfaces/ContainerAddPartyRoleParams) |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
@@ -338,7 +338,7 @@ one dimension, in one request (`GET /containers/summary`).
 
 > **update**(`id`, `attrs`, `options?`): `Promise`\<`any`\>
 
-Update container attributes such as `ref_numbers`.
+Update a container's `ref_numbers`, `seal_number`, equipment type, length, and height, or `weight_in_lbs`.
 
 #### Parameters
 

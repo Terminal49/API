@@ -417,12 +417,15 @@
                   "sdk/reference/client/classes/Terminal49Client",
                   "sdk/reference/client/interfaces/Terminal49ClientConfig",
                   "sdk/reference/client/interfaces/CustomFieldDefinitionListFilters",
+                  "sdk/reference/client/interfaces/CustomFieldDefinitionListOptions",
                   "sdk/reference/client/interfaces/CustomFieldListFilters",
                   "sdk/reference/client/interfaces/TriggerWebhookParams",
                   "sdk/reference/client/interfaces/VesselFuturePositionsParams",
                   "sdk/reference/client/interfaces/VesselFuturePositionsWithCoordsParams",
                   "sdk/reference/client/interfaces/WebhookNotificationGetOptions",
-                  "sdk/reference/client/interfaces/WebhookNotificationListOptions"
+                  "sdk/reference/client/interfaces/WebhookNotificationListOptions",
+                  "sdk/reference/client/type-aliases/PartyAttributes",
+                  "sdk/reference/client/type-aliases/WebhookEvent"
                 ]
               },
               {
@@ -437,13 +440,18 @@
                   "sdk/reference/client/managers/classes/ShipmentManager",
                   "sdk/reference/client/managers/classes/ShippingLineManager",
                   "sdk/reference/client/managers/classes/TrackingRequestManager",
+                  "sdk/reference/client/managers/interfaces/ContainerAddPartyRoleParams",
                   "sdk/reference/client/managers/interfaces/CreateDocumentParams",
                   "sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions",
                   "sdk/reference/client/managers/interfaces/DocumentListFilters",
+                  "sdk/reference/client/managers/interfaces/ShipmentAddPartyRoleParams",
                   "sdk/reference/client/managers/interfaces/TrackingRequestListFilters",
                   "sdk/reference/client/managers/interfaces/UpdateDocumentParams",
+                  "sdk/reference/client/managers/type-aliases/ContainerUpdateAttributes",
                   "sdk/reference/client/managers/type-aliases/DocumentRotation",
-                  "sdk/reference/client/managers/type-aliases/TrackingRequestType"
+                  "sdk/reference/client/managers/type-aliases/ShipmentUpdateAttributes",
+                  "sdk/reference/client/managers/type-aliases/TrackingRequestType",
+                  "sdk/reference/client/managers/type-aliases/TrackingRequestUpdateAttributes"
                 ]
               },
               {
@@ -497,7 +505,11 @@
                   "sdk/reference/types/models/interfaces/Shipment",
                   "sdk/reference/types/models/interfaces/ShippingLine",
                   "sdk/reference/types/models/interfaces/TrackingRequest",
-                  "sdk/reference/types/models/interfaces/TrackingSlots"
+                  "sdk/reference/types/models/interfaces/TrackingSlots",
+                  "sdk/reference/types/models/interfaces/Vessel",
+                  "sdk/reference/types/models/interfaces/VesselPosition",
+                  "sdk/reference/types/models/interfaces/VesselWithFuturePositions",
+                  "sdk/reference/types/models/type-aliases/CustomFieldValue"
                 ]
               },
               {

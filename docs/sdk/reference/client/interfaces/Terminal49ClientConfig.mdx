@@ -11,7 +11,7 @@ Configuration for [Terminal49Client](/sdk/reference/client/classes/Terminal49Cli
 
 | Property | Type | Description |
 | ------ | ------ | ------ |
-| <a id="property-accountid"></a> `accountId?` | `string` | Account id to send as `x-account-id` for user-scoped bearer tokens. |
+| <a id="property-accountid"></a> `accountId?` | `string` | Account id to send as `x-account-id` for user-scoped bearer tokens. Also fills `{account_id}` in the account custom field definition routes. |
 | <a id="property-apibaseurl"></a> `apiBaseUrl?` | `string` | API base URL. Defaults to `https://api.terminal49.com/v2`. |
 | <a id="property-apitoken"></a> `apiToken` | `string` | Terminal49 API token. Pass either the raw token or a value prefixed with `Token ` or `Bearer `. |
 | <a id="property-defaultformat"></a> `defaultFormat?` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | Default response format for methods that support mapped responses. Defaults to `raw`. |

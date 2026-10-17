@@ -1,8 +1,8 @@
 import { UpstreamError } from '../errors.js';
 import type { ContainerListFilters } from '../../generated/list-filters.js';
 import { serializeListQuery } from '../filter-validation.js';
-import type { components, paths } from '../../generated/terminal49.js';
-import type { Container } from '../../types/models.js';
+import type { paths } from '../../generated/terminal49.js';
+import type { Container, CustomFieldValue } from '../../types/models.js';
 import type {
   CallOptions,
   ContainerInclude,
@@ -11,6 +11,7 @@ import type {
   ListOptions,
 } from '../../types/options.js';
 import {
+  mapContainer,
   mapContainerList,
   mapContainerRoute,
   mapCustomFields,
@@ -25,16 +26,16 @@ import {
 import { callerPayload, type JsonBody } from '../spec.js';
 import { BaseManager } from './base.js';
 
-type ContainerUpdateAttributes = NonNullable<
+/** Writable container attributes for `update`. */
+export type ContainerUpdateAttributes = NonNullable<
   JsonBody<paths['/containers/{id}']['patch']>['data']
 >['attributes'];
-type CustomFieldValue = components['schemas']['custom_field_value'];
 type PartyRoleData = JsonBody<
   paths['/containers/{container_id}/party_roles']['post']
 >['data'];
 
 /** Parameters for `addPartyRole`; `role` is limited to what the spec accepts on this route. */
-interface AddPartyRoleParams {
+export interface ContainerAddPartyRoleParams {
   role: PartyRoleData['attributes']['role'];
   partyId: PartyRoleData['relationships']['party']['data']['id'];
 }
@@ -115,10 +116,10 @@ export class ContainerManager extends BaseManager {
         },
       }),
     );
-    return this.formatResult(raw, options?.format);
+    return this.formatResult(raw, options?.format, mapContainer);
   }
 
-  /** Update container attributes such as `ref_numbers`. */
+  /** Update a container's `ref_numbers`, `seal_number`, equipment type, length, and height, or `weight_in_lbs`. */
   async update(
     id: string,
     attrs: ContainerUpdateAttributes,
@@ -130,13 +131,17 @@ export class ContainerManager extends BaseManager {
         body: { data: { type: 'container', id, attributes: attrs } },
       }),
     );
-    return this.formatResult(raw, options?.format);
+    return this.formatResult(raw, options?.format, mapContainer);
   }
 
   async customFields(id: string, options?: CallOptions): Promise<any> {
-    // The spec omits include=definition, but mapCustomFields reads the included definitions.
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/containers/${encodeURIComponent(id)}/custom_fields?include=definition`,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/containers/{container_id}/custom_fields', {
+        params: {
+          path: { container_id: id },
+          query: { include: 'definition' },
+        },
+      }),
     );
     return this.formatResult(raw, options?.format, mapCustomFields);
   }
@@ -310,7 +315,7 @@ export class ContainerManager extends BaseManager {
   /** Assign a party to a container in the given role. */
   async addPartyRole(
     id: string,
-    { role, partyId }: AddPartyRoleParams,
+    { role, partyId }: ContainerAddPartyRoleParams,
     options?: CallOptions,
   ): Promise<any> {
     const raw = await this.transport.execute(() =>

@@ -263,12 +263,12 @@ describe('Terminal49Client request building', () => {
   it('accepts comma-separated tracking request include strings', async () => {
     const search = buildSearchParams([
       ['filter[status]', 'pending'],
-      ['include', 'shipment,container'],
+      ['include', 'tracked_object,customer'],
     ]);
 
     const { fetchImpl, calls } = createMockFetch({
       [`/tracking_requests?${search}`]: () => jsonResponse({ data: [] }),
-      '/tracking_requests/tr-1?include=shipment,container': () =>
+      '/tracking_requests/tr-1?include=tracked_object,customer': () =>
         jsonResponse({ data: { id: 'tr-1' } }),
     });
 
@@ -280,14 +280,18 @@ describe('Terminal49Client request building', () => {
 
     await client.listTrackingRequests({
       'filter[status]': 'pending',
-      include: 'shipment,container',
+      include: 'tracked_object,customer',
     });
     await client.getTrackingRequest('tr-1', {
-      include: 'shipment,container',
+      include: 'tracked_object,customer',
     });
 
-    expect(calls[0].url.searchParams.get('include')).toBe('shipment,container');
-    expect(calls[1].url.searchParams.get('include')).toBe('shipment,container');
+    expect(calls[0].url.searchParams.get('include')).toBe(
+      'tracked_object,customer',
+    );
+    expect(calls[1].url.searchParams.get('include')).toBe(
+      'tracked_object,customer',
+    );
   });
 
   it('sends explicit scac when creating tracking request', async () => {
@@ -363,13 +367,15 @@ describe('Terminal49Client request building', () => {
       fetchImpl,
     });
 
-    await client.updateTrackingRequest('tr-1', { status: 'paused' });
+    await client.updateTrackingRequest('tr-1', {
+      ref_numbers: ['PO-1', 'PO-2'],
+    });
 
     expect(captured).toEqual({
       data: {
         type: 'tracking_request',
         id: 'tr-1',
-        attributes: { status: 'paused' },
+        attributes: { ref_numbers: ['PO-1', 'PO-2'] },
       },
     });
   });
@@ -430,6 +436,104 @@ describe('Terminal49Client request building', () => {
     expect(captured.data.attributes.scac).toBe('CAND');
   });
 
+  it('sends the caller numberType instead of the inferred one', async () => {
+    let captured: any = null;
+    const { fetchImpl } = createMockFetch({
+      '/tracking_requests/infer_number': () =>
+        jsonResponse({
+          data: {
+            attributes: {
+              number_type: 'bill_of_lading',
+              shipping_line: { selected: { scac: 'MAEU' }, candidates: [] },
+            },
+          },
+        }),
+      '/tracking_requests': (init) => {
+        captured = JSON.parse(String(init?.body));
+        return jsonResponse({ data: { id: 'tr-3' } }, 201);
+      },
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.createTrackingRequestFromInfer('255123456', {
+      numberType: 'booking_number',
+    });
+    expect(captured.data.attributes).toMatchObject({
+      request_type: 'booking_number',
+      request_number: '255123456',
+      scac: 'MAEU',
+    });
+  });
+
+  it('uses the caller numberType when infer reports an unknown type', async () => {
+    let captured: any = null;
+    const { fetchImpl } = createMockFetch({
+      '/tracking_requests/infer_number': () =>
+        jsonResponse({
+          data: {
+            attributes: {
+              number_type: 'unknown',
+              shipping_line: { selected: { scac: 'MAEU' }, candidates: [] },
+            },
+          },
+        }),
+      '/tracking_requests': (init) => {
+        captured = JSON.parse(String(init?.body));
+        return jsonResponse({ data: { id: 'tr-4' } }, 201);
+      },
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await client.createTrackingRequestFromInfer('MAEU123456789', {
+      numberType: 'bill_of_lading',
+    });
+    expect(captured.data.attributes.request_type).toBe('bill_of_lading');
+  });
+
+  it('rejects an unrecognized numberType override by name', async () => {
+    let created = false;
+    const { fetchImpl } = createMockFetch({
+      '/tracking_requests/infer_number': () =>
+        jsonResponse({
+          data: {
+            attributes: {
+              number_type: 'bill_of_lading',
+              shipping_line: { selected: { scac: 'MAEU' }, candidates: [] },
+            },
+          },
+        }),
+      '/tracking_requests': () => {
+        created = true;
+        return jsonResponse({ data: { id: 'tr-5' } }, 201);
+      },
+    });
+
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl,
+    });
+
+    await expect(
+      client.createTrackingRequestFromInfer('MAEU123456789', {
+        numberType: 'BOL',
+      }),
+    ).rejects.toThrow(
+      'Invalid numberType "BOL". Use container, bill_of_lading, or booking_number.',
+    );
+    expect(created).toBe(false);
+  });
+
   it('throws when infer does not provide number type', async () => {
     const { fetchImpl } = createMockFetch({
       '/tracking_requests/infer_number': () =>
@@ -477,10 +581,10 @@ describe('Terminal49Client request building', () => {
     ).rejects.toBeInstanceOf(ValidationError);
   });
 
-  it('sends JSON:API payloads for shipment updates and tracking controls', async () => {
+  it('sends a JSON:API update body and bodiless tracking controls', async () => {
     let updatePayload: any = null;
-    let stopPayload: any = null;
-    let resumePayload: any = null;
+    let stopBody: unknown = null;
+    let resumeBody: unknown = null;
 
     const { fetchImpl, calls } = createMockFetch({
       '/shipments/ship-1': (init) => {
@@ -488,11 +592,11 @@ describe('Terminal49Client request building', () => {
         return jsonResponse({ data: { id: 'ship-1' } });
       },
       '/shipments/ship-1/stop_tracking': (init) => {
-        stopPayload = JSON.parse(String(init?.body));
+        stopBody = init?.body;
         return jsonResponse({ data: { id: 'ship-1' } });
       },
       '/shipments/ship-1/resume_tracking': (init) => {
-        resumePayload = JSON.parse(String(init?.body));
+        resumeBody = init?.body;
         return jsonResponse({ data: { id: 'ship-1' } });
       },
     });
@@ -503,7 +607,10 @@ describe('Terminal49Client request building', () => {
       fetchImpl,
     });
 
-    await client.updateShipment('ship-1', { status: 'paused' });
+    await client.updateShipment('ship-1', {
+      ref_numbers: ['PO-1'],
+      tags: ['hot', 'priority'],
+    });
     await client.stopTrackingShipment('ship-1');
     await client.resumeTrackingShipment('ship-1');
 
@@ -511,22 +618,18 @@ describe('Terminal49Client request building', () => {
       data: {
         type: 'shipment',
         id: 'ship-1',
-        attributes: { status: 'paused' },
+        attributes: { ref_numbers: ['PO-1'], tags: ['hot', 'priority'] },
       },
     });
-    expect(stopPayload).toEqual({
-      data: { type: 'shipment', id: 'ship-1' },
-    });
-    expect(resumePayload).toEqual({
-      data: { type: 'shipment', id: 'ship-1' },
-    });
+    expect(stopBody).toBe('');
+    expect(resumeBody).toBe('');
 
     expect(calls[0].init?.method).toBe('PATCH');
     expect(calls[1].init?.method).toBe('PATCH');
     expect(calls[2].init?.method).toBe('PATCH');
   });
 
-  it('derives demurrage fields from container attributes', async () => {
+  it('derives demurrage fields from raw container attributes under a mapped default', async () => {
     const { fetchImpl } = createMockFetch({
       '/containers/cont-1?include=pod_terminal': () =>
         jsonResponse({
@@ -549,6 +652,7 @@ describe('Terminal49Client request building', () => {
       apiToken: 'token-123',
       apiBaseUrl: baseUrl,
       fetchImpl,
+      defaultFormat: 'mapped',
     });
 
     const demurrage = await client.getDemurrage('cont-1');
@@ -564,7 +668,7 @@ describe('Terminal49Client request building', () => {
     });
   });
 
-  it('filters rail milestones to rail events only', async () => {
+  it('filters rail milestones to rail events under a mapped default', async () => {
     const { fetchImpl } = createMockFetch({
       '/containers/cont-1?include=transport_events': () =>
         jsonResponse({
@@ -606,6 +710,7 @@ describe('Terminal49Client request building', () => {
       apiToken: 'token-123',
       apiBaseUrl: baseUrl,
       fetchImpl,
+      defaultFormat: 'mapped',
     });
 
     const result = await client.getRailMilestones('cont-1');

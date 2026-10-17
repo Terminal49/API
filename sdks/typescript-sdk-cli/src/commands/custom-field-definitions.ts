@@ -4,15 +4,10 @@
 
 import type { Command } from 'commander';
 import { parseJsonObjectPayload } from '../util/input.js';
-import { action, addListOptions, cliEnvelope, listAction } from './action.js';
+import { action, cliEnvelope, listAction } from './action.js';
 
 type PayloadOptions = {
   payload: Record<string, unknown>;
-};
-
-type CustomFieldDefinitionListOptions = {
-  page?: number;
-  pageSize?: number;
 };
 
 type PaginationEnvelope = {
@@ -59,16 +54,19 @@ export function registerCustomFieldDefinitionsCommand(program: Command): void {
     .command('custom-field-definitions')
     .description('Manage custom field definitions');
 
-  const listCommand = addListOptions(
-    cmd.command('list').description('List custom field definitions'),
-  );
+  const listCommand = cmd
+    .command('list')
+    .description('List custom field definitions')
+    .option(
+      '--templates',
+      'List the Terminal49 templates you can copy with template_id instead of your account definitions',
+    );
   listCommand.action(
     listAction('custom-field-definitions.list', async ({ client, globals }) => {
-      const options = listCommand.opts() as CustomFieldDefinitionListOptions;
+      const { templates } = listCommand.opts() as { templates?: boolean };
       const result = await client.customFieldDefinitions.list({
-        page: options.page,
-        pageSize: options.pageSize,
         format: globals.format,
+        scope: templates ? 'templates' : 'account',
       });
       return cliEnvelope(listDataFrom(result), paginationFrom(result));
     }),

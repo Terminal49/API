@@ -1,5 +1,5 @@
-import type { components } from '../../generated/terminal49.js';
-import type { TrackingRequest } from '../../types/models.js';
+import type { paths } from '../../generated/terminal49.js';
+import type { CustomFieldValue, TrackingRequest } from '../../types/models.js';
 import type {
   CallOptions,
   IncludeParam,
@@ -13,9 +13,20 @@ import {
   mapTrackingRequestList,
 } from '../mappers.js';
 import { copyStringParams, normalizeInclude } from '../query.js';
+import type { JsonBody } from '../spec.js';
 import { BaseManager } from './base.js';
 
-type CustomFieldValue = components['schemas']['custom_field_value'];
+type TrackingRequestCreateBody = JsonBody<paths['/tracking_requests']['post']>;
+type TrackingRequestCreateAttributes = NonNullable<
+  NonNullable<TrackingRequestCreateBody['data']>['attributes']
+>;
+type TrackingRequestUpdateBody = JsonBody<
+  paths['/tracking_requests/{id}']['patch']
+>;
+/** Writable tracking request attributes. `ref_numbers` replaces the existing list. */
+export type TrackingRequestUpdateAttributes = NonNullable<
+  TrackingRequestUpdateBody['data']
+>['attributes'];
 
 export type TrackingRequestType =
   | 'container'
@@ -24,6 +35,11 @@ export type TrackingRequestType =
 
 export interface CreateTrackingRequestFromInferOptions {
   scac?: string;
+  /**
+   * Number type to send instead of the inferred one: `container`,
+   * `bill_of_lading`, or `booking_number` (`booking` is also accepted).
+   * Any other value throws a ValidationError before a request is sent.
+   */
   numberType?: string;
   refNumbers?: string[];
   shipmentTags?: string[];
@@ -87,7 +103,7 @@ export class TrackingRequestManager extends BaseManager {
 
   async update(
     id: string,
-    attrs: Record<string, any>,
+    attrs: TrackingRequestUpdateAttributes,
     options?: CallOptions,
   ): Promise<any> {
     const payload = {
@@ -101,18 +117,37 @@ export class TrackingRequestManager extends BaseManager {
     const raw = await this.transport.execute(() =>
       this.transport.client.PATCH('/tracking_requests/{id}', {
         params: { path: { id } },
-        body: payload as any,
+        body: payload,
       }),
     );
 
     return this.formatResult(raw, options?.format, mapTrackingRequest);
   }
 
+  /**
+   * Cancel a tracking request that is still `pending` or `awaiting_manifest`.
+   * It moves to status `cancelled`. Any other status returns 422.
+   */
+  async cancel(id: string): Promise<any> {
+    return this.transport.execute(() =>
+      this.transport.client.PATCH('/tracking_requests/{id}/cancel', {
+        params: { path: { id } },
+      }),
+    );
+  }
+
   /** List custom field values set on a tracking request, with their definitions. */
   async customFields(id: string, options?: CallOptions): Promise<any> {
-    // The spec omits include=definition, but mapCustomFields reads the included definitions.
-    const raw = await this.transport.executeManual(
-      `${this.transport.baseUrl}/tracking_requests/${encodeURIComponent(id)}/custom_fields?include=definition`,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET(
+        '/tracking_requests/{tracking_request_id}/custom_fields',
+        {
+          params: {
+            path: { tracking_request_id: id },
+            query: { include: 'definition' },
+          },
+        },
+      ),
     );
     return this.formatResult(raw, options?.format, mapCustomFields);
   }
@@ -196,7 +231,7 @@ export class TrackingRequestManager extends BaseManager {
       );
     }
 
-    const attributes: Record<string, unknown> = {
+    const attributes: TrackingRequestCreateAttributes = {
       request_type: params.requestType,
       request_number: params.requestNumber,
       scac: params.scac ?? '',
@@ -214,11 +249,11 @@ export class TrackingRequestManager extends BaseManager {
         type: 'tracking_request' as const,
         attributes,
       },
-    };
+    } satisfies TrackingRequestCreateBody;
 
     return this.transport.execute(() =>
       this.transport.client.POST('/tracking_requests', {
-        body: payload as any,
+        body: payload,
       }),
     );
   }
@@ -230,7 +265,7 @@ export class TrackingRequestManager extends BaseManager {
 
     return this.transport.execute(() =>
       this.transport.client.POST('/tracking_requests/infer_number', {
-        body: { number } as any,
+        body: { number },
       }),
     );
   }
@@ -239,11 +274,17 @@ export class TrackingRequestManager extends BaseManager {
     number: string,
     options: CreateTrackingRequestFromInferOptions = {},
   ): Promise<{ infer: any; trackingRequest: any }> {
+    const overrideType = this.normalizeInferNumberType(options.numberType);
+    if (options.numberType && !overrideType) {
+      throw new ValidationError(
+        `Invalid numberType "${options.numberType}". Use container, bill_of_lading, or booking_number.`,
+      );
+    }
+
     const infer = await this.inferNumber(number);
     const attrs = infer?.data?.attributes || {};
-    const numberType = this.normalizeInferNumberType(
-      attrs.number_type || options.numberType,
-    );
+    const numberType =
+      overrideType ?? this.normalizeInferNumberType(attrs.number_type);
     const shippingLine = attrs.shipping_line || {};
     const selected = shippingLine.selected || null;
     const candidates = Array.isArray(shippingLine.candidates)

@@ -56,6 +56,7 @@ export type ContainerInclude =
   | 'pickup_facility'
   | 'transport_events';
 
-export type TrackingRequestInclude = 'shipment' | 'container';
+/** Relationships the API serializes on a tracking request. Any other include returns 400. */
+export type TrackingRequestInclude = 'tracked_object' | 'customer' | 'user';
 
 export type WebhookNotificationInclude = 'webhook' | 'reference_object';

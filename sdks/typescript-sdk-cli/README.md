@@ -149,14 +149,14 @@ Stable error codes include `USAGE_ERROR`, `NETWORK_ERROR`, `AUTH_ERROR`, `RATE_L
 - `t49 track <number>`
 - `t49 shipping-lines list`
 - `t49 webhooks list|get|create|update|delete|ips`
-- `t49 webhook-notifications list|get|examples`
+- `t49 webhook-notifications list|get|examples`. `examples` requires `--event <event>`, a webhook event name such as `container.transport.vessel_arrived`.
 - `t49 vessels get|get-by-imo|future-positions|future-positions-coords`. `future-positions` requires `--port-id` and `--previous-port-id`. `future-positions-coords` also requires `--latitude` and `--longitude`.
 - `t49 ports get`
 - `t49 terminals get`
 - `t49 parties list|get`
 - `t49 metro-areas get`
 - `t49 custom-fields list|get|create|update|delete`
-- `t49 custom-field-definitions list|get|create|update|delete`
+- `t49 custom-field-definitions list|get|create|update|delete`. `list` prints your account definitions, and `list --templates` prints the Terminal49 templates you can copy with `template_id`.
 - `t49 custom-field-options list|get|create|update|delete`
 - `t49 search <query>`
 - `t49 config path|get|set|list|clear|auth-status|client-check`

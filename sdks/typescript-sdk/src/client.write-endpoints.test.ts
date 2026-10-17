@@ -15,7 +15,7 @@ function servedBody(method: string, pathname: string) {
   };
 }
 
-function buildClient() {
+function buildClient(config: { accountId?: string } = {}) {
   const calls: RecordedCall[] = [];
   const fetchImpl: typeof fetch = async (input, init) => {
     const request = input instanceof Request ? input : new Request(input, init);
@@ -35,6 +35,7 @@ function buildClient() {
     apiBaseUrl: 'https://api.test/v2',
     fetchImpl,
     maxRetries: 0,
+    ...config,
   });
   return { client, calls };
 }
@@ -124,7 +125,14 @@ describe('party roles', () => {
 describe('containers', () => {
   it('updates a container by id', async () => {
     const { client, calls } = buildClient();
-    await client.containers.update('c-1', { ref_numbers: ['REF-1'] });
+    await client.containers.update('c-1', {
+      ref_numbers: ['REF-1'],
+      seal_number: 'SEAL-1',
+      equipment_type: 'reefer',
+      equipment_length: 40,
+      equipment_height: 'high_cube',
+      weight_in_lbs: 1000,
+    });
     expect(calls[0]).toMatchObject({
       method: 'PATCH',
       path: '/containers/c-1',
@@ -132,9 +140,36 @@ describe('containers', () => {
         data: {
           type: 'container',
           id: 'c-1',
-          attributes: { ref_numbers: ['REF-1'] },
+          attributes: {
+            ref_numbers: ['REF-1'],
+            seal_number: 'SEAL-1',
+            equipment_type: 'reefer',
+            equipment_length: 40,
+            equipment_height: 'high_cube',
+            weight_in_lbs: 1000,
+          },
         },
       },
+    });
+  });
+});
+
+describe('tracking requests', () => {
+  it('cancels a tracking request without a body', async () => {
+    const { client, calls } = buildClient();
+
+    const result = await client.trackingRequests.cancel('tr 1');
+
+    expect(calls).toEqual([
+      {
+        method: 'PATCH',
+        path: '/tracking_requests/tr%201/cancel',
+        query: {},
+        body: undefined,
+      },
+    ]);
+    expect(result).toEqual({
+      data: { id: 'PATCH /tracking_requests/tr%201/cancel', type: 'stub' },
     });
   });
 });
@@ -185,7 +220,12 @@ describe('documents', () => {
     await docs.create({ name: 'BOL.pdf', attachedDocument: 'blob-1' });
     await docs.get('d-1', { include: 'shipments' });
     await docs.update('d-1', {
-      documentTypeManual: 'bill_of_lading',
+      documentType: 'bill_of_lading',
+      classificationNotes: 'Reviewed by ops',
+      extractedDataManual: { bill_of_lading_number: 'BL-1' },
+    });
+    await docs.update('d-1', {
+      classificationNotes: null,
       extractedDataManual: null,
     });
     await docs.delete('d-1');
@@ -194,11 +234,12 @@ describe('documents', () => {
     await docs.reextract('d-1');
     await docs.reclassify('d-1');
     await docs.relink('d-1');
-    await docs.rotate('d-1', 90);
+    await docs.rotate('d-1', 270);
 
     expect(calls.map((c) => [c.method, c.path])).toEqual([
       ['POST', '/documents'],
       ['GET', '/documents/d-1'],
+      ['PATCH', '/documents/d-1'],
       ['PATCH', '/documents/d-1'],
       ['DELETE', '/documents/d-1'],
       ['GET', '/documents/types'],
@@ -220,11 +261,18 @@ describe('documents', () => {
         type: 'document',
         attributes: {
           document_type: 'bill_of_lading',
-          extracted_data_manual: null,
+          classification_notes: 'Reviewed by ops',
+          extracted_data_manual: { bill_of_lading_number: 'BL-1' },
         },
       },
     });
-    expect(calls[9].body).toEqual({ degrees: 90 });
+    expect(calls[3].body).toEqual({
+      data: {
+        type: 'document',
+        attributes: { classification_notes: null, extracted_data_manual: null },
+      },
+    });
+    expect(calls[10].body).toEqual({ degrees: 270 });
   });
 
   it('rejects create without required attributes', async () => {
@@ -232,6 +280,9 @@ describe('documents', () => {
     await expect(
       client.documents.create({ name: '', attachedDocument: 'blob-1' }),
     ).rejects.toThrow('name is required');
+    await expect(
+      client.documents.create({ name: 'BOL.pdf', attachedDocument: '' }),
+    ).rejects.toThrow('attached_document is required');
     expect(calls).toHaveLength(0);
   });
 });
@@ -312,7 +363,6 @@ describe('custom field list filters', () => {
       },
     });
     await client.customFieldDefinitions.list({
-      pageSize: 5,
       filters: { entityType: 'Shipment', dataType: 'enum', displayName: 'PO' },
     });
 
@@ -322,7 +372,6 @@ describe('custom field list filters', () => {
       'filter[definition_id]': 'def-1',
     });
     expect(calls[1].query).toEqual({
-      'page[size]': '5',
       'filter[entity_type]': 'Shipment',
       'filter[data_type]': 'enum',
       'filter[display_name]': 'PO',
@@ -337,6 +386,50 @@ describe('custom field list filters', () => {
 
     expect(calls.map((c) => c.query)).toEqual([
       { 'filter[entity_type]': 'TrackingRequest' },
+    ]);
+  });
+});
+
+describe('account custom field definitions', () => {
+  it('lists and creates account definitions on the account route', async () => {
+    const { client, calls } = buildClient();
+    const { client: scoped, calls: scopedCalls } = buildClient({
+      accountId: 'acct-1',
+    });
+    const body = { data: { type: 'custom_field_definition', attributes: {} } };
+
+    await client.customFieldDefinitions.list({
+      filters: { entityType: 'Cargo' },
+    });
+    await client.customFieldDefinitions.create(body);
+    await scoped.customFieldDefinitions.list();
+    await scoped.customFieldDefinitions.create(body);
+
+    expect(calls.map((c) => [c.method, c.path, c.query, c.body])).toEqual([
+      [
+        'GET',
+        '/accounts/current/custom_field_definitions',
+        { 'filter[entity_type]': 'Cargo' },
+        undefined,
+      ],
+      ['POST', '/accounts/current/custom_field_definitions', {}, body],
+    ]);
+    expect(scopedCalls.map((c) => [c.method, c.path])).toEqual([
+      ['GET', '/accounts/acct-1/custom_field_definitions'],
+      ['POST', '/accounts/acct-1/custom_field_definitions'],
+    ]);
+  });
+
+  it('lists Terminal49 templates on the top-level route', async () => {
+    const { client, calls } = buildClient({ accountId: 'acct-1' });
+
+    await client.customFieldDefinitions.list({
+      scope: 'templates',
+      filters: { dataType: 'enum' },
+    });
+
+    expect(calls.map((c) => [c.method, c.path, c.query])).toEqual([
+      ['GET', '/custom_field_definitions', { 'filter[data_type]': 'enum' }],
     ]);
   });
 });
@@ -367,7 +460,6 @@ describe('resource methods on the client', () => {
     await client.webhookNotifications.list({ page: 3 });
     await client.webhookNotifications.get('n-1');
     await client.webhookNotifications.examples('container.created');
-    await client.webhookNotifications.examples();
     await client.vessels.get('v-1');
     await client.vessels.getByImo('9876543');
     await client.vessels.futurePositions('v-1', {
@@ -389,7 +481,7 @@ describe('resource methods on the client', () => {
     await client.customFieldDefinitions.create(body);
     await client.customFieldDefinitions.update('d-1', body);
     await client.customFieldDefinitions.delete('d-1');
-    await client.customFieldOptions.list('d-1', { page: 1, pageSize: 20 });
+    await client.customFieldOptions.list('d-1');
     await client.customFieldOptions.get('d-1', 'o-1');
     await client.customFieldOptions.create('d-1', body);
     await client.customFieldOptions.update('d-1', 'o-1', body);
@@ -419,7 +511,6 @@ describe('resource methods on the client', () => {
         { event: 'container.created' },
         undefined,
       ],
-      ['GET', '/webhook_notifications/examples', {}, undefined],
       ['GET', '/vessels/v-1', {}, undefined],
       ['GET', '/vessels/9876543', {}, undefined],
       [
@@ -445,15 +536,10 @@ describe('resource methods on the client', () => {
       ['GET', '/parties/pa-1', {}, undefined],
       ['GET', '/metro_areas/m-1', {}, undefined],
       ['GET', '/custom_field_definitions/d-1', {}, undefined],
-      ['POST', '/custom_field_definitions', {}, body],
+      ['POST', '/accounts/current/custom_field_definitions', {}, body],
       ['PATCH', '/custom_field_definitions/d-1', {}, body],
       ['DELETE', '/custom_field_definitions/d-1', {}, undefined],
-      [
-        'GET',
-        '/custom_field_definitions/d-1/options',
-        { 'page[number]': '1', 'page[size]': '20' },
-        undefined,
-      ],
+      ['GET', '/custom_field_definitions/d-1/options', {}, undefined],
       ['GET', '/custom_field_definitions/d-1/options/o-1', {}, undefined],
       ['POST', '/custom_field_definitions/d-1/options', {}, body],
       ['PATCH', '/custom_field_definitions/d-1/options/o-1', {}, body],
@@ -609,7 +695,7 @@ describe('return values', () => {
       'PATCH',
       '/documents/d-1',
       (c: Terminal49Client) =>
-        c.documents.update('d-1', { documentTypeManual: 'bill_of_lading' }),
+        c.documents.update('d-1', { documentType: 'bill_of_lading' }),
     ],
     ['GET', '/documents/types', (c: Terminal49Client) => c.documents.types()],
     [
@@ -655,7 +741,7 @@ describe('return values', () => {
     ['GET', '/custom_fields', (c: Terminal49Client) => c.customFields.list()],
     [
       'GET',
-      '/custom_field_definitions',
+      '/accounts/current/custom_field_definitions',
       (c: Terminal49Client) => c.customFieldDefinitions.list(),
     ],
     ['GET', '/webhooks', (c: Terminal49Client) => c.webhooks.list()],
@@ -673,7 +759,8 @@ describe('return values', () => {
     [
       'GET',
       '/webhook_notifications/examples',
-      (c: Terminal49Client) => c.webhookNotifications.examples(),
+      (c: Terminal49Client) =>
+        c.webhookNotifications.examples('container.created'),
     ],
     ['GET', '/vessels/v-1', (c: Terminal49Client) => c.vessels.get('v-1')],
     [
@@ -717,7 +804,7 @@ describe('return values', () => {
     ],
     [
       'POST',
-      '/custom_field_definitions',
+      '/accounts/current/custom_field_definitions',
       (c: Terminal49Client) => c.customFieldDefinitions.create({ data: {} }),
     ],
     [

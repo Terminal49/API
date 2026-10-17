@@ -73,7 +73,7 @@ data from Node.js applications.
 | `vessels.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | `vessels.getByImo` | `public` | (`imo`, `options?`) => `Promise`\<`any`\> |
 | <a id="property-webhooknotifications"></a> `webhookNotifications` | `public` | `object` |
-| `webhookNotifications.examples` | `public` | (`event?`, `options?`) => `Promise`\<`any`\> |
+| `webhookNotifications.examples` | `public` | (`event`, `options?`) => `Promise`\<`any`\> |
 | `webhookNotifications.get` | `public` | (`id`, `options?`) => `Promise`\<`any`\> |
 | `webhookNotifications.list` | `public` | (`options?`) => `Promise`\<`any`\> |
 | <a id="property-webhooks"></a> `webhooks` | `public` | `object` |
@@ -111,7 +111,7 @@ Create a custom field assignment.
 
 > **createCustomFieldDefinition**(`payload`, `options?`): `Promise`\<`any`\>
 
-Create a custom field definition.
+Create a custom field definition for your account. Set `data.attributes.template_id` to copy a Terminal49 template.
 
 #### Parameters
 
@@ -757,15 +757,15 @@ Fetch a webhook notification by ID.
 
 ### getWebhookNotificationExamples()
 
-> **getWebhookNotificationExamples**(`event?`, `options?`): `Promise`\<`any`\>
+> **getWebhookNotificationExamples**(`event`, `options?`): `Promise`\<`any`\>
 
-Fetch example webhook notification payloads.
+Fetch the example webhook notification payload for `event`. The API answers 400 without one.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `event?` | `string` |
+| `event` | `"container.transport.vessel_arrived"` \| `"container.transport.estimated.vessel_arrived"` \| `"container.transport.vessel_discharged"` \| `"container.transport.vessel_loaded"` \| `"container.transport.vessel_departed"` \| `"container.transport.estimated.vessel_departed"` \| `"container.transport.rail_departed"` \| `"container.transport.rail_arrived"` \| `"container.transport.rail_loaded"` \| `"container.transport.rail_unloaded"` \| `"container.transport.transshipment_arrived"` \| `"container.transport.transshipment_discharged"` \| `"container.transport.transshipment_loaded"` \| `"container.transport.transshipment_departed"` \| `"container.transport.feeder_arrived"` \| `"container.transport.feeder_discharged"` \| `"container.transport.feeder_loaded"` \| `"container.transport.feeder_departed"` \| `"container.transport.empty_out"` \| `"container.transport.full_in"` \| `"container.transport.full_out"` \| `"container.transport.empty_in"` \| `"container.transport.vessel_berthed"` \| `"shipment.estimated.arrival"` \| `"tracking_request.succeeded"` \| `"tracking_request.failed"` \| `"tracking_request.awaiting_manifest"` \| `"tracking_request.tracking_stopped"` \| `"container.created"` \| `"container.updated"` \| `"container.pod_terminal_changed"` \| `"container.transport.arrived_at_inland_destination"` \| `"container.transport.estimated.arrived_at_inland_destination"` \| `"container.pickup_lfd.changed"` \| `"container.pickup_lfd_line.changed"` \| `"container.pickup_lfd_terminal.changed"` \| `"container.pickup_lfd_rail.changed"` \| `"container.pickup_appointment.changed"` \| `"container.transport.available"` \| `"container.transport.not_available"` \| `"container.transport.delivered"` \| `"document_representation.created"` \| `"document_representation.failed"` \| `"container.detention_lfd_line.changed"` \| `"container.delivery_appointment.changed"` \| `"shipment.routing.filled"` \| `"link.created"` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
@@ -815,13 +815,14 @@ List containers with optional filters and pagination.
 
 > **listCustomFieldDefinitions**(`options?`): `Promise`\<`any`\>
 
-List custom field definitions.
+List your account's custom field definitions, or the Terminal49 templates.
+The API does not paginate this list.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) & `object` |
+| `options?` | [`CustomFieldDefinitionListOptions`](/sdk/reference/client/interfaces/CustomFieldDefinitionListOptions) |
 
 #### Returns
 
@@ -833,14 +834,15 @@ List custom field definitions.
 
 > **listCustomFieldOptions**(`definitionId`, `options?`): `Promise`\<`any`\>
 
-List options for a custom field definition.
+List every option of a custom field definition. The API does not paginate
+this list.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
 | `definitionId` | `string` |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -852,13 +854,13 @@ List options for a custom field definition.
 
 > **listCustomFields**(`options?`): `Promise`\<`any`\>
 
-List custom field assignments.
+List custom field assignments. The API does not paginate this list.
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) & `object` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` |
 
 #### Returns
 
@@ -1241,11 +1243,15 @@ Update shipment attributes such as reference numbers or tags.
 
 #### Parameters
 
-| Parameter | Type |
-| ------ | ------ |
-| `id` | `string` |
-| `attrs` | `Record`\<`string`, `any`\> |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `id` | `string` | - |
+| `attrs` | \{ `ref_numbers?`: `string`[]; `tags?`: `string`[]; `user_provided_booking_number?`: `string`; `user_provided_mbl_number?`: `string`; \} | - |
+| `attrs.ref_numbers?` | `string`[] | **Description** Shipment ref numbers. **Example** `[ "REFNUMBER10" ]` |
+| `attrs.tags?` | `string`[] | **Description** Tags related to a shipment |
+| `attrs.user_provided_booking_number?` | `string` | **Description** Booking number you provide for the shipment. **Example** `BK123456` |
+| `attrs.user_provided_mbl_number?` | `string` | **Description** Master bill of lading number you provide for the shipment. **Example** `MEDUFR030802` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) | - |
 
 #### Returns
 
@@ -1261,11 +1267,12 @@ Update tracking request attributes.
 
 #### Parameters
 
-| Parameter | Type |
-| ------ | ------ |
-| `id` | `string` |
-| `attrs` | `Record`\<`string`, `any`\> |
-| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `id` | `string` | - |
+| `attrs` | \{ `ref_numbers?`: `string`[]; \} | - |
+| `attrs.ref_numbers?` | `string`[] | **Description** Customer reference numbers. The list you send replaces the existing list. **Example** `[ "REFNUMBER11" ]` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) | - |
 
 #### Returns
 
