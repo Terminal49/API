@@ -108,6 +108,11 @@ import {
   executeAssignParty,
 } from './tools/assign-party.js';
 import {
+  executeUnassignParty,
+  unassignPartyInputSchema,
+  unassignPartyOutputSchema,
+} from './tools/unassign-party.js';
+import {
   cancelTrackingRequestInputSchema,
   cancelTrackingRequestOutputSchema,
   executeCancelTrackingRequest,
@@ -1045,6 +1050,7 @@ function formatToolError(
       case 'add_reference_numbers':
       case 'remove_reference_numbers':
       case 'assign_party':
+      case 'unassign_party':
         return `No ${entityLabel(input.entity_type)} found with id ${typeof input.entity_id === 'string' ? input.entity_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
@@ -1828,6 +1834,19 @@ export function createTerminal49McpServer(
         outputSchema: assignPartyOutputSchema,
       },
       async (args, context) => executeAssignParty(args, client, context),
+    ),
+    unassign_party: tool(
+      {
+        description:
+          'Remove one party role, such as a wrong customer or dray carrier, from a container or shipment. Only the link is removed; the party and its other assignments stay. ' +
+          'Pass the party_role_id from the record party_roles list. To replace a party, unassign the old one, then call assign_party for the new one. ' +
+          'Call it first without confirmation_token: it changes nothing and returns a preview (the role and the party) with a confirmation_token. ' +
+          'Show the preview to the user, and call again with the token only after the user approves it. ' +
+          'Returns unassigned, or not_assigned with the current party_roles when the record has no role with that id.',
+        inputSchema: unassignPartyInputSchema,
+        outputSchema: unassignPartyOutputSchema,
+      },
+      async (args, context) => executeUnassignParty(args, client, context),
     ),
     search_docs: tool(
       {
