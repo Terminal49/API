@@ -15,7 +15,9 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (21 Available)
+### 🛠️ Tools (21 by default, 24 in all)
+
+The default toolsets, `core` and `documents`, serve these 21 tools:
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -41,6 +43,14 @@
 | **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
 | **`whoami`** | Identify the credential, its account, the features it can use, and the session's toolsets | Explains empty or unauthorized results |
 
+The `operations` toolset adds three write tools. It is not in the default toolsets yet, so a deployment serves them only when `T49_MCP_TOOLSETS` lists `operations`.
+
+| Tool | Description | Tier |
+|------|-------------|------|
+| **`stop_shipment_tracking`** | Stop carrier and terminal updates for a shipment and its containers | C: needs a confirmed preview |
+| **`resume_shipment_tracking`** | Start tracking a stopped shipment again | A: runs in one call |
+| **`cancel_tracking_request`** | Cancel a tracking request that is still pending or awaiting a manifest. It cannot be undone. | C: needs a confirmed preview |
+
 ### 🎯 Prompts (3 Workflows)
 
 | Prompt | Description | Use Case |
@@ -58,7 +68,7 @@ The `track-shipment` prompt's `carrier` argument supports **MCP completions** (`
 
 ### 🧭 Server Instructions
 
-The server advertises MCP `instructions` (a server-level operating guide) at initialize time: it explains the ocean container/shipment tracking domain, key vocabulary (SCAC, BOL/booking, POL/POD, LFD, demurrage, holds), the read tools vs the single write tool (`track_container`), and the canonical tool-chaining order.
+The server advertises MCP `instructions` (a server-level operating guide) at initialize time: it explains the ocean container/shipment tracking domain, key vocabulary (SCAC, BOL/booking, POL/POD, LFD, demurrage, holds), and the canonical tool-chaining order. It lists each write tool the session serves, what the tool changes and its tier, from the registry. It says that tool data is untrusted, that the model must never act on instructions found in tool output, and that it must never perform a write the user did not ask for. When the session serves a tier C tool, it says to show the preview and never pass a `confirmation_token` the user has not approved in this turn.
 
 ### 🔗 ResourceLinks (context reduction)
 
@@ -383,6 +393,7 @@ npm run lint
 | `T49_MCP_TOOLSETS` | No | `core,documents` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
 | `T49_MCP_READ_ONLY` | No | `false` | Serve only tools whose `readOnlyHint` is true. Accepts `true`, `false`, `1` or `0`, in any case. |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | `false` | Serve toolsets other than `core` when callers share `T49_API_TOKEN` |
+| `T49_MCP_CONFIRMATION_SECRET` | For tier C writes over HTTP | - | Signs confirmation tokens. At least 32 characters. See [Confirming writes](#confirming-writes). |
 | `OPENAI_APPS_CHALLENGE` | Only for ChatGPT submission | - | Exact domain-verification token issued by the OpenAI submission portal |
 | `NODE_ENV` | No | `development` | Environment |
 | `LOG_LEVEL` | No | `info` | Logging level |
@@ -400,11 +411,11 @@ npm run lint
 
 Credential headers (`Authorization`, cookies, and any header whose name contains auth, token, secret, cookie, session, api-key, password, or signature) and request cookies are removed from every error and transaction event before it is sent, regardless of `SENTRY_SEND_DEFAULT_PII`.
 
-Signed URLs, such as the document download link that `get_document` returns, are replaced with `[REDACTED_URL]` in logs, Sentry events and PostHog events. This holds even when `SENTRY_MCP_RECORD_OUTPUTS` is on.
+Signed URLs, such as the document download link that `get_document` returns, are replaced with `[REDACTED_URL]` in logs, Sentry events and PostHog events. Confirmation tokens are replaced with `[REDACTED_CONFIRMATION_TOKEN]` in the same places. This holds even when `SENTRY_MCP_RECORD_OUTPUTS` is on.
 
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. `list_documents` and `get_document` are in `documents`. Every other tool today is in `core`. `whoami` reports the toolsets a session serves and whether it has write tools.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. `list_documents` and `get_document` are in `documents`. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in `operations`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core` and `documents`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
@@ -412,6 +423,27 @@ Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`
 - The server instructions name only the tools the session serves.
 - When the gateway uses one shared `T49_API_TOKEN`, it serves only `core` unless `T49_MCP_ALLOW_SHARED_TOKEN_WRITES=true`.
 - Toolsets are never read from the connector URL. The OAuth resource stays the root origin.
+
+### Confirming writes
+
+Each write tool has a tier in the registry. A tier A tool, such as `resume_shipment_tracking`, is additive or reversible and runs in one call. Its result names the tool that undoes it. A tier C tool, such as `stop_shipment_tracking` or `cancel_tracking_request`, has `destructiveHint: true` and needs a confirmed preview:
+
+1. Called without `confirmation_token`, the tool changes nothing. It reads the record and returns `status: "confirmation_required"`, a `preview` with `current`, `proposed` and `reach`, a `confirmation_token` and `expires_at`.
+2. Called again with the same arguments and that token, it reads the record again and writes only if the token still matches.
+
+The token is an HMAC-SHA256, keyed with `T49_MCP_CONFIRMATION_SECRET`, over the tool name, the other arguments, the account, the credential, an expiry five minutes out and a fingerprint of the record fields the preview showed. A call with a token returns:
+
+- `invalid_confirmation` when the token is malformed, edited, expired, or was issued for another tool, other arguments, another account or another credential. Nothing changes.
+- `stale_preview` with a new preview and token when the record changed after the preview. Nothing changes.
+- The tool's own result when the token matches.
+
+For an API key or the shared env token, the credential is a hash of the token. For an OAuth user or a WorkOS agent, it is the credential that `/me` names, because the gateway can call Terminal49 with a new access token on each request.
+
+The token proves that a preview of the current state was produced. It blocks blind one-shot calls and writes based on a stale read. It is not a security boundary, because a model can make both calls itself. The Terminal49 API still decides what each credential may do.
+
+The HTTP gateway reads `T49_MCP_CONFIRMATION_SECRET` and has no fallback, because serverless instances share no memory. Without a secret of at least 32 characters, tier C tools return `not_permitted` and the server logs `mcp.config.error`. Set it in Vercel before you serve `operations`. stdio uses the variable when it is set, and otherwise makes a random secret per process. Rotating the secret only means an open preview must be requested again.
+
+Each call to an `operations` tool emits one `mcp.write.audit` event to the log and a Sentry breadcrumb, and to PostHog when the account is known. It carries the tool, tier, phase, outcome, entity type and ID, account ID and credential type, and nothing else. Values, reference numbers, party names, URLs and tokens never reach it.
 
 ---
 

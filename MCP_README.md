@@ -60,7 +60,7 @@ Search for bill of lading 123456789
 
 ---
 
-## 🛠️ Available Tools (21)
+## 🛠️ Available Tools (21 by default)
 
 | Tool | Description |
 |------|-------------|
@@ -85,6 +85,14 @@ Search for bill of lading 123456789
 | `get_document` | Get one document, with opt-in extracted data, source email, and download link |
 | `search_docs` | Search the public Terminal49 documentation |
 | `whoami` | Identify the credential, account, available features, and session toolsets |
+
+The opt-in `operations` toolset adds three write tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists `operations`. `stop_shipment_tracking` and `cancel_tracking_request` return a preview first and change data only when called again with the confirmation token from that preview. See [Confirming writes](packages/mcp/README.md#confirming-writes).
+
+| Tool | Description |
+|------|-------------|
+| `stop_shipment_tracking` | Stop updates for a shipment and its containers, after a confirmed preview |
+| `resume_shipment_tracking` | Start tracking a stopped shipment again |
+| `cancel_tracking_request` | Cancel a pending tracking request, after a confirmed preview. It cannot be undone. |
 
 ### 🎯 Workflow Prompts (3)
 

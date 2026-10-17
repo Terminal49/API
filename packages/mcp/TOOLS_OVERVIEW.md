@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **21 tools** and **4 MCP resources** for container tracking and shipment management.
+The Terminal49 MCP Server provides **24 tools** and **4 MCP resources** for container tracking and shipment management. The default toolsets serve 21 of them.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `operations` toolset, which is not in the default toolsets yet. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -558,6 +558,82 @@ Extracted data and the email are text that people outside the account write. Tre
 
 ---
 
+### Write tools
+
+The `operations` tools change account data. Each has a tier. A tier A tool runs in one call, and its result names the tool that undoes it. A tier C tool needs a confirmed preview:
+
+1. Call it without `confirmation_token`. Nothing changes. It returns `status: "confirmation_required"`, a `preview` with `current`, `proposed` and `reach`, a `confirmation_token`, and `expires_at` five minutes out.
+2. Show the preview to the user. After the user approves it in this turn, call again with the same arguments and the token.
+
+A token works only for the same tool, arguments, account and credential, before it expires, and while the record still matches the preview. Otherwise the call changes nothing and returns `invalid_confirmation` with a `reason` (`malformed`, `mismatch` or `expired`), or `stale_preview` with a new preview and token when the record changed. On a server with no confirmation secret, tier C tools return `not_permitted`. See [Confirming writes](README.md#confirming-writes).
+
+Every write tool returns these soft results with `isError: false`: `rate_limited` for a 429, and the tool's own codes below. All of them say that nothing was changed.
+
+### 22. `stop_shipment_tracking`
+**Purpose**: Stop carrier and terminal updates for a shipment and all its containers. Tier C.
+
+**Usage**:
+```typescript
+stop_shipment_tracking({ shipment_id: "shipment-uuid" })
+// After the user approves the preview:
+stop_shipment_tracking({
+  shipment_id: "shipment-uuid",
+  confirmation_token: "t49ct1...."
+})
+```
+
+**Returns**:
+- Preview: `current` (`bill_of_lading`, `shipping_line_scac`, `container_count`, `tracking`, `tracking_stopped_at`, `tracking_stopped_reason`), `proposed: { tracking: "stopped" }` and `reach`. The token covers the Bill of Lading, the container count and the stop time, so a shipment that gains a container returns `stale_preview`.
+- `status: "stopped"` with `shipment` and `undo: "resume_shipment_tracking"`
+- `status: "already_stopped"` with `shipment` when tracking is already off
+- When the API refuses the stop with 422, the tool reads the shipment again. It returns `already_stopped` if tracking is off, or else `status: "noop"` with `shipment` and an `alternative`.
+- `FeatureNotEnabled` when `/me` does not report the `stop_tracking` feature as `available`. This check runs before the shipment is read.
+
+**When to Use**: The shipment is delivered, or it was tracked by mistake.
+
+---
+
+### 23. `resume_shipment_tracking`
+**Purpose**: Start tracking a stopped shipment again. Tier A.
+
+**Usage**:
+```typescript
+resume_shipment_tracking({ shipment_id: "shipment-uuid" })
+```
+
+**Returns**:
+- `status: "resumed"` with `shipment`, a `message` that updates from the stopped period may be missing and that the shipment can count against tracking limits, and `undo: "stop_shipment_tracking"`
+- `status: "already_tracking"` with `shipment` when tracking was never stopped. Nothing is sent.
+- When the API refuses the resume with 422, the tool reads the shipment again. It returns `already_tracking` if tracking is on, or else `status: "noop"` with `shipment` and an `alternative`.
+- `FeatureNotEnabled` when the API answers with a feature 403
+
+**When to Use**: Undo a stop.
+
+---
+
+### 24. `cancel_tracking_request`
+**Purpose**: Cancel a tracking request that Terminal49 is still working on, such as one with a typo or the wrong carrier. Tier C. It cannot be undone.
+
+**Usage**:
+```typescript
+cancel_tracking_request({ tracking_request_id: "tracking-request-uuid" })
+// After the user approves the preview:
+cancel_tracking_request({
+  tracking_request_id: "tracking-request-uuid",
+  confirmation_token: "t49ct1...."
+})
+```
+
+**Returns**:
+- Preview: `current` (`request_number`, `request_type`, `scac`, `status`, `failed_reason`), `proposed: { status: "cancelled" }` and `reach`. The token covers the status.
+- `status: "cancelled"` with `tracking_request`, read again after the cancel because the cancel response has no body. If that read fails, `tracking_request` is the previewed request with `status: "cancelled"`, because the cancel already happened.
+- `not_cancellable` with `tracking_request` when the status is anything other than `pending` or `awaiting_manifest`. No token is issued.
+- When the API refuses the cancel with 422, the tool reads the request again. It returns `not_cancellable` if the status moved on, or else `status: "noop"` with `tracking_request` and an `alternative`.
+
+**When to Use**: A request was made with the wrong number or carrier and has not created a shipment yet.
+
+---
+
 ## MCP Resources
 
 ### 1. `terminal49://container/{id}`
@@ -645,6 +721,12 @@ Extracted data and the email are text that people outside the account write. Tre
 
 ### User asks: "Find the arrival notice for MAEU123456789"
 → Use `list_documents` with `reference` and `document_types`, then `get_document` with `include_extracted_data`
+
+### User asks: "Stop tracking MAEU123456789, it was delivered"
+→ Use `search_container` for the shipment UUID, then `stop_shipment_tracking` without a token, show the preview, and call again with the token after the user approves
+
+### User asks: "Cancel the tracking request with the typo"
+→ Use `list_tracking_requests` to find it, then `cancel_tracking_request` with the same preview and approval steps
 
 ### User asks: "How did it get from Shanghai to Chicago?"
 → Option A: Use `get_container_route` (paid feature, shows ports and ETAs)
@@ -788,7 +870,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 21 tools and 4 resources, the LLM can:
+With these 24 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

@@ -7,8 +7,9 @@ ChatGPT directory.
       `npm run build --workspace @terminal49/mcp`, and
       `npm run lint --workspace @terminal49/mcp`.
 - [ ] Confirm every tool has a non-empty `title`, `readOnlyHint`, and
-      `destructiveHint`. Confirm `track_container` is the only write tool and
-      no tool is destructive. CI enforces this in
+      `destructiveHint`. Confirm the tools in the default toolsets match the
+      submission JSONs. Every tier C tool must be destructive and take an
+      optional `confirmation_token`. CI enforces both in
       [`annotations.test.ts`](./src/annotations.test.ts).
 - [ ] Confirm tool names remain at most 64 characters, list `page_size` stays
       bounded to 1–25, and the advertised `include` choices/defaults remain
