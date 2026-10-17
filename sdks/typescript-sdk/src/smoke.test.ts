@@ -52,7 +52,7 @@ if (!token || !runSmoke) {
     it('reads trade intelligence coverage and runs one search', async () => {
       try {
         const meta = await client.tradeIntel.meta();
-        expect(meta.facts_since_month).toMatch(/^\d{4}-\d{2}$/);
+        expect(meta.facts_since_month).toMatch(/^\d{4}-\d{2}-01$/);
 
         const search = await client.tradeIntel.searchCommodities({
           query: 'office chairs',

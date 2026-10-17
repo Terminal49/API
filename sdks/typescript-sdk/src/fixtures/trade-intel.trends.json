@@ -15,22 +15,22 @@
   ],
   "series": [
     {
-      "period": "2026-Q1",
+      "period": "2026-01",
       "origin_country": "VIETNAM",
       "value": 12000
     },
     {
-      "period": "2026-Q1",
+      "period": "2026-01",
       "origin_country": "PEOPLES REP OF CHINA",
       "value": 11000
     },
     {
-      "period": "2026-Q2",
+      "period": "2026-04",
       "origin_country": "VIETNAM",
       "value": 12500
     },
     {
-      "period": "2026-Q2",
+      "period": "2026-04",
       "origin_country": "PEOPLES REP OF CHINA",
       "value": 10800
     }

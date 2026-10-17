@@ -45,6 +45,8 @@ interface ReplayableRequest {
   request: Request;
   /** Schema path (e.g. `/trade_intel/trends`); read-only query `POST`s are retried like `GET`s. */
   path?: string;
+  /** Retries spent so far, shared by `onError` and `onResponse` so together they stay within `maxRetries`. */
+  retries: number;
 }
 
 /** The middleware context the retry interceptor reads; `schemaPath` is absent on manual requests. */
@@ -77,6 +79,7 @@ export class RetryInterceptor {
       this.replayableRequests.set(this.requestKey(request, id), {
         request: request.clone(),
         path: schemaPath,
+        retries: 0,
       });
     } catch {
       this.replayableRequests.delete(this.requestKey(request, id));
@@ -94,19 +97,19 @@ export class RetryInterceptor {
     const requestKey = this.requestKey(request, id);
     const replayable = this.replayableRequests.get(requestKey);
     let currentResponse = response;
-    let attempt = 0;
 
     try {
       while (
         replayable &&
         isRetryableStatus(currentResponse.status) &&
         this.isRetryable(replayable) &&
-        attempt < this.maxRetries
+        replayable.retries < this.maxRetries
       ) {
         const retryAfterMs = parseRetryAfterMs(
           currentResponse.headers.get('Retry-After'),
         );
-        await this.sleep(computeBackoffDelay(attempt, retryAfterMs));
+        await this.sleep(computeBackoffDelay(replayable.retries, retryAfterMs));
+        replayable.retries++;
 
         try {
           currentResponse = await this.fetchImpl(replayable.request.clone());
@@ -118,7 +121,6 @@ export class RetryInterceptor {
           // initial-fetch path.
           throw toNetworkError(error);
         }
-        attempt++;
       }
 
       return currentResponse;
@@ -148,9 +150,9 @@ export class RetryInterceptor {
       isRetryableNetworkError(error) &&
       this.isRetryable(replayable)
     ) {
-      let attempt = 0;
-      while (attempt < this.maxRetries) {
-        await this.sleep(computeBackoffDelay(attempt));
+      while (replayable.retries < this.maxRetries) {
+        await this.sleep(computeBackoffDelay(replayable.retries));
+        replayable.retries++;
         try {
           // A recovered Response is handed back to openapi-fetch, which then
           // runs `onResponse` for this same request id. Keep the replay entry
@@ -158,8 +160,7 @@ export class RetryInterceptor {
           // deletes it once the response chain finishes.
           return await this.fetchImpl(replayable.request.clone());
         } catch (retryError) {
-          attempt++;
-          if (attempt >= this.maxRetries) {
+          if (replayable.retries >= this.maxRetries) {
             this.replayableRequests.delete(requestKey);
             return toNetworkError(retryError);
           }

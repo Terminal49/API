@@ -51,7 +51,7 @@ describe('TradeIntelManager', () => {
     expect(calls[0].init?.method).toBe('GET');
     expect(calls[0].url.toString()).toBe(`${baseUrl}/trade_intel/meta`);
     expect(result).toEqual(meta);
-    expect(result.facts_since_month).toBe('2022-01');
+    expect(result.facts_since_month).toBe('2022-01-01');
   });
 
   it('searchCompanies POSTs the request body as JSON', async () => {
@@ -164,6 +164,37 @@ describe('TradeIntelManager', () => {
     expect(sentBody(calls[0])).toEqual({ hs4: '9401', months: 3, limit: 1 });
     expect(result).toEqual(body);
     expect(result.importers[0].containers).toBe(800);
+  });
+
+  it('topImporters passes through the nulls a ranking without hs4 carries', async () => {
+    const body = {
+      since: '2025-10',
+      until: '2026-09',
+      ranked_by: 'containers',
+      filters: { pod: 'savannah' },
+      notes: [],
+      importers: [
+        {
+          company_name: 'EXAMPLE OUTDOOR SUPPLY',
+          states: null,
+          containers: 800,
+          teus: 1500.0,
+          estimated_value: null,
+        },
+      ],
+    };
+    const { client } = makeClient({
+      '/trade_intel/importers/top': () => jsonResponse(body),
+    });
+
+    const result = await client.tradeIntel.topImporters({
+      port_of_discharge: 'savannah',
+    });
+
+    expect(result).toEqual(body);
+    expect(result.filters.pod).toBe('savannah');
+    expect(result.importers[0].states).toBeNull();
+    expect(result.importers[0].estimated_value).toBeNull();
   });
 
   it('trends POSTs group_by, filters, and the period', async () => {
@@ -336,6 +367,29 @@ describe('TradeIntelManager', () => {
       expect((error as ValidationError).status).toBe(422);
       expect((error as ValidationError).message).toBe(
         'Input should be less than or equal to 50 (body.limit)',
+      );
+    });
+
+    it('maps the 422 cost-cap { error } body to ValidationError with the server message', async () => {
+      const { client } = makeClient({
+        '/trade_intel/bills_of_lading/lookup': () =>
+          jsonResponse(
+            {
+              error:
+                'Query too broad for the cost cap; narrow the time window or filters.',
+            },
+            422,
+          ),
+      });
+
+      const error = await client.tradeIntel
+        .lookupBillOfLading('MEDUW9559867', { months: 18 })
+        .catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(ValidationError);
+      expect((error as ValidationError).status).toBe(422);
+      expect((error as ValidationError).message).toBe(
+        'Query too broad for the cost cap; narrow the time window or filters.',
       );
     });
 

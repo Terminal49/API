@@ -90,7 +90,7 @@ current, partial month.
 
 ### companyProfile()
 
-> **companyProfile**(`request`): `Promise`\<\{ `carriers?`: `object`[]; `commodities_hs4?`: `object`[]; `company_name`: `string`; `company_state`: `string` \| `null`; `destination_states?`: `object`[]; `found`: `boolean`; `monthly?`: `object`[]; `notes?`: `string`[]; `origin_countries?`: `object`[]; `ports_of_discharge?`: `object`[]; `since`: `string`; `totals?`: \{ `containers`: `number`; `containers_as_consignee`: `number`; `containers_as_notify_party`: `number`; `states`: `string`[]; `teus`: `number`; \}; `until`: `string`; \}\>
+> **companyProfile**(`request`): `Promise`\<\{ `carriers?`: `object`[]; `commodities_hs4?`: `object`[]; `company_name`: `string`; `company_state`: `string` \| `null`; `destination_states?`: `object`[]; `found`: `boolean`; `monthly?`: `object`[]; `notes?`: `string`[]; `origin_countries?`: `object`[]; `ports_of_discharge?`: `object`[]; `since`: `string`; `totals?`: \{ `containers`: `number`; `containers_as_consignee`: `number`; `containers_as_notify_party`: `number`; `states`: `string`[] \| `null`; `teus`: `number`; \}; `until?`: `string`; \}\>
 
 Import profile for one company over full calendar months. `company_name`
 must be the exact name returned by [searchCompanies](#searchcompanies).
@@ -106,7 +106,7 @@ must be the exact name returned by [searchCompanies](#searchcompanies).
 
 #### Returns
 
-`Promise`\<\{ `carriers?`: `object`[]; `commodities_hs4?`: `object`[]; `company_name`: `string`; `company_state`: `string` \| `null`; `destination_states?`: `object`[]; `found`: `boolean`; `monthly?`: `object`[]; `notes?`: `string`[]; `origin_countries?`: `object`[]; `ports_of_discharge?`: `object`[]; `since`: `string`; `totals?`: \{ `containers`: `number`; `containers_as_consignee`: `number`; `containers_as_notify_party`: `number`; `states`: `string`[]; `teus`: `number`; \}; `until`: `string`; \}\>
+`Promise`\<\{ `carriers?`: `object`[]; `commodities_hs4?`: `object`[]; `company_name`: `string`; `company_state`: `string` \| `null`; `destination_states?`: `object`[]; `found`: `boolean`; `monthly?`: `object`[]; `notes?`: `string`[]; `origin_countries?`: `object`[]; `ports_of_discharge?`: `object`[]; `since`: `string`; `totals?`: \{ `containers`: `number`; `containers_as_consignee`: `number`; `containers_as_notify_party`: `number`; `states`: `string`[] \| `null`; `teus`: `number`; \}; `until?`: `string`; \}\>
 
 ***
 
@@ -212,7 +212,7 @@ both. Results are ranked by match quality, not size.
 
 ### topImporters()
 
-> **topImporters**(`request?`): `Promise`\<\{ `filters`: \{ `hs4?`: `string`; `origin_country?`: `string`; `port_of_discharge?`: `string`; \}; `importers`: `object`[]; `notes`: `string`[]; `ranked_by`: `string`; `since`: `string`; `until`: `string`; \}\>
+> **topImporters**(`request?`): `Promise`\<\{ `filters`: \{ `hs4?`: `string`; `origin_country?`: `string`; `pod?`: `string`; \}; `importers`: `object`[]; `notes`: `string`[]; `ranked_by`: `string`; `since`: `string`; `until`: `string`; \}\>
 
 Rank US importers by physical containers, optionally for one HS4 heading,
 port of discharge, or origin country.
@@ -230,7 +230,7 @@ port of discharge, or origin country.
 
 #### Returns
 
-`Promise`\<\{ `filters`: \{ `hs4?`: `string`; `origin_country?`: `string`; `port_of_discharge?`: `string`; \}; `importers`: `object`[]; `notes`: `string`[]; `ranked_by`: `string`; `since`: `string`; `until`: `string`; \}\>
+`Promise`\<\{ `filters`: \{ `hs4?`: `string`; `origin_country?`: `string`; `pod?`: `string`; \}; `importers`: `object`[]; `notes`: `string`[]; `ranked_by`: `string`; `since`: `string`; `until`: `string`; \}\>
 
 ***
 

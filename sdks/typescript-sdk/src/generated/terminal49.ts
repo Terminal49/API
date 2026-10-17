@@ -3789,7 +3789,7 @@ export interface components {
          */
         TradeIntelMeasure: "containers" | "teus" | "estimated_value";
         /**
-         * @description Bucket size for a time series. Periods are formatted `YYYY-MM`, `YYYY-Qn`, or `YYYY`.
+         * @description Bucket size for a time series. Every period is labelled by its first month, `YYYY-MM`: a quarter starting in April 2026 is `2026-04` and the year 2026 is `2026-01`.
          * @default month
          * @enum {string}
          */
@@ -3876,13 +3876,13 @@ export interface components {
         /** @description Index window, freshness, and counts. Also returned as `index` by `companies/search`. */
         TradeIntelMeta: {
             /**
-             * @description First month of the 12-full-month window that search results and rankings cover.
-             * @example 2025-09
+             * @description First day (`YYYY-MM-DD`) of the first month of the 12-full-month window that search results cover.
+             * @example 2025-10-01
              */
             since_month: string;
             /**
-             * @description Month after the last full month in the search window (exclusive).
-             * @example 2026-09
+             * @description First day (`YYYY-MM-DD`) of the month after the last full month in the search window (exclusive).
+             * @example 2026-10-01
              */
             until_month_exclusive: string;
             /**
@@ -3906,36 +3906,36 @@ export interface components {
              */
             hs_codes: number;
             /**
-             * @description First month of history available to `companies/profile`, `importers/top`, `trends`, and `breakdown`. History starts in January 2022.
-             * @example 2022-01
+             * @description First month of history available to `companies/profile`, `importers/top`, `trends`, and `breakdown`. History starts in January 2022. Formatted as the first day of the month (`YYYY-MM-DD`).
+             * @example 2022-01-01
              */
             facts_since_month: string;
             /**
-             * @description Month after the latest month with data (exclusive).
-             * @example 2026-11
+             * @description Day after the date the index was built (`YYYY-MM-DD`, exclusive): the end of the loaded history.
+             * @example 2026-10-09
              */
             facts_until_exclusive: string;
             /**
-             * @description The current calendar month, which is still being loaded and is incomplete.
-             * @example 2026-10
+             * @description First day (`YYYY-MM-DD`) of the current calendar month, which is still being loaded and is incomplete.
+             * @example 2026-10-01
              */
             partial_month: string;
             /**
-             * @description Serving mode of the index.
-             * @example local
+             * @description How the index was built: `full` or `incremental`.
+             * @example incremental
              */
             mode: string;
             /** @description Fingerprint of the current fact build. It changes whenever the data is refreshed. */
             facts_hash: string;
             /**
-             * @description Start of the period covered by the most recent daily refresh.
-             * @example 2026-10-01
+             * @description Start of the period covered by the most recent daily refresh (`YYYY-MM-DD`).
+             * @example 2026-07-01
              */
             refreshed_since: string;
             fact_rows: components["schemas"]["TradeIntelFactRowCounts"];
             /**
              * @description Unit of every `containers` figure: physical containers, each counted once.
-             * @example containers
+             * @example physical containers: distinct (container_number, imported_on)
              */
             volume_measure: string;
             /**
@@ -4031,13 +4031,13 @@ export interface components {
             /** @description Share of containers that were refrigerated, 0 to 1. */
             reefer_share: number;
             /**
-             * @description First month with volume in the window.
-             * @example 2025-09
+             * @description First day (`YYYY-MM-DD`) of the first month with volume in the window.
+             * @example 2025-10-01
              */
             first_month: string;
             /**
-             * @description Last month with volume in the window.
-             * @example 2026-08
+             * @description First day (`YYYY-MM-DD`) of the last month with volume in the window.
+             * @example 2026-09-01
              */
             last_month: string;
             /** @description Top US ports of discharge. */
@@ -4082,8 +4082,8 @@ export interface components {
             containers_as_notify_party: number;
             /** @description Twenty-foot equivalent units. */
             teus: number;
-            /** @description US states the company's rows are split across. */
-            states: string[];
+            /** @description US states the company's rows are split across, or `null` when none of its rows carries a state. */
+            states: string[] | null;
         };
         TradeIntelMonthlyVolume: {
             /**
@@ -4096,7 +4096,7 @@ export interface components {
             /** @description Twenty-foot equivalent units. */
             teus: number;
         };
-        /** @description Import profile for one company. When `found` is `true` the totals, monthly series, breakdowns, and notes are returned. */
+        /** @description Import profile for one company. When `found` is `true` the period end (`until`), totals, monthly series, breakdowns, and notes are returned; when it is `false` only `company_name`, `company_state`, `since`, and `found` are. */
         TradeIntelCompanyProfile: {
             /**
              * @description The requested company name.
@@ -4111,10 +4111,10 @@ export interface components {
              */
             since: string;
             /**
-             * @description Last month of the period (inclusive).
+             * @description Last month of the period (inclusive). Present only when `found` is `true`.
              * @example 2026-09
              */
-            until: string;
+            until?: string;
             /** @description `false` when the exact name has no volume in the period. The name must match `companies/search` exactly; a company can also be split across several names. */
             found: boolean;
             totals?: components["schemas"]["TradeIntelCompanyProfileTotals"];
@@ -4196,14 +4196,14 @@ export interface components {
         TradeIntelTopImporter: {
             /** @description Normalized company name; pass it to `companies/search` or `companies/profile`. */
             company_name: string;
-            /** @description US states the company's volume is split across. */
-            states: string[];
+            /** @description US states the company's volume is split across, or `null` when none of its rows carries a state. */
+            states: string[] | null;
             /** @description Physical containers matching the filters. */
             containers: number;
             /** @description Twenty-foot equivalent units. */
             teus: number;
-            /** @description Modelled USD estimate; present when `hs4` was given. */
-            estimated_value?: number;
+            /** @description Modelled USD estimate when `hs4` was given; `null` otherwise. */
+            estimated_value: number | null;
         };
         TradeIntelTopImporters: {
             /**
@@ -4221,10 +4221,13 @@ export interface components {
              * @example containers
              */
             ranked_by: string;
-            /** @description The filters that were applied. */
+            /** @description The filters that were applied, keyed by the names the service uses: a `port_of_discharge` request comes back as `pod`. Only filters that were given appear. */
             filters: {
+                /** @description The four-digit HS heading. */
                 hs4?: string;
-                port_of_discharge?: string;
+                /** @description The `port_of_discharge` substring. */
+                pod?: string;
+                /** @description The `origin_country` substring. */
                 origin_country?: string;
             };
             /** @description Counting caveats that apply to this response, for example that volume is physical containers or that the window includes a partial month. Surface these to end users. */
@@ -4257,8 +4260,8 @@ export interface components {
         /** @description One point in the series. When `group_by` is set, each point also carries one property per dimension (for example `origin_country`). */
         TradeIntelTrendPoint: {
             /**
-             * @description `YYYY-MM`, `YYYY-Qn`, or `YYYY` depending on `interval`.
-             * @example 2026-Q1
+             * @description First month of the period, `YYYY-MM`, whatever the `interval`: quarters are `2026-01`, `2026-04`, and so on, and years are `2026-01`.
+             * @example 2026-01
              */
             period: string;
             /** @description The measure for this period and group. */
@@ -4652,27 +4655,13 @@ export interface components {
                 "application/json": components["schemas"]["TradeIntelError"];
             };
         };
-        /** @description Unprocessable Entity - the body failed schema validation (a value out of range, a malformed month, or an unknown enum value). */
+        /** @description Unprocessable Entity - either the body failed schema validation (a value out of range, a malformed month, or an unknown enum value), reported in `detail`, or the request would read more data than the query cost cap allows, reported in `error`. Narrow the time window or filters for the second. */
         TradeIntelValidationFailed: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                /**
-                 * @example {
-                 *       "detail": [
-                 *         {
-                 *           "loc": [
-                 *             "body",
-                 *             "limit"
-                 *           ],
-                 *           "msg": "Input should be less than or equal to 50",
-                 *           "type": "less_than_equal"
-                 *         }
-                 *       ]
-                 *     }
-                 */
-                "application/json": components["schemas"]["TradeIntelValidationError"];
+                "application/json": components["schemas"]["TradeIntelValidationError"] | components["schemas"]["TradeIntelError"];
             };
         };
         /** @description Too Many Requests - about 120 requests per minute are allowed per account. */
@@ -10256,25 +10245,25 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "since_month": "2025-09",
-                     *       "until_month_exclusive": "2026-09",
+                     *       "since_month": "2025-10-01",
+                     *       "until_month_exclusive": "2026-10-01",
                      *       "months": 12,
                      *       "min_containers": 5,
                      *       "companies": 250000,
                      *       "hs_codes": 1200,
-                     *       "facts_since_month": "2022-01",
-                     *       "facts_until_exclusive": "2026-11",
-                     *       "partial_month": "2026-10",
-                     *       "mode": "local",
+                     *       "facts_since_month": "2022-01-01",
+                     *       "facts_until_exclusive": "2026-10-09",
+                     *       "partial_month": "2026-10-01",
+                     *       "mode": "incremental",
                      *       "facts_hash": "3f9c1a7e",
-                     *       "refreshed_since": "2026-10-01",
+                     *       "refreshed_since": "2026-07-01",
                      *       "fact_rows": {
                      *         "lane_month": 1200000,
                      *         "company_month": 9800000,
                      *         "commodity_month": 6400000,
                      *         "hs_lane_month": 15000000
                      *       },
-                     *       "volume_measure": "containers",
+                     *       "volume_measure": "physical containers: distinct (container_number, imported_on)",
                      *       "built_at": "2026-10-08T06:12:44Z"
                      *     }
                      */
@@ -10311,25 +10300,25 @@ export interface operations {
                     /**
                      * @example {
                      *       "index": {
-                     *         "since_month": "2025-09",
-                     *         "until_month_exclusive": "2026-09",
+                     *         "since_month": "2025-10-01",
+                     *         "until_month_exclusive": "2026-10-01",
                      *         "months": 12,
                      *         "min_containers": 5,
                      *         "companies": 250000,
                      *         "hs_codes": 1200,
-                     *         "facts_since_month": "2022-01",
-                     *         "facts_until_exclusive": "2026-11",
-                     *         "partial_month": "2026-10",
-                     *         "mode": "local",
+                     *         "facts_since_month": "2022-01-01",
+                     *         "facts_until_exclusive": "2026-10-09",
+                     *         "partial_month": "2026-10-01",
+                     *         "mode": "incremental",
                      *         "facts_hash": "3f9c1a7e",
-                     *         "refreshed_since": "2026-10-01",
+                     *         "refreshed_since": "2026-07-01",
                      *         "fact_rows": {
                      *           "lane_month": 1200000,
                      *           "company_month": 9800000,
                      *           "commodity_month": 6400000,
                      *           "hs_lane_month": 15000000
                      *         },
-                     *         "volume_measure": "containers",
+                     *         "volume_measure": "physical containers: distinct (container_number, imported_on)",
                      *         "built_at": "2026-10-08T06:12:44Z"
                      *       },
                      *       "results": [
@@ -10342,8 +10331,8 @@ export interface operations {
                      *           "teus": 2310.5,
                      *           "estimated_value": 48200000,
                      *           "reefer_share": 0,
-                     *           "first_month": "2025-09",
-                     *           "last_month": "2026-08",
+                     *           "first_month": "2025-10-01",
+                     *           "last_month": "2026-09-01",
                      *           "top_ports": [
                      *             {
                      *               "name": "SAVANNAH",
@@ -10631,22 +10620,22 @@ export interface operations {
                      *       ],
                      *       "series": [
                      *         {
-                     *           "period": "2026-Q1",
+                     *           "period": "2026-01",
                      *           "origin_country": "VIETNAM",
                      *           "value": 12000
                      *         },
                      *         {
-                     *           "period": "2026-Q1",
+                     *           "period": "2026-01",
                      *           "origin_country": "PEOPLES REP OF CHINA",
                      *           "value": 11000
                      *         },
                      *         {
-                     *           "period": "2026-Q2",
+                     *           "period": "2026-04",
                      *           "origin_country": "VIETNAM",
                      *           "value": 12500
                      *         },
                      *         {
-                     *           "period": "2026-Q2",
+                     *           "period": "2026-04",
                      *           "origin_country": "PEOPLES REP OF CHINA",
                      *           "value": 10800
                      *         }
