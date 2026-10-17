@@ -1082,10 +1082,13 @@ export function createTerminal49McpServer(
       title: 'Track Container',
       description:
         'Track a container, bill of lading, or booking number. ' +
-        'Uses inference to choose the carrier/type when possible, creates a tracking request, ' +
-        'and returns detailed container information. When the carrier cannot be inferred it asks for scac; ' +
-        'a container prefix names the equipment owner, not the carrier. If a newly created request is still pending, ' +
-        'use list_tracking_requests to check its status.',
+        "If the number matches a container that is still being tracked, returns that container's details; " +
+        'if it matches an in-progress tracking request, returns that request. ' +
+        'Otherwise uses inference to choose the carrier/type when possible and creates a tracking request. ' +
+        'A new request returns the request (id, request_number, number_type, scac). ' +
+        'Container details come back only when the create response links a container, which a new request normally does not, ' +
+        'so poll list_tracking_requests for its status, then use search_container or get_shipment_details. ' +
+        'When the carrier cannot be inferred it asks for scac; a container prefix names the equipment owner, not the carrier.',
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
