@@ -168,6 +168,35 @@ describe('MCP tool annotations', () => {
     ).toEqual(['search_docs']);
   });
 
+  it('never names a tool from an opt-in toolset in the store submissions', () => {
+    const optIn = REGISTRY.filter(
+      (tool) => !DEFAULT_TOOLSETS.includes(tool.toolset),
+    ).map((tool) => tool.name);
+    expect(optIn).toEqual(
+      expect.arrayContaining([
+        'relink_document',
+        'update_document',
+        'list_webhooks',
+        'list_webhook_notifications',
+      ]),
+    );
+
+    for (const file of [
+      'chatgpt-app-submission.json',
+      'claude-connector-submission.json',
+    ]) {
+      const text = readFileSync(
+        new URL(`../../../${file}`, import.meta.url),
+        'utf8',
+      );
+      for (const name of optIn) {
+        expect(text, `${name} in ${file}`).not.toMatch(
+          new RegExp(`\\b${name}\\b`),
+        );
+      }
+    }
+  });
+
   it('lists exactly the default toolset tools, with live annotations, in the store submissions', () => {
     const tools = getRegisteredTools();
     const chatGpt = JSON.parse(
