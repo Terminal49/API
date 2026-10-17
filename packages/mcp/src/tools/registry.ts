@@ -41,11 +41,12 @@ export interface ToolDefinition {
 function readTool<const Name extends string>(
   name: Name,
   title: string,
+  toolset: Toolset = 'core',
 ): ToolDefinition & { name: Name } {
   return {
     name,
     title,
-    toolset: 'core',
+    toolset,
     tier: 'read',
     annotations: {
       readOnlyHint: true,
@@ -85,6 +86,7 @@ export const TOOL_REGISTRY = [
   readTool('list_custom_field_definitions', 'List Custom Field Definitions'),
   readTool('list_tracking_requests', 'List Tracking Requests'),
   readTool('get_tracking_request', 'Get Tracking Request'),
+  readTool('list_documents', 'List Documents', 'documents'),
   {
     name: 'search_docs',
     title: 'Search Terminal49 Docs',

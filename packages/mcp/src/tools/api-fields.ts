@@ -10,8 +10,27 @@ export const nullableNumber = z.number().nullable().catch(null);
 export const nullableBoolean = z.boolean().nullable().catch(null);
 export const stringList = z.array(z.string()).catch([]);
 
+const resourceIdentifier = z.object({ id: z.string(), type: z.string() });
+
 /** A JSON:API relationship to one record, read as its id and type. */
 export const relationshipRef = z
-  .object({ data: z.object({ id: z.string(), type: z.string() }).nullable() })
+  .object({ data: resourceIdentifier.nullable() })
+  .nullable()
+  .catch(null);
+
+/**
+ * A JSON:API relationship to many records, read as their ids and types. Null
+ * when the API leaves the relationship out, so callers can tell "not sent"
+ * from "none". A malformed entry is dropped and the valid ones are kept.
+ */
+export const relationshipList = z
+  .object({
+    data: z.array(z.unknown()).transform((entries) =>
+      entries.flatMap((entry) => {
+        const parsed = resourceIdentifier.safeParse(entry);
+        return parsed.success ? [parsed.data] : [];
+      }),
+    ),
+  })
   .nullable()
   .catch(null);
