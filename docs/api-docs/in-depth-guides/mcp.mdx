@@ -170,7 +170,7 @@ Once configured, verify everything works:
   <Step title="Ask Claude to list tools">
     > "List the tools available in the Terminal49 MCP server."
 
-    Claude should respond with a list of 14 tools including `search_container`, `track_container`, and list tools.
+    Claude should respond with a list of 19 tools including `search_container`, `track_container`, and list tools.
   </Step>
   <Step title="Search for a test container">
     > "Using the Terminal49 MCP server, search for container TCLU1234567 and summarize its status."
@@ -221,18 +221,23 @@ T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio 2>&1 | head -20
 |------|-------------|------------|
 | `search_container` | Find containers by number, BL, booking, or ref | `query: string` |
 | `track_container` | Start tracking a container | `number`, `numberType?`, `scac?`, `refNumbers?` |
-| `get_container` | Get container with optional includes | `id: uuid`, `include?: ['shipment', 'pod_terminal', 'transport_events', 'custom_fields']` |
-| `get_shipment_details` | Get shipment and containers | `id: uuid`, `include_containers?: boolean`, `include_custom_fields?: boolean` |
+| `identify_tracking_number` | Predict a number's type and carrier, and check whether it is already tracked, without tracking it | `number: string` |
+| `get_container` | Get container with optional includes | `id: uuid`, `include?: ['shipment', 'pod_terminal', 'transport_events', 'custom_fields', 'party_roles']` |
+| `get_shipment_details` | Get shipment and containers | `id: uuid`, `include_containers?: boolean`, `include_custom_fields?: boolean`, `include_party_roles?: boolean` |
 | `get_container_transport_events` | Get event timeline | `id: uuid` |
 | `get_supported_shipping_lines` | List carriers with SCAC codes | `search?: string` |
 | `get_container_route` | Get ports in route order with ETAs and the current vessel (paid feature) | `id: uuid` |
+| `get_location` | Get a port, terminal, or metro area | `kind` (`port`, `terminal`, or `metro_area`), `id` (UUID, or a UN/LOCODE for a port or metro area) |
+| `get_vessel` | Get a vessel's position and, optionally, its projected arrival at a port (projection is a paid feature) | `id: uuid`, `eta_to?: { port_id, previous_port_id, latitude?, longitude? }` |
 | `list_shipments` | List shipments with filters + pagination | `number?`, `tracking_stopped?`, `actively_tracked?`, `voyage_status?`, `pod_code?`, `pol_code?`, `pod_arrival?`, `created_at?`, `tags?`, `advanced_filters?`, `include_stopped_tracking?`, `sort?`, `include_containers?`, `page?`, `page_size?` |
 | `list_containers` | List containers with filters + pagination | `number?`, `current_status?`, `pod_code?`, `pol_code?`, `shipping_line_scac?`, `has_holds?`, `has_fees?`, `requires_attention?`, `actively_tracked?`, `arrival?`, `pickup_lfd?`, `tags?`, `advanced_filters?`, `include_stopped_tracking?`, `sort?`, `include?: ['shipment', 'pod_terminal']`, `view?`, `page?`, `page_size?` |
 | `summarize_containers` | Count containers grouped by one dimension | `group_by` (`pod_terminal`, `current_status`, `shipping_line`, `port_of_discharge`, `hold_type`, `pickup_lfd_date`, or `pod_arrival_date`), plus the `list_containers` filters except `sort`, `include`, `view`, `page`, and `page_size` |
-| `list_parties` | Find parties by company name and return their IDs | `search?`, `limit?` (default 25, maximum 50) |
+| `list_parties` | Find parties by company name, or read one by ID | `id?`, `search?`, `limit?` (default 25, maximum 50) |
+| `list_custom_field_definitions` | List the account's custom fields, their types, and enum options | `entity_type?` (`container` or `shipment`), `include_archived?: boolean` |
 | `list_tracking_requests` | List tracking requests with filters | `request_number?`, `status?` (`pending`, `created`, `failed`, or `cancelled`), `scac?`, `page?`, `page_size?` |
+| `get_tracking_request` | Get one tracking request's status, failure reason, and shipment | `id: uuid`, `include_custom_fields?: boolean` |
 | `search_docs` | Search the public Terminal49 documentation | `query: string`, `limit?` (1-10, default 5) |
-| `whoami` | Identify the credential, its account, and available features | none |
+| `whoami` | Identify the credential, its account, available features, and the session's toolsets | none |
 
 ### Prompts
 
