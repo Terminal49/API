@@ -375,6 +375,45 @@ whoami()
 
 ---
 
+### 15. `set_party_role`
+**Purpose**: Attach a party to containers or shipments in a role, or detach it (writes)
+
+**Usage**:
+```typescript
+set_party_role({
+  container_ids: ["<container-id>"], // or shipment_ids; 1-50, not both
+  role: "pickup_dray_carrier", // containers support only this role
+  party_id: "<party-id-from-list_parties>",
+  action: "add" // or "remove"
+})
+```
+
+**Returns**:
+- `updated`, `unchanged` (already matched), `failed` (`id`, `error`), and `not_attempted` (the call ran out of time before reaching them; nothing changed on them)
+
+**When to Use**: Only when the user asks to change these records. Resolve the company with `list_parties` first.
+
+---
+
+### 16. `set_custom_field`
+**Purpose**: Set or clear one of the account's custom fields on containers or shipments (writes)
+
+**Usage**:
+```typescript
+set_custom_field({
+  entity: "container", // or "shipment"
+  ids: ["<container-id>"], // 1-50
+  api_slug: "sales_rep",
+  value: "Sofia Cortina" // an array of option values for a multi-select field; null clears
+})
+```
+
+**Returns**: the same `updated`, `unchanged`, `failed`, and `not_attempted` lists as `set_party_role`
+
+**When to Use**: Only when the user asks to change these records. Read the field's `api_slug` from `get_container` or `get_shipment_details` with custom fields first.
+
+---
+
 ## MCP Resources
 
 ### 1. `terminal49://container/{id}`
@@ -590,7 +629,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 14 tools and 4 resources, the LLM can:
+With these 16 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates
