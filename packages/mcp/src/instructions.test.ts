@@ -135,6 +135,17 @@ describe('server instructions', () => {
     }
   });
 
+  it('asks the model to report each write and its undo tool only when writes are served', () => {
+    const rule = /When the result has an undo field, name that tool/;
+
+    expect(buildServerInstructions(defaultTools())).toMatch(rule);
+    expect(
+      buildServerInstructions(
+        selectTools({ toolsets: TOOLSETS, readOnly: true }),
+      ),
+    ).not.toMatch(rule);
+  });
+
   it('marks tool output untrusted in every mode', async () => {
     const full = await initializeInstructions({ toolsets: TOOLSETS });
     const readOnly = await initializeInstructions({
