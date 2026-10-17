@@ -39,6 +39,10 @@ function partyRoleDoc(
 }
 
 describe('set_party_role', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('assigns the drayage carrier, skips containers that already have it, and reports failures', async () => {
     const client = fakeClient();
     client.containers.partyRoles.mockImplementation(async (id: string) =>
@@ -204,6 +208,61 @@ describe('set_party_role', () => {
     expect(result.summary).toBe(
       'Set pickup_dray_carrier on 1 container; 1 already had only that party; 0 failed.',
     );
+  });
+
+  it('returns at the time budget, flags a half-done swap, and starts no write after it', async () => {
+    vi.useFakeTimers();
+    const client = fakeClient();
+    const calls: string[] = [];
+    const after = <T>(ms: number, value: T) =>
+      new Promise<T>((resolve) => setTimeout(() => resolve(value), ms));
+    const oldCarrier = partyRoleDoc({
+      id: 'pr-old',
+      role: 'pickup_dray_carrier',
+      partyId: OTHER_PARTY,
+    });
+    client.containers.partyRoles.mockImplementation((id: string) =>
+      after(id === C1 ? CALL_BUDGET_MS + 5_000 : 0, oldCarrier),
+    );
+    client.containers.addPartyRole.mockImplementation((id: string) => {
+      calls.push(`add ${id}`);
+      return after(CALL_BUDGET_MS / 2, {});
+    });
+    client.containers.removePartyRole.mockImplementation((id: string) => {
+      calls.push(`remove ${id}`);
+      return after(CALL_BUDGET_MS * 3, undefined);
+    });
+
+    let result: Awaited<ReturnType<typeof executeSetPartyRole>> | undefined;
+    void executeSetPartyRole(
+      {
+        container_ids: [C1, C2],
+        role: 'pickup_dray_carrier',
+        party_id: PARTY,
+        action: 'replace',
+      },
+      client,
+    ).then((value) => {
+      result = value;
+    });
+    await vi.advanceTimersByTimeAsync(CALL_BUDGET_MS);
+
+    expect(result).toEqual({
+      updated: [],
+      unchanged: [],
+      failed: [
+        {
+          id: C2,
+          error:
+            'Ran out of time while saving. The change may or may not have been applied; check this record before calling again.',
+        },
+      ],
+      not_attempted: [C1],
+      summary:
+        'Set pickup_dray_carrier on 0 containers; 0 already had only that party; 1 failed. Ran out of time before 1 more; call again with not_attempted.',
+    });
+    await vi.advanceTimersByTimeAsync(CALL_BUDGET_MS * 4);
+    expect(calls).toEqual([`add ${C2}`, `remove ${C2}`]);
   });
 
   it('keeps the new carrier when the old one is gone by the time it is detached', async () => {
@@ -419,17 +478,14 @@ describe('set_custom_field', () => {
     expect(repeat).toMatchObject({ updated: [], unchanged: [C1] });
   });
 
-  it('stops starting records at the time budget and reports the rest as not attempted', async () => {
+  it('stops at the time budget and reports records it did not change as not attempted', async () => {
     vi.useFakeTimers();
     const client = fakeClient();
     client.containers.customFields.mockImplementation(
-      () =>
-        new Promise((resolve) =>
-          setTimeout(() => resolve([]), CALL_BUDGET_MS / 2),
-        ),
+      () => new Promise((resolve) => setTimeout(() => resolve([]), 9_000)),
     );
     const ids = Array.from(
-      { length: 12 },
+      { length: 17 },
       (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`,
     );
 
@@ -442,10 +498,45 @@ describe('set_custom_field', () => {
 
     expect(result.updated).toEqual(ids.slice(0, 10));
     expect(result.not_attempted).toEqual(ids.slice(10));
-    expect(client.containers.customFields).toHaveBeenCalledTimes(10);
+    expect(client.containers.setCustomField).toHaveBeenCalledTimes(10);
     expect(result.summary).toBe(
-      'Set sales_rep on 10 containers; 0 already had that value; 0 failed. Ran out of time before 2 more; call again with not_attempted.',
+      'Set sales_rep on 10 containers; 0 already had that value; 0 failed. Ran out of time before 7 more; call again with not_attempted.',
     );
+  });
+
+  it('returns at the time budget while a write is still running and flags that record', async () => {
+    vi.useFakeTimers();
+    const client = fakeClient();
+    client.containers.customFields.mockResolvedValue([]);
+    client.containers.setCustomField.mockImplementation((id: string) =>
+      id === C2
+        ? new Promise((resolve) => setTimeout(resolve, CALL_BUDGET_MS * 3))
+        : Promise.resolve({}),
+    );
+
+    let result: Awaited<ReturnType<typeof executeSetCustomField>> | undefined;
+    void executeSetCustomField(
+      { entity: 'container', ids: [C1, C2], api_slug: 'sales_rep', value: 'X' },
+      client,
+    ).then((value) => {
+      result = value;
+    });
+    await vi.advanceTimersByTimeAsync(CALL_BUDGET_MS);
+
+    expect(result).toEqual({
+      updated: [C1],
+      unchanged: [],
+      failed: [
+        {
+          id: C2,
+          error:
+            'Ran out of time while saving. The change may or may not have been applied; check this record before calling again.',
+        },
+      ],
+      not_attempted: [],
+      summary:
+        'Set sales_rep on 1 container; 0 already had that value; 1 failed.',
+    });
   });
 
   it('sets a value where it differs and leaves matching records alone', async () => {
