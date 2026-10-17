@@ -60,6 +60,11 @@ all pass (`contractPass`) — a single failure fails the test:
 **Latency** is a _soft_ check: recorded in the score and the report, but a slow
 response alone never fails the suite.
 
+The webhook read cases check that `list_webhooks` returns no secret, header
+value, or URL query string, and that `list_webhook_notifications` returns
+delivery rows. Both skip when the gateway does not list the opt-in `developer`
+toolset.
+
 Negative cases assert error behavior: an unknown id and a missing required
 argument must produce tool errors, while a gibberish search must return an empty
 result set (not an error).
@@ -76,8 +81,8 @@ could create a real tracking request.
 [`writes.eval.ts`](./writes.eval.ts) runs the write tools against a dedicated
 sandbox account. It runs only when `MCP_EVAL_ENABLE_WRITE=1` and
 `MCP_EVAL_SANDBOX_TOKEN` are both set, and it uses that token, never
-`MCP_EVAL_TOKEN`. Each case is a round trip that leaves the record as it found
-it:
+`MCP_EVAL_TOKEN`. Each case except the document case is a round trip that
+leaves the record as it found it:
 
 - stop a shipment with a confirmed preview, then resume it;
 - refuse a stop with an edited confirmation token;
@@ -92,8 +97,15 @@ it:
   unset. That token is short-lived, so set it just before the run. Before it
   writes, the case calls `whoami` with both credentials and fails when the
   bearer's account is not the `MCP_EVAL_SANDBOX_TOKEN` account.
+- relink the first document, and preview a `reextract` with `update_document`
+  without confirming it. This case is not a round trip. A relink repeats
+  Terminal49's matching and can add shipment or container links, and nothing
+  removes them. A document fix cannot be undone exactly, so the case never
+  confirms one. It depends on the `documents_write` toolset, not
+  `operations`. It skips when the gateway does not list those tools or the
+  account has no document.
 
-Every case skips when the gateway does not list the write tools, which
+Every other case skips when the gateway does not list the write tools, which
 happens when its toolsets leave out `operations`, or when the sandbox account
 has no shipment. The two stop cases also skip when the sandbox key cannot stop
 tracking (`FeatureNotEnabled`) or the first shipment is already stopped. The

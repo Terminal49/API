@@ -1,6 +1,6 @@
 /**
- * Live write evals for the tracking lifecycle, reference number, party and
- * custom field tools.
+ * Live write evals for the tracking lifecycle, reference number, party,
+ * custom field and document fix tools.
  *
  * These change account data, so they run only against a dedicated sandbox
  * account and only when both are set:
@@ -17,7 +17,8 @@
  *
  * cancel_tracking_request has no live case: a cancel cannot be undone, and
  * every run would have to create a new, billable tracking request. Its
- * fixture tests cover it.
+ * fixture tests cover it. update_document is only previewed: its actions
+ * cannot be undone exactly, and reextract uses processing time.
  */
 
 import { beforeAll, describe, expect, it } from 'vite-plus/test';
@@ -342,6 +343,44 @@ if (!enableWrite || !sandboxToken) {
       } finally {
         if (needsClear) await confirmedAsUser({ ...target, clear: true });
       }
+    });
+
+    it('relinks a document and previews a document fix without confirming it', async ({
+      skip,
+    }) => {
+      // The gateway lists these tools only when its toolsets include
+      // documents_write.
+      if (
+        !served.includes('relink_document') ||
+        !served.includes('update_document')
+      ) {
+        return skip();
+      }
+      const documents = structured(
+        await client.callTool('list_documents', { page_size: 1 }),
+      );
+      const first = Array.isArray(documents.items)
+        ? documents.items.find(isRecord)
+        : undefined;
+      if (!first || typeof first.id !== 'string') return skip();
+
+      const relinked = await client.callTool('relink_document', {
+        id: first.id,
+      });
+      expect(relinked.isError).toBe(false);
+      expect(['accepted', 'noop']).toContain(structured(relinked).status);
+
+      const preview = structured(
+        await client.callTool('update_document', {
+          id: first.id,
+          action: 'reextract',
+        }),
+      );
+      expect(preview.status).toBe('confirmation_required');
+      expect(typeof preview.confirmation_token).toBe('string');
+      expect(isRecord(preview.preview) && preview.preview.action).toBe(
+        'reextract',
+      );
     });
   });
 }
