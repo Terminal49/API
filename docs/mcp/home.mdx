@@ -132,6 +132,33 @@ See [Other MCP clients](/mcp/setup/other-clients) for details on OAuth discovery
 
 The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP endpoints as the REST API.
 
+### Limit the tools
+
+Two optional request headers reduce the tools your client sees. They can only remove tools.
+
+- `X-T49-MCP-Read-Only: true` lists only read-only tools. It removes `track_container`.
+- `X-T49-MCP-Toolsets` takes a comma-separated list of toolsets.
+
+The toolset names are:
+
+- `core`: every tool today.
+- `documents`: no tools yet.
+- `operations`: no tools yet.
+- `documents_write`: no tools yet.
+- `developer`: no tools yet.
+
+```json
+{
+  "url": "https://mcp.terminal49.com",
+  "headers": {
+    "Authorization": "Token YOUR_API_KEY",
+    "X-T49-MCP-Read-Only": "true"
+  }
+}
+```
+
+The read-only header accepts `true`, `false`, `1` or `0`, in any case. Any other read-only value, an unknown toolset name, or a toolsets value made only of commas returns `400 Bad Request`.
+
 ---
 
 ## Monitoring
