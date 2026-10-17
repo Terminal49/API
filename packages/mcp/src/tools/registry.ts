@@ -231,6 +231,7 @@ export const TOOL_REGISTRY = [
       openWorldHint: true,
     },
   },
+  readTool('list_webhooks', 'List Webhooks', 'developer'),
   readTool('whoami', 'Who Am I'),
 ] as const satisfies readonly ToolDefinition[];
 

@@ -90,6 +90,11 @@ import {
   getDocumentOutputSchema,
   MAX_EXTRACTED_DATA_CHARS,
 } from './tools/get-document.js';
+import {
+  executeListWebhooks,
+  listWebhooksInputSchema,
+  listWebhooksOutputSchema,
+} from './tools/list-webhooks.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
@@ -1076,6 +1081,8 @@ function formatToolError(
       case 'set_custom_field':
       case 'update_custom_field':
         return `No ${entityLabel(input.entity_type)} found with id ${typeof input.entity_id === 'string' ? input.entity_id : '(missing)'}.`;
+      case 'list_webhooks':
+        return `No webhook found with id ${typeof input.webhook_id === 'string' ? input.webhook_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
       default:
@@ -1969,6 +1976,18 @@ export function createTerminal49McpServer(
           { query, limit },
           { assistantApiKey: process.env.MINTLIFY_ASSISTANT_API_KEY },
         ),
+    ),
+    list_webhooks: tool(
+      {
+        description:
+          "List the account's webhooks, or read one by webhook_id: whether each is active, the events it receives, and the scheme, host, and path of its URL. " +
+          'The query string is never shown. The host keeps its first label only when that is a short lowercase word, and the path keeps only a short lowercase first segment; anything else is replaced with [redacted]. has_query, host_redacted and path_redacted say when that happened. ' +
+          'The signing secret and header values are never shown: has_secret says whether a secret is set, and header_names lists the custom headers by name. ' +
+          'Set include_event_catalog for every event a webhook can subscribe to, with a description. Page size is capped at 25; if links.next exists, request the next page.',
+        inputSchema: listWebhooksInputSchema,
+        outputSchema: listWebhooksOutputSchema,
+      },
+      async (args) => executeListWebhooks(args, client),
     ),
     whoami: tool(
       {
