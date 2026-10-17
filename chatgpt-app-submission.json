@@ -4,7 +4,7 @@
   "app_info": {
     "display_name": "Terminal49",
     "subtitle": "Track shipping containers",
-    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, and create new tracking requests through ChatGPT.",
+    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, and create new tracking requests through ChatGPT. SQL analysis tools are listed only for signed-in users whose active account has assistant-sql access; they are not available with API keys.",
     "category": "BUSINESS"
   },
   "tools": {
@@ -174,6 +174,54 @@
         "read_only_justification": "Reads the caller's own credential, account, and feature availability without modifying data.",
         "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "sql_query": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Runs read-only SQL and creates a temporary user-owned result snapshot; source records are unchanged.",
+        "open_world_justification": "Operates only within the authenticated private Terminal49 account.",
+        "destructive_justification": "Does not delete or overwrite existing account data."
+      }
+    },
+    "describe_views": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads account-scoped query metadata or stored result rows without changing records.",
+        "open_world_justification": "Operates only within the authenticated private Terminal49 account.",
+        "destructive_justification": "Does not delete or overwrite existing account data."
+      }
+    },
+    "query_guide": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads account-scoped query metadata or stored result rows without changing records.",
+        "open_world_justification": "Operates only within the authenticated private Terminal49 account.",
+        "destructive_justification": "Does not delete or overwrite existing account data."
+      }
+    },
+    "get_query_result": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads account-scoped query metadata or stored result rows without changing records.",
+        "open_world_justification": "Operates only within the authenticated private Terminal49 account.",
+        "destructive_justification": "Does not delete or overwrite existing account data."
       }
     }
   },

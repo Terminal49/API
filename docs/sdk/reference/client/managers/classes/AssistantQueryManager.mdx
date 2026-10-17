@@ -1,0 +1,133 @@
+---
+title: "Class: AssistantQueryManager"
+---
+
+# Class: AssistantQueryManager
+
+User-scoped analytics. Requires assistant-sql; ordinary API keys are rejected.
+
+## Extends
+
+- [`BaseManager`](/sdk/reference/client/managers/classes/BaseManager)
+
+## Constructors
+
+### Constructor
+
+> **new AssistantQueryManager**(`transport`, `accountId?`): `AssistantQueryManager`
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) |
+| `accountId?` | `string` |
+
+#### Returns
+
+`AssistantQueryManager`
+
+#### Overrides
+
+[`BaseManager`](/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/sdk/reference/client/managers/classes/BaseManager#constructor)
+
+## Methods
+
+### guide()
+
+> **guide**(`id`): `Promise`\<[`AssistantGuide`](/sdk/reference/client/managers/type-aliases/AssistantGuide)\>
+
+Read a measurement guide. Start with method.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+
+#### Returns
+
+`Promise`\<[`AssistantGuide`](/sdk/reference/client/managers/type-aliases/AssistantGuide)\>
+
+***
+
+### guides()
+
+> **guides**(): `Promise`\<[`AssistantGuideIndex`](/sdk/reference/client/managers/type-aliases/AssistantGuideIndex)\>
+
+List available measurement guides.
+
+#### Returns
+
+`Promise`\<[`AssistantGuideIndex`](/sdk/reference/client/managers/type-aliases/AssistantGuideIndex)\>
+
+***
+
+### query()
+
+> **query**(`sql`, `previewRows?`): `Promise`\<[`AssistantQueryPreview`](/sdk/reference/client/managers/type-aliases/AssistantQueryPreview)\>
+
+Execute once and store a 24-hour result. POST is not automatically retried.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `sql` | `string` |
+| `previewRows?` | `number` |
+
+#### Returns
+
+`Promise`\<[`AssistantQueryPreview`](/sdk/reference/client/managers/type-aliases/AssistantQueryPreview)\>
+
+***
+
+### result()
+
+> **result**(`id`, `offset?`, `limit?`): `Promise`\<[`AssistantQueryPage`](/sdk/reference/client/managers/type-aliases/AssistantQueryPage)\>
+
+Read a page from a result owned by the current user and account.
+
+#### Parameters
+
+| Parameter | Type | Default value |
+| ------ | ------ | ------ |
+| `id` | `string` | `undefined` |
+| `offset` | `number` | `0` |
+| `limit` | `number` | `50` |
+
+#### Returns
+
+`Promise`\<[`AssistantQueryPage`](/sdk/reference/client/managers/type-aliases/AssistantQueryPage)\>
+
+***
+
+### view()
+
+> **view**(`id`, `columns?`, `search?`): `Promise`\<[`AssistantView`](/sdk/reference/client/managers/type-aliases/AssistantView)\>
+
+Get exact column definitions and named metrics, optionally filtered.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `columns?` | `string`[] |
+| `search?` | `string` |
+
+#### Returns
+
+`Promise`\<[`AssistantView`](/sdk/reference/client/managers/type-aliases/AssistantView)\>
+
+***
+
+### views()
+
+> **views**(): `Promise`\<[`AssistantViewIndex`](/sdk/reference/client/managers/type-aliases/AssistantViewIndex)\>
+
+Discover views before writing SQL.
+
+#### Returns
+
+`Promise`\<[`AssistantViewIndex`](/sdk/reference/client/managers/type-aliases/AssistantViewIndex)\>

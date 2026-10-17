@@ -413,6 +413,8 @@ describe('MCP server wiring', () => {
       expect(_objectSchemaHasProperty(tool.inputSchema, 'intent'), name).toBe(
         false,
       );
+      // New SQL tools never accepted legacy intent; their strict schemas reject it.
+      if (!(name in legacyArgs)) continue;
       expect(
         tool.inputSchema.parse({
           ...legacyArgs[name],

@@ -2,6 +2,7 @@
  * Terminal49 MCP Server
  * Implementation using the MCP TypeScript SDK v2 McpServer API
  */
+import { createHash } from 'node:crypto';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import {
   completable,
@@ -9,7 +10,14 @@ import {
   ResourceTemplate,
 } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import { Terminal49Client } from '@terminal49/sdk';
+import {
+  NetworkError,
+  RateLimitError,
+  Terminal49Client,
+  TimeoutError,
+  UpstreamError,
+} from '@terminal49/sdk';
+import { registerSqlTools } from './tools/sql-query.js';
 import { executeGetContainer } from './tools/get-container.js';
 import { executeTrackContainer } from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
@@ -102,7 +110,7 @@ export const TERMINAL49_SERVER_INSTRUCTIONS = `Terminal49 tracks ocean container
 
 Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered); custom fields = account-defined fields (PO number, project manager, etc.) on containers and shipments, loaded with get_container include ['custom_fields'] or get_shipment_details include_custom_fields.
 
-Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete or overwrite data.
+Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. sql_query reads account data and creates a temporary, user-owned result snapshot; it does not modify source records and is not idempotent. SQL analysis is marked read-only because the snapshot is an expiring result cache, not a change to account records. All tools except track_container are marked read-only. SQL tools are listed only when the current user and account have access. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete or overwrite data.
 
 Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for ports, ETAs, and the current vessel if the account has Routing Data). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links. Call whoami to learn which account and credential this session is bound to and which features it can use: when the user asks who they are or which account is connected, when a lookup returns nothing or an authorization error, or before relying on a gated feature such as routing, custom fields, or stop tracking.`;
 
@@ -971,11 +979,110 @@ export interface Terminal49McpServerTelemetry {
   authSource?: McpAuthSource;
 }
 
+const SQL_DISCOVERY_TTL_MS = 60_000;
+const SQL_DISCOVERY_MAX_ENTRIES = 1_000;
+const sqlDiscoveryCache = new Map<
+  string,
+  { expiresAt: number; decision: Promise<boolean> }
+>();
+
+// A transient failure says nothing about access. Rails authorizes every SQL call,
+// so keeping the tools listed is safe and avoids "unknown tool" mid-conversation.
+function isTransientDiscoveryError(error: unknown): boolean {
+  return (
+    error instanceof UpstreamError ||
+    error instanceof RateLimitError ||
+    error instanceof NetworkError ||
+    error instanceof TimeoutError
+  );
+}
+
+async function probeAssistantSql(
+  apiToken: string,
+  apiBaseUrl: string | undefined,
+  accountId: string,
+): Promise<boolean> {
+  const client = new Terminal49Client({
+    apiToken,
+    apiBaseUrl,
+    accountId,
+    maxRetries: 0,
+    timeoutMs: 5000,
+  });
+  const result = await client.assistantQueries.views();
+  return Array.isArray(result.views);
+}
+
+// Discovery uses the same read endpoint and authorization gates as SQL execution.
+// Decisions are cached briefly per credential + account + API base (the key is a
+// hash, so no token is held as a map key) and never shared across them. Denials
+// (401/403/404, malformed responses) hide the tools; transient failures keep them
+// listed and are not cached. /me can replace this probe once it reports assistant-sql.
+function discoverAssistantSql(
+  apiToken: string,
+  apiBaseUrl: string | undefined,
+  accountId: string,
+): Promise<boolean> {
+  const key = createHash('sha256')
+    .update(JSON.stringify([apiToken, accountId, apiBaseUrl ?? '']))
+    .digest('hex');
+  const now = Date.now();
+  const cached = sqlDiscoveryCache.get(key);
+  if (cached && cached.expiresAt > now) return cached.decision;
+
+  const decision: Promise<boolean> = probeAssistantSql(
+    apiToken,
+    apiBaseUrl,
+    accountId,
+  ).catch((error: unknown) => {
+    if (!isTransientDiscoveryError(error)) return false;
+    if (sqlDiscoveryCache.get(key)?.decision === decision) {
+      sqlDiscoveryCache.delete(key);
+    }
+    return true;
+  });
+
+  sqlDiscoveryCache.delete(key);
+  if (sqlDiscoveryCache.size >= SQL_DISCOVERY_MAX_ENTRIES) {
+    for (const [staleKey, entry] of sqlDiscoveryCache) {
+      if (entry.expiresAt <= now) sqlDiscoveryCache.delete(staleKey);
+    }
+    if (sqlDiscoveryCache.size >= SQL_DISCOVERY_MAX_ENTRIES) {
+      const oldest = sqlDiscoveryCache.keys().next().value;
+      if (oldest !== undefined) sqlDiscoveryCache.delete(oldest);
+    }
+  }
+  sqlDiscoveryCache.set(key, {
+    expiresAt: now + SQL_DISCOVERY_TTL_MS,
+    decision,
+  });
+  return decision;
+}
+
+export async function createAuthorizedTerminal49McpServer(
+  apiToken: string,
+  apiBaseUrl?: string,
+  accountId?: string,
+  telemetry: Terminal49McpServerTelemetry = {},
+): Promise<McpServer> {
+  // API keys and calls without an explicit active account never get SQL tools.
+  const assistantSql =
+    accountId !== undefined &&
+    accountId !== '' &&
+    /^Bearer\s+\S+/i.test(apiToken)
+      ? await discoverAssistantSql(apiToken, apiBaseUrl, accountId)
+      : false;
+  return createTerminal49McpServer(apiToken, apiBaseUrl, accountId, telemetry, {
+    assistantSql,
+  });
+}
+
 export function createTerminal49McpServer(
   apiToken: string,
   apiBaseUrl?: string,
   accountId?: string,
   telemetry: Terminal49McpServerTelemetry = {},
+  capabilities: { assistantSql?: boolean } = {},
 ): McpServer {
   const client = new Terminal49Client({
     apiToken,
@@ -1009,6 +1116,10 @@ export function createTerminal49McpServer(
   );
 
   // ==================== TOOLS ====================
+
+  if (capabilities.assistantSql) {
+    registerSqlTools(server, apiToken, apiBaseUrl, accountId);
+  }
 
   // Tool 1: Search Container
   server.registerTool(
@@ -1871,7 +1982,7 @@ export async function runStdioServer() {
   }
 
   serveStdio(() =>
-    createTerminal49McpServer(apiToken, apiBaseUrl, undefined, {
+    createAuthorizedTerminal49McpServer(apiToken, apiBaseUrl, undefined, {
       transport: 'stdio',
     }),
   );

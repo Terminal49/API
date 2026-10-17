@@ -79,7 +79,13 @@ function getRegisteredTools(): Record<
   string,
   { title?: string; annotations?: ToolAnnotations }
 > {
-  const server = createTerminal49McpServer('token');
+  const server = createTerminal49McpServer(
+    'token',
+    undefined,
+    undefined,
+    {},
+    { assistantSql: true },
+  );
   return (server as any)._registeredTools as Record<
     string,
     { title?: string; annotations?: ToolAnnotations }
@@ -88,6 +94,10 @@ function getRegisteredTools(): Record<
 
 describe('MCP tool annotations', () => {
   const readTools = [
+    'sql_query',
+    'describe_views',
+    'query_guide',
+    'get_query_result',
     'search_container',
     'get_container',
     'get_container_route',
@@ -128,7 +138,7 @@ describe('MCP tool annotations', () => {
     expect(annotations?.idempotentHint).toBe(false);
   });
 
-  it('advertises track_container as the only write and no destructive tools', () => {
+  it('advertises only tracking as a non-destructive write', () => {
     const tools = getRegisteredTools();
     const writeTools = Object.entries(tools)
       .filter(([, tool]) => tool.annotations?.readOnlyHint === false)
