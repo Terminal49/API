@@ -94,4 +94,29 @@ export const TOOL_REGISTRY = [
   readTool('whoami', 'Who Am I'),
 ] as const satisfies readonly ToolDefinition[];
 
-export type ToolName = (typeof TOOL_REGISTRY)[number]['name'];
+export type RegisteredTool = (typeof TOOL_REGISTRY)[number];
+
+export type ToolName = RegisteredTool['name'];
+
+/** Toolsets served when the operator sets no `T49_MCP_TOOLSETS`. */
+export const DEFAULT_TOOLSETS: readonly Toolset[] = ['core', 'documents'];
+
+export interface ToolSelection {
+  toolsets: readonly Toolset[];
+  /** Drop every tool whose readOnlyHint is false. */
+  readOnly: boolean;
+}
+
+/** The registry entries a server with this selection registers, in order. */
+export function selectTools(selection: ToolSelection): RegisteredTool[] {
+  return TOOL_REGISTRY.filter(
+    (tool) =>
+      selection.toolsets.includes(tool.toolset) &&
+      (tool.annotations.readOnlyHint || !selection.readOnly),
+  );
+}
+
+/** The tools a server registers with the default toolsets. */
+export function defaultTools(): RegisteredTool[] {
+  return selectTools({ toolsets: DEFAULT_TOOLSETS, readOnly: false });
+}

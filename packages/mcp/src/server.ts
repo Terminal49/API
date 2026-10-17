@@ -52,9 +52,12 @@ import {
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
-  TOOL_REGISTRY,
+  DEFAULT_TOOLSETS,
+  defaultTools,
+  selectTools,
   type ToolDefinition,
   type ToolName,
+  type Toolset,
 } from './tools/registry.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
@@ -80,6 +83,7 @@ import {
   instrumentMcpServer,
 } from './sentry.js';
 import { logMcpEvent } from './logging.js';
+import { buildServerInstructions } from './instructions.js';
 
 type ContentAnnotations = {
   audience?: Array<'user' | 'assistant'>;
@@ -106,18 +110,9 @@ type ToolContent = TextContent | ResourceLinkContent;
 /** Registers one tool on the server from its registry definition. */
 type ToolRegistrar = (definition: ToolDefinition) => void;
 
-/**
- * Server-level instructions (MCP `ServerOptions.instructions`). This is a
- * concise operating guide handed to the LLM at initialize time so it
- * understands the ocean-tracking domain and how to chain the tools.
- */
-export const TERMINAL49_SERVER_INSTRUCTIONS = `Terminal49 tracks ocean containers and shipments live from carriers and terminals. Data is real-time from ocean carriers (by SCAC, e.g. MAEU = Maersk) and US/Canada terminals, so values change between calls.
-
-Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered); custom fields = account-defined fields (PO number, project manager, etc.) on containers and shipments, loaded with get_container include ['custom_fields'] or get_shipment_details include_custom_fields.
-
-Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete or overwrite data.
-
-Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for ports, ETAs, and the current vessel if the account has Routing Data). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links. Call whoami to learn which account and credential this session is bound to and which features it can use: when the user asks who they are or which account is connected, when a lookup returns nothing or an authorization error, or before relying on a gated feature such as routing, custom fields, or stop tracking.`;
+/** The instructions a server with the default toolsets sends. */
+export const TERMINAL49_SERVER_INSTRUCTIONS =
+  buildServerInstructions(defaultTools());
 
 type ResponseDisplayColumn = {
   key: string;
@@ -1006,16 +1001,20 @@ function createCarrierScacCompleter(
   };
 }
 
-export interface Terminal49McpServerTelemetry {
+export interface Terminal49McpServerOptions {
   transport?: McpTransportKind;
   authSource?: McpAuthSource;
+  /** Toolsets to register. Defaults to DEFAULT_TOOLSETS. */
+  toolsets?: readonly Toolset[];
+  /** Register only tools whose readOnlyHint is true. */
+  readOnly?: boolean;
 }
 
 export function createTerminal49McpServer(
   apiToken: string,
   apiBaseUrl?: string,
   accountId?: string,
-  telemetry: Terminal49McpServerTelemetry = {},
+  options: Terminal49McpServerOptions = {},
 ): McpServer {
   const client = new Terminal49Client({
     apiToken,
@@ -1024,6 +1023,10 @@ export function createTerminal49McpServer(
     defaultFormat: 'mapped',
   });
 
+  const selectedTools = selectTools({
+    toolsets: options.toolsets ?? DEFAULT_TOOLSETS,
+    readOnly: options.readOnly ?? false,
+  });
   const completeCarrierScac = createCarrierScacCompleter(client);
 
   // Observability wrapping, outermost last. Sentry's wrapper returns a wrapped
@@ -1039,13 +1042,17 @@ export function createTerminal49McpServer(
           version: SERVER_VERSION,
         },
         {
-          instructions: TERMINAL49_SERVER_INSTRUCTIONS,
+          instructions: buildServerInstructions(selectedTools),
         },
       ),
     ),
     // Groups the stateless HTTP path's events per account instead of minting an
     // anonymous person per request.
-    { distinctId: accountId, ...telemetry },
+    {
+      distinctId: accountId,
+      transport: options.transport,
+      authSource: options.authSource,
+    },
   );
 
   // ==================== TOOLS ====================
@@ -1320,7 +1327,9 @@ export function createTerminal49McpServer(
         description:
           'Get list of shipping lines (carriers) supported by Terminal49 for container tracking. ' +
           'Returns SCAC codes, full names, and common abbreviations, with optional name or SCAC filtering. ' +
-          'Pass the returned four-letter SCAC to track_container when carrier inference is ambiguous.',
+          (selectedTools.some((tool) => tool.name === 'track_container')
+            ? 'Pass the returned four-letter SCAC to track_container when carrier inference is ambiguous.'
+            : 'Use the returned four-letter SCAC when a carrier code is needed.'),
         inputSchema: z.object({
           search: z
             .string()
@@ -1587,7 +1596,7 @@ export function createTerminal49McpServer(
     ),
   } satisfies Record<ToolName, ToolRegistrar>;
 
-  for (const definition of TOOL_REGISTRY) {
+  for (const definition of selectedTools) {
     tools[definition.name](definition);
   }
 
