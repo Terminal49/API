@@ -5,11 +5,8 @@
  * that enforces the feature.
  */
 
-import type {
-  CurrentAccount,
-  CurrentCredential,
-  Terminal49Client,
-} from '@terminal49/sdk';
+import type { CurrentAccount } from '@terminal49/sdk';
+import type { ToolContext } from './context.js';
 
 export interface WhoamiTrackingSlots {
   limit: number;
@@ -78,10 +75,9 @@ function toAccount(account: CurrentAccount): WhoamiAccount {
 }
 
 export async function executeWhoami(
-  client: Terminal49Client,
+  context: Pick<ToolContext, 'me'>,
 ): Promise<WhoamiResponse> {
-  // SAFETY: `format: 'mapped'` makes the SDK return the result of mapCurrentCredential.
-  const me = (await client.me({ format: 'mapped' })) as CurrentCredential;
+  const me = await context.me();
 
   const user = me.user
     ? {

@@ -52,6 +52,11 @@ import {
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
+  createToolContext,
+  type McpCredentialType,
+  type ToolContext,
+} from './tools/context.js';
+import {
   DEFAULT_TOOLSETS,
   defaultTools,
   selectTools,
@@ -1008,6 +1013,8 @@ export interface Terminal49McpServerOptions {
   toolsets?: readonly Toolset[];
   /** Register only tools whose readOnlyHint is true. */
   readOnly?: boolean;
+  /** How the caller authenticated. Defaults to api_key. */
+  credentialType?: McpCredentialType;
 }
 
 export function createTerminal49McpServer(
@@ -1023,6 +1030,7 @@ export function createTerminal49McpServer(
     defaultFormat: 'mapped',
   });
 
+  const credentialType = options.credentialType ?? 'api_key';
   const selectedTools = selectTools({
     toolsets: options.toolsets ?? DEFAULT_TOOLSETS,
     readOnly: options.readOnly ?? false,
@@ -1069,6 +1077,7 @@ export function createTerminal49McpServer(
       },
       handler: (
         args: StandardSchemaWithJSON.InferOutput<InputArgs>,
+        context: ToolContext,
       ) => Promise<unknown>,
       buildResourceLinks?: (result: unknown) => ResourceLinkContent[],
     ): ToolRegistrar =>
@@ -1087,7 +1096,8 @@ export function createTerminal49McpServer(
         // resolve that conditional type while InputArgs is still generic.
         wrapTool(
           definition.name,
-          handler,
+          (args: StandardSchemaWithJSON.InferOutput<InputArgs>) =>
+            handler(args, createToolContext(client, credentialType)),
           buildResourceLinks,
         ) as ToolCallback<InputArgs>,
       );
@@ -1592,7 +1602,7 @@ export function createTerminal49McpServer(
           features: z.record(z.string(), z.object({ status: z.string() })),
         }),
       },
-      async () => executeWhoami(client),
+      async (_args, context) => executeWhoami(context),
     ),
   } satisfies Record<ToolName, ToolRegistrar>;
 
