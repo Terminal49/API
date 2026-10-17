@@ -185,6 +185,18 @@ export const TOOL_REGISTRY = [
     },
   },
   {
+    name: 'update_custom_field',
+    title: 'Update Custom Field',
+    toolset: 'operations',
+    tier: 'C',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
     name: 'search_docs',
     title: 'Search Terminal49 Docs',
     toolset: 'core',

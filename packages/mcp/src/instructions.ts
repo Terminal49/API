@@ -35,6 +35,8 @@ const WRITE_EFFECTS = {
     'removes one party role from a container or shipment and keeps the party',
   set_custom_field:
     'fills an empty custom field on a container, shipment or tracking request',
+  update_custom_field:
+    'replaces or clears a custom field value on a container, shipment or tracking request',
 } satisfies Record<WriteTool['name'], string>;
 
 const TIER_RULES = {

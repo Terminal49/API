@@ -118,6 +118,11 @@ import {
   setCustomFieldOutputSchema,
 } from './tools/set-custom-field.js';
 import {
+  executeUpdateCustomField,
+  updateCustomFieldInputSchema,
+  updateCustomFieldOutputSchema,
+} from './tools/update-custom-field.js';
+import {
   cancelTrackingRequestInputSchema,
   cancelTrackingRequestOutputSchema,
   executeCancelTrackingRequest,
@@ -1057,6 +1062,7 @@ function formatToolError(
       case 'assign_party':
       case 'unassign_party':
       case 'set_custom_field':
+      case 'update_custom_field':
         return `No ${entityLabel(input.entity_type)} found with id ${typeof input.entity_id === 'string' ? input.entity_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
@@ -1859,7 +1865,7 @@ export function createTerminal49McpServer(
         description:
           'Fill an empty custom field, such as a PO number or project manager, on a container, shipment, or tracking request. ' +
           "Get the field's api_slug, data_type, and allowed values from the account's custom field definitions first. The value is checked against the data_type and options before anything is sent; a value that does not fit returns invalid_value with the expected form. " +
-          'When the field already has a value, it returns already_set with current_value and changes nothing. It checks before it writes but cannot block a write that lands at the same moment, so do not run two set_custom_field calls on the same field in parallel. ' +
+          'When the field already has a value, it returns already_set with current_value and changes nothing; use update_custom_field to replace or clear it. It checks before it writes but cannot block a write that lands at the same moment, so do not run two set_custom_field calls on the same field in parallel. ' +
           'On a tracking request, Terminal49 copies the value to the shipment or containers the request creates. A later change on the tracking request does not reach those copies, so once the request has created its shipment this returns use_shipment_or_container with shipment_id; set the field on that shipment or its containers instead. ' +
           'Returns set with the stored value, or unknown_field, field_not_applicable, or unsupported_field when the field cannot take this write. ' +
           'Returns ambiguous_field with values when a tracking request holds one value per container for the field.',
@@ -1867,6 +1873,21 @@ export function createTerminal49McpServer(
         outputSchema: setCustomFieldOutputSchema,
       },
       async (args, context) => executeSetCustomField(args, client, context),
+    ),
+    update_custom_field: tool(
+      {
+        description:
+          'Replace or clear a custom field value on a container, shipment, or tracking request. Terminal49 keeps no copy of the old value. ' +
+          'Pass value to replace it, checked against the data_type and options as in set_custom_field, or clear: true to remove it. ' +
+          'Call it first without confirmation_token: it changes nothing and returns a preview (the record, the field, the current value, and the proposed value) with a confirmation_token. ' +
+          'Show the preview to the user, and call again with the token only after the user approves it. The token stops working if the value changes in the meantime. ' +
+          'Returns updated or cleared with previous_value, unchanged when the field already has the new value, or not_set when the field has no value; fill an empty field with set_custom_field. ' +
+          'Returns ambiguous_field with values, and no token, when a tracking request holds one value per container for the field. ' +
+          'Returns use_shipment_or_container with shipment_id, and no token, when a tracking request already created its shipment, because the change would not reach the shipment or its containers; change the field there instead.',
+        inputSchema: updateCustomFieldInputSchema,
+        outputSchema: updateCustomFieldOutputSchema,
+      },
+      async (args, context) => executeUpdateCustomField(args, client, context),
     ),
     search_docs: tool(
       {
