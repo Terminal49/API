@@ -18,6 +18,7 @@
  */
 import type { McpServer } from '@modelcontextprotocol/server';
 import type { BeforeSendFn, UserIdentity } from '@posthog/mcp';
+import { redactSignedUrlsDeep } from './signed-urls.js';
 // `PostHog` is imported from `@posthog/mcp`'s re-export rather than from
 // `posthog-node` directly, and deliberately so. `posthog-node` is a *peer*
 // dependency of `@posthog/mcp`, and this monorepo also carries a transitive
@@ -155,8 +156,9 @@ export function initializePostHogFromEnv(
 }
 
 /**
- * `beforeSend` hook. Drops `$exception` events wholesale and strips
- * customer-identifying properties from everything else.
+ * `beforeSend` hook. Drops `$exception` events wholesale, strips
+ * customer-identifying properties from everything else, and redacts signed
+ * URLs from what remains.
  */
 const redactSensitiveProperties: BeforeSendFn = (event) => {
   // `enableExceptionAutocapture: false` below should mean these never appear.
@@ -173,6 +175,7 @@ const redactSensitiveProperties: BeforeSendFn = (event) => {
     }
   }
 
+  event.properties = redactSignedUrlsDeep(event.properties);
   return event;
 };
 
