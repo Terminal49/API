@@ -89,6 +89,18 @@ export const TOOL_REGISTRY = [
   readTool('list_documents', 'List Documents', 'documents'),
   readTool('get_document', 'Get Document', 'documents'),
   {
+    name: 'stop_shipment_tracking',
+    title: 'Stop Shipment Tracking',
+    toolset: 'operations',
+    tier: 'C',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
     name: 'resume_shipment_tracking',
     title: 'Resume Shipment Tracking',
     toolset: 'operations',

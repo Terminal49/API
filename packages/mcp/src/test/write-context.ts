@@ -1,4 +1,5 @@
 import type { Terminal49Client } from '@terminal49/sdk';
+import { z } from 'zod';
 import {
   createToolContext,
   type ToolContext,
@@ -29,13 +30,19 @@ export function writeContext(
   });
 }
 
-/** Captures what console.error receives, for checking audit events. */
-export function auditEvents(
-  lines: readonly string[],
-): Record<string, unknown>[] {
+const loggedEventSchema = z.object({ event: z.string() }).passthrough();
+
+/** The audit events among the lines console.error received. */
+export function auditEvents(lines: readonly string[]) {
   return lines
-    .map((line) => JSON.parse(line) as Record<string, unknown>)
+    .map((line) => loggedEventSchema.parse(JSON.parse(line)))
     .filter((event) => event.event === 'mcp.write.audit');
+}
+
+/** The confirmation_token a preview returned. Fails the test if there is none. */
+export function tokenOf(result: unknown): string {
+  return z.object({ confirmation_token: z.string() }).parse(result)
+    .confirmation_token;
 }
 
 /** A raw GET /me body for an API key on TEST_ACCOUNT_ID with these features. */

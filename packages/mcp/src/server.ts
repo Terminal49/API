@@ -90,6 +90,11 @@ import {
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
+  executeStopShipmentTracking,
+  stopShipmentTrackingInputSchema,
+  stopShipmentTrackingOutputSchema,
+} from './tools/stop-shipment-tracking.js';
+import {
   executeResumeShipmentTracking,
   resumeShipmentTrackingInputSchema,
   resumeShipmentTrackingOutputSchema,
@@ -1005,6 +1010,7 @@ function formatToolError(
         return `No document found with id ${id ?? '(missing)'}.`;
       case 'get_vessel':
         return `No vessel found with id ${id ?? '(missing)'}.`;
+      case 'stop_shipment_tracking':
       case 'resume_shipment_tracking':
         return `No shipment found with id ${typeof input.shipment_id === 'string' ? input.shipment_id : '(missing)'}.`;
       case 'get_location':
@@ -1687,6 +1693,19 @@ export function createTerminal49McpServer(
         outputSchema: getDocumentOutputSchema,
       },
       async (args) => executeGetDocument(args, client),
+    ),
+    stop_shipment_tracking: tool(
+      {
+        description:
+          'Stop carrier and terminal updates for a shipment and all its containers, for example when it is delivered or was tracked by mistake. ' +
+          'Call it first without confirmation_token: it changes nothing and returns a preview (the Bill of Lading, the number of containers, and whether tracking is on) with a confirmation_token. ' +
+          'Show the preview to the user, and call again with the token only after the user approves it. ' +
+          'Returns stopped, or already_stopped when tracking was already off. Needs the stop_tracking feature; without it the result is FeatureNotEnabled.',
+        inputSchema: stopShipmentTrackingInputSchema,
+        outputSchema: stopShipmentTrackingOutputSchema,
+      },
+      async (args, context) =>
+        executeStopShipmentTracking(args, client, context),
     ),
     resume_shipment_tracking: tool(
       {

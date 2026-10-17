@@ -11,6 +11,7 @@ import {
   type Terminal49McpServerOptions,
 } from './server.js';
 import {
+  defaultTools,
   selectTools,
   TOOL_REGISTRY,
   TOOLSETS,
@@ -91,6 +92,39 @@ describe('server instructions', () => {
       );
     }
     expect(instructions).not.toMatch(/None delete or overwrite data/);
+  });
+
+  it('gives the confirmation rule only when a tool needs a confirmed preview', () => {
+    const rule =
+      /Never pass a confirmation_token the user has not approved in this turn/;
+    const stale = /On stale_preview/;
+    const all = buildServerInstructions(
+      selectTools({ toolsets: TOOLSETS, readOnly: false }),
+    );
+    const operations = buildServerInstructions(
+      selectTools({ toolsets: ['operations'], readOnly: false }),
+    );
+    expect(all).toMatch(rule);
+    expect(all).toMatch(stale);
+    expect(operations).toMatch(rule);
+    expect(operations).toMatch(stale);
+
+    const withoutTierC = [
+      buildServerInstructions(defaultTools()),
+      buildServerInstructions(
+        selectTools({ toolsets: TOOLSETS, readOnly: true }),
+      ),
+      buildServerInstructions(
+        selectTools({
+          toolsets: ['core', 'operations'],
+          readOnly: false,
+        }).filter((tool) => tool.tier !== 'C'),
+      ),
+    ];
+    for (const instructions of withoutTierC) {
+      expect(instructions).not.toMatch(rule);
+      expect(instructions).not.toMatch(stale);
+    }
   });
 
   it('marks tool output untrusted in every mode', async () => {
