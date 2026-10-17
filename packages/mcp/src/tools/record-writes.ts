@@ -18,8 +18,8 @@ import type {
 
 const MAX_RECORDS = 50;
 const CONCURRENCY = 5;
-// The hosted /mcp function stops at 30s (vercel.json maxDuration). Stop starting
-// new records well before that so the caller still gets the result back.
+// The hosted /mcp function stops at 30s (vercel.json maxDuration). Stop working
+// on records well before that so the caller still gets the result back.
 export const CALL_BUDGET_MS = 20_000;
 
 export const CONTAINER_PARTY_ROLES = [
@@ -176,16 +176,29 @@ function describeError(error: unknown): string {
   return 'The change could not be saved.';
 }
 
+// Every write a record change makes goes through `save`, so none starts after
+// the call has stopped waiting for that record.
+type Save = <T>(write: () => Promise<T>) => Promise<T>;
+
+const TIMED_OUT_MID_WRITE =
+  'Ran out of time while saving. The change may or may not have been applied; check this record before calling again.';
+
 async function applyEach(
   ids: string[],
-  change: (id: string) => Promise<Outcome>,
+  change: (id: string, save: Save) => Promise<Outcome>,
   describe: (counts: {
     updated: number;
     unchanged: number;
     failed: number;
   }) => string,
 ): Promise<RecordWriteResult> {
-  const deadline = Date.now() + CALL_BUDGET_MS;
+  // The SDK cannot cancel a request, so the call stops waiting at the deadline
+  // instead; an SDK request may take 30s and retry, past the function limit.
+  const deadline = new AbortController();
+  const timer = setTimeout(() => deadline.abort(), CALL_BUDGET_MS);
+  const outOfTime = new Promise<'out_of_time'>((resolve) =>
+    deadline.signal.addEventListener('abort', () => resolve('out_of_time')),
+  );
   const result: RecordWriteResult = {
     updated: [],
     unchanged: [],
@@ -197,11 +210,26 @@ async function applyEach(
   const workers = Array.from(
     { length: Math.min(CONCURRENCY, queue.length) },
     async () => {
-      while (Date.now() < deadline) {
+      while (!deadline.signal.aborted) {
         const id = queue.shift();
         if (id === undefined) break;
+        let wrote = false;
+        const save: Save = (write) => {
+          if (deadline.signal.aborted) {
+            return Promise.reject(new RecordWriteError(TIMED_OUT_MID_WRITE));
+          }
+          wrote = true;
+          return write();
+        };
         try {
-          result[await change(id)].push(id);
+          const outcome = await Promise.race([change(id, save), outOfTime]);
+          if (outcome !== 'out_of_time') {
+            result[outcome].push(id);
+          } else if (wrote) {
+            result.failed.push({ id, error: TIMED_OUT_MID_WRITE });
+          } else {
+            result.not_attempted.push(id);
+          }
         } catch (error) {
           result.failed.push({ id, error: describeError(error) });
         }
@@ -209,14 +237,16 @@ async function applyEach(
     },
   );
   await Promise.all(workers);
-  result.not_attempted = queue;
+  clearTimeout(timer);
+  result.not_attempted.push(...queue);
   result.summary = describe({
     updated: result.updated.length,
     unchanged: result.unchanged.length,
     failed: result.failed.length,
   });
-  if (queue.length > 0) {
-    result.summary += ` Ran out of time before ${queue.length} more; call again with not_attempted.`;
+  const skipped = result.not_attempted.length;
+  if (skipped > 0) {
+    result.summary += ` Ran out of time before ${skipped} more; call again with not_attempted.`;
   }
   return result;
 }
@@ -255,7 +285,7 @@ export async function executeSetPartyRole(
 
   return applyEach(
     container_ids ?? shipment_ids ?? [],
-    async (id) => {
+    async (id, save) => {
       const { data } = partyRoleListSchema.parse(
         await manager.partyRoles(id, { format: 'raw' }),
       );
@@ -270,7 +300,7 @@ export async function executeSetPartyRole(
       if (action === 'remove') {
         if (matching.length === 0) return 'unchanged';
         for (const assignment of matching) {
-          await manager.removePartyRole(id, assignment.id);
+          await save(() => manager.removePartyRole(id, assignment.id));
         }
         return 'updated';
       }
@@ -283,13 +313,13 @@ export async function executeSetPartyRole(
               : `Already has a different ${role}. Use action "replace" to swap it.`,
           );
         }
-        await addRole(id);
+        await save(() => addRole(id));
         return 'updated';
       }
 
       if (others.length === 0) {
         if (matching.length > 0) return 'unchanged';
-        await addRole(id);
+        await save(() => addRole(id));
         return 'updated';
       }
       // The unique index rejects a second customer, so a swap would have to
@@ -301,10 +331,10 @@ export async function executeSetPartyRole(
       }
       // Attach first so a failed add leaves the previous party in place.
       const attached = matching.length === 0;
-      if (attached) await addRole(id);
+      if (attached) await save(() => addRole(id));
       for (const assignment of others) {
         try {
-          await manager.removePartyRole(id, assignment.id);
+          await save(() => manager.removePartyRole(id, assignment.id));
         } catch (error) {
           if (isNotFound(error)) continue; // Rails already replaced it.
           const detail = `could not detach another party in ${role}: ${describeError(error)}`;
@@ -351,7 +381,7 @@ export async function executeSetCustomField(
 
   return applyEach(
     ids,
-    async (id) => {
+    async (id, save) => {
       // SAFETY: `format: 'mapped'` makes the SDK return the result of mapCustomFields.
       const current = (await manager.customFields(id, {
         format: 'mapped',
@@ -359,11 +389,11 @@ export async function executeSetCustomField(
       const existing = current.find((field) => field.slug === api_slug);
       if (value === null) {
         if (!existing || existing.value == null) return 'unchanged';
-        await manager.deleteCustomField(id, api_slug);
+        await save(() => manager.deleteCustomField(id, api_slug));
         return 'updated';
       }
       if (existing && sameValue(existing.value, value)) return 'unchanged';
-      await manager.setCustomField(id, api_slug, value);
+      await save(() => manager.setCustomField(id, api_slug, value));
       return 'updated';
     },
     ({ updated, unchanged, failed }) =>
