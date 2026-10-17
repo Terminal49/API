@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **14 tools** and **4 MCP resources** for container tracking and shipment management.
+The Terminal49 MCP Server provides **19 tools** and **4 MCP resources** for container tracking and shipment management.
 
 `packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. Every tool below is in the `core` toolset. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
@@ -76,6 +76,8 @@ get_container({
 - Rail tracking (if applicable)
 - Shipment context
 - Terminal details
+- `custom_fields` when `include` lists `custom_fields`
+- `party_roles` when `include` lists `party_roles`: each row has the party role `id`, `role`, `party_id` and `party_name`. `party_name` is the company name, else the party's name, else its nickname. If the credential cannot read party roles, `party_roles` is `null` and `party_roles_note` explains why.
 - **Lifecycle-aware metadata** with presentation guidance
 
 **Response Metadata** (NEW):
@@ -110,7 +112,9 @@ get_container({
 ```typescript
 get_shipment_details({
   id: "shipment-uuid",
-  include_containers: true  // default
+  include_containers: true,  // default
+  include_custom_fields: false,  // default
+  include_party_roles: false  // default
 })
 ```
 
@@ -121,6 +125,7 @@ get_shipment_details({
 - Vessel information
 - ETA/ATA for all legs
 - Container list (if included)
+- `custom_fields` and `party_roles` when requested, in the same shape as `get_container`
 - **Shipment status** with presentation guidance
 
 **When to Use**:
@@ -143,6 +148,7 @@ get_container_transport_events({ id: "container-uuid" })
 - Event categorization (vessel/rail/terminal/truck)
 - Key milestones extracted
 - Location context for each event
+- `vessel_id` on each event, or `null`. Pass it to `get_vessel`.
 - Presentation guidance
 
 **Example Response**:
@@ -331,11 +337,16 @@ list_parties({
   search: "acme",
   limit: 25 // 1-50
 })
+
+// One party by ID, for example party_id from a party role
+list_parties({ id: "party-uuid" })
 ```
 
 **Returns**:
 - `parties` (`id`, `name`) and `total_matched`
 - `truncated` when the list does not hold every match
+
+With `id`, the tool reads that one party and ignores `search` and `limit`. An unknown ID returns no parties. A party with no company name comes back with its name, else its nickname, else its ID, as `name`.
 
 **When to Use**: Before `list_containers` or `summarize_containers` when a question names a company. Filter with `advanced_filters.parties`, keyed by role, such as `{ customer: "<id>" }`.
 
@@ -372,8 +383,126 @@ whoami()
 - Account: company name, business type, plan, SCAC, location, tracking-slot usage on free/trial plans
 - User (when signed in): email, name, role, job role, job title; `other_accounts` the user can switch to
 - `features`: per-feature status (`available`, `requires_paid_plan`, `requires_user_credential`, `not_enabled`)
+- `credential_type`: how this MCP session signed in (`user`, `agent`, `api_key` or `shared_token`)
+- `enabled_toolsets`: the toolsets this session serves
+- `write_tools_available`: `false` when the session serves only read-only tools
 
 **Use when**: the user asks which account is connected, a lookup returns nothing or 401, or before relying on routing, custom fields, or stop tracking.
+
+---
+
+### 15. `get_tracking_request`
+**Purpose**: Read one tracking request, for example right after `track_container`
+
+**Usage**:
+```typescript
+get_tracking_request({
+  id: "tracking-request-uuid",
+  include_custom_fields: false // default
+})
+```
+
+**Returns**:
+- `request_number`, `request_type`, `scac`, `status`, `failed_reason`, `ref_numbers`, `tags`
+- `is_retrying` and `retry_count`
+- `shipment_id` once the request succeeded (status `created`), otherwise `null`
+- `custom_fields` when requested, with `custom_fields_note` when the credential cannot read them
+
+**When to Use**: Check whether a new request succeeded, failed or is still `pending` or `awaiting_manifest`.
+
+---
+
+### 16. `identify_tracking_number`
+**Purpose**: Identify a number without tracking it
+
+**Usage**:
+```typescript
+identify_tracking_number({ number: "CAIU2885402" })
+```
+
+**Returns**:
+- `number_type` (`container`, `bill_of_lading` or `booking_number`), `is_valid`, `check_digit_passed` and `invalid_reason`
+- `carrier`: `decision` (`auto_select`, `needs_confirmation` or `no_prediction`), `selected` and `candidates`, each with `scac`, `name` and `confidence`
+- `already_tracked`: the `containers` and `shipments` with exactly this number, each with `id` and `shipping_line`, and any `in_progress_request`. It is `null` when the search finds none.
+- `already_tracked_note`: set when the search fails. Then `already_tracked` is `null` because the check did not run, not because the number is untracked.
+
+It creates nothing and adds no tracking volume. Carrier prediction uses the beta `infer_number` endpoint. A 429 from either call returns `{ error: "rate_limited", message, alternative }` with `isError: false`.
+
+**When to Use**: "Which carrier is this?" or "Do we already track this?" before deciding to track a number.
+
+---
+
+### 17. `get_location`
+**Purpose**: Read a port, terminal or metro area
+
+**Usage**:
+```typescript
+get_location({ kind: "port", id: "USLAX" }) // UN/LOCODE or UUID
+get_location({ kind: "terminal", id: "terminal-uuid" }) // UUID only
+get_location({ kind: "metro_area", id: "USLAX" })
+```
+
+**Returns**:
+- Every kind: `kind`, `id`, `name`, `time_zone`
+- Port and metro area: `code` (UN/LOCODE), `state_abbr`, `country_code`, `latitude`, `longitude`. A port also has `city`.
+- Terminal: `nickname`, `firms_code`, `smdg_code`, `bic_facility_code`, `address`, and `port` with the port time zone
+
+The tool checks the ID for each kind before it calls the API. A wrong ID returns a tool error with a fixed message.
+
+**When to Use**: A terminal address or FIRMS code, or the local time zone for last free day and appointment times.
+
+---
+
+### 18. `get_vessel`
+**Purpose**: Read a vessel and, on request, project its track to a port
+
+**Usage**:
+```typescript
+get_vessel({ id: "vessel-uuid" })
+
+get_vessel({
+  id: "vessel-uuid",
+  eta_to: {
+    port_id: "destination-port-uuid",
+    previous_port_id: "previous-port-uuid",
+    latitude: 30.5,   // optional; give with longitude
+    longitude: -150.25
+  }
+})
+```
+
+**Returns**:
+- `name`, `imo`, `mmsi`
+- `position`: `latitude`, `longitude`, `speed_knots`, `heading_degrees`, `reported_at`, or `null`
+- With `eta_to`: `eta` with `estimated_arrival_at`, `total_positions` and at most 120 `positions`, evenly spaced and always with the first and last
+
+The tool always returns `position`. It has no option to leave it out.
+
+The projection needs Routing Data. Without it, `eta` is `null` and `eta_note` explains why. A port pair the API cannot project, such as a wrong `port_id` or `previous_port_id`, also gives `eta: null` and an `eta_note`, and the vessel still comes back. If vessel data itself is gated, the tool returns `FeatureNotEnabled` with `isError: false`.
+
+**When to Use**: "Where is the vessel now?" or "When will it reach the port?" Get `vessel_id` from `get_container_transport_events` and port IDs from `get_shipment_details`.
+
+---
+
+### 19. `list_custom_field_definitions`
+**Purpose**: List the account's custom fields
+
+**Usage**:
+```typescript
+list_custom_field_definitions({
+  entity_type: "container", // container | shipment; omit for both
+  include_archived: false // default
+})
+```
+
+**Returns**:
+- `total` and `definitions`, each with `id`, `api_slug`, `display_name`, `description`, `entity_type`, `data_type`, `reference_type`, `validation`, `sensitive`, `archived`
+- `options` (`id`, `label`, `value`) for `enum` and `enum_multi` fields, in display order
+- If one field's options cannot be loaded, its `options` is `null` and `options_note` explains why. The other definitions still return.
+
+If the credential cannot read custom fields, `definitions` is `null` and `custom_fields_note` explains why.
+
+**When to Use**: Before reading or setting a custom field value, to learn its slug, type and allowed values.
 
 ---
 
@@ -449,6 +578,18 @@ whoami()
 
 ### User asks: "What carriers do you track?"
 → Use `get_supported_shipping_lines`
+
+### User asks: "Which carrier is MAEU123456789? Do we track it already?"
+→ Use `identify_tracking_number`
+
+### User asks: "Did my tracking request go through?"
+→ Use `get_tracking_request` with the request ID
+
+### User asks: "What is the terminal's FIRMS code?" / "Which time zone is the LFD in?"
+→ Use `get_location`
+
+### User asks: "Where is the vessel now?"
+→ Use `get_container_transport_events` for the `vessel_id`, then `get_vessel`
 
 ### User asks: "How did it get from Shanghai to Chicago?"
 → Option A: Use `get_container_route` (paid feature, shows ports and ETAs)
@@ -592,7 +733,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 14 tools and 4 resources, the LLM can:
+With these 19 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

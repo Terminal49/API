@@ -60,21 +60,29 @@ Search for bill of lading 123456789
 
 ---
 
-## 🛠️ Available Tools (10)
+## 🛠️ Available Tools (19)
 
 | Tool | Description |
 |------|-------------|
 | `search_container` | Find containers by number, BL, booking, or reference |
 | `track_container` | Start tracking a container with carrier code |
+| `identify_tracking_number` | Predict a number's type and carrier without tracking it |
 | `get_container` | Get detailed container information |
 | `get_shipment_details` | Get complete shipment routing and containers |
 | `get_container_transport_events` | Get full event timeline |
 | `get_container_route` | Get ports in route order with ETAs and the current vessel |
+| `get_location` | Get a port, terminal, or metro area |
+| `get_vessel` | Get a vessel's position and projected arrival |
 | `get_supported_shipping_lines` | List 40+ supported carriers |
 | `list_containers` | Browse all tracked containers |
+| `summarize_containers` | Count containers by terminal, status, carrier, port, hold, or date |
 | `list_shipments` | Browse all shipments |
+| `list_parties` | Find parties by company name or ID |
+| `list_custom_field_definitions` | List the account's custom fields |
 | `list_tracking_requests` | Browse tracking requests |
-| `whoami` | Identify the credential, account, and available features |
+| `get_tracking_request` | Get one tracking request |
+| `search_docs` | Search the public Terminal49 documentation |
+| `whoami` | Identify the credential, account, available features, and session toolsets |
 
 ### 🎯 Workflow Prompts (3)
 

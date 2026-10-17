@@ -15,24 +15,29 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (14 Available)
+### 🛠️ Tools (19 Available)
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
 | **`search_container`** | Search by container#, BL, booking, or reference | Fast fuzzy search |
 | **`track_container`** | Create tracking request and get container data | SCAC autocomplete ✨ |
-| **`get_container`** | Get detailed container info with flexible data loading | Progressive loading |
-| **`get_shipment_details`** | Get shipment routing, BOL, containers, ports | Full shipment context |
+| **`identify_tracking_number`** | Predict a number's type and carrier and check whether it is already tracked | Creates nothing |
+| **`get_container`** | Get detailed container info with flexible data loading | Optional custom fields and party roles |
+| **`get_shipment_details`** | Get shipment routing, BOL, containers, ports | Optional custom fields and party roles |
 | **`get_container_transport_events`** | Get full event timeline for a container | Milestone history |
 | **`get_supported_shipping_lines`** | List 40+ major carriers with SCAC codes | Filterable by name/code |
 | **`get_container_route`** | Get ports in route order with ETAs and the current vessel | Premium feature |
+| **`get_location`** | Get a port, terminal, or metro area | FIRMS code, address, time zone |
+| **`get_vessel`** | Get a vessel's position and, optionally, its projected track to a port | Projection is a premium feature |
 | **`list_shipments`** | List shipments with filters and pagination | Fleet-level visibility |
 | **`list_containers`** | List containers with filters and pagination | Returns ResourceLinks ✨ |
 | **`summarize_containers`** | Count containers grouped by terminal, status, carrier, port, hold, or date | Same filters as `list_containers` |
-| **`list_parties`** | Find parties by company name and return their IDs | Feeds `advanced_filters.parties` |
+| **`list_parties`** | Find parties by company name, or read one by ID | Feeds `advanced_filters.parties` |
+| **`list_custom_field_definitions`** | List the account's custom fields, their types, and enum options | Needs a signed-in user |
 | **`list_tracking_requests`** | List tracking requests and statuses | Audit and monitoring |
+| **`get_tracking_request`** | Get one tracking request's status, failure reason, and shipment | Follow-up after tracking |
 | **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
-| **`whoami`** | Identify the credential, its account, and the features it can use | Explains empty or unauthorized results |
+| **`whoami`** | Identify the credential, its account, the features it can use, and the session's toolsets | Explains empty or unauthorized results |
 
 ### 🎯 Prompts (3 Workflows)
 
@@ -395,7 +400,7 @@ Credential headers (`Authorization`, cookies, and any header whose name contains
 
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. Every tool today is in `core`.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. Every tool today is in `core`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
