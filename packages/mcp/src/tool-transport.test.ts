@@ -637,11 +637,55 @@ describe('all public tools over MCP client transport', () => {
     },
   );
 
+  it('track_container returns the created request alongside its readable linked container', async () => {
+    sdk.search.mockResolvedValue({ data: [] });
+    sdk.createTrackingRequestFromInfer.mockResolvedValue({
+      infer: { inferred_type: 'container', selected_scac: 'MAEU' },
+      trackingRequest: {
+        data: {
+          id: 'tr-created',
+          type: 'tracking_request',
+          attributes: { request_type: 'container', scac: 'MAEU' },
+        },
+        included: [{ id: CONTAINER_ID, type: 'container' }],
+      },
+    });
+    sdk.containersGet.mockResolvedValue({ raw: containerRaw() });
+    const { client, handler } = await connectClient();
+
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'CAIU2885402', scac: 'MAEU' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        id: CONTAINER_ID,
+        tracking_request_created: true,
+        tracking_request: {
+          id: 'tr-created',
+          request_number: 'CAIU2885402',
+          number_type: 'container',
+          scac: 'MAEU',
+        },
+      });
+    } finally {
+      await client.close();
+      await handler.close();
+    }
+  });
+
   it('track_container preserves a created request when its linked container is not readable yet', async () => {
     sdk.search.mockResolvedValue({ data: [] });
     sdk.createTrackingRequestFromInfer.mockResolvedValue({
       infer: { inferred_type: 'container', selected_scac: 'MAEU' },
       trackingRequest: {
+        data: {
+          id: 'tr-created',
+          type: 'tracking_request',
+          attributes: { request_type: 'container', scac: 'MAEU' },
+        },
         included: [{ id: CONTAINER_ID, type: 'container' }],
       },
     });
@@ -660,7 +704,9 @@ describe('all public tools over MCP client transport', () => {
       expect(result.structuredContent).toMatchObject({
         tracking_request_created: true,
         tracking_request: {
+          id: 'tr-created',
           request_number: 'CAIU2885402',
+          number_type: 'container',
           container_id: CONTAINER_ID,
         },
       });

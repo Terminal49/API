@@ -254,11 +254,25 @@ function duplicateResult(
   };
 }
 
-function submittedScac(
+/**
+ * Describes the request the API created. The submitted values are fallbacks
+ * for a response that leaves an attribute out.
+ */
+function createdRequest(
   trackingRequest: any,
-  requestedScac: string | undefined,
-): string | undefined {
-  return trackingRequest?.data?.attributes?.scac || requestedScac;
+  submitted: {
+    number: string;
+    numberType: string | undefined;
+    scac: string | undefined;
+  },
+) {
+  const attributes = trackingRequest?.data?.attributes;
+  return {
+    id: trackingRequest?.data?.id,
+    request_number: attributes?.request_number || submitted.number,
+    number_type: attributes?.request_type || submitted.numberType,
+    scac: attributes?.scac || submitted.scac,
+  };
 }
 
 function hasValidIso6346CheckDigit(number: string): boolean {
@@ -490,24 +504,25 @@ export async function executeTrackContainer(
 
     // Extract container ID from the tracking response
     const containerId = extractContainerId(trackingRequest);
+    const created = createdRequest(trackingRequest, {
+      number,
+      numberType: inferredNumberType,
+      scac: requestedScac,
+    });
 
     if (!containerId) {
       logMcpEvent({
         event: 'tracking_request.pending',
         number,
-        numberType: numberTypeOverride,
-        scac: submittedScac(trackingRequest, requestedScac),
+        numberType: created.number_type,
+        scac: created.scac,
         timestamp: new Date().toISOString(),
       });
 
       return {
         tracking_request_created: true,
         infer_result: infer,
-        tracking_request: {
-          request_number: number,
-          number_type: inferredNumberType,
-          scac: submittedScac(trackingRequest, requestedScac),
-        },
+        tracking_request: created,
       };
     }
 
@@ -532,12 +547,7 @@ export async function executeTrackContainer(
       return {
         tracking_request_created: true,
         infer_result: infer,
-        tracking_request: {
-          request_number: number,
-          number_type: inferredNumberType,
-          scac: submittedScac(trackingRequest, requestedScac),
-          container_id: containerId,
-        },
+        tracking_request: { ...created, container_id: containerId },
       };
     }
 
@@ -555,6 +565,7 @@ export async function executeTrackContainer(
       ...containerDetails,
       tracking_request_created: true,
       infer_result: infer,
+      tracking_request: created,
     };
   } catch (error) {
     const duration = Date.now() - startTime;

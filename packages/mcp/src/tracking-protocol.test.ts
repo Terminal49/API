@@ -234,6 +234,38 @@ describe('track_container carrier selection', () => {
     }
   });
 
+  it('returns the id and number type of the request the API created', async () => {
+    stubApi({
+      'GET /search': () => ({ data: [] }),
+      'POST /tracking_requests/infer_number': () => {
+        const response = inferResponse('MAEU123456789', 'MAEU');
+        response.data.attributes.number_type = 'bill_of_lading';
+        return response;
+      },
+      'POST /tracking_requests': createdTrackingRequest,
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MAEU123456789' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        tracking_request_created: true,
+        tracking_request: {
+          id: 'tr-1',
+          request_number: 'MAEU123456789',
+          number_type: 'bill_of_lading',
+          scac: 'MAEU',
+        },
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
   it('creates the request when numberType is supplied after inference fails', async () => {
     const requests = stubApi({
       'GET /search': () => ({ data: [] }),
