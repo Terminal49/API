@@ -303,19 +303,21 @@ const shipments = await client.shipments.list({
     "type": "container",
     "id": "abc-123",
     "attributes": {
-      "container_number": "CAIU1234567",
+      "number": "CAIU1234567",
       "available_for_pickup": true
     }
   }
 }
 ```
 
-**Mapped format:**
+**Mapped format (abridged):**
 ```json
 {
   "id": "abc-123",
-  "containerNumber": "CAIU1234567",
-  "availableForPickup": true
+  "number": "CAIU1234567",
+  "location": {
+    "availableForPickup": true
+  }
 }
 ```
 </Accordion>
