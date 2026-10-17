@@ -40,17 +40,6 @@ export class AuthInterceptor {
   }
 }
 
-/**
- * Retries transient failures with backoff. Two kinds of failure are handled:
- *
- *  - A response with a retryable status (429 / 5xx), handled in `onResponse`.
- *  - A thrown transport error (DNS/connection/"fetch failed"), handled in
- *    `onError` — these never reach `onResponse` because `fetch` rejected.
- *
- * Retries are gated by {@link shouldRetryRequest}: idempotent methods are always
- * eligible, but non-idempotent writes are only retried when the caller supplied
- * an `Idempotency-Key` header. 429 backoff honors the server's `Retry-After`.
- */
 /** A request captured before it was sent, so it can be replayed on retry. */
 interface ReplayableRequest {
   request: Request;
@@ -62,6 +51,19 @@ interface ReplayableRequest {
 type RetryRequestParams = Pick<MiddlewareCallbackParams, 'id' | 'request'> &
   Partial<Pick<MiddlewareCallbackParams, 'schemaPath'>>;
 
+/**
+ * Retries transient failures with backoff. Two kinds of failure are handled:
+ *
+ *  - A response with a retryable status (429 / 5xx), handled in `onResponse`.
+ *  - A thrown transport error (DNS/connection/"fetch failed"), handled in
+ *    `onError` — these never reach `onResponse` because `fetch` rejected.
+ *
+ * Retries are gated by {@link shouldRetryRequest}: idempotent methods are always
+ * eligible, as are read-only query `POST`s (the `/trade_intel/` routes, whose
+ * body is a query and creates nothing). Other non-idempotent writes are only
+ * retried when the caller supplied an `Idempotency-Key` header. 429 backoff
+ * honors the server's `Retry-After`.
+ */
 export class RetryInterceptor {
   private replayableRequests = new Map<Request | string, ReplayableRequest>();
 
