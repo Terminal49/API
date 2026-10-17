@@ -255,7 +255,7 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Reads one document's metadata and, on request, its extracted data and source email without modifying the document.",
+        "read_only_justification": "Reads one document's metadata and, on request, its extracted data, source email and a short-lived download link, without modifying the document.",
         "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }

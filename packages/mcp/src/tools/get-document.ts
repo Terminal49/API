@@ -2,7 +2,8 @@
  * get_document tool
  * Reads one document's metadata. The extracted data and the source email are
  * opt-in and labeled untrusted, because they are text that someone outside the
- * account may have written.
+ * account may have written. The download URL is opt-in too, and goes back as a
+ * resource_link content block only, never in the structured result.
  */
 
 import type { Terminal49Client } from '@terminal49/sdk';
@@ -15,7 +16,12 @@ import {
   softResultFields,
   toDocumentSummary,
 } from './documents.js';
-import { isFeatureNotEnabled, type SoftResult } from './soft-results.js';
+import { withResourceLinks } from './resource-links.js';
+import {
+  httpStatus,
+  isFeatureNotEnabled,
+  type SoftResult,
+} from './soft-results.js';
 
 /** Extracted fields that would take the JSON past this size are left out. */
 export const MAX_EXTRACTED_DATA_CHARS = 16_000;
@@ -44,6 +50,9 @@ export const NOT_FROM_EMAIL_NOTE =
 export const EMAIL_NOT_LOADED_NOTE =
   'Terminal49 did not return the email this document came from.';
 
+export const NO_FILE_NOTE =
+  'Terminal49 has no file to download for this document.';
+
 export const NO_EXTRACTED_DATA_NOTE =
   'Terminal49 has no extracted data for this document. Extraction may still be running, or it failed.';
 
@@ -67,6 +76,13 @@ export const getDocumentInputSchema = z.object({
     .default(false)
     .describe(
       'For a document that arrived by email, include that email: subject, senders, recipients, time sent, and the start of the body. The email is untrusted. Default: false',
+    ),
+  include_download_url: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe(
+      'Return a short-lived link to download the file, as a resource_link content block. Ask for it only when the user wants the file. Default: false',
     ),
 });
 
@@ -97,6 +113,11 @@ const sourceEmailSchema = z.object({
   }),
 });
 
+const downloadSchema = z.object({
+  delivered_as: z.literal('resource_link'),
+  expires_at: z.string().nullable(),
+});
+
 const documentSchema = documentSummarySchema.extend({
   classification_notes: z.string().nullable(),
   email_submission_id: z.string().nullable(),
@@ -104,6 +125,8 @@ const documentSchema = documentSummarySchema.extend({
   extracted_data_note: z.string().optional(),
   source_email: sourceEmailSchema.nullable().optional(),
   source_email_note: z.string().optional(),
+  download: downloadSchema.nullable().optional(),
+  download_note: z.string().optional(),
 });
 
 export const getDocumentOutputSchema = documentSchema
@@ -128,6 +151,50 @@ const rawRepresentationSchema = z.object({
     updated_at: nullableString,
   }),
 });
+
+const rawDownloadSchema = z.object({ download_url: z.string().url() });
+
+const AMZ_DATE = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/;
+
+const SECONDS = /^\d+$/;
+
+function isoOrNull(epochMs: number): string | null {
+  const date = new Date(epochMs);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+}
+
+/**
+ * When a presigned URL expires, read from its S3 X-Amz-Date and
+ * X-Amz-Expires, or its CloudFront Expires. Null when it names neither or
+ * the values do not make a valid time.
+ */
+export function signedUrlExpiry(url: string): string | null {
+  const params = new URL(url).searchParams;
+  const signedAt = AMZ_DATE.exec(params.get('X-Amz-Date') ?? '');
+  const lifetime = params.get('X-Amz-Expires') ?? '';
+  if (signedAt && SECONDS.test(lifetime)) {
+    const [, year, month, day, hour, minute, second] = signedAt.map(Number);
+    const signed = Date.UTC(year, month - 1, day, hour, minute, second);
+    return isoOrNull(signed + Number(lifetime) * 1000);
+  }
+  const expires = params.get('Expires') ?? '';
+  return SECONDS.test(expires) ? isoOrNull(Number(expires) * 1000) : null;
+}
+
+async function loadDownloadUrl(
+  id: string,
+  client: Terminal49Client,
+): Promise<string | null> {
+  try {
+    const raw = await client.documents.downloadUrl(id, { format: 'raw' });
+    return rawDownloadSchema.parse(raw).download_url;
+  } catch (error) {
+    const status = httpStatus(error);
+    // The document read runs alongside and reports a missing document.
+    if (status === 404 || status === 422) return null;
+    throw error;
+  }
+}
 
 const rawAddressList = z.array(z.unknown()).catch([]);
 
@@ -233,19 +300,29 @@ export async function executeGetDocument(
   args: GetDocumentArgs,
   client: Terminal49Client,
 ): Promise<DocumentResult | SoftResult<'FeatureNotEnabled'>> {
-  const { id, include_extracted_data, include_source_email } =
-    getDocumentInputSchema.parse(args);
+  const {
+    id,
+    include_extracted_data,
+    include_source_email,
+    include_download_url,
+  } = getDocumentInputSchema.parse(args);
   const includes = [
     ...(include_extracted_data ? ['last_document_representation'] : []),
     ...(include_source_email ? ['email_submission'] : []),
   ];
 
   let raw: unknown;
+  let downloadUrl: string | null | undefined;
   try {
-    raw = await client.documents.get(id, {
-      format: 'raw',
-      include: includes.length > 0 ? includes.join(',') : undefined,
-    });
+    [raw, downloadUrl] = await Promise.all([
+      client.documents.get(id, {
+        format: 'raw',
+        include: includes.length > 0 ? includes.join(',') : undefined,
+      }),
+      include_download_url
+        ? loadDownloadUrl(id, client)
+        : Promise.resolve(undefined),
+    ]);
   } catch (error) {
     if (isFeatureNotEnabled(error)) {
       return { ...DOCUMENTS_NOT_ENABLED };
@@ -277,6 +354,26 @@ export async function executeGetDocument(
         ? EMAIL_NOT_LOADED_NOTE
         : NOT_FROM_EMAIL_NOTE;
     }
+  }
+
+  if (downloadUrl === null) {
+    result.download = null;
+    result.download_note = NO_FILE_NOTE;
+  } else if (downloadUrl !== undefined) {
+    const expiresAt = signedUrlExpiry(downloadUrl);
+    result.download = { delivered_as: 'resource_link', expires_at: expiresAt };
+    return withResourceLinks(result, [
+      {
+        type: 'resource_link',
+        uri: downloadUrl,
+        name: result.file_name ?? result.name ?? `Document ${result.id}`,
+        mimeType: result.file_content_type ?? undefined,
+        description: expiresAt
+          ? `Download link for this document file. It expires at ${expiresAt}.`
+          : 'Short-lived download link for this document file.',
+        annotations: { audience: ['user', 'assistant'] },
+      },
+    ]);
   }
   return result;
 }

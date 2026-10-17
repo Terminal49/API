@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { createTerminal49McpServer } from '../server.js';
 import { fakeApiClient, fakeApiFetch } from '../test/fake-api.js';
 import { MAX_DOCUMENT_TEXT_CHARS } from './documents.js';
+import { resourceLinksOf } from './resource-links.js';
 import {
   EMAIL_NOT_LOADED_NOTE,
   executeGetDocument,
@@ -12,7 +13,9 @@ import {
   MAX_EMAIL_SUBJECT_CHARS,
   MAX_EXTRACTED_DATA_CHARS,
   NO_EXTRACTED_DATA_NOTE,
+  NO_FILE_NOTE,
   NOT_FROM_EMAIL_NOTE,
+  signedUrlExpiry,
   UNTRUSTED_EMAIL_NOTICE,
   UNTRUSTED_NOTICE,
 } from './get-document.js';
@@ -507,6 +510,121 @@ describe('get_document', () => {
     });
   });
 
+  it('returns the download URL only as a resource link', async () => {
+    const { client, requests } = fakeApiClient({
+      [`GET /documents/${DOCUMENT_ID}`]: { body: documentResponse('none') },
+      [`GET /documents/${DOCUMENT_ID}/download_url`]: {
+        body: { download_url: SIGNED_URL },
+      },
+    });
+
+    const result = await executeGetDocument(
+      { id: DOCUMENT_ID, include_download_url: true },
+      client,
+    );
+
+    expect(requests.map((request) => request.path).sort()).toEqual([
+      `/documents/${DOCUMENT_ID}`,
+      `/documents/${DOCUMENT_ID}/download_url`,
+    ]);
+    expect(result).toMatchObject({
+      download: {
+        delivered_as: 'resource_link',
+        expires_at: '2026-10-17T13:00:00.000Z',
+      },
+    });
+    expect(JSON.stringify(result)).not.toContain('X-Amz-Signature');
+    expect(Object.getOwnPropertySymbols({ ...result })).toEqual([]);
+    expect(resourceLinksOf(result)).toEqual([
+      {
+        type: 'resource_link',
+        uri: SIGNED_URL,
+        name: 'hbl.pdf',
+        mimeType: 'application/pdf',
+        description:
+          'Download link for this document file. It expires at 2026-10-17T13:00:00.000Z.',
+        annotations: { audience: ['user', 'assistant'] },
+      },
+    ]);
+    expect(getDocumentOutputSchema.safeParse(result).success).toBe(true);
+  });
+
+  it.each([
+    [
+      'an empty X-Amz-Expires',
+      'https://t49-documents-prod.s3.amazonaws.com/a/hbl.pdf?X-Amz-Date=20261017T120000Z&X-Amz-Expires=&X-Amz-Signature=deadbeef',
+    ],
+    [
+      'an out-of-range Expires',
+      'https://d1.cloudfront.net/a.pdf?Expires=99999999999999&Signature=x&Key-Pair-Id=y',
+    ],
+  ])(
+    'returns the document with an unknown expiry for %s',
+    async (_case, downloadUrl) => {
+      const { client } = fakeApiClient({
+        [`GET /documents/${DOCUMENT_ID}`]: { body: documentResponse('none') },
+        [`GET /documents/${DOCUMENT_ID}/download_url`]: {
+          body: { download_url: downloadUrl },
+        },
+      });
+
+      const result = await executeGetDocument(
+        { id: DOCUMENT_ID, include_download_url: true },
+        client,
+      );
+
+      expect(result).toMatchObject({
+        id: DOCUMENT_ID,
+        download: { delivered_as: 'resource_link', expires_at: null },
+      });
+      expect(resourceLinksOf(result)).toMatchObject([
+        {
+          uri: downloadUrl,
+          description: 'Short-lived download link for this document file.',
+        },
+      ]);
+    },
+  );
+
+  it('never asks for a download URL unless include_download_url is set', async () => {
+    const { client, requests } = fakeApiClient({
+      [`GET /documents/${DOCUMENT_ID}`]: { body: documentResponse('none') },
+    });
+
+    const result = await executeGetDocument(
+      {
+        id: DOCUMENT_ID,
+        include_extracted_data: true,
+        include_source_email: true,
+      },
+      client,
+    );
+
+    expect(requests.map((request) => request.path)).toEqual([
+      `/documents/${DOCUMENT_ID}`,
+    ]);
+    expect(result).not.toHaveProperty('download');
+    expect(resourceLinksOf(result)).toEqual([]);
+  });
+
+  it('explains a document with no file to download', async () => {
+    const { client } = fakeApiClient({
+      [`GET /documents/${DOCUMENT_ID}`]: { body: documentResponse('none') },
+      [`GET /documents/${DOCUMENT_ID}/download_url`]: { status: 422 },
+    });
+
+    const result = await executeGetDocument(
+      { id: DOCUMENT_ID, include_download_url: true },
+      client,
+    );
+
+    expect(result).toMatchObject({
+      download: null,
+      download_note: NO_FILE_NOTE,
+    });
+    expect(resourceLinksOf(result)).toEqual([]);
+  });
+
   it('returns a soft FeatureNotEnabled result when documents are not enabled', async () => {
     const { client } = fakeApiClient({
       [`GET /documents/${DOCUMENT_ID}`]: {
@@ -519,5 +637,23 @@ describe('get_document', () => {
 
     expect(result).toMatchObject({ error: 'FeatureNotEnabled' });
     expect(getDocumentOutputSchema.safeParse(result).success).toBe(true);
+  });
+});
+
+describe('signedUrlExpiry', () => {
+  it('reads an S3 signing time and lifetime', () => {
+    expect(signedUrlExpiry(SIGNED_URL)).toBe('2026-10-17T13:00:00.000Z');
+  });
+
+  it('reads a CloudFront expiry', () => {
+    expect(
+      signedUrlExpiry(
+        'https://d1.cloudfront.net/a.pdf?Expires=1792238400&Signature=x',
+      ),
+    ).toBe('2026-10-17T12:00:00.000Z');
+  });
+
+  it('returns null when the URL names no expiry', () => {
+    expect(signedUrlExpiry('https://files.example.com/a.pdf?sig=x')).toBeNull();
   });
 });
