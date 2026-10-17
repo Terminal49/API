@@ -308,7 +308,11 @@ function isNotFound(error: unknown): boolean {
 }
 
 type ExistingTracking =
-  | { kind: 'container'; id: string; shippingLine?: string }
+  | {
+      kind: 'containers';
+      /** Every container whose number is exactly the one searched, in search order. */
+      matches: Array<{ id: string; shippingLine?: string }>;
+    }
   | {
       kind: 'pending_request';
       id: string;
@@ -328,10 +332,12 @@ const IN_PROGRESS_REQUEST_STATUSES: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Finds a container, or an in-progress tracking request, that already tracks
- * `number`. The API rejects a second request for a number only under the
- * same carrier, so an in-progress request under another SCAC is ignored when
- * the caller names one: retracking under the right carrier must reach the API.
+ * Finds an in-progress tracking request for `number`, or else the containers
+ * whose number is exactly `number`. The API rejects a second request for a
+ * number only under the same carrier, so an in-progress request under another
+ * SCAC is ignored when the caller names one: retracking under the right
+ * carrier must reach the API. Search matches substrings and reference
+ * numbers, so a container with another number never counts.
  */
 async function findExistingTracking(
   number: string,
@@ -344,21 +350,6 @@ async function findExistingTracking(
 
   try {
     const result = await executeSearchContainer({ query: number }, client);
-
-    const exactMatch = result.containers.find(
-      (container) =>
-        normalizeTrackingNumber(container.container_number) === number,
-    );
-    const match =
-      exactMatch ??
-      (result.containers.length === 1 ? result.containers[0] : null);
-    if (match?.id) {
-      return {
-        kind: 'container',
-        id: match.id,
-        shippingLine: normalizeText(match.shipping_line),
-      };
-    }
 
     const pending = result.tracking_requests.find(
       (request) =>
@@ -375,7 +366,19 @@ async function findExistingTracking(
         scac: pending.scac,
       };
     }
-    return null;
+
+    const matches = result.containers.flatMap((candidate) =>
+      candidate.id &&
+      normalizeTrackingNumber(candidate.container_number) === number
+        ? [
+            {
+              id: candidate.id,
+              shippingLine: normalizeText(candidate.shipping_line),
+            },
+          ]
+        : [],
+    );
+    return matches.length > 0 ? { kind: 'containers', matches } : null;
   } catch {
     return null;
   }
@@ -431,34 +434,46 @@ export async function executeTrackContainer(
         },
       };
     }
-    if (existing?.kind === 'container') {
-      let containerDetails: Awaited<ReturnType<typeof executeGetContainer>>;
-      try {
-        containerDetails = await executeGetContainer(
-          { id: existing.id },
-          client,
-        );
-      } catch (error) {
-        if (!isNotFound(error)) {
-          throw error;
+    if (existing?.kind === 'containers') {
+      // Search also returns containers whose shipment stopped tracking. The
+      // API accepts a new request for such a container, as container numbers
+      // are reused on later voyages, so only a tracked one ends the call here.
+      let unavailableId: string | undefined;
+      for (const match of existing.matches) {
+        let containerDetails: Awaited<ReturnType<typeof executeGetContainer>>;
+        try {
+          containerDetails = await executeGetContainer(
+            { id: match.id },
+            client,
+          );
+        } catch (error) {
+          if (!isNotFound(error)) {
+            throw error;
+          }
+          unavailableId ??= match.id;
+          continue;
         }
+        if (!containerDetails.shipment?.line_tracking_stopped_at) {
+          return {
+            ...containerDetails,
+            tracking_request_created: false,
+            infer_result: {
+              inferred_type: inferredNumberType,
+              selected_scac: requestedScac || match.shippingLine,
+              source: 'search_match',
+            },
+          };
+        }
+      }
+      if (unavailableId) {
         return {
           error: 'ContainerUnavailable',
           message:
             'A tracked container matched this number, but its details are not available yet. Retry the container lookup shortly.',
           tracking_request_created: false,
-          container: { id: existing.id },
+          container: { id: unavailableId },
         };
       }
-      return {
-        ...containerDetails,
-        tracking_request_created: false,
-        infer_result: {
-          inferred_type: inferredNumberType,
-          selected_scac: requestedScac || existing.shippingLine,
-          source: 'search_match',
-        },
-      };
     }
 
     let infer: any;

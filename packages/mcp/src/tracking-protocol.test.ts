@@ -776,6 +776,205 @@ describe('track_container when search finds a tracking request', () => {
   });
 });
 
+function containerSearchHit(number: string) {
+  return {
+    data: [
+      {
+        id: 'cargo-earlier',
+        type: 'search_result',
+        attributes: {
+          entity_type: 'cargo',
+          number,
+          scac: 'MAEU',
+          status: null,
+        },
+      },
+    ],
+  };
+}
+
+function containerWithShipment(lineTrackingStoppedAt: string | null) {
+  return {
+    data: {
+      id: 'cargo-earlier',
+      type: 'container',
+      attributes: { number: 'MSKU4330011' },
+      relationships: {
+        shipment: { data: { id: 'shipment-earlier', type: 'shipment' } },
+      },
+    },
+    included: [
+      {
+        id: 'shipment-earlier',
+        type: 'shipment',
+        attributes: {
+          shipping_line_scac: 'MAEU',
+          line_tracking_stopped_at: lineTrackingStoppedAt,
+        },
+      },
+    ],
+  };
+}
+
+describe('track_container when search finds a container', () => {
+  it('returns the container while its shipment is still tracked', async () => {
+    const requests = stubApi({
+      'GET /search': () => containerSearchHit('MSKU4330011'),
+      'GET /containers/cargo-earlier': () => containerWithShipment(null),
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330011', scac: 'MAEU' },
+      });
+
+      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+        'GET /v2/search',
+        'GET /v2/containers/cargo-earlier',
+      ]);
+      expect(result.structuredContent).toMatchObject({
+        id: 'cargo-earlier',
+        tracking_request_created: false,
+        infer_result: { source: 'search_match' },
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("creates a new request when the container's earlier tracking has stopped", async () => {
+    const requests = stubApi({
+      'GET /search': () => containerSearchHit('MSKU4330011'),
+      'GET /containers/cargo-earlier': () =>
+        containerWithShipment('2026-09-01T00:00:00Z'),
+      'POST /tracking_requests/infer_number': () =>
+        inferResponse('MSKU4330011', 'MAEU'),
+      'POST /tracking_requests': createdTrackingRequest,
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330011', scac: 'MAEU' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+        'GET /v2/search',
+        'GET /v2/containers/cargo-earlier',
+        'POST /v2/tracking_requests/infer_number',
+        'POST /v2/tracking_requests',
+      ]);
+      expect(result.structuredContent).toMatchObject({
+        tracking_request_created: true,
+        tracking_request: { request_number: 'MSKU4330011', scac: 'MAEU' },
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('returns a later exact match that is still tracked when an earlier one has stopped', async () => {
+    const stopped = containerWithShipment('2026-09-01T00:00:00Z');
+    const tracked = containerWithShipment(null);
+    tracked.data.id = 'cargo-later';
+    tracked.data.relationships.shipment.data.id = 'shipment-later';
+    tracked.included[0]!.id = 'shipment-later';
+    const requests = stubApi({
+      'GET /search': () => ({
+        data: [
+          ...containerSearchHit('MSKU4330011').data,
+          {
+            ...containerSearchHit('MSKU4330011').data[0]!,
+            id: 'cargo-later',
+          },
+        ],
+      }),
+      'GET /containers/cargo-earlier': () => stopped,
+      'GET /containers/cargo-later': () => tracked,
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330011', scac: 'MAEU' },
+      });
+
+      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+        'GET /v2/search',
+        'GET /v2/containers/cargo-earlier',
+        'GET /v2/containers/cargo-later',
+      ]);
+      expect(result.structuredContent).toMatchObject({
+        id: 'cargo-later',
+        tracking_request_created: false,
+        infer_result: { source: 'search_match' },
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('creates a new request when the only container found has another number', async () => {
+    const requests = stubApi({
+      'GET /search': () => containerSearchHit('TSTU4330035'),
+      'POST /tracking_requests/infer_number': () =>
+        inferResponse('MSKU4330011', 'MAEU'),
+      'POST /tracking_requests': createdTrackingRequest,
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330011' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+        'GET /v2/search',
+        'POST /v2/tracking_requests/infer_number',
+        'POST /v2/tracking_requests',
+      ]);
+      expect(result.structuredContent).toMatchObject({
+        tracking_request_created: true,
+        tracking_request: { request_number: 'MSKU4330011', scac: 'MAEU' },
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('returns an in-progress request found alongside another container', async () => {
+    const requests = stubApi({
+      'GET /search': () => ({
+        data: [
+          ...containerSearchHit('TSTU4330035').data,
+          ...trackingRequestSearchHit('pending', 'OOLU').data,
+        ],
+      }),
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'ZZQU4330040' },
+      });
+
+      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+        'GET /v2/search',
+      ]);
+      expect(result.structuredContent).toMatchObject({
+        tracking_request_created: false,
+        source: 'search_match',
+        tracking_request: { id: 'tr-earlier', status: 'pending' },
+      });
+    } finally {
+      await client.close();
+    }
+  });
+});
+
 describe('list_tracking_requests status filter', () => {
   it('rejects succeeded, which the API would silently treat as pending', async () => {
     const requests = stubApi({});
