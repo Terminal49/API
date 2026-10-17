@@ -192,17 +192,38 @@ const textOf = (body: any): string =>
   body.result.content.map((block: { text?: string }) => block.text).join('\n');
 
 describe('record writes through the /mcp gateway', () => {
+  const GATEWAY_ENV = [
+    'T49_API_TOKEN',
+    'T49_MCP_CLIENT_SECRET',
+    'T49_MCP_AUTHKIT_ENABLED',
+    'T49_CONNECTED_CLIENTS_RESOLVE_SECRET',
+    'T49_MCP_RESOLVE_SECRET',
+    'T49_MCP_RESOURCE_URL',
+    'WORKOS_MCP_RESOURCE',
+    'WORKOS_AUTHORIZATION_SERVER_URL',
+    'WORKOS_ISSUER',
+    'T49_API_BASE_URL',
+    'T49_MCP_ALLOWED_HOSTS',
+    'T49_MCP_ALLOWED_ORIGINS',
+  ];
+  let savedEnv: Record<string, string | undefined> = {};
+
   beforeEach(() => {
     vi.resetModules();
+    savedEnv = Object.fromEntries(
+      GATEWAY_ENV.map((name) => [name, process.env[name]]),
+    );
+    for (const name of GATEWAY_ENV) delete process.env[name];
     process.env.T49_API_BASE_URL = 'https://api.test/v2';
   });
 
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
-    delete process.env.T49_API_BASE_URL;
-    delete process.env.T49_MCP_AUTHKIT_ENABLED;
-    delete process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET;
+    for (const name of GATEWAY_ENV) {
+      if (savedEnv[name] === undefined) delete process.env[name];
+      else process.env[name] = savedEnv[name];
+    }
   });
 
   it('counts OAuth resolution against the write deadline and reports each record', async () => {
