@@ -23813,17 +23813,7 @@
             }
           }
         }
-      }
-    },
-    "securitySchemes": {
-      "authorization": {
-        "name": "Authorization",
-        "type": "apiKey",
-        "in": "header",
-        "description": "Use a Terminal49 API key in the `Authorization` header with the `Token` prefix.\n\n`Authorization: Token YOUR_API_KEY`"
-      }
-    },
-    "responses": {
+      },
       "TradeIntelBadRequest": {
         "description": "Bad Request - the request was understood but a value is invalid, for example an `hs4` that is not a 4-digit HS code.",
         "content": {
@@ -23910,6 +23900,14 @@
             }
           }
         }
+      }
+    },
+    "securitySchemes": {
+      "authorization": {
+        "name": "Authorization",
+        "type": "apiKey",
+        "in": "header",
+        "description": "Use a Terminal49 API key in the `Authorization` header with the `Token` prefix.\n\n`Authorization: Token YOUR_API_KEY`"
       }
     }
   },
