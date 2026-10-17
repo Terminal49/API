@@ -376,7 +376,7 @@ whoami()
 ---
 
 ### 15. `set_party_role`
-**Purpose**: Attach a party to containers or shipments in a role, or detach it (writes)
+**Purpose**: Attach a party to containers or shipments in a role, replace the party in that role, or detach it (destructive writes)
 
 **Usage**:
 ```typescript
@@ -384,19 +384,19 @@ set_party_role({
   container_ids: ["<container-id>"], // or shipment_ids; 1-50, not both
   role: "pickup_dray_carrier", // containers support only this role
   party_id: "<party-id-from-list_parties>",
-  action: "add" // or "remove"
+  action: "replace" // or "add" (beside others) or "remove"
 })
 ```
 
 **Returns**:
 - `updated`, `unchanged` (already matched), `failed` (`id`, `error`), and `not_attempted` (the call ran out of time before reaching them; nothing changed on them)
 
-**When to Use**: Only when the user asks to change these records. Resolve the company with `list_parties` first.
+**When to Use**: Only when the user asks to change these records. Resolve the company with `list_parties` first. `pickup_dray_carrier` and `customer` hold one party per record: `add` fails where a different party holds one, and `replace` swaps it (except a shipment `customer`, which must be removed, then added).
 
 ---
 
 ### 16. `set_custom_field`
-**Purpose**: Set or clear one of the account's custom fields on containers or shipments (writes)
+**Purpose**: Set or clear one of the account's custom fields on containers or shipments (destructive writes: overwrites or clears the previous value)
 
 **Usage**:
 ```typescript
