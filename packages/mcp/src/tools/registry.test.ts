@@ -1,3 +1,8 @@
+import {
+  Client,
+  StreamableHTTPClientTransport,
+} from '@modelcontextprotocol/client';
+import { createMcpHandler } from '@modelcontextprotocol/server';
 import { describe, expect, it } from 'vite-plus/test';
 import { createTerminal49McpServer } from '../server.js';
 import {
@@ -86,5 +91,28 @@ describe('tool registry', () => {
     const selected = selectTools({ toolsets: TOOLSETS, readOnly: false });
 
     expect(selected).toEqual([...TOOL_REGISTRY]);
+  });
+
+  it('answers tools/list with an empty list when no toolset has tools', async () => {
+    const handler = createMcpHandler(
+      () =>
+        createTerminal49McpServer('token', 'https://api.test', undefined, {
+          toolsets: [],
+        }),
+      { legacy: 'stateless', responseMode: 'json' },
+    );
+    const client = new Client({ name: 'registry-test', version: '1.0.0' });
+    await client.connect(
+      new StreamableHTTPClientTransport(new URL('https://mcp.test/mcp'), {
+        fetch: (url, init) => handler.fetch(new Request(url, init)),
+      }),
+    );
+
+    try {
+      await expect(client.listTools()).resolves.toMatchObject({ tools: [] });
+    } finally {
+      await client.close();
+      await handler.close();
+    }
   });
 });

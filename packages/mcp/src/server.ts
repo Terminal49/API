@@ -62,6 +62,7 @@ import {
   selectTools,
   type ToolDefinition,
   type ToolName,
+  type ToolSelection,
   type Toolset,
 } from './tools/registry.js';
 import { readContainerResource } from './resources/container.js';
@@ -88,6 +89,7 @@ import {
   instrumentMcpServer,
 } from './sentry.js';
 import { logMcpEvent } from './logging.js';
+import { resolveToolSelection } from './toolsets.js';
 import { buildServerInstructions } from './instructions.js';
 
 type ContentAnnotations = {
@@ -1051,6 +1053,9 @@ export function createTerminal49McpServer(
         },
         {
           instructions: buildServerInstructions(selectedTools),
+          // Answer tools/list with an empty list, not "method not found",
+          // when the selected toolsets have no tools.
+          capabilities: { tools: { listChanged: true } },
         },
       ),
     ),
@@ -1791,7 +1796,9 @@ export function createTerminal49McpServer(
 }
 
 // Stdio transport runner
-export async function runStdioServer() {
+export async function runStdioServer(
+  serve: (factory: () => McpServer) => void = serveStdio,
+) {
   const apiToken = process.env.T49_API_TOKEN;
   const apiBaseUrl = process.env.T49_API_BASE_URL;
 
@@ -1817,9 +1824,24 @@ export async function runStdioServer() {
     console.error('SDK: @modelcontextprotocol/server v2 (McpServer API)');
   }
 
-  serveStdio(() =>
+  let toolSelection: ToolSelection;
+  try {
+    toolSelection = resolveToolSelection({
+      env: process.env,
+      credentialType: 'api_key',
+    });
+  } catch (error) {
+    console.error(
+      `ERROR: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    process.exit(1);
+  }
+
+  serve(() =>
     createTerminal49McpServer(apiToken, apiBaseUrl, undefined, {
       transport: 'stdio',
+      credentialType: 'api_key',
+      ...toolSelection,
     }),
   );
 }
