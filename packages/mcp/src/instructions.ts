@@ -29,6 +29,8 @@ const WRITE_EFFECTS = {
     'adds reference numbers to a container, shipment or tracking request and keeps the ones already there',
   remove_reference_numbers:
     'removes reference numbers from a container, shipment or tracking request',
+  assign_party:
+    'links a party such as a customer or dray carrier to a container or shipment in a role',
 } satisfies Record<WriteTool['name'], string>;
 
 const TIER_RULES = {

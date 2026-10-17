@@ -17,6 +17,8 @@ import { httpStatus } from './soft-results.js';
 
 const PAGE_SIZE = 100;
 const MAX_PAGES = 10;
+/** The most parties {@link loadParties} reads. */
+export const MAX_LOADED_PARTIES = PAGE_SIZE * MAX_PAGES;
 
 export const PARTY_ROLES = Object.keys(
   containerFilterShape.parties.unwrap().shape,
