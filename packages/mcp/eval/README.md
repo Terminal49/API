@@ -79,49 +79,76 @@ could create a real tracking request.
 
 ## Write evals
 
-[`writes.eval.ts`](./writes.eval.ts) runs the write tools against a dedicated
-sandbox account. It runs only when `MCP_EVAL_ENABLE_WRITE=1` and
+[`writes.eval.ts`](./writes.eval.ts) runs the write tools against the sandbox
+account. It runs only when `MCP_EVAL_ENABLE_WRITE=1` and
 `MCP_EVAL_SANDBOX_TOKEN` are both set, and it uses that token, never
-`MCP_EVAL_TOKEN`. Each case except the document case is a round trip that
-leaves the record as it found it:
+`MCP_EVAL_TOKEN`.
 
-- stop a shipment with a confirmed preview, then resume it;
+The sandbox account also holds demo data, so the suite changes only three
+eval fixtures. [`write-fixtures.ts`](./write-fixtures.ts) names them and picks
+each one by exact match:
+
+- the one shipment whose reference numbers include `MCP-EVAL-FIXTURE`;
+- the party named `MCP Eval (do not use)`;
+- the shipment custom field with API slug `mcp_eval_fixture` and type
+  `short_text`.
+
+A case skips when its fixture is missing. It never falls back to another
+record. Unit tests in [`write-fixtures.test.ts`](./write-fixtures.test.ts)
+check that each selector refuses a near match, such as another reference
+number, another party name, or another custom field.
+
+### One-time setup
+
+Do these steps once in the sandbox account before the first run:
+
+1. Add the reference number `MCP-EVAL-FIXTURE` to one demo shipment. Pick a
+   shipment that is still tracked. Do not add it to a second shipment. The
+   suite skips when two shipments carry it.
+2. Create a shipment custom field with the API slug `mcp_eval_fixture` and the
+   type short text. Use it for nothing else.
+
+You do not need to create the party. The first run creates
+`MCP Eval (do not use)` with `assign_party`, and later runs find it by name.
+Do not rename it or use it on other records.
+
+### Cases
+
+Each case is a round trip on the fixtures. It undoes its write in a `finally`
+block, so the change is undone even when an assertion fails:
+
+- stop the fixture shipment with a confirmed preview, then resume it;
 - refuse a stop with an edited confirmation token;
-- add a reference number to a shipment, then remove it with a confirmed
-  preview;
-- assign the first party as `notify_party` on a shipment, then unassign it
-  with a confirmed preview.
-- set the first `short_text` shipment custom field on a shipment, then
-  overwrite it and clear it with confirmed previews. Terminal49 accepts custom
-  field changes only from a signed-in user, never from an API key. So this
-  case runs as the user in `MCP_EVAL_SANDBOX_BEARER` and skips when it is
-  unset. That token is short-lived, so set it just before the run. Before it
-  writes, the case calls `whoami` with both credentials and fails when the
-  bearer's account is not the `MCP_EVAL_SANDBOX_TOKEN` account.
-- relink the first document, and preview a `reextract` with `update_document`
-  without confirming it. This case is not a round trip. A relink repeats
-  Terminal49's matching and can add shipment or container links, and nothing
-  removes them. A document fix cannot be undone exactly, so the case never
-  confirms one. It depends on the `documents_write` toolset, not
-  `operations`. It skips when the account has no document.
+- add a reference number to the fixture shipment, then remove it with a
+  confirmed preview;
+- assign the eval party as `notify_party` on the fixture shipment, then
+  unassign it with a confirmed preview;
+- set `mcp_eval_fixture` on the fixture shipment, then overwrite it and clear
+  it with confirmed previews. Terminal49 accepts custom field changes only
+  from a signed-in user, never from an API key. So this case runs as the user
+  in `MCP_EVAL_SANDBOX_BEARER` and skips when it is unset. That token is
+  short-lived, so set it just before the run. Before it writes, the case
+  calls `whoami` with both credentials and fails when the bearer's account is
+  not the `MCP_EVAL_SANDBOX_TOKEN` account. The case always clears the field
+  when it ends.
+- preview a `reextract` with `update_document` on a document attached to the
+  fixture shipment, without confirming it. Nothing is written. The case
+  finds the document by the fixture shipment's bill of lading and skips when
+  none is attached.
 
 The write suite is strict too. Its `beforeAll` fails when the gateway does not
 list every default write tool, so a gateway that lost `operations` or
 `documents_write` cannot pass with every case skipped.
-`MCP_EVAL_ALLOW_SPARSE=1` turns that failure into skips. Every other case
-skips when the sandbox account has no shipment. The two stop cases also skip when the sandbox key cannot stop
-tracking (`FeatureNotEnabled`) or the first shipment is already stopped. The
-reference number and party cases do not check either, so they run on a
-stopped shipment too. The party case skips when the account has no party, and
-when the party already holds that role, so it never removes a role it did not
-create. The custom field case skips without `MCP_EVAL_SANDBOX_BEARER`, when
-the account has no shipment or no shipment `short_text` field, and when the
-field already has a value on the shipment. It fails when the user cannot load
-the account's custom field definitions.
-If an assertion fails after a change, the case still undoes the change before
-it ends. `cancel_tracking_request` has no live
-case: a cancel cannot be undone and each run would need a new, billable
-tracking request. Fixture tests cover it.
+`MCP_EVAL_ALLOW_SPARSE=1` turns that failure into skips. The two stop cases
+also skip when the sandbox key cannot stop tracking (`FeatureNotEnabled`) or
+the fixture shipment is already stopped. The custom field case skips when the
+field already has a value, and its cleanup removes that value for the next
+run.
+
+`cancel_tracking_request` and `relink_document` have no live case. A cancel
+cannot be undone, and each run would need a new, billable tracking request. A
+relink can add shipment or container links that nothing removes. Fixture
+tests cover both.
 
 ## Output
 
@@ -148,7 +175,7 @@ waits until Vercel reports a successful production deployment of the pushed
 commit, so it never tests the build that production served before the push.
 Its concurrency group lets only one run edit the sandbox account at a time. It sets `MCP_EVAL_ENABLE_WRITE=1` and
 passes `MCP_EVAL_SANDBOX_TOKEN: ${{ secrets.MCP_EVAL_SANDBOX_TOKEN }}`. Store
-the API key of the dedicated sandbox account in that secret, never a customer
+the sandbox account's API key in that secret, never a customer
 account's key. Until the secret is set, the write suite skips and the step
 exits 0. CI does not set `MCP_EVAL_SANDBOX_BEARER`, because OAuth tokens expire
 in minutes, so the custom field case skips there. Run it by hand with a fresh
