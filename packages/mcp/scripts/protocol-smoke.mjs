@@ -3,7 +3,16 @@ import {
   StreamableHTTPClientTransport,
 } from '@modelcontextprotocol/client';
 import { createMcpHandler } from '@modelcontextprotocol/server';
+import { readFileSync } from 'node:fs';
 import { createTerminal49McpServer } from '../dist/server.js';
+
+const featureMap = JSON.parse(
+  readFileSync(
+    new URL('../../../skills/agent-trust/feature-map.json', import.meta.url),
+    'utf8',
+  ),
+);
+const expectedToolNames = featureMap.mcpTools.map((tool) => tool.name).sort();
 
 const protocolVersion = process.env.MCP_PROTOCOL_VERSION;
 if (!protocolVersion) {
@@ -67,13 +76,10 @@ try {
   }
 
   const { tools } = await client.listTools();
-  if (
-    tools.length !== 14 ||
-    !tools.some((tool) => tool.name === 'search_docs') ||
-    !tools.some((tool) => tool.name === 'whoami')
-  ) {
+  const toolNames = tools.map((tool) => tool.name).sort();
+  if (JSON.stringify(toolNames) !== JSON.stringify(expectedToolNames)) {
     throw new Error(
-      `Expected 14 tools including search_docs and whoami over ${protocolVersion}, received ${tools.length}`,
+      `MCP tools/list differs from skills/agent-trust/feature-map.json over ${protocolVersion}. Expected ${JSON.stringify(expectedToolNames)}, received ${JSON.stringify(toolNames)}`,
     );
   }
 

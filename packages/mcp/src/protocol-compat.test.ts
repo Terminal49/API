@@ -53,6 +53,15 @@ const MCP_DOCS = readFileSync(
   'utf8',
 );
 
+const MCP_TOOL_NAMES: string[] = JSON.parse(
+  readFileSync(
+    new URL('../../../skills/agent-trust/feature-map.json', import.meta.url),
+    'utf8',
+  ),
+)
+  .mcpTools.map((tool: { name: string }) => tool.name)
+  .sort();
+
 function documentedToolSection(toolName: string): string {
   const marker = `### \`${toolName}\``;
   const start = MCP_DOCS.indexOf(marker);
@@ -174,7 +183,7 @@ describe('MCP protocol compatibility', () => {
       ]),
     );
 
-    expect(tools).toHaveLength(14);
+    expect(tools.map((tool) => tool.name).sort()).toEqual(MCP_TOOL_NAMES);
     for (const tool of tools) {
       expect(tool.name.length, tool.name).toBeLessThanOrEqual(64);
       expect(tool.inputSchema.properties, tool.name).not.toHaveProperty(
@@ -306,7 +315,7 @@ describe('MCP protocol compatibility', () => {
           client.listResourceTemplates(),
         ]);
 
-      expect(tools).toHaveLength(14);
+      expect(tools.map((tool) => tool.name).sort()).toEqual(MCP_TOOL_NAMES);
       expect(prompts).toHaveLength(3);
       expect(resources).toHaveLength(3);
       expect(resourceTemplates).toHaveLength(1);
