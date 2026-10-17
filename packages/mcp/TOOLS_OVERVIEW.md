@@ -390,6 +390,7 @@ set_party_role({
 
 **Returns**:
 - `updated`, `unchanged` (already matched), `failed` (`id`, `error`), and `not_attempted` (the call ran out of time before reaching them; nothing changed on them)
+- A record still being saved when time ran out is in `failed` with an error saying the change may or may not have been applied; check it before calling again
 
 **When to Use**: Only when the user asks to change these records. Resolve the company with `list_parties` first. `pickup_dray_carrier` and `customer` hold one party per record: `add` fails where a different party holds one, and `replace` swaps it (except a shipment `customer`, which must be removed, then added).
 
