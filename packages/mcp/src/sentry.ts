@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import * as Sentry from '@sentry/node';
-import { redactSignedUrlsDeep } from './signed-urls.js';
+import { redactSecretsDeep } from './redaction.js';
 
 type Environment = NodeJS.ProcessEnv;
 
@@ -107,9 +107,10 @@ export function scrubSensitiveRequestData<T extends Sentry.Event>(event: T): T {
     scrubSpanData(span.data);
   }
 
-  // A tool result can carry a presigned download URL, which Sentry's MCP
-  // integration records as a span attribute when outputs are recorded.
-  return redactSignedUrlsDeep(event);
+  // A tool result can carry a presigned download URL or a confirmation
+  // token, which Sentry's MCP integration records as span attributes when
+  // outputs are recorded.
+  return redactSecretsDeep(event);
 }
 
 export function buildSentryOptions(

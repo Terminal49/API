@@ -13,6 +13,8 @@ const SECRET_VALUES = [
   'BYPASS-SENTINEL-0000',
 ];
 
+const CONFIRMATION_TOKEN = `t49ct1.k9x2m1.${'A'.repeat(43)}.${'B'.repeat(43)}`;
+
 const CREDENTIAL_HEADERS = {
   authorization: `Token ${SECRET_VALUES[0]}`,
   // `prefs` is not a cookie name Sentry recognizes as sensitive.
@@ -102,6 +104,38 @@ describe('scrubSensitiveRequestData', () => {
     expect(event.spans?.[0]?.data).toEqual({
       'mcp.tool.name': 'get_document',
       'mcp.tool.result.1.uri': '[REDACTED_URL]',
+    });
+  });
+
+  it('redacts confirmation tokens from recorded tool arguments and results', () => {
+    const event = scrubSensitiveRequestData({
+      breadcrumbs: [{ category: 'console', message: CONFIRMATION_TOKEN }],
+      spans: [
+        {
+          span_id: 'c',
+          trace_id: 't',
+          start_timestamp: 0,
+          data: {
+            'mcp.tool.name': 'stop_shipment_tracking',
+            'mcp.request.argument.confirmation_token':
+              JSON.stringify(CONFIRMATION_TOKEN),
+            'mcp.tool.result.content': JSON.stringify({
+              confirmation_token: CONFIRMATION_TOKEN,
+            }),
+          },
+        },
+      ],
+    });
+
+    expect(event.breadcrumbs?.[0]?.message).toBe(
+      '[REDACTED_CONFIRMATION_TOKEN]',
+    );
+    expect(event.spans?.[0]?.data).toEqual({
+      'mcp.tool.name': 'stop_shipment_tracking',
+      'mcp.request.argument.confirmation_token':
+        '"[REDACTED_CONFIRMATION_TOKEN]"',
+      'mcp.tool.result.content':
+        '{"confirmation_token":"[REDACTED_CONFIRMATION_TOKEN]"}',
     });
   });
 
