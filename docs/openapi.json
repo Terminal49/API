@@ -15730,25 +15730,25 @@
                   "$ref": "#/components/schemas/TradeIntelMeta"
                 },
                 "example": {
-                  "since_month": "2025-09",
-                  "until_month_exclusive": "2026-09",
+                  "since_month": "2025-10-01",
+                  "until_month_exclusive": "2026-10-01",
                   "months": 12,
                   "min_containers": 5,
                   "companies": 250000,
                   "hs_codes": 1200,
-                  "facts_since_month": "2022-01",
-                  "facts_until_exclusive": "2026-11",
-                  "partial_month": "2026-10",
-                  "mode": "local",
+                  "facts_since_month": "2022-01-01",
+                  "facts_until_exclusive": "2026-10-09",
+                  "partial_month": "2026-10-01",
+                  "mode": "incremental",
                   "facts_hash": "3f9c1a7e",
-                  "refreshed_since": "2026-10-01",
+                  "refreshed_since": "2026-07-01",
                   "fact_rows": {
                     "lane_month": 1200000,
                     "company_month": 9800000,
                     "commodity_month": 6400000,
                     "hs_lane_month": 15000000
                   },
-                  "volume_measure": "containers",
+                  "volume_measure": "physical containers: distinct (container_number, imported_on)",
                   "built_at": "2026-10-08T06:12:44Z"
                 }
               }
@@ -15817,25 +15817,25 @@
                 },
                 "example": {
                   "index": {
-                    "since_month": "2025-09",
-                    "until_month_exclusive": "2026-09",
+                    "since_month": "2025-10-01",
+                    "until_month_exclusive": "2026-10-01",
                     "months": 12,
                     "min_containers": 5,
                     "companies": 250000,
                     "hs_codes": 1200,
-                    "facts_since_month": "2022-01",
-                    "facts_until_exclusive": "2026-11",
-                    "partial_month": "2026-10",
-                    "mode": "local",
+                    "facts_since_month": "2022-01-01",
+                    "facts_until_exclusive": "2026-10-09",
+                    "partial_month": "2026-10-01",
+                    "mode": "incremental",
                     "facts_hash": "3f9c1a7e",
-                    "refreshed_since": "2026-10-01",
+                    "refreshed_since": "2026-07-01",
                     "fact_rows": {
                       "lane_month": 1200000,
                       "company_month": 9800000,
                       "commodity_month": 6400000,
                       "hs_lane_month": 15000000
                     },
-                    "volume_measure": "containers",
+                    "volume_measure": "physical containers: distinct (container_number, imported_on)",
                     "built_at": "2026-10-08T06:12:44Z"
                   },
                   "results": [
@@ -15848,8 +15848,8 @@
                       "teus": 2310.5,
                       "estimated_value": 48200000.0,
                       "reefer_share": 0.0,
-                      "first_month": "2025-09",
-                      "last_month": "2026-08",
+                      "first_month": "2025-10-01",
+                      "last_month": "2026-09-01",
                       "top_ports": [
                         {
                           "name": "SAVANNAH",
@@ -16293,22 +16293,22 @@
                   ],
                   "series": [
                     {
-                      "period": "2026-Q1",
+                      "period": "2026-01",
                       "origin_country": "VIETNAM",
                       "value": 12000
                     },
                     {
-                      "period": "2026-Q1",
+                      "period": "2026-01",
                       "origin_country": "PEOPLES REP OF CHINA",
                       "value": 11000
                     },
                     {
-                      "period": "2026-Q2",
+                      "period": "2026-04",
                       "origin_country": "VIETNAM",
                       "value": 12500
                     },
                     {
-                      "period": "2026-Q2",
+                      "period": "2026-04",
                       "origin_country": "PEOPLES REP OF CHINA",
                       "value": 10800
                     }
@@ -22192,7 +22192,7 @@
           "year"
         ],
         "default": "month",
-        "description": "Bucket size for a time series. Periods are formatted `YYYY-MM`, `YYYY-Qn`, or `YYYY`."
+        "description": "Bucket size for a time series. Every period is labelled by its first month, `YYYY-MM`: a quarter starting in April 2026 is `2026-04` and the year 2026 is `2026-01`."
       },
       "TradeIntelDimension": {
         "type": "string",
@@ -22357,13 +22357,13 @@
         "properties": {
           "since_month": {
             "type": "string",
-            "description": "First month of the 12-full-month window that search results and rankings cover.",
-            "example": "2025-09"
+            "description": "First day (`YYYY-MM-DD`) of the first month of the 12-full-month window that search results cover.",
+            "example": "2025-10-01"
           },
           "until_month_exclusive": {
             "type": "string",
-            "description": "Month after the last full month in the search window (exclusive).",
-            "example": "2026-09"
+            "description": "First day (`YYYY-MM-DD`) of the month after the last full month in the search window (exclusive).",
+            "example": "2026-10-01"
           },
           "months": {
             "type": "integer",
@@ -22387,23 +22387,23 @@
           },
           "facts_since_month": {
             "type": "string",
-            "description": "First month of history available to `companies/profile`, `importers/top`, `trends`, and `breakdown`. History starts in January 2022.",
-            "example": "2022-01"
+            "description": "First month of history available to `companies/profile`, `importers/top`, `trends`, and `breakdown`. History starts in January 2022. Formatted as the first day of the month (`YYYY-MM-DD`).",
+            "example": "2022-01-01"
           },
           "facts_until_exclusive": {
             "type": "string",
-            "description": "Month after the latest month with data (exclusive).",
-            "example": "2026-11"
+            "description": "Day after the date the index was built (`YYYY-MM-DD`, exclusive): the end of the loaded history.",
+            "example": "2026-10-09"
           },
           "partial_month": {
             "type": "string",
-            "description": "The current calendar month, which is still being loaded and is incomplete.",
-            "example": "2026-10"
+            "description": "First day (`YYYY-MM-DD`) of the current calendar month, which is still being loaded and is incomplete.",
+            "example": "2026-10-01"
           },
           "mode": {
             "type": "string",
-            "description": "Serving mode of the index.",
-            "example": "local"
+            "description": "How the index was built: `full` or `incremental`.",
+            "example": "incremental"
           },
           "facts_hash": {
             "type": "string",
@@ -22411,8 +22411,8 @@
           },
           "refreshed_since": {
             "type": "string",
-            "description": "Start of the period covered by the most recent daily refresh.",
-            "example": "2026-10-01"
+            "description": "Start of the period covered by the most recent daily refresh (`YYYY-MM-DD`).",
+            "example": "2026-07-01"
           },
           "fact_rows": {
             "$ref": "#/components/schemas/TradeIntelFactRowCounts"
@@ -22420,7 +22420,7 @@
           "volume_measure": {
             "type": "string",
             "description": "Unit of every `containers` figure: physical containers, each counted once.",
-            "example": "containers"
+            "example": "physical containers: distinct (container_number, imported_on)"
           },
           "built_at": {
             "type": "string",
@@ -22608,13 +22608,13 @@
           },
           "first_month": {
             "type": "string",
-            "description": "First month with volume in the window.",
-            "example": "2025-09"
+            "description": "First day (`YYYY-MM-DD`) of the first month with volume in the window.",
+            "example": "2025-10-01"
           },
           "last_month": {
             "type": "string",
-            "description": "Last month with volume in the window.",
-            "example": "2026-08"
+            "description": "First day (`YYYY-MM-DD`) of the last month with volume in the window.",
+            "example": "2026-09-01"
           },
           "top_ports": {
             "type": "array",
@@ -22739,7 +22739,8 @@
             "items": {
               "type": "string"
             },
-            "description": "US states the company's rows are split across."
+            "description": "US states the company's rows are split across, or `null` when none of its rows carries a state.",
+            "nullable": true
           }
         },
         "required": [
@@ -22793,7 +22794,7 @@
           },
           "until": {
             "type": "string",
-            "description": "Last month of the period (inclusive).",
+            "description": "Last month of the period (inclusive). Present only when `found` is `true`.",
             "example": "2026-09"
           },
           "found": {
@@ -22857,10 +22858,9 @@
           "company_name",
           "company_state",
           "since",
-          "until",
           "found"
         ],
-        "description": "Import profile for one company. When `found` is `true` the totals, monthly series, breakdowns, and notes are returned."
+        "description": "Import profile for one company. When `found` is `true` the period end (`until`), totals, monthly series, breakdowns, and notes are returned; when it is `false` only `company_name`, `company_state`, `since`, and `found` are."
       },
       "TradeIntelCommoditySearchRequest": {
         "type": "object",
@@ -22992,7 +22992,8 @@
             "items": {
               "type": "string"
             },
-            "description": "US states the company's volume is split across."
+            "description": "US states the company's volume is split across, or `null` when none of its rows carries a state.",
+            "nullable": true
           },
           "containers": {
             "type": "integer",
@@ -23004,14 +23005,16 @@
           },
           "estimated_value": {
             "type": "number",
-            "description": "Modelled USD estimate; present when `hs4` was given."
+            "description": "Modelled USD estimate when `hs4` was given; `null` otherwise.",
+            "nullable": true
           }
         },
         "required": [
           "company_name",
           "states",
           "containers",
-          "teus"
+          "teus",
+          "estimated_value"
         ]
       },
       "TradeIntelTopImporters": {
@@ -23034,16 +23037,19 @@
           },
           "filters": {
             "type": "object",
-            "description": "The filters that were applied.",
+            "description": "The filters that were applied, keyed by the names the service uses: a `port_of_discharge` request comes back as `pod`. Only filters that were given appear.",
             "properties": {
               "hs4": {
-                "type": "string"
+                "type": "string",
+                "description": "The four-digit HS heading."
               },
-              "port_of_discharge": {
-                "type": "string"
+              "pod": {
+                "type": "string",
+                "description": "The `port_of_discharge` substring."
               },
               "origin_country": {
-                "type": "string"
+                "type": "string",
+                "description": "The `origin_country` substring."
               }
             }
           },
@@ -23120,8 +23126,8 @@
         "properties": {
           "period": {
             "type": "string",
-            "description": "`YYYY-MM`, `YYYY-Qn`, or `YYYY` depending on `interval`.",
-            "example": "2026-Q1"
+            "description": "First month of the period, `YYYY-MM`, whatever the `interval`: quarters are `2026-01`, `2026-04`, and so on, and years are `2026-01`.",
+            "example": "2026-01"
           },
           "value": {
             "type": "number",
@@ -23854,23 +23860,39 @@
         }
       },
       "TradeIntelValidationFailed": {
-        "description": "Unprocessable Entity - the body failed schema validation (a value out of range, a malformed month, or an unknown enum value).",
+        "description": "Unprocessable Entity - either the body failed schema validation (a value out of range, a malformed month, or an unknown enum value), reported in `detail`, or the request would read more data than the query cost cap allows, reported in `error`. Narrow the time window or filters for the second.",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/TradeIntelValidationError"
-            },
-            "example": {
-              "detail": [
+              "oneOf": [
                 {
-                  "loc": [
-                    "body",
-                    "limit"
-                  ],
-                  "msg": "Input should be less than or equal to 50",
-                  "type": "less_than_equal"
+                  "$ref": "#/components/schemas/TradeIntelValidationError"
+                },
+                {
+                  "$ref": "#/components/schemas/TradeIntelError"
                 }
               ]
+            },
+            "examples": {
+              "Schema validation": {
+                "value": {
+                  "detail": [
+                    {
+                      "loc": [
+                        "body",
+                        "limit"
+                      ],
+                      "msg": "Input should be less than or equal to 50",
+                      "type": "less_than_equal"
+                    }
+                  ]
+                }
+              },
+              "Query cost cap": {
+                "value": {
+                  "error": "Query too broad for the cost cap; narrow the time window or filters."
+                }
+              }
             }
           }
         }
