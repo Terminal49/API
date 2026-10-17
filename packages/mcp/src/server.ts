@@ -1818,12 +1818,6 @@ export async function runStdioServer(
   // registers no listener at all) when PostHog is unconfigured.
   registerPostHogExitHook();
 
-  if (process.env.T49_MCP_STDIO_BANNER === '1') {
-    console.error('Terminal49 MCP Server v1.0.0 running on stdio');
-    console.error('Available: 10 tools | 3 prompts | 4 resources');
-    console.error('SDK: @modelcontextprotocol/server v2 (McpServer API)');
-  }
-
   let toolSelection: ToolSelection;
   try {
     toolSelection = resolveToolSelection({
@@ -1835,6 +1829,14 @@ export async function runStdioServer(
       `ERROR: ${error instanceof Error ? error.message : String(error)}`,
     );
     process.exit(1);
+  }
+
+  if (process.env.T49_MCP_STDIO_BANNER === '1') {
+    console.error(`Terminal49 MCP Server v${SERVER_VERSION} running on stdio`);
+    console.error(
+      `Available: ${selectTools(toolSelection).length} tools | 3 prompts | 4 resources`,
+    );
+    console.error('SDK: @modelcontextprotocol/server v2 (McpServer API)');
   }
 
   serve(() =>
