@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { logMcpEvent } from '../logging.js';
 import { executeGetContainer } from './get-container.js';
 import { executeSearchContainer } from './search-container.js';
+import type { WriteAuditSummary } from './write-kit.js';
 
 export interface TrackContainerArgs {
   number: string;
@@ -635,6 +636,29 @@ export async function executeTrackContainer(
         throw error;
     }
   }
+}
+
+const trackAuditSchema = z.object({
+  error: z.string().optional(),
+  tracking_request_created: z.boolean().optional(),
+  source: z.string().optional(),
+  tracking_request: z.object({ id: z.string().optional() }).optional(),
+});
+
+/** The audit outcome of a track_container result and the request it names. */
+export function trackContainerAudit(result: unknown): WriteAuditSummary {
+  const parsed = trackAuditSchema.safeParse(result);
+  if (!parsed.success) return { outcome: 'unknown' };
+  const { error, tracking_request_created, source, tracking_request } =
+    parsed.data;
+  const outcome =
+    error ??
+    (tracking_request_created
+      ? 'created'
+      : source === 'duplicate'
+        ? 'duplicate'
+        : 'already_tracked');
+  return { outcome, entityId: tracking_request?.id };
 }
 
 /**

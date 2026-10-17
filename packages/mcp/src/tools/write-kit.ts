@@ -335,7 +335,8 @@ export interface WriteAuditInput {
   /** The result's status or soft-result code, or `error` for a thrown call. */
   outcome: string;
   entityType: AuditEntityType;
-  entityId: string;
+  /** Undefined when the call created no record, or failed before it did. */
+  entityId: string | undefined;
   accountId: string | undefined;
   credentialType: McpCredentialType;
 }
@@ -415,7 +416,7 @@ export function auditOutcome(result: unknown): string {
 interface WriteTarget {
   tool: ToolName;
   entityType: AuditEntityType;
-  entityId: string;
+  entityId: string | undefined;
 }
 
 /**
@@ -433,9 +434,14 @@ async function auditAccountId(
 }
 
 function auditor(context: ToolContext, target: WriteTarget, tier: 'A' | 'C') {
-  return async (phase: WritePhase, outcome: string) =>
+  return async (
+    phase: WritePhase,
+    outcome: string,
+    entityId = target.entityId,
+  ) =>
     emitWriteAudit({
       ...target,
+      entityId,
       tier,
       phase,
       outcome,
@@ -444,16 +450,34 @@ function auditor(context: ToolContext, target: WriteTarget, tier: 'A' | 'C') {
     });
 }
 
-/** Runs a tier A write and emits its audit event. */
+/** The audit outcome and record of a tier A write, read from its result. */
+export interface WriteAuditSummary {
+  outcome: string;
+  entityId?: string;
+}
+
+/**
+ * Runs a tier A write and emits its audit event. `summarize` reads the
+ * outcome and record from the result, for a write whose record id is known
+ * only after it runs.
+ */
 export async function runWrite<Result>(
   context: ToolContext,
   target: WriteTarget,
   run: () => Promise<Result>,
+  summarize: (result: Result) => WriteAuditSummary = (result) => ({
+    outcome: auditOutcome(result),
+  }),
 ): Promise<Result> {
   const audit = auditor(context, target, 'A');
   try {
     const result = await run();
-    await audit('execute', auditOutcome(result));
+    const summary = summarize(result);
+    await audit(
+      'execute',
+      summary.outcome,
+      summary.entityId ?? target.entityId,
+    );
     return result;
   } catch (error) {
     await audit('execute', 'error');

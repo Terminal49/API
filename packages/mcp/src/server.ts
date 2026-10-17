@@ -14,7 +14,10 @@ import {
 import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
 import { executeGetContainer } from './tools/get-container.js';
-import { executeTrackContainer } from './tools/track-container.js';
+import {
+  executeTrackContainer,
+  trackContainerAudit,
+} from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
 import { executeGetShipmentDetails } from './tools/get-shipment-details.js';
 import {
@@ -104,7 +107,11 @@ import {
   resumeShipmentTrackingInputSchema,
   resumeShipmentTrackingOutputSchema,
 } from './tools/resume-shipment-tracking.js';
-import { credentialHash, usableConfirmationSecret } from './tools/write-kit.js';
+import {
+  credentialHash,
+  runWrite,
+  usableConfirmationSecret,
+} from './tools/write-kit.js';
 import {
   createToolContext,
   MCP_CREDENTIAL_TYPES,
@@ -1329,24 +1336,37 @@ export function createTerminal49McpServer(
           })
           .passthrough(),
       },
-      async ({
-        number,
-        numberType,
-        containerNumber,
-        scac,
-        bookingNumber,
-        refNumbers,
-      }) =>
-        executeTrackContainer(
+      async (
+        {
+          number,
+          numberType,
+          containerNumber,
+          scac,
+          bookingNumber,
+          refNumbers,
+        },
+        context,
+      ) =>
+        runWrite(
+          context,
           {
-            number,
-            numberType,
-            containerNumber,
-            scac,
-            bookingNumber,
-            refNumbers,
+            tool: 'track_container',
+            entityType: 'tracking_request',
+            entityId: undefined,
           },
-          client,
+          () =>
+            executeTrackContainer(
+              {
+                number,
+                numberType,
+                containerNumber,
+                scac,
+                bookingNumber,
+                refNumbers,
+              },
+              client,
+            ),
+          trackContainerAudit,
         ),
     ),
     identify_tracking_number: tool(
