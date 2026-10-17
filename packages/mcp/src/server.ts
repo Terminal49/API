@@ -2,6 +2,7 @@
  * Terminal49 MCP Server
  * Implementation using the MCP TypeScript SDK v2 McpServer API
  */
+import { randomBytes } from 'node:crypto';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import {
   completable,
@@ -88,6 +89,7 @@ import {
 } from './tools/get-document.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
+import { credentialHash, usableConfirmationSecret } from './tools/write-kit.js';
 import {
   createToolContext,
   MCP_CREDENTIAL_TYPES,
@@ -1073,6 +1075,11 @@ export interface Terminal49McpServerOptions {
   readOnly?: boolean;
   /** How the caller authenticated. Defaults to api_key. */
   credentialType?: McpCredentialType;
+  /**
+   * Signs tier C confirmation tokens. Without one of at least 32 characters,
+   * tier C tools refuse to write.
+   */
+  confirmationSecret?: string;
 }
 
 export function createTerminal49McpServer(
@@ -1099,6 +1106,9 @@ export function createTerminal49McpServer(
     writeToolsAvailable: selectedTools.some(
       (tool) => !tool.annotations.readOnlyHint,
     ),
+    credentialHash: credentialHash(apiToken),
+    confirmationSecret: usableConfirmationSecret(options.confirmationSecret),
+    gatewayAccountId: accountId,
   };
   const completeCarrierScac = createCarrierScacCompleter(client);
 
@@ -1991,6 +2001,12 @@ export async function runStdioServer(
     process.exit(1);
   }
 
+  // One stdio process serves one user, so a secret made at startup is enough.
+  // Tokens from an earlier process stop working, which costs one re-preview.
+  const confirmationSecret =
+    process.env.T49_MCP_CONFIRMATION_SECRET?.trim() ||
+    randomBytes(32).toString('hex');
+
   if (process.env.T49_MCP_STDIO_BANNER === '1') {
     console.error(`Terminal49 MCP Server v${SERVER_VERSION} running on stdio`);
     console.error(
@@ -2003,6 +2019,7 @@ export async function runStdioServer(
     createTerminal49McpServer(apiToken, apiBaseUrl, undefined, {
       transport: 'stdio',
       credentialType: 'api_key',
+      confirmationSecret,
       ...toolSelection,
     }),
   );

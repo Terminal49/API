@@ -18,7 +18,12 @@ import type { SoftResult } from './soft-results.js';
 import { CONFIRMATION_TOKEN_PREFIX } from '../redaction.js';
 import { addMcpBreadcrumb } from '../sentry.js';
 import { captureMcpEvent } from '../posthog.js';
-import { MCP_CREDENTIAL_TYPES, type McpCredentialType } from './context.js';
+import {
+  MCP_CREDENTIAL_TYPES,
+  type McpCredentialType,
+  type ToolContext,
+} from './context.js';
+import { logMcpEvent } from '../logging.js';
 import { TOOL_REGISTRY, type ToolName } from './registry.js';
 
 /** How long a confirmation token stays valid. */
@@ -393,4 +398,153 @@ export function auditOutcome(result: unknown): string {
     .safeParse(result);
   if (!parsed.success) return 'done';
   return 'status' in parsed.data ? parsed.data.status : parsed.data.error;
+}
+
+// ==================== Write flows ====================
+
+interface WriteTarget {
+  tool: ToolName;
+  entityType: AuditEntityType;
+  entityId: string;
+}
+
+/**
+ * The account an audit event names. The lookup can call /me, and a failed
+ * lookup leaves the account out rather than failing the write.
+ */
+async function auditAccountId(
+  context: ToolContext,
+): Promise<string | undefined> {
+  try {
+    return await context.accountId();
+  } catch {
+    return undefined;
+  }
+}
+
+function auditor(context: ToolContext, target: WriteTarget, tier: 'A' | 'C') {
+  return async (phase: WritePhase, outcome: string) =>
+    emitWriteAudit({
+      ...target,
+      tier,
+      phase,
+      outcome,
+      accountId: await auditAccountId(context),
+      credentialType: context.credentialType,
+    });
+}
+
+/** Runs a tier A write and emits its audit event. */
+export async function runWrite<Result>(
+  context: ToolContext,
+  target: WriteTarget,
+  run: () => Promise<Result>,
+): Promise<Result> {
+  const audit = auditor(context, target, 'A');
+  try {
+    const result = await run();
+    await audit('execute', auditOutcome(result));
+    return result;
+  } catch (error) {
+    await audit('execute', 'error');
+    throw error;
+  }
+}
+
+/** What a tier C read found: a reason to stop, or the state to confirm. */
+export type ConfirmedWriteRead<Preview, Stop> =
+  | { stop: Stop }
+  | {
+      /** The exact fields the write reads or changes. */
+      state: unknown;
+      preview: Preview;
+    };
+
+export interface ConfirmedWrite<Preview, Stop, Done> extends WriteTarget {
+  /** The tool arguments, with confirmation_token when the caller sent one. */
+  args: Record<string, unknown> & { confirmation_token?: string };
+  /** Reads the record. Called on every call, before any token is checked. */
+  read(): Promise<ConfirmedWriteRead<Preview, Stop>>;
+  /** Changes the record. Called only with a token that matches. */
+  write(): Promise<Done>;
+}
+
+export type ConfirmedWriteResult<Preview, Stop, Done> =
+  | Stop
+  | Done
+  | ConfirmationRequiredResult<Preview>
+  | StalePreviewResult<Preview>
+  | InvalidConfirmationResult
+  | NotPermittedResult;
+
+/**
+ * Runs a tier C write. Without a token it returns a preview and a token.
+ * With a token it writes only if the token matches this call and the record
+ * has not changed; a changed record returns a new preview and token.
+ */
+export async function runConfirmedWrite<Preview, Stop, Done>(
+  context: ToolContext,
+  plan: ConfirmedWrite<Preview, Stop, Done>,
+): Promise<ConfirmedWriteResult<Preview, Stop, Done>> {
+  const audit = auditor(context, plan, 'C');
+  const { confirmation_token: token, ...args } = plan.args;
+  const phase: WritePhase = token ? 'execute' : 'preview';
+  const secret = context.confirmationSecret;
+  if (!secret) {
+    logMcpEvent({
+      event: 'mcp.config.error',
+      error: 'ConfirmationSecretMissing',
+      reason:
+        'T49_MCP_CONFIRMATION_SECRET is unset or shorter than 32 characters, so tier C writes are refused.',
+      tool: plan.tool,
+      timestamp: new Date().toISOString(),
+    });
+    await audit(phase, CONFIRMATION_NOT_CONFIGURED.error);
+    return { ...CONFIRMATION_NOT_CONFIGURED };
+  }
+
+  try {
+    const read = await plan.read();
+    if ('stop' in read) {
+      await audit(phase, auditOutcome(read.stop));
+      return read.stop;
+    }
+    const binding: ConfirmationBinding = {
+      tool: plan.tool,
+      args,
+      accountId: await context.accountId(),
+      credentialHash: await context.credentialKey(),
+    };
+    const fingerprint = stateFingerprint(read.state);
+
+    if (!token) {
+      await audit(phase, 'confirmation_required');
+      return confirmationRequired(
+        plan.tool,
+        read.preview,
+        issueConfirmationToken(secret, binding, fingerprint),
+      );
+    }
+
+    const check = checkConfirmationToken(secret, token, binding, fingerprint);
+    if (!check.ok) {
+      if (check.reason === 'stale') {
+        await audit(phase, 'stale_preview');
+        return stalePreview(
+          plan.tool,
+          read.preview,
+          issueConfirmationToken(secret, binding, fingerprint),
+        );
+      }
+      await audit(phase, 'invalid_confirmation');
+      return invalidConfirmation(plan.tool, check.reason);
+    }
+
+    const done = await plan.write();
+    await audit(phase, auditOutcome(done));
+    return done;
+  } catch (error) {
+    await audit(phase, 'error');
+    throw error;
+  }
 }

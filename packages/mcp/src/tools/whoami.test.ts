@@ -15,8 +15,11 @@ function contextReturning(
     credentialType: 'api_key',
     toolsets: ['core', 'documents'],
     writeToolsAvailable: true,
+    credentialHash: 'hash',
     ...session,
     me: meFn,
+    accountId: async () => me.account.id,
+    credentialKey: async () => 'hash',
   };
   return { context, me: meFn };
 }
