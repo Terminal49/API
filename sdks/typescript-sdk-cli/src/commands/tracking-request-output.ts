@@ -23,10 +23,10 @@ function safeMap(raw: unknown, mapper: Mapper): unknown {
 
 function formatMappedPayload(
   raw: unknown,
-  format: ResponseFormat | undefined,
+  format: ResponseFormat,
   mapper: Mapper,
 ): unknown {
-  if (!format || format === 'raw') return raw;
+  if (format === 'raw') return raw;
 
   const mapped = safeMap(raw, mapper);
   if (format === 'both') return { raw, mapped };
@@ -36,7 +36,7 @@ function formatMappedPayload(
 export function formatInferResult(
   client: Terminal49Client,
   raw: unknown,
-  format: ResponseFormat | undefined,
+  format: ResponseFormat,
 ): unknown {
   return formatMappedPayload(raw, format, (payload) =>
     client.deserialize(payload),
@@ -45,7 +45,7 @@ export function formatInferResult(
 
 export function formatTrackingRequestResult(
   raw: unknown,
-  format: ResponseFormat | undefined,
+  format: ResponseFormat,
 ): unknown {
   return formatMappedPayload(raw, format, mapTrackingRequest);
 }
@@ -53,9 +53,9 @@ export function formatTrackingRequestResult(
 export function formatCreateFromInferResult(
   client: Terminal49Client,
   raw: unknown,
-  format: ResponseFormat | undefined,
+  format: ResponseFormat,
 ): unknown {
-  if (!format || format === 'raw') return raw;
+  if (format === 'raw') return raw;
 
   const record = asRecord(raw);
   if (!record || !('trackingRequest' in record)) return raw;

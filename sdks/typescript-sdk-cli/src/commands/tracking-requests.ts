@@ -202,7 +202,7 @@ export function registerTrackingRequestsCommand(program: Command): void {
   createCommand.action(
     action(
       'tracking-requests.create',
-      async ({ client, globals }, type: string, requestNumber: string) => {
+      async ({ client, format }, type: string, requestNumber: string) => {
         const options = localOptions<TrackingCreateOptions>(createCommand);
         const result = await client.trackingRequests.create({
           requestType: mapType(type),
@@ -211,7 +211,7 @@ export function registerTrackingRequestsCommand(program: Command): void {
           refNumbers: optionalList(options.refNumbers),
           shipmentTags: optionalList(options.shipmentTags),
         });
-        return formatTrackingRequestResult(result, globals.format);
+        return formatTrackingRequestResult(result, format);
       },
     ),
   );
@@ -238,9 +238,9 @@ export function registerTrackingRequestsCommand(program: Command): void {
     .action(
       action(
         'tracking-requests.infer',
-        async ({ client, globals }, number: string) => {
+        async ({ client, format }, number: string) => {
           const result = await client.trackingRequests.inferNumber(number);
-          return formatInferResult(client, result, globals.format);
+          return formatInferResult(client, result, format);
         },
       ),
     );
@@ -255,7 +255,7 @@ export function registerTrackingRequestsCommand(program: Command): void {
   createFromInferCommand.action(
     action(
       'tracking-requests.create-from-infer',
-      async ({ client, globals }, number: string) => {
+      async ({ client, format }, number: string) => {
         const options = localOptions<TrackingInferOptions>(
           createFromInferCommand,
         );
@@ -264,7 +264,7 @@ export function registerTrackingRequestsCommand(program: Command): void {
           number,
           options,
         );
-        return formatCreateFromInferResult(client, result, globals.format);
+        return formatCreateFromInferResult(client, result, format);
       },
     ),
   );

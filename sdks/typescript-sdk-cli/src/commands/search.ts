@@ -4,14 +4,14 @@
  * Global search across shipments, containers, and tracking requests.
  */
 
-import type { Terminal49Client } from '@terminal49/sdk';
+import type { ResponseFormat, Terminal49Client } from '@terminal49/sdk';
 import type { Command } from 'commander';
 import { action } from './action.js';
 
 async function formatSearchResult(
   client: Terminal49Client,
   query: string,
-  format: 'raw' | 'mapped' | 'both' | undefined,
+  format: ResponseFormat,
 ): Promise<unknown> {
   const raw = await client.search(query);
   if (format === 'both') return { raw, mapped: client.deserialize(raw) };
@@ -28,8 +28,8 @@ export function registerSearchCommand(program: Command): void {
     .argument('<query>')
     .description('Search query')
     .action(
-      action('search', async ({ client, globals }, query: string) =>
-        formatSearchResult(client, query, globals.format),
+      action('search', async ({ client, format }, query: string) =>
+        formatSearchResult(client, query, format),
       ),
     );
 }

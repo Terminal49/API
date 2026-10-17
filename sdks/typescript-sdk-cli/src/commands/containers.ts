@@ -4,6 +4,7 @@
  * Subcommands: get, list, events, route, map (deprecated, GeoJSON), raw-events, refresh, demurrage, rail
  */
 
+import type { ResponseFormat } from '@terminal49/sdk';
 import type { Command } from 'commander';
 import { parseJsonValue } from '../util/input.js';
 import { action, defineList, warnUnsupportedFilters } from './action.js';
@@ -80,7 +81,7 @@ function railFromRaw(
 }
 
 async function formattedFromRaw(
-  format: 'raw' | 'mapped' | 'both' | undefined,
+  format: ResponseFormat,
   rawLoader: () => Promise<unknown>,
   mapper: (raw: unknown) => unknown,
 ): Promise<unknown> {
@@ -237,9 +238,9 @@ export function registerContainersCommand(program: Command): void {
     .command('demurrage <id>')
     .description('Get demurrage summary for a container')
     .action(
-      action('containers.demurrage', async ({ client, globals }, id: string) =>
+      action('containers.demurrage', async ({ client, format }, id: string) =>
         formattedFromRaw(
-          globals.format,
+          format,
           () => client.containers.get(id, ['pod_terminal'], { format: 'raw' }),
           (raw) => demurrageFromRaw(id, raw),
         ),
@@ -250,9 +251,9 @@ export function registerContainersCommand(program: Command): void {
     .command('rail <id>')
     .description('Get rail milestones for a container')
     .action(
-      action('containers.rail', async ({ client, globals }, id: string) =>
+      action('containers.rail', async ({ client, format }, id: string) =>
         formattedFromRaw(
-          globals.format,
+          format,
           () =>
             client.containers.get(id, ['transport_events'], { format: 'raw' }),
           (raw) => railFromRaw(id, raw),
