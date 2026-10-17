@@ -5,9 +5,13 @@ import { createTerminal49McpServer } from './server.js';
 import {
   DEFAULT_TOOLSETS,
   TOOL_REGISTRY,
+  type ToolDefinition,
   TOOLSETS,
   type Toolset,
 } from './tools/registry.js';
+
+/** The registry with each tier widened, so checks for any tier compile. */
+const REGISTRY: readonly ToolDefinition[] = TOOL_REGISTRY;
 
 vi.mock('@sentry/node', () => ({
   captureException: vi.fn(),
@@ -126,7 +130,7 @@ describe('MCP tool annotations', () => {
   });
 
   it('matches each tier to its annotations', () => {
-    for (const tool of TOOL_REGISTRY) {
+    for (const tool of REGISTRY) {
       const { readOnlyHint, destructiveHint } = tool.annotations;
       expect(readOnlyHint, `${tool.name} tier ${tool.tier}`).toBe(
         tool.tier === 'read',
@@ -140,9 +144,7 @@ describe('MCP tool annotations', () => {
   it('gives every tier C tool an optional confirmation_token input', () => {
     const tools = getRegisteredTools(TOOLSETS);
 
-    for (const definition of TOOL_REGISTRY.filter(
-      (tool) => tool.tier === 'C',
-    )) {
+    for (const definition of REGISTRY.filter((tool) => tool.tier === 'C')) {
       const schema = tools[definition.name]?.inputSchema;
       expect(schema, definition.name).toBeDefined();
       const jsonSchema = z.toJSONSchema(schema!, { io: 'input' }) as {

@@ -42,7 +42,7 @@ function readTool<const Name extends string>(
   name: Name,
   title: string,
   toolset: Toolset = 'core',
-): ToolDefinition & { name: Name } {
+): ToolDefinition & { name: Name; tier: 'read' } {
   return {
     name,
     title,
