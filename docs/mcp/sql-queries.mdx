@@ -9,7 +9,7 @@ The MCP server provides four tools for read-only analysis of your account data. 
 
 Connect your MCP client to `https://mcp.terminal49.com` using OAuth. Your account needs the `assistant-sql` feature and connected-client access. Delegated agents can also use these tools; they additionally need chat access.
 
-**Ordinary API keys cannot use these endpoints.** The backend checks the caller, account membership, feature access and result ownership on each request. The four SQL tools appear in `tools/list` only after the server confirms SQL access for the current user and account. If the access check fails or is unavailable, the standard tools remain available and SQL tools are omitted. Execution still checks permissions independently.
+**Ordinary API keys cannot use these endpoints.** The backend checks the caller, account membership, feature access and result ownership on each request. The four SQL tools appear in `tools/list` only after the server confirms SQL access for the current user and account. The server remembers that answer for up to 60 seconds per user and account. If the access check is denied, the standard tools remain available and SQL tools are omitted. If the check fails temporarily (a timeout, rate limit or server error), SQL tools stay listed so they do not disappear mid-conversation. Execution still checks permissions independently on every call.
 
 In the TypeScript SDK, configure the active account using `accountId`. The assistant query manager sends the user credential and `X-Account-ID` through the SDK's authenticated transport. These user-scoped endpoints are not included in the API-key Postman collection.
 
