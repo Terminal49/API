@@ -19,9 +19,11 @@ import { executeListTrackingRequests } from './list-tracking-requests.js';
 import { executeRemoveReferenceNumbers } from './remove-reference-numbers.js';
 import { executeResumeShipmentTracking } from './resume-shipment-tracking.js';
 import { executeSearchContainer } from './search-container.js';
+import { executeSetCustomField } from './set-custom-field.js';
 import { executeStopShipmentTracking } from './stop-shipment-tracking.js';
 import { executeTrackContainer } from './track-container.js';
 import { executeUnassignParty } from './unassign-party.js';
+import { executeUpdateCustomField } from './update-custom-field.js';
 import { buildListContract } from '../server.js';
 import { EXPECTED_ROUTE_SUMMARY, routeFixture } from '../test/route-fixture.js';
 
@@ -2111,6 +2113,233 @@ describe('MCP write tool contracts', () => {
       status: 'unassigned',
       party_role: { id: ROLE_ID, party_name: 'Acme' },
       undo: 'assign_party',
+    });
+  });
+
+  const PRIORITY_DEFINITION = {
+    data: [
+      {
+        id: 'def-priority',
+        type: 'custom_field_definition',
+        attributes: {
+          api_slug: 'priority',
+          display_name: 'Priority',
+          entity_type: 'Shipment',
+          data_type: 'enum',
+          discarded_at: null,
+        },
+      },
+    ],
+  };
+
+  const PRIORITY_OPTIONS = {
+    data: [
+      { id: 'o1', attributes: { label: 'Low', value: 'low', position: 1 } },
+      { id: 'o2', attributes: { label: 'High', value: 'high', position: 2 } },
+    ],
+  };
+
+  function rawCustomFields(value: string | null) {
+    return {
+      data:
+        value === null
+          ? []
+          : [
+              {
+                id: 'cf-1',
+                type: 'custom_field',
+                attributes: {
+                  api_slug: 'priority',
+                  value,
+                  display_value: value,
+                },
+              },
+            ],
+    };
+  }
+
+  function customFieldClient(
+    records: Record<string, unknown>,
+  ): Terminal49Client {
+    return asClient({
+      customFieldDefinitions: {
+        list: vi.fn().mockResolvedValue(PRIORITY_DEFINITION),
+      },
+      customFieldOptions: {
+        list: vi.fn().mockResolvedValue(PRIORITY_OPTIONS),
+      },
+      ...records,
+    });
+  }
+
+  it('set_custom_field checks the option, then calls shipments.setCustomField', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const setCustomField = vi.fn().mockResolvedValue({
+      data: {
+        id: 'cf-1',
+        type: 'custom_field',
+        attributes: {
+          api_slug: 'priority',
+          value: 'high',
+          display_value: 'High',
+        },
+      },
+    });
+    const customFields = vi.fn().mockResolvedValue(rawCustomFields(null));
+    const client = customFieldClient({
+      shipments: {
+        get: vi.fn().mockResolvedValue(rawShipment(null)),
+        customFields,
+        setCustomField,
+      },
+    });
+
+    const result = await executeSetCustomField(
+      {
+        entity_type: 'shipment',
+        entity_id: SHIPMENT_ID,
+        api_slug: 'priority',
+        value: 'high',
+      },
+      client,
+      writeContext(client),
+    );
+
+    expect(customFields).toHaveBeenCalledWith(SHIPMENT_ID, { format: 'raw' });
+    expect(setCustomField).toHaveBeenCalledWith(
+      SHIPMENT_ID,
+      'priority',
+      'high',
+      { format: 'raw' },
+    );
+    expect(result).toMatchObject({
+      status: 'set',
+      record: { entity_type: 'shipment', label: 'MAEU123456789' },
+      field: { api_slug: 'priority', data_type: 'enum' },
+      value: 'high',
+      display_value: 'High',
+      undo: 'update_custom_field',
+    });
+  });
+
+  it('update_custom_field previews, then calls trackingRequests.updateCustomField with the token', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const updateCustomField = vi.fn().mockResolvedValue({
+      data: {
+        id: 'cf-1',
+        type: 'custom_field',
+        attributes: {
+          api_slug: 'priority',
+          value: 'high',
+          display_value: 'High',
+        },
+      },
+    });
+    const client = customFieldClient({
+      trackingRequests: {
+        get: vi.fn().mockResolvedValue(rawTrackingRequest('created')),
+        customFields: vi.fn().mockResolvedValue(rawCustomFields('low')),
+        updateCustomField,
+      },
+    });
+    const args = {
+      entity_type: 'tracking_request' as const,
+      entity_id: REQUEST_ID,
+      api_slug: 'priority',
+      value: 'high',
+    };
+
+    const preview = await executeUpdateCustomField(
+      args,
+      client,
+      writeContext(client),
+    );
+    expect(updateCustomField).not.toHaveBeenCalled();
+    const result = await executeUpdateCustomField(
+      { ...args, confirmation_token: tokenOf(preview) },
+      client,
+      writeContext(client),
+    );
+
+    expect(updateCustomField).toHaveBeenCalledWith(
+      REQUEST_ID,
+      'priority',
+      'high',
+      { format: 'raw' },
+    );
+    expect(result).toMatchObject({
+      status: 'updated',
+      record: { entity_type: 'tracking_request', label: 'MAEU123456780' },
+      previous_value: 'low',
+      value: 'high',
+      undo: 'update_custom_field',
+    });
+  });
+
+  it('update_custom_field clears with containers.deleteCustomField', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const deleteCustomField = vi.fn().mockResolvedValue({});
+    const client = customFieldClient({
+      customFieldDefinitions: {
+        list: vi.fn().mockResolvedValue({
+          data: [
+            {
+              id: 'def-po',
+              attributes: {
+                api_slug: 'po_number',
+                entity_type: 'Cargo',
+                data_type: 'short_text',
+                discarded_at: null,
+              },
+            },
+          ],
+        }),
+      },
+      containers: {
+        get: vi.fn().mockResolvedValue(buildContainerRaw()),
+        customFields: vi.fn().mockResolvedValue({
+          data: [
+            {
+              id: 'cf-2',
+              attributes: {
+                api_slug: 'po_number',
+                value: 'PO-1',
+                display_value: 'PO-1',
+              },
+            },
+          ],
+        }),
+        deleteCustomField,
+      },
+    });
+    const args = {
+      entity_type: 'container' as const,
+      entity_id: '5a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d',
+      api_slug: 'po_number',
+      clear: true,
+    };
+
+    const preview = await executeUpdateCustomField(
+      args,
+      client,
+      writeContext(client),
+    );
+    const result = await executeUpdateCustomField(
+      { ...args, confirmation_token: tokenOf(preview) },
+      client,
+      writeContext(client),
+    );
+
+    expect(deleteCustomField).toHaveBeenCalledWith(
+      args.entity_id,
+      'po_number',
+      { format: 'raw' },
+    );
+    expect(result).toMatchObject({
+      status: 'cleared',
+      previous_value: 'PO-1',
+      value: null,
+      undo: 'set_custom_field',
     });
   });
 });
