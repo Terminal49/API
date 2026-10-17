@@ -14,7 +14,7 @@ import {
 } from '@modelcontextprotocol/server';
 import { toNodeHandler } from '@modelcontextprotocol/node';
 import * as Sentry from '@sentry/node';
-import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
+import { createAuthorizedTerminal49McpServer } from '../packages/mcp/src/server.js';
 import { flushPostHogEvents } from '../packages/mcp/src/posthog.js';
 import { captureMcpException } from '../packages/mcp/src/sentry.js';
 import { protectedResourceMetadataUrl } from '../packages/mcp/src/resource.js';
@@ -639,7 +639,7 @@ export default async function handler(
     // the established stateless 2025-era path for older clients.
     mcpHandler = createMcpHandler(
       () =>
-        createTerminal49McpServer(
+        createAuthorizedTerminal49McpServer(
           resolvedTerminal49Auth.apiToken,
           process.env.T49_API_BASE_URL,
           resolvedTerminal49Auth.accountId,

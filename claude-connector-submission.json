@@ -10,7 +10,7 @@
   "listing": {
     "name": "Terminal49",
     "tagline": "Track ocean shipments",
-    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, and create new tracking requests.",
+    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, and create new tracking requests. SQL analysis tools are listed only for signed-in users whose active account has assistant-sql access; they are not available with API keys.",
     "categories": [
       "Business"
     ],
@@ -22,17 +22,21 @@
     "icon": "public/store-icons/terminal49-light.png",
     "icon_dark": "public/store-icons/terminal49-dark.png",
     "tool_names": [
+      "describe_views",
       "get_container",
       "get_container_route",
       "get_container_transport_events",
+      "get_query_result",
       "get_shipment_details",
       "get_supported_shipping_lines",
       "list_containers",
       "list_parties",
       "list_shipments",
       "list_tracking_requests",
+      "query_guide",
       "search_container",
       "search_docs",
+      "sql_query",
       "summarize_containers",
       "track_container",
       "whoami"

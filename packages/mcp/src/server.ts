@@ -10,6 +10,7 @@ import {
 } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
+import { registerSqlTools } from './tools/sql-query.js';
 import { executeGetContainer } from './tools/get-container.js';
 import { executeTrackContainer } from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
@@ -102,7 +103,7 @@ export const TERMINAL49_SERVER_INSTRUCTIONS = `Terminal49 tracks ocean container
 
 Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered); custom fields = account-defined fields (PO number, project manager, etc.) on containers and shipments, loaded with get_container include ['custom_fields'] or get_shipment_details include_custom_fields.
 
-Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete or overwrite data.
+Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. sql_query reads account data and creates a temporary, user-owned result snapshot; it does not modify source records and is not idempotent. SQL analysis is marked read-only because the snapshot is an expiring result cache, not a change to account records. All tools except track_container are marked read-only. SQL tools are listed only when the current user and account have access. All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation. None delete or overwrite data.
 
 Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for ports, ETAs, and the current vessel if the account has Routing Data). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links. Call whoami to learn which account and credential this session is bound to and which features it can use: when the user asks who they are or which account is connected, when a lookup returns nothing or an authorization error, or before relying on a gated feature such as routing, custom fields, or stop tracking.`;
 
@@ -971,11 +972,42 @@ export interface Terminal49McpServerTelemetry {
   authSource?: McpAuthSource;
 }
 
+// Discovery uses the same read endpoint and authorization gates as SQL execution.
+// Fail closed without sharing feature decisions across credentials or accounts.
+// /me can replace this probe once its contract and backend are deployed.
+export async function createAuthorizedTerminal49McpServer(
+  apiToken: string,
+  apiBaseUrl?: string,
+  accountId?: string,
+  telemetry: Terminal49McpServerTelemetry = {},
+): Promise<McpServer> {
+  let assistantSql = false;
+  if (accountId && /^Bearer\s+\S+/i.test(apiToken)) {
+    try {
+      const client = new Terminal49Client({
+        apiToken,
+        apiBaseUrl,
+        accountId,
+        maxRetries: 0,
+        timeoutMs: 5000,
+      });
+      const result = await client.assistantQueries.views();
+      assistantSql = Array.isArray(result.views);
+    } catch {
+      // An unavailable capability must not break the standard tool inventory.
+    }
+  }
+  return createTerminal49McpServer(apiToken, apiBaseUrl, accountId, telemetry, {
+    assistantSql,
+  });
+}
+
 export function createTerminal49McpServer(
   apiToken: string,
   apiBaseUrl?: string,
   accountId?: string,
   telemetry: Terminal49McpServerTelemetry = {},
+  capabilities: { assistantSql?: boolean } = {},
 ): McpServer {
   const client = new Terminal49Client({
     apiToken,
@@ -1009,6 +1041,10 @@ export function createTerminal49McpServer(
   );
 
   // ==================== TOOLS ====================
+
+  if (capabilities.assistantSql) {
+    registerSqlTools(server, apiToken, apiBaseUrl, accountId);
+  }
 
   // Tool 1: Search Container
   server.registerTool(
@@ -1871,7 +1907,7 @@ export async function runStdioServer() {
   }
 
   serveStdio(() =>
-    createTerminal49McpServer(apiToken, apiBaseUrl, undefined, {
+    createAuthorizedTerminal49McpServer(apiToken, apiBaseUrl, undefined, {
       transport: 'stdio',
     }),
   );

@@ -16,7 +16,7 @@ const mockState = vi.hoisted(() => ({
 }));
 
 vi.mock('../src/server.js', () => ({
-  createTerminal49McpServer: vi.fn(
+  createAuthorizedTerminal49McpServer: vi.fn(
     (apiToken: string, apiBaseUrl?: string, accountId?: string) => {
       const server = {
         close: vi.fn().mockResolvedValue(undefined),
