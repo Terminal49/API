@@ -90,6 +90,11 @@ import {
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
+  cancelTrackingRequestInputSchema,
+  cancelTrackingRequestOutputSchema,
+  executeCancelTrackingRequest,
+} from './tools/cancel-tracking-request.js';
+import {
   executeStopShipmentTracking,
   stopShipmentTrackingInputSchema,
   stopShipmentTrackingOutputSchema,
@@ -1013,6 +1018,8 @@ function formatToolError(
       case 'stop_shipment_tracking':
       case 'resume_shipment_tracking':
         return `No shipment found with id ${typeof input.shipment_id === 'string' ? input.shipment_id : '(missing)'}.`;
+      case 'cancel_tracking_request':
+        return `No tracking request found with id ${typeof input.tracking_request_id === 'string' ? input.tracking_request_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
       default:
@@ -1718,6 +1725,19 @@ export function createTerminal49McpServer(
       },
       async (args, context) =>
         executeResumeShipmentTracking(args, client, context),
+    ),
+    cancel_tracking_request: tool(
+      {
+        description:
+          'Cancel a tracking request that Terminal49 is still working on (status pending or awaiting_manifest), for example one with a typo or the wrong carrier, before it creates a shipment. It cannot be undone. ' +
+          'Call it first without confirmation_token: it changes nothing and returns a preview (the number, carrier SCAC, and status) with a confirmation_token. ' +
+          'Show the preview to the user, and call again with the token only after the user approves it. ' +
+          'Returns cancelled with the request, or not_cancellable with its current status when it is in any other status.',
+        inputSchema: cancelTrackingRequestInputSchema,
+        outputSchema: cancelTrackingRequestOutputSchema,
+      },
+      async (args, context) =>
+        executeCancelTrackingRequest(args, client, context),
     ),
     search_docs: tool(
       {

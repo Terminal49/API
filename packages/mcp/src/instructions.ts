@@ -23,6 +23,8 @@ const WRITE_EFFECTS = {
   stop_shipment_tracking:
     'stops carrier and terminal updates for a shipment and its containers',
   resume_shipment_tracking: 'starts tracking a stopped shipment again',
+  cancel_tracking_request:
+    'cancels a tracking request that is still pending, which cannot be undone',
 } satisfies Record<WriteTool['name'], string>;
 
 const TIER_RULES = {

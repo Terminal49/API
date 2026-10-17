@@ -77,15 +77,6 @@ export const STOP_TRACKING_NOT_ENABLED: StopTrackingNotEnabled = {
     'Ask an account admin to enable it, or stop tracking from the Terminal49 dashboard.',
 };
 
-export type WriteRateLimited = SoftResult<'rate_limited'>;
-
-export const WRITE_RATE_LIMITED: WriteRateLimited = {
-  error: 'rate_limited',
-  message:
-    'Terminal49 is limiting how often this change can be made. Nothing was changed.',
-  alternative: 'Wait a minute and try again.',
-};
-
 /** Terminal49 refused a stop or resume with 422 and the state did not change. */
 export interface TrackingUnchanged {
   status: 'noop';

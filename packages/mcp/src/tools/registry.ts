@@ -113,6 +113,18 @@ export const TOOL_REGISTRY = [
     },
   },
   {
+    name: 'cancel_tracking_request',
+    title: 'Cancel Tracking Request',
+    toolset: 'operations',
+    tier: 'C',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
     name: 'search_docs',
     title: 'Search Terminal49 Docs',
     toolset: 'core',

@@ -290,6 +290,16 @@ export function confirmedWriteResultSchema<Fields extends z.ZodRawShape>(
   });
 }
 
+export type WriteRateLimited = SoftResult<'rate_limited'>;
+
+/** Returned when Terminal49 answers a write with 429. */
+export const WRITE_RATE_LIMITED: WriteRateLimited = {
+  error: 'rate_limited',
+  message:
+    'Terminal49 is limiting how often this change can be made. Nothing was changed.',
+  alternative: 'Wait a minute and try again.',
+};
+
 /** The confirmation_token input every tier C tool takes. */
 export const confirmationTokenInput = z
   .string()
@@ -465,8 +475,11 @@ export interface ConfirmedWrite<Preview, Stop, Done> extends WriteTarget {
   args: Record<string, unknown> & { confirmation_token?: string };
   /** Reads the record. Called on every call, before any token is checked. */
   read(): Promise<ConfirmedWriteRead<Preview, Stop>>;
-  /** Changes the record. Called only with a token that matches. */
-  write(): Promise<Done>;
+  /**
+   * Changes the record. Called only with a token that matches, and given the
+   * preview of the state the token was checked against.
+   */
+  write(preview: Preview): Promise<Done>;
 }
 
 export type ConfirmedWriteResult<Preview, Stop, Done> =
@@ -540,7 +553,7 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
       return invalidConfirmation(plan.tool, check.reason);
     }
 
-    const done = await plan.write();
+    const done = await plan.write(read.preview);
     await audit(phase, auditOutcome(done));
     return done;
   } catch (error) {
