@@ -4,3 +4,4 @@ export * from './shipments.js';
 export * from './shipping-lines.js';
 export * from './tracking-requests.js';
 export * from './documents.js';
+export * from './assistant-queries.js';

@@ -16,6 +16,7 @@ import {
   ValidationError,
 } from './client/errors.js';
 import {
+  AssistantQueryManager,
   ContainerManager,
   DocumentManager,
   DocumentSchemaManager,
@@ -218,6 +219,7 @@ export class Terminal49Client {
   private accountId: string;
   private defaultFormat: ResponseFormat;
 
+  public assistantQueries: AssistantQueryManager;
   public shipments: ShipmentManager;
   public containers: ContainerManager;
   public trackingRequests: TrackingRequestManager;
@@ -363,6 +365,10 @@ export class Terminal49Client {
 
     this.jsona = new Jsona();
 
+    this.assistantQueries = new AssistantQueryManager(
+      this.transport,
+      config.accountId,
+    );
     this.shipments = new ShipmentManager(this.transport, defaultFormat);
     this.containers = new ContainerManager(this.transport, defaultFormat);
     this.trackingRequests = new TrackingRequestManager(
