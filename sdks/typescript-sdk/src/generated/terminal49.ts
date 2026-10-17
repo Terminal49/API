@@ -46,7 +46,7 @@ export interface paths {
         head?: never;
         /**
          * Edit a shipment
-         * @description Update a shipment
+         * @description Update a shipment.
          */
         patch: operations["patch-shipments-id"];
         trace?: never;
@@ -169,7 +169,7 @@ export interface paths {
         head?: never;
         /**
          * Edit a tracking request
-         * @description Update a tracking request
+         * @description Update a tracking request.
          */
         patch: operations["patch-track-request-by-id"];
         trace?: never;
@@ -229,21 +229,21 @@ export interface paths {
         };
         /**
          * Get single webhook
-         * @description Get the details of a single webhook
+         * @description Get the details of a single webhook.
          */
         get: operations["get-webhooks-id"];
         put?: never;
         post?: never;
         /**
          * Delete a webhook
-         * @description Delete a webhook
+         * @description Delete a webhook.
          */
         delete: operations["delete-webhooks-id"];
         options?: never;
         head?: never;
         /**
          * Edit a webhook
-         * @description Update a single webhook
+         * @description Update a single webhook.
          */
         patch: operations["patch-webhooks-id"];
         trace?: never;
@@ -303,10 +303,7 @@ export interface paths {
             };
             cookie?: never;
         };
-        /**
-         * Get a single webhook notification
-         * @description
-         */
+        /** Get a single webhook notification */
         get: operations["get-webhook-notification-id"];
         put?: never;
         post?: never;
@@ -345,7 +342,7 @@ export interface paths {
         };
         /**
          * Get webhook notification payload examples
-         * @description Returns an example payload as it would be sent to a webhook endpoint for the provided `event`
+         * @description Returns an example payload as it would be sent to a webhook endpoint for the provided `event`. The event must be one your account can subscribe to; otherwise the API returns 400.
          */
         get: operations["get-webhook-notifications-example"];
         put?: never;
@@ -457,7 +454,7 @@ export interface paths {
         head?: never;
         /**
          * Edit a container
-         * @description Update a container
+         * @description Update a container's reference numbers, seal number, equipment type, length, and height, or weight. The container number cannot be edited: sending a different `number` returns 422. Equipment type, length, and height are validated together. When any of them changes, all three must have a value, or the request returns 422. A value outside the listed equipment enums also returns 422.
          */
         patch: operations["patch-containers-id"];
         trace?: never;
@@ -795,10 +792,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List custom field definitions */
+        /**
+         * List custom field definition templates
+         * @description Lists the Terminal49 template definitions. To list the definitions configured for your account, use `GET /accounts/{account_id}/custom_field_definitions`. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
+         */
         get: operations["get-custom-field-definitions"];
         put?: never;
-        /** Create a custom field definition */
+        /**
+         * Create a custom field definition template
+         * @description Creates a Terminal49 template definition. Only Terminal49 accounts can create templates; other accounts receive 401. To create a definition for your account, use `POST /accounts/{account_id}/custom_field_definitions`.
+         */
         post: operations["post-custom-field-definitions"];
         delete?: never;
         options?: never;
@@ -820,7 +823,10 @@ export interface paths {
         get: operations["get-custom-field-definitions-id"];
         put?: never;
         post?: never;
-        /** Delete a custom field definition */
+        /**
+         * Delete a custom field definition
+         * @description Deletes a custom field definition. A definition that has values returns 422; archive it instead. Templates are Terminal49-managed: other accounts get 401 when they update or delete one, so only Terminal49 accounts can see the 422 for a template that other accounts use.
+         */
         delete: operations["delete-custom-field-definitions-id"];
         options?: never;
         head?: never;
@@ -838,7 +844,10 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** List custom field options */
+        /**
+         * List custom field options
+         * @description Lists every option of the definition. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
+         */
         get: operations["get-custom-field-options"];
         put?: never;
         /** Create a custom field option */
@@ -880,7 +889,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List custom fields */
+        /**
+         * List custom fields
+         * @description The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
+         */
         get: operations["get-custom-fields"];
         put?: never;
         /** Create a custom field */
@@ -1114,14 +1126,14 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** @description Returns a party by it's given identifier */
+        /** @description Returns a party by it's given identifier. */
         get: operations["get-parties-id"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Updates a party */
+        /** @description Updates a party. */
         patch: operations["edit-party"];
         trace?: never;
     };
@@ -1189,7 +1201,7 @@ export interface paths {
         head?: never;
         /**
          * Edit a document
-         * @description Updates manual extraction and classification fields.
+         * @description Updates the document type, classification notes, and manual extraction data.
          */
         patch: operations["patch-documents-id"];
         trace?: never;
@@ -1368,6 +1380,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tracking_requests/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tracking Request ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Cancel a tracking request
+         * @description Cancel a tracking request that is still `pending` or `awaiting_manifest`. The request moves to status `cancelled` with failed_reason `Cancelled by user`. Requests in any other status return 422. A request that belongs to another account also returns 422 with a string `errors`. An unknown tracking request ID currently returns a 500 server error, not 404. A 401 comes only from authentication. It means the API token is missing or invalid, or the account may not use the API.
+         */
+        patch: operations["patch-tracking-request-cancel"];
+        trace?: never;
+    };
+    "/accounts/{account_id}/custom_field_definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Your account ID. The API always uses the account of the authenticated user. */
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List custom field definitions
+         * @description Lists the custom field definitions configured for your account. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
+         */
+        get: operations["get-account-custom-field-definitions"];
+        put?: never;
+        /**
+         * Create a custom field definition
+         * @description Creates a custom field definition for your account. Pass `template_id` to copy a Terminal49 template; attributes you send override the template's values.
+         */
+        post: operations["post-account-custom-field-definitions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me": {
         parameters: {
             query?: never;
@@ -1439,7 +1501,7 @@ export interface components {
                         type: "terminal";
                         /** Format: uuid */
                         id: string;
-                    };
+                    } | null;
                 };
                 destination_terminal?: {
                     data?: {
@@ -1447,7 +1509,7 @@ export interface components {
                         type: "terminal" | "rail_terminal";
                         /** Format: uuid */
                         id: string;
-                    };
+                    } | null;
                 };
                 line_tracking_stopped_by_user?: {
                     data?: {
@@ -1455,14 +1517,14 @@ export interface components {
                         type: "user";
                         /** Format: uuid */
                         id: string;
-                    };
+                    } | null;
                 };
             };
             attributes: {
                 bill_of_lading_number: string;
                 /** @description The normalized version of the shipment number used for querying the carrier */
                 normalized_number?: string;
-                ref_numbers?: string[] | null;
+                ref_numbers?: (string | null)[] | null;
                 /** Format: date-time */
                 created_at?: string;
                 tags?: string[];
@@ -1547,7 +1609,10 @@ export interface components {
             /** @enum {string} */
             type: "shipment";
             links: {
-                /** Format: uri */
+                /**
+                 * Format: uri-reference
+                 * @description Path of this resource, relative to the API host (for example `/v2/shipments/{id}`).
+                 */
                 self: string;
             };
         };
@@ -1558,21 +1623,20 @@ export interface components {
         };
         /** link */
         "link-self": {
-            /** Format: uri */
+            /** @description Absolute URL of the request, including its query string as sent. On a create, this is the collection URL the request was posted to, not the URL of the new resource. */
             self?: string;
         };
-        /** links */
+        /**
+         * links
+         * @description Pagination links. Each value is an absolute URL. `self` repeats the request URL as sent, including its query string and its encoding. `current`, `first`, `prev`, `next`, and `last` repeat the request's query parameters, with `page[number]` and `page[size]` in unencoded brackets.
+         */
         links: {
-            /** Format: uri */
-            last?: string;
-            /** Format: uri */
-            next?: string;
-            /** Format: uri */
-            prev?: string;
-            /** Format: uri */
-            first?: string;
-            /** Format: uri */
             self?: string;
+            current?: string;
+            first?: string;
+            prev?: string;
+            next?: string;
+            last?: string;
         };
         /**
          * Container model
@@ -1721,21 +1785,21 @@ export interface components {
                         id?: string;
                         /** @enum {string} */
                         type?: "shipment";
-                    };
+                    } | null;
                 };
                 pickup_facility?: {
                     data?: {
                         id?: string;
                         /** @enum {string} */
                         type?: "terminal";
-                    };
+                    } | null;
                 };
                 pod_terminal?: {
                     data?: {
                         id?: string;
                         /** @enum {string} */
                         type?: "terminal";
-                    };
+                    } | null;
                 };
                 transport_events?: {
                     data?: {
@@ -1767,8 +1831,16 @@ export interface components {
                 country_code?: string;
                 /** @description IANA tz */
                 time_zone?: string;
-                latitude?: number | null;
-                longitude?: number | null;
+                /**
+                 * @description Latitude in decimal degrees, serialized as a decimal string (for example `"22.57489971"`).
+                 * @example 22.57489971
+                 */
+                latitude?: string | null;
+                /**
+                 * @description Longitude in decimal degrees, serialized as a decimal string (for example `"22.57489971"`).
+                 * @example 114.27769989
+                 */
+                longitude?: string | null;
             };
             /** @enum {string} */
             type: "port";
@@ -1803,7 +1875,7 @@ export interface components {
         /** Error model */
         error: {
             detail?: string | null;
-            title: string | null;
+            title?: string | null;
             source?: {
                 pointer?: string | null;
                 parameter?: string | null;
@@ -1826,8 +1898,16 @@ export interface components {
                 country_code?: string;
                 /** @description IANA tz */
                 time_zone?: string;
-                latitude?: number | null;
-                longitude?: number | null;
+                /**
+                 * @description Latitude in decimal degrees, serialized as a decimal string (for example `"22.57489971"`).
+                 * @example 22.57489971
+                 */
+                latitude?: string | null;
+                /**
+                 * @description Longitude in decimal degrees, serialized as a decimal string (for example `"22.57489971"`).
+                 * @example 114.27769989
+                 */
+                longitude?: string | null;
             };
             /** @enum {string} */
             type: "metro_area";
@@ -1849,25 +1929,25 @@ export interface components {
             };
             attributes: {
                 name: string;
-                nickname?: string;
+                nickname?: string | null;
                 /** @description CBP FIRMS Code or CBS Sublocation Code */
-                firms_code?: string;
+                firms_code?: string | null;
                 /** @description SMDG Code */
-                smdg_code?: string;
+                smdg_code?: string | null;
                 /** @description BIC Facility Code */
-                bic_facility_code?: string;
+                bic_facility_code?: string | null;
                 /** @description Street part of the address */
-                street?: string;
+                street?: string | null;
                 /** @description City part of the address */
-                city?: string;
+                city?: string | null;
                 /** @description State part of the address */
-                state?: string;
+                state?: string | null;
                 /** @description State abbreviation for the state */
-                state_abbr?: string;
+                state_abbr?: string | null;
                 /** @description ZIP code part of the address */
-                zip?: string;
+                zip?: string | null;
                 /** @description Country part of the address */
-                country?: string;
+                country?: string | null;
             };
             /** @enum {string} */
             type?: "terminal";
@@ -1915,12 +1995,12 @@ export interface components {
                 ref_numbers?: string[] | null;
                 tags?: string[];
                 /** @enum {string} */
-                status: "pending" | "awaiting_manifest" | "created" | "failed" | "tracking_stopped";
+                status: "pending" | "awaiting_manifest" | "created" | "failed" | "tracking_stopped" | "cancelled";
                 /**
-                 * @description If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request. `scac_auto_detect_failed` means `auto_detect_vocc_scac` was set but no supported carrier SCAC could be inferred from the request number.
+                 * @description If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request. `scac_auto_detect_failed` means `auto_detect_vocc_scac` was set but no supported carrier SCAC could be inferred from the request number. A request waiting for the carrier to publish the shipment or its containers has status `awaiting_manifest` and failed_reason null. Only older records carry the `awaiting_manifest` failed_reason value. `shipping_line_not_supported` means Terminal49 cannot track that shipping line. A request cancelled through `PATCH /tracking_requests/{id}/cancel` has status `cancelled` and failed_reason `Cancelled by user`.
                  * @enum {string|null}
                  */
-                failed_reason?: "booking_cancelled" | "duplicate" | "expired" | "internal_processing_error" | "invalid_number" | "not_found" | "retries_exhausted" | "shipping_line_unreachable" | "unrecognized_response" | "data_unavailable" | "scac_auto_detect_failed" | null;
+                failed_reason?: "booking_cancelled" | "duplicate" | "expired" | "internal_processing_error" | "invalid_number" | "not_found" | "retries_exhausted" | "shipping_line_unreachable" | "unrecognized_response" | "data_unavailable" | "scac_auto_detect_failed" | "awaiting_manifest" | "shipping_line_not_supported" | "Cancelled by user" | null;
                 /**
                  * @example bill_of_lading
                  * @enum {string}
@@ -1954,6 +2034,15 @@ export interface components {
                         type?: "account";
                     } | null;
                 };
+                /** @description User who created the tracking request, or `null` when the request has no linked user. */
+                user?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "user";
+                    } | null;
+                };
             };
         };
         /** webhook */
@@ -1974,7 +2063,7 @@ export interface components {
                  */
                 active: boolean;
                 /** @description The list of events to enabled for this endpoint */
-                events: ("container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed")[];
+                events: ("container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "shipment.routing.filled" | "link.created")[];
                 /** @description A random token that will sign all delivered webhooks */
                 secret: string;
                 headers?: {
@@ -2055,8 +2144,11 @@ export interface components {
             /** @enum {string} */
             type: "transport_event";
             attributes?: {
-                /** @enum {string} */
-                event?: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed";
+                /**
+                 * @description The event name. The three `container.pickup_lfd_*_calculated.changed` events are Last Free Day estimates that Terminal49 calculates. They can appear when you read transport events, but you cannot subscribe a webhook to them.
+                 * @enum {string}
+                 */
+                event?: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "container.pickup_lfd_line_calculated.changed" | "container.pickup_lfd_terminal_calculated.changed" | "container.pickup_lfd_rail_calculated.changed";
                 voyage_number?: string | null;
                 /** Format: date-time */
                 timestamp?: string | null;
@@ -2179,7 +2271,7 @@ export interface components {
             type?: "webhook_notification";
             attributes?: {
                 /** @enum {string} */
-                event: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed";
+                event: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "shipment.routing.filled" | "link.created";
                 /**
                  * @description Whether the notification has been delivered to the webhook endpoint
                  * @default pending
@@ -2202,7 +2294,7 @@ export interface components {
                         /** Format: uuid */
                         id?: string;
                         /** @enum {string} */
-                        type?: "tracking_request" | "estimated_event" | "transport_event" | "container_updated_event" | "document";
+                        type?: "tracking_request" | "estimated_event" | "transport_event" | "container_updated_event" | "document" | "container_created_event" | "container_pod_terminal_changed_event" | "link" | "document_observation";
                     };
                 };
             };
@@ -2335,7 +2427,7 @@ export interface components {
                  */
                 created_at?: string;
                 /** @description The city or facility name of the event location */
-                location_name?: string;
+                location_name?: string | null;
                 /** @description UNLOCODE of the event location */
                 location_locode?: string | null;
                 /** @description The name of the vessel where applicable */
@@ -2353,7 +2445,7 @@ export interface components {
                         id?: string;
                         /** @enum {string} */
                         type?: "port" | "metro_area";
-                    };
+                    } | null;
                 };
                 vessel?: {
                     data?: {
@@ -2361,14 +2453,32 @@ export interface components {
                         id?: string;
                         /** @enum {string} */
                         type?: "vessel";
+                    } | null;
+                };
+                container?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "container";
                     };
+                };
+                terminal?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "terminal";
+                    } | null;
                 };
             };
         };
         /** Container Pod Terminal Changed Event */
         container_pod_terminal_changed_event: {
+            /** Format: uuid */
             id?: string;
-            type?: string;
+            /** @enum {string} */
+            type?: "container_pod_terminal_changed_event";
             attributes?: {
                 /**
                  * @description Where the information about the terminal change came from
@@ -2384,23 +2494,29 @@ export interface components {
             };
             relationships?: {
                 container?: {
-                    /** Format: uuid */
-                    id?: string;
-                    /** @enum {string} */
-                    type?: "container";
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "container";
+                    } | null;
                 };
                 shipment?: {
-                    /** Format: uuid */
-                    id?: string;
-                    /** @enum {string} */
-                    type?: "shipment";
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "shipment";
+                    } | null;
                 };
                 /** @description The terminal the container has changed to. If this container is still on the vessel this represents an advisory. If it was previously at the terminal this represents an off-dock move. */
                 terminal?: {
-                    /** Format: uuid */
-                    id?: string;
-                    /** @enum {string} */
-                    type?: "terminal";
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "terminal";
+                    } | null;
                 };
             };
         };
@@ -2474,11 +2590,11 @@ export interface components {
             /** @description State name (if applicable) */
             state?: string | null;
             /** @description ISO country code */
-            country_code?: string;
+            country_code?: string | null;
             /** @description Country name */
-            country?: string;
+            country?: string | null;
             /** @description IANA timezone identifier */
-            time_zone?: string;
+            time_zone?: string | null;
             /** @description Port label: POL, POD, or TS1, TS2, etc. */
             label?: string;
             /**
@@ -2542,9 +2658,9 @@ export interface components {
             /** @description State name of departure port */
             departure_port_state?: string | null;
             /** @description Country code of departure port */
-            departure_port_country_code?: string;
+            departure_port_country_code?: string | null;
             /** @description Country name of departure port */
-            departure_port_country?: string;
+            departure_port_country?: string | null;
             /** @description Label of departure port (POL, POD, TS1, etc.) */
             departure_port_label?: string;
             /**
@@ -2553,7 +2669,7 @@ export interface components {
              */
             departure_port_atd?: string | null;
             /** @description Timezone of departure port */
-            departure_port_time_zone?: string;
+            departure_port_time_zone?: string | null;
             /** @description ID of the next port the vessel is heading to */
             arrival_port_id?: string | null;
             /** @description Name of the arrival port */
@@ -2660,9 +2776,9 @@ export interface components {
             coordinates: number[];
         };
         /** @description Raw custom field value (type depends on definition) */
-        custom_field_value: (string | number | boolean | string[] | {
+        custom_field_value: (string | null) | number | boolean | string[] | {
             [key: string]: unknown;
-        }) | null;
+        };
         /** Custom field */
         custom_field: {
             /** Format: uuid */
@@ -2701,8 +2817,11 @@ export interface components {
             /** @enum {string} */
             type: "custom_field_definition";
             attributes?: {
-                /** @enum {string} */
-                entity_type: "Shipment" | "Container" | "TrackingRequest";
+                /**
+                 * @description The entity type this definition applies to. `Cargo` means containers.
+                 * @enum {string}
+                 */
+                entity_type: "Shipment" | "Cargo";
                 api_slug: string;
                 display_name: string;
                 description?: string | null;
@@ -2714,6 +2833,56 @@ export interface components {
                 } | null;
                 default_format?: string | null;
                 default_value?: components["schemas"]["custom_field_value"];
+                /** @description Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching. */
+                reference_number?: boolean;
+                /** @description Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views. */
+                sensitive?: boolean;
+                /** @description Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app. */
+                inline_option_creation?: boolean;
+                /**
+                 * Format: uuid
+                 * @description ID of the Terminal49 template this definition was copied from.
+                 */
+                template_id?: string | null;
+                /** @description Whether any entity has a value for this definition. */
+                has_data?: boolean;
+                /** Format: date-time */
+                created_at?: string;
+                /** Format: date-time */
+                updated_at?: string;
+                /**
+                 * Format: date-time
+                 * @description When the definition was archived.
+                 */
+                discarded_at?: string | null;
+            };
+            relationships?: {
+                /** @description The owning account. `null` for Terminal49 templates. */
+                account?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "account";
+                    } | null;
+                };
+                /** @description The user who created the definition. */
+                created_by?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "user";
+                    } | null;
+                };
+                options?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "custom_field_option";
+                    }[];
+                };
             };
         };
         /** Custom field option */
@@ -2899,10 +3068,13 @@ export interface components {
                 id?: string;
                 /** @description Display name of the document. */
                 name?: string;
-                /** @description System-classified document type. */
+                /** @description Document type code. See `GET /documents/types` for allowed values. */
                 document_type?: string;
-                /** @description Document type set manually by a user, when available. */
-                document_type_manual?: string | null;
+                /**
+                 * @description Who set `document_type`: `customer` (set through the API or app), `admin` (Terminal49 staff) or `llm` (automatic classification).
+                 * @enum {string|null}
+                 */
+                document_type_source?: "customer" | "admin" | "llm" | null;
                 /** @description Additional notes captured during document classification. */
                 classification_notes?: string | null;
                 /**
@@ -3096,6 +3268,157 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** container_created_event */
+        container_created_event: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            type?: "container_created_event";
+            attributes?: {
+                /** Format: date-time */
+                timestamp?: string;
+                /** @description IANA tz */
+                timezone?: string | null;
+            };
+            relationships?: {
+                container?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "container";
+                    } | null;
+                };
+                shipment?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "shipment";
+                    } | null;
+                };
+            };
+        };
+        /**
+         * link
+         * @description A link between a document and the shipment or container it belongs to.
+         */
+        link: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            type?: "link";
+            attributes?: {
+                kind?: string;
+                kind_label?: string;
+                created_by?: string;
+                created_by_label?: string;
+                /** @example Document */
+                source_type?: string;
+                /** Format: uuid */
+                source_id?: string;
+                /** @example Shipment */
+                target_type?: string;
+                /** Format: uuid */
+                target_id?: string;
+                has_parent?: boolean;
+                /** @example Document to Shipment */
+                link_description?: string;
+                /** Format: date-time */
+                created_at?: string;
+                /** Format: date-time */
+                updated_at?: string;
+            };
+            relationships?: {
+                source?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "document";
+                    } | null;
+                };
+                target?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "container" | "shipment";
+                    } | null;
+                };
+                user?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "user";
+                    } | null;
+                };
+                parent?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "link";
+                    } | null;
+                };
+                child_links?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "link";
+                    }[];
+                };
+            };
+        };
+        /**
+         * document_observation
+         * @description A shipment field value read from a document. The reference object of `shipment.routing.filled`.
+         */
+        document_observation: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            type?: "document_observation";
+            attributes?: {
+                kind?: string;
+                field?: string;
+                before?: unknown;
+                after?: unknown;
+                source?: string | null;
+                /** Format: date-time */
+                observed_at?: string | null;
+                document_name?: string | null;
+                /** Format: uuid */
+                document_processing_id?: string | null;
+                /** @example 2026-09-24 */
+                schema_version?: string | null;
+            };
+            relationships?: {
+                shipment?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "shipment";
+                    } | null;
+                };
+                document?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "document";
+                    } | null;
+                };
+            };
+        };
+        /**
+         * Webhook notification included resource
+         * @description A resource that can appear in `included` on a webhook notification response.
+         */
+        webhook_notification_included: components["schemas"]["webhook"] | components["schemas"]["tracking_request"] | components["schemas"]["transport_event"] | components["schemas"]["estimated_event"] | components["schemas"]["container_updated_event"] | components["schemas"]["container_pod_terminal_changed_event"] | components["schemas"]["container_created_event"] | components["schemas"]["document"] | components["schemas"]["document_representation"] | components["schemas"]["document_email_submission"] | components["schemas"]["document_observation"] | components["schemas"]["link"] | components["schemas"]["shipment"] | components["schemas"]["container"] | components["schemas"]["port"] | components["schemas"]["metro_area"] | components["schemas"]["terminal"] | components["schemas"]["vessel"] | components["schemas"]["shipping_line"] | components["schemas"]["account"];
         /** Feature availability */
         feature_availability: {
             /**
@@ -3234,7 +3557,99 @@ export interface components {
             };
         };
     };
-    responses: never;
+    responses: {
+        /** @description Bad Request */
+        BadRequest: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "errors": [
+                 *         {
+                 *           "status": "400",
+                 *           "title": "Bad Request",
+                 *           "source": {
+                 *             "parameter": "include"
+                 *           }
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    errors?: components["schemas"]["error"][];
+                };
+            };
+        };
+        /** @description Unauthorized. The API token is missing or invalid, or the account may not perform this action. */
+        Unauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "errors": [
+                 *         {
+                 *           "detail": "You are not allowed to perform this action"
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    errors?: components["schemas"]["error"][];
+                };
+            };
+        };
+        /** @description Not Found */
+        NotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "errors": [
+                 *         {
+                 *           "status": "404",
+                 *           "title": "Not Found"
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    errors?: components["schemas"]["error"][];
+                };
+            };
+        };
+        /** @description Unprocessable Entity */
+        UnprocessableEntity: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "errors": [
+                 *         {
+                 *           "status": "422",
+                 *           "source": {
+                 *             "pointer": "/data/attributes/label"
+                 *           },
+                 *           "title": "Unprocessable Entity",
+                 *           "detail": "Label can't be blank",
+                 *           "code": "blank"
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    errors?: components["schemas"]["error"][];
+                };
+            };
+        };
+    };
     parameters: never;
     requestBodies: never;
     headers: never;
@@ -3570,6 +3985,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description Not Found */
             404: {
                 headers: {
@@ -3616,6 +4032,16 @@ export interface operations {
                              *     ]
                              */
                             ref_numbers?: string[];
+                            /**
+                             * @description Master bill of lading number you provide for the shipment.
+                             * @example MEDUFR030802
+                             */
+                            user_provided_mbl_number?: string;
+                            /**
+                             * @description Booking number you provide for the shipment.
+                             * @example BK123456
+                             */
+                            user_provided_booking_number?: string;
                             /** @description Tags related to a shipment */
                             tags?: string[];
                         };
@@ -3635,6 +4061,10 @@ export interface operations {
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "patch-shipments-id-stop-tracking": {
@@ -3659,6 +4089,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "patch-shipments-id-resume-tracking": {
@@ -3683,6 +4116,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-tracking-requests": {
@@ -3695,8 +4131,8 @@ export interface operations {
                 q?: string;
                 /** @description filter by `request_number` */
                 "filter[request_number]"?: string;
-                /** @description filter by `status` */
-                "filter[status]"?: "created" | "pending" | "failed";
+                /** @description filter by `status`. `pending` matches requests with status `pending`; any value other than `created`, `failed` or `cancelled` is treated as `pending`. */
+                "filter[status]"?: "created" | "pending" | "failed" | "cancelled";
                 /** @description filter by shipping line `scac` */
                 "filter[scac]"?: string;
                 /** @description filter by tracking_requests `created_at` after a certain ISO8601 timestamp */
@@ -3707,7 +4143,7 @@ export interface operations {
                 "filter[updated_at][start]"?: string;
                 /** @description filter by tracking_requests `updated_at` before a certain ISO8601 timestamp */
                 "filter[updated_at][end]"?: string;
-                /** @description Comma delimited list of relations to include. 'tracked_object' is included by default. */
+                /** @description Comma-delimited list of relationships to include. Accepted values: `tracked_object`, `customer`, and `user`. `tracked_object` is included by default. */
                 include?: string;
                 "page[number]"?: number;
                 "page[size]"?: number;
@@ -3734,13 +4170,17 @@ export interface operations {
                             /** @enum {string} */
                             type?: "shipment";
                             links?: {
-                                /** Format: uri */
+                                /**
+                                 * Format: uri-reference
+                                 * @description Path of this resource, relative to the API host (for example `/v2/shipments/{id}`).
+                                 */
                                 self?: string;
                             };
-                        })[];
+                        } | components["schemas"]["user"])[];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             /** @description Not Found */
             404: {
                 headers: {
@@ -4024,7 +4464,7 @@ export interface operations {
     "get-track-request-by-id": {
         parameters: {
             query?: {
-                /** @description Comma delimited list of relations to include. 'tracked_object' is included by default. */
+                /** @description Comma-delimited list of relationships to include. Accepted values: `tracked_object`, `customer`, and `user`. `tracked_object` is included by default. */
                 include?: string;
             };
             header?: never;
@@ -4044,10 +4484,12 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["tracking_request"];
-                        included?: (components["schemas"]["account"] | components["schemas"]["shipment"] | components["schemas"]["shipping_line"])[];
+                        included?: (components["schemas"]["account"] | components["schemas"]["shipment"] | components["schemas"]["shipping_line"] | components["schemas"]["user"])[];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
             /** @description Not Found */
             404: {
                 headers: {
@@ -4077,10 +4519,12 @@ export interface operations {
                     data?: {
                         attributes: {
                             /**
-                             * @description Tracking request ref number.
-                             * @example REFNUMBER11
+                             * @description Customer reference numbers. The list you send replaces the existing list.
+                             * @example [
+                             *       "REFNUMBER11"
+                             *     ]
                              */
-                            ref_number?: string;
+                            ref_numbers?: string[];
                         };
                     };
                 };
@@ -4098,11 +4542,17 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-tracking-requests-custom-fields": {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Comma-separated relationships to include: `definition`, `entity`, `updated_by`. */
+                include?: string;
+            };
             header?: never;
             path: {
                 /** @description Tracking request ID */
@@ -4122,9 +4572,12 @@ export interface operations {
                         data?: components["schemas"]["custom_field"][];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
+                        included?: (components["schemas"]["custom_field_definition"] | components["schemas"]["shipment"] | components["schemas"]["container"] | components["schemas"]["tracking_request"] | components["schemas"]["user"])[];
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "post-tracking-requests-custom-fields": {
@@ -4175,6 +4628,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "delete-tracking-requests-custom-fields-api-slug": {
@@ -4198,6 +4654,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-tracking-requests-custom-fields-api-slug": {
@@ -4238,6 +4696,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-webhooks-id": {
@@ -4262,6 +4723,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "delete-webhooks-id": {
@@ -4275,13 +4738,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-webhooks-id": {
@@ -4305,7 +4770,7 @@ export interface operations {
                              */
                             url?: string;
                             /** @description The list of events to enable for this endpoint. */
-                            events?: ("container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed")[];
+                            events?: ("container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "shipment.routing.filled" | "link.created")[];
                             active?: boolean;
                             /** @description Optional custom headers to pass with each webhook invocation */
                             headers?: {
@@ -4333,6 +4798,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-webhooks": {
@@ -4381,8 +4849,9 @@ export interface operations {
                              */
                             url: string;
                             /** @description The list of events to enable for this endpoint. */
-                            events?: ("container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed")[];
-                            active: boolean;
+                            events: ("container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "shipment.routing.filled" | "link.created")[];
+                            /** @default true */
+                            active?: boolean;
                             /** @description Optional custom headers to pass with each webhook invocation */
                             headers?: {
                                 /** @description The name of the header. (Please note this will be auto-capitalized) */
@@ -4410,6 +4879,7 @@ export interface operations {
                     "application/xml": components["schemas"]["webhook"];
                 };
             };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-webhooks-events": {
@@ -4467,10 +4937,12 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["webhook_notification"];
-                        included?: (components["schemas"]["webhook"] | components["schemas"]["tracking_request"] | components["schemas"]["transport_event"] | components["schemas"]["estimated_event"] | components["schemas"]["container_updated_event"] | components["schemas"]["document"] | components["schemas"]["document_representation"] | components["schemas"]["document_email_submission"])[];
+                        included?: components["schemas"]["webhook_notification_included"][];
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "get-webhook-notifications": {
@@ -4497,7 +4969,7 @@ export interface operations {
                         data?: components["schemas"]["webhook_notification"][];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
-                        included?: (components["schemas"]["webhook"] | components["schemas"]["tracking_request"] | components["schemas"]["transport_event"] | components["schemas"]["estimated_event"] | components["schemas"]["container_updated_event"] | components["schemas"]["document"] | components["schemas"]["document_representation"] | components["schemas"]["document_email_submission"])[];
+                        included?: components["schemas"]["webhook_notification_included"][];
                     };
                 };
             };
@@ -4505,9 +4977,9 @@ export interface operations {
     };
     "get-webhook-notifications-example": {
         parameters: {
-            query?: {
+            query: {
                 /** @description The webhook notification event name you wish to see an example of */
-                event?: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed";
+                event: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "shipment.routing.filled" | "link.created";
             };
             header?: never;
             path?: never;
@@ -4522,13 +4994,12 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data?: components["schemas"]["webhook_notification"][];
-                        links?: components["schemas"]["links"];
-                        meta?: components["schemas"]["meta"];
-                        included?: (components["schemas"]["webhook"] | components["schemas"]["tracking_request"] | components["schemas"]["transport_event"] | components["schemas"]["estimated_event"] | components["schemas"]["container_updated_event"] | components["schemas"]["document"] | components["schemas"]["document_representation"] | components["schemas"]["document_email_submission"])[];
+                        data?: components["schemas"]["webhook_notification"];
+                        included?: components["schemas"]["webhook_notification_included"][];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
         };
     };
     "get-webhooks-ips": {
@@ -5324,7 +5795,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["container"][];
-                        included?: components["schemas"]["shipment"][];
+                        included?: (components["schemas"]["shipment"] | components["schemas"]["terminal"] | components["schemas"]["transport_event"] | components["schemas"]["raw_event"])[];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
                     };
@@ -5711,10 +6182,12 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["container"];
-                        included?: (components["schemas"]["shipment"] | components["schemas"]["terminal"] | components["schemas"]["transport_event"])[];
+                        included?: (components["schemas"]["shipment"] | components["schemas"]["terminal"] | components["schemas"]["transport_event"] | components["schemas"]["raw_event"])[];
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-containers-id": {
@@ -5736,6 +6209,15 @@ export interface operations {
                         type: "container";
                         attributes: {
                             ref_numbers?: string[];
+                            /** @example SEAL1234567 */
+                            seal_number?: string | null;
+                            /** @enum {string} */
+                            equipment_type?: "dry" | "flat_rack" | "open_top" | "reefer" | "tank" | "pallet_wide" | "hard_top";
+                            /** @enum {integer} */
+                            equipment_length?: 20 | 24 | 40 | 45 | 48 | 53;
+                            /** @enum {string} */
+                            equipment_height?: "standard" | "high_cube" | "flexible";
+                            weight_in_lbs?: number | null;
                         };
                     };
                 };
@@ -5753,6 +6235,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-containers-id-raw_events": {
@@ -5777,6 +6262,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-containers-id-transport_events": {
@@ -5807,6 +6293,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-containers-id-map-geojson": {
@@ -5882,6 +6369,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-containers-id-refresh": {
@@ -5907,6 +6395,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description Forbidden - This API endpoint is not enabled for your account. Please contact support@terminal49.com */
             403: {
                 headers: {
@@ -5925,6 +6414,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
             /** @description Too Many Requests - You've hit the refresh limit. Please try again in a minute. */
             429: {
                 headers: {
@@ -5992,6 +6482,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-metro-area-id": {
@@ -6005,14 +6496,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description OK. An unknown id or UN/LOCODE returns `data: null` with status 200, not 404. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data?: components["schemas"]["metro_area"];
+                        data?: components["schemas"]["metro_area"] | (never | null);
                     };
                 };
             };
@@ -6040,6 +6531,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-vessels-id": {
@@ -6088,6 +6580,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-vessels-imo": {
@@ -6136,6 +6629,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-vessels-id-future-positions": {
@@ -6187,6 +6681,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-vessels-id-future-positions-with-coordinates": {
@@ -6242,6 +6737,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-terminal-id": {
@@ -6266,6 +6762,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "list-parties": {
@@ -6348,10 +6845,8 @@ export interface operations {
     "get-custom-field-definitions": {
         parameters: {
             query?: {
-                "page[number]"?: number;
-                "page[size]"?: number;
-                /** @description Filter by entity type (Shipment or Container) */
-                "filter[entity_type]"?: string;
+                /** @description Filter by entity type. `Cargo` means containers. */
+                "filter[entity_type]"?: "Shipment" | "Cargo";
                 /** @description Filter by data type */
                 "filter[data_type]"?: string;
                 /** @description Filter by display name (prefix match) */
@@ -6372,7 +6867,6 @@ export interface operations {
                     "application/json": {
                         data?: components["schemas"]["custom_field_definition"][];
                         links?: components["schemas"]["links"];
-                        meta?: components["schemas"]["meta"];
                     };
                 };
             };
@@ -6392,8 +6886,11 @@ export interface operations {
                         /** @enum {string} */
                         type: "custom_field_definition";
                         attributes: {
-                            /** @enum {string} */
-                            entity_type: "Shipment" | "Container";
+                            /**
+                             * @description `Cargo` means containers.
+                             * @enum {string}
+                             */
+                            entity_type: "Shipment" | "Cargo";
                             api_slug: string;
                             display_name: string;
                             description?: string | null;
@@ -6405,6 +6902,21 @@ export interface operations {
                             } | null;
                             default_format?: string | null;
                             default_value?: components["schemas"]["custom_field_value"];
+                            /**
+                             * @description Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching.
+                             * @default false
+                             */
+                            reference_number?: boolean;
+                            /**
+                             * @description Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views.
+                             * @default false
+                             */
+                            sensitive?: boolean;
+                            /**
+                             * @description Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app.
+                             * @default false
+                             */
+                            inline_option_creation?: boolean;
                         };
                     };
                 };
@@ -6423,6 +6935,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-field-definitions-id": {
@@ -6449,6 +6963,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "delete-custom-field-definitions-id": {
@@ -6463,13 +6978,16 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "patch-custom-field-definitions-id": {
@@ -6488,14 +7006,17 @@ export interface operations {
                     data?: {
                         /** @enum {string} */
                         type: "custom_field_definition";
+                        /** @description The attributes the API updates. It ignores any other attribute, such as `data_type`, `validation` or `default_value`, and still returns 200. */
                         attributes: {
                             display_name?: string;
                             description?: string | null;
-                            validation?: {
-                                [key: string]: unknown;
-                            } | null;
                             default_format?: string | null;
-                            default_value?: components["schemas"]["custom_field_value"];
+                            /** @description Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching. */
+                            reference_number?: boolean;
+                            /** @description Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views. */
+                            sensitive?: boolean;
+                            /** @description Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app. */
+                            inline_option_creation?: boolean;
                         };
                     };
                 };
@@ -6514,6 +7035,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-field-options": {
@@ -6537,10 +7061,10 @@ export interface operations {
                     "application/json": {
                         data?: components["schemas"]["custom_field_option"][];
                         links?: components["schemas"]["links"];
-                        meta?: components["schemas"]["meta"];
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "post-custom-field-options": {
@@ -6581,6 +7105,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-field-options-id": {
@@ -6609,6 +7136,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "delete-custom-field-options-id": {
@@ -6625,13 +7154,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-custom-field-options-id": {
@@ -6673,15 +7204,16 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-fields": {
         parameters: {
             query?: {
-                "page[number]"?: number;
-                "page[size]"?: number;
-                /** @description Filter by entity type (Shipment or Container) */
-                "filter[entity_type]"?: string;
+                /** @description Filter by entity type. The value must match exactly: `Shipment`, `Cargo` (containers) or `TrackingRequest`. */
+                "filter[entity_type]"?: "Shipment" | "Cargo" | "TrackingRequest";
                 /** @description Filter by entity ID */
                 "filter[entity_id]"?: string;
                 /** @description Filter by custom field definition ID */
@@ -6702,7 +7234,6 @@ export interface operations {
                     "application/json": {
                         data?: components["schemas"]["custom_field"][];
                         links?: components["schemas"]["links"];
-                        meta?: components["schemas"]["meta"];
                     };
                 };
             };
@@ -6748,7 +7279,7 @@ export interface operations {
                             entity?: {
                                 data?: {
                                     /** @enum {string} */
-                                    type: "shipment" | "container";
+                                    type: "shipment" | "container" | "tracking_request";
                                     /** Format: uuid */
                                     id: string;
                                 };
@@ -6771,6 +7302,8 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-fields-id": {
@@ -6797,6 +7330,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "delete-custom-fields-id": {
@@ -6811,13 +7345,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-custom-fields-id": {
@@ -6856,11 +7392,17 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-shipments-custom-fields": {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Comma-separated relationships to include: `definition`, `entity`, `updated_by`. */
+                include?: string;
+            };
             header?: never;
             path: {
                 /** @description Shipment ID */
@@ -6880,9 +7422,12 @@ export interface operations {
                         data?: components["schemas"]["custom_field"][];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
+                        included?: (components["schemas"]["custom_field_definition"] | components["schemas"]["shipment"] | components["schemas"]["container"] | components["schemas"]["tracking_request"] | components["schemas"]["user"])[];
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "post-shipments-custom-fields": {
@@ -6933,6 +7478,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "delete-shipments-custom-fields-api-slug": {
@@ -6956,6 +7504,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-shipments-custom-fields-api-slug": {
@@ -6996,6 +7546,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-shipments-party-roles": {
@@ -7035,13 +7588,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     "post-shipments-party-roles": {
@@ -7127,13 +7674,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
             /** @description Unprocessable Entity */
             422: {
                 headers: {
@@ -7179,18 +7720,15 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-containers-custom-fields": {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Comma-separated relationships to include: `definition`, `entity`, `updated_by`. */
+                include?: string;
+            };
             header?: never;
             path: {
                 /** @description Container ID */
@@ -7210,9 +7748,12 @@ export interface operations {
                         data?: components["schemas"]["custom_field"][];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
+                        included?: (components["schemas"]["custom_field_definition"] | components["schemas"]["shipment"] | components["schemas"]["container"] | components["schemas"]["tracking_request"] | components["schemas"]["user"])[];
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "post-containers-custom-fields": {
@@ -7263,6 +7804,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "delete-containers-custom-fields-api-slug": {
@@ -7286,6 +7830,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-containers-custom-fields-api-slug": {
@@ -7326,6 +7872,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-containers-party-roles": {
@@ -7365,13 +7914,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     "post-containers-party-roles": {
@@ -7457,13 +8000,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
             /** @description Unprocessable Entity */
             422: {
                 headers: {
@@ -7509,13 +8046,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-parties-id": {
@@ -7541,6 +8072,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "edit-party": {
@@ -7582,6 +8115,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             /** @description Unprocessable Entity */
             422: {
                 headers: {
@@ -7862,8 +8397,10 @@ export interface operations {
                         /** @enum {string} */
                         type: "document";
                         attributes: {
-                            /** @description Manually override the document type. */
-                            document_type_manual?: string;
+                            /** @description Document type code. Must be one of the codes from `GET /documents/types`. Setting it marks `document_type_source` as `customer`. The API does not validate unknown codes as a 422; it currently returns 500 for them. */
+                            document_type?: string;
+                            /** @description Notes about how the document was classified. */
+                            classification_notes?: string | null;
                             /** @description Manually provide extracted key/value data. Set to null to clear manual values. */
                             extracted_data_manual?: {
                                 [key: string]: unknown;
@@ -7898,6 +8435,7 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-documents-id-download_url": {
@@ -8283,7 +8821,7 @@ export interface operations {
                      *       "data": [
                      *         {
                      *           "id": "abc12345-6789-40ef-9012-3456789abcde",
-                     *           "type": "shipment",
+                     *           "type": "search_result",
                      *           "attributes": {
                      *             "entity_type": "shipment",
                      *             "number": "MEDUA1234567",
@@ -8305,7 +8843,7 @@ export interface operations {
                      *         },
                      *         {
                      *           "id": "def45678-9012-43ab-9cde-f0123456789a",
-                     *           "type": "cargo",
+                     *           "type": "search_result",
                      *           "attributes": {
                      *             "entity_type": "cargo",
                      *             "number": "MSCU1234567",
@@ -8331,13 +8869,16 @@ export interface operations {
                             /** @description Unique identifier of the matched resource */
                             id?: string;
                             /**
-                             * @description Resource type
+                             * @description Always `search_result`. The matched resource kind is in `attributes.entity_type`.
                              * @enum {string}
                              */
-                            type?: "shipment" | "cargo" | "tracking_request";
+                            type?: "search_result";
                             attributes?: {
-                                /** @description Type of the matched entity: `shipment`, `cargo`, or `tracking_request` */
-                                entity_type?: string;
+                                /**
+                                 * @description Type of the matched entity: `shipment`, `cargo` (a container), or `tracking_request`
+                                 * @enum {string}
+                                 */
+                                entity_type?: "shipment" | "cargo" | "tracking_request";
                                 /** @description BL number (shipments), container number (cargos), or request number (tracking requests) */
                                 number?: string;
                                 /** @description Associated shipment ID (for cargos and tracking requests only) */
@@ -8408,6 +8949,202 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "patch-tracking-request-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tracking Request ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancelled. The response body is an empty JSON object. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /** @example {} */
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Unauthorized. The API token is missing or invalid, or the account may not use the API. Ownership never causes a 401 here: another account's tracking request returns 422. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "errors": [
+                     *         {
+                     *           "detail": "invalid API token"
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+            /** @description The tracking request is not in a cancellable status, or it belongs to another account. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "errors": "Can't cancel tracking request in created state.  Must be in pending or awaiting_manifest state."
+                     *     }
+                     */
+                    "application/json": {
+                        errors?: string;
+                    };
+                };
+            };
+            /** @description Server error. An unknown tracking request ID currently returns 500 instead of 404. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "get-account-custom-field-definitions": {
+        parameters: {
+            query?: {
+                /** @description Filter by entity type. `Cargo` means containers. */
+                "filter[entity_type]"?: "Shipment" | "Cargo";
+                /** @description Filter by data type */
+                "filter[data_type]"?: string;
+                /** @description Filter by display name (prefix match) */
+                "filter[display_name]"?: string;
+            };
+            header?: never;
+            path: {
+                /** @description Your account ID. The API always uses the account of the authenticated user. */
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["custom_field_definition"][];
+                        links?: components["schemas"]["links"];
+                    };
+                };
+            };
+        };
+    };
+    "post-account-custom-field-definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Your account ID. The API always uses the account of the authenticated user. */
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    data?: {
+                        /** @enum {string} */
+                        type: "custom_field_definition";
+                        /** @description Send `template_id`, or all of `entity_type`, `api_slug`, `display_name` and `data_type`. With `template_id`, the template supplies any of those four you leave out. */
+                        attributes: {
+                            /**
+                             * @description `Cargo` means containers.
+                             * @enum {string}
+                             */
+                            entity_type?: "Shipment" | "Cargo";
+                            api_slug?: string;
+                            display_name?: string;
+                            description?: string | null;
+                            /** @enum {string} */
+                            data_type?: "short_text" | "number" | "date" | "datetime" | "boolean" | "enum" | "enum_multi" | "reference";
+                            reference_type?: string | null;
+                            validation?: {
+                                [key: string]: unknown;
+                            } | null;
+                            default_format?: string | null;
+                            default_value?: components["schemas"]["custom_field_value"];
+                            /**
+                             * Format: uuid
+                             * @description ID of a Terminal49 template definition to copy.
+                             */
+                            template_id?: string;
+                            /**
+                             * @description Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching.
+                             * @default false
+                             */
+                            reference_number?: boolean;
+                            /**
+                             * @description Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views.
+                             * @default false
+                             */
+                            sensitive?: boolean;
+                            /**
+                             * @description Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app.
+                             * @default false
+                             */
+                            inline_option_creation?: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["custom_field_definition"];
+                        links?: components["schemas"]["link-self"];
+                    };
+                };
+            };
+            /** @description `template_id` does not match a Terminal49 template. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "errors": [
+                     *         {
+                     *           "status": "404",
+                     *           "title": "Not Found"
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-me": {

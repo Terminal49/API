@@ -1387,6 +1387,9 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -1500,9 +1503,21 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
-        "description": "Update a shipment",
+        "description": "Update a shipment.",
         "tags": [
           "Shipments"
         ],
@@ -1530,6 +1545,16 @@
                             "items": {
                               "type": "string"
                             }
+                          },
+                          "user_provided_mbl_number": {
+                            "type": "string",
+                            "example": "MEDUFR030802",
+                            "description": "Master bill of lading number you provide for the shipment."
+                          },
+                          "user_provided_booking_number": {
+                            "type": "string",
+                            "example": "BK123456",
+                            "description": "Booking number you provide for the shipment."
                           },
                           "tags": {
                             "type": "array",
@@ -1590,6 +1615,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         }
       }
@@ -1627,6 +1661,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         }
       }
@@ -2266,12 +2309,16 @@
                                 "properties": {
                                   "self": {
                                     "type": "string",
-                                    "format": "uri"
+                                    "format": "uri-reference",
+                                    "description": "Path of this resource, relative to the API host (for example `/v2/shipments/{id}`)."
                                   }
                                 }
                               }
                             },
                             "description": ""
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
                           }
                         ]
                       }
@@ -2281,6 +2328,9 @@
                 "examples": {}
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "404": {
             "description": "Not Found",
@@ -2341,13 +2391,14 @@
               "enum": [
                 "created",
                 "pending",
-                "failed"
+                "failed",
+                "cancelled"
               ],
               "example": "created"
             },
             "in": "query",
             "name": "filter[status]",
-            "description": "filter by `status`"
+            "description": "filter by `status`. `pending` matches requests with status `pending`; any value other than `created`, `failed` or `cancelled` is treated as `pending`."
           },
           {
             "schema": {
@@ -2404,7 +2455,7 @@
             },
             "in": "query",
             "name": "include",
-            "description": "Comma delimited list of relations to include. 'tracked_object' is included by default."
+            "description": "Comma-delimited list of relationships to include. Accepted values: `tracked_object`, `customer`, and `user`. `tracked_object` is included by default."
           },
           {
             "schema": {
@@ -2741,6 +2792,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/shipping_line"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
                           }
                         ]
                       }
@@ -2964,6 +3018,12 @@
               }
             }
           },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -2996,7 +3056,7 @@
           }
         },
         "operationId": "get-track-request-by-id",
-        "description": "Get the details and status of an existing tracking request. ",
+        "description": "Get the details and status of an existing tracking request.",
         "tags": [
           "Tracking Requests"
         ],
@@ -3007,7 +3067,7 @@
             },
             "in": "query",
             "name": "include",
-            "description": "Comma delimited list of relations to include. 'tracked_object' is included by default."
+            "description": "Comma-delimited list of relationships to include. Accepted values: `tracked_object`, `customer`, and `user`. `tracked_object` is included by default."
           }
         ],
         "x-internal": false
@@ -3030,9 +3090,18 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
-        "description": "Update a tracking request",
+        "description": "Update a tracking request.",
         "tags": [
           "Tracking Requests"
         ],
@@ -3052,10 +3121,15 @@
                       "attributes": {
                         "type": "object",
                         "properties": {
-                          "ref_number": {
-                            "type": "string",
-                            "example": "REFNUMBER11",
-                            "description": "Tracking request ref number."
+                          "ref_numbers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "example": [
+                              "REFNUMBER11"
+                            ],
+                            "description": "Customer reference numbers. The list you send replaces the existing list."
                           }
                         }
                       }
@@ -3105,13 +3179,51 @@
                     },
                     "meta": {
                       "$ref": "#/components/schemas/meta"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/custom_field_definition"
+                          },
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container"
+                          },
+                          {
+                            "$ref": "#/components/schemas/tracking_request"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
+                          }
+                        ]
+                      }
                     }
                   }
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
-        }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "include",
+            "description": "Comma-separated relationships to include: `definition`, `entity`, `updated_by`."
+          }
+        ]
       },
       "post": {
         "summary": "Create a tracking request custom field",
@@ -3137,6 +3249,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -3236,6 +3357,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -3285,6 +3415,12 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -3320,10 +3456,16 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-webhooks-id",
-        "description": "Get the details of a single webhook"
+        "description": "Get the details of a single webhook."
       },
       "patch": {
         "summary": "Edit a webhook",
@@ -3343,9 +3485,18 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
-        "description": "Update a single webhook",
+        "description": "Update a single webhook.",
         "tags": [
           "Webhooks"
         ],
@@ -3421,7 +3572,11 @@
                                 "container.transport.not_available",
                                 "container.transport.delivered",
                                 "document_representation.created",
-                                "document_representation.failed"
+                                "document_representation.failed",
+                                "container.detention_lfd_line.changed",
+                                "container.delivery_appointment.changed",
+                                "shipment.routing.filled",
+                                "link.created"
                               ]
                             }
                           },
@@ -3469,11 +3624,17 @@
         "summary": "Delete a webhook",
         "operationId": "delete-webhooks-id",
         "responses": {
-          "200": {
-            "description": "OK"
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
-        "description": "Delete a webhook",
+        "description": "Delete a webhook.",
         "tags": [
           "Webhooks"
         ]
@@ -3591,7 +3752,7 @@
                         "type": "object",
                         "required": [
                           "url",
-                          "active"
+                          "events"
                         ],
                         "properties": {
                           "url": {
@@ -3650,13 +3811,18 @@
                                 "container.transport.not_available",
                                 "container.transport.delivered",
                                 "document_representation.created",
-                                "document_representation.failed"
+                                "document_representation.failed",
+                                "container.detention_lfd_line.changed",
+                                "container.delivery_appointment.changed",
+                                "shipment.routing.filled",
+                                "link.created"
                               ],
                               "example": "tracking_request.succeeded"
                             }
                           },
                           "active": {
-                            "type": "boolean"
+                            "type": "boolean",
+                            "default": true
                           },
                           "headers": {
                             "type": "array",
@@ -3789,6 +3955,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         }
       },
@@ -3920,32 +4089,7 @@
                     "included": {
                       "type": "array",
                       "items": {
-                        "anyOf": [
-                          {
-                            "$ref": "#/components/schemas/webhook"
-                          },
-                          {
-                            "$ref": "#/components/schemas/tracking_request"
-                          },
-                          {
-                            "$ref": "#/components/schemas/transport_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/estimated_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/container_updated_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document_representation"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document_email_submission"
-                          }
-                        ]
+                        "$ref": "#/components/schemas/webhook_notification_included"
                       }
                     }
                   }
@@ -4574,10 +4718,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-webhook-notification-id",
-        "description": "\n",
         "tags": [
           "Webhook Notifications"
         ],
@@ -4619,32 +4768,7 @@
                     "included": {
                       "type": "array",
                       "items": {
-                        "anyOf": [
-                          {
-                            "$ref": "#/components/schemas/webhook"
-                          },
-                          {
-                            "$ref": "#/components/schemas/tracking_request"
-                          },
-                          {
-                            "$ref": "#/components/schemas/transport_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/estimated_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/container_updated_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document_representation"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document_email_submission"
-                          }
-                        ]
+                        "$ref": "#/components/schemas/webhook_notification_included"
                       }
                     }
                   }
@@ -4696,56 +4820,25 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/webhook_notification"
-                      }
-                    },
-                    "links": {
-                      "$ref": "#/components/schemas/links"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/meta"
+                      "$ref": "#/components/schemas/webhook_notification"
                     },
                     "included": {
                       "type": "array",
                       "items": {
-                        "anyOf": [
-                          {
-                            "$ref": "#/components/schemas/webhook"
-                          },
-                          {
-                            "$ref": "#/components/schemas/tracking_request"
-                          },
-                          {
-                            "$ref": "#/components/schemas/transport_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/estimated_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/container_updated_event"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document_representation"
-                          },
-                          {
-                            "$ref": "#/components/schemas/document_email_submission"
-                          }
-                        ]
+                        "$ref": "#/components/schemas/webhook_notification_included"
                       }
                     }
                   }
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           }
         },
         "operationId": "get-webhook-notifications-example",
-        "description": "Returns an example payload as it would be sent to a webhook endpoint for the provided `event` ",
+        "description": "Returns an example payload as it would be sent to a webhook endpoint for the provided `event`. The event must be one your account can subscribe to; otherwise the API returns 400.",
         "tags": [
           "Webhook Notifications"
         ],
@@ -4796,13 +4889,18 @@
                 "container.transport.not_available",
                 "container.transport.delivered",
                 "document_representation.created",
-                "document_representation.failed"
+                "document_representation.failed",
+                "container.detention_lfd_line.changed",
+                "container.delivery_appointment.changed",
+                "shipment.routing.filled",
+                "link.created"
               ],
               "example": "container.transport.full_out"
             },
             "in": "query",
             "name": "event",
-            "description": "The webhook notification event name you wish to see an example of"
+            "description": "The webhook notification event name you wish to see an example of",
+            "required": true
           }
         ]
       },
@@ -5059,7 +5157,20 @@
                     "included": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/shipment"
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/terminal"
+                          },
+                          {
+                            "$ref": "#/components/schemas/transport_event"
+                          },
+                          {
+                            "$ref": "#/components/schemas/raw_event"
+                          }
+                        ]
                       }
                     },
                     "links": {
@@ -8316,6 +8427,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/transport_event"
+                          },
+                          {
+                            "$ref": "#/components/schemas/raw_event"
                           }
                         ]
                       }
@@ -8449,6 +8563,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-containers-id",
@@ -8482,9 +8602,18 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
-        "description": "Update a container",
+        "description": "Update a container's reference numbers, seal number, equipment type, length, and height, or weight. The container number cannot be edited: sending a different `number` returns 422. Equipment type, length, and height are validated together. When any of them changes, all three must have a value, or the request returns 422. A value outside the listed equipment enums also returns 422.",
         "tags": [
           "Containers"
         ],
@@ -8520,6 +8649,46 @@
                               "type": "string",
                               "example": "REF-12345"
                             }
+                          },
+                          "seal_number": {
+                            "type": "string",
+                            "nullable": true,
+                            "example": "SEAL1234567"
+                          },
+                          "equipment_type": {
+                            "type": "string",
+                            "enum": [
+                              "dry",
+                              "flat_rack",
+                              "open_top",
+                              "reefer",
+                              "tank",
+                              "pallet_wide",
+                              "hard_top"
+                            ]
+                          },
+                          "equipment_length": {
+                            "type": "integer",
+                            "enum": [
+                              20,
+                              24,
+                              40,
+                              45,
+                              48,
+                              53
+                            ]
+                          },
+                          "equipment_height": {
+                            "type": "string",
+                            "enum": [
+                              "standard",
+                              "high_cube",
+                              "flexible"
+                            ]
+                          },
+                          "weight_in_lbs": {
+                            "type": "number",
+                            "nullable": true
                           }
                         }
                       }
@@ -8976,6 +9145,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-containers-id-raw_events",
@@ -9306,6 +9478,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-containers-id-transport_events",
@@ -9747,6 +9922,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-containers-id-map-geojson",
@@ -9795,6 +9973,9 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "403": {
             "description": "Forbidden - This API endpoint is not enabled for your account. Please contact support@terminal49.com",
             "content": {
@@ -9826,6 +10007,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           },
           "429": {
             "description": "Too Many Requests - You've hit the refresh limit. Please try again in a minute.",
@@ -9935,6 +10119,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-shipping_lines-id",
@@ -9959,14 +10146,49 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "OK. An unknown id or UN/LOCODE returns `data: null` with status 200, not 404.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/metro_area"
+                      "oneOf": [
+                        {
+                          "$ref": "#/components/schemas/metro_area"
+                        },
+                        {
+                          "type": "object",
+                          "nullable": true,
+                          "enum": [
+                            null
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                "examples": {
+                  "Metro area": {
+                    "value": {
+                      "data": {
+                        "id": "13a8bea0-36e7-4186-a9a0-5fc4f94ccdd9",
+                        "type": "metro_area",
+                        "attributes": {
+                          "name": "Los Angeles",
+                          "state_abbr": "CA",
+                          "code": "USLAX",
+                          "latitude": "34.0522342",
+                          "longitude": "-118.2436849",
+                          "country_code": "US",
+                          "time_zone": "America/Los_Angeles"
+                        }
+                      }
+                    }
+                  },
+                  "Unknown id": {
+                    "value": {
+                      "data": null
                     }
                   }
                 }
@@ -10009,6 +10231,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-port-id",
@@ -10104,6 +10329,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-vessels-id",
@@ -10199,6 +10427,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-vessels-imo",
@@ -10279,6 +10510,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-vessels-id-future-positions",
@@ -10380,6 +10614,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-vessels-id-future-positions-with-coordinates",
@@ -10457,6 +10694,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-terminal-id",
@@ -10641,7 +10881,7 @@
     },
     "/custom_field_definitions": {
       "get": {
-        "summary": "List custom field definitions",
+        "summary": "List custom field definition templates",
         "operationId": "get-custom-field-definitions",
         "tags": [
           "Custom Field Definitions"
@@ -10649,27 +10889,15 @@
         "parameters": [
           {
             "schema": {
-              "type": "integer",
-              "default": 1
-            },
-            "in": "query",
-            "name": "page[number]"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "default": 25
-            },
-            "in": "query",
-            "name": "page[size]"
-          },
-          {
-            "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Shipment",
+                "Cargo"
+              ]
             },
             "in": "query",
             "name": "filter[entity_type]",
-            "description": "Filter by entity type (Shipment or Container)"
+            "description": "Filter by entity type. `Cargo` means containers."
           },
           {
             "schema": {
@@ -10704,19 +10932,17 @@
                     },
                     "links": {
                       "$ref": "#/components/schemas/links"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/meta"
                     }
                   }
                 }
               }
             }
           }
-        }
+        },
+        "description": "Lists the Terminal49 template definitions. To list the definitions configured for your account, use `GET /accounts/{account_id}/custom_field_definitions`. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`."
       },
       "post": {
-        "summary": "Create a custom field definition",
+        "summary": "Create a custom field definition template",
         "operationId": "post-custom-field-definitions",
         "tags": [
           "Custom Field Definitions"
@@ -10739,6 +10965,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -10773,8 +11005,9 @@
                             "type": "string",
                             "enum": [
                               "Shipment",
-                              "Container"
-                            ]
+                              "Cargo"
+                            ],
+                            "description": "`Cargo` means containers."
                           },
                           "api_slug": {
                             "type": "string"
@@ -10814,6 +11047,21 @@
                           },
                           "default_value": {
                             "$ref": "#/components/schemas/custom_field_value"
+                          },
+                          "reference_number": {
+                            "type": "boolean",
+                            "description": "Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching.",
+                            "default": false
+                          },
+                          "sensitive": {
+                            "type": "boolean",
+                            "description": "Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views.",
+                            "default": false
+                          },
+                          "inline_option_creation": {
+                            "type": "boolean",
+                            "description": "Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app.",
+                            "default": false
                           }
                         }
                       }
@@ -10823,7 +11071,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Creates a Terminal49 template definition. Only Terminal49 accounts can create templates; other accounts receive 401. To create a definition for your account, use `POST /accounts/{account_id}/custom_field_definitions`."
       }
     },
     "/custom_field_definitions/{id}": {
@@ -10862,6 +11111,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       },
@@ -10889,6 +11141,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -10920,19 +11181,24 @@
                             "type": "string",
                             "nullable": true
                           },
-                          "validation": {
-                            "type": "object",
-                            "nullable": true,
-                            "additionalProperties": true
-                          },
                           "default_format": {
                             "type": "string",
                             "nullable": true
                           },
-                          "default_value": {
-                            "$ref": "#/components/schemas/custom_field_value"
+                          "reference_number": {
+                            "type": "boolean",
+                            "description": "Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching."
+                          },
+                          "sensitive": {
+                            "type": "boolean",
+                            "description": "Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views."
+                          },
+                          "inline_option_creation": {
+                            "type": "boolean",
+                            "description": "Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app."
                           }
-                        }
+                        },
+                        "description": "The attributes the API updates. It ignores any other attribute, such as `data_type`, `validation` or `default_value`, and still returns 200."
                       }
                     }
                   }
@@ -10949,10 +11215,20 @@
           "Custom Field Definitions"
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
-        }
+        },
+        "description": "Deletes a custom field definition. A definition that has values returns 422; archive it instead. Templates are Terminal49-managed: other accounts get 401 when they update or delete one, so only Terminal49 accounts can see the 422 for a template that other accounts use."
       }
     },
     "/custom_field_definitions/{definition_id}/options": {
@@ -10989,16 +11265,17 @@
                     },
                     "links": {
                       "$ref": "#/components/schemas/links"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/meta"
                     }
                   }
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
-        }
+        },
+        "description": "Lists every option of the definition. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`."
       },
       "post": {
         "summary": "Create a custom field option",
@@ -11024,6 +11301,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -11118,6 +11404,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       },
@@ -11145,6 +11437,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -11193,8 +11494,14 @@
           "Custom Field Options"
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -11209,27 +11516,16 @@
         "parameters": [
           {
             "schema": {
-              "type": "integer",
-              "default": 1
-            },
-            "in": "query",
-            "name": "page[number]"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "default": 25
-            },
-            "in": "query",
-            "name": "page[size]"
-          },
-          {
-            "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Shipment",
+                "Cargo",
+                "TrackingRequest"
+              ]
             },
             "in": "query",
             "name": "filter[entity_type]",
-            "description": "Filter by entity type (Shipment or Container)"
+            "description": "Filter by entity type. The value must match exactly: `Shipment`, `Cargo` (containers) or `TrackingRequest`."
           },
           {
             "schema": {
@@ -11264,16 +11560,14 @@
                     },
                     "links": {
                       "$ref": "#/components/schemas/links"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/meta"
                     }
                   }
                 }
               }
             }
           }
-        }
+        },
+        "description": "The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`."
       },
       "post": {
         "summary": "Create a custom field",
@@ -11299,6 +11593,12 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -11353,7 +11653,8 @@
                                     "type": "string",
                                     "enum": [
                                       "shipment",
-                                      "container"
+                                      "container",
+                                      "tracking_request"
                                     ]
                                   },
                                   "id": {
@@ -11428,6 +11729,9 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       },
@@ -11455,6 +11759,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -11502,8 +11815,14 @@
           "Custom Fields"
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -11545,13 +11864,51 @@
                     },
                     "meta": {
                       "$ref": "#/components/schemas/meta"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/custom_field_definition"
+                          },
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container"
+                          },
+                          {
+                            "$ref": "#/components/schemas/tracking_request"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
+                          }
+                        ]
+                      }
                     }
                   }
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
-        }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "include",
+            "description": "Comma-separated relationships to include: `definition`, `entity`, `updated_by`."
+          }
+        ]
       },
       "post": {
         "summary": "Create a shipment custom field",
@@ -11577,6 +11934,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -11676,6 +12042,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -11725,6 +12100,12 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -11838,7 +12219,7 @@
             }
           },
           "404": {
-            "description": "Not Found"
+            "$ref": "#/components/responses/NotFound"
           }
         }
       },
@@ -12045,7 +12426,7 @@
             }
           },
           "404": {
-            "description": "Not Found"
+            "$ref": "#/components/responses/NotFound"
           },
           "422": {
             "description": "Unprocessable Entity",
@@ -12145,7 +12526,7 @@
             }
           },
           "404": {
-            "description": "Not Found"
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -12187,13 +12568,51 @@
                     },
                     "meta": {
                       "$ref": "#/components/schemas/meta"
+                    },
+                    "included": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/custom_field_definition"
+                          },
+                          {
+                            "$ref": "#/components/schemas/shipment"
+                          },
+                          {
+                            "$ref": "#/components/schemas/container"
+                          },
+                          {
+                            "$ref": "#/components/schemas/tracking_request"
+                          },
+                          {
+                            "$ref": "#/components/schemas/user"
+                          }
+                        ]
+                      }
                     }
                   }
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
-        }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "include",
+            "description": "Comma-separated relationships to include: `definition`, `entity`, `updated_by`."
+          }
+        ]
       },
       "post": {
         "summary": "Create a container custom field",
@@ -12219,6 +12638,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -12318,6 +12746,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "requestBody": {
@@ -12367,6 +12804,12 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -12480,7 +12923,7 @@
             }
           },
           "404": {
-            "description": "Not Found"
+            "$ref": "#/components/responses/NotFound"
           }
         }
       },
@@ -12681,7 +13124,7 @@
             }
           },
           "404": {
-            "description": "Not Found"
+            "$ref": "#/components/responses/NotFound"
           },
           "422": {
             "description": "Unprocessable Entity",
@@ -12796,7 +13239,7 @@
             }
           },
           "404": {
-            "description": "Not Found"
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -12831,16 +13274,22 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "operationId": "get-parties-id",
-        "description": "Returns a party by it's given identifier",
+        "description": "Returns a party by it's given identifier.",
         "tags": [
           "Parties"
         ]
       },
       "patch": {
-        "description": "Updates a party",
+        "description": "Updates a party.",
         "operationId": "edit-party",
         "responses": {
           "200": {
@@ -12860,6 +13309,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           },
           "422": {
             "description": "Unprocessable Entity",
@@ -13485,7 +13940,7 @@
       },
       "patch": {
         "summary": "Edit a document",
-        "description": "Updates manual extraction and classification fields.",
+        "description": "Updates the document type, classification notes, and manual extraction data.",
         "tags": [
           "Documents"
         ],
@@ -13523,9 +13978,14 @@
                       "attributes": {
                         "type": "object",
                         "properties": {
-                          "document_type_manual": {
+                          "document_type": {
                             "type": "string",
-                            "description": "Manually override the document type."
+                            "description": "Document type code. Must be one of the codes from `GET /documents/types`. Setting it marks `document_type_source` as `customer`. The API does not validate unknown codes as a 422; it currently returns 500 for them."
+                          },
+                          "classification_notes": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Notes about how the document was classified."
                           },
                           "extracted_data_manual": {
                             "type": "object",
@@ -13620,6 +14080,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           }
         },
         "operationId": "patch-documents-id"
@@ -14505,11 +14968,9 @@
                           },
                           "type": {
                             "type": "string",
-                            "description": "Resource type",
+                            "description": "Always `search_result`. The matched resource kind is in `attributes.entity_type`.",
                             "enum": [
-                              "shipment",
-                              "cargo",
-                              "tracking_request"
+                              "search_result"
                             ]
                           },
                           "attributes": {
@@ -14517,7 +14978,12 @@
                             "properties": {
                               "entity_type": {
                                 "type": "string",
-                                "description": "Type of the matched entity: `shipment`, `cargo`, or `tracking_request`"
+                                "description": "Type of the matched entity: `shipment`, `cargo` (a container), or `tracking_request`",
+                                "enum": [
+                                  "shipment",
+                                  "cargo",
+                                  "tracking_request"
+                                ]
                               },
                               "number": {
                                 "type": "string",
@@ -14596,7 +15062,7 @@
                   "data": [
                     {
                       "id": "abc12345-6789-40ef-9012-3456789abcde",
-                      "type": "shipment",
+                      "type": "search_result",
                       "attributes": {
                         "entity_type": "shipment",
                         "number": "MEDUA1234567",
@@ -14618,7 +15084,7 @@
                     },
                     {
                       "id": "def45678-9012-43ab-9cde-f0123456789a",
-                      "type": "cargo",
+                      "type": "search_result",
                       "attributes": {
                         "entity_type": "cargo",
                         "number": "MSCU1234567",
@@ -14704,6 +15170,318 @@
             }
           }
         }
+      }
+    },
+    "/tracking_requests/{id}/cancel": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Tracking Request ID"
+        }
+      ],
+      "patch": {
+        "summary": "Cancel a tracking request",
+        "operationId": "patch-tracking-request-cancel",
+        "description": "Cancel a tracking request that is still `pending` or `awaiting_manifest`. The request moves to status `cancelled` with failed_reason `Cancelled by user`. Requests in any other status return 422. A request that belongs to another account also returns 422 with a string `errors`. An unknown tracking request ID currently returns a 500 server error, not 404. A 401 comes only from authentication. It means the API token is missing or invalid, or the account may not use the API.",
+        "tags": [
+          "Tracking Requests"
+        ],
+        "responses": {
+          "200": {
+            "description": "Cancelled. The response body is an empty JSON object.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. The API token is missing or invalid, or the account may not use the API. Ownership never causes a 401 here: another account's tracking request returns 422.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "detail": "invalid API token"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The tracking request is not in a cancellable status, or it belongs to another account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "errors": "Can't cancel tracking request in created state.  Must be in pending or awaiting_manifest state."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error. An unknown tracking request ID currently returns 500 instead of 404."
+          }
+        }
+      }
+    },
+    "/accounts/{account_id}/custom_field_definitions": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "description": "Your account ID. The API always uses the account of the authenticated user."
+        }
+      ],
+      "get": {
+        "summary": "List custom field definitions",
+        "operationId": "get-account-custom-field-definitions",
+        "tags": [
+          "Custom Field Definitions"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Shipment",
+                "Cargo"
+              ]
+            },
+            "in": "query",
+            "name": "filter[entity_type]",
+            "description": "Filter by entity type. `Cargo` means containers."
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "filter[data_type]",
+            "description": "Filter by data type"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "filter[display_name]",
+            "description": "Filter by display name (prefix match)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/custom_field_definition"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/links"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Lists the custom field definitions configured for your account. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`."
+      },
+      "post": {
+        "summary": "Create a custom field definition",
+        "operationId": "post-account-custom-field-definitions",
+        "tags": [
+          "Custom Field Definitions"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/custom_field_definition"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/link-self"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`template_id` does not match a Terminal49 template.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/error"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "status": "404",
+                      "title": "Not Found"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "attributes"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "custom_field_definition"
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "entity_type": {
+                            "type": "string",
+                            "enum": [
+                              "Shipment",
+                              "Cargo"
+                            ],
+                            "description": "`Cargo` means containers."
+                          },
+                          "api_slug": {
+                            "type": "string"
+                          },
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "data_type": {
+                            "type": "string",
+                            "enum": [
+                              "short_text",
+                              "number",
+                              "date",
+                              "datetime",
+                              "boolean",
+                              "enum",
+                              "enum_multi",
+                              "reference"
+                            ]
+                          },
+                          "reference_type": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "validation": {
+                            "type": "object",
+                            "nullable": true,
+                            "additionalProperties": true
+                          },
+                          "default_format": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "default_value": {
+                            "$ref": "#/components/schemas/custom_field_value"
+                          },
+                          "template_id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "ID of a Terminal49 template definition to copy."
+                          },
+                          "reference_number": {
+                            "type": "boolean",
+                            "description": "Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching.",
+                            "default": false
+                          },
+                          "sensitive": {
+                            "type": "boolean",
+                            "description": "Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views.",
+                            "default": false
+                          },
+                          "inline_option_creation": {
+                            "type": "boolean",
+                            "description": "Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app.",
+                            "default": false
+                          }
+                        },
+                        "description": "Send `template_id`, or all of `entity_type`, `api_slug`, `display_name` and `data_type`. With `template_id`, the template supplies any of those four you leave out."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Creates a custom field definition for your account. Pass `template_id` to copy a Terminal49 template; attributes you send override the template's values."
       }
     },
     "/me": {
@@ -15100,7 +15878,8 @@
                     "required": [
                       "type",
                       "id"
-                    ]
+                    ],
+                    "nullable": true
                   }
                 }
               },
@@ -15125,7 +15904,8 @@
                     "required": [
                       "type",
                       "id"
-                    ]
+                    ],
+                    "nullable": true
                   }
                 }
               },
@@ -15149,7 +15929,8 @@
                     "required": [
                       "type",
                       "id"
-                    ]
+                    ],
+                    "nullable": true
                   }
                 }
               }
@@ -15168,7 +15949,8 @@
               "ref_numbers": {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "type": "string",
+                  "nullable": true
                 },
                 "nullable": true
               },
@@ -15339,7 +16121,8 @@
             "properties": {
               "self": {
                 "type": "string",
-                "format": "uri"
+                "format": "uri-reference",
+                "description": "Path of this resource, relative to the API host (for example `/v2/shipments/{id}`)."
               }
             },
             "required": [
@@ -15373,7 +16156,7 @@
         "properties": {
           "self": {
             "type": "string",
-            "format": "uri"
+            "description": "Absolute URL of the request, including its query string as sent. On a create, this is the collection URL the request was posted to, not the URL of the new resource."
           }
         }
       },
@@ -15381,27 +16164,26 @@
         "title": "links",
         "type": "object",
         "properties": {
-          "last": {
-            "type": "string",
-            "format": "uri"
+          "self": {
+            "type": "string"
           },
-          "next": {
-            "type": "string",
-            "format": "uri"
-          },
-          "prev": {
-            "type": "string",
-            "format": "uri"
+          "current": {
+            "type": "string"
           },
           "first": {
-            "type": "string",
-            "format": "uri"
+            "type": "string"
           },
-          "self": {
-            "type": "string",
-            "format": "uri"
+          "prev": {
+            "type": "string"
+          },
+          "next": {
+            "type": "string"
+          },
+          "last": {
+            "type": "string"
           }
-        }
+        },
+        "description": "Pagination links. Each value is an absolute URL. `self` repeats the request URL as sent, including its query string and its encoding. `current`, `first`, `prev`, `next`, and `last` repeat the request's query parameters, with `page[number]` and `page[size]` in unencoded brackets."
       },
       "container": {
         "title": "Container model",
@@ -15830,7 +16612,8 @@
                           "shipment"
                         ]
                       }
-                    }
+                    },
+                    "nullable": true
                   }
                 }
               },
@@ -15849,7 +16632,8 @@
                           "terminal"
                         ]
                       }
-                    }
+                    },
+                    "nullable": true
                   }
                 }
               },
@@ -15868,7 +16652,8 @@
                           "terminal"
                         ]
                       }
-                    }
+                    },
+                    "nullable": true
                   }
                 }
               },
@@ -15966,18 +16751,22 @@
                 "description": "IANA tz"
               },
               "latitude": {
-                "type": "number",
+                "type": "string",
                 "x-stoplight": {
                   "id": "480os7a90z6kk"
                 },
-                "nullable": true
+                "nullable": true,
+                "description": "Latitude in decimal degrees, serialized as a decimal string (for example `\"22.57489971\"`).",
+                "example": "22.57489971"
               },
               "longitude": {
-                "type": "number",
+                "type": "string",
                 "x-stoplight": {
                   "id": "nfdetqgx5p1yv"
                 },
-                "nullable": true
+                "nullable": true,
+                "description": "Longitude in decimal degrees, serialized as a decimal string (for example `\"22.57489971\"`).",
+                "example": "114.27769989"
               }
             }
           },
@@ -16135,10 +16924,7 @@
             "nullable": true,
             "additionalProperties": true
           }
-        },
-        "required": [
-          "title"
-        ]
+        }
       },
       "metro_area": {
         "title": "Metro area model",
@@ -16179,18 +16965,22 @@
                 }
               },
               "latitude": {
-                "type": "number",
+                "type": "string",
                 "x-stoplight": {
                   "id": "9l62t4cwsp53w"
                 },
-                "nullable": true
+                "nullable": true,
+                "description": "Latitude in decimal degrees, serialized as a decimal string (for example `\"22.57489971\"`).",
+                "example": "22.57489971"
               },
               "longitude": {
-                "type": "number",
+                "type": "string",
                 "x-stoplight": {
                   "id": "3tzibc0li8xvg"
                 },
-                "nullable": true
+                "nullable": true,
+                "description": "Longitude in decimal degrees, serialized as a decimal string (for example `\"22.57489971\"`).",
+                "example": "114.27769989"
               }
             }
           },
@@ -16258,43 +17048,53 @@
                 "type": "string"
               },
               "nickname": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "firms_code": {
                 "type": "string",
-                "description": "CBP FIRMS Code or CBS Sublocation Code"
+                "description": "CBP FIRMS Code or CBS Sublocation Code",
+                "nullable": true
               },
               "smdg_code": {
                 "type": "string",
-                "description": "SMDG Code"
+                "description": "SMDG Code",
+                "nullable": true
               },
               "bic_facility_code": {
                 "type": "string",
-                "description": "BIC Facility Code"
+                "description": "BIC Facility Code",
+                "nullable": true
               },
               "street": {
                 "type": "string",
-                "description": "Street part of the address"
+                "description": "Street part of the address",
+                "nullable": true
               },
               "city": {
                 "type": "string",
-                "description": "City part of the address"
+                "description": "City part of the address",
+                "nullable": true
               },
               "state": {
                 "type": "string",
-                "description": "State part of the address"
+                "description": "State part of the address",
+                "nullable": true
               },
               "state_abbr": {
                 "type": "string",
-                "description": "State abbreviation for the state"
+                "description": "State abbreviation for the state",
+                "nullable": true
               },
               "zip": {
                 "type": "string",
-                "description": "ZIP code part of the address"
+                "description": "ZIP code part of the address",
+                "nullable": true
               },
               "country": {
                 "type": "string",
-                "description": "Country part of the address"
+                "description": "Country part of the address",
+                "nullable": true
               }
             }
           },
@@ -16434,7 +17234,8 @@
                   "awaiting_manifest",
                   "created",
                   "failed",
-                  "tracking_stopped"
+                  "tracking_stopped",
+                  "cancelled"
                 ]
               },
               "failed_reason": {
@@ -16451,9 +17252,12 @@
                   "unrecognized_response",
                   "data_unavailable",
                   "scac_auto_detect_failed",
+                  "awaiting_manifest",
+                  "shipping_line_not_supported",
+                  "Cancelled by user",
                   null
                 ],
-                "description": "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request. `scac_auto_detect_failed` means `auto_detect_vocc_scac` was set but no supported carrier SCAC could be inferred from the request number.",
+                "description": "If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request. `scac_auto_detect_failed` means `auto_detect_vocc_scac` was set but no supported carrier SCAC could be inferred from the request number. A request waiting for the carrier to publish the shipment or its containers has status `awaiting_manifest` and failed_reason null. Only older records carry the `awaiting_manifest` failed_reason value. `shipping_line_not_supported` means Terminal49 cannot track that shipping line. A request cancelled through `PATCH /tracking_requests/{id}/cancel` has status `cancelled` and failed_reason `Cancelled by user`.",
                 "nullable": true
               },
               "request_type": {
@@ -16536,6 +17340,28 @@
                         "type": "string",
                         "enum": [
                           "account"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "user": {
+                "type": "object",
+                "description": "User who created the tracking request, or `null` when the request has no linked user.",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "user"
                         ]
                       }
                     }
@@ -16628,7 +17454,11 @@
                     "container.transport.not_available",
                     "container.transport.delivered",
                     "document_representation.created",
-                    "document_representation.failed"
+                    "document_representation.failed",
+                    "container.detention_lfd_line.changed",
+                    "container.delivery_appointment.changed",
+                    "shipment.routing.filled",
+                    "link.created"
                   ]
                 }
               },
@@ -16785,6 +17615,7 @@
             "properties": {
               "event": {
                 "type": "string",
+                "description": "The event name. The three `container.pickup_lfd_*_calculated.changed` events are Last Free Day estimates that Terminal49 calculates. They can appear when you read transport events, but you cannot subscribe a webhook to them.",
                 "enum": [
                   "container.transport.vessel_arrived",
                   "container.transport.estimated.vessel_arrived",
@@ -16820,7 +17651,12 @@
                   "container.transport.not_available",
                   "container.transport.delivered",
                   "document_representation.created",
-                  "document_representation.failed"
+                  "document_representation.failed",
+                  "container.detention_lfd_line.changed",
+                  "container.delivery_appointment.changed",
+                  "container.pickup_lfd_line_calculated.changed",
+                  "container.pickup_lfd_terminal_calculated.changed",
+                  "container.pickup_lfd_rail_calculated.changed"
                 ]
               },
               "voyage_number": {
@@ -17185,7 +18021,11 @@
                   "container.transport.not_available",
                   "container.transport.delivered",
                   "document_representation.created",
-                  "document_representation.failed"
+                  "document_representation.failed",
+                  "container.detention_lfd_line.changed",
+                  "container.delivery_appointment.changed",
+                  "shipment.routing.filled",
+                  "link.created"
                 ]
               },
               "delivery_status": {
@@ -17248,7 +18088,11 @@
                           "estimated_event",
                           "transport_event",
                           "container_updated_event",
-                          "document"
+                          "document",
+                          "container_created_event",
+                          "container_pod_terminal_changed_event",
+                          "link",
+                          "document_observation"
                         ]
                       }
                     }
@@ -17526,7 +18370,8 @@
               },
               "location_name": {
                 "type": "string",
-                "description": "The city or facility name of the event location"
+                "description": "The city or facility name of the event location",
+                "nullable": true
               },
               "location_locode": {
                 "type": "string",
@@ -17573,7 +18418,8 @@
                           "metro_area"
                         ]
                       }
-                    }
+                    },
+                    "nullable": true
                   }
                 }
               },
@@ -17593,6 +18439,48 @@
                           "vessel"
                         ]
                       }
+                    },
+                    "nullable": true
+                  }
+                }
+              },
+              "container": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "container"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "terminal": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "terminal"
+                        ]
+                      }
                     }
                   }
                 }
@@ -17606,10 +18494,14 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "type": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "container_pod_terminal_changed_event"
+            ]
           },
           "attributes": {
             "type": "object",
@@ -17637,53 +18529,70 @@
               "container": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "container"
-                    ]
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "container"
+                        ]
+                      }
+                    }
                   }
                 }
               },
               "shipment": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "shipment"
-                    ]
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "shipment"
+                        ]
+                      }
+                    }
                   }
                 }
               },
               "terminal": {
                 "type": "object",
-                "description": "The terminal the container has changed to. If this container is still on the vessel this represents an advisory. If it was previously at the terminal this represents an off-dock move.",
                 "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "terminal"
-                    ]
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "terminal"
+                        ]
+                      }
+                    }
                   }
-                }
+                },
+                "description": "The terminal the container has changed to. If this container is still on the vessel this represents an advisory. If it was previously at the terminal this represents an off-dock move."
               }
             }
           }
-        },
-        "description": ""
+        }
       },
       "party": {
         "title": "Party model",
@@ -17858,15 +18767,18 @@
           },
           "country_code": {
             "type": "string",
-            "description": "ISO country code"
+            "description": "ISO country code",
+            "nullable": true
           },
           "country": {
             "type": "string",
-            "description": "Country name"
+            "description": "Country name",
+            "nullable": true
           },
           "time_zone": {
             "type": "string",
-            "description": "IANA timezone identifier"
+            "description": "IANA timezone identifier",
+            "nullable": true
           },
           "label": {
             "type": "string",
@@ -17973,11 +18885,13 @@
           },
           "departure_port_country_code": {
             "type": "string",
-            "description": "Country code of departure port"
+            "description": "Country code of departure port",
+            "nullable": true
           },
           "departure_port_country": {
             "type": "string",
-            "description": "Country name of departure port"
+            "description": "Country name of departure port",
+            "nullable": true
           },
           "departure_port_label": {
             "type": "string",
@@ -17991,7 +18905,8 @@
           },
           "departure_port_time_zone": {
             "type": "string",
-            "description": "Timezone of departure port"
+            "description": "Timezone of departure port",
+            "nullable": true
           },
           "arrival_port_id": {
             "type": "string",
@@ -18191,10 +19106,10 @@
       },
       "custom_field_value": {
         "description": "Raw custom field value (type depends on definition)",
-        "nullable": true,
         "oneOf": [
           {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           {
             "type": "number"
@@ -18329,9 +19244,9 @@
                 "type": "string",
                 "enum": [
                   "Shipment",
-                  "Container",
-                  "TrackingRequest"
-                ]
+                  "Cargo"
+                ],
+                "description": "The entity type this definition applies to. `Cargo` means containers."
               },
               "api_slug": {
                 "type": "string"
@@ -18371,6 +19286,42 @@
               },
               "default_value": {
                 "$ref": "#/components/schemas/custom_field_value"
+              },
+              "reference_number": {
+                "type": "boolean",
+                "description": "Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching."
+              },
+              "sensitive": {
+                "type": "boolean",
+                "description": "Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views."
+              },
+              "inline_option_creation": {
+                "type": "boolean",
+                "description": "Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app."
+              },
+              "template_id": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true,
+                "description": "ID of the Terminal49 template this definition was copied from."
+              },
+              "has_data": {
+                "type": "boolean",
+                "description": "Whether any entity has a value for this definition."
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "discarded_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "description": "When the definition was archived."
               }
             },
             "required": [
@@ -18379,6 +19330,90 @@
               "display_name",
               "data_type"
             ]
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "account": {
+                "type": "object",
+                "description": "The owning account. `null` for Terminal49 templates.",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "required": [
+                      "type",
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "account"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "created_by": {
+                "type": "object",
+                "description": "The user who created the definition.",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "required": [
+                      "type",
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "options": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "id"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "custom_field_option"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "required": [
@@ -18793,12 +19828,17 @@
                 "type": "string"
               },
               "document_type": {
-                "description": "System-classified document type.",
+                "description": "Document type code. See `GET /documents/types` for allowed values.",
                 "type": "string"
               },
-              "document_type_manual": {
-                "description": "Document type set manually by a user, when available.",
+              "document_type_source": {
+                "description": "Who set `document_type`: `customer` (set through the API or app), `admin` (Terminal49 staff) or `llm` (automatic classification).",
                 "type": "string",
+                "enum": [
+                  "customer",
+                  "admin",
+                  "llm"
+                ],
                 "nullable": true
               },
               "classification_notes": {
@@ -19277,6 +20317,427 @@
           }
         }
       },
+      "container_created_event": {
+        "title": "container_created_event",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "container_created_event"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "timezone": {
+                "type": "string",
+                "nullable": true,
+                "description": "IANA tz"
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "container": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "container"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "shipment": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "shipment"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "link": {
+        "title": "link",
+        "type": "object",
+        "description": "A link between a document and the shipment or container it belongs to.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "link"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "kind_label": {
+                "type": "string"
+              },
+              "created_by": {
+                "type": "string"
+              },
+              "created_by_label": {
+                "type": "string"
+              },
+              "source_type": {
+                "type": "string",
+                "example": "Document"
+              },
+              "source_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "target_type": {
+                "type": "string",
+                "example": "Shipment"
+              },
+              "target_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "has_parent": {
+                "type": "boolean"
+              },
+              "link_description": {
+                "type": "string",
+                "example": "Document to Shipment"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "document"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "target": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "container",
+                          "shipment"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "parent": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "link"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "child_links": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "link"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "document_observation": {
+        "title": "document_observation",
+        "type": "object",
+        "description": "A shipment field value read from a document. The reference object of `shipment.routing.filled`.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "document_observation"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "before": {},
+              "after": {},
+              "source": {
+                "type": "string",
+                "nullable": true
+              },
+              "observed_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "document_name": {
+                "type": "string",
+                "nullable": true
+              },
+              "document_processing_id": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              },
+              "schema_version": {
+                "type": "string",
+                "nullable": true,
+                "example": "2026-09-24"
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "shipment": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "shipment"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "document": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "document"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "webhook_notification_included": {
+        "title": "Webhook notification included resource",
+        "description": "A resource that can appear in `included` on a webhook notification response.",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/webhook"
+          },
+          {
+            "$ref": "#/components/schemas/tracking_request"
+          },
+          {
+            "$ref": "#/components/schemas/transport_event"
+          },
+          {
+            "$ref": "#/components/schemas/estimated_event"
+          },
+          {
+            "$ref": "#/components/schemas/container_updated_event"
+          },
+          {
+            "$ref": "#/components/schemas/container_pod_terminal_changed_event"
+          },
+          {
+            "$ref": "#/components/schemas/container_created_event"
+          },
+          {
+            "$ref": "#/components/schemas/document"
+          },
+          {
+            "$ref": "#/components/schemas/document_representation"
+          },
+          {
+            "$ref": "#/components/schemas/document_email_submission"
+          },
+          {
+            "$ref": "#/components/schemas/document_observation"
+          },
+          {
+            "$ref": "#/components/schemas/link"
+          },
+          {
+            "$ref": "#/components/schemas/shipment"
+          },
+          {
+            "$ref": "#/components/schemas/container"
+          },
+          {
+            "$ref": "#/components/schemas/port"
+          },
+          {
+            "$ref": "#/components/schemas/metro_area"
+          },
+          {
+            "$ref": "#/components/schemas/terminal"
+          },
+          {
+            "$ref": "#/components/schemas/vessel"
+          },
+          {
+            "$ref": "#/components/schemas/shipping_line"
+          },
+          {
+            "$ref": "#/components/schemas/account"
+          }
+        ]
+      },
       "feature_availability": {
         "title": "Feature availability",
         "type": "object",
@@ -19664,6 +21125,119 @@
             "required": [
               "accounts"
             ]
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/error"
+                  }
+                }
+              }
+            },
+            "example": {
+              "errors": [
+                {
+                  "status": "400",
+                  "title": "Bad Request",
+                  "source": {
+                    "parameter": "include"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized. The API token is missing or invalid, or the account may not perform this action.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/error"
+                  }
+                }
+              }
+            },
+            "example": {
+              "errors": [
+                {
+                  "detail": "You are not allowed to perform this action"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not Found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/error"
+                  }
+                }
+              }
+            },
+            "example": {
+              "errors": [
+                {
+                  "status": "404",
+                  "title": "Not Found"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "Unprocessable Entity",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/error"
+                  }
+                }
+              }
+            },
+            "example": {
+              "errors": [
+                {
+                  "status": "422",
+                  "source": {
+                    "pointer": "/data/attributes/label"
+                  },
+                  "title": "Unprocessable Entity",
+                  "detail": "Label can't be blank",
+                  "code": "blank"
+                }
+              ]
+            }
           }
         }
       }

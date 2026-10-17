@@ -219,7 +219,7 @@ describe('documents', () => {
       data: {
         type: 'document',
         attributes: {
-          document_type_manual: 'bill_of_lading',
+          document_type: 'bill_of_lading',
           extracted_data_manual: null,
         },
       },
@@ -306,7 +306,7 @@ describe('custom field list filters', () => {
     const { client, calls } = buildClient();
     await client.customFields.list({
       filters: {
-        entityType: 'Container',
+        entityType: 'Cargo',
         entityId: 'c-1',
         definitionId: 'def-1',
       },
@@ -317,7 +317,7 @@ describe('custom field list filters', () => {
     });
 
     expect(calls[0].query).toEqual({
-      'filter[entity_type]': 'Container',
+      'filter[entity_type]': 'Cargo',
       'filter[entity_id]': 'c-1',
       'filter[definition_id]': 'def-1',
     });
@@ -334,12 +334,8 @@ describe('custom field list filters', () => {
     await client.customFields.list({
       filters: { entityType: 'TrackingRequest' },
     });
-    await client.customFieldDefinitions.list({
-      filters: { entityType: 'TrackingRequest' },
-    });
 
     expect(calls.map((c) => c.query)).toEqual([
-      { 'filter[entity_type]': 'TrackingRequest' },
       { 'filter[entity_type]': 'TrackingRequest' },
     ]);
   });

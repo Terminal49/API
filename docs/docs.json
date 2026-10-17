@@ -112,6 +112,7 @@
               "api-docs/api-reference/tracking-requests/create-a-tracking-request",
               "api-docs/api-reference/tracking-requests/get-a-single-tracking-request",
               "api-docs/api-reference/tracking-requests/edit-a-tracking-request",
+              "api-docs/api-reference/tracking-requests/cancel-a-tracking-request",
               "api-docs/api-reference/tracking-requests/auto-detect-carrier",
               "api-docs/api-reference/tracking-requests/list-tracking-request-custom-fields",
               "api-docs/api-reference/tracking-requests/create-tracking-request-custom-field",
@@ -223,6 +224,8 @@
           {
             "group": "Custom Field Definitions",
             "pages": [
+              "api-docs/api-reference/custom-fields/list-account-custom-field-definitions",
+              "api-docs/api-reference/custom-fields/create-account-custom-field-definition",
               "api-docs/api-reference/custom-fields/list-custom-field-definitions",
               "api-docs/api-reference/custom-fields/get-a-custom-field-definition",
               "api-docs/api-reference/custom-fields/create-a-custom-field-definition",

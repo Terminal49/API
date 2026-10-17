@@ -6,7 +6,7 @@ og:description: List all selectable options for an enum-type custom field defini
 openapi: get /custom_field_definitions/{definition_id}/options
 ---
 
-List all options for a custom field definition.
+List all options for a custom field definition. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
 
 ## Path parameters
 

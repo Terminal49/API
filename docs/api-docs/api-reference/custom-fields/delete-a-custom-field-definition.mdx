@@ -1,8 +1,8 @@
 ---
 title: Delete a custom field definition
-description: "Delete a custom field definition from your Terminal49 account, removing the field type and its applied values from shipments and containers permanently."
+description: "Delete a custom field definition from your Terminal49 account. A definition that already has values cannot be deleted; archive it instead."
 og:title: Delete a Custom Field Definition | Terminal49 API Documentation
-og:description: Delete a custom field definition from the Terminal49 API. Removes the field schema and all associated values from every shipment and container record.
+og:description: Delete a custom field definition from the Terminal49 API. Returns 204 on success, 422 when the definition has values, or 401 when a non-Terminal49 account deletes a template.
 openapi: delete /custom_field_definitions/{id}
 ---
 
@@ -16,4 +16,8 @@ Delete a custom field definition by its ID.
 
 ## Behavior
 
-Deleting a custom field definition also removes all associated custom field values.
+Returns `204` when the definition is deleted.
+
+- A definition that has values returns `422` with the title `This field has data. You can archive it instead.`
+- Templates are managed by Terminal49. Other accounts get `401` when they delete a template.
+- For a Terminal49 account, a template that other accounts use returns `422` with the title `This template is in use by other accounts. You can archive it instead.`

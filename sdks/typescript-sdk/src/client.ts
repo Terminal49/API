@@ -29,7 +29,11 @@ import type {
   TrackingRequestListFilters,
   TrackingRequestType,
 } from './client/managers/tracking-requests.js';
-import { applyTypedPagination, normalizeInclude } from './client/query.js';
+import {
+  applyTypedPagination,
+  normalizeInclude,
+  type PaginatedQuery,
+} from './client/query.js';
 import { callerPayload, type JsonBody } from './client/spec.js';
 import { mapCurrentCredential } from './client/mappers.js';
 import { Transport } from './client/transport.js';
@@ -67,15 +71,18 @@ export {
 type WebhookEvent = NonNullable<
   paths['/webhook_notifications/examples']['get']['parameters']['query']
 >['event'];
+// The API ignores page[*] on these routes, but accepts it, and the CLI forwards --page.
 type CustomFieldDefinitionListQuery = NonNullable<
   paths['/custom_field_definitions']['get']['parameters']['query']
->;
+> &
+  PaginatedQuery;
 type WebhookNotificationListQuery = NonNullable<
   paths['/webhook_notifications']['get']['parameters']['query']
 >;
 type CustomFieldListQuery = NonNullable<
   paths['/custom_fields']['get']['parameters']['query']
->;
+> &
+  PaginatedQuery;
 type TriggerWebhookBody = JsonBody<paths['/webhooks/trigger']['post']>;
 type PartyAttributes = NonNullable<
   JsonBody<paths['/parties']['post']>['data']
@@ -125,7 +132,7 @@ export interface TriggerWebhookParams {
 
 /** Filters accepted by `customFields.list`. */
 export interface CustomFieldListFilters {
-  entityType?: CustomFieldDefinitionAttributes['entity_type'];
+  entityType?: CustomFieldListQuery['filter[entity_type]'];
   entityId?: string;
   definitionId?: string;
 }
