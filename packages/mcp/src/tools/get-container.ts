@@ -94,6 +94,8 @@ export interface ContainerStatus {
     port_of_lading_name?: string;
     port_of_discharge_name?: string;
     destination_name?: string;
+    /** When the shipment stopped updating; null while it is still tracked. */
+    line_tracking_stopped_at: string | null;
   } | null;
   pod_terminal: {
     id: string;
@@ -312,6 +314,8 @@ function formatContainerResponse(
           port_of_lading_name: shipment.attributes?.port_of_lading_name,
           port_of_discharge_name: shipment.attributes?.port_of_discharge_name,
           destination_name: shipment.attributes?.destination_name,
+          line_tracking_stopped_at:
+            shipment.attributes?.line_tracking_stopped_at ?? null,
         }
       : null,
     pod_terminal: podTerminal

@@ -1283,7 +1283,7 @@ describe('MCP tool contracts', () => {
     const result = await executeListTrackingRequests(
       {
         request_number: 'CAIU1234567',
-        status: 'succeeded',
+        status: 'created',
         scac: 'MAEU',
         page: 3,
         page_size: 10,
@@ -1294,7 +1294,7 @@ describe('MCP tool contracts', () => {
     expect(list).toHaveBeenCalledWith(
       {
         'filter[request_number]': 'CAIU1234567',
-        'filter[status]': 'succeeded',
+        'filter[status]': 'created',
         'filter[scac]': 'MAEU',
       },
       { format: 'mapped', page: 3, pageSize: 10 },

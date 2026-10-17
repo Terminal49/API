@@ -36,7 +36,10 @@ import {
   CONTAINER_FILTER_KEYS,
   listResponseMetadataSchema,
 } from './tools/list-filters.js';
-import { executeListTrackingRequests } from './tools/list-tracking-requests.js';
+import {
+  executeListTrackingRequests,
+  TRACKING_REQUEST_STATUS_FILTERS,
+} from './tools/list-tracking-requests.js';
 import {
   executeListParties,
   listPartiesInputSchema,
@@ -885,6 +888,9 @@ function formatToolError(
     ) {
       return `Container number ${number} fails the ISO 6346 check digit.`;
     }
+    if (err.name === 'TrackContainerError' && err.message) {
+      return err.message;
+    }
   }
 
   if (err.name === 'NotFoundError' || err.status === 404) {
@@ -920,10 +926,6 @@ function formatToolError(
       return `${err.message.replace(/[.\s]*$/, '.')} Use the filter values and operators documented in the tool schema.`;
     }
     return 'Invalid or unsupported list filter. Use the names, values, and operators documented in the tool schema.';
-  }
-
-  if (toolName === 'track_container' && err.name === 'ValidationError') {
-    return `Tracking identifier ${number} is invalid. Verify the identifier type and carrier SCAC.`;
   }
 
   return 'The Terminal49 request could not be completed. Contact support if the problem persists.';
@@ -1015,7 +1017,7 @@ export function createTerminal49McpServer(
       title: 'Search Containers',
       description:
         'Search for containers, shipments, and tracking information by container number, ' +
-        'booking number, bill of lading, or reference number. Returns matching private-account records. ' +
+        'booking number, bill of lading, or reference number. Returns matching private-account containers, shipments, and tracking requests. Only a request whose tracking was stopped (status tracking_stopped) carries shipment_id. Succeeded requests appear as their container or shipment, and a request whose number matches a returned shipment is omitted. ' +
         'Use get_container or get_shipment_details with a returned UUID for a detailed snapshot. ' +
         'Pass exactly one identifier, never a user message or conversation history. ' +
         'Examples: CAIU2885402, MAEU123456789, or a customer reference number.',
@@ -1055,6 +1057,16 @@ export function createTerminal49McpServer(
             container_count: z.number(),
           }),
         ),
+        tracking_requests: z.array(
+          z.object({
+            id: z.string(),
+            request_number: z.string(),
+            status: z.string(),
+            failed_reason: z.string().optional(),
+            scac: z.string().optional(),
+            shipment_id: z.string().optional(),
+          }),
+        ),
         total_results: z.number(),
       }),
     },
@@ -1070,9 +1082,13 @@ export function createTerminal49McpServer(
       title: 'Track Container',
       description:
         'Track a container, bill of lading, or booking number. ' +
-        'Uses inference to choose the carrier/type when possible, creates a tracking request, ' +
-        'and returns detailed container information. If a newly created request is still pending, ' +
-        'use list_tracking_requests to check its status.',
+        "If the number matches a container that is still being tracked, returns that container's details; " +
+        'if it matches an in-progress tracking request, returns that request. ' +
+        'Otherwise uses inference to choose the carrier/type when possible and creates a tracking request. ' +
+        'A new request returns the request (id, request_number, number_type, scac). ' +
+        'Container details come back only when the create response links a container, which a new request normally does not, ' +
+        'so poll list_tracking_requests for its status, then use search_container or get_shipment_details. ' +
+        'When the carrier cannot be inferred it asks for scac; a container prefix names the equipment owner, not the carrier.',
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -1119,7 +1135,7 @@ export function createTerminal49McpServer(
           .regex(/^[A-Za-z]{4}$/)
           .optional()
           .describe(
-            'Optional four-letter shipping-line SCAC (e.g., MAEU for Maersk)',
+            'Four-letter shipping-line SCAC (e.g., MAEU for Maersk). Optional, but required when Terminal49 cannot infer the carrier.',
           ),
         refNumbers: z
           .array(z.string().trim().min(1).max(64))
@@ -1485,7 +1501,7 @@ export function createTerminal49McpServer(
     {
       title: 'List Tracking Requests',
       description:
-        'Return one intentionally requested page of tracking requests, optionally filtered by request identifier, status, or carrier SCAC. Page size is capped at 25. For succeeded requests, use search_container to resolve the tracked identifier into container or shipment UUIDs. Identifier fields must never contain user messages or conversation history.',
+        'Return one intentionally requested page of tracking requests, optionally filtered by request identifier, status, or carrier SCAC. Page size is capped at 25. A request whose status is created has succeeded; its shipment.id is the shipment UUID for get_shipment_details. Identifier fields must never contain user messages or conversation history.',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1505,9 +1521,13 @@ export function createTerminal49McpServer(
                 'One tracking request identifier (maximum 64 characters). Never pass conversation text.',
               ),
             status: z
-              .enum(['created', 'pending', 'succeeded', 'failed'])
+              .enum(TRACKING_REQUEST_STATUS_FILTERS)
               .optional()
-              .describe('Filter by request status (mapped to filter[status])'),
+              .describe(
+                'Filter by request status: pending (still being processed), created (succeeded: the shipment was created), failed, or cancelled. ' +
+                  'This filter cannot select awaiting_manifest (still being processed while the carrier manifest is pending) or tracking_stopped; ' +
+                  'to find those, pass request_number without status.',
+              ),
             scac: z
               .string()
               .trim()
@@ -1655,7 +1675,7 @@ export function createTerminal49McpServer(
       argsSchema: z.object({
         container_number: z
           .string()
-          .describe('Container number (e.g., CAIU1234567)'),
+          .describe('Container number (e.g., MSKU4330011)'),
         // Autocompletes from the live supported-carrier list (SCAC codes).
         // `completable` must wrap the INNER string so the MCP SDK (which
         // unwraps ZodOptional before checking isCompletable) advertises the

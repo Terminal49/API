@@ -28,6 +28,14 @@ export interface SearchResult {
     shipping_line: string;
     container_count: number;
   }>;
+  tracking_requests: Array<{
+    id: string;
+    request_number: string;
+    status: string;
+    failed_reason?: string;
+    scac?: string;
+    shipment_id?: string;
+  }>;
   total_results: number;
 }
 
@@ -120,6 +128,7 @@ function formatSearchResponse(apiResponse: any): SearchResult {
 
   const containers: SearchResult['containers'] = [];
   const shipments: SearchResult['shipments'] = [];
+  const trackingRequests: SearchResult['tracking_requests'] = [];
 
   // Process main data - search API returns type="search_result"
   for (const item of data) {
@@ -134,6 +143,8 @@ function formatSearchResponse(apiResponse: any): SearchResult {
         containers.push(formatSearchResult(item));
       } else if (entityType === 'shipment') {
         shipments.push(formatSearchResultShipment(item));
+      } else if (entityType === 'tracking_request') {
+        trackingRequests.push(formatSearchResultTrackingRequest(item));
       }
     }
     // Legacy format support
@@ -163,7 +174,9 @@ function formatSearchResponse(apiResponse: any): SearchResult {
   return {
     containers,
     shipments,
-    total_results: containers.length + shipments.length,
+    tracking_requests: trackingRequests,
+    total_results:
+      containers.length + shipments.length + trackingRequests.length,
   };
 }
 
@@ -225,6 +238,21 @@ function formatSearchResultShipment(
     container_count: Number.isFinite(Number(attrs.containers_count))
       ? Number(attrs.containers_count)
       : 0,
+  };
+}
+
+function formatSearchResultTrackingRequest(
+  searchResult: any,
+): SearchResult['tracking_requests'][0] {
+  const attrs = searchResult.attributes || {};
+
+  return {
+    id: String(searchResult.id),
+    request_number: toText(attrs.number),
+    status: toText(attrs.status),
+    failed_reason: toTextOrUndefined(attrs.failed_reason),
+    scac: toTextOrUndefined(attrs.scac),
+    shipment_id: toTextOrUndefined(attrs.shipment_id),
   };
 }
 

@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Terminal49 MCP Server now provides **10 specialized tools** and **2 MCP resources** for comprehensive container tracking and shipment management.
+The Terminal49 MCP Server now provides **13 specialized tools** and **4 MCP resources** for comprehensive container tracking and shipment management.
 
 ### Design Philosophy
 
@@ -24,24 +24,24 @@ search_container({ query: "CAIU1234567" })
 search_container({ query: "MAEU123456789" })  // Booking
 ```
 
-**Returns**: List of matching containers and shipments
+**Returns**: `containers`, `shipments`, and `tracking_requests` (`id`, `request_number`, `status`, `failed_reason` when the request failed, `scac`, `shipment_id` when tracking was stopped), plus `total_results` counting all three
 
 **When to Use**: User provides a container number or booking number to look up
 
 ---
 
 ### 2. `track_container`
-**Purpose**: Create a tracking request for a new container
+**Purpose**: Start tracking a container, bill of lading, or booking number
 
 **Usage**:
 ```typescript
 track_container({
-  containerNumber: "CAIU1234567",
-  scac: "MAEU"
+  number: "MSKU4330011",
+  scac: "MAEU" // optional; required when the carrier cannot be inferred
 })
 ```
 
-**Returns**: Tracking request details
+**Returns**: The tool first searches for the number. If a tracking request for it is still in progress (status `pending` or `awaiting_manifest`, under the same SCAC when `scac` is given), it returns that request and its status. If a container with exactly that number is still being tracked, it returns that container's details. A container whose shipment has stopped tracking does not count, because container numbers are reused on later voyages. Otherwise it creates a tracking request and returns it. If the API reports that the number is already tracked, the tool returns `source: "duplicate"` with the existing `tracking_request.id`, `shipment_id` when one exists, and the API's message, which can name a different number that the request is stored under. In these three cases `tracking_request_created` is `false`. Container numbers must pass the ISO 6346 check digit before the tool calls the API.
 
 **When to Use**: User wants to start tracking a container not yet in the system
 
@@ -236,14 +236,14 @@ It does not return track geometry, port codes, transport mode, carrier SCAC, or 
 ---
 
 ### 8. `list_shipments` ✅
-**Purpose**: List shipments with optional status, port, and carrier filters
+**Purpose**: List shipments with optional voyage status, port, arrival, and tag filters
 
 **Usage**:
 ```typescript
 list_shipments({
-  status: "in_transit",
-  port: "USLAX",
-  carrier: "MAEU"
+  voyage_status: "on_ship",
+  pod_code: "USLAX",
+  pod_arrival: "<=7.days.from_now"
 })
 ```
 
@@ -262,9 +262,10 @@ list_shipments({
 **Usage**:
 ```typescript
 list_containers({
-  status: "available_for_pickup",
-  port: "USLAX",
-  include: "shipment,pod_terminal"
+  current_status: "available",
+  pod_code: "USLAX",
+  shipping_line_scac: "MAEU",
+  include: ["shipment", "pod_terminal"]
 })
 ```
 
@@ -282,8 +283,7 @@ list_containers({
 **Usage**:
 ```typescript
 list_tracking_requests({
-  status: "succeeded",
-  request_type: "manual",
+  status: "created", // pending | created | failed | cancelled; created means succeeded and still tracking. The filter cannot select awaiting_manifest (still processing, manifest pending) or tracking_stopped; look those up by request_number without status
   page: 1,
   page_size: 25
 })
@@ -298,7 +298,66 @@ list_tracking_requests({
 
 ---
 
-### 11. `whoami`
+### 11. `summarize_containers`
+**Purpose**: Count containers grouped by one dimension, for "how many" and "break down by" questions
+
+**Usage**:
+```typescript
+summarize_containers({
+  group_by: "pod_terminal", // pod_terminal | current_status | shipping_line | port_of_discharge | hold_type | pickup_lfd_date | pod_arrival_date
+  has_holds: true
+})
+```
+
+Accepts the `list_containers` filters except `sort`, `include`, `view`, `page`, and `page_size`. Only actively tracked containers are counted unless `include_stopped_tracking` is true.
+
+**Returns**:
+- `total` and `groups` (`key`, `label`, `count`), ordered by count
+- `truncated` when there are more than 200 groups
+- `applied_filters`
+
+**When to Use**: Counts and breakdowns. Use `list_containers` to list the containers themselves.
+
+---
+
+### 12. `list_parties`
+**Purpose**: Find the companies on the account's shipments by name and return their IDs
+
+**Usage**:
+```typescript
+list_parties({
+  search: "acme",
+  limit: 25 // 1-50
+})
+```
+
+**Returns**:
+- `parties` (`id`, `name`) and `total_matched`
+- `truncated` when the list does not hold every match
+
+**When to Use**: Before `list_containers` or `summarize_containers` when a question names a company. Filter with `advanced_filters.parties`, keyed by role, such as `{ customer: "<id>" }`.
+
+---
+
+### 13. `search_docs`
+**Purpose**: Search the public Terminal49 documentation
+
+**Usage**:
+```typescript
+search_docs({
+  query: "webhook retries",
+  limit: 5 // 1-10
+})
+```
+
+**Returns**:
+- `results` with `title`, `url`, `page`, and an excerpt in `content`
+
+**When to Use**: How-to and definition questions. It does not read account data.
+
+---
+
+### 14. `whoami`
 **Purpose**: Identify the caller, the account the session is scoped to, and which gated features that credential can use
 
 **Usage**:
@@ -347,6 +406,20 @@ whoami()
 1. User: "What does rail_loaded mean?"
 2. LLM reads `terminal49://docs/milestone-glossary`
 3. LLM responds: "rail_loaded means the container has been loaded onto a rail car at the port. This typically happens 1-2 days after discharge and indicates the start of the inland journey by rail."
+
+---
+
+### 3. `terminal49://docs/mcp-query-guidance`
+**Purpose**: Playbooks that map common container logistics questions to tools and output shape
+
+**When to Use**: The client needs help choosing a tool for a user question
+
+---
+
+### 4. `terminal49://docs/list-display-columns`
+**Purpose**: Column catalog for `list_containers`, `list_shipments`, and `list_tracking_requests` results
+
+**When to Use**: Read it once. The list tools name it in `column_catalog_resource` instead of repeating the catalog in every response.
 
 ---
 
@@ -482,9 +555,9 @@ get_container_transport_events({ id: "abc-123" })
  ### Workflow 2: Demurrage Management
  ```
  1. User: "Which containers are past LFD?"
-2. LLM: list_containers({ status: "arrived" })
+2. LLM: list_containers({ current_status: "available", pickup_lfd: "<today" })
  3. For each: get_container(id)
- 4. Filter where pickup_lfd < now
+ 4. Confirm pickup_lfd < now
  5. Present with urgency (days overdue, estimated charges)
  ```
 
@@ -517,7 +590,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 10 tools and 2 resources, the LLM can:
+With these 14 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

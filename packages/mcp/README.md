@@ -15,7 +15,7 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (10 Available)
+### 🛠️ Tools (14 Available)
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -28,7 +28,11 @@
 | **`get_container_route`** | Get ports in route order with ETAs and the current vessel | Premium feature |
 | **`list_shipments`** | List shipments with filters and pagination | Fleet-level visibility |
 | **`list_containers`** | List containers with filters and pagination | Returns ResourceLinks ✨ |
+| **`summarize_containers`** | Count containers grouped by terminal, status, carrier, port, hold, or date | Same filters as `list_containers` |
+| **`list_parties`** | Find parties by company name and return their IDs | Feeds `advanced_filters.parties` |
 | **`list_tracking_requests`** | List tracking requests and statuses | Audit and monitoring |
+| **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
+| **`whoami`** | Identify the credential, its account, and the features it can use | Explains empty or unauthorized results |
 
 ### 🎯 Prompts (3 Workflows)
 
