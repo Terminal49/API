@@ -20,7 +20,7 @@ The SDK throws typed errors you can catch and handle based on the error type.
 | `AuthorizationError` | HTTP 403. The API key is valid but lacks permission for the request. |
 | `NotFoundError` | Resource doesn't exist or isn't accessible |
 | `ValidationError` | Invalid request parameters |
-| `RateLimitError` | Too many requests |
+| `RateLimitError` | HTTP 429. Too many requests. `error.retryAfterMs` is the wait the API asked for, when it sent a `Retry-After` header. |
 | `FeatureNotEnabledError` | Feature requires a plan upgrade |
 | `UpstreamError` | Carrier or terminal API is unavailable |
 | `Terminal49Error` | Generic error fallback |
@@ -47,8 +47,9 @@ try {
   } else if (error instanceof NotFoundError) {
     console.error('Container not found');
   } else if (error instanceof RateLimitError) {
-    console.error('Rate limited, retrying in 60s');
-    await new Promise((resolve) => setTimeout(resolve, 60000));
+    const waitMs = error.retryAfterMs ?? 60000;
+    console.error(`Rate limited, retrying in ${waitMs / 1000}s`);
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
   } else {
     throw error;
   }
