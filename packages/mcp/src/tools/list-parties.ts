@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
 import { containerFilterShape } from '../generated/list-filter-schemas.js';
 import { partyAttributesSchema, partyName } from './party-roles.js';
+import { nullableString } from './api-fields.js';
 import { httpStatus } from './soft-results.js';
 
 const PAGE_SIZE = 100;
@@ -50,7 +51,7 @@ export type ListPartiesArgs = z.input<typeof listPartiesInputSchema>;
 
 export interface ListPartiesResult {
   total_matched: number;
-  parties: { id: string; name: string }[];
+  parties: PartySummary[];
   truncated: boolean;
   usage: string;
 }
@@ -58,7 +59,11 @@ export interface ListPartiesResult {
 const normalize = (text: string) =>
   text.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 
-function rank(name: string, search: string): number | null {
+/**
+ * How well a party name matches a search: 0 is an exact match ignoring case
+ * and punctuation, higher is weaker, null is no match.
+ */
+export function matchRank(name: string, search: string): number | null {
   const lower = name.toLowerCase();
   const term = search.toLowerCase();
   const normalizedSearch = normalize(search);
@@ -68,6 +73,68 @@ function rank(name: string, search: string): number | null {
   if (lower.includes(term)) return 2;
   if (normalizedSearch && normalize(name).includes(normalizedSearch)) return 3;
   return null;
+}
+
+export interface PartySummary {
+  id: string;
+  name: string;
+}
+
+/** The parties matching a search, best match first, then by name. */
+export function rankParties(
+  parties: readonly PartySummary[],
+  search: string,
+): PartySummary[] {
+  return parties
+    .map((party) => ({ party, score: matchRank(party.name, search) }))
+    .filter(
+      (match): match is { party: PartySummary; score: number } =>
+        match.score !== null,
+    )
+    .sort(
+      (a, b) => a.score - b.score || a.party.name.localeCompare(b.party.name),
+    )
+    .map((match) => match.party);
+}
+
+const rawPartyRowSchema = z.object({
+  id: z.string(),
+  attributes: z
+    .object({ company_name: nullableString, name: nullableString })
+    .catch({ company_name: null, name: null }),
+});
+
+const rawPartyPageSchema = z.object({
+  data: z.array(z.unknown()).catch([]),
+  links: z.object({ next: nullableString }).nullable().catch(null),
+});
+
+/**
+ * Loads up to MAX_PAGES pages of the account's parties. `truncated` is true
+ * when the account has more.
+ */
+export async function loadParties(
+  client: Terminal49Client,
+): Promise<{ parties: PartySummary[]; truncated: boolean }> {
+  const parties: PartySummary[] = [];
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const { data, links } = rawPartyPageSchema.parse(
+      await client.parties.list({ page, pageSize: PAGE_SIZE, format: 'raw' }),
+    );
+    for (const row of data) {
+      const parsed = rawPartyRowSchema.safeParse(row);
+      if (!parsed.success) continue;
+      const item = parsed.data;
+      const name = (
+        item.attributes.company_name ?? item.attributes.name
+      )?.trim();
+      if (name) parties.push({ id: item.id, name });
+    }
+    if (!links?.next || data.length === 0) {
+      return { parties, truncated: false };
+    }
+  }
+  return { parties, truncated: true };
 }
 
 export async function executeListParties(
@@ -85,32 +152,9 @@ export async function executeListParties(
     };
   }
 
-  const parties: { id: string; name: string }[] = [];
-  let truncated = false;
-  for (let page = 1; page <= MAX_PAGES; page++) {
-    const doc: any = await client.parties.list({
-      page,
-      pageSize: PAGE_SIZE,
-      format: 'raw',
-    });
-    for (const item of doc?.data ?? []) {
-      const name = item?.attributes?.company_name ?? item?.attributes?.name;
-      if (item?.id && typeof name === 'string' && name.trim())
-        parties.push({ id: item.id, name: name.trim() });
-    }
-    if (!doc?.links?.next || (doc?.data ?? []).length === 0) break;
-    if (page === MAX_PAGES) truncated = true;
-  }
-
+  const { parties, truncated } = await loadParties(client);
   const matches = search
-    ? parties
-        .map((party) => ({ party, score: rank(party.name, search) }))
-        .filter((match) => match.score !== null)
-        .sort(
-          (a, b) =>
-            a.score! - b.score! || a.party.name.localeCompare(b.party.name),
-        )
-        .map((match) => match.party)
+    ? rankParties(parties, search)
     : [...parties].sort((a, b) => a.name.localeCompare(b.name));
 
   return {
@@ -136,10 +180,10 @@ const rawPartySchema = z.object({
  * The party with this id, or null when the account has none. A party with no
  * display name is still returned, named by its id.
  */
-async function getParty(
+export async function getParty(
   id: string,
   client: Terminal49Client,
-): Promise<{ id: string; name: string } | null> {
+): Promise<PartySummary | null> {
   let raw: unknown;
   try {
     raw = await client.parties.get(id, { format: 'raw' });
