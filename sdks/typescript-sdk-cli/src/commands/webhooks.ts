@@ -3,12 +3,8 @@
  */
 
 import type { Command } from 'commander';
-import {
-  parseJsonObjectPayload,
-  positiveInt,
-  splitCommaList,
-} from '../util/input.js';
-import { action } from './action.js';
+import { parseJsonObjectPayload, splitCommaList } from '../util/input.js';
+import { action, defineList } from './action.js';
 
 type PayloadOptions = {
   active?: boolean;
@@ -43,21 +39,19 @@ function webhookPayload(options: PayloadOptions): Record<string, unknown> {
 export function registerWebhooksCommand(program: Command): void {
   const cmd = program.command('webhooks').description('Manage webhooks');
 
-  const listCommand = cmd
-    .command('list')
-    .description('List webhooks')
-    .option('--page <number>', 'Page number', positiveInt('--page'))
-    .option('--page-size <number>', 'Page size', positiveInt('--page-size'));
-  listCommand.action(
-    action('webhooks.list', async ({ client, globals }) => {
+  const listCommand = cmd.command('list').description('List webhooks');
+  defineList(listCommand, {
+    name: 'webhooks.list',
+    paginated: true,
+    run: ({ client, format }) => {
       const options = localOptions<PayloadOptions>(listCommand);
       return client.webhooks.list({
         page: options.page,
         pageSize: options.pageSize,
-        format: globals.format,
+        format,
       });
-    }),
-  );
+    },
+  });
 
   cmd
     .command('get <id>')

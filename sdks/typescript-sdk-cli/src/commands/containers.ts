@@ -4,9 +4,11 @@
  * Subcommands: get, list, events, route, map (deprecated, GeoJSON), raw-events, refresh, demurrage, rail
  */
 
+import type { ResponseFormat } from '@terminal49/sdk';
 import type { Command } from 'commander';
 import { parseJsonValue } from '../util/input.js';
-import { action, addListOptions, cliEnvelope, listAction } from './action.js';
+import { action, defineList, warnUnsupportedFilters } from './action.js';
+import { customFieldSlug } from './custom-field-slug.js';
 
 type ContainerListOptions = {
   include?: string;
@@ -22,13 +24,6 @@ type SetCustomFieldOptions = {
   value: unknown;
 };
 
-type PaginationEnvelope = {
-  pagination?: {
-    links?: unknown;
-    meta?: unknown;
-  };
-};
-
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -37,44 +32,6 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 
 function localOptions<T>(command: Command): T {
   return command.opts() as T;
-}
-
-function paginationFrom(result: unknown): PaginationEnvelope | undefined {
-  const record = asRecord(result);
-  const mapped = asRecord(record?.mapped);
-  const raw = asRecord(record?.raw);
-  const links = record?.links ?? mapped?.links ?? raw?.links;
-  const meta = record?.meta ?? mapped?.meta ?? raw?.meta;
-  if (links === undefined && meta === undefined) return undefined;
-  return { pagination: { links, meta } };
-}
-
-function warnUnsupportedFilters(result: unknown): void {
-  const record = asRecord(result);
-  const mapped = asRecord(record?.mapped);
-  const unsupportedFilters =
-    record?.unsupportedFilters ?? mapped?.unsupportedFilters;
-  if (!Array.isArray(unsupportedFilters) || unsupportedFilters.length === 0)
-    return;
-  process.stderr.write(
-    `Warning: unsupported filters ignored by SDK: ${unsupportedFilters.join(', ')}\n`,
-  );
-}
-
-function listDataFrom(result: unknown): unknown {
-  const record = asRecord(result);
-  if (record?.raw || record?.mapped) {
-    const raw = asRecord(record.raw);
-    const mapped = asRecord(record.mapped);
-    return {
-      raw: raw?.data ?? record.raw,
-      mapped: mapped?.items ?? record.mapped,
-    };
-  }
-
-  if (Array.isArray(record?.items)) return record.items;
-  if (record && 'data' in record) return record.data;
-  return result;
 }
 
 function demurrageFromRaw(
@@ -124,7 +81,7 @@ function railFromRaw(
 }
 
 async function formattedFromRaw(
-  format: 'raw' | 'mapped' | 'both' | undefined,
+  format: ResponseFormat,
   rawLoader: () => Promise<unknown>,
   mapper: (raw: unknown) => unknown,
 ): Promise<unknown> {
@@ -152,44 +109,41 @@ export function registerContainersCommand(program: Command): void {
     }),
   );
 
-  const listCommand = addListOptions(
-    cmd
-      .command('list')
-      .description('List containers')
-      .option(
-        '--include <resources>',
-        'Comma-separated include list for each container',
-      ),
-  );
-  listCommand.action(
-    listAction(
-      'containers.list',
-      async ({ client, globals }) => {
-        const options = localOptions<ContainerListOptions>(listCommand);
-        const result = await client.containers.list(
-          { include: options.include },
-          {
-            page: options.page,
-            pageSize: options.pageSize,
-            format: globals.format,
-          },
-        );
-        warnUnsupportedFilters(result);
-        return cliEnvelope(listDataFrom(result), paginationFrom(result));
-      },
-      ({ client, globals }) => {
-        const options = localOptions<ContainerListOptions>(listCommand);
-        return client.containers.iterate(
-          { include: options.include },
-          {
-            pageSize: options.pageSize,
-            maxPages: globals.maxPages,
-            maxRows: globals.maxRows,
-          },
-        );
-      },
-    ),
-  );
+  const listCommand = cmd
+    .command('list')
+    .description('List containers')
+    .option(
+      '--include <resources>',
+      'Comma-separated include list for each container',
+    );
+  defineList(listCommand, {
+    name: 'containers.list',
+    paginated: true,
+    run: async ({ client, globals }) => {
+      const options = localOptions<ContainerListOptions>(listCommand);
+      const result = await client.containers.list(
+        { include: options.include },
+        {
+          page: options.page,
+          pageSize: options.pageSize,
+          format: globals.format,
+        },
+      );
+      warnUnsupportedFilters(result);
+      return result;
+    },
+    iterate: ({ client, globals }) => {
+      const options = localOptions<ContainerListOptions>(listCommand);
+      return client.containers.iterate(
+        { include: options.include },
+        {
+          pageSize: options.pageSize,
+          maxPages: globals.maxPages,
+          maxRows: globals.maxRows,
+        },
+      );
+    },
+  });
 
   cmd
     .command('events <id>')
@@ -234,8 +188,10 @@ export function registerContainersCommand(program: Command): void {
     );
 
   const setCustomFieldCommand = cmd
-    .command('set-custom-field <id> <field-id>')
-    .description('Set a container custom field value')
+    .command('set-custom-field <id> <api-slug>')
+    .description(
+      'Set a container custom field value by its definition api_slug (a definition id also works)',
+    )
     .requiredOption(
       '--value <json>',
       'Custom field JSON value',
@@ -244,13 +200,18 @@ export function registerContainersCommand(program: Command): void {
   setCustomFieldCommand.action(
     action(
       'containers.set-custom-field',
-      async ({ client, globals }, id: string, fieldId: string) => {
+      async ({ client, globals }, id: string, apiSlug: string) => {
         const options = localOptions<SetCustomFieldOptions>(
           setCustomFieldCommand,
         );
-        return client.containers.setCustomField(id, fieldId, options.value, {
-          format: globals.format,
-        });
+        return client.containers.setCustomField(
+          id,
+          await customFieldSlug(client, apiSlug),
+          options.value,
+          {
+            format: globals.format,
+          },
+        );
       },
     ),
   );
@@ -277,9 +238,9 @@ export function registerContainersCommand(program: Command): void {
     .command('demurrage <id>')
     .description('Get demurrage summary for a container')
     .action(
-      action('containers.demurrage', async ({ client, globals }, id: string) =>
+      action('containers.demurrage', async ({ client, format }, id: string) =>
         formattedFromRaw(
-          globals.format,
+          format,
           () => client.containers.get(id, ['pod_terminal'], { format: 'raw' }),
           (raw) => demurrageFromRaw(id, raw),
         ),
@@ -290,9 +251,9 @@ export function registerContainersCommand(program: Command): void {
     .command('rail <id>')
     .description('Get rail milestones for a container')
     .action(
-      action('containers.rail', async ({ client, globals }, id: string) =>
+      action('containers.rail', async ({ client, format }, id: string) =>
         formattedFromRaw(
-          globals.format,
+          format,
           () =>
             client.containers.get(id, ['transport_events'], { format: 'raw' }),
           (raw) => railFromRaw(id, raw),

@@ -74,7 +74,7 @@ export function registerTrackCommand(program: Command): void {
     .option('--ref-numbers <numbers>', 'Comma-separated reference numbers')
     .option('--shipment-tags <tags>', 'Comma-separated shipment tags')
     .action(
-      action('track', async ({ client, globals }, value: string) => {
+      action('track', async ({ client, format }, value: string) => {
         const options = localOptions<TrackOptions>(cmd);
         if (options.type) {
           const infer = await client.trackingRequests.inferNumber(value);
@@ -96,7 +96,7 @@ export function registerTrackCommand(program: Command): void {
           return formatCreateFromInferResult(
             client,
             { infer, trackingRequest },
-            globals.format,
+            format,
           );
         }
 
@@ -105,7 +105,7 @@ export function registerTrackCommand(program: Command): void {
           refNumbers: optionalList(options.refNumbers),
           shipmentTags: optionalList(options.shipmentTags),
         });
-        return formatCreateFromInferResult(client, result, globals.format);
+        return formatCreateFromInferResult(client, result, format);
       }),
     );
 }

@@ -45,6 +45,16 @@ export function positiveInt(name: string) {
   };
 }
 
+export function nonNegativeInt(name: string) {
+  return (value: string): number => {
+    const parsed = Number(value);
+    if (value.trim() === '' || !Number.isInteger(parsed) || parsed < 0) {
+      throw new InvalidArgumentError(`${name} must be a non-negative integer`);
+    }
+    return parsed;
+  };
+}
+
 export function finiteNumber(name: string) {
   return (value: string): number => {
     const parsed = Number(value);

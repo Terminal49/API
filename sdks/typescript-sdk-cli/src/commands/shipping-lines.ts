@@ -5,7 +5,7 @@
  */
 
 import type { Command } from 'commander';
-import { action } from './action.js';
+import { defineList } from './action.js';
 
 type ShippingLinesListOptions = {
   search?: string;
@@ -20,13 +20,16 @@ export function registerShippingLinesCommand(program: Command): void {
   const listCommand = cmd
     .command('list')
     .description('List shipping lines')
-    .option('--search <text>', 'Search shipping lines by name or code');
-  listCommand.action(
-    action('shipping-lines.list', async ({ client, globals }) => {
-      const options = listCommand.opts() as ShippingLinesListOptions;
-      return client.shippingLines.list(options.search, {
-        format: globals.format,
-      });
-    }),
-  );
+    .option(
+      '--search <text>',
+      'Keep lines whose SCAC, alternative SCACs, name, or short name contain the text (case-insensitive; filtered by the CLI, not the API)',
+    );
+  defineList(listCommand, {
+    name: 'shipping-lines.list',
+    paginated: false,
+    run: ({ client, format }) => {
+      const options = listCommand.opts<ShippingLinesListOptions>();
+      return client.shippingLines.list(options.search, { format });
+    },
+  });
 }

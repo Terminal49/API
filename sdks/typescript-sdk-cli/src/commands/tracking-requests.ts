@@ -8,7 +8,7 @@ import { type Terminal49Client, ValidationError } from '@terminal49/sdk';
 import type { Command } from 'commander';
 import { InvalidArgumentError } from 'commander';
 import { parseJsonObjectPayload, splitCommaList } from '../util/input.js';
-import { action, addListOptions, cliEnvelope, listAction } from './action.js';
+import { action, defineList } from './action.js';
 import {
   formatCreateFromInferResult,
   formatInferResult,
@@ -51,13 +51,6 @@ type TrackingInferOptions = {
   shipmentTags?: string;
 };
 
-type PaginationEnvelope = {
-  pagination?: {
-    links?: unknown;
-    meta?: unknown;
-  };
-};
-
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -66,32 +59,6 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 
 function localOptions<T>(command: Command): T {
   return command.opts() as T;
-}
-
-function paginationFrom(result: unknown): PaginationEnvelope | undefined {
-  const record = asRecord(result);
-  const mapped = asRecord(record?.mapped);
-  const raw = asRecord(record?.raw);
-  const links = record?.links ?? mapped?.links ?? raw?.links;
-  const meta = record?.meta ?? mapped?.meta ?? raw?.meta;
-  if (links === undefined && meta === undefined) return undefined;
-  return { pagination: { links, meta } };
-}
-
-function listDataFrom(result: unknown): unknown {
-  const record = asRecord(result);
-  if (record?.raw || record?.mapped) {
-    const raw = asRecord(record.raw);
-    const mapped = asRecord(record.mapped);
-    return {
-      raw: raw?.data ?? record.raw,
-      mapped: mapped?.items ?? record.mapped,
-    };
-  }
-
-  if (Array.isArray(record?.items)) return record.items;
-  if (record && 'data' in record) return record.data;
-  return result;
 }
 
 function optionalList(value: string | undefined): string[] | undefined {
@@ -179,44 +146,38 @@ export function registerTrackingRequestsCommand(program: Command): void {
     .alias('tracking_requests')
     .description('Tracking request commands');
 
-  const listCommand = addListOptions(
-    cmd
-      .command('list')
-      .description('List tracking requests')
-      .option('--status <status>', 'Filter by status')
-      .option('--request-number <number>', 'Filter by request number')
-      .option('--scac <scac>', 'Filter by shipping line SCAC')
-      .option('--created-after <iso>', 'Filter by created_at start')
-      .option('--created-before <iso>', 'Filter by created_at end')
-      .option('--updated-after <iso>', 'Filter by updated_at start')
-      .option('--updated-before <iso>', 'Filter by updated_at end')
-      .option('--include <resources>', 'Comma-separated include list'),
-  );
-  listCommand.action(
-    listAction(
-      'tracking-requests.list',
-      async ({ client, globals }) => {
-        const options = localOptions<TrackingListOptions>(listCommand);
-        const result = await client.trackingRequests.list(
-          listFilters(options),
-          {
-            page: options.page,
-            pageSize: options.pageSize,
-            format: globals.format,
-          },
-        );
-        return cliEnvelope(listDataFrom(result), paginationFrom(result));
-      },
-      ({ client, globals }) => {
-        const options = localOptions<TrackingListOptions>(listCommand);
-        return client.trackingRequests.iterate(listFilters(options), {
-          pageSize: options.pageSize,
-          maxPages: globals.maxPages,
-          maxRows: globals.maxRows,
-        });
-      },
-    ),
-  );
+  const listCommand = cmd
+    .command('list')
+    .description('List tracking requests')
+    .option('--status <status>', 'Filter by status')
+    .option('--request-number <number>', 'Filter by request number')
+    .option('--scac <scac>', 'Filter by shipping line SCAC')
+    .option('--created-after <iso>', 'Filter by created_at start')
+    .option('--created-before <iso>', 'Filter by created_at end')
+    .option('--updated-after <iso>', 'Filter by updated_at start')
+    .option('--updated-before <iso>', 'Filter by updated_at end')
+    .option('--include <resources>', 'Comma-separated include list');
+  defineList(listCommand, {
+    name: 'tracking-requests.list',
+    paginated: true,
+    run: async ({ client, globals }) => {
+      const options = localOptions<TrackingListOptions>(listCommand);
+      const result = await client.trackingRequests.list(listFilters(options), {
+        page: options.page,
+        pageSize: options.pageSize,
+        format: globals.format,
+      });
+      return result;
+    },
+    iterate: ({ client, globals }) => {
+      const options = localOptions<TrackingListOptions>(listCommand);
+      return client.trackingRequests.iterate(listFilters(options), {
+        pageSize: options.pageSize,
+        maxPages: globals.maxPages,
+        maxRows: globals.maxRows,
+      });
+    },
+  });
 
   const getCommand = cmd
     .command('get <id>')
@@ -241,7 +202,7 @@ export function registerTrackingRequestsCommand(program: Command): void {
   createCommand.action(
     action(
       'tracking-requests.create',
-      async ({ client, globals }, type: string, requestNumber: string) => {
+      async ({ client, format }, type: string, requestNumber: string) => {
         const options = localOptions<TrackingCreateOptions>(createCommand);
         const result = await client.trackingRequests.create({
           requestType: mapType(type),
@@ -250,7 +211,7 @@ export function registerTrackingRequestsCommand(program: Command): void {
           refNumbers: optionalList(options.refNumbers),
           shipmentTags: optionalList(options.shipmentTags),
         });
-        return formatTrackingRequestResult(result, globals.format);
+        return formatTrackingRequestResult(result, format);
       },
     ),
   );
@@ -277,9 +238,9 @@ export function registerTrackingRequestsCommand(program: Command): void {
     .action(
       action(
         'tracking-requests.infer',
-        async ({ client, globals }, number: string) => {
+        async ({ client, format }, number: string) => {
           const result = await client.trackingRequests.inferNumber(number);
-          return formatInferResult(client, result, globals.format);
+          return formatInferResult(client, result, format);
         },
       ),
     );
@@ -294,7 +255,7 @@ export function registerTrackingRequestsCommand(program: Command): void {
   createFromInferCommand.action(
     action(
       'tracking-requests.create-from-infer',
-      async ({ client, globals }, number: string) => {
+      async ({ client, format }, number: string) => {
         const options = localOptions<TrackingInferOptions>(
           createFromInferCommand,
         );
@@ -303,7 +264,7 @@ export function registerTrackingRequestsCommand(program: Command): void {
           number,
           options,
         );
-        return formatCreateFromInferResult(client, result, globals.format);
+        return formatCreateFromInferResult(client, result, format);
       },
     ),
   );

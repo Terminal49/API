@@ -1,4 +1,4 @@
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { AuthenticationError, NetworkError } from '@terminal49/sdk';
@@ -7,71 +7,9 @@ import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { listFilters } from '../src/commands/tracking-requests.js';
 import { getExitCode } from '../src/errors.js';
 import { createProgram } from '../src/index.js';
+import { resetApiStub, runProgram } from './helpers.js';
 
-const originalEnv = {
-  T49_API_TOKEN: process.env.T49_API_TOKEN,
-  T49_API_BASE_URL: process.env.T49_API_BASE_URL,
-  XDG_CONFIG_HOME: process.env.XDG_CONFIG_HOME,
-};
-
-class ProcessExit extends Error {
-  constructor(readonly code: number | string | null | undefined) {
-    super(`process.exit(${String(code)})`);
-  }
-}
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  restoreEnv('T49_API_TOKEN', originalEnv.T49_API_TOKEN);
-  restoreEnv('T49_API_BASE_URL', originalEnv.T49_API_BASE_URL);
-  restoreEnv('XDG_CONFIG_HOME', originalEnv.XDG_CONFIG_HOME);
-});
-
-function restoreEnv(name: string, value: string | undefined): void {
-  if (value === undefined) {
-    delete process.env[name];
-  } else {
-    process.env[name] = value;
-  }
-}
-
-async function runProgram(
-  args: string[],
-): Promise<{ status: number; stdout: string; stderr: string }> {
-  const stdout: string[] = [];
-  const stderr: string[] = [];
-  const originalWrite = process.stdout.write;
-  const originalErrorWrite = process.stderr.write;
-  const originalExit = process.exit;
-  process.stdout.write = ((chunk: unknown) => {
-    stdout.push(String(chunk));
-    return true;
-  }) as typeof process.stdout.write;
-  process.stderr.write = ((chunk: unknown) => {
-    stderr.push(String(chunk));
-    return true;
-  }) as typeof process.stderr.write;
-  process.exit = ((code?: number | string | null) => {
-    throw new ProcessExit(code);
-  }) as typeof process.exit;
-
-  try {
-    const program = createProgram();
-    program.exitOverride();
-    await program.parseAsync(args, { from: 'user' });
-    return { status: 0, stdout: stdout.join(''), stderr: stderr.join('') };
-  } catch (error) {
-    if (error instanceof ProcessExit) {
-      const status = typeof error.code === 'number' ? error.code : 1;
-      return { status, stdout: stdout.join(''), stderr: stderr.join('') };
-    }
-    throw error;
-  } finally {
-    process.stdout.write = originalWrite;
-    process.stderr.write = originalErrorWrite;
-    process.exit = originalExit;
-  }
-}
+afterEach(resetApiStub);
 
 function findCommand(program: Command, path: string[]): Command {
   let current = program;
@@ -157,27 +95,6 @@ describe('CLI regressions', () => {
     expect(shipments).not.toContain('--updated-after');
   });
 
-  it('cliEnvelope is branded so raw JSON:API docs are not mistaken for list envelopes', async () => {
-    const { cliEnvelope } = await import('../src/commands/action.js');
-    const envelope = cliEnvelope([{ id: '1' }], {
-      pagination: { meta: { total: 1 } },
-    });
-    expect(envelope.__cliEnvelope).toBe(true);
-    expect(envelope.data).toEqual([{ id: '1' }]);
-
-    // A JSON:API document has `data` but must not satisfy the branded envelope.
-    const jsonApi = {
-      data: {
-        type: 'container',
-        id: 'c1',
-        attributes: { number: 'ABCD1234567' },
-      },
-      included: [{ type: 'terminal', id: 't1' }],
-      links: { self: '/containers/c1' },
-    };
-    expect('__cliEnvelope' in jsonApi).toBe(false);
-  });
-
   it('vessels future-positions requires both port ids', async () => {
     process.env.T49_API_TOKEN = 'token-123';
     const result = await runProgram([
@@ -192,6 +109,36 @@ describe('CLI regressions', () => {
     expect(result.stderr).toContain(
       "required option '--previous-port-id <id>' not specified",
     );
+  });
+
+  it('vessels future-positions sends --port-id and --previous-port-id as their own params', async () => {
+    const urls: string[] = [];
+    vi.stubGlobal('fetch', async (input: Request | URL | string) => {
+      urls.push(input instanceof Request ? input.url : String(input));
+      return new Response(JSON.stringify({ data: null }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    process.env.T49_API_TOKEN = 'token-123';
+    process.env.T49_API_BASE_URL = 'https://api.test/v2';
+    process.env.XDG_CONFIG_HOME = mkdtempSync(join(tmpdir(), 't49-cli-'));
+
+    const result = await runProgram([
+      '--json',
+      'vessels',
+      'future-positions',
+      'v-1',
+      '--port-id',
+      'port-2',
+      '--previous-port-id',
+      'port-1',
+    ]);
+
+    expect(result.status).toBe(0);
+    expect(urls).toEqual([
+      'https://api.test/v2/vessels/v-1/future_positions?port_id=port-2&previous_port_id=port-1',
+    ]);
   });
 
   it('vessels future-positions-coords rejects a non-numeric latitude', async () => {
@@ -244,6 +191,32 @@ describe('CLI regressions', () => {
       'https://api.test/v2/accounts/current/custom_field_definitions',
       'https://api.test/v2/custom_field_definitions',
     ]);
+  });
+
+  it('vessels future-positions-coords rejects an empty latitude without a request', async () => {
+    const urls: string[] = [];
+    vi.stubGlobal('fetch', async (input: Request | URL | string) => {
+      urls.push(input instanceof Request ? input.url : String(input));
+      return new Response('{}', { status: 200 });
+    });
+    process.env.T49_API_TOKEN = 'token-123';
+    const result = await runProgram([
+      '--json',
+      'vessels',
+      'future-positions-coords',
+      'v-1',
+      '--port-id',
+      'p',
+      '--previous-port-id',
+      'q',
+      '--latitude',
+      '',
+      '--longitude',
+      '1',
+    ]);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('--latitude must be a number');
+    expect(urls).toEqual([]);
   });
 
   it('vessels future-positions-coords sends the spec query params', async () => {
@@ -362,5 +335,50 @@ describe('CLI regressions', () => {
       '/v2/containers/c-1/map_geojson',
       '/v2/containers/c-1/map_geojson',
     ]);
+  });
+
+  it('containers route --table prints the ports and vessel the SDK maps from map_geojson', async () => {
+    const geojson = readFileSync(
+      new URL(
+        '../../typescript-sdk/src/fixtures/containers.map_geojson.json',
+        import.meta.url,
+      ),
+      'utf8',
+    );
+    vi.stubGlobal(
+      'fetch',
+      async () =>
+        new Response(geojson, {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    );
+    process.env.T49_API_TOKEN = 'token-123';
+    process.env.T49_API_BASE_URL = 'https://api.test/v2';
+    process.env.XDG_CONFIG_HOME = mkdtempSync(join(tmpdir(), 't49-cli-'));
+
+    const result = await runProgram(['--table', 'containers', 'route', 'c-1']);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toBe(
+      [
+        '┌─────┬───────┬──────────────┬─────────┬──────────────────────┬──────────────────────┬──────────────┬──────────────────────┐',
+        '│ Seq │ Label │ Port         │ Country │ Inbound ETA          │ Inbound ATA          │ Outbound ETD │ Outbound ATD         │',
+        '├─────┼───────┼──────────────┼─────────┼──────────────────────┼──────────────────────┼──────────────┼──────────────────────┤',
+        '│ 1   │ POL   │ Laem Chabang │ TH      │                      │                      │              │ 2025-11-08T00:44:52Z │',
+        '├─────┼───────┼──────────────┼─────────┼──────────────────────┼──────────────────────┼──────────────┼──────────────────────┤',
+        '│ 2   │ TS1   │ Xiamen       │ CN      │                      │ 2025-11-15T16:00:00Z │              │ 2025-11-19T16:00:00Z │',
+        '├─────┼───────┼──────────────┼─────────┼──────────────────────┼──────────────────────┼──────────────┼──────────────────────┤',
+        '│ 3   │ POD   │ Savannah     │ US      │ 2025-12-31T05:00:00Z │                      │              │                      │',
+        '└─────┴───────┴──────────────┴─────────┴──────────────────────┴──────────────────────┴──────────────┴──────────────────────┘',
+        'Current vessel',
+        '┌─────────────┬─────────┬────────┬──────────────┬────────────────┬─────────┬────────────┬──────────────────────┐',
+        '│ Vessel      │ IMO     │ Voyage │ Latitude     │ Longitude      │ Heading │ Speed (kn) │ Position At          │',
+        '├─────────────┼─────────┼────────┼──────────────┼────────────────┼─────────┼────────────┼──────────────────────┤',
+        '│ ZIM BANGKOK │ 9936525 │ 13E    │ 31.023033333 │ -131.128473333 │ 108     │ 21         │ 2025-12-11T11:46:03Z │',
+        '└─────────────┴─────────┴────────┴──────────────┴────────────────┴─────────┴────────────┴──────────────────────┘',
+        '',
+      ].join('\n'),
+    );
   });
 });

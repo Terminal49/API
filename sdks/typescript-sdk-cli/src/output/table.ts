@@ -8,10 +8,10 @@
 
 import Table from 'cli-table3';
 
-interface ColumnDef {
-  key: string | string[];
-  title: string;
-}
+/** A column reads the first renderable `key` path, or computes its cell with `value`. */
+type ColumnDef =
+  | { title: string; key: string | string[] }
+  | { title: string; value: (row: Record<string, unknown>) => unknown };
 
 const ROUTE_PORT_COLUMNS: ColumnDef[] = [
   { key: 'sequence', title: 'Seq' },
@@ -35,22 +35,117 @@ const ROUTE_VESSEL_COLUMNS: ColumnDef[] = [
   { key: 'positionAt', title: 'Position At' },
 ];
 
+const FUTURE_POSITION_COLUMNS: ColumnDef[] = [
+  { key: 'timestamp', title: 'Timestamp' },
+  { key: 'latitude', title: 'Latitude' },
+  { key: 'longitude', title: 'Longitude' },
+  { key: 'heading', title: 'Heading' },
+  { key: 'estimated', title: 'Estimated' },
+];
+
+const WEBHOOK_COLUMNS: ColumnDef[] = [
+  { key: 'id', title: 'ID' },
+  { key: 'attributes.url', title: 'URL' },
+  { key: 'attributes.active', title: 'Active' },
+  {
+    title: 'Events',
+    value: (row) => {
+      const events = valueAtPath(row, 'attributes.events');
+      return Array.isArray(events) ? events.length : undefined;
+    },
+  },
+];
+
+/**
+ * Mapped `CustomField` rows from the entity custom-fields commands, or raw
+ * `custom_field` resources with their included definition (see `withDefinitions`).
+ */
+const CUSTOM_FIELD_COLUMNS: ColumnDef[] = [
+  { key: 'id', title: 'ID' },
+  { key: ['slug', 'attributes.api_slug'], title: 'Slug' },
+  { key: ['name', 'definition.attributes.display_name'], title: 'Name' },
+  {
+    key: [
+      'displayValue',
+      'attributes.display_value',
+      'value',
+      'attributes.value',
+    ],
+    title: 'Value',
+  },
+  { key: ['dataType', 'definition.attributes.data_type'], title: 'Data Type' },
+];
+
+/** Raw `custom_field` resources, which carry no definition name or data type. */
+const CUSTOM_FIELD_RECORD_COLUMNS: ColumnDef[] = [
+  { key: 'id', title: 'ID' },
+  { key: 'attributes.api_slug', title: 'Slug' },
+  {
+    key: ['attributes.display_value', 'attributes.value'],
+    title: 'Value',
+  },
+  { key: 'attributes.updated_at', title: 'Updated' },
+];
+
+const CUSTOM_FIELD_OPTION_COLUMNS: ColumnDef[] = [
+  { key: 'id', title: 'ID' },
+  { key: 'attributes.label', title: 'Label' },
+  { key: 'attributes.value', title: 'Value' },
+  { key: 'attributes.position', title: 'Position' },
+];
+
 const commandColumns: Record<string, ColumnDef[]> = {
   'shipments.list': [
     { key: 'id', title: 'ID' },
-    { key: 'billOfLading', title: 'BOL' },
-    { key: 'shippingLineScac', title: 'SCAC' },
-    { key: 'status', title: 'Status' },
-    { key: 'customerName', title: 'Customer' },
-    { key: 'tracking.lineTrackingStoppedReason', title: 'Tracking' },
+    { key: ['billOfLading', 'attributes.bill_of_lading_number'], title: 'BOL' },
+    {
+      key: ['shippingLineScac', 'attributes.shipping_line_scac'],
+      title: 'SCAC',
+    },
+    { key: ['customerName', 'attributes.customer_name'], title: 'Customer' },
+    {
+      key: [
+        'portOfDischargeName',
+        'ports.portOfDischarge.name',
+        'attributes.port_of_discharge_name',
+      ],
+      title: 'POD',
+    },
+    {
+      key: ['podEtaAt', 'ports.portOfDischarge.eta', 'attributes.pod_eta_at'],
+      title: 'POD ETA',
+    },
+    {
+      key: [
+        'tracking.lineTrackingStoppedReason',
+        'attributes.line_tracking_stopped_reason',
+      ],
+      title: 'Tracking Stopped',
+    },
   ],
+  'webhooks.list': WEBHOOK_COLUMNS,
+  'webhooks.create': WEBHOOK_COLUMNS,
+  'webhooks.update': WEBHOOK_COLUMNS,
+  'shipments.custom-fields': CUSTOM_FIELD_COLUMNS,
+  'containers.custom-fields': CUSTOM_FIELD_COLUMNS,
+  'shipments.set-custom-field': CUSTOM_FIELD_RECORD_COLUMNS,
+  'containers.set-custom-field': CUSTOM_FIELD_RECORD_COLUMNS,
+  'custom-fields.list': CUSTOM_FIELD_RECORD_COLUMNS,
+  'custom-fields.create': CUSTOM_FIELD_RECORD_COLUMNS,
+  'custom-fields.update': CUSTOM_FIELD_RECORD_COLUMNS,
+  'custom-field-options.list': CUSTOM_FIELD_OPTION_COLUMNS,
+  'custom-field-options.create': CUSTOM_FIELD_OPTION_COLUMNS,
+  'custom-field-options.update': CUSTOM_FIELD_OPTION_COLUMNS,
   'containers.list': [
     { key: 'id', title: 'ID' },
-    { key: 'number', title: 'Number' },
-    { key: 'status', title: 'Status' },
-    { key: 'equipment.type', title: 'Type' },
-    { key: 'equipment.length', title: 'Len' },
-    { key: 'location.currentLocation', title: 'Location' },
+    { key: ['number', 'attributes.number'], title: 'Number' },
+    { key: ['status', 'attributes.current_status'], title: 'Status' },
+    { key: ['equipment.type', 'attributes.equipment_type'], title: 'Type' },
+    { key: ['equipment.length', 'attributes.equipment_length'], title: 'Len' },
+    {
+      key: ['location.currentLocation', 'attributes.location_at_pod_terminal'],
+      title: 'Location',
+    },
     { key: 'terminals.podTerminal.name', title: 'POD Terminal' },
   ],
   'containers.events': [
@@ -92,10 +187,10 @@ const commandColumns: Record<string, ColumnDef[]> = {
   ],
   'tracking-requests.list': [
     { key: 'id', title: 'ID' },
-    { key: 'requestType', title: 'Type' },
-    { key: 'requestNumber', title: 'Number' },
-    { key: 'scac', title: 'SCAC' },
-    { key: 'status', title: 'Status' },
+    { key: ['requestType', 'attributes.request_type'], title: 'Type' },
+    { key: ['requestNumber', 'attributes.request_number'], title: 'Number' },
+    { key: ['scac', 'attributes.scac'], title: 'SCAC' },
+    { key: ['status', 'attributes.status'], title: 'Status' },
   ],
   search: [
     { key: 'match', title: 'Match' },
@@ -105,10 +200,23 @@ const commandColumns: Record<string, ColumnDef[]> = {
     { key: 'details', title: 'Details' },
     { key: 'score', title: 'Score' },
   ],
+  commands: [
+    { key: 'name', title: 'Command' },
+    { key: 'description', title: 'Description' },
+    {
+      title: 'Subcommands',
+      value: (row) => {
+        const subcommands = row.subcommands;
+        return Array.isArray(subcommands)
+          ? subcommands.map((subcommand) => asRecord(subcommand)?.name)
+          : undefined;
+      },
+    },
+  ],
   'shipping-lines.list': [
-    { key: 'scac', title: 'SCAC' },
-    { key: 'name', title: 'Name' },
-    { key: 'shortName', title: 'Short Name' },
+    { key: ['scac', 'attributes.scac'], title: 'SCAC' },
+    { key: ['name', 'attributes.name'], title: 'Name' },
+    { key: ['shortName', 'attributes.short_name'], title: 'Short Name' },
   ],
 };
 
@@ -127,6 +235,9 @@ const unknownColumnCandidates: ColumnDef[] = [
   { key: 'attributes.api_slug', title: 'Slug' },
   { key: 'attributes.display_name', title: 'Display Name' },
   { key: 'attributes.data_type', title: 'Data Type' },
+  { key: 'attributes.label', title: 'Label' },
+  { key: 'attributes.url', title: 'URL' },
+  { key: ['attributes.display_value', 'attributes.value'], title: 'Value' },
   { key: 'attributes.number', title: 'Number' },
   { key: 'attributes.name', title: 'Name' },
   { key: 'attributes.company_name', title: 'Company' },
@@ -148,6 +259,7 @@ function valueForColumn(
   row: Record<string, unknown>,
   column: ColumnDef,
 ): unknown {
+  if ('value' in column) return column.value(row);
   const keys = Array.isArray(column.key) ? column.key : [column.key];
   for (const key of keys) {
     const value = valueAtPath(row, key);
@@ -590,11 +702,33 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
     : undefined;
 }
 
+/** Rows of the mapped half of a `{ raw, mapped }` pair, or of the data itself. */
 function tableRows(data: unknown): Record<string, unknown>[] {
-  const mapped = asRecord(data)?.mapped;
-  return Array.isArray(mapped)
-    ? (mapped as Record<string, unknown>[])
-    : normalizeRows(data);
+  const record = asRecord(data);
+  return normalizeRows(
+    record && 'raw' in record && 'mapped' in record ? record.mapped : data,
+  );
+}
+
+/** Attaches each raw `custom_field` row's included `custom_field_definition` as `definition`. */
+function withDefinitions(
+  data: unknown,
+  rows: Record<string, unknown>[],
+): Record<string, unknown>[] {
+  const included = asRecord(data)?.included;
+  if (!Array.isArray(included)) return rows;
+  const definitions = new Map(
+    included
+      .map(asRecord)
+      .filter((resource) => resource?.type === 'custom_field_definition')
+      .map((resource) => [resource?.id, resource]),
+  );
+  return rows.map((row) => {
+    const definition = definitions.get(
+      valueAtPath(row, 'relationships.definition.data.id'),
+    );
+    return definition ? { ...row, definition } : row;
+  });
 }
 
 /** Ports table plus a current-vessel table, from a `{ ports }` route or a `{ raw, mapped }` pair; undefined for raw GeoJSON. */
@@ -612,12 +746,33 @@ function renderRoute(data: unknown): string | undefined {
   return `${ports}Current vessel\n${renderRows([vessel], ROUTE_VESSEL_COLUMNS)}`;
 }
 
+/** A positions table under a vessel line, from a mapped vessel, a `{ raw, mapped }` pair, or the raw document. */
+function renderFuturePositions(data: unknown): string | undefined {
+  const record = asRecord(data);
+  const mapped = asRecord(record?.mapped) ?? record;
+  const vessel = asRecord(asRecord(mapped?.data)?.attributes) ?? mapped;
+  if (!Array.isArray(vessel?.positions)) return undefined;
+
+  const imo = hasRenderableValue(vessel.imo)
+    ? ` (IMO ${formatCell(vessel.imo)})`
+    : '';
+  const header = `Vessel ${formatCell(vessel.name)}${imo}\n`;
+  return `${header}${renderRows(
+    vessel.positions as Record<string, unknown>[],
+    FUTURE_POSITION_COLUMNS,
+  )}`;
+}
+
 function isSearchCommand(command: string): boolean {
   return command === 'search' || command.startsWith('search.');
 }
 
 function isDetailCommand(command: string): boolean {
-  return command.endsWith('.get') || command.endsWith('.get-by-imo');
+  return (
+    command.endsWith('.get') ||
+    command.endsWith('.get-by-imo') ||
+    command.startsWith('config.')
+  );
 }
 
 function unwrapDetailObject(
@@ -687,7 +842,71 @@ function renderDetail(data: unknown): string | undefined {
   return `${table.toString()}\n`;
 }
 
-export function renderTable(command: string, data: unknown): string {
+/** The value at `parts`, collected across every array the path passes through. */
+function valuesAtPath(value: unknown, parts: string[]): unknown {
+  if (parts.length === 0 || value === null || value === undefined) return value;
+  if (Array.isArray(value))
+    return value.flatMap((item) => valuesAtPath(item, parts) ?? []);
+  const record = asRecord(value);
+  if (!record) return undefined;
+  const [head, ...tail] = parts;
+  return valuesAtPath(record[head], tail);
+}
+
+/**
+ * The table for a `--fields` projection: one column per field path, titled by
+ * the path as typed. Rows are the first array the paths share, starting from
+ * the rows `projectFields` projected (a list's array or `items`), so
+ * `--fields data.id` on a raw list and `--fields ports.name` on a route both
+ * give one row per element.
+ */
+function renderProjected(data: unknown, fields: string[]): string {
+  if (!hasRenderableValue(data)) return 'No rows.\n';
+  const paths = fields.map((field) => field.split('.'));
+  const shared = paths.reduce((prefix, parts) => {
+    const mismatch = prefix.findIndex((part, index) => parts[index] !== part);
+    return mismatch === -1 ? prefix : prefix.slice(0, mismatch);
+  });
+
+  const maxDepth = Math.min(
+    shared.length,
+    ...paths.map((parts) => parts.length - 1),
+  );
+
+  const itemsRoot = asRecord(data)?.items;
+  let rows: unknown = Array.isArray(itemsRoot) ? itemsRoot : data;
+  let depth = 0;
+  while (!Array.isArray(rows) && depth < maxDepth) {
+    const next = asRecord(rows)?.[shared[depth]];
+    if (!Array.isArray(next) && !asRecord(next)) break;
+    rows = next;
+    depth += 1;
+  }
+  if (!Array.isArray(rows)) {
+    rows = [data];
+    depth = 0;
+  }
+
+  return renderRows(
+    rows as Record<string, unknown>[],
+    paths.map((parts, index) => ({
+      title: fields[index],
+      value: (row) => valuesAtPath(row, parts.slice(depth)),
+    })),
+  );
+}
+
+/**
+ * Renders `data` for a TTY. Pass the `--fields` paths when they narrowed the
+ * data, so the table shows those fields instead of the command's columns.
+ */
+export function renderTable(
+  command: string,
+  data: unknown,
+  { fields = [] }: { fields?: string[] } = {},
+): string {
+  if (fields.length > 0) return renderProjected(data, fields);
+
   if (isDetailCommand(command)) {
     const detail = renderDetail(data);
     if (detail) return detail;
@@ -698,10 +917,20 @@ export function renderTable(command: string, data: unknown): string {
     if (route) return route;
   }
 
+  if (
+    command === 'vessels.future-positions' ||
+    command === 'vessels.future-positions-coords'
+  ) {
+    const positions = renderFuturePositions(data);
+    if (positions) return positions;
+  }
+
   const rows = tableRows(data);
   const renderedRows = isSearchCommand(command)
     ? rows.map(enrichSearchRow)
-    : rows;
+    : command.endsWith('.custom-fields')
+      ? withDefinitions(data, rows)
+      : rows;
   return renderRows(
     renderedRows,
     commandColumns[command] ?? inferUnknownColumns(renderedRows),

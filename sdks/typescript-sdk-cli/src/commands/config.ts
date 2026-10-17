@@ -48,10 +48,7 @@ export function registerConfigCommand(program: Command): void {
         'config.path',
         async (_options: unknown, command: Command) => {
           const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            compact: global.compact,
-          });
+          const formatter = createFormatter(global);
           formatter.output('config.path', { path: getConfigPath() });
         },
       ),
@@ -72,10 +69,7 @@ export function registerConfigCommand(program: Command): void {
             config[configKey],
             options.reveal,
           );
-          const formatter = createFormatter({
-            json: command.optsWithGlobals().json,
-            compact: command.optsWithGlobals().compact,
-          });
+          const formatter = createFormatter(command.optsWithGlobals());
           formatter.output('config.get', { key, value } as ConfigOutput);
         },
       ),
@@ -95,10 +89,7 @@ export function registerConfigCommand(program: Command): void {
         ) => {
           const configKey = validateConfigKey(key);
           const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            compact: global.compact,
-          });
+          const formatter = createFormatter(global);
           const parsed = parseConfigValue(configKey, value);
           const next = await writeConfig({
             [configKey]: parsed,
@@ -117,10 +108,7 @@ export function registerConfigCommand(program: Command): void {
         'config.list',
         async (options: RevealOptions, command: Command) => {
           const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            compact: global.compact,
-          });
+          const formatter = createFormatter(global);
           const cfg = await loadConfig();
           formatter.output('config.list', redactConfig(cfg, options.reveal));
         },
@@ -135,10 +123,7 @@ export function registerConfigCommand(program: Command): void {
         'config.clear',
         async (_options: unknown, command: Command) => {
           const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            compact: global.compact,
-          });
+          const formatter = createFormatter(global);
           await resetConfig();
           formatter.output('config.clear', { removed: true });
         },
@@ -153,10 +138,7 @@ export function registerConfigCommand(program: Command): void {
         'config.auth-status',
         async (_options: unknown, command: Command) => {
           const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            compact: global.compact,
-          });
+          const formatter = createFormatter(global);
           const cfg = await loadConfig();
           const status = {
             hasToken: Boolean(
@@ -183,10 +165,7 @@ export function registerConfigCommand(program: Command): void {
         'config.client-check',
         async (_options: unknown, command: Command) => {
           const global = command.optsWithGlobals();
-          const formatter = createFormatter({
-            json: global.json,
-            compact: global.compact,
-          });
+          const formatter = createFormatter(global);
           await createClient({
             token: global.token,
             baseUrl: global.baseUrl,

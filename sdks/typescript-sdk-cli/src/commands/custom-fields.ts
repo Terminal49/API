@@ -4,67 +4,22 @@
 
 import type { Command } from 'commander';
 import { parseJsonObjectPayload } from '../util/input.js';
-import { action, cliEnvelope, listAction } from './action.js';
+import { action, defineList } from './action.js';
 
 type PayloadOptions = {
   payload: Record<string, unknown>;
 };
-
-type PaginationEnvelope = {
-  pagination?: {
-    links?: unknown;
-    meta?: unknown;
-  };
-};
-
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : undefined;
-}
-
-function paginationFrom(result: unknown): PaginationEnvelope | undefined {
-  const record = asRecord(result);
-  const mapped = asRecord(record?.mapped);
-  const raw = asRecord(record?.raw);
-  const links = record?.links ?? mapped?.links ?? raw?.links;
-  const meta = record?.meta ?? mapped?.meta ?? raw?.meta;
-  if (links === undefined && meta === undefined) return undefined;
-  return { pagination: { links, meta } };
-}
-
-function listDataFrom(result: unknown): unknown {
-  const record = asRecord(result);
-  if (record?.raw || record?.mapped) {
-    const raw = asRecord(record.raw);
-    const mapped = asRecord(record.mapped);
-    return {
-      raw: raw?.data ?? record.raw,
-      mapped: mapped?.items ?? mapped?.data ?? record.mapped,
-    };
-  }
-
-  if (Array.isArray(record?.items)) return record.items;
-  if (record && 'data' in record) return record.data;
-  return result;
-}
 
 export function registerCustomFieldsCommand(program: Command): void {
   const cmd = program
     .command('custom-fields')
     .description('Manage custom fields');
 
-  cmd
-    .command('list')
-    .description('List custom field assignments')
-    .action(
-      listAction('custom-fields.list', async ({ client, globals }) => {
-        const result = await client.customFields.list({
-          format: globals.format,
-        });
-        return cliEnvelope(listDataFrom(result), paginationFrom(result));
-      }),
-    );
+  defineList(cmd.command('list').description('List custom field assignments'), {
+    name: 'custom-fields.list',
+    paginated: false,
+    run: ({ client, format }) => client.customFields.list({ format }),
+  });
 
   cmd
     .command('get <id>')
