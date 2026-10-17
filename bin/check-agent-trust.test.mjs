@@ -359,6 +359,24 @@ test('discovers workspace globs from the root manifest', (t) => {
   );
 });
 
+test('recursive workspace globs skip installed dependency manifests like npm', (t) => {
+  const repository = createGuardRepository(t);
+  const rootPackage = JSON.parse(
+    readFileSync(join(repository, 'package.json'), 'utf8'),
+  );
+  rootPackage.workspaces = ['packages/*', 'sdks/**'];
+  writeJson(repository, 'package.json', rootPackage);
+  writeJson(
+    repository,
+    'sdks/typescript-sdk/node_modules/openapi-fetch/package.json',
+    { name: 'openapi-fetch', version: '0.17.0' },
+  );
+
+  const result = runGuard(repository);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /PASS agent trust guards/);
+});
+
 test('ignores third-party and build-output Vite configs excluded by Git', (t) => {
   const repository = createGuardRepository(t);
   for (const path of [

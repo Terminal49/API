@@ -325,7 +325,7 @@ function workspaceManifests() {
       readJson('package.json').workspaces.map(
         (workspace) => `${workspace}/package.json`,
       ),
-      { cwd: root },
+      { cwd: root, exclude: ['**/node_modules/**'] },
     ),
   );
 }
