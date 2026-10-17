@@ -221,26 +221,40 @@ function checkFeatureMap() {
       }
     }
   }
+  function isRegistrationCallee(member) {
+    return (
+      ts.isCallExpression(member.parent) && member.parent.expression === member
+    );
+  }
   function visit(node) {
+    if (
+      (ts.isIdentifier(node) || ts.isStringLiteralLike(node)) &&
+      node.text === 'registerTool' &&
+      !(
+        (ts.isPropertyAccessExpression(node.parent) &&
+          node.parent.name === node &&
+          isRegistrationCallee(node.parent)) ||
+        (ts.isElementAccessExpression(node.parent) &&
+          node.parent.argumentExpression === node &&
+          isRegistrationCallee(node.parent))
+      )
+    ) {
+      const { line } = sourceFile.getLineAndCharacterOfPosition(
+        node.getStart(sourceFile),
+      );
+      throw new Error(
+        `Unsupported MCP registerTool form at packages/mcp/src/server.ts:${line + 1}; call <receiver>.registerTool('<literal name>', ...) directly`,
+      );
+    }
     if (ts.isCallExpression(node)) {
       const expression = node.expression;
-      const receiver =
-        ts.isPropertyAccessExpression(expression) ||
-        ts.isElementAccessExpression(expression)
-          ? expression.expression
-          : null;
       const method = ts.isPropertyAccessExpression(expression)
         ? expression.name.text
         : ts.isElementAccessExpression(expression) &&
             ts.isStringLiteralLike(expression.argumentExpression)
           ? expression.argumentExpression.text
           : null;
-      if (
-        receiver &&
-        ts.isIdentifier(receiver) &&
-        receiver.text === 'server' &&
-        method === 'registerTool'
-      ) {
+      if (method === 'registerTool') {
         const name = node.arguments[0];
         if (!name || !ts.isStringLiteralLike(name))
           throw new Error(

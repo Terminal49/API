@@ -473,6 +473,60 @@ for (const call of [
   });
 }
 
+for (const [form, registration] of [
+  [
+    'an alias',
+    "const alias = server;\nalias.registerTool('new_tool', {}, () => executeNew());",
+  ],
+  [
+    'a reassigned receiver',
+    "let target;\ntarget = server;\ntarget.registerTool('new_tool', {}, () => executeNew());",
+  ],
+]) {
+  test(`registration through ${form} is held to the feature map`, (t) => {
+    const repository = createGuardRepository(t);
+    const toolPath = 'packages/mcp/src/tools/new-tool.ts';
+    mkdirSync(dirname(join(repository, toolPath)), { recursive: true });
+    writeFileSync(
+      join(repository, toolPath),
+      'export function executeNew() {}',
+    );
+    writeFileSync(
+      join(repository, 'packages/mcp/src/server.ts'),
+      `import { executeNew } from './tools/new-tool.js';\n${registration}`,
+    );
+    const unmapped = runGuard(repository);
+    assert.equal(unmapped.status, 1, unmapped.stdout);
+    assert.match(unmapped.stderr, /MCP feature map drifted/);
+    assert.match(unmapped.stderr, /new_tool/);
+
+    writeJson(repository, 'skills/agent-trust/feature-map.json', {
+      mcpTools: [{ name: 'new_tool', implementation: toolPath }],
+      sdkEntrypoints: [],
+      docsRoutes: [],
+    });
+    const mapped = runGuard(repository);
+    assert.equal(mapped.status, 0, mapped.stderr);
+  });
+}
+
+for (const source of [
+  "const { registerTool } = server;\nregisterTool('new_tool', {});",
+  "const register = server.registerTool.bind(server);\nregister('new_tool', {});",
+  "const method = 'registerTool';\nserver[method]('new_tool', {});",
+]) {
+  test(`rejects the unsupported registration form ${JSON.stringify(source)}`, (t) => {
+    const repository = createGuardRepository(t);
+    writeFileSync(join(repository, 'packages/mcp/src/server.ts'), source);
+    const result = runGuard(repository);
+    assert.equal(result.status, 1, result.stdout);
+    assert.match(
+      result.stderr,
+      /Unsupported MCP registerTool form at packages\/mcp\/src\/server\.ts:1;/,
+    );
+  });
+}
+
 test('tracks MCP pages outside the mcp prefix through nested navigation', () => {
   assert.deepEqual(
     collectDocsRoutes({
