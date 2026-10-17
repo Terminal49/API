@@ -37,6 +37,8 @@ const WRITE_EFFECTS = {
     'fills an empty custom field on a container, shipment or tracking request',
   update_custom_field:
     'replaces or clears a custom field value on a container, shipment or tracking request',
+  relink_document:
+    'matches a document to shipments and containers again in the background',
 } satisfies Record<WriteTool['name'], string>;
 
 const TIER_RULES = {

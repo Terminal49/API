@@ -118,6 +118,11 @@ import {
   setCustomFieldOutputSchema,
 } from './tools/set-custom-field.js';
 import {
+  executeRelinkDocument,
+  relinkDocumentInputSchema,
+  relinkDocumentOutputSchema,
+} from './tools/relink-document.js';
+import {
   executeUpdateCustomField,
   updateCustomFieldInputSchema,
   updateCustomFieldOutputSchema,
@@ -1049,6 +1054,7 @@ function formatToolError(
       case 'get_tracking_request':
         return `No tracking request found with id ${id ?? '(missing)'}.`;
       case 'get_document':
+      case 'relink_document':
         return `No document found with id ${id ?? '(missing)'}.`;
       case 'get_vessel':
         return `No vessel found with id ${id ?? '(missing)'}.`;
@@ -1888,6 +1894,17 @@ export function createTerminal49McpServer(
         outputSchema: updateCustomFieldOutputSchema,
       },
       async (args, context) => executeUpdateCustomField(args, client, context),
+    ),
+    relink_document: tool(
+      {
+        description:
+          'Ask Terminal49 to match a document to shipments and containers again, for example after a shipment or container it names starts being tracked. ' +
+          'It runs in the background: the result is accepted, and the links can take a minute to change. document_before_relink shows the links before the call. ' +
+          'Calling it again only repeats the matching. Returns noop when Terminal49 will not relink the document in its current state.',
+        inputSchema: relinkDocumentInputSchema,
+        outputSchema: relinkDocumentOutputSchema,
+      },
+      async (args, context) => executeRelinkDocument(args, client, context),
     ),
     search_docs: tool(
       {

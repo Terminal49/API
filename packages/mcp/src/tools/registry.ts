@@ -197,6 +197,18 @@ export const TOOL_REGISTRY = [
     },
   },
   {
+    name: 'relink_document',
+    title: 'Relink Document',
+    toolset: 'documents_write',
+    tier: 'A',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
     name: 'search_docs',
     title: 'Search Terminal49 Docs',
     toolset: 'core',
