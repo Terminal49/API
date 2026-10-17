@@ -220,7 +220,7 @@ Find containers by container number, BL, booking, or your own reference. This is
 Start tracking a container, bill of lading, or booking number. The tool first searches your account for the number:
 
 - If a tracking request for it is still in progress, with status `pending` or `awaiting_manifest`, the tool returns that request and its status. When you pass `scac`, only an in-progress request under the same SCAC counts.
-- If a container with exactly that number is still being tracked, the tool returns that container's details. A container whose shipment has stopped tracking does not count, because container numbers are reused on later voyages.
+- If a container with exactly that number is still being tracked, the tool returns that container's details in the same shape as `get_container`, plus `tracking_request_created` and `infer_result`. A container whose shipment has stopped tracking does not count, because container numbers are reused on later voyages.
 - Otherwise the tool creates a tracking request. If the API reports that the number is already tracked, the tool returns `source: "duplicate"`, the existing `tracking_request.id`, and `shipment_id` when the request has a shipment. `message` holds the API's explanation, which can name a different number that the existing request is stored under.
 
 Check `tracking_request_created` in the result. It is `false` when the tool returned an existing container, an in-progress request, or a duplicate. Container numbers are checked against the ISO 6346 check digit before the tool calls the API.
@@ -287,32 +287,80 @@ The response may also include `_metadata` with factual details such as `includes
 ```
 </Accordion>
 
-<Accordion title="Example response (mapped)">
+<Accordion title="Example response">
 ```json
 {
   "id": "abc-123-uuid",
-  "number": "CAIU1234567",
-  "status": "available_for_pickup",
+  "container_number": "CAIU1234567",
+  "status": "available",
+  "status_source": "current_status",
   "equipment": {
-    "type": "40HC",
-    "length": "40",
-    "height": "high_cube"
+    "type": "dry",
+    "length": 40,
+    "height": "high_cube",
+    "weight_lbs": 52000
   },
   "location": {
-    "currentLocation": "APM Terminals",
-    "availableForPickup": true,
-    "podArrivedAt": "2025-01-15T08:30:00Z",
-    "podDischargedAt": "2025-01-16T14:20:00Z"
+    "current_location": "Yard",
+    "available_for_pickup": true,
+    "availability_known": true,
+    "pod_arrived_at": "2026-10-12T08:30:00Z",
+    "pod_arrived_at_local": "10/12/2026, 01:30 AM PDT",
+    "pod_discharged_at": "2026-10-13T14:20:00Z",
+    "pod_discharged_at_local": "10/13/2026, 07:20 AM PDT",
+    "pod_timezone": "America/Los_Angeles"
   },
   "demurrage": {
-    "pickupLfd": "2025-01-22",
-    "holds": [],
-    "fees": []
+    "pickup_lfd": "2026-10-20T07:00:00Z",
+    "pickup_lfd_local": "10/20/2026, 12:00 AM PDT",
+    "last_free_days": {
+      "terminal": "2026-10-20T07:00:00Z",
+      "rail": null,
+      "line": null
+    },
+    "pickup_appointment_at": null,
+    "fees_at_pod_terminal": [],
+    "fees_total_amount": 0,
+    "fees_currency_code": null,
+    "holds_at_pod_terminal": [],
+    "urgency": "none",
+    "urgency_suppressed": false,
+    "urgency_reason": null,
+    "days_until_lfd": 4
+  },
+  "rail": {
+    "pod_rail_carrier": null,
+    "pod_rail_loaded_at": null,
+    "destination_eta": null,
+    "destination_ata": null
   },
   "shipment": {
     "id": "shipment-uuid",
-    "billOfLading": "MAEU123456789",
-    "shippingLineScac": "MAEU"
+    "ref_numbers": [
+      "PO-1234"
+    ],
+    "line": "MAEU",
+    "shipping_line_name": "Maersk",
+    "port_of_lading_name": "Shanghai",
+    "port_of_discharge_name": "Los Angeles",
+    "destination_name": null,
+    "line_tracking_stopped_at": null
+  },
+  "pod_terminal": {
+    "id": "terminal-uuid",
+    "name": "APM Terminals Pier 400",
+    "firms_code": "W185"
+  },
+  "custom_fields": null,
+  "created_at": "2026-09-01T12:00:00Z",
+  "_metadata": {
+    "container_state": "available_for_pickup",
+    "status_is_authoritative": true,
+    "derived_lifecycle": "available_for_pickup",
+    "includes_loaded": [
+      "shipment",
+      "pod_terminal"
+    ]
   }
 }
 ```
@@ -337,25 +385,70 @@ Get the full event timeline for a container's journey.
 <Accordion title="Example response">
 ```json
 {
-  "totalEvents": 47,
-  "eventCategories": {
-    "vesselEvents": 8,
-    "railEvents": 12,
-    "terminalEvents": 18
-  },
-  "milestones": {
-    "vesselLoadedAt": "2024-12-08T10:30:00Z",
-    "vesselDepartedAt": "2024-12-09T14:00:00Z",
-    "vesselArrivedAt": "2024-12-22T08:30:00Z",
-    "dischargedAt": "2024-12-23T11:15:00Z"
+  "total_events": 4,
+  "event_categories": {
+    "vessel_events": 4,
+    "rail_events": 0,
+    "truck_events": 0,
+    "terminal_events": 0,
+    "other_events": 0
   },
   "timeline": [
     {
       "event": "container.transport.vessel_loaded",
-      "timestamp": "2024-12-08T10:30:00Z",
-      "location": { "name": "Shanghai", "locode": "CNSHA" }
+      "timestamp": "2024-12-08T10:30:00.000Z",
+      "timezone": "Asia/Shanghai",
+      "voyage_number": "451E",
+      "location": {
+        "name": "Shanghai",
+        "code": "CNSHA",
+        "type": "port"
+      }
+    },
+    {
+      "event": "container.transport.vessel_departed",
+      "timestamp": "2024-12-09T14:00:00.000Z",
+      "timezone": "Asia/Shanghai",
+      "voyage_number": "451E",
+      "location": {
+        "name": "Shanghai",
+        "code": "CNSHA",
+        "type": "port"
+      }
+    },
+    {
+      "event": "container.transport.vessel_arrived",
+      "timestamp": "2024-12-22T08:30:00.000Z",
+      "timezone": "America/Los_Angeles",
+      "voyage_number": "451E",
+      "location": {
+        "name": "Los Angeles",
+        "code": "USLAX",
+        "type": "port"
+      }
+    },
+    {
+      "event": "container.transport.vessel_discharged",
+      "timestamp": "2024-12-23T11:15:00.000Z",
+      "timezone": "America/Los_Angeles",
+      "voyage_number": "451E",
+      "location": {
+        "name": "Los Angeles",
+        "code": "USLAX",
+        "type": "port"
+      }
     }
-  ]
+  ],
+  "milestones": {
+    "vessel_loaded_at": "2024-12-08T10:30:00.000Z",
+    "vessel_departed_at": "2024-12-09T14:00:00.000Z",
+    "vessel_arrived_at": "2024-12-22T08:30:00.000Z",
+    "discharged_at": "2024-12-23T11:15:00.000Z"
+  },
+  "_metadata": {
+    "source": "transport_events_subresource",
+    "container_found": true
+  }
 }
 ```
 </Accordion>
