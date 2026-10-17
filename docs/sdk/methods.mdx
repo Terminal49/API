@@ -20,6 +20,12 @@ The SDK exposes a `Terminal49Client` with methods grouped by resource type. Each
 |--------|-------------|
 | `client.search(query)` | Search across shipments and containers by number, reference, or keyword |
 
+### Credential
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `client.me(options?)` | `GET /me` | Describe the credential behind the client: whether it is an API key or a signed-in user, the account it is scoped to, and which gated features it can use there. Works for free-plan API keys too. |
+
 ### Shipments
 
 | Method | Description |
