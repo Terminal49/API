@@ -19,6 +19,7 @@ import {
   isRecord,
   resolveConfig,
   type ToolResult,
+  writesEnabled,
 } from './client.js';
 import {
   hasArray,
@@ -69,12 +70,11 @@ if (!cfg) {
     process.env.MCP_EVAL_ALLOW_SPARSE === '1' ||
     process.env.MCP_EVAL_ALLOW_SPARSE === 'true';
 
-  // The only mutating tool (track_container) is opt-in: on an arbitrary account
-  // the idempotent search-match path is not guaranteed, so a call could create a
-  // real tracking request. Enable explicitly with MCP_EVAL_ENABLE_WRITE=1.
-  const enableWrite =
-    process.env.MCP_EVAL_ENABLE_WRITE === '1' ||
-    process.env.MCP_EVAL_ENABLE_WRITE === 'true';
+  // track_container is the only mutating tool this suite calls, and it is
+  // opt-in: on an arbitrary account the idempotent search-match path is not
+  // guaranteed, so a call could create a real tracking request. Enable it with
+  // MCP_EVAL_ENABLE_WRITE=1. writes.eval.ts covers the other write tools.
+  const enableWrite = writesEnabled();
 
   describe('Terminal49 MCP tool eval', () => {
     beforeAll(async () => {

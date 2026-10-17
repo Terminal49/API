@@ -9,48 +9,63 @@
  * The endpoint is MCP_EVAL_ENDPOINT, as for the read suite. Each case is a
  * round trip that leaves the record as it found it.
  *
+ * The sandbox account also holds demo data, so the cases change only the
+ * fixtures in write-fixtures.ts: the one shipment with reference number
+ * MCP-EVAL-FIXTURE, the party "MCP Eval (do not use)", and the short_text
+ * custom field mcp_eval_fixture. A case skips when its fixture is missing.
+ * It never falls back to another record.
+ *
  * Terminal49 accepts custom field changes only from a signed-in user, never
  * from an API key. So the custom field case also needs
  *   MCP_EVAL_SANDBOX_BEARER=<OAuth access token of a sandbox account user>
  * and skips without it. It fails before any write when that user's account
  * is not the MCP_EVAL_SANDBOX_TOKEN account.
  *
- * cancel_tracking_request has no live case: a cancel cannot be undone, and
- * every run would have to create a new, billable tracking request. Its
- * fixture tests cover it. update_document is only previewed: its actions
- * cannot be undone exactly, and reextract uses processing time.
+ * cancel_tracking_request and relink_document have no live case. A cancel
+ * cannot be undone, and every run would have to create a new, billable
+ * tracking request. A relink cannot be undone exactly. Their fixture tests
+ * cover them. update_document is only previewed, on a document attached to
+ * the fixture shipment, and never confirmed.
  */
 
 import { beforeAll, describe, expect, it } from 'vite-plus/test';
-import { EvalClient, isRecord, type ToolResult } from './client.js';
+import {
+  EvalClient,
+  isRecord,
+  missingDefaultWriteTools,
+  resolveSandboxConfig,
+  type ToolResult,
+} from './client.js';
 import { fixtureItems } from './fixtures.js';
+import {
+  EVAL_CUSTOM_FIELD_SLUG,
+  EVAL_FIXTURE_REF,
+  EVAL_PARTY_NAME,
+  selectEvalDefinition,
+  selectEvalParty,
+  selectFixtureDocument,
+  selectFixtureShipment,
+  type FixtureShipment,
+} from './write-fixtures.js';
 
-const enableWrite =
-  process.env.MCP_EVAL_ENABLE_WRITE === '1' ||
-  process.env.MCP_EVAL_ENABLE_WRITE === 'true';
-const sandboxToken = process.env.MCP_EVAL_SANDBOX_TOKEN?.trim();
-const sandboxBearer = process.env.MCP_EVAL_SANDBOX_BEARER?.trim();
-const endpoint =
-  process.env.MCP_EVAL_ENDPOINT?.trim() || 'https://mcp.terminal49.com/mcp';
+const cfg = resolveSandboxConfig();
+
+const NO_FIXTURE = `No sandbox shipment has reference number ${EVAL_FIXTURE_REF}, or the gateway does not list this tool.`;
 
 function structured(result: ToolResult): Record<string, unknown> {
   return isRecord(result.payload) ? result.payload : {};
 }
 
-if (!enableWrite || !sandboxToken) {
+if (!cfg) {
   describe.skip('Terminal49 MCP write eval (set MCP_EVAL_ENABLE_WRITE and MCP_EVAL_SANDBOX_TOKEN)', () => {
     it('is skipped without a sandbox account', () => {
       expect(true).toBe(true);
     });
   });
 } else {
-  const client = new EvalClient({
-    endpoint,
-    scheme: 'Token',
-    token: sandboxToken,
-  });
+  const client = new EvalClient(cfg.sandbox);
   let served: string[] = [];
-  let shipmentId: string | undefined;
+  let fixture: FixtureShipment | undefined;
   let partyId: string | undefined;
 
   /** Previews a tier C call, then confirms it with the token it returned. */
@@ -70,37 +85,44 @@ if (!enableWrite || !sandboxToken) {
       const init = await client.initialize();
       expect(init.http).toBe(200);
       served = (await client.listTools()).map((tool) => tool.name);
-      if (!served.includes('stop_shipment_tracking')) return;
+      // A gateway that drops the default write toolsets would skip every case
+      // and pass. Fail instead (MCP_EVAL_ALLOW_SPARSE=1 to allow).
+      const allowSparse =
+        process.env.MCP_EVAL_ALLOW_SPARSE === '1' ||
+        process.env.MCP_EVAL_ALLOW_SPARSE === 'true';
+      const missing = missingDefaultWriteTools(served);
+      if (missing.length > 0 && !allowSparse) {
+        throw new Error(
+          `the gateway does not list the default write tools ${missing.join(', ')}; ` +
+            'check its T49_MCP_TOOLSETS, or set MCP_EVAL_ALLOW_SPARSE=1 to permit skipping.',
+        );
+      }
+
+      const shipments = await client.callTool('list_shipments', {
+        advanced_filters: { q: EVAL_FIXTURE_REF },
+        include_stopped_tracking: true,
+        page_size: 25,
+      });
+      fixture = selectFixtureShipment(
+        fixtureItems('list_shipments', shipments),
+      );
 
       const parties = structured(
-        await client.callTool('list_parties', { limit: 1 }),
+        await client.callTool('list_parties', {
+          search: EVAL_PARTY_NAME,
+          limit: 50,
+        }),
       );
-      const firstParty = Array.isArray(parties.parties)
-        ? parties.parties.find(isRecord)
-        : undefined;
-      partyId =
-        firstParty && typeof firstParty.id === 'string'
-          ? firstParty.id
-          : undefined;
-
-      // Takes the first shipment. The case skips if it is already stopped.
-      const shipments = await client.callTool('list_shipments', {
-        page_size: 10,
-      });
-      const first = fixtureItems('list_shipments', shipments).find(
-        (item) => isRecord(item) && typeof item.id === 'string',
-      );
-      shipmentId =
-        isRecord(first) && typeof first.id === 'string' ? first.id : undefined;
+      partyId = selectEvalParty(parties.parties);
     });
 
     it('stops a shipment with a confirmed preview, then resumes it', async ({
       skip,
     }) => {
-      // The gateway lists these tools only when its toolsets include operations.
-      if (!served.includes('stop_shipment_tracking') || !shipmentId) {
-        return skip();
+      if (!served.includes('stop_shipment_tracking') || !fixture) {
+        return skip(NO_FIXTURE);
       }
+      const shipmentId = fixture.id;
 
       const preview = await client.callTool('stop_shipment_tracking', {
         shipment_id: shipmentId,
@@ -142,9 +164,10 @@ if (!enableWrite || !sandboxToken) {
     });
 
     it('refuses a stop with an edited confirmation token', async ({ skip }) => {
-      if (!served.includes('stop_shipment_tracking') || !shipmentId) {
-        return skip();
+      if (!served.includes('stop_shipment_tracking') || !fixture) {
+        return skip(NO_FIXTURE);
       }
+      const shipmentId = fixture.id;
 
       const preview = structured(
         await client.callTool('stop_shipment_tracking', {
@@ -171,33 +194,32 @@ if (!enableWrite || !sandboxToken) {
     it('adds a reference number, then removes it with a confirmed preview', async ({
       skip,
     }) => {
-      if (!served.includes('add_reference_numbers') || !shipmentId) {
-        return skip();
+      if (!served.includes('add_reference_numbers') || !fixture) {
+        return skip(NO_FIXTURE);
       }
-      const target = { entity_type: 'shipment', entity_id: shipmentId };
+      const target = { entity_type: 'shipment', entity_id: fixture.id };
       const refNumber = `MCP-EVAL-${Date.now().toString(36).toUpperCase()}`;
 
-      let needsRemove = false;
+      let removed = false;
       try {
         const added = await client.callTool('add_reference_numbers', {
           ...target,
           add: [refNumber],
         });
-        needsRemove = structured(added).status === 'added';
         expect(added.isError).toBe(false);
         expect(structured(added).status).toBe('added');
         expect(structured(added).ref_numbers).toContain(refNumber);
 
-        const removed = await confirmed('remove_reference_numbers', {
+        const result = await confirmed('remove_reference_numbers', {
           ...target,
           remove: [refNumber],
         });
-        if (removed.status === 'removed') needsRemove = false;
-        expect(removed.status).toBe('removed');
-        expect(removed.ref_numbers).not.toContain(refNumber);
+        removed = result.status === 'removed';
+        expect(result.status).toBe('removed');
+        expect(result.ref_numbers).not.toContain(refNumber);
       } finally {
-        // Leave the sandbox shipment's list as it was even when an assert failed.
-        if (needsRemove) {
+        // A number that was never added comes back not_present, unchanged.
+        if (!removed) {
           await confirmed('remove_reference_numbers', {
             ...target,
             remove: [refNumber],
@@ -206,53 +228,58 @@ if (!enableWrite || !sandboxToken) {
       }
     });
 
-    it('assigns a party, then unassigns it with a confirmed preview', async ({
+    it('assigns the eval party, then unassigns it with a confirmed preview', async ({
       skip,
     }) => {
-      if (!served.includes('assign_party') || !shipmentId || !partyId) {
-        return skip();
+      if (!served.includes('assign_party') || !fixture) {
+        return skip(NO_FIXTURE);
       }
-      const target = { entity_type: 'shipment', entity_id: shipmentId };
+      const target = { entity_type: 'shipment', entity_id: fixture.id };
 
+      // The first run creates the eval party; later runs find it by name.
       const assigned = structured(
         await client.callTool('assign_party', {
           ...target,
           role: 'notify_party',
-          party_id: partyId,
+          ...(partyId
+            ? { party_id: partyId }
+            : { party_name: EVAL_PARTY_NAME, create_party_if_missing: true }),
         }),
       );
-      // Never remove a role this run did not create.
-      if (assigned.status === 'already_present') return skip();
-      expect(assigned.status).toBe('assigned');
       const role = isRecord(assigned.party_role) ? assigned.party_role : {};
+      // A role this run created, or one an earlier run left on the fixture.
+      const ours =
+        typeof role.id === 'string' &&
+        (assigned.status === 'assigned' ||
+          (role.party_name === EVAL_PARTY_NAME &&
+            (!partyId || role.party_id === partyId)));
       const unassign = () =>
         confirmed('unassign_party', { ...target, party_role_id: role.id });
 
-      let needsUnassign = true;
+      let unassigned = false;
       try {
-        expect(typeof role.id).toBe('string');
-        const unassigned = await unassign();
-        if (unassigned.status === 'unassigned') needsUnassign = false;
-        expect(unassigned.status).toBe('unassigned');
-        expect(unassigned.undo).toBe('assign_party');
+        expect(assigned.status).toBe('assigned');
+        expect(role.party_name).toBe(EVAL_PARTY_NAME);
+        if (partyId) expect(role.party_id).toBe(partyId);
+        const result = await unassign();
+        unassigned = result.status === 'unassigned';
+        expect(result.status).toBe('unassigned');
+        expect(result.undo).toBe('assign_party');
       } finally {
-        if (needsUnassign && typeof role.id === 'string') await unassign();
+        if (ours && !unassigned) await unassign();
       }
     });
 
-    it('sets a custom field, then updates and clears it with confirmed previews', async ({
+    it('sets the eval custom field, then updates and clears it with confirmed previews', async ({
       skip,
     }) => {
-      if (!sandboxBearer) {
+      if (!cfg.user) {
         return skip(
           'Custom fields reject API keys. Set MCP_EVAL_SANDBOX_BEARER to a sandbox user token.',
         );
       }
-      const user = new EvalClient({
-        endpoint,
-        scheme: 'Bearer',
-        token: sandboxBearer,
-      });
+      if (!fixture) return skip(NO_FIXTURE);
+      const user = new EvalClient(cfg.user);
       expect((await user.initialize()).http).toBe(200);
       const tools = (await user.listTools()).map((tool) => tool.name);
       if (!tools.includes('set_custom_field')) return skip();
@@ -273,16 +300,6 @@ if (!enableWrite || !sandboxToken) {
         'MCP_EVAL_SANDBOX_BEARER must belong to the MCP_EVAL_SANDBOX_TOKEN account',
       ).toBe(sandboxAccount);
 
-      const shipments = await user.callTool('list_shipments', {
-        page_size: 1,
-      });
-      const shipment = fixtureItems('list_shipments', shipments).find(
-        (item) => isRecord(item) && typeof item.id === 'string',
-      );
-      if (!isRecord(shipment) || typeof shipment.id !== 'string') {
-        return skip();
-      }
-
       const listed = structured(
         await user.callTool('list_custom_field_definitions', {
           entity_type: 'shipment',
@@ -292,18 +309,16 @@ if (!enableWrite || !sandboxToken) {
         Array.isArray(listed.definitions),
         String(listed.custom_fields_note),
       ).toBe(true);
-      const definition = Array.isArray(listed.definitions)
-        ? listed.definitions.find(
-            (item) => isRecord(item) && item.data_type === 'short_text',
-          )
-        : undefined;
-      if (!isRecord(definition) || typeof definition.api_slug !== 'string') {
-        return skip();
+      const apiSlug = selectEvalDefinition(listed.definitions);
+      if (!apiSlug) {
+        return skip(
+          `The sandbox account has no short_text shipment custom field ${EVAL_CUSTOM_FIELD_SLUG}.`,
+        );
       }
       const target = {
         entity_type: 'shipment',
-        entity_id: shipment.id,
-        api_slug: definition.api_slug,
+        entity_id: fixture.id,
+        api_slug: apiSlug,
       };
       const value = `MCP-EVAL-${Date.now().toString(36).toUpperCase()}`;
       const confirmedAsUser = async (args: Record<string, unknown>) => {
@@ -319,13 +334,12 @@ if (!enableWrite || !sandboxToken) {
         );
       };
 
-      const set = structured(
-        await user.callTool('set_custom_field', { ...target, value }),
-      );
-      // Never touch a value this run did not set.
-      if (set.status === 'already_set') return skip();
-      let needsClear = set.status === 'set';
       try {
+        const set = structured(
+          await user.callTool('set_custom_field', { ...target, value }),
+        );
+        // A value an earlier run left behind. The clear below removes it.
+        if (set.status === 'already_set') return skip();
         expect(set.status).toBe('set');
         expect(set.value).toBe(value);
 
@@ -337,42 +351,37 @@ if (!enableWrite || !sandboxToken) {
         expect(updated.previous_value).toBe(value);
 
         const cleared = await confirmedAsUser({ ...target, clear: true });
-        if (cleared.status === 'cleared') needsClear = false;
         expect(cleared.status).toBe('cleared');
         expect(cleared.undo).toBe('set_custom_field');
       } finally {
-        if (needsClear) await confirmedAsUser({ ...target, clear: true });
+        // The field is eval-only, so it ends every run empty. An empty field
+        // comes back not_set, unchanged.
+        await confirmedAsUser({ ...target, clear: true });
       }
     });
 
-    it('relinks a document and previews a document fix without confirming it', async ({
+    it('previews a document fix on the fixture shipment without confirming it', async ({
       skip,
     }) => {
-      // The gateway lists these tools only when its toolsets include
+      // The gateway lists update_document only when its toolsets include
       // documents_write.
-      if (
-        !served.includes('relink_document') ||
-        !served.includes('update_document')
-      ) {
-        return skip();
+      if (!served.includes('update_document') || !fixture) {
+        return skip(NO_FIXTURE);
       }
+      if (!fixture.billOfLading) return skip();
       const documents = structured(
-        await client.callTool('list_documents', { page_size: 1 }),
+        await client.callTool('list_documents', {
+          reference: fixture.billOfLading,
+          page_size: 25,
+        }),
       );
-      const first = Array.isArray(documents.items)
-        ? documents.items.find(isRecord)
-        : undefined;
-      if (!first || typeof first.id !== 'string') return skip();
+      const documentId = selectFixtureDocument(documents.items, fixture.id);
+      if (!documentId) return skip();
 
-      const relinked = await client.callTool('relink_document', {
-        id: first.id,
-      });
-      expect(relinked.isError).toBe(false);
-      expect(['accepted', 'noop']).toContain(structured(relinked).status);
-
+      // No confirmation_token, so nothing is written.
       const preview = structured(
         await client.callTool('update_document', {
-          id: first.id,
+          id: documentId,
           action: 'reextract',
         }),
       );
