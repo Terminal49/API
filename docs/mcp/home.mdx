@@ -143,7 +143,7 @@ The toolset names are:
 
 - `core`: every tool except the document reads and the write tools below. `whoami` reports the toolsets a session serves.
 - `documents`: `list_documents` and `get_document`.
-- `operations`: `stop_shipment_tracking`, `resume_shipment_tracking`, and `cancel_tracking_request`. The hosted server at `mcp.terminal49.com` does not serve this toolset yet. A self-hosted server serves it when `T49_MCP_TOOLSETS` lists it.
+- `operations`: `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, and `unassign_party`. The hosted server at `mcp.terminal49.com` does not serve this toolset yet. A self-hosted server serves it when `T49_MCP_TOOLSETS` lists it.
 - `documents_write`: no tools yet.
 - `developer`: no tools yet.
 
@@ -171,7 +171,7 @@ Input and output recording is disabled by default. Leave `SENTRY_MCP_RECORD_INPU
 
 Signed URLs, such as a document download link, are replaced with `[REDACTED_URL]` in logs, Sentry, and PostHog, even when output recording is on. Confirmation tokens are replaced with `[REDACTED_CONFIRMATION_TOKEN]` in the same places.
 
-Each call to a write tool, `track_container` included, logs one `mcp.write.audit` event, adds a Sentry breadcrumb, and sends a PostHog event when the account is known. The event names the tool, its tier, the phase, the outcome, the record type and ID, the account ID, and the credential type. It never carries values, reference numbers, party names, URLs, or tokens.
+Each call to a write tool, `track_container` included, logs one `mcp.write.audit` event, adds a Sentry breadcrumb, and sends a PostHog event when the account is known. The event names the tool, its tier, the phase, the outcome, the record type and ID, the account ID, and the credential type. It never carries values, reference numbers, party names, URLs, or tokens. When `assign_party` creates a party, it logs a second event with the record type `party`, the new party ID, and the outcome `created`.
 
 ---
 
@@ -656,7 +656,7 @@ Find the companies on the account's shipments (customers, shippers, consignees, 
 **Parameters**
 
 - `id` *(uuid, optional)* - one party to read, such as `party_id` from a party role. When you pass `id`, the tool ignores `search` and `limit`. An unknown ID returns no parties. A party with no company name comes back with its name, else its nickname, else its ID, as `name`.
-- `search` *(string, optional)* - company name or part of one; case and punctuation are ignored.
+- `search` *(string, optional)* - company name, name or nickname, or part of one; case and punctuation are ignored.
 - `limit` *(number, optional)* - most parties to return. Default 25, maximum 50.
 
 **Good for**
@@ -863,7 +863,7 @@ Extracted data and the source email are text that people outside your account wr
 
 ### Write tools
 
-The `operations` toolset holds three tools that change your account's data. The hosted server does not serve them yet. Each write tool has a tier:
+The `operations` toolset holds seven tools that change your account's data. The hosted server does not serve them yet. Each write tool has a tier:
 
 - **Tier A** tools run in one call. The result names the tool that undoes the change.
 - **Tier C** tools need a confirmed preview. They are marked destructive, so most AI clients ask you before each call.
@@ -879,7 +879,7 @@ A token expires after 5 minutes. It works only for the same tool, arguments, acc
 The confirmation step makes sure you see the current state before a destructive change. Terminal49 still decides what your credential can do.
 </Note>
 
-Write tools return these results with `isError: false`, so the AI client can explain them: `rate_limited` when Terminal49 limits the request rate, with `retry_after_s` when Terminal49 says how long to wait, `not_permitted` when the server is not set up to confirm changes, and the codes listed for each tool. Each of these results says that nothing was changed.
+Write tools return these results with `isError: false`, so the AI client can explain them: `rate_limited` when Terminal49 limits the request rate, with `retry_after_s` when Terminal49 says how long to wait, `not_permitted` when the server is not set up to confirm changes, and the codes listed for each tool. Each of these results says that nothing was changed, except when `assign_party` created a party it could not link.
 
 ---
 
@@ -945,6 +945,111 @@ Cancel a tracking request that Terminal49 is still working on, such as one with 
 - "Cancel the tracking request I made with the wrong carrier."
 
 **REST equivalent**: [PATCH /tracking_requests/{id}/cancel](/api-docs/api-reference/tracking-requests/cancel-a-tracking-request)
+
+---
+
+### `add_reference_numbers`
+
+Add reference numbers, such as PO or job numbers, to a container, shipment, or tracking request. Tier A.
+
+**Parameters**
+- `entity_type` *(string, required)* – `container`, `shipment`, or `tracking_request`
+- `entity_id` *(uuid, required)* – the record's UUID
+- `add` *(string[], required)* – 1 to 20 reference numbers, each up to 64 characters. Matching is exact after trimming spaces from both these numbers and the numbers on the record.
+
+**Returns**
+- `status: "added"` with the list before (`previous`), the list after (`ref_numbers`), the numbers `added` and `already_present`, and `undo: "remove_reference_numbers"`
+- `status: "already_present"` when every number is already on the record. Nothing is sent, so asking twice changes nothing.
+- `concurrent_change_detected` – the tool reads the record again after the change. This is `true` when the list it reads differs from the list it sent, which means someone else changed the list at the same time. It is `null` when the record could not be read again.
+- `status: "noop"` when Terminal49 refuses the list. Nothing changed.
+- `unreadable_reference_numbers` when Terminal49 returns the record's list in a form the tool cannot read. Nothing changed.
+
+Terminal49 replaces the whole list on each change, so the tool sends the numbers already on the record plus the new ones. Empty (null) entries in the list hold no number, and the tool leaves them out.
+
+**Good for**
+- "Tag MSCU1234565 with PO 4500123."
+
+**REST equivalent**: [PATCH /containers/{id}](/api-docs/api-reference/containers/edit-a-container), [PATCH /shipments/{id}](/api-docs/api-reference/shipments/edit-a-shipment), [PATCH /tracking_requests/{id}](/api-docs/api-reference/tracking-requests/edit-a-tracking-request)
+
+---
+
+### `remove_reference_numbers`
+
+Remove reference numbers from a container, shipment, or tracking request. Tier C, because searches, filters, and integrations that use a removed number stop finding the record.
+
+**Parameters**
+- `entity_type` *(string, required)* – `container`, `shipment`, or `tracking_request`
+- `entity_id` *(uuid, required)* – the record's UUID
+- `remove` *(string[], required)* – 1 to 20 reference numbers, each up to 1000 characters. Matching works as in `add_reference_numbers`.
+- `confirmation_token` *(string, optional)* – leave it out to get a preview. Send it only after you approve that preview.
+
+**Returns**
+- Without a token: a `preview` with the list now, the list after, the numbers it would remove, and the numbers that are not on the record, and a `confirmation_token`
+- `status: "removed"` with `previous`, `ref_numbers`, `removed`, `concurrent_change_detected`, and `undo: "add_reference_numbers"`
+- `status: "not_present"` when none of the numbers are on the record. No token is issued.
+- `status: "noop"` when Terminal49 refuses the shorter list. Nothing changed.
+- `unreadable_reference_numbers` when Terminal49 returns the record's list in a form the tool cannot read. No token is issued.
+
+The token covers the whole list. If any reference number on the record changes after the preview, you get a new preview.
+
+**Good for**
+- "Remove the wrong PO number from this shipment."
+
+**REST equivalent**: [PATCH /containers/{id}](/api-docs/api-reference/containers/edit-a-container), [PATCH /shipments/{id}](/api-docs/api-reference/shipments/edit-a-shipment), [PATCH /tracking_requests/{id}](/api-docs/api-reference/tracking-requests/edit-a-tracking-request)
+
+---
+
+### `assign_party`
+
+Link a party, such as a customer, shipper, or dray carrier, to a container or shipment in a role. Tier A.
+
+**Parameters**
+- `entity_type` *(string, required)* – `container` or `shipment`
+- `entity_id` *(uuid, required)* – the record's UUID
+- `role` *(string, required)* – `shipper`, `consignee`, `notify_party`, `customs_broker`, `customer`, `freight_forwarder`, or `pickup_dray_carrier`. A container accepts only `pickup_dray_carrier`. Assign other roles on its shipment.
+- `party_id` *(uuid, optional)* – the party's UUID, such as an `id` from `list_parties`
+- `party_name` *(string, optional)* – the party's company name, name or nickname. It must match one party exactly, ignoring case and punctuation. Send `party_id` or `party_name`, not both.
+- `create_party_if_missing` *(boolean, optional)* – with `party_name`, create the party when no party has that name as its company name, name, or nickname (default: false)
+
+**Returns**
+- `status: "assigned"` with the new `party_role` (`id`, `role`, `party_id`, `party_name`), `party_created`, `other_parties_in_role`, and `undo: "unassign_party"`
+- `status: "already_present"` when the party already has this role on the record. Nothing is sent, so asking twice changes nothing.
+- `party_not_found` with the closest names in `candidates` when no party matches
+- `ambiguous_party` with `candidates` when more than one party has the name
+- `party_lookup_incomplete` when your account has more than 1000 parties. The tool cannot check a name against all of them, so it does not use or create a party by name. Send `party_id` instead.
+- `status: "noop"` when Terminal49 refuses the assignment
+
+The tool creates a party only when no party has that name. If two requests try to create the same party at once, the second one finds and reuses the first one's party. If the tool created a party but could not link it, the result says so with `party_created: true` and the new party in `created_party`. This applies to `noop`, `rate_limited`, and `party_not_linked`, which covers any other failure. It also applies to `already_present` when another request linked the new party in the same role at the same time.
+
+**Good for**
+- "Make Ray Drayage the dray carrier on MSCU1234565."
+- "Set Acme Imports as the customer on this shipment."
+
+**REST equivalent**: [POST /shipments/{id}/party_roles](/api-docs/api-reference/party-roles/assign-a-shipment-party-role), [POST /containers/{id}/party_roles](/api-docs/api-reference/party-roles/assign-a-container-party-role), [POST /parties](/api-docs/api-reference/parties/create-a-party)
+
+---
+
+### `unassign_party`
+
+Remove one party role from a container or shipment. Tier C. Only the link is removed. The party and its other assignments stay.
+
+**Parameters**
+- `entity_type` *(string, required)* – `container` or `shipment`
+- `entity_id` *(uuid, required)* – the record's UUID
+- `party_role_id` *(uuid, required)* – the party role `id` from `get_container` with `include: ["party_roles"]`, or from `get_shipment_details` with `include_party_roles`
+- `confirmation_token` *(string, optional)* – leave it out to get a preview. Send it only after you approve that preview.
+
+**Returns**
+- Without a token: a `preview` with the role and the party, and a `confirmation_token`
+- `status: "unassigned"` with the removed `party_role` and `undo: "assign_party"`
+- `status: "not_assigned"` with the record's current party roles when it has no role with that ID. No token is issued.
+
+To replace a party, unassign the old one, then assign the new one.
+
+**Good for**
+- "The customer on this shipment is wrong. Change it to Acme Imports."
+
+**REST equivalent**: [DELETE /shipments/{id}/party_roles/{id}](/api-docs/api-reference/party-roles/remove-a-shipment-party-role), [DELETE /containers/{id}/party_roles/{id}](/api-docs/api-reference/party-roles/remove-a-container-party-role)
 
 ---
 
@@ -1063,13 +1168,13 @@ These Terminal49 API capabilities are available through the [SDK](/api-docs/in-d
 
 | API | Description | Workaround |
 |-----|-------------|------------|
-| `update_shipment` | Update shipment ref numbers/tags | Use [REST API](/api-docs/api-reference/shipments/edit-a-shipment) |
+| `update_shipment` | Update shipment tags and user-provided booking or Bill of Lading numbers | Use [REST API](/api-docs/api-reference/shipments/edit-a-shipment) |
 | `raw_events` | Get raw EDI event data | Use [REST API](/api-docs/api-reference/containers/get-a-containers-raw-events) |
 | Container refresh | Ask the carrier and terminal for fresh container data | Use [REST API](/api-docs/api-reference/containers/refresh-container) |
 | Webhooks | Real-time event notifications | Configure via the [webhooks guide](/api-docs/in-depth-guides/webhooks) |
 
 <Info>
-Stopping and resuming shipment tracking, and cancelling a tracking request, are MCP tools in the `operations` toolset. The hosted server does not serve that toolset yet. Editing a shipment still needs the REST API or the SDK.
+Stopping and resuming shipment tracking, cancelling a tracking request, editing reference numbers, and assigning parties are MCP tools in the `operations` toolset. The hosted server does not serve that toolset yet. Other shipment edits still need the REST API or the SDK.
 </Info>
 
 ---
