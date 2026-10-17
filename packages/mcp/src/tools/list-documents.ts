@@ -7,6 +7,7 @@
 
 import type { Terminal49Client } from '@terminal49/sdk';
 import { z } from 'zod';
+import { stringLinks } from './api-fields.js';
 import {
   DOCUMENTS_NOT_ENABLED,
   documentSummarySchema,
@@ -130,15 +131,6 @@ function toRows(records: readonly unknown[]): DocumentSummary[] {
     const parsed = rawDocumentSchema.safeParse(record);
     return parsed.success ? [toDocumentSummary(parsed.data)] : [];
   });
-}
-
-/** Keeps the pagination links the API sends as strings; null means no page. */
-function stringLinks(links: Record<string, unknown>): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(links).filter(
-      (entry): entry is [string, string] => typeof entry[1] === 'string',
-    ),
-  );
 }
 
 export async function executeListDocuments(

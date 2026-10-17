@@ -34,3 +34,14 @@ export const relationshipList = z
   })
   .nullable()
   .catch(null);
+
+/** Keeps the pagination links the API sends as strings; null means no page. */
+export function stringLinks(
+  links: Record<string, unknown>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(links).filter(
+      (entry): entry is [string, string] => typeof entry[1] === 'string',
+    ),
+  );
+}
