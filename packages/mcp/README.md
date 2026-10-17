@@ -443,7 +443,7 @@ The token proves that a preview of the current state was produced. It blocks bli
 
 The HTTP gateway reads `T49_MCP_CONFIRMATION_SECRET` and has no fallback, because serverless instances share no memory. Without a secret of at least 32 characters, tier C tools return `not_permitted` and the server logs `mcp.config.error`. Set it in Vercel before you serve `operations`. stdio uses the variable when it is set, and otherwise makes a random secret per process. Rotating the secret only means an open preview must be requested again.
 
-Each call to an `operations` tool emits one `mcp.write.audit` event to the log and a Sentry breadcrumb, and to PostHog when the account is known. It carries the tool, tier, phase, outcome, entity type and ID, account ID and credential type, and nothing else. Values, reference numbers, party names, URLs and tokens never reach it.
+Each call to a write tool, `track_container` included, emits one `mcp.write.audit` event to the log and a Sentry breadcrumb, and to PostHog when the account is known. It carries the tool, tier, phase, outcome, entity type and ID, account ID and credential type, and nothing else. Values, reference numbers, party names, URLs and tokens never reach it.
 
 ---
 

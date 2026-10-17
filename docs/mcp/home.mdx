@@ -171,7 +171,7 @@ Input and output recording is disabled by default. Leave `SENTRY_MCP_RECORD_INPU
 
 Signed URLs, such as a document download link, are replaced with `[REDACTED_URL]` in logs, Sentry, and PostHog, even when output recording is on. Confirmation tokens are replaced with `[REDACTED_CONFIRMATION_TOKEN]` in the same places.
 
-Each call to a write tool in the `operations` toolset logs one `mcp.write.audit` event, adds a Sentry breadcrumb, and sends a PostHog event when the account is known. The event names the tool, its tier, the phase, the outcome, the record type and ID, the account ID, and the credential type. It never carries values, reference numbers, party names, URLs, or tokens.
+Each call to a write tool, `track_container` included, logs one `mcp.write.audit` event, adds a Sentry breadcrumb, and sends a PostHog event when the account is known. The event names the tool, its tier, the phase, the outcome, the record type and ID, the account ID, and the credential type. It never carries values, reference numbers, party names, URLs, or tokens.
 
 ---
 
@@ -879,7 +879,7 @@ A token expires after 5 minutes. It works only for the same tool, arguments, acc
 The confirmation step makes sure you see the current state before a destructive change. Terminal49 still decides what your credential can do.
 </Note>
 
-Write tools return these results with `isError: false`, so the AI client can explain them: `rate_limited` when Terminal49 limits the request rate, `not_permitted` when the server is not set up to confirm changes, and the codes listed for each tool. Each of these results says that nothing was changed.
+Write tools return these results with `isError: false`, so the AI client can explain them: `rate_limited` when Terminal49 limits the request rate, with `retry_after_s` when Terminal49 says how long to wait, `not_permitted` when the server is not set up to confirm changes, and the codes listed for each tool. Each of these results says that nothing was changed.
 
 ---
 

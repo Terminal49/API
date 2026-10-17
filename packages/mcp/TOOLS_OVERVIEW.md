@@ -567,7 +567,7 @@ The `operations` tools change account data. Each has a tier. A tier A tool runs 
 
 A token works only for the same tool, arguments, account and credential, before it expires, and while the record still matches the preview. Otherwise the call changes nothing and returns `invalid_confirmation` with a `reason` (`malformed`, `mismatch` or `expired`), or `stale_preview` with a new preview and token when the record changed. On a server with no confirmation secret, tier C tools return `not_permitted`. See [Confirming writes](README.md#confirming-writes).
 
-Every write tool returns these soft results with `isError: false`: `rate_limited` for a 429, and the tool's own codes below. All of them say that nothing was changed.
+Every write tool returns these soft results with `isError: false`: `rate_limited` for a 429, with `retry_after_s` when Terminal49 sent a `Retry-After` header, and the tool's own codes below. All of them say that nothing was changed.
 
 ### 22. `stop_shipment_tracking`
 **Purpose**: Stop carrier and terminal updates for a shipment and all its containers. Tier C.
