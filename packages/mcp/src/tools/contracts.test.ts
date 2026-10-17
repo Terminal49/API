@@ -4,7 +4,9 @@ import {
   NotFoundError,
   type Terminal49Client,
 } from '@terminal49/sdk';
-import { describe, expect, it, vi } from 'vite-plus/test';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import { executeCancelTrackingRequest } from './cancel-tracking-request.js';
+import { tokenOf, writeContext } from '../test/write-context.js';
 import { executeGetContainer } from './get-container.js';
 import { executeGetContainerRoute } from './get-container-route.js';
 import { executeGetContainerTransportEvents } from './get-container-transport-events.js';
@@ -12,7 +14,9 @@ import { executeGetShipmentDetails } from './get-shipment-details.js';
 import { executeListContainers } from './list-containers.js';
 import { executeListShipments } from './list-shipments.js';
 import { executeListTrackingRequests } from './list-tracking-requests.js';
+import { executeResumeShipmentTracking } from './resume-shipment-tracking.js';
 import { executeSearchContainer } from './search-container.js';
+import { executeStopShipmentTracking } from './stop-shipment-tracking.js';
 import { executeTrackContainer } from './track-container.js';
 import { buildListContract } from '../server.js';
 import { EXPECTED_ROUTE_SUMMARY, routeFixture } from '../test/route-fixture.js';
@@ -1770,5 +1774,151 @@ describe('MCP tool contracts', () => {
     expect(result.containers.every((c) => c.duplicate_number === true)).toBe(
       true,
     );
+  });
+});
+
+describe('MCP write tool contracts', () => {
+  const SHIPMENT_ID = '0b5e3a1c-7d2f-4e6a-8b9c-1d2e3f4a5b6c';
+  const REQUEST_ID = '6c1f0d52-8a3e-4b9f-9d21-0e5f4a7b8c90';
+
+  function rawShipment(stoppedAt: string | null) {
+    return {
+      data: {
+        id: SHIPMENT_ID,
+        type: 'shipment',
+        attributes: {
+          bill_of_lading_number: 'MAEU123456789',
+          shipping_line_scac: 'MAEU',
+          line_tracking_stopped_at: stoppedAt,
+          line_tracking_stopped_reason: stoppedAt ? 'user' : null,
+        },
+        relationships: {
+          containers: { data: [{ id: 'container-1', type: 'container' }] },
+        },
+      },
+    };
+  }
+
+  function rawTrackingRequest(status: string) {
+    return {
+      data: {
+        id: REQUEST_ID,
+        type: 'tracking_request',
+        attributes: {
+          request_number: 'MAEU123456780',
+          request_type: 'bill_of_lading',
+          scac: 'MAEU',
+          status,
+          failed_reason: null,
+        },
+        relationships: { tracked_object: { data: null } },
+      },
+    };
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('stop_shipment_tracking previews, then stops with the token', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const stopTracking = vi
+      .fn()
+      .mockResolvedValue(rawShipment('2026-10-17T12:00:00Z'));
+    const client = asClient({
+      me: vi.fn().mockResolvedValue({
+        features: { stop_tracking: { status: 'available' } },
+      }),
+      shipments: {
+        get: vi.fn().mockResolvedValue(rawShipment(null)),
+        stopTracking,
+      },
+    });
+
+    const preview = await executeStopShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      writeContext(client),
+    );
+    expect(stopTracking).not.toHaveBeenCalled();
+    const result = await executeStopShipmentTracking(
+      {
+        shipment_id: SHIPMENT_ID,
+        confirmation_token: tokenOf(preview),
+      },
+      client,
+      writeContext(client),
+    );
+
+    expect(stopTracking).toHaveBeenCalledWith(SHIPMENT_ID, { format: 'raw' });
+    expect(result).toMatchObject({
+      status: 'stopped',
+      shipment: { id: SHIPMENT_ID, tracking: 'stopped', container_count: 1 },
+      undo: 'resume_shipment_tracking',
+    });
+  });
+
+  it('resume_shipment_tracking resumes a stopped shipment in one call', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const resumeTracking = vi.fn().mockResolvedValue(rawShipment(null));
+    const client = asClient({
+      shipments: {
+        get: vi.fn().mockResolvedValue(rawShipment('2026-10-10T08:00:00Z')),
+        resumeTracking,
+      },
+    });
+
+    const result = await executeResumeShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      writeContext(client),
+    );
+
+    expect(resumeTracking).toHaveBeenCalledWith(SHIPMENT_ID, {
+      format: 'raw',
+    });
+    expect(result).toMatchObject({
+      status: 'resumed',
+      shipment: { id: SHIPMENT_ID, tracking: 'active' },
+      undo: 'stop_shipment_tracking',
+    });
+  });
+
+  it('cancel_tracking_request previews, then cancels with the token', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const get = vi
+      .fn()
+      .mockResolvedValueOnce(rawTrackingRequest('pending'))
+      .mockResolvedValueOnce(rawTrackingRequest('pending'))
+      .mockResolvedValueOnce(rawTrackingRequest('cancelled'));
+    const cancel = vi.fn().mockResolvedValue({});
+    const client = asClient({ trackingRequests: { get, cancel } });
+
+    const preview = await executeCancelTrackingRequest(
+      { tracking_request_id: REQUEST_ID },
+      client,
+      writeContext(client),
+    );
+    expect(preview).toMatchObject({
+      preview: {
+        current: { id: REQUEST_ID, scac: 'MAEU', status: 'pending' },
+        proposed: { status: 'cancelled' },
+      },
+    });
+    expect(cancel).not.toHaveBeenCalled();
+    const result = await executeCancelTrackingRequest(
+      {
+        tracking_request_id: REQUEST_ID,
+        confirmation_token: tokenOf(preview),
+      },
+      client,
+      writeContext(client),
+    );
+
+    expect(cancel).toHaveBeenCalledWith(REQUEST_ID, { format: 'raw' });
+    expect(result).toMatchObject({
+      status: 'cancelled',
+      tracking_request: { id: REQUEST_ID, status: 'cancelled' },
+    });
   });
 });
