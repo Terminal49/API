@@ -2,7 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server now provides **13 specialized tools** and **4 MCP resources** for comprehensive container tracking and shipment management.
+The Terminal49 MCP Server provides **14 tools** and **4 MCP resources** for container tracking and shipment management.
+
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. Every tool below is in the `core` toolset. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 

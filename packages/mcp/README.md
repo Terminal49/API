@@ -373,6 +373,9 @@ npm run lint
 |----------|----------|---------|-------------|
 | `T49_API_TOKEN` | ✅ Yes | - | Terminal49 API token |
 | `T49_API_BASE_URL` | No | `https://api.terminal49.com/v2` | API base URL |
+| `T49_MCP_TOOLSETS` | No | `core,documents` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
+| `T49_MCP_READ_ONLY` | No | `false` | Serve only tools whose `readOnlyHint` is true. Accepts `true`, `false`, `1` or `0`, in any case. |
+| `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | `false` | Serve toolsets other than `core` when callers share `T49_API_TOKEN` |
 | `OPENAI_APPS_CHALLENGE` | Only for ChatGPT submission | - | Exact domain-verification token issued by the OpenAI submission portal |
 | `NODE_ENV` | No | `development` | Environment |
 | `LOG_LEVEL` | No | `info` | Logging level |
@@ -389,6 +392,17 @@ npm run lint
 > Only enable `SENTRY_MCP_RECORD_INPUTS` or `SENTRY_MCP_RECORD_OUTPUTS` after confirming that your Sentry project is approved to store shipment identifiers, references, and customer data.
 
 Credential headers (`Authorization`, cookies, and any header whose name contains auth, token, secret, cookie, session, api-key, password, or signature) and request cookies are removed from every error and transaction event before it is sent, regardless of `SENTRY_SEND_DEFAULT_PII`.
+
+### Toolsets
+
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. Every tool today is in `core`.
+
+- `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
+- The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
+- `X-T49-MCP-Read-Only: true` or `T49_MCP_READ_ONLY=true` removes every tool whose `readOnlyHint` is false, including `track_container`. Both accept `true`, `false`, `1` or `0`, in any case. Any other header value returns 400. The header cannot turn off read-only mode that the env turned on.
+- The server instructions name only the tools the session serves.
+- When the gateway uses one shared `T49_API_TOKEN`, it serves only `core` unless `T49_MCP_ALLOW_SHARED_TOKEN_WRITES=true`.
+- Toolsets are never read from the connector URL. The OAuth resource stays the root origin.
 
 ---
 
