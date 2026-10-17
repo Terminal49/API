@@ -147,7 +147,7 @@ Input and output recording is disabled by default. Leave `SENTRY_MCP_RECORD_INPU
 ## Tools reference
 
 <Note>
-Every tool is read-only except `track_container`, which creates a tracking request. If your account already has a container or an in-progress tracking request for the number, `track_container` returns it instead of creating a new request. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one.
+Every tool is read-only except `track_container`, which creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one.
 </Note>
 
 ### `search_container`
@@ -219,8 +219,8 @@ Find containers by container number, BL, booking, or your own reference. This is
 
 Start tracking a container, bill of lading, or booking number. The tool first searches your account for the number:
 
-- If a container already tracks it, the tool returns that container's details.
 - If a tracking request for it is still in progress, with status `pending` or `awaiting_manifest`, the tool returns that request and its status. When you pass `scac`, only an in-progress request under the same SCAC counts.
+- If a container with exactly that number is still being tracked, the tool returns that container's details. A container whose shipment has stopped tracking does not count, because container numbers are reused on later voyages.
 - Otherwise the tool creates a tracking request. If the API reports that the number is already tracked, the tool returns `source: "duplicate"`, the existing `tracking_request.id`, and `shipment_id` when the request has a shipment. `message` holds the API's explanation, which can name a different number that the existing request is stored under.
 
 Check `tracking_request_created` in the result. It is `false` when the tool returned an existing container, an in-progress request, or a duplicate. Container numbers are checked against the ISO 6346 check digit before the tool calls the API.
