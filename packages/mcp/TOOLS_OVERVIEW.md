@@ -595,7 +595,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 14 tools and 4 resources, the LLM can:
+With these 21 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates
