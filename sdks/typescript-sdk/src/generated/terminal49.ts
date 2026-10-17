@@ -1785,7 +1785,7 @@ export interface components {
                         id?: string;
                         /** @enum {string} */
                         type?: "shipment";
-                    };
+                    } | null;
                 };
                 pickup_facility?: {
                     data?: {

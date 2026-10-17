@@ -16611,7 +16611,8 @@
                           "shipment"
                         ]
                       }
-                    }
+                    },
+                    "nullable": true
                   }
                 }
               },
