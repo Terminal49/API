@@ -196,7 +196,16 @@ const NON_FILTER_LIST_ARGS = new Set([
  */
 const PLAUSIBLE_TOTAL_THRESHOLD = 1000;
 
-function buildContentPayload(result: unknown): ToolContent[] {
+// Record writes report per-record outcomes (failed IDs, records not reached, a
+// write that may have applied) that a summary line would hide from text-only
+// clients, so their text content is the whole result.
+const FULL_RESULT_TEXT_TOOLS = new Set(['set_party_role', 'set_custom_field']);
+
+function buildContentPayload(toolName: string, result: unknown): ToolContent[] {
+  if (FULL_RESULT_TEXT_TOOLS.has(toolName)) {
+    return [{ type: 'text', text: formatAsText(result) }];
+  }
+
   if (result && typeof result === 'object' && (result as any).summary) {
     return [{ type: 'text', text: formatAsText((result as any).summary) }];
   }
@@ -858,7 +867,10 @@ function wrapTool<TArgs>(
         [],
         toolName,
       );
-      const content: ToolContent[] = buildContentPayload(structuredContent);
+      const content: ToolContent[] = buildContentPayload(
+        toolName,
+        structuredContent,
+      );
 
       if (buildResourceLinks) {
         content.push(...buildResourceLinks(structuredContent, args));
@@ -1010,11 +1022,18 @@ export interface Terminal49McpServerTelemetry {
   authSource?: McpAuthSource;
 }
 
+/**
+ * @param writeDeadlineAt Epoch ms by which set_party_role and set_custom_field
+ *   stop waiting on records. The HTTP gateway sets it from the request start so
+ *   auth time counts against the function limit; without it each call gets
+ *   CALL_BUDGET_MS from when it starts.
+ */
 export function createTerminal49McpServer(
   apiToken: string,
   apiBaseUrl?: string,
   accountId?: string,
   telemetry: Terminal49McpServerTelemetry = {},
+  writeDeadlineAt?: number,
 ): McpServer {
   const client = new Terminal49Client({
     apiToken,
@@ -1551,7 +1570,7 @@ export function createTerminal49McpServer(
       outputSchema: recordWriteOutputSchema,
     },
     wrapTool('set_party_role', async (args: SetPartyRoleArgs) =>
-      executeSetPartyRole(args, client),
+      executeSetPartyRole(args, client, writeDeadlineAt),
     ),
   );
 
@@ -1575,7 +1594,7 @@ export function createTerminal49McpServer(
       outputSchema: recordWriteOutputSchema,
     },
     wrapTool('set_custom_field', async (args: SetCustomFieldArgs) =>
-      executeSetCustomField(args, client),
+      executeSetCustomField(args, client, writeDeadlineAt),
     ),
   );
 

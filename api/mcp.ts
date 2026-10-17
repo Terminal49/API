@@ -15,6 +15,7 @@ import {
 import { toNodeHandler } from '@modelcontextprotocol/node';
 import * as Sentry from '@sentry/node';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
+import { CALL_BUDGET_MS } from '../packages/mcp/src/tools/record-writes.js';
 import { flushPostHogEvents } from '../packages/mcp/src/posthog.js';
 import { captureMcpException } from '../packages/mcp/src/sentry.js';
 import { protectedResourceMetadataUrl } from '../packages/mcp/src/resource.js';
@@ -385,6 +386,8 @@ export default async function handler(
   res: ResponseLike,
 ): Promise<void> {
   const requestId = buildRequestId();
+  // vercel.json caps this function at 30s from the request, auth included.
+  const writeDeadlineAt = Date.now() + CALL_BUDGET_MS;
   setCorsHeaders(res);
   logLifecycle('mcp.request.start', requestId, {
     method: req.method ?? 'UNKNOWN',
@@ -647,6 +650,7 @@ export default async function handler(
             transport: 'http',
             authSource: resolvedTerminal49Auth.authSource,
           },
+          writeDeadlineAt,
         ),
       {
         legacy: 'stateless',

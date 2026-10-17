@@ -19,7 +19,8 @@ import type {
 const MAX_RECORDS = 50;
 const CONCURRENCY = 5;
 // The hosted /mcp function stops at 30s (vercel.json maxDuration). Stop working
-// on records well before that so the caller still gets the result back.
+// on records well before that so the caller still gets the result back. The
+// gateway starts this budget when the request arrives, so auth time counts too.
 export const CALL_BUDGET_MS = 20_000;
 
 export const CONTAINER_PARTY_ROLES = [
@@ -191,11 +192,14 @@ async function applyEach(
     unchanged: number;
     failed: number;
   }) => string,
+  deadlineAt: number,
 ): Promise<RecordWriteResult> {
   // The SDK cannot cancel a request, so the call stops waiting at the deadline
   // instead; an SDK request may take 30s and retry, past the function limit.
   const deadline = new AbortController();
-  const timer = setTimeout(() => deadline.abort(), CALL_BUDGET_MS);
+  const remainingMs = deadlineAt - Date.now();
+  if (remainingMs <= 0) deadline.abort();
+  const timer = setTimeout(() => deadline.abort(), Math.max(remainingMs, 0));
   const outOfTime = new Promise<'out_of_time'>((resolve) =>
     deadline.signal.addEventListener('abort', () => resolve('out_of_time')),
   );
@@ -270,6 +274,7 @@ const partyRoleListSchema = z.object({
 export async function executeSetPartyRole(
   args: SetPartyRoleArgs,
   client: Terminal49Client,
+  deadlineAt = Date.now() + CALL_BUDGET_MS,
 ): Promise<RecordWriteResult> {
   const { container_ids, shipment_ids, role, party_id, action } =
     setPartyRoleInputSchema.parse(args);
@@ -350,6 +355,7 @@ export async function executeSetPartyRole(
     ({ updated, unchanged, failed }) =>
       `${PARTY_ROLE_VERBS[action]} ${role} on ${records(updated, noun)}; ` +
       `${unchanged} already ${PARTY_ROLE_UNCHANGED[action]}; ${failed} failed.`,
+    deadlineAt,
   );
 }
 
@@ -374,6 +380,7 @@ const sameValue = (a: unknown, b: unknown) => comparable(a) === comparable(b);
 export async function executeSetCustomField(
   args: SetCustomFieldArgs,
   client: Terminal49Client,
+  deadlineAt = Date.now() + CALL_BUDGET_MS,
 ): Promise<RecordWriteResult> {
   const { entity, ids, api_slug, value } =
     setCustomFieldInputSchema.parse(args);
@@ -399,5 +406,6 @@ export async function executeSetCustomField(
     ({ updated, unchanged, failed }) =>
       `${value === null ? 'Cleared' : 'Set'} ${api_slug} on ${records(updated, entity)}; ` +
       `${unchanged} already ${value === null ? 'empty' : 'had that value'}; ${failed} failed.`,
+    deadlineAt,
   );
 }

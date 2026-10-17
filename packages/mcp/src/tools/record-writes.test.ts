@@ -539,6 +539,27 @@ describe('set_custom_field', () => {
     });
   });
 
+  it('touches no record when the deadline passed before the call started', async () => {
+    const client = fakeClient();
+    client.containers.customFields.mockResolvedValue([]);
+
+    const result = await executeSetCustomField(
+      { entity: 'container', ids: [C1, C2], api_slug: 'sales_rep', value: 'X' },
+      client,
+      Date.now() - 1,
+    );
+
+    expect(client.containers.customFields).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      updated: [],
+      unchanged: [],
+      failed: [],
+      not_attempted: [C1, C2],
+      summary:
+        'Set sales_rep on 0 containers; 0 already had that value; 0 failed. Ran out of time before 2 more; call again with not_attempted.',
+    });
+  });
+
   it('sets a value where it differs and leaves matching records alone', async () => {
     const client = fakeClient();
     client.containers.customFields.mockImplementation(async (id: string) =>
