@@ -130,6 +130,20 @@ describe('get_location', () => {
     });
   });
 
+  it.each([401, 500])(
+    'fails instead of dropping the time zone when the port lookup answers %i',
+    async (status) => {
+      const { client } = fakeApiClient({
+        [`GET /terminals/${TERMINAL_ID}`]: { body: terminal },
+        [`GET /ports/${PORT_ID}`]: { status },
+      });
+
+      await expect(
+        executeGetLocation({ kind: 'terminal', id: TERMINAL_ID }, client),
+      ).rejects.toMatchObject({ status });
+    },
+  );
+
   it('returns a metro area without a city', async () => {
     const { client } = fakeApiClient({
       [`GET /metro_areas/${METRO_ID}`]: {

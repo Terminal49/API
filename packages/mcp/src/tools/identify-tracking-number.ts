@@ -155,22 +155,20 @@ const searchHitSchema = z.object({
   }),
 });
 
-const rawSearchSchema = z.object({
-  data: z
-    .array(z.unknown())
-    .catch([])
-    .transform((items) =>
-      items.flatMap((item) => {
-        const parsed = searchHitSchema.safeParse(item);
-        return parsed.success ? [parsed.data] : [];
-      }),
-    ),
-});
+const rawSearchSchema = z.object({ data: z.array(searchHitSchema) });
+
+/** `/search` returns at most this many hits, so a full page may omit the exact one. */
+const SEARCH_RESULT_CAP = 25;
 
 type AlreadyTracked = Pick<
   TrackingNumberIdentification,
   'already_tracked' | 'already_tracked_note'
 >;
+
+const UNKNOWN: AlreadyTracked = {
+  already_tracked: null,
+  already_tracked_note: ALREADY_TRACKED_UNKNOWN_NOTE,
+};
 
 /**
  * The account's containers, shipments, and in-progress tracking requests whose
@@ -186,19 +184,17 @@ async function findAlreadyTracked(
     raw = await client.search(number);
   } catch (error) {
     if (httpStatus(error) === 429) throw error;
-    return {
-      already_tracked: null,
-      already_tracked_note: ALREADY_TRACKED_UNKNOWN_NOTE,
-    };
+    return { ...UNKNOWN };
   }
 
-  const hits = rawSearchSchema
-    .parse(raw)
-    .data.filter(
-      (hit) =>
-        hit.attributes.number !== null &&
-        normalizeTrackingNumber(hit.attributes.number) === number,
-    );
+  const parsed = rawSearchSchema.safeParse(raw);
+  if (!parsed.success) return { ...UNKNOWN };
+  const page = parsed.data.data;
+  const hits = page.filter(
+    (hit) =>
+      hit.attributes.number !== null &&
+      normalizeTrackingNumber(hit.attributes.number) === number,
+  );
   const records = (entityTypes: readonly string[]) =>
     hits
       .filter((hit) => entityTypes.includes(hit.attributes.entity_type ?? ''))
@@ -212,7 +208,9 @@ async function findAlreadyTracked(
   const containers = records(['cargo', 'container']);
   const shipments = records(['shipment']);
   if (!request && containers.length === 0 && shipments.length === 0) {
-    return { already_tracked: null };
+    return page.length < SEARCH_RESULT_CAP
+      ? { already_tracked: null }
+      : { ...UNKNOWN };
   }
   return {
     already_tracked: {
