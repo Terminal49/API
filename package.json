@@ -24,7 +24,6 @@
     "sdk:docs": "npm run docs --workspace @terminal49/sdk"
   },
   "dependencies": {
-    "mintlify": "^4.2.939",
     "openapi-fetch": "^0.15.2",
     "openapi-typescript": "^7.13.0"
   },
@@ -35,15 +34,6 @@
     "vite-plus": "0.3.3"
   },
   "overrides": {
-    "@mintlify/previewing": {
-      "express": "4.22.2"
-    },
-    "@mintlify/scraping": {
-      "zod": "3.25.76"
-    },
-    "@mintlify/validation": {
-      "zod": "3.25.76"
-    },
     "@terminal49/sdk": {
       "typedoc": {
         "minimatch": {
@@ -51,17 +41,10 @@
         }
       }
     },
-    "axios": "^1.16.0",
     "brace-expansion": "5.0.6",
-    "chromium-bidi": {
-      "zod": "3.23.8"
-    },
-    "express-rate-limit": "^8.5.2",
     "fast-uri": "^3.1.8",
     "hono": "^4.12.16",
-    "ip-address": "^10.1.1",
     "js-yaml": "^4.3.1",
-    "lodash": "^4.18.1",
     "minimatch": {
       "brace-expansion": "5.0.6"
     },
@@ -69,13 +52,11 @@
       "brace-expansion": "5.0.6"
     },
     "postcss": "^8.5.28",
-    "rollup": "^4.60.4",
     "typedoc": {
       "minimatch": {
         "brace-expansion": "5.0.6"
       }
     },
-    "uuid": "^11.1.1",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3",
     "vitest": "4.1.11"
   },

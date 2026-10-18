@@ -59,7 +59,7 @@ For substantive documentation writing, use the repo-local skill at `skills/termi
 ## Build and Development Commands
 
 ### Docs
-- Preview locally: `cd docs && mintlify dev`
+- Preview locally: `cd docs && npx -y mintlify@latest dev` (the CLI is not a repo dependency)
 - Lint the OpenAPI spec: `spectral lint --ruleset .spectral.mjs docs/openapi.json`
 - Regenerate Postman: `openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,enableOptionalParameters=false`
 
@@ -117,11 +117,11 @@ Standard commands live in **Build and Development Commands** above; the notes be
 ### Products & how to run them (nothing here is a long-running backend — MCP/SDK are clients of the external Terminal49 API at `https://api.terminal49.com/v2`)
 - **SDK** (`@terminal49/sdk`): unit tests are fixture-based and need no network/token (`npm run test --workspace @terminal49/sdk -- --run`). `smoke`/`example` scripts hit the live API and need `T49_API_TOKEN`.
 - **MCP** (`@terminal49/mcp`): build then run the stdio server with `npm run mcp:stdio` (or `node packages/mcp/dist/index.js`). `initialize` + `tools/list` work **without** a token (see the quick-verification snippet in `packages/mcp/LOCAL_DEV.md`); a *successful* `tools/call` result needs a real `T49_API_TOKEN` (without one, tools return a generic Terminal49 error — the wiring still runs). The `api/` HTTP gateway (Path 2/3) additionally needs the Vercel CLI + a local backend and is optional.
-- **Docs** (`docs/`): see the mintlify gotcha below.
+- **Docs** (`docs/`): see the mintlify note below.
 
-### `mintlify dev` gotcha (docs preview)
-- Running `mintlify dev` / local `npx mintlify` **from inside this monorepo fails** — it reports `Unable to parse page metadata` for nearly every page and aborts with `Failed to parse MDX files`. The MDX/frontmatter is valid; the cause is the root `package.json` `overrides` (which pin `zod`/`express`/etc. inside `@mintlify/*` transitive deps) bleeding into the workspace-hoisted `mintlify` and breaking its parser.
-- **Workaround:** run an isolated mintlify install from the docs dir: `cd docs && npx -y mintlify@latest dev`. This serves all pages on `http://localhost:3000`. (Docs deploy via the hosted Mintlify Git integration and CI does not run the preview, so this only affects local preview.)
+### `mintlify dev` (docs preview)
+- The Mintlify CLI is not a workspace dependency. It pulled hundreds of packages, and most of the repo's `npm audit` findings, into the shared lockfile, and the root `overrides` broke its MDX parser when it was hoisted here.
+- Run it in isolation from the docs dir: `cd docs && npx -y mintlify@latest dev`. This serves all pages on `http://localhost:3000`. (Docs deploy via the hosted Mintlify Git integration and CI does not run the preview, so this only affects local preview.)
 
 ### No local secrets by default
 - No `T49_API_TOKEN` is provisioned in the Cloud VM, so live SDK/MCP calls against the Terminal49 API can't be exercised without one (matches CI, where the live MCP eval skips without `MCP_EVAL_TOKEN`).
