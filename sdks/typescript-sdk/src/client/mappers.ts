@@ -11,6 +11,7 @@ import type {
   TrackingRequest,
   CurrentAccount,
   CurrentCredential,
+  TrackingSlots,
   CurrentUser,
   Vessel,
   VesselPosition,
@@ -572,9 +573,35 @@ function mapCurrentAccount(
     plan: attrs.plan ?? undefined,
   };
   if (trackingSlots && 'tracking_slots' in attrs) {
-    account.trackingSlots = attrs.tracking_slots ?? null;
+    account.trackingSlots = mapTrackingSlots(attrs.tracking_slots);
   }
   return account;
+}
+
+// Map the known fields only. The backend adds fields to this object over time, and
+// consumers with strict output schemas (the MCP whoami tool) must not see them leak through.
+function mapTrackingSlots(raw: any): TrackingSlots | null {
+  if (raw == null) return null;
+  for (const key of [
+    'limit',
+    'used',
+    'active_containers',
+    'pending_tracking_requests',
+    'remaining',
+  ]) {
+    if (typeof raw[key] !== 'number') {
+      throw new Error(
+        `Invalid /me response: tracking_slots.${key} must be a number`,
+      );
+    }
+  }
+  return {
+    limit: raw.limit,
+    used: raw.used,
+    activeContainers: raw.active_containers,
+    pendingTrackingRequests: raw.pending_tracking_requests,
+    remaining: raw.remaining,
+  };
 }
 
 /** Map a `GET /me` document to a {@link CurrentCredential}. */

@@ -260,8 +260,15 @@ export interface FeatureAvailability {
 
 /** Tracking-slot usage on free and trial plans. */
 export interface TrackingSlots {
+  /** Slots the plan allows. */
   limit: number;
+  /** Slots in use: active containers plus pending requests, deduplicated by container number. */
   used: number;
+  /** Slots held by containers currently being tracked. */
+  activeContainers: number;
+  /** Slots reserved by tracking requests that have not resolved yet. */
+  pendingTrackingRequests: number;
+  /** Slots still available, never below zero. */
   remaining: number;
 }
 
