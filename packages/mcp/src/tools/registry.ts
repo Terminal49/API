@@ -13,6 +13,7 @@ export const TOOLSETS = [
   'operations',
   'documents_write',
   'developer',
+  'trade',
 ] as const;
 
 export type Toolset = (typeof TOOLSETS)[number];
@@ -41,11 +42,12 @@ export interface ToolDefinition {
 function readTool<const Name extends string>(
   name: Name,
   title: string,
+  toolset: Toolset = 'core',
 ): ToolDefinition & { name: Name } {
   return {
     name,
     title,
-    toolset: 'core',
+    toolset,
     tier: 'read',
     annotations: {
       readOnlyHint: true,
@@ -92,6 +94,13 @@ export const TOOL_REGISTRY = [
     },
   },
   readTool('whoami', 'Who Am I'),
+  readTool('search_importers', 'Search US Importers', 'trade'),
+  readTool('get_importer_profile', 'Get Importer Profile', 'trade'),
+  readTool('search_commodities', 'Search Commodities', 'trade'),
+  readTool('rank_importers', 'Rank US Importers', 'trade'),
+  readTool('get_trade_trends', 'Get Trade Trends', 'trade'),
+  readTool('get_trade_breakdown', 'Get Trade Breakdown', 'trade'),
+  readTool('get_trade_data_coverage', 'Get Trade Data Coverage', 'trade'),
 ] as const satisfies readonly ToolDefinition[];
 
 export type RegisteredTool = (typeof TOOL_REGISTRY)[number];
@@ -99,7 +108,11 @@ export type RegisteredTool = (typeof TOOL_REGISTRY)[number];
 export type ToolName = RegisteredTool['name'];
 
 /** Toolsets served when the operator sets no `T49_MCP_TOOLSETS`. */
-export const DEFAULT_TOOLSETS: readonly Toolset[] = ['core', 'documents'];
+export const DEFAULT_TOOLSETS: readonly Toolset[] = [
+  'core',
+  'documents',
+  'trade',
+];
 
 export interface ToolSelection {
   toolsets: readonly Toolset[];

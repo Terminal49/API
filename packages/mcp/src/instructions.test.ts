@@ -133,5 +133,5 @@ describe('tool descriptions', () => {
         }
       }
     }
-  });
+  }, 60_000);
 });

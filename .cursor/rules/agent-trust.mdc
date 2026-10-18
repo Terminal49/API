@@ -1,0 +1,14 @@
+---
+description: Terminal49/API paved path and verification gate
+alwaysApply: true
+---
+
+# Agent trust gate
+
+- Extend OpenAPI endpoints, npm packages, and MCP tools through
+  `skills/agent-trust/references/paved-path.md`.
+- Keep `skills/agent-trust/feature-map.json` synchronized with MCP tool
+  registrations, SDK package exports, and non-generated SDK/MCP docs routes.
+- Run `npm run agent-verify` before handing off code changes. Do not claim a
+  passing result from `agent-verify:quick`.
+- Keep generated files generated and credentials out of this public repository.
