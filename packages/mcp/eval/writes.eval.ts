@@ -15,10 +15,11 @@
  * and skips without it. It fails before any write when that user's account
  * is not the MCP_EVAL_SANDBOX_TOKEN account.
  *
- * cancel_tracking_request has no live case: a cancel cannot be undone, and
- * every run would have to create a new, billable tracking request. Its
- * fixture tests cover it. update_document is only previewed: its actions
- * cannot be undone exactly, and reextract uses processing time.
+ * cancel_tracking_request and relink_document have no live case. A cancel
+ * cannot be undone, and every run would have to create a new, billable
+ * tracking request. A relink cannot be undone exactly. Their fixture tests
+ * cover them. update_document is only previewed: its actions cannot be undone
+ * exactly, and reextract uses processing time.
  */
 
 import { beforeAll, describe, expect, it } from 'vite-plus/test';
@@ -346,15 +347,10 @@ if (!enableWrite || !sandboxToken) {
       }
     });
 
-    it('relinks a document and previews a document fix without confirming it', async ({
-      skip,
-    }) => {
-      // The gateway lists these tools only when its toolsets include
+    it('previews a document fix without confirming it', async ({ skip }) => {
+      // The gateway lists update_document only when its toolsets include
       // documents_write.
-      if (
-        !served.includes('relink_document') ||
-        !served.includes('update_document')
-      ) {
+      if (!served.includes('update_document')) {
         return skip();
       }
       const documents = structured(
@@ -365,12 +361,7 @@ if (!enableWrite || !sandboxToken) {
         : undefined;
       if (!first || typeof first.id !== 'string') return skip();
 
-      const relinked = await client.callTool('relink_document', {
-        id: first.id,
-      });
-      expect(relinked.isError).toBe(false);
-      expect(['accepted', 'noop']).toContain(structured(relinked).status);
-
+      // No confirmation_token, so nothing is written.
       const preview = structured(
         await client.callTool('update_document', {
           id: first.id,
