@@ -133,12 +133,12 @@ describe('webhook telemetry', () => {
     // Guard against a vacuous pass: the tools returned webhooks, and every
     // sink saw the calls.
     expect(JSON.stringify(results[0]?.structuredContent)).toContain(
-      'hooks.example.com',
+      '[redacted].[redacted].example.com:8443',
     );
     expect(failed.isError).toBe(true);
     const sentry = sentryEnvelopes.join('\n');
     expect(sentry).toContain('list_webhooks');
-    expect(sentry).toContain('hooks.example.com');
+    expect(sentry).toContain('[redacted].[redacted].example.com:8443');
     const posthog = postHogBodies.join('\n');
     expect(posthog).toContain('list_webhook_notifications');
     const logs = logLines.join('\n');
