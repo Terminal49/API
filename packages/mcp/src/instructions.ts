@@ -121,6 +121,19 @@ const PARAGRAPHS: readonly Paragraph[] = [
       },
     ],
   },
+  {
+    aboutTools: true,
+    segments: [
+      {
+        text: [
+          "Trade intelligence (search_importers, get_importer_profile, search_commodities, rank_importers, get_trade_trends, get_trade_breakdown, get_trade_data_coverage) answers market questions about US ocean imports: who imports a product, what a named company imports and how that is changing, where goods come from, and port, carrier, and lane volumes. It is built from US Customs bill-of-lading records from January 2022 to today, refreshed daily, and is enabled per account; if a tool says it isn't enabled, tell the user to contact support@terminal49.com and don't retry or invent figures.",
+          'Resolve first, then analyze: search_importers for a company (use its exact company_name), search_commodities for a product (check common_goods before trusting an HS4 code). Then get_importer_profile for one company (months: 24 for a year-over-year trend; the company filter in trends is a substring match), rank_importers for "who imports X", get_trade_trends for change over time, get_trade_breakdown for mix and share. Most answers take two to five calls.',
+          "Read the numbers carefully: volume is physical containers, each counted once; values are estimates, not declared customs values; trends and breakdowns include the current, incomplete month unless until is set, so a last-period drop is usually that; history starts in January 2022, not where the default two-year trends window begins. A company can appear under several names and once per state, and some importers keep their names off the records or ship under a forwarder, so low or missing volume is a floor, not the company's size. Forwarders and customs brokers appear among importers. A high share_as_notify_party is a clue, not proof: large cargo owners can also be listed mostly as notify party, so also weigh the name (LOGISTICS, FREIGHT, SHIPPING, CUSTOMS, BROKERAGE) and the product mix before calling a company a forwarder. Don't add volumes across products or companies. Carriers appear under spelling variants; merge them before computing shares.",
+          'Answer in plain language: lead with the takeaway, name the period, round numbers, and describe caveats in everyday words rather than field names.',
+        ].join('\n'),
+      },
+    ],
+  },
 ];
 
 function mentionedTools(text: string): ToolName[] {
@@ -133,13 +146,27 @@ function isWriteTool(tool: RegisteredTool): tool is WriteTool {
   return tool.tier !== 'read';
 }
 
+/** Which data the registered tools read. */
+function dataScope(names: ReadonlySet<ToolName>): string {
+  const trade = names.has('search_importers');
+  if (!names.has('search_docs')) {
+    return trade
+      ? " The trade intelligence tools read US import market data, not the account's shipments."
+      : " All tools operate within the user's private Terminal49 account.";
+  }
+  if (!trade) {
+    return " All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation.";
+  }
+  const accountTools = names.has('whoami')
+    ? 'The shipment, container, tracking, party, and whoami tools'
+    : 'All tools except search_docs and the trade intelligence tools';
+  return ` ${accountTools} operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation; the trade intelligence tools read US import market data, not the account's shipments.`;
+}
+
 /** Which tools change account records, and the rules for using them. */
 function writeRules(tools: readonly RegisteredTool[]): string[] {
   const writes = tools.filter(isWriteTool);
-  const names = new Set(tools.map((tool) => tool.name));
-  const scope = names.has('search_docs')
-    ? " All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation."
-    : " All tools operate within the user's private Terminal49 account.";
+  const scope = dataScope(new Set(tools.map((tool) => tool.name)));
 
   if (writes.length === 0) {
     return [

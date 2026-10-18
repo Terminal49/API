@@ -136,6 +136,40 @@ describe('Terminal49Client transport resilience', () => {
     }
   });
 
+  it('counts network and 5xx retries against one maxRetries budget', async () => {
+    vi.useFakeTimers();
+    try {
+      const outcomes = ['throw', 'throw', 503, 503, 200] as const;
+      let attempt = 0;
+      const fetchImpl = vi.fn(async () => {
+        const outcome = outcomes[attempt++];
+        if (outcome === 'throw') throw new TypeError('fetch failed');
+        if (outcome === 503) {
+          return jsonResponse({ error: 'Data source error' }, 503);
+        }
+        return jsonResponse({ results: [] });
+      });
+
+      const client = new Terminal49Client({
+        apiToken: 'token-123',
+        apiBaseUrl: baseUrl,
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+        maxRetries: 2,
+      });
+
+      const resultPromise = client.tradeIntel.searchCommodities({
+        query: 'office chairs',
+      });
+      const assertion =
+        expect(resultPromise).rejects.toBeInstanceOf(UpstreamError);
+      await vi.advanceTimersByTimeAsync(10_000);
+      await assertion;
+      expect(fetchImpl).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('waits for the Retry-After header before retrying a 429', async () => {
     vi.useFakeTimers();
     try {
