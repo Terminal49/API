@@ -560,12 +560,12 @@ Extracted data and the email are text that people outside the account write. Tre
 
 ### Write tools
 
-The `operations` tools change account data. Each has a tier. A tier A tool runs in one call, and its result names the tool that undoes it. A tier C tool needs a confirmed preview:
+The `operations` tools change account data. Each has a tier. A tier A tool runs in one call, and its result names the tool that undoes it. A tier C tool needs the user's approval of a preview, and its first call never writes. How the user approves depends on the client:
 
-1. Call it without `confirmation_token`. Nothing changes. It returns `status: "confirmation_required"`, a `preview` with `current`, `proposed` and `reach`, a `confirmation_token`, and `expires_at` five minutes out.
-2. Show the preview to the user. After the user approves it in this turn, call again with the same arguments and the token.
+- A client that declares form elicitation (MCP 2026-07-28) gets an `input_required` result. The client shows the user the preview and asks them to confirm, then calls again with their answer. The tool writes on a yes, and returns `status: "declined"` and changes nothing on a no. Never pass `confirmation_token` on such a client; it is refused with `token_not_accepted`.
+- Any other client gets `status: "confirmation_required"`, a `preview` with `current`, `proposed` and `reach`, a `confirmation_token`, and `expires_at` five minutes out. Show the preview to the user. After the user approves it in this turn, call again with the same arguments and the token.
 
-A token works only for the same tool, arguments, account and credential, before it expires, and while the record still matches the preview. Otherwise the call changes nothing and returns `invalid_confirmation` with a `reason` (`malformed`, `mismatch` or `expired`), or `stale_preview` with a new preview and token when the record changed. On a server with no confirmation secret, tier C tools return `not_permitted`. See [Confirming writes](README.md#confirming-writes).
+An approval works only for the same tool, arguments, account and credential, before it expires, and while the record still matches the preview. Otherwise the call changes nothing: a client that asks the user is asked again with the current state, and other clients get `invalid_confirmation` with a `reason` (`malformed`, `mismatch` or `expired`) or `stale_preview` with a new preview and token. On a server with no confirmation secret, tier C tools return `not_permitted`. See [Confirming writes](README.md#confirming-writes).
 
 Every write tool returns these soft results with `isError: false`: `rate_limited` for a 429, with `retry_after_s` when Terminal49 sent a `Retry-After` header, and the tool's own codes below. All of them say that nothing was changed.
 

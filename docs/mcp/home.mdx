@@ -867,14 +867,15 @@ Extracted data and the source email are text that people outside your account wr
 The `operations` toolset holds three tools that change your account's data. The hosted server does not serve them yet. Each write tool has a tier:
 
 - **Tier A** tools run in one call. The result names the tool that undoes the change.
-- **Tier C** tools need a confirmed preview. They are marked destructive, so most AI clients ask you before each call.
+- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, so Claude Code asks you before each call in every permission mode.
 
-A tier C call works in two steps:
+The first call of a tier C tool never changes anything. It reads the record and builds a preview of the record now and after the change. How you approve the preview depends on your AI client.
 
-1. The AI client calls the tool without `confirmation_token`. Nothing changes. The tool returns `status: "confirmation_required"`, a `preview` of the record now and after the change, a `confirmation_token`, and `expires_at`.
-2. You approve the preview. The client calls the tool again with the same arguments and the token.
+**Clients that can ask you directly.** On MCP protocol revision 2026-07-28, a client that declares form elicitation (Claude Code and Claude Desktop do) gets an `input_required` result. The client shows you the preview and asks you to confirm. If you confirm, the client calls the tool again and the change is made. If you decline or dismiss the dialog, the tool returns `status: "declined"` and nothing changes. The AI model never sees a token it could pass back, so only you can approve the change. A `confirmation_token` sent on such a client is refused with `token_not_accepted`.
 
-A token expires after 5 minutes. It works only for the same tool, arguments, account, and credential. If the record changed after the preview, the tool returns `stale_preview` with a new preview and token, and changes nothing. A wrong, edited, or expired token returns `invalid_confirmation`. The server tells your AI client to show you the preview and never to send a token you have not approved.
+**Other clients.** The tool returns `status: "confirmation_required"`, the `preview`, a `confirmation_token`, and `expires_at`. You approve the preview in the chat, and the client calls the tool again with the same arguments and the token.
+
+Either way, the approval expires after 5 minutes and works only for the same tool, arguments, account, and credential. If the record changed after you saw the preview, nothing changes: a client that asks you directly shows you the current state and asks again, and other clients get `stale_preview` with a new preview and token. A wrong, edited, or expired token returns `invalid_confirmation`.
 
 <Note>
 The confirmation step makes sure you see the current state before a destructive change. Terminal49 still decides what your credential can do.
