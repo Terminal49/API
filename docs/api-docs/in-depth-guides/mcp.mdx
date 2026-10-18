@@ -352,6 +352,9 @@ The `vercel.json` configures the MCP server (excerpt):
 | `T49_API_BASE_URL` | No | Override API URL (default: `https://api.terminal49.com/v2`) |
 | `T49_MCP_ALLOWED_HOSTS` | No | Comma-separated host allowlist for request Host validation |
 | `T49_MCP_ALLOWED_ORIGINS` | No | Comma-separated origin allowlist for request Origin validation |
+| `T49_MCP_TOOLSETS` | No | Comma-separated toolsets the server allows; defaults to `core,documents,trade`. An unknown name or a value made only of commas stops stdio and fails HTTP requests |
+| `T49_MCP_READ_ONLY` | No | Serves only read-only tools when set to `true` or `1`; defaults to `false` |
+| `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | Serves toolsets other than `core` and `trade` when callers share `T49_API_TOKEN`; defaults to `false` |
 | `SENTRY_DSN` | No | Enables Sentry MCP Monitoring |
 | `SENTRY_ENVIRONMENT` | No | Sentry environment name; defaults to `NODE_ENV` |
 | `SENTRY_RELEASE` | No | Sentry release identifier; defaults to `VERCEL_GIT_COMMIT_SHA` |
@@ -359,6 +362,8 @@ The `vercel.json` configures the MCP server (excerpt):
 | `SENTRY_MCP_RECORD_INPUTS` | No | Records MCP inputs in Sentry when set to `true`; defaults to `false` |
 | `SENTRY_MCP_RECORD_OUTPUTS` | No | Records MCP outputs in Sentry when set to `true`; defaults to `false` |
 | `SENTRY_SEND_DEFAULT_PII` | No | Enables Sentry default PII behavior; defaults to `false` |
+
+Clients can remove tools per request with the `X-T49-MCP-Toolsets` and `X-T49-MCP-Read-Only` headers. A header can only narrow what the env allows. See [Limit the tools](/mcp/home#limit-the-tools).
 
 ---
 

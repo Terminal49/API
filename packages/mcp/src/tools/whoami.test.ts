@@ -1,21 +1,18 @@
-import type { CurrentCredential, Terminal49Client } from '@terminal49/sdk';
+import type { CurrentCredential } from '@terminal49/sdk';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { executeWhoami } from './whoami.js';
 
 const ACCOUNT_ID = 'b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a';
 const OTHER_ACCOUNT_ID = 'c8f3d0b2-6e4a-4f9c-8d1b-2a3f4e5d6c7b';
 
-function clientReturning(me: CurrentCredential) {
+function contextReturning(me: CurrentCredential) {
   const meFn = vi.fn().mockResolvedValue(me);
-  // SAFETY: executeWhoami only calls `client.me`, so a stub with that one method stands in
-  // for the full SDK client.
-  const client = { me: meFn } as unknown as Terminal49Client;
-  return { client, me: meFn };
+  return { context: { me: meFn }, me: meFn };
 }
 
 describe('executeWhoami', () => {
   it('describes an API key without a user and with an empty switch list', async () => {
-    const { client, me } = clientReturning({
+    const { context, me } = contextReturning({
       id: 'key-1',
       kind: 'api_key',
       channel: 'api',
@@ -34,9 +31,9 @@ describe('executeWhoami', () => {
       user: null,
     });
 
-    const result = await executeWhoami(client);
+    const result = await executeWhoami(context);
 
-    expect(me).toHaveBeenCalledWith({ format: 'mapped' });
+    expect(me).toHaveBeenCalledOnce();
     expect(result).toEqual({
       kind: 'api_key',
       channel: 'api',
@@ -58,7 +55,7 @@ describe('executeWhoami', () => {
   });
 
   it('describes a signed-in user and lists only the accounts they could switch to', async () => {
-    const { client } = clientReturning({
+    const { context } = contextReturning({
       id: 'user-1',
       kind: 'user',
       channel: 'mcp',
@@ -83,7 +80,7 @@ describe('executeWhoami', () => {
       },
     });
 
-    const result = await executeWhoami(client);
+    const result = await executeWhoami(context);
 
     expect(result.kind).toBe('user');
     expect(result.credential_name).toBeNull();
