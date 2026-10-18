@@ -236,6 +236,30 @@
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
     },
+    "list_documents": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Lists document metadata on the account without modifying any document.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_document": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads one document's metadata and, on request, its extracted data, source email and a short-lived download link, without modifying the document.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
     "search_importers": {
       "annotations": {
         "readOnlyHint": true,

@@ -111,6 +111,22 @@ describe('sanitizeMcpLogEvent', () => {
     expect((result.nested as any).safe_value).toBe('visible');
   });
 
+  it('redacts signed URLs from values under any key', () => {
+    const url =
+      'https://bucket.s3.amazonaws.com/a.pdf?X-Amz-Expires=3600&X-Amz-Signature=abc';
+    const result = sanitizeMcpLogEvent({
+      event: 'test',
+      detail: `fetched ${url}`,
+      nested: { links: [url] },
+    });
+
+    expect(result).toEqual({
+      event: 'test',
+      detail: 'fetched [REDACTED_URL]',
+      nested: { links: ['[REDACTED_URL]'] },
+    });
+  });
+
   it('preserves non-sensitive operational fields', () => {
     const input = {
       event: 'tool.execute.complete',

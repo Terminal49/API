@@ -668,6 +668,71 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
+    // ---- document reads ----
+
+    it('list_documents returns compact rows or explains the gate', async () => {
+      const { result, score } = await evaluate(
+        'list_documents',
+        { page_size: 5 },
+        {
+          predicates: [
+            {
+              name: 'rows without extracted data, or an explained gate',
+              test: (p) =>
+                isRecord(p) &&
+                (p.error === 'FeatureNotEnabled' ||
+                  (Array.isArray(p.items) &&
+                    p.items.every(
+                      (row) => isRecord(row) && !('extracted_data' in row),
+                    ))),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('get_document labels extracted data untrusted and keeps the download URL out of text', async ({
+      skip,
+    }) => {
+      const list = await client.callTool('list_documents', { page_size: 1 });
+      const first = listItems(list.payload)[0];
+      if (!first || typeof first.id !== 'string') return skip();
+      const id = first.id;
+      const { result, score } = await evaluate(
+        'get_document',
+        { id, include_extracted_data: true, include_download_url: true },
+        {
+          requiredKeys: ['id', 'document_type', 'has_extracted_data'],
+          predicates: [
+            { name: 'id round-trips', test: (p) => readString(p, 'id') === id },
+            {
+              name: 'extracted data is labeled untrusted, or explained',
+              test: (p) =>
+                isRecord(p) &&
+                ((isRecord(p.extracted_data) &&
+                  p.extracted_data.trust === 'untrusted') ||
+                  typeof p.extracted_data_note === 'string'),
+            },
+            {
+              name: 'download link delivered outside the text, or explained',
+              test: (p, r) =>
+                isRecord(p) &&
+                !/https?:\/\/\S+[?&](?:X-Amz-Signature|Signature)=/i.test(
+                  r.rawText,
+                ) &&
+                ((isRecord(p.download) &&
+                  p.download.delivered_as === 'resource_link') ||
+                  typeof p.download_note === 'string'),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
     // ---- list filtering and pagination ----
 
     const listItems = (p: unknown): Record<string, unknown>[] =>

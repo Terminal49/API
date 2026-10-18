@@ -170,7 +170,7 @@ Once configured, verify everything works:
   <Step title="Ask Claude to list tools">
     > "List the tools available in the Terminal49 MCP server."
 
-    Claude should respond with a list of 26 tools including `search_container`, `track_container`, the list tools, and the trade intelligence tools.
+    Claude should respond with a list of 28 tools including `search_container`, `track_container`, the list tools, and the trade intelligence tools.
   </Step>
   <Step title="Search for a test container">
     > "Using the Terminal49 MCP server, search for container TCLU1234567 and summarize its status."
@@ -236,6 +236,8 @@ T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio 2>&1 | head -20
 | `list_custom_field_definitions` | List the account's custom fields, their types, and enum options | `entity_type?` (`container` or `shipment`), `include_archived?: boolean` |
 | `list_tracking_requests` | List tracking requests with filters | `request_number?`, `status?` (`pending`, `created`, `failed`, or `cancelled`), `scac?`, `page?`, `page_size?` |
 | `get_tracking_request` | Get one tracking request's status, failure reason, and shipment | `id: uuid`, `include_custom_fields?: boolean` |
+| `list_documents` | Find documents such as Bills of Lading and arrival notices; rows never include extracted data or file links | `filename?`, `reference?`, `document_types?`, `sort?`, `page?`, `page_size?`, `include_types?: boolean` |
+| `get_document` | Get one document, with opt-in extracted data and source email (both labeled untrusted) and a download link returned as a `resource_link` | `id: uuid`, `include_extracted_data?: boolean`, `include_source_email?: boolean`, `include_download_url?: boolean` |
 | `search_docs` | Search the public Terminal49 documentation | `query: string`, `limit?` (1-10, default 5) |
 | `whoami` | Identify the credential, its account, available features, and the session's toolsets | none |
 
