@@ -27,7 +27,7 @@
     "build": "tsc",
     "type-check": "tsc --noEmit",
     "test": "vp test run",
-    "generate:types": "openapi-typescript ../../docs/openapi.json -o src/generated/terminal49.ts && node scripts/generate-filter-types.mjs",
+    "generate:types": "openapi-typescript ../../docs/openapi.json -o src/generated/terminal49.ts --default-non-nullable=false && node scripts/generate-filter-types.mjs",
     "docs": "npm run docs:clean && typedoc --options typedoc.json && node scripts/postprocess-generated-docs.mjs",
     "docs:clean": "node scripts/clean-generated-docs.mjs",
     "docs:mintlify": "npm run docs",

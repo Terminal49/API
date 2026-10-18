@@ -111,7 +111,9 @@ describe('get_document', () => {
     const result = await executeGetDocument({ id: DOCUMENT_ID }, client);
 
     expect(requests).toHaveLength(1);
-    expect(requests[0].query.has('include')).toBe(false);
+    expect(requests[0].query.get('include')).toBe(
+      'last_document_representation',
+    );
     expect(result).toEqual({
       id: DOCUMENT_ID,
       name: 'HBL CGGMSGH5110912',

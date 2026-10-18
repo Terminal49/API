@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **34 tools** and **4 MCP resources** for container tracking and shipment management. The default toolsets serve 21 of them.
+The Terminal49 MCP Server provides **41 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 28 of them.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field` and `update_custom_field` are in the `operations` toolset, which is not in the default toolsets yet. `relink_document` and `update_document` are in the opt-in `documents_write` toolset. `list_webhooks` and `list_webhook_notifications` are in the opt-in `developer` toolset. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field` and `update_custom_field` are in the `operations` toolset, which is not in the default toolsets yet. `relink_document` and `update_document` are in the opt-in `documents_write` toolset. `list_webhooks` and `list_webhook_notifications` are in the opt-in `developer` toolset. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -527,7 +527,7 @@ list_documents({
 - `links` and `meta` from the API. If `links.next` exists, the page is partial.
 - `document_types` (`code`, `label`) when `include_types` is true
 
-`shipment_ids`, `container_ids` and `has_extracted_data` are `null` when the API leaves the relationship out. `name` and `file_name` are cut to 256 characters. Whoever sends a file picks its name, so treat both as data. Rows never include extracted data or a file URL. If the account does not have document processing, the tool returns `FeatureNotEnabled` with `isError: false`.
+`has_extracted_data` is `true` only when the latest extraction has fields. It is `false` while extraction has not produced fields yet. `shipment_ids`, `container_ids` and `has_extracted_data` are `null` when the API leaves the relationship out. `name` and `file_name` are cut to 256 characters. Whoever sends a file picks its name, so treat both as data. Rows never include extracted data or a file URL. If the account does not have document processing, the tool returns `FeatureNotEnabled` with `isError: false`.
 
 **When to Use**: "Find the arrival notice for this BOL" or "Which documents came in today?"
 
@@ -682,7 +682,8 @@ Each number can be up to 1000 characters, so a long number already on the record
 
 **Returns**:
 - Preview: `current` (`record` fields and `ref_numbers`), `proposed: { ref_numbers }`, `removing`, `not_present` and `reach`. The token covers the whole current list, so any change to the list after the preview returns `stale_preview`.
-- `status: "removed"` with `previous`, `ref_numbers`, `removed`, `not_present`, `concurrent_change_detected` and `undo: "add_reference_numbers"`. The read-back works as in `add_reference_numbers`.
+- `status: "removed"` with `previous`, `ref_numbers`, `removed`, `not_present` and `concurrent_change_detected`. The read-back works as in `add_reference_numbers`.
+- `undo: "add_reference_numbers"` only when every removed number is 64 characters or shorter, because `add_reference_numbers` takes no longer number. Otherwise `message` says to re-add the number in the Terminal49 dashboard.
 - `status: "not_present"` with `ref_numbers` when none of the numbers are on the record. No token is issued.
 - `status: "noop"` with an `alternative` when the API refuses the shorter list with 422
 - `unreadable_reference_numbers` as in `add_reference_numbers`. No token is issued.
@@ -948,6 +949,12 @@ The tool never asks the API to include the webhook record, and it returns no pay
 
 ---
 
+### Trade intelligence tools
+
+`search_importers`, `get_importer_profile`, `search_commodities`, `rank_importers`, `get_trade_trends`, `get_trade_breakdown`, and `get_trade_data_coverage` answer US ocean import market questions from US Customs bill-of-lading records (January 2022 onward). They are read-only and enabled per account. See `docs/mcp/home.mdx` for parameters and the caveats agents must apply.
+
+---
+
 ## MCP Resources
 
 ### 1. `terminal49://container/{id}`
@@ -1205,7 +1212,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 34 tools and 4 resources, the LLM can:
+With these 41 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates
