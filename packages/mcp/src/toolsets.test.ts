@@ -152,13 +152,13 @@ describe('resolveToolSelection', () => {
     ).toThrow(/T49_MCP_READ_ONLY/);
   });
 
-  it('limits the shared env token to core', () => {
+  it('limits the shared env token to core and trade', () => {
     const selection = resolveToolSelection({
-      env: { T49_MCP_TOOLSETS: 'core,documents,operations' },
+      env: { T49_MCP_TOOLSETS: 'core,documents,operations,trade' },
       credentialType: 'shared_token',
     });
 
-    expect(selection.toolsets).toEqual(['core']);
+    expect(selection.toolsets).toEqual(['core', 'trade']);
   });
 
   it('lets the operator allow more toolsets for the shared env token', () => {

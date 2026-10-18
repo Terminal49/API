@@ -11,6 +11,8 @@ import { TOOL_REGISTRY, type ToolName } from './tools/registry.js';
 
 interface Segment {
   text: string;
+  /** Keep the segment only when these tools are registered. */
+  requires?: readonly ToolName[];
   /** Keep the segment only when this tool is not registered. */
   unless?: ToolName;
 }
@@ -54,11 +56,17 @@ const PARAGRAPHS: readonly Paragraph[] = [
         unless: 'track_container',
       },
       {
-        text: " All tools except search_docs operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation.",
+        text: " The shipment, container, tracking, party, and whoami tools operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation",
       },
       {
-        text: " All tools operate within the user's private Terminal49 account.",
-        unless: 'search_docs',
+        text: "; the trade intelligence tools read US import market data, not the account's shipments.",
+        requires: ['whoami', 'search_importers'],
+      },
+      { text: '.', requires: ['whoami'], unless: 'search_importers' },
+      {
+        text: " The trade intelligence tools read US import market data, not the account's shipments.",
+        requires: ['search_importers'],
+        unless: 'whoami',
       },
       { text: ' None delete or overwrite data.' },
     ],
@@ -104,6 +112,19 @@ const PARAGRAPHS: readonly Paragraph[] = [
       },
     ],
   },
+  {
+    aboutTools: true,
+    segments: [
+      {
+        text: [
+          "Trade intelligence (search_importers, get_importer_profile, search_commodities, rank_importers, get_trade_trends, get_trade_breakdown, get_trade_data_coverage) answers market questions about US ocean imports: who imports a product, what a named company imports and how that is changing, where goods come from, and port, carrier, and lane volumes. It is built from US Customs bill-of-lading records from January 2022 to today, refreshed daily, and is enabled per account; if a tool says it isn't enabled, tell the user to contact support@terminal49.com and don't retry or invent figures.",
+          'Resolve first, then analyze: search_importers for a company (use its exact company_name), search_commodities for a product (check common_goods before trusting an HS4 code). Then get_importer_profile for one company (months: 24 for a year-over-year trend; the company filter in trends is a substring match), rank_importers for "who imports X", get_trade_trends for change over time, get_trade_breakdown for mix and share. Most answers take two to five calls.',
+          "Read the numbers carefully: volume is physical containers, each counted once; values are estimates, not declared customs values; trends and breakdowns include the current, incomplete month unless until is set, so a last-period drop is usually that; history starts in January 2022, not where the default two-year trends window begins. A company can appear under several names and once per state, and some importers keep their names off the records or ship under a forwarder, so low or missing volume is a floor, not the company's size. Forwarders and customs brokers appear among importers. A high share_as_notify_party is a clue, not proof: large cargo owners can also be listed mostly as notify party, so also weigh the name (LOGISTICS, FREIGHT, SHIPPING, CUSTOMS, BROKERAGE) and the product mix before calling a company a forwarder. Don't add volumes across products or companies. Carriers appear under spelling variants; merge them before computing shares.",
+          'Answer in plain language: lead with the takeaway, name the period, round numbers, and describe caveats in everyday words rather than field names.',
+        ].join('\n'),
+      },
+    ],
+  },
 ];
 
 function mentionedTools(text: string): ToolName[] {
@@ -119,7 +140,9 @@ export function buildServerInstructions(
   const registered = new Set(tools.map((tool) => tool.name));
   const keep = (segment: Segment) =>
     (!segment.unless || !registered.has(segment.unless)) &&
-    mentionedTools(segment.text).every((name) => registered.has(name));
+    [...(segment.requires ?? []), ...mentionedTools(segment.text)].every(
+      (name) => registered.has(name),
+    );
 
   return PARAGRAPHS.filter(
     (paragraph) => !paragraph.aboutTools || registered.size > 0,

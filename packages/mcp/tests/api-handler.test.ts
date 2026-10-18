@@ -342,11 +342,11 @@ describe('api/mcp handler lifecycle', () => {
     expect(mockState.serverCreateArgs[0]?.apiToken).toBe('env-token-value');
     expect(mockState.serverCreateArgs[0]?.options).toMatchObject({
       credentialType: 'shared_token',
-      toolsets: ['core'],
+      toolsets: ['core', 'trade'],
     });
   });
 
-  it('keeps the shared env token on core even when the operator allows more', async () => {
+  it('keeps the shared env token on core and trade even when the operator allows more', async () => {
     process.env.T49_API_TOKEN = 'env-token-value';
     process.env.T49_MCP_CLIENT_SECRET = 'mcp-client-secret';
     process.env.T49_MCP_TOOLSETS = 'core,documents,operations';

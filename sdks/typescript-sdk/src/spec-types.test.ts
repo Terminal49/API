@@ -70,6 +70,31 @@ describe('generated spec types', () => {
     expectTypeOf<TrackingRequestInclude>().toEqualTypeOf<SpecRelationship>();
   });
 
+  it('types the trade intelligence nulls and omissions the service sends', () => {
+    type Schemas = components['schemas'];
+    type TopImporter = Schemas['TradeIntelTopImporter'];
+    type RankingFilters = Schemas['TradeIntelTopImporters']['filters'];
+    type ValidationBody =
+      components['responses']['TradeIntelValidationFailed']['content']['application/json'];
+
+    expectTypeOf<TopImporter['states']>().toEqualTypeOf<string[] | null>();
+    expectTypeOf<TopImporter['estimated_value']>().toEqualTypeOf<
+      number | null
+    >();
+    expectTypeOf<
+      Schemas['TradeIntelCompanyProfileTotals']['states']
+    >().toEqualTypeOf<string[] | null>();
+    expectTypeOf<Schemas['TradeIntelCompanyProfile']['until']>().toEqualTypeOf<
+      string | undefined
+    >();
+    expectTypeOf<keyof RankingFilters>().toEqualTypeOf<
+      'hs4' | 'pod' | 'origin_country'
+    >();
+    expectTypeOf<{
+      error: 'Query too broad for the cost cap; narrow the time window or filters.';
+    }>().toExtend<ValidationBody>();
+  });
+
   it('types execute as the success body, or undefined for a bodyless success', () => {
     const run = (transport: Transport) => ({
       deleted: transport.execute(() =>
