@@ -986,7 +986,7 @@ Remove reference numbers from a container, shipment, or tracking request. Tier C
 
 **Returns**
 - Without a token: a `preview` with the list now, the list after, the numbers it would remove, and the numbers that are not on the record, and a `confirmation_token`
-- `status: "removed"` with `previous`, `ref_numbers`, `removed`, `concurrent_change_detected`, and `undo: "add_reference_numbers"`
+- `status: "removed"` with `previous`, `ref_numbers`, `removed`, and `concurrent_change_detected`. It adds `undo: "add_reference_numbers"` only when every removed number is 64 characters or shorter, because `add_reference_numbers` takes no longer number. Re-add a longer number in the Terminal49 dashboard.
 - `status: "not_present"` when none of the numbers are on the record. No token is issued.
 - `status: "noop"` when Terminal49 refuses the shorter list. Nothing changed.
 - `unreadable_reference_numbers` when Terminal49 returns the record's list in a form the tool cannot read. No token is issued.

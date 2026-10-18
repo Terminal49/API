@@ -682,7 +682,8 @@ Each number can be up to 1000 characters, so a long number already on the record
 
 **Returns**:
 - Preview: `current` (`record` fields and `ref_numbers`), `proposed: { ref_numbers }`, `removing`, `not_present` and `reach`. The token covers the whole current list, so any change to the list after the preview returns `stale_preview`.
-- `status: "removed"` with `previous`, `ref_numbers`, `removed`, `not_present`, `concurrent_change_detected` and `undo: "add_reference_numbers"`. The read-back works as in `add_reference_numbers`.
+- `status: "removed"` with `previous`, `ref_numbers`, `removed`, `not_present` and `concurrent_change_detected`. The read-back works as in `add_reference_numbers`.
+- `undo: "add_reference_numbers"` only when every removed number is 64 characters or shorter, because `add_reference_numbers` takes no longer number. Otherwise `message` says to re-add the number in the Terminal49 dashboard.
 - `status: "not_present"` with `ref_numbers` when none of the numbers are on the record. No token is issued.
 - `status: "noop"` with an `alternative` when the API refuses the shorter list with 422
 - `unreadable_reference_numbers` as in `add_reference_numbers`. No token is issued.
