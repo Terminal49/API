@@ -117,10 +117,55 @@ export const rawDocumentSchema = z.object({
 
 export type RawDocument = z.infer<typeof rawDocumentSchema>;
 
-export function toDocumentSummary(document: RawDocument): DocumentSummary {
+/** The include that loads each document's latest extraction. */
+export const REPRESENTATION_INCLUDE = 'last_document_representation';
+
+export const rawRepresentationSchema = z.object({
+  id: z.string(),
+  type: z.literal('document_representation'),
+  attributes: z.object({
+    schema_version: nullableString,
+    payload: z.record(z.string(), z.unknown()).catch({}),
+    updated_at: nullableString,
+  }),
+});
+
+export type RawRepresentation = z.infer<typeof rawRepresentationSchema>;
+
+export function findRepresentation(
+  included: readonly unknown[],
+  id: string | undefined,
+): RawRepresentation | undefined {
+  for (const record of included) {
+    const parsed = rawRepresentationSchema.safeParse(record);
+    if (parsed.success && parsed.data.id === id) return parsed.data;
+  }
+  return undefined;
+}
+
+/**
+ * A representation is created with an empty payload before extraction
+ * finishes, so only one with fields counts as extracted data. Null when the
+ * API leaves out the relationship or the representation.
+ */
+function hasExtractedData(
+  document: RawDocument,
+  included: readonly unknown[],
+): boolean | null {
+  const extraction = document.relationships.last_document_representation;
+  if (!extraction) return null;
+  if (extraction.data === null) return false;
+  const representation = findRepresentation(included, extraction.data.id);
+  if (!representation) return null;
+  return Object.keys(representation.attributes.payload).length > 0;
+}
+
+export function toDocumentSummary(
+  document: RawDocument,
+  included: readonly unknown[],
+): DocumentSummary {
   const { attributes, relationships } = document;
   const segment = attributes.parsed?.packetSegment;
-  const extraction = relationships.last_document_representation;
   return {
     id: document.id,
     name: attributes.name,
@@ -136,7 +181,7 @@ export function toDocumentSummary(document: RawDocument): DocumentSummary {
       relationships.shipments?.data.map((shipment) => shipment.id) ?? null,
     container_ids:
       relationships.cargos?.data.map((container) => container.id) ?? null,
-    has_extracted_data: extraction ? extraction.data !== null : null,
+    has_extracted_data: hasExtractedData(document, included),
     created_at: attributes.created_at,
     updated_at: attributes.updated_at,
   };
@@ -149,7 +194,10 @@ export const documentStateSchema = documentSummarySchema.extend({
 
 export type DocumentState = z.infer<typeof documentStateSchema>;
 
-const rawDocumentResponseSchema = z.object({ data: rawDocumentSchema });
+const rawDocumentResponseSchema = z.object({
+  data: rawDocumentSchema,
+  included: z.array(z.unknown()).catch([]),
+});
 
 /** Parses a GET or PATCH /documents/{id} body. */
 export function parseDocumentResponse(raw: unknown): {
@@ -157,10 +205,10 @@ export function parseDocumentResponse(raw: unknown): {
   /** The latest extraction's id, so a new extraction changes the state. */
   extractionId: string | null;
 } {
-  const { data } = rawDocumentResponseSchema.parse(raw);
+  const { data, included } = rawDocumentResponseSchema.parse(raw);
   return {
     document: {
-      ...toDocumentSummary(data),
+      ...toDocumentSummary(data, included),
       classification_notes: data.attributes.classification_notes,
     },
     extractionId:
@@ -168,7 +216,10 @@ export function parseDocumentResponse(raw: unknown): {
   };
 }
 
-/** Reads one document without includes. */
+/**
+ * Reads one document without includes, so no extracted text enters the write
+ * path. has_extracted_data is then null whenever an extraction exists.
+ */
 export async function readDocument(
   client: Pick<Terminal49Client, 'documents'>,
   id: string,

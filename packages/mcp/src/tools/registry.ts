@@ -13,6 +13,7 @@ export const TOOLSETS = [
   'operations',
   'documents_write',
   'developer',
+  'trade',
 ] as const;
 
 export type Toolset = (typeof TOOLSETS)[number];
@@ -238,6 +239,13 @@ export const TOOL_REGISTRY = [
     'developer',
   ),
   readTool('whoami', 'Who Am I'),
+  readTool('search_importers', 'Search US Importers', 'trade'),
+  readTool('get_importer_profile', 'Get Importer Profile', 'trade'),
+  readTool('search_commodities', 'Search Commodities', 'trade'),
+  readTool('rank_importers', 'Rank US Importers', 'trade'),
+  readTool('get_trade_trends', 'Get Trade Trends', 'trade'),
+  readTool('get_trade_breakdown', 'Get Trade Breakdown', 'trade'),
+  readTool('get_trade_data_coverage', 'Get Trade Data Coverage', 'trade'),
 ] as const satisfies readonly ToolDefinition[];
 
 export type RegisteredTool = (typeof TOOL_REGISTRY)[number];
@@ -250,6 +258,7 @@ export const DEFAULT_TOOLSETS: readonly Toolset[] = [
   'documents',
   'operations',
   'documents_write',
+  'trade',
 ];
 
 export interface ToolSelection {

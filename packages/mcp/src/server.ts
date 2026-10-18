@@ -184,6 +184,23 @@ import {
   type ResourceLinkContent,
   resourceLinksOf,
 } from './tools/resource-links.js';
+import {
+  executeGetImporterProfile,
+  executeGetTradeBreakdown,
+  executeGetTradeDataCoverage,
+  executeGetTradeTrends,
+  executeRankImporters,
+  executeSearchCommodities,
+  executeSearchImporters,
+  getImporterProfileInputSchema,
+  getTradeBreakdownInputSchema,
+  getTradeDataCoverageInputSchema,
+  getTradeTrendsInputSchema,
+  isTradeIntelTool,
+  rankImportersInputSchema,
+  searchCommoditiesInputSchema,
+  searchImportersInputSchema,
+} from './tools/trade-intel.js';
 import { readContainerResource } from './resources/container.js';
 import { readMilestoneGlossaryResource } from './resources/milestone-glossary.js';
 import {
@@ -1057,6 +1074,24 @@ function formatToolError(
     return 'Terminal49 could not identify this number. Pass one container, Bill of Lading, or booking number.';
   }
 
+  if (isTradeIntelTool(toolName)) {
+    // The API's 400 messages are written for callers (e.g. "hs4 must be a
+    // 4-digit HS code"), so they are safe and useful to show. Other failures
+    // stay generic.
+    if (err.name === 'ValidationError' && err.status === 400 && err.message) {
+      return `Trade intelligence could not answer this request: ${err.message}`;
+    }
+    if (err.name === 'ValidationError') {
+      return 'Trade intelligence could not answer this request because an input is out of range. Check the values against the tool schema.';
+    }
+    if (err.name === 'RateLimitError' || err.status === 429) {
+      return 'Trade intelligence is receiving too many requests right now. Wait a minute, then try again.';
+    }
+    if (err.name === 'UpstreamError' || (err.status ?? 0) >= 500) {
+      return 'Trade intelligence is temporarily unavailable. Try again shortly.';
+    }
+  }
+
   if (err.name === 'NotFoundError' || err.status === 404) {
     switch (toolName) {
       case 'get_container':
@@ -1281,6 +1316,20 @@ export function createTerminal49McpServer(
         ) as ToolCallback<InputArgs>,
       );
     };
+
+  // Trade intelligence: US import market data (bill-of-lading records). Gated
+  // per account at call time; a missing entitlement returns a plain "not
+  // enabled" result.
+  const notEnabledFields = {
+    error: z.string().optional(),
+    message: z.string().optional(),
+    alternative: z.string().optional(),
+  };
+  const rows = z.array(z.record(z.string(), z.unknown())).optional();
+  const period = z
+    .object({ from: z.string().optional(), to: z.string().optional() })
+    .passthrough()
+    .optional();
 
   const tools = {
     search_container: tool(
@@ -1774,7 +1823,7 @@ export function createTerminal49McpServer(
       {
         description:
           'Find documents on this account, such as Bills of Lading, arrival notices, and delivery orders, by file name, reference number, or document type, newest first. Page size is capped at 25. ' +
-          'Each row has the document id, type, source (upload, api, email, or split_document), file name and size, the shipment and container ids it is linked to, and whether extracted data exists. ' +
+          'Each row has the document id, type, source (upload, api, email, or split_document), file name and size, the shipment and container ids it is linked to, and whether the latest extraction has fields yet. ' +
           'Rows never include extracted data or a download link; call get_document with a returned id for those. ' +
           'Set include_types to get every document type code with its label. If links.next exists, results are partial: request the next page with the same filters.',
         inputSchema: listDocumentsInputSchema,
@@ -2062,6 +2111,140 @@ export function createTerminal49McpServer(
         }),
       },
       async (_args, context) => executeWhoami(context),
+    ),
+    search_importers: tool(
+      {
+        description:
+          'Find US importers by company name (typos and partial names are fine), by what they import in plain words, or both, optionally narrowed by state, US port, or origin country. ' +
+          'Each result covers the 12-month search window in period (it can end a month or two before the last full month; use get_importer_profile for the latest months): containers, how many as consignee versus notify party, TEUs, estimated value, and top ports, origin countries, carriers, and products. ' +
+          'Results are ordered by match quality, not size, and one company appears once per US state and often under several names (divisions, distribution centers), so read every row before answering. ' +
+          'A high share_as_notify_party suggests a forwarder or customs broker, but large cargo owners can also be listed mostly as notify party, so weigh the name and product mix too. Long lists are cut to the top five, with more_not_shown counting the rest. Low volume for a well-known company is a floor: some importers keep their names off the records or ship under a forwarder. ' +
+          'Pass a returned company_name unchanged to get_importer_profile.',
+        inputSchema: z.preprocess(
+          stripLegacyIntent,
+          searchImportersInputSchema,
+        ),
+        outputSchema: z
+          .object({ ...notEnabledFields, period, importers: rows })
+          .passthrough(),
+      },
+      async (args) => executeSearchImporters(args, client),
+    ),
+    get_importer_profile: tool(
+      {
+        description:
+          "One importer's US ocean imports over full calendar months ending last month: totals, a monthly series (up to 60 months), US ports, origin countries, carriers, destination states, and products with estimated value. " +
+          'company_name must be the exact name from search_importers; omit company_state to combine all of its locations. ' +
+          "This is the right tool for one company's trend: use months: 24 and compare the latest months with the same months a year earlier (the get_trade_trends company filter matches every name containing the text). " +
+          'If the company imports under several names, profile each and say which you included. Values are estimates, not declared customs values. Carrier names have spelling variants; merge them before computing shares.',
+        inputSchema: z.preprocess(
+          stripLegacyIntent,
+          getImporterProfileInputSchema,
+        ),
+        outputSchema: z
+          .object({
+            ...notEnabledFields,
+            company_name: z.string().optional(),
+            found: z.boolean().optional(),
+            period,
+            totals: z.record(z.string(), z.unknown()).optional(),
+            monthly: rows,
+          })
+          .passthrough(),
+      },
+      async (args) => executeGetImporterProfile(args, client),
+    ),
+    search_commodities: tool(
+      {
+        description:
+          'Turn a product description ("office chairs") or an HS code prefix ("94") into four-digit HS product codes, with the goods commonly declared under each code, the number of importers, and 12-month estimated import value. ' +
+          'HS descriptions are terse and codes are broader than everyday product names (0306 covers all frozen crustaceans, not just shrimp), so check common_goods before using a code (common_goods_not_shown counts goods left out), and say which code you used. ' +
+          'Pass hs4 to rank_importers or as a filter to get_trade_trends and get_trade_breakdown.',
+        inputSchema: z.preprocess(
+          stripLegacyIntent,
+          searchCommoditiesInputSchema,
+        ),
+        outputSchema: z
+          .object({ ...notEnabledFields, products: rows })
+          .passthrough(),
+      },
+      async (args) => executeSearchCommodities(args, client),
+    ),
+    rank_importers: tool(
+      {
+        description:
+          'Rank US importers by physical containers over full calendar months ending last month, for a product (hs4), a US port, an origin country, or any combination; includes estimated value when hs4 is given. ' +
+          'Use it for "who imports X" and "top importers through Y". The ranking includes forwarders and customs brokers and does not say which rows are; check the top names with search_importers when that matters, using share_as_notify_party together with the company name and product mix (large cargo owners can also be mostly notify party). ' +
+          'Big importers can be split across names, and some keep their names off the records, so absence from the list does not mean low volume.',
+        inputSchema: z.preprocess(stripLegacyIntent, rankImportersInputSchema),
+        outputSchema: z
+          .object({ ...notEnabledFields, period, importers: rows })
+          .passthrough(),
+      },
+      async (args) => executeRankImporters(args, client),
+    ),
+    get_trade_trends: tool(
+      {
+        description:
+          'Time series of US ocean imports (containers, TEUs, or estimated value) by month, quarter, or year, optionally split by up to two dimensions (origin country, US port, coast, carrier, product, importer, and more) and filtered by any of them. ' +
+          'Default window: the 24 months ending with the current month, which is still incomplete (its points are marked partial), so a drop in the last period is usually that. Set until to the last full month and compare like periods. History goes back to January 2022; pass since for a longer view. ' +
+          "The company filter is a substring match (IKEA also matches IKEA SUPPLY AG); for one company use get_importer_profile. Use this without a company filter for market totals, and don't add values across products or companies. " +
+          'Countries and ports use the records\' spellings (filter "china", not "China"); merge carrier spelling variants before computing shares.',
+        inputSchema: z.preprocess(stripLegacyIntent, getTradeTrendsInputSchema),
+        outputSchema: z
+          .object({
+            ...notEnabledFields,
+            measure: z.string().optional(),
+            interval: z.string().optional(),
+            period,
+            series: rows,
+            truncated: z.boolean().optional(),
+          })
+          .passthrough(),
+      },
+      async (args) => executeGetTradeTrends(args, client),
+    ),
+    get_trade_breakdown: tool(
+      {
+        description:
+          'Nested totals of US ocean imports over one to three dimensions, such as region > country > US port or HS chapter > HS code, with a grand total (level 0) and subtotals at every level, keeping the largest children under each parent. Use it for mix and share questions. ' +
+          'Default window: the 12 months ending with the current, incomplete month, so it is not 12 full months; for an annual total set since and until to 12 full months. ' +
+          "The company filter is a substring match. Don't add values across products or companies. Merge carrier spelling variants before computing shares. Values are estimates, not declared customs values.",
+        inputSchema: z.preprocess(
+          stripLegacyIntent,
+          getTradeBreakdownInputSchema,
+        ),
+        outputSchema: z
+          .object({
+            ...notEnabledFields,
+            measure: z.string().optional(),
+            period,
+            rows,
+            truncated: z.boolean().optional(),
+          })
+          .passthrough(),
+      },
+      async (args) => executeGetTradeBreakdown(args, client),
+    ),
+    get_trade_data_coverage: tool(
+      {
+        description:
+          'What the trade intelligence data covers right now: where history starts (January 2022), the latest month and whether it is still incomplete, the last full month, the 12-month window search_importers uses, and when the data was last built. ' +
+          'Call it before quoting a period or when the user asks how current or how far back the data goes. It also shows whether trade intelligence is enabled for the account.',
+        inputSchema: z.preprocess(
+          stripLegacyIntent,
+          getTradeDataCoverageInputSchema,
+        ),
+        outputSchema: z
+          .object({
+            ...notEnabledFields,
+            history_starts: z.string().optional(),
+            latest_month: z.string().optional(),
+            last_full_month: z.string().optional(),
+          })
+          .passthrough(),
+      },
+      async () => executeGetTradeDataCoverage(client),
     ),
   } satisfies Record<ToolName, ToolRegistrar>;
 

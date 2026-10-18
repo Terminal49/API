@@ -94,7 +94,8 @@ export function documentState(fixture: FixtureDocument = {}) {
     parent_document_id: null,
     shipment_ids: fixture.shipmentIds ?? [],
     container_ids: [],
-    has_extracted_data: extractionId !== null,
+    // The write tools never load the extraction, so its payload is unknown.
+    has_extracted_data: extractionId === null ? false : null,
     created_at: '2026-10-15T10:00:00Z',
     updated_at: fixture.updatedAt ?? '2026-10-15T10:05:00Z',
   };
