@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
+  evalPartyNameIsFree,
   selectEvalDefinition,
   selectEvalParty,
   selectFixtureDocument,
@@ -74,6 +75,25 @@ describe('selectEvalParty', () => {
     ['the payload has no parties', undefined],
   ])('refuses to pick a party when %s', (_case, parties) => {
     expect(selectEvalParty(parties)).toBeUndefined();
+  });
+});
+
+describe('evalPartyNameIsFree', () => {
+  it('lets the first run create the eval party when the search finds no party', () => {
+    expect(evalPartyNameIsFree([])).toBe(true);
+  });
+
+  it.each([
+    ['differs only in punctuation', 'MCP Eval do not use'],
+    ['differs only in case', 'mcp eval (do not use)'],
+    ['contains the name', 'MCP Eval (do not use) archive'],
+    ['is the eval party', 'MCP Eval (do not use)'],
+  ])('refuses when the search found a party that %s', (_case, name) => {
+    expect(evalPartyNameIsFree([{ id: 'near', name }])).toBe(false);
+  });
+
+  it('refuses when the payload has no party list', () => {
+    expect(evalPartyNameIsFree(undefined)).toBe(false);
   });
 });
 

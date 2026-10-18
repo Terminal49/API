@@ -41,6 +41,7 @@ import {
   EVAL_CUSTOM_FIELD_SLUG,
   EVAL_FIXTURE_REF,
   EVAL_PARTY_NAME,
+  evalPartyNameIsFree,
   selectEvalDefinition,
   selectEvalParty,
   selectFixtureDocument,
@@ -67,6 +68,7 @@ if (!cfg) {
   let served: string[] = [];
   let fixture: FixtureShipment | undefined;
   let partyId: string | undefined;
+  let partyNameIsFree = false;
 
   /** Previews a tier C call, then confirms it with the token it returned. */
   const confirmed = async (tool: string, args: Record<string, unknown>) => {
@@ -114,6 +116,7 @@ if (!cfg) {
         }),
       );
       partyId = selectEvalParty(parties.parties);
+      partyNameIsFree = evalPartyNameIsFree(parties.parties);
     });
 
     it('stops a shipment with a confirmed preview, then resumes it', async ({
@@ -233,6 +236,11 @@ if (!cfg) {
     }) => {
       if (!served.includes('assign_party') || !fixture) {
         return skip(NO_FIXTURE);
+      }
+      if (!partyId && !partyNameIsFree) {
+        return skip(
+          `A party other than exactly "${EVAL_PARTY_NAME}" matches its name, so assign_party could link it.`,
+        );
       }
       const target = { entity_type: 'shipment', entity_id: fixture.id };
 

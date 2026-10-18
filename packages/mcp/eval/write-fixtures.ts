@@ -66,6 +66,16 @@ export function selectEvalParty(parties: unknown): string | undefined {
   return party ? String(party.id) : undefined;
 }
 
+/**
+ * Whether assign_party may create the eval party: the list_parties search for
+ * EVAL_PARTY_NAME found no party at all. assign_party links any party whose
+ * name or nickname matches ignoring case and punctuation, and list_parties
+ * shows only display names, so any hit could be the party it would link.
+ */
+export function evalPartyNameIsFree(parties: unknown): boolean {
+  return Array.isArray(parties) && parties.length === 0;
+}
+
 /** The api_slug of the live short_text definition EVAL_CUSTOM_FIELD_SLUG. */
 export function selectEvalDefinition(definitions: unknown): string | undefined {
   const definition = onlyOne(
