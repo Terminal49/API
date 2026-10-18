@@ -55,6 +55,7 @@ const TOKEN = issueConfirmationToken(
     args: {},
     accountId: ACCOUNT_ID,
     credentialHash: 'hash',
+    channel: 'token',
   },
   'fingerprint',
 ).confirmation_token;

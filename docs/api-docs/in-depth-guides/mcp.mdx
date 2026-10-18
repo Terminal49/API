@@ -245,17 +245,17 @@ The `operations` toolset adds nine write tools. The hosted server does not serve
 
 | Tool | Description | Parameters |
 |------|-------------|------------|
-| `stop_shipment_tracking` | Stop updates for a shipment and its containers. Returns a preview first. | `shipment_id: uuid`, `confirmation_token?: string` |
+| `stop_shipment_tracking` | Stop updates for a shipment and its containers. Asks you to approve a preview first. | `shipment_id: uuid`, `confirmation_token?: string` |
 | `resume_shipment_tracking` | Start tracking a stopped shipment again | `shipment_id: uuid` |
-| `cancel_tracking_request` | Cancel a pending tracking request. Returns a preview first. It cannot be undone. | `tracking_request_id: uuid`, `confirmation_token?: string` |
+| `cancel_tracking_request` | Cancel a pending tracking request. Asks you to approve a preview first. It cannot be undone. | `tracking_request_id: uuid`, `confirmation_token?: string` |
 | `add_reference_numbers` | Add reference numbers to a container, shipment, or tracking request, keeping the ones already there | `entity_type`, `entity_id: uuid`, `add: string[]` |
-| `remove_reference_numbers` | Remove reference numbers from a container, shipment, or tracking request. Returns a preview first. | `entity_type`, `entity_id: uuid`, `remove: string[]`, `confirmation_token?: string` |
+| `remove_reference_numbers` | Remove reference numbers from a container, shipment, or tracking request. Asks you to approve a preview first. | `entity_type`, `entity_id: uuid`, `remove: string[]`, `confirmation_token?: string` |
 | `assign_party` | Link a party to a container or shipment in a role, such as customer or dray carrier | `entity_type`, `entity_id: uuid`, `role`, `party_id?: uuid`, `party_name?: string`, `create_party_if_missing?: boolean` |
-| `unassign_party` | Remove one party role from a container or shipment. Returns a preview first. | `entity_type`, `entity_id: uuid`, `party_role_id: uuid`, `confirmation_token?: string` |
+| `unassign_party` | Remove one party role from a container or shipment. Asks you to approve a preview first. | `entity_type`, `entity_id: uuid`, `party_role_id: uuid`, `confirmation_token?: string` |
 | `set_custom_field` | Fill an empty custom field on a container, shipment, or tracking request. A field with a value returns `already_set`. | `entity_type`, `entity_id: uuid`, `api_slug`, `value` |
-| `update_custom_field` | Replace or clear a custom field value. Returns a preview first. | `entity_type`, `entity_id: uuid`, `api_slug`, `value?`, `clear?: boolean`, `confirmation_token?: string` |
+| `update_custom_field` | Replace or clear a custom field value. Asks you to approve a preview first. | `entity_type`, `entity_id: uuid`, `api_slug`, `value?`, `clear?: boolean`, `confirmation_token?: string` |
 
-See [Write tools](/mcp/home#write-tools) for how a preview and its confirmation token work.
+See [Write tools](/mcp/home#write-tools) for how you approve a preview, in a client that asks you directly or with a confirmation token.
 
 ### Prompts
 
@@ -378,7 +378,7 @@ The `vercel.json` configures the MCP server (excerpt):
 | `T49_MCP_TOOLSETS` | No | Comma-separated toolsets the server allows; defaults to `core,documents,trade`. An unknown name or a value made only of commas stops stdio and fails HTTP requests |
 | `T49_MCP_READ_ONLY` | No | Serves only read-only tools when set to `true` or `1`; defaults to `false` |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | Serves toolsets other than `core` and `trade` when callers share `T49_API_TOKEN`; defaults to `false` |
-| `T49_MCP_CONFIRMATION_SECRET` | For write tools over HTTP | Signs the confirmation tokens that `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `unassign_party`, and `update_custom_field` need. Use at least 32 random characters. Without it, those tools change nothing over HTTP. Local stdio makes a random secret when it is unset |
+| `T49_MCP_CONFIRMATION_SECRET` | For write tools over HTTP | Signs the preview approvals that `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `unassign_party`, and `update_custom_field` need, on both the elicitation and the token channel. Use at least 32 random characters. Without it, those tools change nothing over HTTP. Local stdio makes a random secret when it is unset |
 | `SENTRY_DSN` | No | Enables Sentry MCP Monitoring |
 | `SENTRY_ENVIRONMENT` | No | Sentry environment name; defaults to `NODE_ENV` |
 | `SENTRY_RELEASE` | No | Sentry release identifier; defaults to `VERCEL_GIT_COMMIT_SHA` |

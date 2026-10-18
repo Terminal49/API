@@ -21,6 +21,7 @@ const binding: ConfirmationBinding = {
   args: { shipment_id: SHIPMENT_ID },
   accountId: ACCOUNT_ID,
   credentialHash: credentialHash('Token key-1'),
+  channel: 'token',
 };
 const fingerprint = stateFingerprint({ tracking_stopped: false });
 

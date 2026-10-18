@@ -16,6 +16,7 @@ function contextReturning(
     toolsets: ['core', 'documents'],
     writeToolsAvailable: true,
     credentialHash: 'hash',
+    confirmation: { kind: 'token' },
     ...session,
     me: meFn,
     accountId: async () => me.account.id,
