@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **14 tools** and **4 MCP resources** for container tracking and shipment management.
+The Terminal49 MCP Server provides **21 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. Every tool below is in the `core` toolset. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. The trade intelligence tools are in the `trade` toolset and every other tool below is in the `core` toolset. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -377,6 +377,12 @@ whoami()
 
 ---
 
+### Trade intelligence tools
+
+`search_importers`, `get_importer_profile`, `search_commodities`, `rank_importers`, `get_trade_trends`, `get_trade_breakdown`, and `get_trade_data_coverage` answer US ocean import market questions from US Customs bill-of-lading records (January 2022 onward). They are read-only and enabled per account. See `docs/mcp/home.mdx` for parameters and the caveats agents must apply.
+
+---
+
 ## MCP Resources
 
 ### 1. `terminal49://container/{id}`
@@ -592,7 +598,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 14 tools and 4 resources, the LLM can:
+With these 21 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates
