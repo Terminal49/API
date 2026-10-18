@@ -92,7 +92,7 @@ describe('server instructions', () => {
     for (const tool of tools.filter((entry) => entry.tier !== 'read')) {
       expect(instructions, tool.name).toMatch(
         new RegExp(
-          `\\b${tool.name}\\b[^;.]*${tool.tier === 'A' ? 'runs in one call' : 'needs a confirmed preview'}`,
+          `\\b${tool.name}\\b[^;.]*${tool.tier === 'A' ? 'runs in one call' : "needs the user's approval of a preview"}`,
         ),
       );
     }

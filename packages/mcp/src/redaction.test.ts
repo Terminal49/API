@@ -17,6 +17,7 @@ const { confirmation_token: TOKEN } = issueConfirmationToken(
     args: { shipment_id: '1f0e8a52-3c4d-4b6e-9f7a-8b9c0d1e2f3a' },
     accountId: 'b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a',
     credentialHash: 'hash',
+    channel: 'token',
   },
   'fingerprint',
 );
