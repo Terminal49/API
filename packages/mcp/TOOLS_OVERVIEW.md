@@ -915,7 +915,7 @@ list_webhooks({
 
 **Returns**:
 - `webhooks`, each with `id`, `active`, `events`, `url`, `has_secret` and `header_names`
-- `url` has `scheme`, `host` and `path`, plus `has_query`, `host_redacted` and `path_redacted`. The query string, fragment, user name and password are dropped. The host keeps its leftmost label only when that label is 1 to 12 lowercase letters or hyphens. The path keeps only its first segment, and only when that segment is lowercase words of up to 16 letters joined by hyphens. Every other label or segment is replaced with `[redacted]`.
+- `url` has `scheme`, `host` and `path`, plus `has_query`, `host_redacted` and `path_redacted`. The query string, fragment, user name and password are dropped. The host keeps only its last two labels, such as `example.com`. Every other host label and every path segment is replaced with `[redacted]`.
 - `has_secret` says whether a signing secret is set. `header_names` lists custom header names, never their values.
 - `links` and `meta` when listing
 - `event_catalog` when requested: each `category` with its `events` (`name`, `description`)
