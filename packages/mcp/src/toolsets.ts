@@ -16,6 +16,9 @@ import type { McpCredentialType } from './tools/context.js';
 export const TOOLSETS_HEADER = 'X-T49-MCP-Toolsets';
 export const READ_ONLY_HEADER = 'X-T49-MCP-Read-Only';
 
+/** Toolsets the shared env token gets without T49_MCP_ALLOW_SHARED_TOKEN_WRITES. */
+const SHARED_TOKEN_TOOLSETS: readonly Toolset[] = ['core', 'trade'];
+
 /** A request header that the gateway answers with 400. */
 export class ToolSelectionRequestError extends Error {
   constructor(message: string) {
@@ -82,12 +85,12 @@ function allowedToolsets(
   }
 
   // One shared T49_API_TOKEN cannot tell callers apart, so it stays on core
-  // unless the operator opts in.
+  // and the read-only trade toolset unless the operator opts in.
   if (
     credentialType === 'shared_token' &&
     !envFlag(env, 'T49_MCP_ALLOW_SHARED_TOKEN_WRITES')
   ) {
-    return allowed.filter((toolset) => toolset === 'core');
+    return allowed.filter((toolset) => SHARED_TOKEN_TOOLSETS.includes(toolset));
   }
   return allowed;
 }

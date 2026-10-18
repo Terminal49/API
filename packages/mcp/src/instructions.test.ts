@@ -205,7 +205,7 @@ describe('tool descriptions', () => {
         }
       }
     }
-    // One MCP connection per toolset subset and mode: 64 round trips that
+    // One MCP connection per toolset subset and mode: 128 round trips that
     // grow with every toolset.
-  }, 30_000);
+  }, 60_000);
 });

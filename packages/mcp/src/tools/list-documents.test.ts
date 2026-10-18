@@ -48,6 +48,13 @@ describe('list_documents', () => {
       'GET /documents': {
         body: {
           data: [documentRecord],
+          included: [
+            {
+              id: 'b3abc297-624a-4eaa-a0e9-4ac4ebbd064f',
+              type: 'document_representation',
+              attributes: { payload: { bill_of_lading: 'MAEU1' } },
+            },
+          ],
           links: { next: 'https://api.test/v2/documents?page[number]=2' },
           meta: { total: 26 },
         },
@@ -58,6 +65,7 @@ describe('list_documents', () => {
 
     expect(requests).toHaveLength(1);
     expect(Object.fromEntries(requests[0].query)).toEqual({
+      include: 'last_document_representation',
       sort: '-created_at',
       'page[size]': '25',
     });
@@ -88,6 +96,55 @@ describe('list_documents', () => {
     expect(listDocumentsOutputSchema.parse(result)).toEqual(result);
   });
 
+  it('reports extracted data only when the extraction has fields', async () => {
+    const pendingId = '5d1c6a7e-2b3f-4a8c-9d0e-1f2a3b4c5d6e';
+    const representation = (id: string, payload: Record<string, unknown>) => ({
+      id,
+      type: 'document_representation',
+      attributes: { schema_version: 'v1', payload, updated_at: null },
+    });
+    const withRepresentation = (
+      documentId: string,
+      representationId: string,
+    ) => ({
+      ...documentRecord,
+      id: documentId,
+      relationships: {
+        ...documentRecord.relationships,
+        last_document_representation: {
+          data: { id: representationId, type: 'document_representation' },
+        },
+      },
+    });
+    const { client, requests } = fakeApiClient({
+      'GET /documents': {
+        body: {
+          data: [
+            withRepresentation(DOCUMENT_ID, 'rep-extracted'),
+            withRepresentation(pendingId, 'rep-pending'),
+          ],
+          included: [
+            representation('rep-extracted', { bill_of_lading: 'MAEU1' }),
+            representation('rep-pending', {}),
+          ],
+        },
+      },
+    });
+
+    const result = await executeListDocuments({}, client);
+
+    expect(requests[0].query.get('include')).toBe(
+      'last_document_representation',
+    );
+    expect(
+      'items' in result &&
+        result.items.map((item) => [item.id, item.has_extracted_data]),
+    ).toEqual([
+      [DOCUMENT_ID, true],
+      [pendingId, false],
+    ]);
+  });
+
   it('sends the filters, sort and page the caller asked for', async () => {
     const { client, requests } = fakeApiClient({
       'GET /documents': { body: { data: [] } },
@@ -109,6 +166,7 @@ describe('list_documents', () => {
       'filter[filename]': 'arrival',
       'filter[reference]': 'MAEU123456789',
       'filter[document_types]': 'arrival_notice,delivery_order',
+      include: 'last_document_representation',
       sort: 'document_type',
       'page[number]': '2',
       'page[size]': '10',
