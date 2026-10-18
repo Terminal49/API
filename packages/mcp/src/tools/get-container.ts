@@ -41,92 +41,6 @@ export interface GetContainerArgs {
   include?: ContainerInclude[];
 }
 
-export interface ContainerStatus {
-  id: string;
-  container_number: string;
-  /** Authoritative headline status from the API `current_status`. */
-  status: string;
-  status_source: ContainerStatusResult['status_source'];
-  equipment: {
-    type: string | null;
-    length: number | null;
-    height: string | null;
-    weight_lbs: number | null;
-  };
-  location: {
-    current_location: string | null;
-    available_for_pickup: boolean | null;
-    availability_known: boolean | null;
-    pod_arrived_at: string | null;
-    pod_arrived_at_local: string;
-    pod_discharged_at: string | null;
-    pod_discharged_at_local: string;
-    pod_timezone: string | null;
-  };
-  demurrage: {
-    pickup_lfd: string | null;
-    pickup_lfd_local: string;
-    /** Per-channel LFDs from import_deadlines (terminal/rail/line). */
-    last_free_days: {
-      terminal: string | null;
-      rail: string | null;
-      line: string | null;
-    };
-    pickup_appointment_at: string | null;
-    fees_at_pod_terminal: DemurrageEvaluation['fees'];
-    fees_total_amount: number | null;
-    fees_currency_code: string | null;
-    holds_at_pod_terminal: unknown[] | null;
-    urgency: DemurrageEvaluation['urgency'];
-    urgency_suppressed: boolean;
-    urgency_reason: string | null;
-    days_until_lfd: number | null;
-  };
-  rail: {
-    pod_rail_carrier: string | null;
-    pod_rail_loaded_at: string | null;
-    destination_eta: string | null;
-    destination_ata: string | null;
-  };
-  shipment: {
-    id: string;
-    ref_numbers: string[];
-    line: string;
-    shipping_line_name?: string;
-    port_of_lading_name?: string;
-    port_of_discharge_name?: string;
-    destination_name?: string;
-    /** When the shipment stopped updating; null while it is still tracked. */
-    line_tracking_stopped_at: string | null;
-  } | null;
-  pod_terminal: {
-    id: string;
-    name: string;
-    firms_code: string;
-  } | null;
-  custom_fields: CustomFieldValue[] | null;
-  custom_fields_note?: string;
-  events?: {
-    count: number;
-    latest_event?: {
-      event: string;
-      timestamp: string;
-      value: unknown;
-      data_source: string | null;
-      invalidated_at: string | null;
-      location?: string;
-    };
-    rail_events_count?: number;
-  };
-  created_at: string;
-  _metadata: {
-    container_state: string;
-    status_is_authoritative: boolean;
-    derived_lifecycle: string;
-    includes_loaded: string[];
-  };
-}
-
 // Values copied straight from API attributes are nullish: the API can omit
 // them, and a missing optional field must not fail the whole tool call.
 const apiString = z.string().nullish();
@@ -234,6 +148,8 @@ export const containerStatusSchema = z.object({
   }),
 });
 
+export type ContainerStatus = z.input<typeof containerStatusSchema>;
+
 /** Merge requested includes onto the defaults, de-duplicated, order-stable. */
 export function resolveIncludes(
   requested: ContainerInclude[] | undefined,
@@ -286,11 +202,7 @@ export async function executeGetContainer(
       timestamp: new Date().toISOString(),
     });
 
-    return formatContainerResponse(
-      raw,
-      includes,
-      customFields,
-    ) satisfies z.input<typeof containerStatusSchema>;
+    return formatContainerResponse(raw, includes, customFields);
   } catch (error) {
     const duration = Date.now() - startTime;
     logMcpEvent({
