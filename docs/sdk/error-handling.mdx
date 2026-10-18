@@ -21,7 +21,7 @@ The SDK throws typed errors you can catch and handle based on the error type.
 | `NotFoundError` | Resource doesn't exist or isn't accessible |
 | `ValidationError` | Invalid request parameters |
 | `RateLimitError` | Too many requests |
-| `FeatureNotEnabledError` | Feature requires a plan upgrade |
+| `FeatureNotEnabledError` | Feature is not enabled for the account, for example trade intelligence or routing data |
 | `UpstreamError` | Carrier or terminal API is unavailable |
 | `Terminal49Error` | Generic error fallback |
 
@@ -57,7 +57,7 @@ try {
 
 ## Automatic retries
 
-The SDK automatically retries `429` and `5xx` responses with exponential backoff up to `maxRetries` (default: 2).
+The SDK automatically retries `429` and `5xx` responses with exponential backoff up to `maxRetries` (default: 2). Retries apply to reads: `GET` requests and the read-only `POST` queries under `client.tradeIntel`. Other writes are retried only when you send an `Idempotency-Key` header.
 
 ```typescript
 const client = new Terminal49Client({

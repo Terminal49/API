@@ -15,7 +15,7 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (19 Available)
+### 🛠️ Tools (26 Available)
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -38,6 +38,13 @@
 | **`get_tracking_request`** | Get one tracking request's status, failure reason, and shipment | Follow-up after tracking |
 | **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
 | **`whoami`** | Identify the credential, its account, the features it can use, and the session's toolsets | Explains empty or unauthorized results |
+| **`search_importers`** | Find US importers by name, by what they import, or both | Trade intelligence, per account |
+| **`get_importer_profile`** | One importer's totals, monthly series, ports, origins, carriers, and products | Trade intelligence, per account |
+| **`search_commodities`** | Turn a product description or HS prefix into four-digit HS codes | Trade intelligence, per account |
+| **`rank_importers`** | Rank importers by containers for a product, US port, or origin country | Trade intelligence, per account |
+| **`get_trade_trends`** | Time series of containers, TEUs, or estimated value | Trade intelligence, per account |
+| **`get_trade_breakdown`** | Nested totals over one to three dimensions | Trade intelligence, per account |
+| **`get_trade_data_coverage`** | Where trade data starts, the latest and last full month | Trade intelligence, per account |
 
 ### 🎯 Prompts (3 Workflows)
 
@@ -378,9 +385,9 @@ npm run lint
 |----------|----------|---------|-------------|
 | `T49_API_TOKEN` | ✅ Yes | - | Terminal49 API token |
 | `T49_API_BASE_URL` | No | `https://api.terminal49.com/v2` | API base URL |
-| `T49_MCP_TOOLSETS` | No | `core,documents` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
+| `T49_MCP_TOOLSETS` | No | `core,documents,trade` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
 | `T49_MCP_READ_ONLY` | No | `false` | Serve only tools whose `readOnlyHint` is true. Accepts `true`, `false`, `1` or `0`, in any case. |
-| `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | `false` | Serve toolsets other than `core` when callers share `T49_API_TOKEN` |
+| `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | `false` | Serve toolsets other than `core` and `trade` when callers share `T49_API_TOKEN` |
 | `OPENAI_APPS_CHALLENGE` | Only for ChatGPT submission | - | Exact domain-verification token issued by the OpenAI submission portal |
 | `NODE_ENV` | No | `development` | Environment |
 | `LOG_LEVEL` | No | `info` | Logging level |
@@ -400,13 +407,13 @@ Credential headers (`Authorization`, cookies, and any header whose name contains
 
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write` or `developer`. Every tool today is in `core`. `whoami` reports the toolsets a session serves and whether it has write tools.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write`, `developer` or `trade`. The trade intelligence tools are in `trade`, and every other tool today is in `core`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
 - `X-T49-MCP-Read-Only: true` or `T49_MCP_READ_ONLY=true` removes every tool whose `readOnlyHint` is false, including `track_container`. Both accept `true`, `false`, `1` or `0`, in any case. Any other header value returns 400. The header cannot turn off read-only mode that the env turned on.
 - The server instructions name only the tools the session serves.
-- When the gateway uses one shared `T49_API_TOKEN`, it serves only `core` unless `T49_MCP_ALLOW_SHARED_TOKEN_WRITES=true`.
+- When the gateway uses one shared `T49_API_TOKEN`, it serves only `core` and the read-only `trade` toolset unless `T49_MCP_ALLOW_SHARED_TOKEN_WRITES=true`.
 - Toolsets are never read from the connector URL. The OAuth resource stays the root origin.
 
 ---
