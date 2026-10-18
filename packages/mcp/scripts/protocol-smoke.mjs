@@ -4,6 +4,7 @@ import {
 } from '@modelcontextprotocol/client';
 import { createMcpHandler } from '@modelcontextprotocol/server';
 import { createTerminal49McpServer } from '../dist/server.js';
+import { defaultTools } from '../dist/tools/registry.js';
 
 const protocolVersion = process.env.MCP_PROTOCOL_VERSION;
 if (!protocolVersion) {
@@ -13,6 +14,7 @@ if (!protocolVersion) {
 const isModern = protocolVersion === '2026-07-28';
 const expectedHandshake = isModern ? 'server/discover' : 'initialize';
 const observedRequests = [];
+const expectedTools = defaultTools().map((tool) => tool.name);
 
 const handler = createMcpHandler(
   () => createTerminal49McpServer('ci-test-token', 'https://api.test'),
@@ -67,13 +69,9 @@ try {
   }
 
   const { tools } = await client.listTools();
-  if (
-    tools.length !== 21 ||
-    !tools.some((tool) => tool.name === 'search_docs') ||
-    !tools.some((tool) => tool.name === 'whoami')
-  ) {
+  if (tools.map((tool) => tool.name).join() !== expectedTools.join()) {
     throw new Error(
-      `Expected 21 tools including search_docs and whoami over ${protocolVersion}, received ${tools.length}`,
+      `Expected ${expectedTools.join(', ')} over ${protocolVersion}, received ${tools.map((tool) => tool.name).join(', ')}`,
     );
   }
 

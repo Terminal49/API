@@ -9,6 +9,7 @@ import {
   createTerminal49McpServer,
   TERMINAL49_SERVER_INSTRUCTIONS,
 } from './server.js';
+import { defaultTools } from './tools/registry.js';
 import { TRADE_INTEL_TOOL_NAMES } from './tools/trade-intel.js';
 
 vi.mock('@sentry/node', () => ({
@@ -372,7 +373,7 @@ describe('MCP server wiring', () => {
     );
     const prompts = Object.keys((server as any)._registeredPrompts || {});
 
-    expect(tools).toHaveLength(21);
+    expect(tools).toHaveLength(defaultTools().length);
     expect(tools).toContain('search_container');
     expect(tools).toContain('track_container');
     expect(tools).toContain('get_container');

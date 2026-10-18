@@ -105,7 +105,7 @@ Pre-built workflows for common tasks:
 ├── api/mcp.ts              # Vercel HTTP endpoint
 ├── packages/mcp/           # MCP server package
 │   ├── src/
-│   │   ├── tools/          # 10 MCP tools
+│   │   ├── tools/          # MCP tools and the tool registry
 │   │   ├── prompts/        # 3 workflow prompts
 │   │   └── resources/      # Dynamic resources
 │   └── README.md           # Full documentation
