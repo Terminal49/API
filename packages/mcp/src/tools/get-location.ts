@@ -8,7 +8,7 @@
 import { NotFoundError, type Terminal49Client } from '@terminal49/sdk';
 import { z } from 'zod';
 import { nullableString, relationshipRef } from './api-fields.js';
-import { ToolInputError } from './soft-results.js';
+import { httpStatus, ToolInputError } from './soft-results.js';
 
 export const LOCATION_KINDS = ['port', 'terminal', 'metro_area'] as const;
 export type LocationKind = (typeof LOCATION_KINDS)[number];
@@ -162,7 +162,12 @@ async function getTerminal(
   const { street, city, state, state_abbr, zip, country } = data.attributes;
   const portId = data.relationships.port?.data?.id;
   const port = portId
-    ? await getPlace('port', portId, client).catch(() => null)
+    ? await getPlace('port', portId, client).catch((error: unknown) => {
+        if (error instanceof NotFoundError || httpStatus(error) === 404) {
+          return null;
+        }
+        throw error;
+      })
     : null;
 
   return {

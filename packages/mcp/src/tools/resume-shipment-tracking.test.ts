@@ -99,6 +99,34 @@ describe('resume_shipment_tracking', () => {
     ]);
   });
 
+  it('resumes a shipment that has a stop reason but no stop time', async () => {
+    const active = shipment(null);
+    const stopped = {
+      data: {
+        ...active.data,
+        attributes: {
+          ...active.data.attributes,
+          line_tracking_stopped_reason: 'cancelled_by_user',
+        },
+      },
+    };
+    const { client, requests } = fakeApiClient({
+      [`GET /shipments/${SHIPMENT_ID}`]: { body: stopped },
+      [`PATCH /shipments/${SHIPMENT_ID}/resume_tracking`]: {
+        body: shipment(null),
+      },
+    });
+
+    const result = await executeResumeShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      writeContext(client),
+    );
+
+    expect(result).toMatchObject({ status: 'resumed' });
+    expect(requests.map((request) => request.method)).toEqual(['GET', 'PATCH']);
+  });
+
   it('audits a session the gateway named no account for under the /me account', async () => {
     const { client } = fakeApiClient({
       'GET /me': { body: meBody() },
