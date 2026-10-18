@@ -246,6 +246,56 @@ describe('identify_tracking_number', () => {
     expect(identifyTrackingNumberOutputSchema.parse(result)).toEqual(result);
   });
 
+  it('says it could not check when a full page of search hits has no exact match', async () => {
+    const { client } = fakeApiClient({
+      'POST /tracking_requests/infer_number': { body: inferred({}) },
+      'GET /search': {
+        body: {
+          data: Array.from({ length: 25 }, (_, index) =>
+            searchResult(
+              { entity_type: 'shipment', number: `BL${index}`, scac: 'MAEU' },
+              `shipment-${index}`,
+            ),
+          ),
+        },
+      },
+    });
+
+    const result = await executeIdentifyTrackingNumber(
+      { number: 'CAIU2885402' },
+      client,
+    );
+
+    expect(result).toMatchObject({
+      already_tracked: null,
+      already_tracked_note: ALREADY_TRACKED_UNKNOWN_NOTE,
+    });
+  });
+
+  it.each([
+    ['data is missing', {}],
+    ['data is not a list', { data: { id: 'x' } }],
+    ['a row is unreadable', { data: [{ id: 7, type: 'search_result' }] }],
+  ])(
+    'says it could not check when %s, instead of not tracked',
+    async (_, body) => {
+      const { client } = fakeApiClient({
+        'POST /tracking_requests/infer_number': { body: inferred({}) },
+        'GET /search': { body },
+      });
+
+      const result = await executeIdentifyTrackingNumber(
+        { number: 'CAIU2885402' },
+        client,
+      );
+
+      expect(result).toMatchObject({
+        already_tracked: null,
+        already_tracked_note: ALREADY_TRACKED_UNKNOWN_NOTE,
+      });
+    },
+  );
+
   it('turns a 429 from the duplicate search into a rate_limited result', async () => {
     const { client } = fakeApiClient({
       'POST /tracking_requests/infer_number': { body: inferred({}) },

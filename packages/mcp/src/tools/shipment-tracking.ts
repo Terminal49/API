@@ -47,14 +47,16 @@ const rawShipmentSchema = z.object({
 export function parseShipmentTracking(raw: unknown): ShipmentTracking {
   const { data } = rawShipmentSchema.parse(raw);
   const stoppedAt = data.attributes.line_tracking_stopped_at;
+  const reason = data.attributes.line_tracking_stopped_reason;
   return {
     id: data.id,
     bill_of_lading: data.attributes.bill_of_lading_number,
     shipping_line_scac: data.attributes.shipping_line_scac,
     container_count: data.relationships.containers?.data.length ?? null,
-    tracking: stoppedAt ? 'stopped' : 'active',
+    // Either field marks a stop: some stopped shipments carry only the reason.
+    tracking: stoppedAt || reason ? 'stopped' : 'active',
     tracking_stopped_at: stoppedAt,
-    tracking_stopped_reason: data.attributes.line_tracking_stopped_reason,
+    tracking_stopped_reason: reason,
   };
 }
 

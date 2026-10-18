@@ -39,7 +39,7 @@ export const MAX_REFERENCE_NUMBERS_PER_CALL = 20;
  * The longest number add accepts. Remove accepts longer ones, because a
  * record can already hold a number added another way.
  */
-const MAX_LENGTH = { add: 64, remove: 1000 } as const;
+export const MAX_LENGTH = { add: 64, remove: 1000 } as const;
 
 export function referenceNumbersInput(verb: 'add' | 'remove') {
   const maxLength = MAX_LENGTH[verb];

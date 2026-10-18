@@ -10,6 +10,7 @@ import { z } from 'zod';
 import type { ToolContext } from './context.js';
 import {
   CONCURRENT_CHANGE_NOTE,
+  MAX_LENGTH,
   readBackReferenceNumbers,
   readReferenceRecord,
   referenceEntityInput,
@@ -63,6 +64,8 @@ export const removeReferenceNumbersOutputSchema = confirmedWriteResultSchema(
   },
 );
 
+export const UNDO_TOO_LONG_NOTE = `add_reference_numbers cannot restore a number over ${MAX_LENGTH.add} characters, so re-add those in the Terminal49 dashboard if needed.`;
+
 const REMOVE_REACH =
   'Only the listed reference numbers are removed from this record. Searches, filters and integrations that use them stop finding it.';
 
@@ -84,7 +87,7 @@ interface RemoveOutcome {
   not_present: string[];
   concurrent_change_detected: boolean | null;
   read_back_note?: string;
-  undo: 'add_reference_numbers';
+  undo?: 'add_reference_numbers';
 }
 
 interface ListRejected {
@@ -181,17 +184,23 @@ export async function executeRemoveReferenceNumbers(
         entity_id,
         sent,
       );
+      const undoable = preview.removing.every(
+        (value) => value.length <= MAX_LENGTH.add,
+      );
+      const notes = [
+        'Reference numbers removed.',
+        ...(after.concurrent_change_detected ? [CONCURRENT_CHANGE_NOTE] : []),
+        ...(undoable ? [] : [UNDO_TOO_LONG_NOTE]),
+      ];
       return {
         status: 'removed',
-        message: after.concurrent_change_detected
-          ? `Reference numbers removed. ${CONCURRENT_CHANGE_NOTE}`
-          : 'Reference numbers removed.',
+        message: notes.join(' '),
         record: target,
         previous,
         ...after,
         removed: preview.removing,
         not_present: preview.not_present,
-        undo: 'add_reference_numbers',
+        ...(undoable && { undo: 'add_reference_numbers' as const }),
       };
     },
   });
