@@ -95,7 +95,7 @@ The default toolsets serve 39 tools. Twelve of them change account data: `track_
 | `get_trade_breakdown` | Nested totals over one to three dimensions (trade intelligence) |
 | `get_trade_data_coverage` | Where trade data starts, the latest and last full month (trade intelligence) |
 
-The `operations` toolset adds nine write tools and is in the default toolsets. Of the write tools, `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `unassign_party`, `update_custom_field` and `update_document` return a preview first and change data only when called again with the confirmation token from that preview. See [Confirming writes](packages/mcp/README.md#confirming-writes).
+The `operations` toolset adds nine write tools and is in the default toolsets. Of the write tools, `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `unassign_party`, `update_custom_field` and `update_document` never change data on their first call: the user approves a preview first, in a confirmation dialog the client shows (MCP 2026-07-28 form elicitation) or, on other clients, by approving the preview in the chat so the model can call again with the confirmation token from it. See [Confirming writes](packages/mcp/README.md#confirming-writes).
 
 | Tool | Description |
 |------|-------------|
@@ -236,7 +236,7 @@ vercel deploy --prod
 **Environment Variables:**
 - `T49_API_TOKEN` - Your Terminal49 API token (required)
 - `T49_API_BASE_URL` - Optional (defaults to https://api.terminal49.com)
-- `T49_MCP_CONFIRMATION_SECRET` - At least 32 random characters. Required for the write tools that return a preview first, which the default toolsets serve
+- `T49_MCP_CONFIRMATION_SECRET` - At least 32 random characters. Required for the write tools that need the user's approval of a preview, which the default toolsets serve; it signs the approval on both the elicitation and the token channel
 - `SENTRY_DSN` - Optional; enables Sentry MCP Monitoring
 - `SENTRY_TRACES_SAMPLE_RATE` - Optional trace sample rate (`1.0` by default)
 - `SENTRY_MCP_RECORD_INPUTS` / `SENTRY_MCP_RECORD_OUTPUTS` - Optional; disabled by default to avoid storing shipment/customer payloads in Sentry

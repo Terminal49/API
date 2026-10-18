@@ -269,7 +269,7 @@
       "justifications": {
         "read_only_justification": "Stops carrier and terminal updates for one shipment in the user's Terminal49 account.",
         "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
-        "destructive_justification": "Ends updates for the shipment and its containers. The tool returns a preview first and makes the change only when called again with the confirmation token from that preview. resume_shipment_tracking starts tracking again."
+        "destructive_justification": "Ends updates for the shipment and its containers. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. resume_shipment_tracking starts tracking again."
       }
     },
     "resume_shipment_tracking": {
@@ -293,7 +293,7 @@
       "justifications": {
         "read_only_justification": "Cancels one pending tracking request in the user's Terminal49 account.",
         "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
-        "destructive_justification": "A cancelled tracking request cannot be restored. The tool returns a preview first and makes the change only when called again with the confirmation token from that preview. It cancels only a request that is still pending."
+        "destructive_justification": "A cancelled tracking request cannot be restored. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. It cancels only a request that is still pending."
       }
     },
     "add_reference_numbers": {
@@ -317,7 +317,7 @@
       "justifications": {
         "read_only_justification": "Removes reference numbers from one container, shipment or tracking request in the user's Terminal49 account.",
         "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
-        "destructive_justification": "Removes the named reference numbers from the record. The tool returns a preview first and makes the change only when called again with the confirmation token from that preview."
+        "destructive_justification": "Removes the named reference numbers from the record. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview."
       }
     },
     "assign_party": {
@@ -341,7 +341,7 @@
       "justifications": {
         "read_only_justification": "Removes one party role from a container or shipment in the user's Terminal49 account.",
         "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
-        "destructive_justification": "Removes the link between the party and the record and keeps the party itself. The tool returns a preview first and makes the change only when called again with the confirmation token from that preview."
+        "destructive_justification": "Removes the link between the party and the record and keeps the party itself. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview."
       }
     },
     "set_custom_field": {
@@ -365,7 +365,7 @@
       "justifications": {
         "read_only_justification": "Replaces or clears a custom field value on one container, shipment or tracking request in the user's Terminal49 account.",
         "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
-        "destructive_justification": "Overwrites or clears the current value. The tool returns a preview first and makes the change only when called again with the confirmation token from that preview."
+        "destructive_justification": "Overwrites or clears the current value. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview."
       }
     },
     "relink_document": {
@@ -389,7 +389,7 @@
       "justifications": {
         "read_only_justification": "Sets the type of one document in the user's Terminal49 account, or has Terminal49 classify or extract it again.",
         "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
-        "destructive_justification": "Replaces the document's type or extracted data. The tool returns a preview first and makes the change only when called again with the confirmation token from that preview."
+        "destructive_justification": "Replaces the document's type or extracted data. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview."
       }
     },
     "search_importers": {
@@ -507,7 +507,7 @@
       "user_prompt": "Remove reference number PO-1234 from the shipment with Bill of Lading COSU6123456789 in my Terminal49 account.",
       "file_attachment_urls": null,
       "tools_triggered": "search_container, remove_reference_numbers",
-      "expected_output": "Finds the shipment, then calls remove_reference_numbers without a confirmation token and shows the preview of the reference numbers before and after. It removes PO-1234 only after the user approves, by calling again with the confirmation token from that preview. If the shipment does not have PO-1234, it reports that nothing was changed.",
+      "expected_output": "Finds the shipment, then calls remove_reference_numbers without a confirmation token. The user sees the preview of the reference numbers before and after, in the client's confirmation dialog or in the chat, and PO-1234 is removed only after the user approves it. If the shipment does not have PO-1234, it reports that nothing was changed.",
       "expected_output_url": null
     },
     {
