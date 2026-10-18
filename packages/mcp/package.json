@@ -28,19 +28,19 @@
     "generate:filters": "node scripts/generate-list-filter-schemas.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/node": "^2.0.0",
-    "@modelcontextprotocol/server": "^2.0.0",
-    "@posthog/mcp": "^0.16.3",
-    "@sentry/node": "^10.55.0",
+    "@modelcontextprotocol/node": "^2.1.1",
+    "@modelcontextprotocol/server": "^2.3.1",
+    "@posthog/mcp": "^0.16.4",
+    "@sentry/node": "^10.76.2",
     "@terminal49/sdk": "0.6.0",
-    "posthog-node": "^5.0.0",
+    "posthog-node": "^5.56.2",
     "zod": "~4.3.6"
   },
   "devDependencies": {
-    "@modelcontextprotocol/client": "^2.0.0",
+    "@modelcontextprotocol/client": "^2.3.1",
     "@types/node": "^24.10.13",
     "@vitest/coverage-v8": "4.1.11",
-    "tsx": "^4.22.4",
+    "tsx": "^4.23.15",
     "typescript": "^5.6.3",
     "vite-plus": "0.3.3"
   },
