@@ -319,6 +319,34 @@ describe('assign_party', () => {
     });
   });
 
+  it.each([
+    ['a page whose data is not a list', { data: { id: 'x' }, links: null }],
+    [
+      'a row with no id',
+      { data: [{ type: 'party', attributes: {} }], links: { next: null } },
+    ],
+  ])('creates nothing when the party list has %s', async (_, page) => {
+    const { client, requests } = fakeApiClient({
+      [`GET ${ROLES_PATH}`]: { body: partyRolesBody([]) },
+      'GET /parties': { body: page },
+    });
+
+    await expect(
+      executeAssignParty(
+        {
+          entity_type: 'shipment',
+          entity_id: PARTY_SHIPMENT_ID,
+          role: 'consignee',
+          party_name: 'Blue Harbor Trading',
+          create_party_if_missing: true,
+        },
+        client,
+        writeContext(client),
+      ),
+    ).rejects.toThrow();
+    expect(requests.filter((request) => request.method === 'POST')).toEqual([]);
+  });
+
   it('says the party was created when the assignment is then rate limited', async () => {
     const { client } = fakeApiClient({
       [`GET ${ROLES_PATH}`]: { body: partyRolesBody([]) },

@@ -333,6 +333,26 @@ describe('runWrite', () => {
     );
   });
 
+  it('returns a write within seconds when /me hangs, and audits without an account', async () => {
+    vi.useFakeTimers();
+    try {
+      const me = vi.fn(() => new Promise<never>(() => {}));
+      const settled = vi.fn();
+      void runWrite(context({}, me), target, async () => ({
+        status: 'created',
+      })).then(settled);
+
+      await vi.advanceTimersByTimeAsync(5_000);
+
+      expect(settled).toHaveBeenCalledWith({ status: 'created' });
+      expect(auditLines(lines)).toEqual([
+        expect.objectContaining({ outcome: 'created', account_id: null }),
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('still returns the result when /me fails, and audits without an account', async () => {
     const me = vi.fn().mockRejectedValue(new Error('me failed'));
 
