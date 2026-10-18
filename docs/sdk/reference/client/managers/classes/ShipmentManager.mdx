@@ -20,7 +20,7 @@ description: "ShipmentManager class in the Terminal49 TypeScript SDK, used to li
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
 | `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
-| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+| `defaultFormat?` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
 
 #### Returns
 
@@ -98,7 +98,7 @@ Remove a custom field value from a shipment.
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
 | `id` | `string` | `undefined` |
-| `includeContainers` | `boolean` | `true` |
+| `includeContainers?` | `boolean` | `true` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` | `undefined` |
 
 #### Returns
@@ -115,7 +115,7 @@ Remove a custom field value from a shipment.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`ShipmentListFilters`](/sdk/reference/types/filters/interfaces/ShipmentListFilters) \| `undefined` |
+| `filters?` | [`ShipmentListFilters`](/sdk/reference/types/filters/interfaces/ShipmentListFilters) \| `undefined` |
 | `options?` | `Omit`\<[`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
 
 #### Returns
@@ -132,7 +132,7 @@ Remove a custom field value from a shipment.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`ShipmentListFilters`](/sdk/reference/types/filters/interfaces/ShipmentListFilters) |
+| `filters?` | [`ShipmentListFilters`](/sdk/reference/types/filters/interfaces/ShipmentListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns

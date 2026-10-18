@@ -202,7 +202,7 @@ Infer carrier/number type, then create a tracking request from the result.
 | Parameter | Type |
 | ------ | ------ |
 | `number` | `string` |
-| `options` | [`CreateTrackingRequestFromInferOptions`](/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) |
+| `options?` | [`CreateTrackingRequestFromInferOptions`](/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) |
 
 #### Returns
 
@@ -317,7 +317,7 @@ Useful when you want a simplified shape instead of JSON:API.
 
 | Type Parameter |
 | ------ |
-| `T` |
+| <a id="type-parameter-t"></a> `T` |
 
 #### Parameters
 
@@ -347,7 +347,7 @@ Fetch a container by ID with optional included relationships.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `include` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
+| `include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
@@ -575,7 +575,7 @@ Fetch a shipment by ID, optionally including related containers.
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
 | `id` | `string` | `undefined` |
-| `includeContainers` | `boolean` | `true` |
+| `includeContainers?` | `boolean` | `true` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) & `object` | `undefined` |
 
 #### Returns
@@ -803,7 +803,7 @@ List containers with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`ContainerListFilters`](/sdk/reference/types/filters/interfaces/ContainerListFilters) |
+| `filters?` | [`ContainerListFilters`](/sdk/reference/types/filters/interfaces/ContainerListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
@@ -897,7 +897,7 @@ List shipments with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`ShipmentListFilters`](/sdk/reference/types/filters/interfaces/ShipmentListFilters) |
+| `filters?` | [`ShipmentListFilters`](/sdk/reference/types/filters/interfaces/ShipmentListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
@@ -935,7 +935,7 @@ List tracking requests with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
+| `filters?` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
@@ -954,7 +954,7 @@ Alias for [listTrackingRequests](#listtrackingrequests).
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
+| `filters?` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
