@@ -182,19 +182,113 @@ function checkSdkEmission(sdkEntrypoints, sdkExports) {
   }
 }
 
-function checkFeatureMap() {
-  const featureMap = readJson('skills/agent-trust/feature-map.json');
-  const serverPath = resolve(root, 'packages/mcp/src/server.ts');
-  const registeredTools = [];
-  const toolImports = new Map();
-  const registeredImplementations = new Map();
-  const program = ts.createProgram([serverPath], {
+function parseSource(path) {
+  const absolute = resolve(root, path);
+  const program = ts.createProgram([absolute], {
     noResolve: true,
     noLib: true,
   });
-  const sourceFile = program.getSourceFile(serverPath);
+  const sourceFile = program.getSourceFile(absolute);
+  return { sourceFile, checker: program.getTypeChecker() };
+}
+
+function sourceLine(sourceFile, path, node) {
+  const { line } = sourceFile.getLineAndCharacterOfPosition(
+    node.getStart(sourceFile),
+  );
+  return `${path}:${line + 1}`;
+}
+
+function unwrapExpression(node) {
+  while (
+    ts.isParenthesizedExpression(node) ||
+    ts.isSatisfiesExpression(node) ||
+    ts.isAsExpression(node)
+  ) {
+    node = node.expression;
+  }
+  return node;
+}
+
+function enclosingDeclaration(expression) {
+  let node = expression;
+  while (
+    (ts.isParenthesizedExpression(node.parent) ||
+      ts.isSatisfiesExpression(node.parent) ||
+      ts.isAsExpression(node.parent)) &&
+    node.parent.expression === node
+  ) {
+    node = node.parent;
+  }
+  return ts.isVariableDeclaration(node.parent) &&
+    node.parent.initializer === node &&
+    ts.isIdentifier(node.parent.name) &&
+    node.parent.parent.flags & ts.NodeFlags.Const
+    ? node.parent
+    : undefined;
+}
+
+function literalPropertyName(name) {
+  return ts.isIdentifier(name) || ts.isStringLiteralLike(name)
+    ? name.text
+    : null;
+}
+
+const registryPath = 'packages/mcp/src/tools/registry.ts';
+
+function collectRegistryToolNames() {
+  if (!existsSync(resolve(root, registryPath))) return [];
+  const { sourceFile } = parseSource(registryPath);
+  const at = (node) => sourceLine(sourceFile, registryPath, node);
+  const declarations = sourceFile.statements
+    .filter(ts.isVariableStatement)
+    .flatMap((statement) => statement.declarationList.declarations)
+    .filter(
+      (declaration) =>
+        ts.isIdentifier(declaration.name) &&
+        declaration.name.text === 'TOOL_REGISTRY',
+    );
+  if (declarations.length !== 1)
+    throw new Error(`${registryPath} must declare TOOL_REGISTRY exactly once`);
+  const registry = unwrapExpression(declarations[0].initializer);
+  if (!ts.isArrayLiteralExpression(registry))
+    throw new Error(
+      `TOOL_REGISTRY at ${at(declarations[0])} must be an array literal`,
+    );
+  return registry.elements.map((entry) => {
+    if (ts.isCallExpression(entry)) {
+      const [name] = entry.arguments;
+      if (name && ts.isStringLiteralLike(name)) return name.text;
+    }
+    if (ts.isObjectLiteralExpression(entry)) {
+      const names = entry.properties.filter(
+        (property) =>
+          !ts.isPropertyAssignment(property) ||
+          literalPropertyName(property.name) === 'name',
+      );
+      const [property] = names;
+      if (
+        names.length === 1 &&
+        ts.isPropertyAssignment(property) &&
+        ts.isStringLiteralLike(property.initializer)
+      )
+        return property.initializer.text;
+    }
+    throw new Error(
+      `Unsupported MCP tool registry entry at ${at(entry)}; declare each tool with a literal name`,
+    );
+  });
+}
+
+function checkFeatureMap() {
+  const featureMap = readJson('skills/agent-trust/feature-map.json');
+  const serverPath = 'packages/mcp/src/server.ts';
+  const registeredTools = [];
+  const toolImports = new Map();
+  const registeredImplementations = new Map();
+  const { sourceFile, checker } = parseSource(serverPath);
   if (!sourceFile) throw new Error('Missing MCP registration source');
-  const checker = program.getTypeChecker();
+  const at = (node) => sourceLine(sourceFile, serverPath, node);
   for (const statement of sourceFile.statements) {
     if (
       !ts.isImportDeclaration(statement) ||
@@ -226,6 +320,77 @@ function checkFeatureMap() {
       ts.isCallExpression(member.parent) && member.parent.expression === member
     );
   }
+  function handlerImplementations(handler) {
+    const implementations = new Set();
+    function collectCalls(node) {
+      if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+        const implementation = toolImports.get(
+          checker.getSymbolAtLocation(node.expression),
+        );
+        if (implementation) implementations.add(implementation);
+      }
+      ts.forEachChild(node, collectCalls);
+    }
+    if (handler) collectCalls(handler);
+    return implementations;
+  }
+  function addTool(name, implementations) {
+    if (registeredImplementations.has(name))
+      throw new Error(`Duplicate MCP tool registration: ${name}`);
+    registeredTools.push(name);
+    registeredImplementations.set(name, implementations);
+  }
+  function returnedFunction(factory) {
+    let body = factory.body;
+    if (body && ts.isBlock(body)) {
+      const [statement] = body.statements;
+      body =
+        body.statements.length === 1 && ts.isReturnStatement(statement)
+          ? statement.expression
+          : undefined;
+    }
+    body = body && unwrapExpression(body);
+    return body && (ts.isArrowFunction(body) || ts.isFunctionExpression(body))
+      ? body
+      : undefined;
+  }
+  // A registerTool call whose name is `<definition>.name` is accepted only as
+  // the body of a `const <registrar> = (spec, handler) => (definition) => ...`
+  // factory. Its tool names come from the handler map's literal keys.
+  function registrarFor(call, name) {
+    const unsupported = () =>
+      new Error(
+        `MCP registrations require supported literal tool names at ${at(call)}; pass a literal name, or register through const <registrar> = (spec, handler) => (definition) => <receiver>.registerTool(definition.name, ...)`,
+      );
+    if (
+      !ts.isPropertyAccessExpression(name) ||
+      name.name.text !== 'name' ||
+      !ts.isIdentifier(name.expression)
+    )
+      throw unsupported();
+    const enclosingFunction = (node) => {
+      let current = node?.parent;
+      while (current && !ts.isFunctionLike(current)) current = current.parent;
+      return current;
+    };
+    const registrar = enclosingFunction(call);
+    const factory = enclosingFunction(registrar);
+    const declaration = factory && enclosingDeclaration(factory);
+    const [definition] = registrar?.parameters ?? [];
+    if (
+      !registrar ||
+      registrar.parameters.length !== 1 ||
+      !ts.isIdentifier(definition.name) ||
+      checker.getSymbolAtLocation(definition.name) !==
+        checker.getSymbolAtLocation(name.expression) ||
+      !(ts.isArrowFunction(factory) || ts.isFunctionExpression(factory)) ||
+      returnedFunction(factory) !== registrar ||
+      !declaration
+    )
+      throw unsupported();
+    return checker.getSymbolAtLocation(declaration.name);
+  }
+  let registrar;
   function visit(node) {
     if (
       (ts.isIdentifier(node) || ts.isStringLiteralLike(node)) &&
@@ -239,11 +404,8 @@ function checkFeatureMap() {
           isRegistrationCallee(node.parent))
       )
     ) {
-      const { line } = sourceFile.getLineAndCharacterOfPosition(
-        node.getStart(sourceFile),
-      );
       throw new Error(
-        `Unsupported MCP registerTool form at packages/mcp/src/server.ts:${line + 1}; call <receiver>.registerTool('<literal name>', ...) directly`,
+        `Unsupported MCP registerTool form at ${at(node)}; call <receiver>.registerTool('<literal name>', ...) directly`,
       );
     }
     if (ts.isCallExpression(node)) {
@@ -256,31 +418,112 @@ function checkFeatureMap() {
           : null;
       if (method === 'registerTool') {
         const name = node.arguments[0];
-        if (!name || !ts.isStringLiteralLike(name))
-          throw new Error(
-            'MCP registrations require supported literal tool names',
-          );
-        registeredTools.push(name.text);
-        const implementations = new Set();
-        function collectCalls(handler) {
-          if (
-            ts.isCallExpression(handler) &&
-            ts.isIdentifier(handler.expression)
-          ) {
-            const implementation = toolImports.get(
-              checker.getSymbolAtLocation(handler.expression),
+        if (name && ts.isStringLiteralLike(name)) {
+          addTool(name.text, handlerImplementations(node.arguments[2]));
+        } else {
+          const found = registrarFor(node, name ?? node);
+          if (registrar)
+            throw new Error(
+              `A second MCP tool registrar at ${at(node)}; register every tool through one registrar`,
             );
-            if (implementation) implementations.add(implementation);
-          }
-          ts.forEachChild(handler, collectCalls);
+          registrar = found;
         }
-        if (node.arguments[2]) collectCalls(node.arguments[2]);
-        registeredImplementations.set(name.text, implementations);
       }
     }
     ts.forEachChild(node, visit);
   }
   visit(sourceFile);
+
+  const handlerMapTools = [];
+  if (registrar) {
+    const [registrarDeclaration] = registrar.declarations;
+    let handlerMap;
+    function references(symbol, declarationName, check) {
+      function find(node) {
+        if (
+          ts.isIdentifier(node) &&
+          node !== declarationName &&
+          checker.getSymbolAtLocation(node) === symbol
+        )
+          check(node);
+        ts.forEachChild(node, find);
+      }
+      find(sourceFile);
+    }
+    references(registrar, registrarDeclaration.name, (reference) => {
+      const call = reference.parent;
+      const property = call.parent;
+      const map = property?.parent;
+      if (
+        !ts.isCallExpression(call) ||
+        call.expression !== reference ||
+        !ts.isPropertyAssignment(property) ||
+        property.initializer !== call ||
+        literalPropertyName(property.name) === null ||
+        !enclosingDeclaration(map) ||
+        (handlerMap && handlerMap !== map)
+      )
+        throw new Error(
+          `MCP tool registrar ${registrarDeclaration.name.text} at ${at(reference)} must only be called as a literal-keyed property value of one const handler map`,
+        );
+      handlerMap = map;
+    });
+    if (!handlerMap)
+      throw new Error(
+        `MCP tool registrar ${registrarDeclaration.name.text} is never placed in a handler map`,
+      );
+    for (const property of handlerMap.properties) {
+      const call = ts.isPropertyAssignment(property)
+        ? property.initializer
+        : undefined;
+      if (
+        !call ||
+        literalPropertyName(property.name) === null ||
+        !ts.isCallExpression(call) ||
+        !ts.isIdentifier(call.expression) ||
+        checker.getSymbolAtLocation(call.expression) !== registrar
+      )
+        throw new Error(
+          `MCP handler map entry at ${at(property)} must be '<literal tool name>': ${registrarDeclaration.name.text}(spec, handler)`,
+        );
+      const name = literalPropertyName(property.name);
+      handlerMapTools.push(name);
+      addTool(name, handlerImplementations(call.arguments[1]));
+    }
+    const mapDeclaration = enclosingDeclaration(handlerMap);
+    references(
+      checker.getSymbolAtLocation(mapDeclaration.name),
+      mapDeclaration.name,
+      (reference) => {
+        const access = reference.parent;
+        const call = access.parent;
+        const key = ts.isElementAccessExpression(access)
+          ? access.argumentExpression
+          : undefined;
+        const [definition] = ts.isCallExpression(call) ? call.arguments : [];
+        if (
+          !key ||
+          access.expression !== reference ||
+          call.expression !== access ||
+          call.arguments.length !== 1 ||
+          !ts.isPropertyAccessExpression(key) ||
+          key.name.text !== 'name' ||
+          !ts.isIdentifier(key.expression) ||
+          !ts.isIdentifier(definition) ||
+          checker.getSymbolAtLocation(key.expression) !==
+            checker.getSymbolAtLocation(definition)
+        )
+          throw new Error(
+            `MCP handler map ${mapDeclaration.name.text} at ${at(reference)} must only be dispatched as ${mapDeclaration.name.text}[definition.name](definition)`,
+          );
+      },
+    );
+  }
+  assertEqual(
+    'MCP tool registry against the server handler map',
+    collectRegistryToolNames(),
+    handlerMapTools,
+  );
   assertEqual(
     'MCP feature map',
     featureMap.mcpTools.map((tool) => tool.name),
