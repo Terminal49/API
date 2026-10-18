@@ -199,4 +199,69 @@ describe('tier C writes through the WorkOS gateway path', () => {
     // bearer tokens.
     expect(new Set(apiCredentials).size).toBe(2);
   });
+
+  it('asks the user through a client that declares form elicitation, across two gateway requests', async () => {
+    const realFetch = globalThis.fetch;
+    const api = fakeApiFetch(apiRoutes());
+    let resolves = 0;
+    vi.stubGlobal(
+      'fetch',
+      async (input: Request | URL | string, init?: RequestInit) => {
+        const url = new URL(input instanceof Request ? input.url : input);
+        if (url.hostname === '127.0.0.1') return realFetch(input, init);
+        if (url.pathname === '/v2/connected-clients/resolve') {
+          resolves += 1;
+          return Response.json({
+            data: {
+              attributes: {
+                access_token: `terminal49-jwt-${resolves}`,
+                account_id: ACCOUNT_ID,
+              },
+            },
+          });
+        }
+        return api.fetch(new Request(input, init));
+      },
+    );
+    const gateway = await serveGateway();
+    server = gateway.server;
+    const client = new Client(
+      { name: 'gateway-test', version: '1.0.0' },
+      {
+        versionNegotiation: { mode: { pin: '2026-07-28' } },
+        capabilities: { elicitation: { form: {} } },
+      },
+    );
+    const asked = vi.fn(async () => ({
+      action: 'accept' as const,
+      content: { confirm: true },
+    }));
+    client.setRequestHandler('elicitation/create', asked);
+    await client.connect(
+      new StreamableHTTPClientTransport(gateway.url, {
+        requestInit: {
+          headers: { Authorization: 'Bearer workos-access-token' },
+        },
+      }),
+    );
+
+    try {
+      const resolvedBeforeCall = resolves;
+      const stopped = await client.callTool({
+        name: 'stop_shipment_tracking',
+        arguments: { shipment_id: SHIPMENT_ID },
+      });
+
+      expect(stopped.structuredContent).toMatchObject({ status: 'stopped' });
+      expect(asked).toHaveBeenCalledOnce();
+      expect(
+        api.requests.filter((request) => request.method === 'PATCH'),
+      ).toHaveLength(1);
+      // The question and the answer were two gateway requests, each resolved
+      // on its own.
+      expect(resolves - resolvedBeforeCall).toBe(2);
+    } finally {
+      await client.close();
+    }
+  });
 });
