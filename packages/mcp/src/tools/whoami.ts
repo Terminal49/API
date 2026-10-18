@@ -11,6 +11,8 @@ import type { ToolContext } from './context.js';
 export interface WhoamiTrackingSlots {
   limit: number;
   used: number;
+  active_containers: number;
+  pending_tracking_requests: number;
   remaining: number;
 }
 
@@ -70,7 +72,20 @@ function toAccount(account: CurrentAccount): WhoamiAccount {
     scac: account.scac ?? null,
     abbr_name: account.abbrName ?? null,
     location: location(account),
-    tracking_slots: account.trackingSlots ?? null,
+    tracking_slots: trackingSlots(account),
+  };
+}
+
+// Build the object field by field so a backend addition can never fail the strict output schema.
+function trackingSlots(account: CurrentAccount): WhoamiTrackingSlots | null {
+  const slots = account.trackingSlots;
+  if (!slots) return null;
+  return {
+    limit: slots.limit,
+    used: slots.used,
+    active_containers: slots.activeContainers,
+    pending_tracking_requests: slots.pendingTrackingRequests,
+    remaining: slots.remaining,
   };
 }
 

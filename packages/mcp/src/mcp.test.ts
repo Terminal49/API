@@ -23,6 +23,7 @@ vi.mock('@sentry/node', () => ({
 // hitting the live API. Tests configure these mocks per-case. `vi.hoisted`
 // is required because vi.mock factories are hoisted above normal declarations.
 const {
+  me,
   search,
   shippingLinesList,
   containersList,
@@ -30,6 +31,7 @@ const {
   containersSummary,
   tradeIntel,
 } = vi.hoisted(() => ({
+  me: vi.fn(),
   search: vi.fn(),
   shippingLinesList: vi.fn(),
   containersList: vi.fn(),
@@ -48,6 +50,7 @@ const {
 
 vi.mock('@terminal49/sdk', () => ({
   Terminal49Client: class Terminal49Client {
+    me = me;
     search = search;
     shippingLines = { list: shippingLinesList };
     containers = { list: containersList, summary: containersSummary };
@@ -446,6 +449,48 @@ describe('MCP server wiring', () => {
         name,
       ).not.toHaveProperty('intent');
     }
+  });
+
+  it('whoami returns schema-valid tracking slots even when the SDK carries extra fields', async () => {
+    // Production regression: the backend emits more tracking_slots fields than the strict
+    // output schema listed, and the MCP SDK rejected the structured content for every free
+    // or trial account. The tool must build the object from known fields only.
+    me.mockResolvedValue({
+      id: 'key-1',
+      kind: 'api_key',
+      channel: 'mcp',
+      name: 'Connector key',
+      features: { routing_data: { status: 'requires_paid_plan' } },
+      account: {
+        id: 'b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a',
+        companyName: 'Acme Logistics',
+        plan: 'free_plan',
+        trackingSlots: {
+          limit: 10,
+          used: 4,
+          activeContainers: 3,
+          pendingTrackingRequests: 1,
+          remaining: 6,
+          someFutureField: 'ignored',
+        },
+      },
+      user: null,
+    });
+    const server = createTerminal49McpServer('token');
+    const tool = (server as any)._registeredTools.whoami;
+    const result = await tool.handler({}, {});
+
+    expect(result.isError).toBeUndefined();
+    expect(result.structuredContent.account.tracking_slots).toEqual({
+      limit: 10,
+      used: 4,
+      active_containers: 3,
+      pending_tracking_requests: 1,
+      remaining: 6,
+    });
+    expect(tool.outputSchema.safeParse(result.structuredContent).success).toBe(
+      true,
+    );
   });
 
   it('summarize_containers returns schema-valid counts from one summary call', async () => {
