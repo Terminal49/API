@@ -6,8 +6,11 @@ import { randomBytes } from 'node:crypto';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import {
   completable,
+  type InputRequiredResult,
+  isInputRequiredResult,
   McpServer,
   ResourceTemplate,
+  type ServerContext,
   type StandardSchemaWithJSON,
   type ToolCallback,
 } from '@modelcontextprotocol/server';
@@ -113,6 +116,7 @@ import {
   usableConfirmationSecret,
 } from './tools/write-kit.js';
 import {
+  confirmationChannel,
   createToolContext,
   MCP_CREDENTIAL_TYPES,
   type McpCredentialType,
@@ -923,18 +927,34 @@ function buildListResourceLinks(
   return links;
 }
 
+/**
+ * How every tier C tool's description ends, so a model knows both ways the
+ * user approves a change.
+ */
+const CONFIRMED_WRITE_CLAUSE =
+  'This change needs the user to approve a preview. The first call changes nothing. On a client that can ask the user (form elicitation), the client shows the user the preview and asks them to confirm, and the tool writes only on their yes; never pass confirmation_token there. On any other client, the first call returns the preview with a confirmation_token: show the preview to the user, and call again with the same arguments and the token only after the user approves it in this turn.';
+
 function wrapTool<TArgs>(
   toolName: string,
-  handler: (args: TArgs) => Promise<unknown>,
+  handler: (args: TArgs, ctx: ServerContext) => Promise<unknown>,
   buildResourceLinks?: (result: unknown, args: TArgs) => ResourceLinkContent[],
-): (args: TArgs) => Promise<{
-  content: ToolContent[];
-  structuredContent?: any;
-  isError?: boolean;
-}> {
-  return async (args: TArgs) => {
+): (
+  args: TArgs,
+  ctx: ServerContext,
+) => Promise<
+  | {
+      content: ToolContent[];
+      structuredContent?: any;
+      isError?: boolean;
+    }
+  | InputRequiredResult
+> {
+  return async (args: TArgs, ctx: ServerContext) => {
     try {
-      const result = await handler(args);
+      const result = await handler(args, ctx);
+      // The client fulfils the embedded request and calls the tool again, so
+      // there is no content to build yet.
+      if (isInputRequiredResult(result)) return result;
       const structuredContent = stripResponseSteering(
         result,
         false,
@@ -1222,22 +1242,37 @@ export function createTerminal49McpServer(
       buildResourceLinks?: (result: unknown) => ResourceLinkContent[],
     ): ToolRegistrar =>
     (definition) => {
+      const confirmed = definition.tier === 'C';
       server.registerTool(
         definition.name,
         {
           title: definition.title,
-          description: spec.description,
+          description: confirmed
+            ? `${spec.description} ${CONFIRMED_WRITE_CLAUSE}`
+            : spec.description,
           annotations: definition.annotations,
           inputSchema: spec.inputSchema,
           outputSchema: spec.outputSchema,
+          // Claude Code shows the permission prompt on every call of a tool
+          // with this key, whatever the permission mode.
+          ...(confirmed && {
+            _meta: { 'anthropic/requiresUserInteraction': true },
+          }),
         },
         // SAFETY: the callback takes the parsed output of `spec.inputSchema`,
         // which is what ToolCallback<InputArgs> resolves to. TypeScript cannot
         // resolve that conditional type while InputArgs is still generic.
         wrapTool(
           definition.name,
-          (args: StandardSchemaWithJSON.InferOutput<InputArgs>) =>
-            handler(args, createToolContext(client, session)),
+          (args: StandardSchemaWithJSON.InferOutput<InputArgs>, ctx) =>
+            handler(
+              args,
+              createToolContext(
+                client,
+                session,
+                confirmationChannel(ctx?.mcpReq),
+              ),
+            ),
           buildResourceLinks,
         ) as ToolCallback<InputArgs>,
       );
@@ -1774,8 +1809,7 @@ export function createTerminal49McpServer(
       {
         description:
           'Stop carrier and terminal updates for a shipment and all its containers, for example when it is delivered or was tracked by mistake. ' +
-          'Call it first without confirmation_token: it changes nothing and returns a preview (the Bill of Lading, the number of containers, and whether tracking is on) with a confirmation_token. ' +
-          'Show the preview to the user, and call again with the token only after the user approves it. ' +
+          'The preview shows the Bill of Lading, the number of containers, and whether tracking is on. ' +
           'Returns stopped, or already_stopped when tracking was already off. Needs the stop_tracking feature; without it the result is FeatureNotEnabled.',
         inputSchema: stopShipmentTrackingInputSchema,
         outputSchema: stopShipmentTrackingOutputSchema,
@@ -1799,8 +1833,7 @@ export function createTerminal49McpServer(
       {
         description:
           'Cancel a tracking request that Terminal49 is still working on (status pending or awaiting_manifest), for example one with a typo or the wrong carrier, before it creates a shipment. It cannot be undone. ' +
-          'Call it first without confirmation_token: it changes nothing and returns a preview (the number, carrier SCAC, and status) with a confirmation_token. ' +
-          'Show the preview to the user, and call again with the token only after the user approves it. ' +
+          'The preview shows the number, carrier SCAC, and status. ' +
           'Returns cancelled with the request, or not_cancellable with its current status when it is in any other status.',
         inputSchema: cancelTrackingRequestInputSchema,
         outputSchema: cancelTrackingRequestOutputSchema,
