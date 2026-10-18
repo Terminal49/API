@@ -3,10 +3,34 @@ import {
   StreamableHTTPClientTransport,
 } from '@modelcontextprotocol/client';
 import { createMcpHandler } from '@modelcontextprotocol/server';
-import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import * as Sentry from '@sentry/node';
+import { Terminal49Error, TimeoutError } from '@terminal49/sdk';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vite-plus/test';
 import { createTerminal49McpServer } from './server.js';
 
-afterEach(() => vi.unstubAllGlobals());
+vi.mock('@sentry/node', () => ({
+  captureException: vi.fn(),
+  flush: vi.fn().mockResolvedValue(true),
+  isInitialized: vi.fn(() => true),
+  wrapMcpServerWithSentry: vi.fn((server) => server),
+}));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.spyOn(console, 'error').mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 interface RecordedRequest {
   method: string;
@@ -105,6 +129,33 @@ const createdTrackingRequest = (body: any) => ({
 });
 
 describe('track_container carrier selection', () => {
+  afterEach(() => {
+    expect(Sentry.captureException).not.toHaveBeenCalled();
+    expect(Sentry.flush).not.toHaveBeenCalled();
+  });
+
+  it('returns a check-digit error without calling the API or reporting an exception', async () => {
+    const requests = stubApi({});
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330012' },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(textOf(result)).toBe(
+        'Container number MSKU4330012 fails the ISO 6346 check digit.',
+      );
+      expect(requests).toEqual([]);
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('"event":"mcp.tool.error"'),
+      );
+    } finally {
+      await client.close();
+    }
+  });
+
   it('sends the inferred carrier, not the container owner prefix', async () => {
     const requests = stubApi({
       'GET /search': () => ({ data: [] }),
@@ -337,6 +388,11 @@ function rejectedCreate(body: unknown) {
 }
 
 describe('track_container when the API refuses the tracking request', () => {
+  afterEach(() => {
+    expect(Sentry.captureException).not.toHaveBeenCalled();
+    expect(Sentry.flush).not.toHaveBeenCalled();
+  });
+
   it('passes the account limit message through instead of calling the number invalid', async () => {
     rejectedCreate({
       errors:
@@ -590,6 +646,96 @@ describe('track_container when the API refuses the tracking request', () => {
       await client.close();
     }
   });
+});
+
+describe('unexpected tool failures still report exceptions', () => {
+  it.each([
+    { status: 401, name: 'AuthenticationError' },
+    { status: 422, name: 'ValidationError' },
+    { status: 500, name: 'UpstreamError' },
+  ])('reports an unhandled $name from tracking', async ({ status, name }) => {
+    stubApi({
+      'GET /search': () => ({ data: [] }),
+      'POST /tracking_requests/infer_number': () =>
+        new Response(
+          JSON.stringify({ message: 'UPSTREAM_INTERNAL_DIAGNOSTIC' }),
+          {
+            status,
+            headers: { 'content-type': 'application/vnd.api+json' },
+          },
+        ),
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330011' },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(textOf(result)).not.toContain('UPSTREAM_INTERNAL_DIAGNOSTIC');
+      expect(Sentry.captureException).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          name,
+          message: 'The Terminal49 upstream request could not be completed.',
+        }),
+      );
+      expect(Sentry.flush).toHaveBeenCalledExactlyOnceWith(2000);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('reports a NotFoundError from a container lookup', async () => {
+    stubApi({});
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'get_container',
+        arguments: { id: '11111111-1111-4111-8111-111111111111' },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(Sentry.captureException).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ name: 'NotFoundError' }),
+      );
+      expect(Sentry.flush).toHaveBeenCalledExactlyOnceWith(2000);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it.each(['TimeoutError', 'TrackContainerError', 'ContainerCheckDigitError'])(
+    'reports an SDK error named %s without treating its name as a validation class',
+    async (name) => {
+      const error =
+        name === 'TimeoutError'
+          ? new TimeoutError()
+          : new Terminal49Error('Unexpected SDK failure');
+      error.name = name;
+      stubApi({
+        'GET /search': () => ({ data: [] }),
+        'POST /tracking_requests/infer_number': () => {
+          throw error;
+        },
+      });
+      const client = await connect();
+      try {
+        const result = await client.callTool({
+          name: 'track_container',
+          arguments: { number: 'MSKU4330011' },
+        });
+
+        expect(result.isError).toBe(true);
+        expect(Sentry.captureException).toHaveBeenCalledExactlyOnceWith(
+          expect.objectContaining({ name }),
+        );
+        expect(Sentry.flush).toHaveBeenCalledExactlyOnceWith(2000);
+      } finally {
+        await client.close();
+      }
+    },
+  );
 });
 
 function trackingRequestSearchHit(
