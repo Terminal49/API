@@ -1988,7 +1988,7 @@ export function createTerminal49McpServer(
       {
         description:
           "List the account's webhooks, or read one by webhook_id: whether each is active, the events it receives, and the scheme, host, and path of its URL. " +
-          'The query string is never shown. The host keeps its first label only when that is a short lowercase word, and the path keeps only a short lowercase first segment; anything else is replaced with [redacted]. has_query, host_redacted and path_redacted say when that happened. ' +
+          'The query string is never shown. The host keeps only its last two labels, such as example.com; every other host label and every path segment is replaced with [redacted]. has_query, host_redacted and path_redacted say when that happened. ' +
           'The signing secret and header values are never shown: has_secret says whether a secret is set, and header_names lists the custom headers by name. ' +
           'Set include_event_catalog for every event a webhook can subscribe to, with a description. Page size is capped at 25; if links.next exists, request the next page.',
         inputSchema: listWebhooksInputSchema,

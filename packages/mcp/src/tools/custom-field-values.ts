@@ -100,13 +100,14 @@ export function fieldOf(definition: FieldDefinition): Field {
 }
 
 /**
- * The account's active definition with this slug, with its options, or
- * undefined. The definitions list is not paginated, so one request sees them
- * all.
+ * The account's active definition with this slug, with its options unless
+ * `withOptions` is false, or undefined. The definitions list is not
+ * paginated, so one request sees them all.
  */
 export async function findDefinition(
   client: Terminal49Client,
   apiSlug: string,
+  withOptions = true,
 ): Promise<FieldDefinition | undefined> {
   const { data } = rawDefinitionsSchema.parse(
     await client.customFieldDefinitions.list({ format: 'raw' }),
@@ -127,7 +128,7 @@ export async function findDefinition(
     entity_type: entityType(attributes.entity_type),
     data_type: attributes.data_type,
   };
-  if (OPTION_DATA_TYPES.has(attributes.data_type ?? '')) {
+  if (withOptions && OPTION_DATA_TYPES.has(attributes.data_type ?? '')) {
     definition.options = await loadOptions(match.id, client);
   }
   return definition;
@@ -468,12 +469,16 @@ export type FieldStop =
   | InvalidValue
   | UnsupportedField;
 
-/** The field's definition, or why this tool cannot write it on this kind of record. */
+/**
+ * The field's definition, or why this tool cannot write it on this kind of
+ * record. A clear checks no value, so it skips loading the options.
+ */
 export async function findWritableField(
   client: Terminal49Client,
   target: FieldWriteTarget,
+  clearing = false,
 ): Promise<{ definition: FieldDefinition } | { stop: FieldStop }> {
-  const definition = await findDefinition(client, target.api_slug);
+  const definition = await findDefinition(client, target.api_slug, !clearing);
   if (!definition) return { stop: unknownField(target.api_slug) };
   const notApplicable = fieldNotApplicable(definition, target.entity_type);
   if (notApplicable) return { stop: notApplicable };

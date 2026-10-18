@@ -15,6 +15,7 @@ import {
 import { auditEvents, tokenOf, writeContext } from '../test/write-context.js';
 import {
   executeRemoveReferenceNumbers,
+  UNDO_TOO_LONG_NOTE,
   removeReferenceNumbersOutputSchema,
 } from './remove-reference-numbers.js';
 
@@ -162,7 +163,9 @@ describe('remove_reference_numbers', () => {
       status: 'removed',
       ref_numbers: ['PO-2'],
       removed: ['PO-1', long],
+      message: `Reference numbers removed. ${UNDO_TOO_LONG_NOTE}`,
     });
+    expect(result).not.toHaveProperty('undo');
     expect(stored.current()).toEqual(['PO-2']);
   });
 

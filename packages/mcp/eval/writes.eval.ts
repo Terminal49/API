@@ -146,7 +146,8 @@ if (!cfg) {
         client.callTool('resume_shipment_tracking', {
           shipment_id: shipmentId,
         });
-      let needsResume = false;
+      // Armed before the stop, so a lost response still resumes.
+      let needsResume = true;
       try {
         const stopped = await client.callTool('stop_shipment_tracking', {
           shipment_id: shipmentId,

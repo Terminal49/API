@@ -124,14 +124,16 @@ const rawPartyRowSchema = z.object({
   attributes: partyAttributesSchema,
 });
 
+// Strict, so an unreadable page fails the load instead of looking complete:
+// assign_party decides whether to create a party from what this returns.
 const rawPartyPageSchema = z.object({
-  data: z.array(z.unknown()).catch([]),
-  links: z.object({ next: nullableString }).nullable().catch(null),
+  data: z.array(rawPartyRowSchema),
+  links: z.object({ next: nullableString }).nullish(),
 });
 
 /**
  * Loads up to MAX_PAGES pages of the account's parties. `truncated` is true
- * when the account has more.
+ * when the account has more. An unreadable page throws.
  */
 export async function loadParties(
   client: Terminal49Client,
@@ -142,11 +144,9 @@ export async function loadParties(
       await client.parties.list({ page, pageSize: PAGE_SIZE, format: 'raw' }),
     );
     for (const row of data) {
-      const parsed = rawPartyRowSchema.safeParse(row);
-      if (!parsed.success) continue;
-      const names = partyNames(parsed.data.attributes);
+      const names = partyNames(row.attributes);
       const [name] = names;
-      if (name) parties.push({ id: parsed.data.id, name, names });
+      if (name) parties.push({ id: row.id, name, names });
     }
     if (!links?.next || data.length === 0) {
       return { parties, truncated: false };

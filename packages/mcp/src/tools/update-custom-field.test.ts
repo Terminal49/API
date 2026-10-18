@@ -11,6 +11,7 @@ import {
   CF_CONTAINER_PATH,
   CF_TRACKING_REQUEST_ID,
   customFieldDefinitions,
+  PRIORITY_DEFINITION_ID,
   sentValue,
   storedCustomFields,
 } from '../test/custom-field-fixtures.js';
@@ -304,6 +305,47 @@ describe('update_custom_field', () => {
       phase: 'preview',
       outcome: 'invalid_value',
     });
+  });
+
+  it('clears an enum field without loading its options', async () => {
+    const id = '2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e';
+    const path = `/shipments/${id}`;
+    const stored = storedCustomFields(
+      path,
+      { priority: 'low' },
+      {
+        data: {
+          id,
+          type: 'shipment',
+          attributes: { bill_of_lading_number: 'MAEU123', ref_numbers: [] },
+        },
+      },
+    );
+    const { client, requests } = fakeApiClient({
+      ...stored.routes,
+      [`GET /custom_field_definitions/${PRIORITY_DEFINITION_ID}/options`]: {
+        status: 500,
+      },
+    });
+
+    const preview = await executeUpdateCustomField(
+      {
+        entity_type: 'shipment',
+        entity_id: id,
+        api_slug: 'priority',
+        clear: true,
+      },
+      client,
+      writeContext(client),
+    );
+
+    expect(preview).toMatchObject({
+      status: 'confirmation_required',
+      preview: { current: { value: 'low' }, action: 'clear' },
+    });
+    expect(requests.map((r) => r.path)).not.toContain(
+      `/custom_field_definitions/${PRIORITY_DEFINITION_ID}/options`,
+    );
   });
 
   it('refuses to clear a field whose data_type set_custom_field cannot write', async () => {

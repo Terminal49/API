@@ -436,17 +436,27 @@ export interface WriteTarget {
   entityId: string | undefined;
 }
 
+/** How long an audit waits for /me before naming no account. */
+const AUDIT_ACCOUNT_DEADLINE_MS = 2_000;
+
 /**
- * The account an audit event names. The lookup can call /me, and a failed
- * lookup leaves the account out rather than failing the write.
+ * The account an audit event names. The lookup can call /me, and a failed or
+ * slow lookup leaves the account out rather than holding up the write.
  */
 async function auditAccountId(
   context: ToolContext,
 ): Promise<string | undefined> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<undefined>((resolve) => {
+    timer = setTimeout(resolve, AUDIT_ACCOUNT_DEADLINE_MS, undefined);
+  });
   try {
-    return await context.accountId();
-  } catch {
-    return undefined;
+    return await Promise.race([
+      context.accountId().catch(() => undefined),
+      deadline,
+    ]);
+  } finally {
+    clearTimeout(timer);
   }
 }
 

@@ -223,7 +223,7 @@ export async function executeUpdateCustomField(
   async function read(): Promise<
     ConfirmedWriteRead<UpdatePreview, UpdateStop>
   > {
-    const found = await findWritableField(client, parsed);
+    const found = await findWritableField(client, parsed, clearing);
     if ('stop' in found) return { stop: found.stop };
     const { definition } = found;
     if (parsed.value !== undefined) {

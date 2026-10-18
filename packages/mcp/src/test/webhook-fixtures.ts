@@ -59,8 +59,8 @@ export function webhookSummary(id = WEBHOOK_ID) {
     ],
     url: {
       scheme: 'https',
-      host: '[redacted].hooks.example.com:8443',
-      path: '/services/[redacted]/[redacted]',
+      host: '[redacted].[redacted].example.com:8443',
+      path: '/[redacted]/[redacted]/[redacted]',
       has_query: true,
       host_redacted: true,
       path_redacted: true,
