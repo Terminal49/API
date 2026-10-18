@@ -10,13 +10,20 @@ import {
 } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
-import { executeGetContainer } from './tools/get-container.js';
+import {
+  containerStatusSchema,
+  executeGetContainer,
+} from './tools/get-container.js';
 import { executeTrackContainer } from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
-import { executeGetShipmentDetails } from './tools/get-shipment-details.js';
+import {
+  executeGetShipmentDetails,
+  shipmentDetailsSchema,
+} from './tools/get-shipment-details.js';
 import {
   executeGetContainerTransportEvents,
   getContainerTransportEventsTool,
+  transportEventsSchema,
 } from './tools/get-container-transport-events.js';
 import { executeGetSupportedShippingLines } from './tools/get-supported-shipping-lines.js';
 import {
@@ -1249,7 +1256,7 @@ export function createTerminal49McpServer(
               '• custom_fields: Account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)',
           ),
       }),
-      outputSchema: z.object({}).passthrough(),
+      outputSchema: containerStatusSchema,
     },
     wrapTool('get_container', async ({ id, include }) =>
       executeGetContainer({ id, include }, client),
@@ -1290,7 +1297,7 @@ export function createTerminal49McpServer(
             'Include account-defined custom fields (e.g. PO number, project manager) set on this shipment. Needs a signed-in user, not an API key. Default: false',
           ),
       }),
-      outputSchema: z.object({}).passthrough(),
+      outputSchema: shipmentDetailsSchema,
     },
     wrapTool(
       'get_shipment_details',
@@ -1319,7 +1326,7 @@ export function createTerminal49McpServer(
           .uuid()
           .describe('The Terminal49 container ID (UUID format)'),
       }),
-      outputSchema: z.object({}).passthrough(),
+      outputSchema: transportEventsSchema,
     },
     wrapTool('get_container_transport_events', async ({ id }) =>
       executeGetContainerTransportEvents({ id }, client),

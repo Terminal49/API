@@ -5,6 +5,11 @@ All notable changes to the Terminal49 MCP Server (TypeScript) will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- `get_container`, `get_shipment_details`, and `get_container_transport_events` publish a full output schema instead of an open object. Every field the tool returns is now listed with its type, so agents that script tool calls (code mode) can read field names without a probe call. Values copied straight from the API stay nullable, so a field the API omits does not fail the call.
+
 ## [1.2.0] - 2026-10-09
 
 ### Added

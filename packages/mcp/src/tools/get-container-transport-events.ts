@@ -4,6 +4,7 @@
  */
 
 import { NotFoundError, Terminal49Client } from '@terminal49/sdk';
+import { z } from 'zod';
 import { logMcpEvent } from '../logging.js';
 
 export interface GetContainerTransportEventsArgs {
@@ -30,10 +31,66 @@ export const getContainerTransportEventsTool = {
   },
 };
 
+const milestoneTimestamp = z.string().optional();
+
+/**
+ * Output contract for get_container_transport_events. Agents that script tool
+ * calls read field names from this schema, so every key
+ * `formatTransportEventsResponse` emits is listed.
+ */
+export const transportEventsSchema = z.object({
+  total_events: z.number(),
+  event_categories: z.object({
+    vessel_events: z.number(),
+    rail_events: z.number(),
+    truck_events: z.number(),
+    terminal_events: z.number(),
+    other_events: z.number(),
+  }),
+  timeline: z.array(
+    z.object({
+      event: z.string().optional(),
+      timestamp: z.string(),
+      // The reported value is opaque; deadline events carry the deadline here.
+      value: z.unknown(),
+      data_source: z.string().nullable(),
+      invalidated_at: z.string().nullable(),
+      timezone: z.string().optional(),
+      voyage_number: z.string().optional(),
+      location: z
+        .object({
+          name: z.string().optional(),
+          code: z.string().optional(),
+          type: z.string().optional(),
+        })
+        .nullable(),
+    }),
+  ),
+  milestones: z.object({
+    vessel_loaded_at: milestoneTimestamp,
+    vessel_departed_at: milestoneTimestamp,
+    vessel_arrived_at: milestoneTimestamp,
+    discharged_at: milestoneTimestamp,
+    rail_loaded_at: milestoneTimestamp,
+    rail_departed_at: milestoneTimestamp,
+    rail_arrived_at: milestoneTimestamp,
+    delivered_at: milestoneTimestamp,
+  }),
+  _metadata: z.object({
+    source: z.enum([
+      'transport_events_subresource',
+      'container_include_fallback',
+    ]),
+    container_found: z.boolean().optional(),
+  }),
+});
+
+type TransportEvents = z.input<typeof transportEventsSchema>;
+
 export async function executeGetContainerTransportEvents(
   args: GetContainerTransportEventsArgs,
   client: Terminal49Client,
-): Promise<any> {
+): Promise<TransportEvents> {
   if (!args.id || args.id.trim() === '') {
     throw new Error('Container ID is required');
   }
@@ -85,7 +142,7 @@ async function fallbackToContainerInclude(
   id: string,
   client: Terminal49Client,
   startTime: number,
-): Promise<any> {
+): Promise<TransportEvents> {
   let raw: any;
   try {
     const fallbackResult = await client.containers.get(
@@ -184,7 +241,7 @@ interface FormatOptions {
 function formatTransportEventsResponse(
   apiResponse: any,
   options: FormatOptions,
-): any {
+): TransportEvents {
   const events = Array.isArray(apiResponse)
     ? apiResponse
     : Array.isArray(apiResponse?.data)
@@ -226,7 +283,7 @@ function formatTransportEventsResponse(
     };
   });
 
-  const metadata: Record<string, unknown> = {
+  const metadata: TransportEvents['_metadata'] = {
     source: options.source,
   };
 
@@ -243,7 +300,11 @@ function formatTransportEventsResponse(
   };
 }
 
-function resolveLocation(attrs: any, relationships: any, included: any[]): any {
+function resolveLocation(
+  attrs: any,
+  relationships: any,
+  included: any[],
+): TransportEvents['timeline'][number]['location'] {
   // Dedicated sub-resource: location is a related resource in `included`.
   const locationId = relationships.location?.data?.id;
   const includedLocation = locationId
@@ -278,7 +339,7 @@ function resolveLocation(attrs: any, relationships: any, included: any[]): any {
   return null;
 }
 
-function categorizeEvents(events: any[]): any {
+function categorizeEvents(events: any[]): TransportEvents['event_categories'] {
   const categories = {
     vessel: [] as any[],
     rail: [] as any[],
@@ -316,8 +377,8 @@ function categorizeEvents(events: any[]): any {
   };
 }
 
-function extractKeyMilestones(events: any[]): any {
-  const milestones: any = {};
+function extractKeyMilestones(events: any[]): TransportEvents['milestones'] {
+  const milestones: TransportEvents['milestones'] = {};
 
   events.forEach((event: any) => {
     const eventType = normalizeText(event.attributes?.event) || '';
