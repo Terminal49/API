@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "hs4": "9401",
+      "description": "Seats (other than barber, dental, etc), and part",
+      "estimated_value": 9800000000.0,
+      "companies": 4200,
+      "common_goods": [
+        "office chairs",
+        "sofas",
+        "car seats"
+      ],
+      "score": 0.91
+    }
+  ]
+}
