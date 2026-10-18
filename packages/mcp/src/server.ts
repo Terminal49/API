@@ -1013,6 +1013,7 @@ export function createTerminal49McpServer(
         'Search for containers, shipments, and tracking information by container number, ' +
         'booking number, bill of lading, or reference number. Returns matching private-account records. ' +
         'Use get_container or get_shipment_details with a returned UUID for a detailed snapshot. ' +
+        'A tracking request with no container or shipment explains why a submitted number is not showing: status failed with failed_reason (for example expired: the carrier never returned the shipment, so check the number or resubmit), or pending/created while Terminal49 is still fetching it. ' +
         'Pass exactly one identifier, never a user message or conversation history. ' +
         'Examples: CAIU2885402, MAEU123456789, or a customer reference number.',
       annotations: {
@@ -1051,6 +1052,17 @@ export function createTerminal49McpServer(
             container_count: z.number(),
           }),
         ),
+        tracking_requests: z.array(
+          z.object({
+            id: z.string(),
+            request_number: z.string(),
+            shipping_line: z.string(),
+            status: z.string(),
+            failed_reason: z.string().optional(),
+            created_at: z.string().optional(),
+            updated_at: z.string().optional(),
+          }),
+        ),
         total_results: z.number(),
       }),
     },
@@ -1065,9 +1077,10 @@ export function createTerminal49McpServer(
     {
       title: 'Track Container',
       description:
-        'Track a container, bill of lading, or booking number. ' +
-        'Uses inference to choose the carrier/type when possible, creates a tracking request, ' +
-        'and returns detailed container information. If a newly created request is still pending, ' +
+        "Start tracking a container, bill of lading, or booking number in the user's account. " +
+        'This creates a tracking request, so only call it when the user asks to track or add a number, and confirm with them first if your client does not ask for approval. ' +
+        'Never call it to look up a number: use search_container, and if the number is not found, say so and offer to track it. ' +
+        'Uses inference to choose the carrier/type when possible and returns detailed container information. If a newly created request is still pending, ' +
         'use list_tracking_requests to check its status.',
       annotations: {
         readOnlyHint: false,

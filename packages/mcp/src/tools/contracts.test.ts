@@ -128,6 +128,49 @@ async function executeSupportedShippingLines(
 }
 
 describe('MCP tool contracts', () => {
+  it('search_container explains a tracking request that never produced a shipment', async () => {
+    const client = asClient({
+      search: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: 'tr-1',
+            type: 'search_result',
+            attributes: {
+              entity_type: 'tracking_request',
+              number: 'HLCUBO2260719950',
+              shipment_id: null,
+              scac: 'HLCU',
+              status: 'failed',
+              failed_reason: 'expired',
+              created_at: '2026-09-16T15:09:30Z',
+              updated_at: '2026-09-30T20:24:28Z',
+            },
+          },
+        ],
+      }),
+    });
+
+    const result = await executeSearchContainer(
+      { query: 'HLCUBO2260719950' },
+      client,
+    );
+
+    expect(result.containers).toEqual([]);
+    expect(result.shipments).toEqual([]);
+    expect(result.total_results).toBe(1);
+    expect(result.tracking_requests).toEqual([
+      {
+        id: 'tr-1',
+        request_number: 'HLCUBO2260719950',
+        shipping_line: 'HLCU',
+        status: 'failed',
+        failed_reason: 'expired',
+        created_at: '2026-09-16T15:09:30Z',
+        updated_at: '2026-09-30T20:24:28Z',
+      },
+    ]);
+  });
+
   it('search_container returns normalized containers and shipments', async () => {
     const client = asClient({
       search: vi.fn().mockResolvedValue({
