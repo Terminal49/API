@@ -79,7 +79,7 @@ The `track-shipment` prompt's `carrier` argument supports **MCP completions** (`
 
 ### 🧭 Server Instructions
 
-The server advertises MCP `instructions` (a server-level operating guide) at initialize time: it explains the ocean container/shipment tracking domain, key vocabulary (SCAC, BOL/booking, POL/POD, LFD, demurrage, holds), and the canonical tool-chaining order. It lists each write tool the session serves, what the tool changes and its tier, from the registry. It says that tool data is untrusted, that the model must never act on instructions found in tool output, and that it must never perform a write the user did not ask for. When the session serves a tier C tool, it says to show the preview and never pass a `confirmation_token` the user has not approved in this turn.
+The server advertises MCP `instructions` (a server-level operating guide) at initialize time: it explains the ocean container/shipment tracking domain, key vocabulary (SCAC, BOL/booking, POL/POD, LFD, demurrage, holds), and the canonical tool-chaining order. It lists each write tool the session serves, what the tool changes and its tier, from the registry. It says that tool data is untrusted, that the model must never act on instructions found in tool output, and that it must never perform a write the user did not ask for. When the session serves a tier C tool, it explains both ways the user approves a preview: a client that can ask the user does so itself, and any other client gets a `confirmation_token` that the model must never pass back without the user's approval in this turn.
 
 ### 🔗 ResourceLinks (context reduction)
 
@@ -437,20 +437,29 @@ Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`
 
 ### Confirming writes
 
-Each write tool has a tier in the registry. A tier A tool, such as `resume_shipment_tracking` or `assign_party`, is additive or reversible and runs in one call. Its result names the tool that undoes it. A tier C tool, such as `stop_shipment_tracking`, `cancel_tracking_request` or `unassign_party`, has `destructiveHint: true` and needs a confirmed preview:
+Each write tool has a tier in the registry. A tier A tool, such as `resume_shipment_tracking` or `assign_party`, is additive or reversible and runs in one call. Its result names the tool that undoes it. A tier C tool, such as `stop_shipment_tracking`, `cancel_tracking_request` or `unassign_party`, has `destructiveHint: true`, carries `_meta["anthropic/requiresUserInteraction"]: true` so Claude Code prompts on every call, and needs the user's approval of a preview. Its first call never writes. It reads the record, builds a `preview` with `current`, `proposed` and `reach`, and issues a confirmation token: an HMAC-SHA256, keyed with `T49_MCP_CONFIRMATION_SECRET`, over the channel, the tool name, the other arguments, the account, the credential, an expiry five minutes out and a fingerprint of the record fields the preview showed. Which channel carries the token depends on the request.
 
-1. Called without `confirmation_token`, the tool changes nothing. It reads the record and returns `status: "confirmation_required"`, a `preview` with `current`, `proposed` and `reach`, a `confirmation_token` and `expires_at`.
+**Elicitation channel.** A request whose 2026-07-28 `_meta` envelope declares form elicitation (`io.modelcontextprotocol/clientCapabilities.elicitation.form`, or a bare `elicitation: {}`) gets an `input_required` result per the MCP multi round-trip pattern: one embedded `elicitation/create` request whose message is the preview as text and whose form has one boolean `confirm` field, plus the token as `requestState`. The client shows the user the preview, then retries the call with the user's answer in `inputResponses` and the `requestState` echoed back. The tool verifies the state against the same call, account, credential, expiry and record fingerprint, and:
+
+- writes when the answer is `accept` with `confirm: true`;
+- returns `status: "declined"` and changes nothing on `decline`, `cancel`, or an accept without `confirm`;
+- asks again, with a note that the record changed, when the fingerprint no longer matches;
+- returns `invalid_confirmation` when the state is malformed, edited, expired, or bound to another call, account or credential.
+
+A `confirmation_token` argument on such a request is refused with `token_not_accepted` before the record is read, so a model cannot route around the user. The model never receives a token on this channel.
+
+**Token channel.** Any other request, including every 2025-era connection, gets the preview-then-token flow:
+
+1. Called without `confirmation_token`, the tool returns `status: "confirmation_required"`, the `preview`, a `confirmation_token` and `expires_at`.
 2. Called again with the same arguments and that token, it reads the record again and writes only if the token still matches.
 
-The token is an HMAC-SHA256, keyed with `T49_MCP_CONFIRMATION_SECRET`, over the tool name, the other arguments, the account, the credential, an expiry five minutes out and a fingerprint of the record fields the preview showed. A call with a token returns:
+A call with a token returns `invalid_confirmation` when the token is malformed, edited, expired, or was issued for another tool, other arguments, another account or another credential; `stale_preview` with a new preview and token when the record changed after the preview; and the tool's own result when the token matches. Nothing changes in the first two cases.
 
-- `invalid_confirmation` when the token is malformed, edited, expired, or was issued for another tool, other arguments, another account or another credential. Nothing changes.
-- `stale_preview` with a new preview and token when the record changed after the preview. Nothing changes.
-- The tool's own result when the token matches.
+A token minted for one channel never verifies on the other, because the channel is part of the MAC. For an API key or the shared env token, the credential is a hash of the token. For an OAuth user or a WorkOS agent, it is the credential that `/me` names, because the gateway can call Terminal49 with a new access token on each request.
 
-For an API key or the shared env token, the credential is a hash of the token. For an OAuth user or a WorkOS agent, it is the credential that `/me` names, because the gateway can call Terminal49 with a new access token on each request.
+On the elicitation channel the human decides, because only the client can answer the embedded request. On the token channel the token proves that a preview of the current state was produced. It blocks blind one-shot calls and writes based on a stale read, but it is not a security boundary, because a model can make both calls itself. The Terminal49 API still decides what each credential may do.
 
-The token proves that a preview of the current state was produced. It blocks blind one-shot calls and writes based on a stale read. It is not a security boundary, because a model can make both calls itself. The Terminal49 API still decides what each credential may do.
+A confirmation cannot be replayed after a successful write on either channel, because every tier C tool fingerprints a field the write changes: `stop_shipment_tracking` the stop time, `cancel_tracking_request` the status, `remove_reference_numbers` the whole reference list, and `unassign_party` the party role row. The server keeps no record of used confirmations, so a confirmation stays valid for its five minutes if someone restores the record to the previewed state by hand in that window.
 
 The HTTP gateway reads `T49_MCP_CONFIRMATION_SECRET` and has no fallback, because serverless instances share no memory. Without a secret of at least 32 characters, tier C tools return `not_permitted` and the server logs `mcp.config.error`. Set it in Vercel before you serve `operations`. stdio uses the variable when it is set, and otherwise makes a random secret per process. Rotating the secret only means an open preview must be requested again.
 

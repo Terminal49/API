@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
+import { CLIENT_CAPABILITIES_META_KEY } from '@modelcontextprotocol/server';
 import type { CurrentCredential, Terminal49Client } from '@terminal49/sdk';
+import { z } from 'zod';
 import type { Toolset } from './registry.js';
 
 /**
@@ -30,8 +32,86 @@ export interface ToolSession {
   gatewayAccountId?: string;
 }
 
+/** What the user answered when the client asked them to confirm a preview. */
+export type ElicitationAnswer =
+  | { action: 'accept'; confirm: boolean }
+  | { action: 'decline' }
+  | { action: 'cancel' };
+
+/**
+ * How a tier C call gets the user's approval of its preview. A request that
+ * declares form elicitation (the 2026-07-28 `_meta` envelope) lets the client
+ * ask the user itself, so the model never handles a confirmation token. Any
+ * other request gets the preview and a token to pass back.
+ */
+export type ConfirmationChannel =
+  | { kind: 'token' }
+  | {
+      kind: 'elicitation';
+      /** The requestState the client echoed from the previous round. */
+      requestState: string | undefined;
+      /** The client's answer to the confirm request, on a retried call. */
+      answer: ElicitationAnswer | undefined;
+    };
+
+/** The key of the one input request a tier C tool embeds. */
+export const CONFIRM_REQUEST_KEY = 'confirm';
+
+/** A bare `elicitation: {}` declares form mode, as the SDK reads it. */
+const formElicitationSchema = z.object({
+  elicitation: z
+    .object({ form: z.unknown().optional(), url: z.unknown().optional() })
+    .refine((modes) => modes.form !== undefined || modes.url === undefined),
+});
+
+const answerSchema = z.union([
+  z.object({
+    action: z.literal('accept'),
+    content: z.object({ confirm: z.boolean().catch(false) }).catch({
+      confirm: false,
+    }),
+  }),
+  z.object({ action: z.literal('decline') }),
+  z.object({ action: z.literal('cancel') }),
+]);
+
+/** The parts of the MCP request context a confirmation channel is read from. */
+export interface ConfirmationRequest {
+  envelope?: Record<string, unknown>;
+  inputResponses?: Record<string, unknown>;
+  requestState: <T = unknown>() => T | undefined;
+}
+
+/**
+ * Reads the confirmation channel of one request from its MCP context. A
+ * request with no context, or no 2026-07-28 envelope, uses the token channel.
+ */
+export function confirmationChannel(
+  request: Partial<ConfirmationRequest> | undefined,
+): ConfirmationChannel {
+  const capabilities = request?.envelope?.[CLIENT_CAPABILITIES_META_KEY];
+  if (!request || !formElicitationSchema.safeParse(capabilities).success) {
+    return { kind: 'token' };
+  }
+  const state = request.requestState?.();
+  const answer = answerSchema.safeParse(
+    request.inputResponses?.[CONFIRM_REQUEST_KEY],
+  );
+  return {
+    kind: 'elicitation',
+    requestState: typeof state === 'string' ? state : undefined,
+    answer: answer.success
+      ? answer.data.action === 'accept'
+        ? { action: 'accept', confirm: answer.data.content.confirm }
+        : { action: answer.data.action }
+      : undefined,
+  };
+}
+
 /** State shared by everything one tool call does. */
 export interface ToolContext extends ToolSession {
+  /** How this call gets the user's approval of a tier C preview. */
+  confirmation: ConfirmationChannel;
   /** GET /me, fetched at most once per tool call. */
   me(): Promise<CurrentCredential>;
   /** The account this call acts on: the gateway's, else the one /me names. */
@@ -48,10 +128,12 @@ export interface ToolContext extends ToolSession {
 export function createToolContext(
   client: Pick<Terminal49Client, 'me'>,
   session: ToolSession,
+  confirmation: ConfirmationChannel = { kind: 'token' },
 ): ToolContext {
   let me: Promise<CurrentCredential> | undefined;
   const context: ToolContext = {
     ...session,
+    confirmation,
     me() {
       // SAFETY: `format: 'mapped'` makes the SDK return mapCurrentCredential's result.
       me ??= client.me({ format: 'mapped' }) as Promise<CurrentCredential>;

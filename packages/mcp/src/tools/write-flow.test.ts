@@ -6,7 +6,11 @@ import {
   it,
   vi,
 } from 'vite-plus/test';
-import { createToolContext, type ToolSession } from './context.js';
+import {
+  type ConfirmationChannel,
+  createToolContext,
+  type ToolSession,
+} from './context.js';
 
 const captureMcpEvent = vi.hoisted(() => vi.fn());
 vi.mock('../posthog.js', async (importOriginal) => ({
@@ -29,6 +33,7 @@ const RECORD_ID = '1f0e8a52-3c4d-4b6e-9f7a-8b9c0d1e2f3a';
 function context(
   session: Partial<ToolSession> = {},
   me = vi.fn().mockResolvedValue({ account: { id: ACCOUNT_ID } }),
+  confirmation: ConfirmationChannel = { kind: 'token' },
 ) {
   return createToolContext(
     { me },
@@ -40,7 +45,30 @@ function context(
       confirmationSecret: SECRET,
       ...session,
     },
+    confirmation,
   );
+}
+
+/** A context for a request that declared form elicitation. */
+function elicitingContext(
+  round: Partial<Extract<ConfirmationChannel, { kind: 'elicitation' }>> = {},
+  session: Partial<ToolSession> = {},
+) {
+  return context(session, undefined, {
+    kind: 'elicitation',
+    requestState: undefined,
+    answer: undefined,
+    ...round,
+  });
+}
+
+/** The requestState an input_required result carries. */
+function stateOf(result: unknown): string {
+  const state = (result as { requestState?: unknown }).requestState;
+  if (typeof state !== 'string') {
+    throw new Error(`no requestState in ${JSON.stringify(result)}`);
+  }
+  return state;
 }
 
 type Preview = { status: string };
@@ -277,6 +305,299 @@ describe('runConfirmedWrite', () => {
       ),
     ).rejects.toThrow('upstream failed');
     expect(auditLines(logged).at(-1)).toMatchObject({ outcome: 'error' });
+  });
+});
+
+describe('runConfirmedWrite on a request that can ask the user', () => {
+  let logged: string[];
+
+  beforeEach(() => {
+    logged = [];
+    vi.spyOn(console, 'error').mockImplementation((line: string) => {
+      logged.push(line);
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('asks the client to confirm the preview and writes nothing', async () => {
+    const target = record();
+
+    const result = await runConfirmedWrite(elicitingContext(), target.plan({}));
+
+    expect(result).toEqual({
+      resultType: 'input_required',
+      inputRequests: {
+        confirm: {
+          method: 'elicitation/create',
+          params: {
+            mode: 'form',
+            message:
+              'track_container on tracking_request 1f0e8a52-3c4d-4b6e-9f7a-8b9c0d1e2f3a\nstatus: "active"',
+            requestedSchema: {
+              type: 'object',
+              properties: {
+                confirm: {
+                  type: 'boolean',
+                  title: 'Confirm',
+                  description: 'Make this change',
+                },
+              },
+              required: ['confirm'],
+            },
+          },
+        },
+      },
+      requestState: expect.stringMatching(/^t49ct1\./),
+    });
+    expect(target.write).not.toHaveBeenCalled();
+    expect(auditLines(logged)).toEqual([
+      expect.objectContaining({
+        phase: 'preview',
+        outcome: 'elicitation_required',
+        account_id: ACCOUNT_ID,
+      }),
+    ]);
+  });
+
+  it('writes once when the user accepts', async () => {
+    const target = record();
+    const asked = await runConfirmedWrite(elicitingContext(), target.plan({}));
+
+    const result = await runConfirmedWrite(
+      elicitingContext({
+        requestState: stateOf(asked),
+        answer: { action: 'accept', confirm: true },
+      }),
+      target.plan({}),
+    );
+
+    expect(result).toEqual({ status: 'done' });
+    expect(target.write).toHaveBeenCalledOnce();
+    expect(auditLines(logged).at(-1)).toMatchObject({
+      phase: 'execute',
+      outcome: 'done',
+    });
+  });
+
+  it.each([
+    [
+      'declines',
+      { action: 'decline' } as const,
+      'The user declined this change. Nothing was changed.',
+    ],
+    [
+      'cancels',
+      { action: 'cancel' } as const,
+      'The user dismissed the confirmation without answering. Nothing was changed.',
+    ],
+    [
+      'accepts without ticking confirm',
+      { action: 'accept', confirm: false } as const,
+      'The user declined this change. Nothing was changed.',
+    ],
+  ])('writes nothing when the user %s', async (_label, answer, message) => {
+    const target = record();
+    const asked = await runConfirmedWrite(elicitingContext(), target.plan({}));
+
+    const result = await runConfirmedWrite(
+      elicitingContext({ requestState: stateOf(asked), answer }),
+      target.plan({}),
+    );
+
+    expect(result).toEqual({ status: 'declined', message });
+    expect(target.write).not.toHaveBeenCalled();
+    expect(auditLines(logged).at(-1)).toMatchObject({
+      phase: 'execute',
+      outcome: 'declined',
+    });
+  });
+
+  it('asks again, with a note, when the record changed before the user answered', async () => {
+    const target = record();
+    const asked = await runConfirmedWrite(elicitingContext(), target.plan({}));
+    target.setStatus('paused');
+
+    const result = await runConfirmedWrite(
+      elicitingContext({
+        requestState: stateOf(asked),
+        answer: { action: 'accept', confirm: true },
+      }),
+      target.plan({}),
+    );
+
+    expect(result).toMatchObject({
+      resultType: 'input_required',
+      inputRequests: {
+        confirm: {
+          params: {
+            message:
+              'The record changed after you last saw it. Here is its current state.\n' +
+              'track_container on tracking_request 1f0e8a52-3c4d-4b6e-9f7a-8b9c0d1e2f3a\n' +
+              'status: "paused"',
+          },
+        },
+      },
+    });
+    expect(stateOf(result)).not.toBe(stateOf(asked));
+    expect(target.write).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['edited', (state: string) => flipStateTag(state), {}, 'mismatch'],
+    [
+      'sent with other arguments',
+      (state: string) => state,
+      { extra: true },
+      'mismatch',
+    ],
+    ['not one the server issued', () => 'not-a-state', {}, 'malformed'],
+  ])(
+    'refuses a requestState that is %s',
+    async (_label, edit, extraArgs: Record<string, unknown>, reason) => {
+      const target = record();
+      const asked = await runConfirmedWrite(
+        elicitingContext(),
+        target.plan({}),
+      );
+
+      const result = await runConfirmedWrite(
+        elicitingContext({
+          requestState: edit(stateOf(asked)),
+          answer: { action: 'accept', confirm: true },
+        }),
+        target.plan(extraArgs),
+      );
+
+      expect(result).toEqual({
+        error: 'invalid_confirmation',
+        reason,
+        message: expect.stringContaining('Nothing was changed.'),
+        alternative:
+          'Call track_container again with the same arguments. The client will ask the user to confirm the current state.',
+      });
+      expect(target.write).not.toHaveBeenCalled();
+    },
+  );
+
+  it('refuses a requestState from another account or credential', async () => {
+    const target = record();
+    const asked = await runConfirmedWrite(elicitingContext(), target.plan({}));
+    const round = {
+      requestState: stateOf(asked),
+      answer: { action: 'accept', confirm: true } as const,
+    };
+
+    await expect(
+      runConfirmedWrite(
+        elicitingContext(round, { gatewayAccountId: OTHER_ACCOUNT_ID }),
+        target.plan({}),
+      ),
+    ).resolves.toMatchObject({
+      error: 'invalid_confirmation',
+      reason: 'mismatch',
+    });
+    await expect(
+      runConfirmedWrite(
+        elicitingContext(round, { credentialHash: 'credential-2' }),
+        target.plan({}),
+      ),
+    ).resolves.toMatchObject({
+      error: 'invalid_confirmation',
+      reason: 'mismatch',
+    });
+    expect(target.write).not.toHaveBeenCalled();
+  });
+
+  it('refuses an expired requestState', async () => {
+    vi.useFakeTimers({ now: Date.parse('2026-10-17T12:00:00Z') });
+    const target = record();
+    const asked = await runConfirmedWrite(elicitingContext(), target.plan({}));
+    vi.advanceTimersByTime(CONFIRMATION_TTL_MS);
+
+    await expect(
+      runConfirmedWrite(
+        elicitingContext({
+          requestState: stateOf(asked),
+          answer: { action: 'accept', confirm: true },
+        }),
+        target.plan({}),
+      ),
+    ).resolves.toMatchObject({
+      error: 'invalid_confirmation',
+      reason: 'expired',
+    });
+    expect(target.write).not.toHaveBeenCalled();
+  });
+
+  it('refuses a confirmation_token without reading the record', async () => {
+    const target = record();
+    const plan = target.plan({ confirmation_token: 't49ct1.x.y.z' });
+    const read = vi.spyOn(plan, 'read');
+
+    const result = await runConfirmedWrite(elicitingContext(), plan);
+
+    expect(result).toEqual({
+      error: 'token_not_accepted',
+      message:
+        'This client asks the user to confirm changes itself, so a confirmation_token is not accepted here. Nothing was changed.',
+      alternative:
+        'Call track_container again with the same arguments and no confirmation_token. The client will show the user the preview and ask them to confirm.',
+    });
+    expect(read).not.toHaveBeenCalled();
+    expect(target.write).not.toHaveBeenCalled();
+    expect(auditLines(logged)).toEqual([
+      expect.objectContaining({
+        phase: 'execute',
+        outcome: 'token_not_accepted',
+      }),
+    ]);
+  });
+
+  it('never accepts a requestState as a confirmation_token, or a token as a requestState', async () => {
+    const target = record();
+    const asked = await runConfirmedWrite(elicitingContext(), target.plan({}));
+    const preview = await runConfirmedWrite(context(), target.plan({}));
+    const token = (preview as { confirmation_token: string })
+      .confirmation_token;
+
+    await expect(
+      runConfirmedWrite(
+        context(),
+        target.plan({ confirmation_token: stateOf(asked) }),
+      ),
+    ).resolves.toMatchObject({
+      error: 'invalid_confirmation',
+      reason: 'mismatch',
+    });
+    await expect(
+      runConfirmedWrite(
+        elicitingContext({
+          requestState: token,
+          answer: { action: 'accept', confirm: true },
+        }),
+        target.plan({}),
+      ),
+    ).resolves.toMatchObject({
+      error: 'invalid_confirmation',
+      reason: 'mismatch',
+    });
+    expect(target.write).not.toHaveBeenCalled();
+  });
+
+  it('refuses to ask without a secret', async () => {
+    const target = record();
+
+    await expect(
+      runConfirmedWrite(
+        elicitingContext({}, { confirmationSecret: undefined }),
+        target.plan({}),
+      ),
+    ).resolves.toMatchObject({ error: 'not_permitted' });
+    expect(target.write).not.toHaveBeenCalled();
   });
 });
 

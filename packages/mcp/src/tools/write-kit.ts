@@ -1,25 +1,36 @@
 /**
- * Shared pieces for tools that change account data: the confirmation token
+ * Shared pieces for tools that change account data: the confirmed preview
  * that tier C writes need, and the soft results those writes return.
  *
- * A tier C tool called without a token changes nothing. It reads the record
- * and returns a preview with a token. The token is an HMAC over the tool, its
- * arguments, the account, the credential, an expiry and a fingerprint of the
- * record state the preview showed. The write runs only when a later call
- * brings back a token that still matches all of them.
+ * A tier C tool's first call changes nothing. It reads the record and builds
+ * a preview and a token: an HMAC over the tool, its arguments, the account,
+ * the credential, an expiry and a fingerprint of the record state the preview
+ * showed. The write runs only when a later call brings back a token that
+ * still matches all of them.
  *
- * The token proves that a preview of the current state was produced. It is not
- * a security boundary: a model can make both calls itself. The backend still
- * decides what the credential may do.
+ * Who holds the token depends on the client. A request that declares form
+ * elicitation (MCP 2026-07-28) gets an input_required result: the client
+ * shows the user the preview and asks them to confirm, and echoes the token
+ * as requestState. The model never sees a token it could pass back, so the
+ * human decides. Any other request gets the preview and the token in the
+ * result, and the model passes the token back after the user approves. That
+ * token is not a security boundary: a model can make both calls itself. The
+ * backend still decides what the credential may do.
  */
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import {
+  inputRequired,
+  type InputRequiredResult,
+} from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { httpStatus, type SoftResult } from './soft-results.js';
 import { CONFIRMATION_TOKEN_PREFIX } from '../redaction.js';
 import { addMcpBreadcrumb } from '../sentry.js';
 import { captureMcpEvent } from '../posthog.js';
 import {
+  CONFIRM_REQUEST_KEY,
   MCP_CREDENTIAL_TYPES,
+  type ConfirmationChannel,
   type McpCredentialType,
   type ToolContext,
 } from './context.js';
@@ -79,6 +90,11 @@ export interface ConfirmationBinding {
   args: Record<string, unknown>;
   accountId: string;
   credentialHash: string;
+  /**
+   * Which channel carries the token, so a requestState the client echoes
+   * never works as a confirmation_token, and the other way round.
+   */
+  channel: ConfirmationChannel['kind'];
 }
 
 function mac(secret: string, parts: unknown[]): string {
@@ -101,6 +117,7 @@ function tokenMac(
 ): string {
   return mac(secret, [
     CONFIRMATION_TOKEN_PREFIX,
+    binding.channel,
     binding.tool,
     binding.args,
     binding.accountId,
@@ -205,15 +222,59 @@ const INVALID_CONFIRMATION_MESSAGES = {
   expired: 'The confirmation_token has expired.',
 } satisfies Record<InvalidConfirmationResult['reason'], string>;
 
+const INVALID_REQUEST_STATE_MESSAGES = {
+  malformed:
+    'The confirmation state the client sent back is not one this server issued.',
+  mismatch:
+    'The confirmation state the client sent back was issued for a different call, account or credential.',
+  expired: 'The confirmation the user gave has expired.',
+} satisfies Record<InvalidConfirmationResult['reason'], string>;
+
 export function invalidConfirmation(
   tool: string,
   reason: InvalidConfirmationResult['reason'],
+  channel: ConfirmationChannel['kind'] = 'token',
 ): InvalidConfirmationResult {
+  return channel === 'token'
+    ? {
+        error: 'invalid_confirmation',
+        reason,
+        message: `${INVALID_CONFIRMATION_MESSAGES[reason]} Nothing was changed.`,
+        alternative: `Call ${tool} again with the same arguments and no confirmation_token to get a new preview, and show it to the user.`,
+      }
+    : {
+        error: 'invalid_confirmation',
+        reason,
+        message: `${INVALID_REQUEST_STATE_MESSAGES[reason]} Nothing was changed.`,
+        alternative: `Call ${tool} again with the same arguments. The client will ask the user to confirm the current state.`,
+      };
+}
+
+export type TokenNotAcceptedResult = SoftResult<'token_not_accepted'>;
+
+/** Returned when a request that can ask the user carries a confirmation_token. */
+export function tokenNotAccepted(tool: string): TokenNotAcceptedResult {
   return {
-    error: 'invalid_confirmation',
-    reason,
-    message: `${INVALID_CONFIRMATION_MESSAGES[reason]} Nothing was changed.`,
-    alternative: `Call ${tool} again with the same arguments and no confirmation_token to get a new preview, and show it to the user.`,
+    error: 'token_not_accepted',
+    message:
+      'This client asks the user to confirm changes itself, so a confirmation_token is not accepted here. Nothing was changed.',
+    alternative: `Call ${tool} again with the same arguments and no confirmation_token. The client will show the user the preview and ask them to confirm.`,
+  };
+}
+
+export interface DeclinedResult {
+  status: 'declined';
+  message: string;
+}
+
+/** Returned when the user did not confirm the preview the client showed. */
+export function declined(action: 'decline' | 'cancel'): DeclinedResult {
+  return {
+    status: 'declined',
+    message:
+      action === 'decline'
+        ? 'The user declined this change. Nothing was changed.'
+        : 'The user dismissed the confirmation without answering. Nothing was changed.',
   };
 }
 
@@ -324,7 +385,7 @@ export const confirmationTokenInput = z
   .max(256)
   .optional()
   .describe(
-    'Leave this out on the first call to get a preview and a token. Pass the token back only after the user approves that preview in this turn.',
+    'Only for a client that cannot ask the user itself: leave this out on the first call to get a preview and a token, and pass the token back only after the user approves that preview in this turn. A client that asks the user itself never needs it.',
   );
 
 // ==================== Audit ====================
@@ -566,12 +627,73 @@ export type ConfirmedWriteResult<Preview, Stop, Done> =
   | StalePreviewResult<Preview>
   | InvalidConfirmationResult
   | NotPermittedResult
-  | WriteRateLimited;
+  | WriteRateLimited
+  | InputRequiredResult
+  | DeclinedResult
+  | TokenNotAcceptedResult;
+
+const previewTextSchema = z
+  .object({ reach: z.string().optional() })
+  .passthrough();
 
 /**
- * Runs a tier C write. Without a token it returns a preview and a token.
- * With a token it writes only if the token matches this call and the record
- * has not changed; a changed record returns a new preview and token.
+ * The preview as text for the confirmation dialog: what the change reaches,
+ * then each preview field, so the user sees the record now and after.
+ */
+export function describeChange(
+  target: WriteTarget,
+  preview: unknown,
+  note?: string,
+): string {
+  const { reach, ...fields } = previewTextSchema.parse(preview);
+  const lines = [
+    ...(note ? [note] : []),
+    `${target.tool} on ${target.entityType} ${target.entityId ?? ''}`.trim(),
+    ...(reach ? [reach] : []),
+    ...Object.entries(fields).map(
+      ([key, value]) => `${key}: ${canonicalJson(value)}`,
+    ),
+  ];
+  return lines.join('\n');
+}
+
+/** Asks the client to show the preview and get the user's yes or no. */
+function elicitConfirmation(
+  target: WriteTarget,
+  preview: unknown,
+  issued: IssuedConfirmation,
+  note?: string,
+): InputRequiredResult {
+  return inputRequired({
+    inputRequests: {
+      [CONFIRM_REQUEST_KEY]: inputRequired.elicit({
+        message: describeChange(target, preview, note),
+        requestedSchema: {
+          type: 'object',
+          properties: {
+            confirm: {
+              type: 'boolean',
+              title: 'Confirm',
+              description: 'Make this change',
+            },
+          },
+          required: ['confirm'],
+        },
+      }),
+    },
+    requestState: issued.confirmation_token,
+  });
+}
+
+const RECORD_CHANGED_NOTE =
+  'The record changed after you last saw it. Here is its current state.';
+
+/**
+ * Runs a tier C write. The first call never writes: it reads the record and
+ * either asks the client to confirm the preview with the user (a request that
+ * declares form elicitation) or returns the preview with a token for the
+ * model to pass back. The write runs only when the confirmation that comes
+ * back matches this call and the record has not changed since the preview.
  */
 export async function runConfirmedWrite<Preview, Stop, Done>(
   context: ToolContext,
@@ -579,7 +701,12 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
 ): Promise<ConfirmedWriteResult<Preview, Stop, Done>> {
   const audit = auditor(context, plan, 'C');
   const { confirmation_token: token, ...args } = plan.args;
-  const phase: WritePhase = token ? 'execute' : 'preview';
+  const channel = context.confirmation;
+  const confirming =
+    channel.kind === 'token'
+      ? token !== undefined
+      : channel.requestState !== undefined;
+  const phase: WritePhase = confirming ? 'execute' : 'preview';
   const secret = context.confirmationSecret;
   if (!secret) {
     logMcpEvent({
@@ -593,6 +720,10 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
     await audit(phase, CONFIRMATION_NOT_CONFIGURED.error);
     return { ...CONFIRMATION_NOT_CONFIGURED };
   }
+  if (channel.kind === 'elicitation' && token !== undefined) {
+    await audit('execute', 'token_not_accepted');
+    return tokenNotAccepted(plan.tool);
+  }
 
   try {
     const read = await plan.read();
@@ -605,30 +736,58 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
       args,
       accountId: await context.accountId(),
       credentialHash: await context.credentialKey(),
+      channel: channel.kind,
     };
     const fingerprint = stateFingerprint(read.state);
+    const issue = () => issueConfirmationToken(secret, binding, fingerprint);
 
-    if (!token) {
-      await audit(phase, 'confirmation_required');
-      return confirmationRequired(
-        plan.tool,
-        read.preview,
-        issueConfirmationToken(secret, binding, fingerprint),
-      );
-    }
-
-    const check = checkConfirmationToken(secret, token, binding, fingerprint);
-    if (!check.ok) {
-      if (check.reason === 'stale') {
-        await audit(phase, 'stale_preview');
-        return stalePreview(
-          plan.tool,
-          read.preview,
-          issueConfirmationToken(secret, binding, fingerprint),
-        );
+    if (channel.kind === 'token') {
+      if (!token) {
+        await audit(phase, 'confirmation_required');
+        return confirmationRequired(plan.tool, read.preview, issue());
       }
-      await audit(phase, 'invalid_confirmation');
-      return invalidConfirmation(plan.tool, check.reason);
+      const check = checkConfirmationToken(secret, token, binding, fingerprint);
+      if (!check.ok) {
+        if (check.reason === 'stale') {
+          await audit(phase, 'stale_preview');
+          return stalePreview(plan.tool, read.preview, issue());
+        }
+        await audit(phase, 'invalid_confirmation');
+        return invalidConfirmation(plan.tool, check.reason);
+      }
+    } else {
+      if (channel.requestState === undefined) {
+        await audit(phase, 'elicitation_required');
+        return elicitConfirmation(plan, read.preview, issue());
+      }
+      const check = checkConfirmationToken(
+        secret,
+        channel.requestState,
+        binding,
+        fingerprint,
+      );
+      if (!check.ok) {
+        if (check.reason === 'stale') {
+          await audit(phase, 'stale_preview');
+          return elicitConfirmation(
+            plan,
+            read.preview,
+            issue(),
+            RECORD_CHANGED_NOTE,
+          );
+        }
+        await audit(phase, 'invalid_confirmation');
+        return invalidConfirmation(plan.tool, check.reason, 'elicitation');
+      }
+      const { answer } = channel;
+      if (answer === undefined) {
+        await audit(phase, 'elicitation_required');
+        return elicitConfirmation(plan, read.preview, issue());
+      }
+      if (answer.action !== 'accept' || !answer.confirm) {
+        await audit(phase, 'declined');
+        return declined(answer.action === 'cancel' ? 'cancel' : 'decline');
+      }
     }
 
     const done = await plan.write(read.preview);
