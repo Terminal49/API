@@ -27,45 +27,33 @@ const MAX_NAME_CHARS = 100;
 const MAX_PATH_CHARS = 256;
 
 /**
- * A first path segment kept as-is. Any segment could be a key the receiver
- * checks, so only a short lowercase route word is shown, and every later
- * segment is redacted.
+ * How many rightmost host labels are kept, the registered domain in most
+ * hosts. Any label left of it, and any path segment, could be a key the
+ * receiver checks, and its spelling cannot show that it is not.
  */
-const ROUTE_WORD = /^[a-z]{1,16}(-[a-z]{1,16})*$/;
-
-/**
- * A leftmost host label kept as-is. Some receivers put the key in the
- * subdomain, as in <key>.m.example.net.
- */
-const HOST_WORD = /^[a-z-]{1,12}$/;
+const KEPT_HOST_LABELS = 2;
 
 function describePath(pathname: string) {
-  let redacted = false;
   const path = pathname
     .split('/')
-    .map((segment, index) => {
-      if (segment === '' || (index === 1 && ROUTE_WORD.test(segment))) {
-        return segment;
-      }
-      redacted = true;
-      return REDACTED_SEGMENT;
-    })
+    .map((segment) => (segment === '' ? segment : REDACTED_SEGMENT))
     .join('/');
   if (path.length > MAX_PATH_CHARS) {
     return { path: `/${REDACTED_SEGMENT}`, redacted: true };
   }
-  return { path, redacted };
+  return { path, redacted: path !== pathname };
 }
 
 function describeHost(parsed: URL) {
-  const [first = '', ...rest] = parsed.hostname.split('.');
-  const redacted = rest.length > 0 && !HOST_WORD.test(first);
-  const hostname = redacted
-    ? [REDACTED_SEGMENT, ...rest].join('.')
-    : parsed.hostname;
+  const labels = parsed.hostname.split('.');
+  const hidden = Math.max(labels.length - KEPT_HOST_LABELS, 0);
+  const hostname = [
+    ...Array<string>(hidden).fill(REDACTED_SEGMENT),
+    ...labels.slice(hidden),
+  ].join('.');
   return {
     host: parsed.port ? `${hostname}:${parsed.port}` : hostname,
-    redacted,
+    redacted: hidden > 0,
   };
 }
 
@@ -82,10 +70,9 @@ export type WebhookUrl = z.infer<typeof webhookUrlSchema>;
 
 /**
  * The parts of a webhook URL that are safe to show. The query string,
- * fragment and any user name or password are dropped. The host keeps its
- * leftmost label only when that is a short lowercase word, and the path keeps
- * only a short lowercase first segment; anything else is replaced with
- * {@link REDACTED_SEGMENT}.
+ * fragment and any user name or password are dropped. The host keeps only its
+ * last two labels, and every path segment and other host label is replaced
+ * with {@link REDACTED_SEGMENT}.
  */
 export function describeWebhookUrl(url: string | null): WebhookUrl {
   let parsed: URL | undefined;

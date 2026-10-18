@@ -185,40 +185,25 @@ describe('list_webhooks', () => {
 });
 
 describe('describeWebhookUrl', () => {
-  it('keeps a short first route word and redacts every later segment', () => {
+  it('redacts every path segment and every host label left of the domain', () => {
     expect(
       describeWebhookUrl(
         'https://hooks.example.com/services/T0123/B0456/abcdEFGHijklMNOPqrstUVWX',
       ),
     ).toEqual({
       scheme: 'https',
-      host: 'hooks.example.com',
-      path: '/services/[redacted]/[redacted]/[redacted]',
+      host: '[redacted].example.com',
+      path: '/[redacted]/[redacted]/[redacted]/[redacted]',
       has_query: false,
-      host_redacted: false,
+      host_redacted: true,
       path_redacted: true,
     });
   });
 
   it.each([
-    ['a UUID', '/hooks/123e4567-e89b-12d3-a456-426614174000'],
-    ['a hex key', '/hooks/9f86d081884c7d659a2feaa0c55ad015'],
-    ['an encoded value', '/hooks/a%2Fb'],
-    ['a long value', `/hooks/${'a'.repeat(25)}`],
-    ['a single-case lowercase key', '/hooks/abcdefghijklmnopqrstuvwx'],
-    ['a single-case uppercase key', '/hooks/ABCDEFGHIJKLMNOPQRSTUVWX'],
-    ['a short lowercase key', '/hooks/k3x9mqpzt7wvbnra'],
-    ['a short word', '/hooks/in'],
-  ])('redacts %s after the first segment', (_label, path) => {
-    expect(describeWebhookUrl(`https://example.com${path}`)).toMatchObject({
-      path: '/hooks/[redacted]',
-      path_redacted: true,
-    });
-  });
-
-  it.each([
+    ['a short lowercase word', '/secret'],
+    ['a hyphenated lowercase word', '/shared-secret'],
     ['an sk_live_ key', '/sk_live_abcdefghijk'],
-    ['a lowercase key', '/abcdefghijklmnopqrstuvwx'],
     ['a key with digits', '/k3x9mqpzt7wvbnra'],
   ])('redacts %s as the first segment', (_label, path) => {
     expect(describeWebhookUrl(`https://example.com${path}`)).toMatchObject({
@@ -227,14 +212,13 @@ describe('describeWebhookUrl', () => {
     });
   });
 
-  it('redacts a key segment after a numeric account id', () => {
+  it('keeps the slashes of a redacted path', () => {
     expect(
       describeWebhookUrl(
         'https://hooks.zapier.com/hooks/catch/1234567/3abcdef/',
       ),
     ).toMatchObject({
-      host: 'hooks.zapier.com',
-      path: '/hooks/[redacted]/[redacted]/[redacted]/',
+      path: '/[redacted]/[redacted]/[redacted]/[redacted]/',
       path_redacted: true,
     });
   });
@@ -243,30 +227,37 @@ describe('describeWebhookUrl', () => {
     [
       'a subdomain key',
       'https://eo1a2b3c4d5e6f7.m.pipedream.net/',
-      '[redacted].m.pipedream.net',
+      '[redacted].[redacted].pipedream.net',
     ],
     [
-      'a long subdomain',
-      'https://abcdefghijklmnop.example.com/',
+      'a short lowercase subdomain',
+      'https://secret.example.com/',
       '[redacted].example.com',
     ],
-    ['an IP address', 'https://10.1.2.3:8443/', '[redacted].1.2.3:8443'],
+    [
+      'a key in a later label',
+      'https://hooks.sharedsecret.example.com/',
+      '[redacted].[redacted].example.com',
+    ],
+    [
+      'an IP address',
+      'https://10.1.2.3:8443/',
+      '[redacted].[redacted].2.3:8443',
+    ],
   ])('redacts %s in the host', (_label, url, host) => {
     const described = describeWebhookUrl(url);
     expect(described).toMatchObject({ host, host_redacted: true });
   });
 
-  it('keeps a plain host and first route word and reports no query', () => {
-    expect(describeWebhookUrl('https://example.com/terminal-webhooks')).toEqual(
-      {
-        scheme: 'https',
-        host: 'example.com',
-        path: '/terminal-webhooks',
-        has_query: false,
-        host_redacted: false,
-        path_redacted: false,
-      },
-    );
+  it('keeps a two-label host and an empty path, and reports no query', () => {
+    expect(describeWebhookUrl('https://example.com/')).toEqual({
+      scheme: 'https',
+      host: 'example.com',
+      path: '/',
+      has_query: false,
+      host_redacted: false,
+      path_redacted: false,
+    });
   });
 
   it('drops the user name, password, query string and fragment', () => {
@@ -277,10 +268,10 @@ describe('describeWebhookUrl', () => {
     expect(described).toEqual({
       scheme: 'https',
       host: 'example.com',
-      path: '/in',
+      path: '/[redacted]',
       has_query: true,
       host_redacted: false,
-      path_redacted: false,
+      path_redacted: true,
     });
     expect(JSON.stringify(described)).not.toMatch(
       /name|password|key|value|part/,
