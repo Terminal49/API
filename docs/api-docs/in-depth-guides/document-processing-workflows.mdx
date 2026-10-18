@@ -335,7 +335,7 @@ If extraction fails, you will receive `document_representation.failed` instead. 
       "id": "90df411d-b836-498b-bf0d-b320d56ab311",
       "type": "email_submission",
       "attributes": {
-        "subject": "[ediDocManager SHP HBL MBL HLCUSHA2601APKY2 / HBL CGGMSGH5110912]",
+        "subject": "Shipping documents: MBL EXBKG0000001 / HBL EXHBL0000001",
         "from": ["sender@example.com"],
         "sent_at": "2026-03-27T13:46:32-07:00"
       }
@@ -345,7 +345,7 @@ If extraction fails, you will receive `document_representation.failed` instead. 
       "type": "document",
       "attributes": {
         "document_type": "unknown",
-        "file_name": "f134a7229b5cf7b6c241c566448b9293_fail-1234.pdf",
+        "file_name": "0a1b2c3d4e5f60718293a4b5c6d7e8f9_fail-1234.pdf",
         "file_url": "https://t49-documents-prod.s3.amazonaws.com/..."
       },
       "relationships": {
@@ -420,41 +420,41 @@ Additional document types will be added in future phases.
         "updated_at": "2026-03-27T20:05:03Z",
         "payload": {
           "hbl_type": "DRAFT",
-          "hbl_number": "CGGMSGH5110912",
-          "carrier_booking_number": "HLCUSHA2601APKY2",
-          "reference_number_isf": "CGGMSGH5110912",
-          "fmc_oti_number": "026564N",
+          "hbl_number": "EXHBL0000001",
+          "carrier_booking_number": "EXBKG0000001",
+          "reference_number_isf": "EXHBL0000001",
+          "fmc_oti_number": "000000N",
           "date_of_issue": "13-02-2026",
           "shipped_on_board_date": "17-Feb-26",
           "freight_payment_terms": "PREPAID",
           "service_mode": "CFS/CY",
-          "vessel_name": "GUSTAV MAERSK",
-          "voyage_number": "606E",
+          "vessel_name": "EXAMPLE TRADER",
+          "voyage_number": "001E",
           "port_of_loading": "SHANGHAI,CHINA",
           "port_of_discharge": "LOS ANGELES, CALIFORNIA, USA",
           "place_of_receipt": "SHANGHAI,CHINA",
-          "place_of_delivery": "PERRIS, CALIFORNIA, USA",
+          "place_of_delivery": "ANYTOWN, CALIFORNIA, USA",
           "point_and_country_of_origin": "SHANGHAI,CHINA",
           "signed_at": "SHANGHAI",
-          "signed_by": "MAERSK LOGISTICS & SERVICE CHINA LIMITED as agent of the Carrier",
+          "signed_by": "EXAMPLE FORWARDING LTD. as agent of the Carrier",
           "shipper": {
-            "name": "FUZHOU LIGHT INDUSTRY IMPORT & EXPORT CO.,LTD",
-            "address": "8/F.,TAIYANG PLAZA,NO.278,HUDONG AVENUE FUZHOU,CHINA"
+            "name": "EXAMPLE SHIPPER CO., LTD",
+            "address": "100 EXAMPLE ROAD, SHANGHAI, CHINA"
           },
           "consignee": {
-            "name": "GOLDENSEE LIMITED",
-            "address": "C/O ACME LOGISTICS INC 100 MAIN ST, ANYTOWN, CA 90001"
+            "name": "EXAMPLE CONSIGNEE LLC",
+            "address": "C/O EXAMPLE LOGISTICS INC, 100 MAIN ST, ANYTOWN, CA 90001"
           },
           "notify_party": {
-            "name": "MOHAWK GLOBAL LOGISTICS",
-            "email": "NJIMPORTS@MOHAWKGLOBAL.COM",
-            "phone": "732-218-9164",
-            "address": "105 FIELDCREST AVE, SUITE 404 EDISON, NJ 08837"
+            "name": "EXAMPLE CUSTOMS BROKER INC.",
+            "email": "imports@example.com",
+            "phone": "555-0100",
+            "address": "200 EXAMPLE AVE, SUITE 100, ANYTOWN, NJ 07001"
           },
           "containers": [
             {
-              "container_number": "FDCU0184438",
-              "seal_number": "HLK6247958",
+              "container_number": "TSTU0000011",
+              "seal_number": "SEAL000001",
               "container_size": "40HIGH",
               "gross_weight": "1116.75",
               "weight_unit": "KGS",
@@ -462,7 +462,7 @@ Additional document types will be added in future phases.
               "measurement_unit": "CBM",
               "number_of_packages": "24",
               "package_unit": "CARTONS",
-              "cargo_references": ["WFH1G9800163", "WFH1G9800162"]
+              "cargo_references": ["PO-EXAMPLE-0001", "PO-EXAMPLE-0002"]
             }
           ],
           "line_items": [
@@ -475,7 +475,7 @@ Additional document types will be added in future phases.
               "measurement": "5.736",
               "measurement_unit": "CBM",
               "hts_codes": ["9401616031"],
-              "cargo_references": ["WFH1G9800163", "WFH1G9800162"]
+              "cargo_references": ["PO-EXAMPLE-0001", "PO-EXAMPLE-0002"]
             }
           ],
           "totals": {
@@ -493,7 +493,7 @@ Additional document types will be added in future phases.
       "id": "3bdf78ea-a86c-40b5-b650-a1d79542808a",
       "type": "email_submission",
       "attributes": {
-        "subject": "[ediDocManager SHP HBL MBL HLCUSHA2601APKY2 / HBL CGGMSGH5110912]",
+        "subject": "Shipping documents: MBL EXBKG0000001 / HBL EXHBL0000001",
         "from": ["sender@example.com"],
         "sent_at": "2026-03-27T13:03:05-07:00"
       }
@@ -504,7 +504,7 @@ Additional document types will be added in future phases.
       "attributes": {
         "document_type": "draft_house_bill_of_lading",
         "source": "email",
-        "file_name": "f134a7229b5cf7b6c241c566448b9293.pdf",
+        "file_name": "0a1b2c3d4e5f60718293a4b5c6d7e8f9.pdf",
         "file_url": "https://t49-documents-prod.s3.amazonaws.com/..."
       },
       "relationships": {
@@ -550,41 +550,41 @@ Additional document types will be added in future phases.
         "updated_at": "2026-03-27T20:05:39Z",
         "payload": {
           "hbl_type": "TELEX",
-          "hbl_number": "CGGMXIM1554317",
-          "carrier_booking_number": "MAEU263829038",
-          "reference_number_isf": "CGGMXIM1554317",
-          "fmc_oti_number": "026564N",
+          "hbl_number": "EXHBL0000002",
+          "carrier_booking_number": "EXBKG0000002",
+          "reference_number_isf": "EXHBL0000002",
+          "fmc_oti_number": "000000N",
           "date_of_issue": "13-02-2026",
           "shipped_on_board_date": "31-Jan-26",
           "freight_payment_terms": "PREPAID",
           "service_mode": "CFS/CY",
-          "vessel_name": "SYNERGY BUSAN",
-          "voyage_number": "604N",
+          "vessel_name": "EXAMPLE EXPRESS",
+          "voyage_number": "002N",
           "port_of_loading": "XIAMEN,CHINA",
           "port_of_discharge": "JACKSONVILLE,FLORIDA,USA",
           "place_of_receipt": "XIAMEN,CHINA",
           "place_of_delivery": "JACKSONVILLE,FLORIDA,USA",
           "point_and_country_of_origin": "XIAMEN,CHINA",
           "signed_at": "XIAMEN",
-          "signed_by": "MAERSK LOGISTICS & SERVICE CHINA LIMITED as agent of the Carrier",
+          "signed_by": "EXAMPLE FORWARDING LTD. as agent of the Carrier",
           "shipper": {
-            "name": "TOTAL WIN HOME PRODUCTS CO.,LTD",
-            "address": "ROOM 601-604, ZHONGXI TIMES TOWER, NO. 26 OF HONGQI ROAD, NANCHENG DISTRICT, DONGGUAN CITY GUANGDONG PROVINCE, CHINA"
+            "name": "EXAMPLE HOME PRODUCTS CO., LTD",
+            "address": "200 EXAMPLE ROAD, DONGGUAN, GUANGDONG, CHINA"
           },
           "consignee": {
-            "name": "UNIVERSE HOME INC.",
-            "address": "1546 NW 56TH STREET, SEATTLE, WA, 98107, UNITED STATES"
+            "name": "EXAMPLE CONSIGNEE INC.",
+            "address": "300 EXAMPLE STREET, ANYTOWN, WA 98000, UNITED STATES"
           },
           "notify_party": {
-            "name": "MOHAWK GLOBAL LOGISTICS",
-            "email": "NJIMPORTS@MOHAWKGLOBAL.COM",
-            "phone": "732-218-9164",
-            "address": "105 FIELDCREST AVE, SUITE 404 EDISON, NJ 08837"
+            "name": "EXAMPLE CUSTOMS BROKER INC.",
+            "email": "imports@example.com",
+            "phone": "555-0100",
+            "address": "200 EXAMPLE AVE, SUITE 100, ANYTOWN, NJ 07001"
           },
           "containers": [
             {
-              "container_number": "CAAU4786387",
-              "seal_number": "CN5274554",
+              "container_number": "TSTU0000021",
+              "seal_number": "SEAL000002",
               "container_size": "40HIGH",
               "gross_weight": "451.7",
               "weight_unit": "KGS",
@@ -592,11 +592,11 @@ Additional document types will be added in future phases.
               "measurement_unit": "CBM",
               "number_of_packages": "37",
               "package_unit": "CARTONS",
-              "cargo_references": ["ACN SPO WHS-41414-42378538"]
+              "cargo_references": ["PO-EXAMPLE-0003"]
             },
             {
-              "container_number": "CAAU4786387",
-              "seal_number": "CN5274554",
+              "container_number": "TSTU0000021",
+              "seal_number": "SEAL000002",
               "container_size": "40HIGH",
               "gross_weight": "862",
               "weight_unit": "KGS",
@@ -604,7 +604,7 @@ Additional document types will be added in future phases.
               "measurement_unit": "CBM",
               "number_of_packages": "26",
               "package_unit": "CARTONS",
-              "cargo_references": ["ACN SPO WHS-41414-42378549"]
+              "cargo_references": ["PO-EXAMPLE-0004"]
             }
           ],
           "line_items": [
@@ -619,7 +619,7 @@ Additional document types will be added in future phases.
             {
               "description": "PET RAMP",
               "hts_codes": ["442199"],
-              "cargo_references": ["ACI SPO: WHS-41414-42267479"]
+              "cargo_references": ["PO-EXAMPLE-0005"]
             },
             {
               "description": "DOG HOUSE",
@@ -628,7 +628,7 @@ Additional document types will be added in future phases.
             {
               "description": "COMMODITY SHELF",
               "hts_codes": ["442199"],
-              "cargo_references": ["ACI SPO: WHS-41414-42267481"]
+              "cargo_references": ["PO-EXAMPLE-0006"]
             }
           ],
           "totals": {
@@ -657,7 +657,7 @@ Additional document types will be added in future phases.
       "attributes": {
         "document_type": "final_house_bill_of_lading",
         "source": "email",
-        "file_name": "c4b16d8360049ea688367f6192dba07b.pdf",
+        "file_name": "9f8e7d6c5b4a39281706f5e4d3c2b1a0.pdf",
         "file_url": "https://t49-documents-prod.s3.amazonaws.com/..."
       },
       "relationships": {
@@ -702,25 +702,25 @@ Additional document types will be added in future phases.
         "created_at": "2026-03-27T20:05:39Z",
         "updated_at": "2026-03-27T20:05:39Z",
         "payload": {
-          "importer_name": "Hulk International Limited",
+          "importer_name": "Example Importer LLC",
           "importer_of_record_number": null,
-          "po_numbers": ["WHS-64134-41828780"],
+          "po_numbers": ["PO-EXAMPLE-0007"],
           "description_of_goods": null,
           "bol_type": null,
-          "hbl_number": "CGGMSGH5115217",
-          "mbl_number": "MAEU265407596",
+          "hbl_number": "EXHBL0000003",
+          "mbl_number": "EXMBL0000003",
           "etd": "17-Feb-26",
           "eta": "04-Mar-26",
-          "consignee_name": "Hulk International Limited",
-          "consignee_address_1": "C/O ACME LOGISTICS INC 100 MAIN ST, ANYTOWN, CA 90001",
+          "consignee_name": "Example Importer LLC",
+          "consignee_address_1": "C/O EXAMPLE LOGISTICS INC, 100 MAIN ST, ANYTOWN, CA 90001",
           "consignee_address_2": null,
           "consignee_city": null,
           "consignee_state": null,
           "consignee_postal_code": null,
           "consignee_country": "US",
           "consignee_irs_tax_id": null,
-          "buyer_name": "Hulk International Limited",
-          "buyer_address_1": "C/O ACME LOGISTICS INC 100 MAIN ST, ANYTOWN, CA 90001",
+          "buyer_name": "Example Importer LLC",
+          "buyer_address_1": "C/O EXAMPLE LOGISTICS INC, 100 MAIN ST, ANYTOWN, CA 90001",
           "buyer_address_2": null,
           "buyer_city": null,
           "buyer_state": null,
@@ -728,15 +728,15 @@ Additional document types will be added in future phases.
           "buyer_country": "US",
           "buyer_duns": null,
           "buyer_duns4": null,
-          "ship_to_name": "Acme Distribution Center 2",
+          "ship_to_name": "Example Distribution Center 2",
           "ship_to_address_1": "100 Main St, Anytown, CA 90001",
           "ship_to_address_2": null,
           "ship_to_city": null,
           "ship_to_state": null,
           "ship_to_postal_code": null,
           "ship_to_country": "US",
-          "seller_name": "Jili Creation Technology Co., Ltd",
-          "seller_address_1": "Room(2803), Aidu international,#72,Jianshe Dong Street,Tiexi District,Shenyang,Liaoning,110000",
+          "seller_name": "Example Seller Co., Ltd",
+          "seller_address_1": "100 Example Road, Shenyang, Liaoning, 110000",
           "seller_address_2": null,
           "seller_city": null,
           "seller_state_province": null,
@@ -744,8 +744,8 @@ Additional document types will be added in future phases.
           "seller_country": "China",
           "seller_duns": null,
           "seller_duns4": null,
-          "consolidator_name": "A.P. Moller – Maersk",
-          "consolidator_address_1": "1-3/F, D3, Tianfu Software Park, Chengdu, China, 610041",
+          "consolidator_name": "Example Consolidator Ltd",
+          "consolidator_address_1": "200 Example Road, Chengdu, China, 610041",
           "consolidator_address_2": null,
           "consolidator_city": null,
           "consolidator_province": null,
@@ -753,8 +753,8 @@ Additional document types will be added in future phases.
           "consolidator_country": "China",
           "consolidator_duns": null,
           "consolidator_duns4": null,
-          "stuffing_location_name": "Shanghai Yangshan Free Trade Port Area Logistics Service Co.,Ltd",
-          "stuffing_location_address_1": "No 666, Tongshun Avenue, Pudong District, Shanghai",
+          "stuffing_location_name": "Example Warehouse Co., Ltd",
+          "stuffing_location_address_1": "300 Example Road, Shanghai",
           "stuffing_location_address_2": null,
           "stuffing_location_city": null,
           "stuffing_location_province": null,
@@ -762,8 +762,8 @@ Additional document types will be added in future phases.
           "stuffing_location_country": "China",
           "stuffing_location_duns": null,
           "stuffing_location_duns4": null,
-          "manufacturer_name": "ZHEJIANG ANJI SHUYE FURNITURE CO.,LTD",
-          "manufacturer_address_1": "DISTRICT 2, SUNSHINE INDUSTRIAL PARK OF DIPU SUBDISTRICT, ANJI COUNTY, HUZHOU CITY, ZHEJIANG PROVINCE, CHINA",
+          "manufacturer_name": "EXAMPLE FURNITURE MANUFACTURING CO., LTD",
+          "manufacturer_address_1": "400 EXAMPLE INDUSTRIAL PARK, HUZHOU, ZHEJIANG, CHINA",
           "manufacturer_address_2": null,
           "manufacturer_city": null,
           "manufacturer_province": null,
@@ -828,8 +828,8 @@ Additional document types will be added in future phases.
         "updated_at": "2026-03-27T20:05:39Z",
         "payload": {
           "document_state": "NON-NEGOTIABLE",
-          "waybill_number": "235600052920",
-          "booking_number": "EGLV235600052920",
+          "waybill_number": "EX0000000004",
+          "booking_number": "EXBK0000000004",
           "carrier_reference": null,
           "carrier_name": "Evergreen Line",
           "scac_code": "EGLV",
@@ -840,22 +840,22 @@ Additional document types will be added in future phases.
           "number_of_original_waybills": "NIL (0)",
           "rider_pages": null,
           "shipper": {
-            "name": "MAERSK LOGISTICS & SERVICES VIETNAM COMPANY LIMITED",
-            "address": "FLOOR 16&17,OFFICE - COMMERCIAL - SERVICE BUILDING AT LOT 5.5,NO.8-10 MAI CHI THO STREET,AN KHANH WARD,HO CHI MINH CITY,VIETNAM",
+            "name": "EXAMPLE FORWARDING (VIETNAM) CO., LTD",
+            "address": "100 EXAMPLE STREET, HO CHI MINH CITY, VIETNAM",
             "email": null,
             "phone": null
           },
           "consignee": {
-            "name": "ACME LOGISTICS INC",
-            "address": "4 COPLEY PLACE FLOOR 7 BOSTON MA 02116 UNITED STATES",
-            "email": "OCEANIMPORT@ACMELOGISTICS.COM",
-            "phone": "1 617-532-5100"
+            "name": "EXAMPLE LOGISTICS INC",
+            "address": "100 MAIN ST, ANYTOWN, MA 02100 UNITED STATES",
+            "email": "oceanimport@example.com",
+            "phone": "1 555-0101"
           },
           "notify_party": {
-            "name": "ACME LOGISTICS INC.",
-            "address": "4 COPLEY PLACE FLOOR 7 BOSTON MA 02116 UNITED STATES",
-            "email": "OCEANIMPORT@ACMELOGISTICS.COM",
-            "phone": "1 617-532-5100"
+            "name": "EXAMPLE LOGISTICS INC.",
+            "address": "100 MAIN ST, ANYTOWN, MA 02100 UNITED STATES",
+            "email": "oceanimport@example.com",
+            "phone": "1 555-0101"
           },
           "also_notify": null,
           "actual_shipper": null,
@@ -864,8 +864,8 @@ Additional document types will be added in future phases.
           "pre_carriage_by": null,
           "place_of_receipt": "HO CHI MINH CITY",
           "date_of_receipt": null,
-          "ocean_vessel": "EVER MAGNA",
-          "voyage_number": "1440-003E",
+          "ocean_vessel": "EXAMPLE CARRIER",
+          "voyage_number": "0001-001E",
           "port_of_loading": "CAI MEP",
           "transshipment_port": null,
           "port_of_discharge": "LOS ANGELES, CA",
@@ -874,8 +874,8 @@ Additional document types will be added in future phases.
           "marks_and_numbers": "N/M",
           "containers": [
             {
-              "container_number": "EGSU9849000",
-              "seal_number": "EMCCYG3555",
+              "container_number": "TSTU0000031",
+              "seal_number": "SEAL000004",
               "container_size": "40H",
               "slac": null,
               "gross_weight": null,
@@ -890,7 +890,7 @@ Additional document types will be added in future phases.
           "hts_codes": ["9401616011"],
           "invoice_references": [],
           "hbl_reference": null,
-          "cargo_references": ["SPO#WHS-58624-41973686"],
+          "cargo_references": ["PO-EXAMPLE-0008"],
           "total_packages": 135,
           "package_unit": "CARTONS",
           "gross_weight": 6439.5,
@@ -908,7 +908,7 @@ Additional document types will be added in future phases.
           "place_of_issue": "HO CHI MINH",
           "date_of_issue": "FEB.02,2026",
           "laden_on_board_date": "FEB.02,2026",
-          "signed_by": "EVERGREEN SHIPPING AGENCY (VIETNAM) COMPANY LTD. As agent for the Carrier and the Vessel Provider Evergreen Marine (Asia) Pte. Ltd. doing business as \"Evergreen Line\""
+          "signed_by": "EXAMPLE SHIPPING AGENCY LTD. As agent for the Carrier"
         }
       }
     },
@@ -918,7 +918,7 @@ Additional document types will be added in future phases.
       "attributes": {
         "document_type": "master_bill_of_lading",
         "source": "email",
-        "file_name": "c4b16d8360049ea688367f6192dba07b.pdf",
+        "file_name": "9f8e7d6c5b4a39281706f5e4d3c2b1a0.pdf",
         "file_url": "https://t49-documents-prod.s3.amazonaws.com/..."
       },
       "relationships": {
@@ -963,8 +963,8 @@ Additional document types will be added in future phases.
         "created_at": "2026-03-27T20:05:39Z",
         "updated_at": "2026-03-27T20:05:39Z",
         "payload": {
-          "issuer_name": "Acme Logistics Inc",
-          "issuer_fmc_oti_number": "026564N",
+          "issuer_name": "Example Logistics Inc",
+          "issuer_fmc_oti_number": "000000N",
           "document_date": null,
           "document_number": null,
           "consol_number": null,
@@ -974,13 +974,13 @@ Additional document types will be added in future phases.
           "pickup_address_name": "New York APM Terminal, New Jersey",
           "pickup_address": null,
           "pickup_address_phone": null,
-          "delivery_name": "Acme Distribution Center",
+          "delivery_name": "Example Distribution Center",
           "delivery_address": "100 Main St, Anytown, NJ 08512 US",
           "ocean_carrier": "Hapag-Lloyd",
-          "mbol": "HLCUSGN2512AWAC8",
+          "mbol": "EXMBL0000005",
           "hbol": null,
-          "vessel_name": "CAUTIN",
-          "voyage_number": "2516E",
+          "vessel_name": "EXAMPLE STAR",
+          "voyage_number": "003E",
           "transport_mode": null,
           "port_of_loading": "Vung Tau",
           "port_of_discharge": "New York",
@@ -990,19 +990,19 @@ Additional document types will be added in future phases.
           "freight_payment_terms": null,
           "service_type": null,
           "movement_type": null,
-          "customer": "Haomaijia Technology (Shenzhen) Co., LTD",
+          "customer": "Example Supplier Co., Ltd",
           "goods_description": null,
           "package_count": null,
           "measurement_cbm": null,
           "measurement_cft": null,
-          "cargo_references": ["WHS-58624-41985386"],
+          "cargo_references": ["PO-EXAMPLE-0009"],
           "delivery_notes": null,
-          "delivery_carrier": "Cargomatic",
+          "delivery_carrier": "Example Trucking Co.",
           "routing_legs": null,
           "containers": [
             {
-              "container_number": "HAMU1717557",
-              "seal_number": "HLC3251157",
+              "container_number": "TSTU0000041",
+              "seal_number": "SEAL000005",
               "container_type": "ISO_45G0",
               "gross_weight_kg": null,
               "gross_weight_lb": 16762.0
@@ -1017,7 +1017,7 @@ Additional document types will be added in future phases.
       "attributes": {
         "document_type": "dray_delivery_order",
         "source": "email",
-        "file_name": "delivery_order_2902654.pdf",
+        "file_name": "delivery_order_000001.pdf",
         "file_url": "https://t49-documents-prod.s3.amazonaws.com/..."
       },
       "relationships": {
