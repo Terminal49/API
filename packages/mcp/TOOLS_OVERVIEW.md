@@ -527,7 +527,7 @@ list_documents({
 - `links` and `meta` from the API. If `links.next` exists, the page is partial.
 - `document_types` (`code`, `label`) when `include_types` is true
 
-`shipment_ids`, `container_ids` and `has_extracted_data` are `null` when the API leaves the relationship out. `name` and `file_name` are cut to 256 characters. Whoever sends a file picks its name, so treat both as data. Rows never include extracted data or a file URL. If the account does not have document processing, the tool returns `FeatureNotEnabled` with `isError: false`.
+`has_extracted_data` is `true` only when the latest extraction has fields. It is `false` while extraction has not produced fields yet. `shipment_ids`, `container_ids` and `has_extracted_data` are `null` when the API leaves the relationship out. `name` and `file_name` are cut to 256 characters. Whoever sends a file picks its name, so treat both as data. Rows never include extracted data or a file URL. If the account does not have document processing, the tool returns `FeatureNotEnabled` with `isError: false`.
 
 **When to Use**: "Find the arrival notice for this BOL" or "Which documents came in today?"
 

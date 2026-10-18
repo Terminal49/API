@@ -12,7 +12,9 @@ import { nullableString } from './api-fields.js';
 import {
   DOCUMENTS_NOT_ENABLED,
   documentSummarySchema,
+  findRepresentation,
   rawDocumentSchema,
+  REPRESENTATION_INCLUDE,
   softResultFields,
   toDocumentSummary,
 } from './documents.js';
@@ -142,16 +144,6 @@ const rawResponseSchema = z.object({
   included: z.array(z.unknown()).catch([]),
 });
 
-const rawRepresentationSchema = z.object({
-  id: z.string(),
-  type: z.literal('document_representation'),
-  attributes: z.object({
-    schema_version: nullableString,
-    payload: z.record(z.string(), z.unknown()).catch({}),
-    updated_at: nullableString,
-  }),
-});
-
 const rawDownloadSchema = z.object({ download_url: z.string().url() });
 
 const AMZ_DATE = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/;
@@ -235,24 +227,21 @@ function findExtractedData(
   included: readonly unknown[],
   representationId: string | undefined,
 ): ExtractedData | null {
-  for (const record of included) {
-    const parsed = rawRepresentationSchema.safeParse(record);
-    if (!parsed.success || parsed.data.id !== representationId) continue;
-    const { schema_version, payload, updated_at } = parsed.data.attributes;
-    // A representation is created with an empty payload before extraction
-    // finishes, so it is not yet extracted data.
-    if (Object.keys(payload).length === 0) return null;
-    const { fields, omitted } = boundFields(payload);
-    return {
-      trust: 'untrusted',
-      notice: UNTRUSTED_NOTICE,
-      schema_version,
-      extracted_at: updated_at,
-      fields,
-      omitted_fields: omitted,
-    };
-  }
-  return null;
+  const representation = findRepresentation(included, representationId);
+  if (!representation) return null;
+  const { schema_version, payload, updated_at } = representation.attributes;
+  // A representation is created with an empty payload before extraction
+  // finishes, so it is not yet extracted data.
+  if (Object.keys(payload).length === 0) return null;
+  const { fields, omitted } = boundFields(payload);
+  return {
+    trust: 'untrusted',
+    notice: UNTRUSTED_NOTICE,
+    schema_version,
+    extracted_at: updated_at,
+    fields,
+    omitted_fields: omitted,
+  };
 }
 
 /** Keeps up to MAX_EMAIL_ADDRESSES string addresses and counts the rest. */
@@ -306,8 +295,10 @@ export async function executeGetDocument(
     include_source_email,
     include_download_url,
   } = getDocumentInputSchema.parse(args);
+  // The extraction is always loaded so has_extracted_data is known; its
+  // fields are returned only when asked for.
   const includes = [
-    ...(include_extracted_data ? ['last_document_representation'] : []),
+    REPRESENTATION_INCLUDE,
     ...(include_source_email ? ['email_submission'] : []),
   ];
 
@@ -317,7 +308,7 @@ export async function executeGetDocument(
     [raw, downloadUrl] = await Promise.all([
       client.documents.get(id, {
         format: 'raw',
-        include: includes.length > 0 ? includes.join(',') : undefined,
+        include: includes.join(','),
       }),
       include_download_url
         ? loadDownloadUrl(id, client)
@@ -332,7 +323,7 @@ export async function executeGetDocument(
 
   const { data, included } = rawResponseSchema.parse(raw);
   const result: DocumentResult = {
-    ...toDocumentSummary(data),
+    ...toDocumentSummary(data, included),
     classification_notes: data.attributes.classification_notes,
     email_submission_id: data.relationships.email_submission?.data?.id ?? null,
   };

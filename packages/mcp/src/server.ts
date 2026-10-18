@@ -1699,7 +1699,7 @@ export function createTerminal49McpServer(
       {
         description:
           'Find documents on this account, such as Bills of Lading, arrival notices, and delivery orders, by file name, reference number, or document type, newest first. Page size is capped at 25. ' +
-          'Each row has the document id, type, source (upload, api, email, or split_document), file name and size, the shipment and container ids it is linked to, and whether extracted data exists. ' +
+          'Each row has the document id, type, source (upload, api, email, or split_document), file name and size, the shipment and container ids it is linked to, and whether the latest extraction has fields yet. ' +
           'Rows never include extracted data or a download link; call get_document with a returned id for those. ' +
           'Set include_types to get every document type code with its label. If links.next exists, results are partial: request the next page with the same filters.',
         inputSchema: listDocumentsInputSchema,

@@ -813,7 +813,7 @@ Find documents on the account, such as Bills of Lading, arrival notices, and del
 - `include_types` *(boolean, optional)* – also return every document type code with its label (default: false)
 
 **Returns**
-- `items` – each with `id`, `name`, `document_type`, `source`, `file_name`, file type and size, `pages` for a document split from a packet, the linked `shipment_ids` and `container_ids`, and `has_extracted_data`
+- `items` – each with `id`, `name`, `document_type`, `source`, `file_name`, file type and size, `pages` for a document split from a packet, the linked `shipment_ids` and `container_ids`, and `has_extracted_data`, which is `true` only when the latest extraction has fields
 - `links` and `meta` – if `links.next` exists, the page is partial
 - `document_types` – with `include_types`
 

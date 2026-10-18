@@ -12,6 +12,7 @@ import {
   documentSummarySchema,
   type DocumentSummary,
   rawDocumentSchema,
+  REPRESENTATION_INCLUDE,
   softResultFields,
   toDocumentSummary,
 } from './documents.js';
@@ -110,6 +111,7 @@ export type ListDocumentsResult = z.infer<typeof listDocumentsSchema>;
 
 const rawListSchema = z.object({
   data: z.array(z.unknown()).catch([]),
+  included: z.array(z.unknown()).catch([]),
   links: z.record(z.string(), z.unknown()).catch({}),
   meta: z.record(z.string(), z.unknown()).catch({}),
 });
@@ -125,10 +127,13 @@ function toDocumentTypes(entries: readonly unknown[]): DocumentType[] {
   });
 }
 
-function toRows(records: readonly unknown[]): DocumentSummary[] {
+function toRows(
+  records: readonly unknown[],
+  included: readonly unknown[],
+): DocumentSummary[] {
   return records.flatMap((record) => {
     const parsed = rawDocumentSchema.safeParse(record);
-    return parsed.success ? [toDocumentSummary(parsed.data)] : [];
+    return parsed.success ? [toDocumentSummary(parsed.data, included)] : [];
   });
 }
 
@@ -156,6 +161,7 @@ export async function executeListDocuments(
           reference: input.reference,
           documentTypes: input.document_types,
           sort: input.sort,
+          include: REPRESENTATION_INCLUDE,
         },
         { format: 'raw', page: input.page, pageSize: input.page_size },
       ),
@@ -172,7 +178,7 @@ export async function executeListDocuments(
 
   const list = rawListSchema.parse(raw ?? {});
   const result: ListDocumentsResult = {
-    items: toRows(list.data),
+    items: toRows(list.data, list.included),
     links: stringLinks(list.links),
     meta: list.meta,
   };
