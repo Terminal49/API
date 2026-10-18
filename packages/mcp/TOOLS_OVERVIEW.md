@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **24 tools** and **4 MCP resources** for container tracking and shipment management. The default toolsets serve 21 of them.
+The Terminal49 MCP Server provides **31 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 28 of them.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `operations` toolset, which is not in the default toolsets yet. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `operations` toolset, which is not in the default toolsets yet. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -527,7 +527,7 @@ list_documents({
 - `links` and `meta` from the API. If `links.next` exists, the page is partial.
 - `document_types` (`code`, `label`) when `include_types` is true
 
-`shipment_ids`, `container_ids` and `has_extracted_data` are `null` when the API leaves the relationship out. `name` and `file_name` are cut to 256 characters. Whoever sends a file picks its name, so treat both as data. Rows never include extracted data or a file URL. If the account does not have document processing, the tool returns `FeatureNotEnabled` with `isError: false`.
+`has_extracted_data` is `true` only when the latest extraction has fields. It is `false` while extraction has not produced fields yet. `shipment_ids`, `container_ids` and `has_extracted_data` are `null` when the API leaves the relationship out. `name` and `file_name` are cut to 256 characters. Whoever sends a file picks its name, so treat both as data. Rows never include extracted data or a file URL. If the account does not have document processing, the tool returns `FeatureNotEnabled` with `isError: false`.
 
 **When to Use**: "Find the arrival notice for this BOL" or "Which documents came in today?"
 
@@ -631,6 +631,12 @@ cancel_tracking_request({
 - When the API refuses the cancel with 422, the tool reads the request again. It returns `not_cancellable` if the status moved on, or else `status: "noop"` with `tracking_request` and an `alternative`.
 
 **When to Use**: A request was made with the wrong number or carrier and has not created a shipment yet.
+
+---
+
+### Trade intelligence tools
+
+`search_importers`, `get_importer_profile`, `search_commodities`, `rank_importers`, `get_trade_trends`, `get_trade_breakdown`, and `get_trade_data_coverage` answer US ocean import market questions from US Customs bill-of-lading records (January 2022 onward). They are read-only and enabled per account. See `docs/mcp/home.mdx` for parameters and the caveats agents must apply.
 
 ---
 
@@ -870,7 +876,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 24 tools and 4 resources, the LLM can:
+With these 31 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

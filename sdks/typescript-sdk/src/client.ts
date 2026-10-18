@@ -23,6 +23,7 @@ import {
   ShipmentManager,
   ShippingLineManager,
   TrackingRequestManager,
+  TradeIntelManager,
 } from './client/managers/index.js';
 import type {
   CreateTrackingRequestFromInferOptions,
@@ -225,6 +226,12 @@ export class Terminal49Client {
   public documents: DocumentManager;
   public emailSubmissions: EmailSubmissionManager;
   public documentSchemas: DocumentSchemaManager;
+  /**
+   * Trade intelligence: US import bill-of-lading records (US Customs
+   * manifests). Plain JSON responses; requires the trade intelligence feature
+   * on the account (otherwise `FeatureNotEnabledError`).
+   */
+  public tradeIntel: TradeIntelManager;
 
   public webhooks = {
     list: (options?: ListOptions) => this.listWebhooks(options),
@@ -379,6 +386,7 @@ export class Terminal49Client {
       this.transport,
       defaultFormat,
     );
+    this.tradeIntel = new TradeIntelManager(this.transport, defaultFormat);
   }
 
   /**
