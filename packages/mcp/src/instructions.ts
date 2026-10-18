@@ -45,7 +45,7 @@ const WRITE_EFFECTS = {
 
 const TIER_RULES = {
   A: 'runs in one call',
-  C: 'needs a confirmed preview',
+  C: "needs the user's approval of a preview",
 } satisfies Record<Exclude<ToolTier, 'read'>, string>;
 
 const UNTRUSTED_DATA =
@@ -204,7 +204,7 @@ function writeRules(tools: readonly RegisteredTool[]): string[] {
   ];
   if (writes.some((tool) => tool.tier !== 'A')) {
     rules.push(
-      'A tool that needs a confirmed preview changes nothing when called without confirmation_token: it returns a preview and a confirmation_token. Show the preview to the user. Never pass a confirmation_token the user has not approved in this turn. A token works for 5 minutes, and only for the same arguments and the same record state. On stale_preview the record changed after the preview: show the new preview and ask again.',
+      "A tool that needs the user's approval changes nothing on its first call. If this client can ask the user (form elicitation), the client shows the user the preview and asks them to confirm, and the tool writes only on their yes; never pass a confirmation_token on such a client, and on declined the user said no. Otherwise the first call returns a preview and a confirmation_token: show the preview to the user. Never pass a confirmation_token the user has not approved in this turn. A token works for 5 minutes, and only for the same arguments and the same record state. On stale_preview the record changed after the preview: show the new preview and ask again.",
     );
   }
   return rules;
