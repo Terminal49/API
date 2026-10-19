@@ -332,6 +332,38 @@ describe('set_party_role', () => {
     ]);
   });
 
+  it('warns that a detach may have applied when the connection drops after it was sent', async () => {
+    const client = fakeClient();
+    client.containers.partyRoles.mockResolvedValue(
+      partyRoleDoc({
+        id: 'pr-old',
+        role: 'pickup_dray_carrier',
+        partyId: OTHER_PARTY,
+      }),
+    );
+    client.containers.removePartyRole.mockRejectedValue(
+      Object.assign(new Error('read ECONNRESET'), { name: 'NetworkError' }),
+    );
+
+    const result = await executeSetPartyRole(
+      {
+        container_ids: [C1],
+        role: 'pickup_dray_carrier',
+        party_id: PARTY,
+        action: 'replace',
+      },
+      client,
+    );
+
+    expect(result.failed).toEqual([
+      {
+        id: C1,
+        error:
+          'Attached the new party but could not detach another party in pickup_dray_carrier: Saving got no clear answer from Terminal49. The change may or may not have been applied; check this record before calling again.',
+      },
+    ]);
+  });
+
   it('does not claim an attach it skipped when a detach fails', async () => {
     const client = fakeClient();
     client.shipments.partyRoles.mockResolvedValue(
@@ -624,6 +656,31 @@ describe('set_custom_field', () => {
 
     expect(result.failed).toEqual([
       { id: C1, error: 'The change could not be saved.' },
+    ]);
+  });
+
+  it('warns that a write may have applied when it fails without an API answer', async () => {
+    const client = fakeClient();
+    client.containers.customFields.mockResolvedValue([]);
+    client.containers.setCustomField.mockImplementation(async (id: string) => {
+      throw id === C1
+        ? Object.assign(new Error('socket hang up'), { name: 'NetworkError' })
+        : Object.assign(new Error('Bad gateway'), {
+            name: 'UpstreamError',
+            status: 502,
+          });
+    });
+
+    const result = await executeSetCustomField(
+      { entity: 'container', ids: [C1, C2], api_slug: 'sales_rep', value: 'X' },
+      client,
+    );
+
+    const noClearAnswer =
+      'Saving got no clear answer from Terminal49. The change may or may not have been applied; check this record before calling again.';
+    expect(result.failed).toEqual([
+      { id: C1, error: noClearAnswer },
+      { id: C2, error: noClearAnswer },
     ]);
   });
 

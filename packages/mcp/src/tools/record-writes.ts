@@ -181,8 +181,19 @@ function describeError(error: unknown): string {
 // the call has stopped waiting for that record.
 type Save = <T>(write: () => Promise<T>) => Promise<T>;
 
-const TIMED_OUT_MID_WRITE =
-  'Ran out of time while saving. The change may or may not have been applied; check this record before calling again.';
+const MAY_HAVE_APPLIED =
+  'The change may or may not have been applied; check this record before calling again.';
+const TIMED_OUT_MID_WRITE = `Ran out of time while saving. ${MAY_HAVE_APPLIED}`;
+const NO_CLEAR_ANSWER = `Saving got no clear answer from Terminal49. ${MAY_HAVE_APPLIED}`;
+
+// A 4xx answer means the API refused the write. Any other failure after the
+// write was sent (a dropped connection, a timeout, a 5xx) can follow a write
+// that was applied.
+const wasRefused = (error: unknown) => {
+  // SAFETY: as in isNotFound; status is used only after a typeof check.
+  const { status } = error as SdkErrorFields;
+  return typeof status === 'number' && status >= 400 && status < 500;
+};
 
 async function applyEach(
   ids: string[],
@@ -223,7 +234,11 @@ async function applyEach(
             return Promise.reject(new RecordWriteError(TIMED_OUT_MID_WRITE));
           }
           wrote = true;
-          return write();
+          return write().catch((error: unknown) => {
+            throw wasRefused(error)
+              ? error
+              : new RecordWriteError(NO_CLEAR_ANSWER);
+          });
         };
         try {
           const outcome = await Promise.race([change(id, save), outOfTime]);

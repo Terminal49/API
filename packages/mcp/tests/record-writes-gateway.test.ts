@@ -62,6 +62,8 @@ type Route = {
   delayMs?: number;
   status?: number;
   body: unknown;
+  /** Drop the connection after the request is sent. */
+  reset?: boolean;
 };
 
 interface Upstream {
@@ -87,9 +89,17 @@ function stubUpstream(route: (method: string, path: string) => Route) {
         delayMs = 0,
         status = 200,
         body,
+        reset = false,
       } = route(request.method, url.pathname);
       if (delayMs > 0) {
         await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+      if (reset) {
+        throw new TypeError('fetch failed', {
+          cause: Object.assign(new Error('read ECONNRESET'), {
+            code: 'ECONNRESET',
+          }),
+        });
       }
       return new Response(JSON.stringify(body), {
         status,
@@ -397,5 +407,53 @@ describe('record writes through the /mcp gateway', () => {
     };
     expect(body.result.structuredContent).toEqual(expected);
     expect(JSON.parse(textOf(body))).toEqual(expected);
+  });
+
+  it('warns in both contents that a write may have applied when the connection drops after it was sent', async () => {
+    const upstream = stubUpstream((method, path) => {
+      const id = path.split('/')[3] ?? '';
+      if (method === 'GET') {
+        return { body: customFieldsDoc(id, 'PO-OLD') };
+      }
+      if (id === C2) {
+        return { body: null, reset: true };
+      }
+      return { status: 201, body: createdCustomField(id, 'PO-NEW') };
+    });
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const res = new NodeResponse();
+
+    await handler(
+      toolsCall('Token YOUR_API_KEY', 'set_custom_field', {
+        entity: 'container',
+        ids: [C1, C2],
+        api_slug: 'po_number',
+        value: 'PO-NEW',
+      }) as any,
+      res as any,
+    );
+
+    const body = res.body();
+    const expected = {
+      updated: [C1],
+      unchanged: [],
+      failed: [
+        {
+          id: C2,
+          error:
+            'Saving got no clear answer from Terminal49. The change may or may not have been applied; check this record before calling again.',
+        },
+      ],
+      not_attempted: [],
+      summary:
+        'Set po_number on 1 container; 0 already had that value; 1 failed.',
+    };
+    expect(body.result.structuredContent).toEqual(expected);
+    expect(JSON.parse(textOf(body))).toEqual(expected);
+    expect(
+      upstream.filter(
+        (call) => call.method === 'POST' && call.path.includes(C2),
+      ),
+    ).toHaveLength(1);
   });
 });
