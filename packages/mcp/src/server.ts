@@ -1322,7 +1322,7 @@ export function createTerminal49McpServer(
       {
         description:
           'Track a container, bill of lading, or booking number. ' +
-          'Adds a tracking request to the account, so call this only when the user asks to track or add a number; to look a number up, use search_container, which only reads the account. ' +
+          'Adds a tracking request to the account only for a number that is not already tracked, so call this only when the user asks to track or add a number; to look a number up, use search_container, which only reads the account. ' +
           "If the number matches a container that is still being tracked, returns that container's details; " +
           'if it matches an in-progress tracking request, returns that request. ' +
           'Otherwise uses inference to choose the carrier/type when possible and creates a tracking request. ' +

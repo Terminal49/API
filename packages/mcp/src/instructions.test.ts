@@ -105,11 +105,10 @@ describe('server instructions', () => {
 
   it('keeps the explicit-request rule wherever track_container is described', () => {
     for (const toolsets of toolsetSubsets()) {
-      const instructions = buildServerInstructions(
-        selectTools({ toolsets, readOnly: false }),
-      );
+      const tools = selectTools({ toolsets, readOnly: false });
+      const instructions = buildServerInstructions(tools);
 
-      if (mentionedTools(instructions).includes('track_container')) {
+      if (tools.some((tool) => tool.name === 'track_container')) {
         expect(instructions, toolsets.join(',')).toMatch(
           /track_container only when the user asks to track/,
         );
