@@ -89,7 +89,7 @@ export const TOOL_REGISTRY = [
   {
     name: 'set_party_role',
     title: 'Set Party Role',
-    toolset: 'core',
+    toolset: 'operations',
     tier: 'A',
     annotations: {
       readOnlyHint: false,
@@ -101,7 +101,7 @@ export const TOOL_REGISTRY = [
   {
     name: 'set_custom_field',
     title: 'Set Custom Field',
-    toolset: 'core',
+    toolset: 'operations',
     tier: 'A',
     annotations: {
       readOnlyHint: false,
@@ -144,6 +144,7 @@ export type ToolName = RegisteredTool['name'];
 export const DEFAULT_TOOLSETS: readonly Toolset[] = [
   'core',
   'documents',
+  'operations',
   'trade',
 ];
 
