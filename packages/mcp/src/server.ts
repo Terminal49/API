@@ -1846,6 +1846,8 @@ export function createTerminal49McpServer(
               .object({
                 limit: z.number(),
                 used: z.number(),
+                active_containers: z.number().optional(),
+                pending_tracking_requests: z.number().optional(),
                 remaining: z.number(),
               })
               .nullable(),
