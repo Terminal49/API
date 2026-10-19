@@ -60,7 +60,7 @@ For substantive documentation writing, use the repo-local skill at `skills/termi
 
 ### Docs
 - Preview locally: `cd docs && mintlify dev`
-- Lint the OpenAPI spec: `spectral lint --ruleset .spectral.mjs docs/openapi.json`
+- Lint the OpenAPI spec: `spectral lint --ruleset .spectral.yaml docs/openapi.json`
 - Regenerate Postman: `openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,enableOptionalParameters=false`
 
 ### Code (npm workspaces)
