@@ -1,5 +1,13 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
-import { createToolContext } from './context.js';
+import { createToolContext, type ToolSession } from './context.js';
+
+const session = (
+  credentialType: ToolSession['credentialType'],
+): ToolSession => ({
+  credentialType,
+  toolsets: ['core'],
+  writeToolsAvailable: false,
+});
 
 function stubClient() {
   const me = vi.fn().mockResolvedValue({ id: 'key-1' });
@@ -9,7 +17,7 @@ function stubClient() {
 describe('createToolContext', () => {
   it('fetches /me once per context', async () => {
     const { client, me } = stubClient();
-    const context = createToolContext(client, 'user');
+    const context = createToolContext(client, session('user'));
 
     const [first, second] = await Promise.all([context.me(), context.me()]);
 
@@ -22,15 +30,25 @@ describe('createToolContext', () => {
   it('fetches /me again for a new context', async () => {
     const { client, me } = stubClient();
 
-    await createToolContext(client, 'api_key').me();
-    await createToolContext(client, 'api_key').me();
+    await createToolContext(client, session('api_key')).me();
+    await createToolContext(client, session('api_key')).me();
 
     expect(me).toHaveBeenCalledTimes(2);
   });
 
-  it('carries the credential type', () => {
+  it('carries the session it was created for', () => {
     const { client } = stubClient();
 
-    expect(createToolContext(client, 'agent').credentialType).toBe('agent');
+    expect(
+      createToolContext(client, {
+        credentialType: 'agent',
+        toolsets: ['core', 'documents'],
+        writeToolsAvailable: true,
+      }),
+    ).toMatchObject({
+      credentialType: 'agent',
+      toolsets: ['core', 'documents'],
+      writeToolsAvailable: true,
+    });
   });
 });
