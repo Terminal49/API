@@ -10294,8 +10294,11 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "403": {
-            "description": "Forbidden - Feature not enabled",
+            "description": "Forbidden - Routing data feature is not enabled for this account",
             "content": {
               "application/json": {
                 "schema": {
@@ -10335,7 +10338,7 @@
           }
         },
         "operationId": "get-vessels-id",
-        "description": "Returns a vessel by id. <Note>`show_positions` is a paid feature. Please contact sales@terminal49.com.</Note>"
+        "description": "Returns a vessel by id, with its current position. Add `show_positions` to include its position history. <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>"
       }
     },
     "/vessels/{imo}": {
@@ -10392,8 +10395,11 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "403": {
-            "description": "Forbidden - Feature not enabled",
+            "description": "Forbidden - Routing data feature is not enabled for this account",
             "content": {
               "application/json": {
                 "schema": {
@@ -10433,7 +10439,7 @@
           }
         },
         "operationId": "get-vessels-imo",
-        "description": "Returns a vessel by the given IMO number. <Note>`show_positions` is a paid feature. Please contact sales@terminal49.com.</Note>",
+        "description": "Returns a vessel by the given IMO number, with its current position. Add `show_positions` to include its position history. <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>",
         "x-internal": true
       }
     },
@@ -10479,6 +10485,9 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "403": {
             "description": "Forbidden - Routing data feature is not enabled for this account",
             "content": {
@@ -10516,7 +10525,7 @@
           }
         },
         "operationId": "get-vessels-id-future-positions",
-        "description": "Returns the estimated route between two ports for a given vessel. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
+        "description": "Returns the estimated route between two ports for a given vessel. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>",
         "parameters": [
           {
             "schema": {
@@ -10583,6 +10592,9 @@
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "403": {
             "description": "Forbidden - Routing data feature is not enabled for this account",
             "content": {
@@ -10620,7 +10632,7 @@
           }
         },
         "operationId": "get-vessels-id-future-positions-with-coordinates",
-        "description": "Returns the estimated route between two ports for a given vessel from a set of coordinates. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
+        "description": "Returns the estimated route between two ports for a given vessel from a set of coordinates. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>",
         "parameters": [
           {
             "schema": {
