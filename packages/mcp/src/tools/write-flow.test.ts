@@ -6,8 +6,11 @@ import {
   it,
   vi,
 } from 'vite-plus/test';
+import { CLIENT_CAPABILITIES_META_KEY } from '@modelcontextprotocol/server';
 import {
+  CONFIRM_REQUEST_KEY,
   type ConfirmationChannel,
+  confirmationChannel,
   createToolContext,
   type ToolSession,
 } from './context.js';
@@ -413,6 +416,65 @@ describe('runConfirmedWrite on a request that can ask the user', () => {
     expect(auditLines(logged).at(-1)).toMatchObject({
       phase: 'execute',
       outcome: 'declined',
+    });
+  });
+
+  /** A context whose channel is parsed from what a client sent. */
+  function answeredContext(requestState: string | undefined, response: unknown) {
+    return context(
+      {},
+      undefined,
+      confirmationChannel({
+        envelope: { [CLIENT_CAPABILITIES_META_KEY]: { elicitation: {} } },
+        inputResponses: { [CONFIRM_REQUEST_KEY]: response },
+        requestState: <T,>() => requestState as T,
+      }),
+    );
+  }
+
+  it.each([
+    ['no content', { action: 'accept' }],
+    ['null content', { action: 'accept', content: null }],
+    ['confirm "true"', { action: 'accept', content: { confirm: 'true' } }],
+    ['confirm 1', { action: 'accept', content: { confirm: 1 } }],
+  ])(
+    'reads an accept with %s as a decline and writes nothing',
+    async (_label, response) => {
+      const target = record();
+      const asked = await runConfirmedWrite(
+        elicitingContext(),
+        target.plan({}),
+      );
+
+      const result = await runConfirmedWrite(
+        answeredContext(stateOf(asked), response),
+        target.plan({}),
+      );
+
+      expect(result).toEqual({
+        status: 'declined',
+        message: 'The user declined this change. Nothing was changed.',
+      });
+      expect(target.write).not.toHaveBeenCalled();
+    },
+  );
+
+  it('asks again when an answer comes back without its requestState', async () => {
+    const target = record();
+
+    const result = await runConfirmedWrite(
+      answeredContext(undefined, {
+        action: 'accept',
+        content: { confirm: true },
+      }),
+      target.plan({}),
+    );
+
+    expect(result).toMatchObject({ requestState: expect.any(String) });
+    expect(target.write).not.toHaveBeenCalled();
+    expect(auditLines(logged).at(-1)).toMatchObject({
+      phase: 'preview',
+      outcome: 'elicitation_required',
     });
   });
 
