@@ -685,7 +685,8 @@ function elicitConfirmation(
 }
 
 /**
- * Tokens that already confirmed a write, kept until they expire. A token is
+ * Tokens that confirmed a write, kept until they expire. A token is reserved
+ * before its write runs, so two concurrent calls cannot both use it. A token is
  * bound to the record's state, and a tier A inverse such as
  * resume_shipment_tracking can restore that state, so without this one
  * approval could confirm the same write twice. It lives in process memory, so
@@ -815,7 +816,17 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
       await audit(phase, 'invalid_confirmation');
       return invalidConfirmation(plan.tool, 'used', channel.kind);
     }
-    const done = await plan.write(read.preview);
+    let done: Done;
+    try {
+      done = await plan.write(read.preview);
+    } catch (error) {
+      // A 4xx means Terminal49 refused the request and changed nothing, so
+      // the approval still stands. A 5xx or a lost response may hide a write.
+      const status = httpStatus(error);
+      if (confirmation && status !== undefined && status >= 400 && status < 500)
+        spentTokens.delete(confirmation);
+      throw error;
+    }
     await audit(phase, auditOutcome(done));
     return done;
   } catch (error) {
