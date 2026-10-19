@@ -33,7 +33,7 @@ Change the source and regenerate instead.
 
 | Generated file | Source | Regenerate with |
 | --- | --- | --- |
-| `Terminal49-API.postman_collection.json` | `docs/openapi.json` | `openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,enableOptionalParameters=false` |
+| `Terminal49-API.postman_collection.json` | `docs/openapi.json` | `node tools/generate-postman.mjs` |
 | `sdks/typescript-sdk/src/generated/**` | `docs/openapi.json` | `npm run generate:types --workspace @terminal49/sdk` |
 | `packages/mcp/src/generated/**` | `docs/openapi.json` | `npm run generate:filters --workspace @terminal49/mcp` |
 | `docs/sdk/reference/**` | SDK source | `npm run sdk:docs` (CI fails if the output is stale) |
