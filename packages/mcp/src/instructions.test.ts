@@ -132,6 +132,17 @@ describe('server instructions', () => {
     }
   });
 
+  it('describes list_webhooks URLs as redacted the way the tool returns them', () => {
+    const instructions = buildServerInstructions(
+      selectTools({ toolsets: ['developer'], readOnly: false }),
+    );
+
+    expect(instructions).toContain(
+      'replaces every path segment and every other host label with [redacted]',
+    );
+    expect(instructions).not.toContain('first path segment');
+  });
+
   it('marks tool output untrusted in every mode', async () => {
     const full = await initializeInstructions({ toolsets: TOOLSETS });
     const readOnly = await initializeInstructions({
