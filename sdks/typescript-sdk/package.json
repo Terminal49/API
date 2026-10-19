@@ -2,6 +2,7 @@
   "name": "@terminal49/sdk",
   "version": "0.6.0",
   "description": "Terminal49 TypeScript SDK (JSON:API, openapi-fetch)",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Terminal49/API.git",

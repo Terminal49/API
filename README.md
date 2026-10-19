@@ -87,4 +87,14 @@ Use conventional commit prefixes (`docs:`, `feat:`, `fix:`, `chore:`), and keep 
 
 This is a public repository. Never commit API keys, secrets, or customer data. Use placeholders such as `Token YOUR_API_KEY` in examples.
 
-To report a security issue, email [support@terminal49.com](mailto:support@terminal49.com).
+To report a security issue privately, see [SECURITY.md](SECURITY.md).
+
+## License
+
+Copyright (c) 2026 Terminal49, Inc.
+
+- **Code and the API spec: [MIT](LICENSE).** This covers everything outside `docs/`, including the SDK, CLI, MCP server, gateway, and tooling, plus the OpenAPI spec at [`docs/openapi.json`](docs/openapi.json) and the Postman collection generated from it.
+- **Documentation: [CC BY 4.0](docs/LICENSE).** This covers everything else in `docs/`, including the guides, reference pages, and images. When you reuse it, credit "Terminal49, Inc." and link to [terminal49.com/docs](https://terminal49.com/docs).
+- **Not licensed:** the Terminal49 name and logos, including [`docs/logos/`](docs/logos/) and [`public/store-icons/`](public/store-icons/). Third-party material, such as map data shown in screenshots, keeps its own terms. Vendored code under [`tools/oxlint/anti-slop/`](tools/oxlint/anti-slop/) keeps its own license.
+
+Contributions are accepted under the same terms: code under MIT, documentation under CC BY 4.0.
