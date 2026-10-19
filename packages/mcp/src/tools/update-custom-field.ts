@@ -136,10 +136,12 @@ type UpdateStop =
   | Unchanged
   | Refused;
 
+type UpdateDone = UpdateOutcome | NotSet | ValueRejected | Refused;
+
 export type UpdateCustomFieldResult = ConfirmedWriteResult<
   UpdatePreview,
   UpdateStop,
-  UpdateOutcome | NotSet | ValueRejected | Refused
+  UpdateDone
 >;
 
 function notSet(
@@ -262,30 +264,31 @@ export async function executeUpdateCustomField(
     };
   }
 
-  async function write(
+  async function refused(
+    error: unknown,
     preview: UpdatePreview,
-  ): Promise<UpdateOutcome | NotSet | ValueRejected> {
-    const { record, field, value: previous } = preview.current;
-    let raw: unknown;
-    try {
-      raw = await writeValue(client, parsed, proposed);
-    } catch (error) {
-      const status = httpStatus(error);
-      // Defensive: Terminal49 answers a DELETE on an empty field with 204.
-      if (clearing && status === 404) return notSet(record, field, true);
-      if (status === 422) {
-        return {
-          status: 'noop',
-          message:
-            'Terminal49 would not save this value in this field. Nothing was changed.',
-          alternative:
-            'Check the value with the user, or change it in the Terminal49 dashboard.',
-          record,
-          field,
-        };
-      }
-      throw error;
+  ): Promise<UpdateDone | undefined> {
+    const { record, field } = preview.current;
+    const status = httpStatus(error);
+    // Defensive: Terminal49 answers a DELETE on an empty field with 204.
+    if (clearing && status === 404) return notSet(record, field, true);
+    if (status === 422) {
+      return {
+        status: 'noop',
+        message:
+          'Terminal49 would not save this value in this field. Nothing was changed.',
+        alternative:
+          'Check the value with the user, or change it in the Terminal49 dashboard.',
+        record,
+        field,
+      };
     }
+    return customFieldsRefused(error, context);
+  }
+
+  async function write(preview: UpdatePreview): Promise<UpdateOutcome> {
+    const { record, field, value: previous } = preview.current;
+    const raw = await writeValue(client, parsed, proposed);
     if (proposed === undefined) {
       return {
         status: 'cleared',
@@ -323,14 +326,7 @@ export async function executeUpdateCustomField(
         throw error;
       }
     },
-    async write(preview) {
-      try {
-        return await write(preview);
-      } catch (error) {
-        const refused = await customFieldsRefused(error, context);
-        if (refused) return refused;
-        throw error;
-      }
-    },
+    write,
+    refused,
   });
 }

@@ -240,6 +240,49 @@ describe('get_vessel', () => {
     },
   );
 
+  it.each([
+    ['no data', {}],
+    ['data with no id', { data: { attributes: vesselAttributes } }],
+    ['attributes that are not an object', { data: { id: VESSEL_ID } }],
+  ])(
+    'fails instead of reporting an empty vessel for a response with %s',
+    async (_case, body) => {
+      const { client } = fakeApiClient({
+        [`GET /vessels/${VESSEL_ID}`]: { body },
+      });
+
+      await expect(
+        executeGetVessel({ id: VESSEL_ID }, client),
+      ).rejects.toThrow();
+    },
+  );
+
+  it.each([
+    ['no data', {}],
+    [
+      'no positions list',
+      { data: { id: VESSEL_ID, attributes: vesselAttributes } },
+    ],
+  ])(
+    'fails instead of reporting an empty projection for a response with %s',
+    async (_case, body) => {
+      const { client } = fakeApiClient({
+        [`GET /vessels/${VESSEL_ID}`]: { body: vessel() },
+        [`GET /vessels/${VESSEL_ID}/future_positions`]: { body },
+      });
+
+      await expect(
+        executeGetVessel(
+          {
+            id: VESSEL_ID,
+            eta_to: { port_id: POD_ID, previous_port_id: POL_ID },
+          },
+          client,
+        ),
+      ).rejects.toThrow();
+    },
+  );
+
   it('still fails with not found when the vessel itself is unknown', async () => {
     const { client } = fakeApiClient({
       [`GET /vessels/${VESSEL_ID}/future_positions`]: { status: 404 },

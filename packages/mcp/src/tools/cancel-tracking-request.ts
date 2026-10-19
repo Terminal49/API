@@ -85,10 +85,15 @@ interface CancelUnchangedResult {
   tracking_request: TrackingRequestSummary;
 }
 
+type CancelOutcome =
+  | CancelledResult
+  | CancelUnchangedResult
+  | NotCancellableResult;
+
 export type CancelTrackingRequestResult = ConfirmedWriteResult<
   CancelPreview,
   NotCancellableResult,
-  CancelledResult | CancelUnchangedResult | NotCancellableResult
+  CancelOutcome
 >;
 
 function summarize(request: GetTrackingRequestResult): TrackingRequestSummary {
@@ -161,18 +166,15 @@ export async function executeCancelTrackingRequest(
         },
       };
     },
+    async refused(error): Promise<CancelOutcome | undefined> {
+      if (httpStatus(error) !== 422) return undefined;
+      const after = await read();
+      return isCancellable(after.status)
+        ? cancelUnchanged(after)
+        : notCancellable(after);
+    },
     async write({ current }) {
-      try {
-        await client.trackingRequests.cancel(id, { format: 'raw' });
-      } catch (error) {
-        if (httpStatus(error) === 422) {
-          const after = await read();
-          return isCancellable(after.status)
-            ? cancelUnchanged(after)
-            : notCancellable(after);
-        }
-        throw error;
-      }
+      await client.trackingRequests.cancel(id, { format: 'raw' });
       // The cancel response body is empty, so read the request again for
       // the status it ended in. The cancel already happened, so a failed
       // read must not report it as an error.

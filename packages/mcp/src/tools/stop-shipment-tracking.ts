@@ -125,27 +125,24 @@ export async function executeStopShipmentTracking(
       };
     },
     async write(): Promise<StopOutcome | StopSoftResult> {
-      try {
-        const raw = await client.shipments.stopTracking(shipment_id, {
-          format: 'raw',
-        });
-        return {
-          status: 'stopped',
-          message:
-            'Tracking stopped. This shipment and its containers get no more updates until tracking is resumed.',
-          shipment: parseShipmentTracking(raw),
-          undo: 'resume_shipment_tracking',
-        };
-      } catch (error) {
-        if (isFeatureNotEnabled(error)) return { ...STOP_TRACKING_NOT_ENABLED };
-        if (httpStatus(error) === 422) {
-          const after = await readShipmentTracking(client, shipment_id);
-          return after.tracking === 'stopped'
-            ? alreadyStopped(after)
-            : trackingUnchanged('stop', after);
-        }
-        throw error;
-      }
+      const raw = await client.shipments.stopTracking(shipment_id, {
+        format: 'raw',
+      });
+      return {
+        status: 'stopped',
+        message:
+          'Tracking stopped. This shipment and its containers get no more updates until tracking is resumed.',
+        shipment: parseShipmentTracking(raw),
+        undo: 'resume_shipment_tracking',
+      };
+    },
+    async refused(error): Promise<StopOutcome | StopSoftResult | undefined> {
+      if (isFeatureNotEnabled(error)) return { ...STOP_TRACKING_NOT_ENABLED };
+      if (httpStatus(error) !== 422) return undefined;
+      const after = await readShipmentTracking(client, shipment_id);
+      return after.tracking === 'stopped'
+        ? alreadyStopped(after)
+        : trackingUnchanged('stop', after);
     },
   });
 }
