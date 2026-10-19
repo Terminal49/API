@@ -40,7 +40,7 @@ Change the source and regenerate instead.
 
 ## Commands
 
-Vite+ (`vp`) is the toolchain, and it delegates package installs to npm. The root `package-lock.json` is the only lockfile. The repo needs Node 24.11 or later (`.tool-versions` pins `24.11.0`), which is the Node 24 floor of Vite+ 0.3.3.
+Vite+ (`vp`) is the toolchain, and it delegates package installs to npm. The root `package-lock.json` is the only lockfile. The repo needs Node 24.11 or later (`.tool-versions` pins `24.11.0`), which is the Node 24 floor of Vite+ 1.3.0.
 
 - Install: `vp install`. CI and Vercel run `npm ci`.
 - Check: `vp run check`. It runs `vp check`, builds the SDK declarations that other workspaces import, and then runs `tsc` for `api/` and every workspace. Keep the `tsc` checks and the SDK-first order. Vite+ type-aware linting stays off until it respects each package's own Node types.
