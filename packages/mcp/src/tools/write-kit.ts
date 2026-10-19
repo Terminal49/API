@@ -614,9 +614,16 @@ export interface ConfirmedWrite<Preview, Stop, Done> extends WriteTarget {
   read(): Promise<ConfirmedWriteRead<Preview, Stop>>;
   /**
    * Changes the record. Called only with a token that matches, and given the
-   * preview of the state the token was checked against.
+   * preview of the state the token was checked against. A 4xx it throws
+   * goes to `refused`, not caught here, so the kit releases the token first.
    */
   write(preview: Preview): Promise<Done>;
+  /**
+   * The result for a 4xx the write threw, after the token is released. A
+   * 4xx means Terminal49 changed nothing. Undefined lets the error fail the
+   * call.
+   */
+  refused?(error: unknown, preview: Preview): Promise<Done | undefined>;
 }
 
 export type ConfirmedWriteResult<Preview, Stop, Done> =
@@ -823,9 +830,11 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
       // A 4xx means Terminal49 refused the request and changed nothing, so
       // the approval still stands. A 5xx or a lost response may hide a write.
       const status = httpStatus(error);
-      if (confirmation && status !== undefined && status >= 400 && status < 500)
-        spentTokens.delete(confirmation);
-      throw error;
+      if (status === undefined || status < 400 || status >= 500) throw error;
+      if (confirmation) spentTokens.delete(confirmation);
+      const answer = await plan.refused?.(error, read.preview);
+      if (answer === undefined) throw error;
+      done = answer;
     }
     await audit(phase, auditOutcome(done));
     return done;
