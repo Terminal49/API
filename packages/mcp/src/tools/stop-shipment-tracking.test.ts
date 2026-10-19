@@ -165,6 +165,102 @@ describe('stop_shipment_tracking', () => {
     ]);
   });
 
+  it('accepts the same token again after Terminal49 rate limits the stop', async () => {
+    let limited = true;
+    let stoppedAt: string | null = null;
+    const { client, requests } = fakeApiClient({
+      'GET /me': { body: meBody(enabled) },
+      [`GET /shipments/${SHIPMENT_ID}`]: () => ({ body: shipment(stoppedAt) }),
+      [`PATCH /shipments/${SHIPMENT_ID}/stop_tracking`]: () => {
+        if (limited) {
+          limited = false;
+          return { status: 429, headers: { 'Retry-After': '1' } };
+        }
+        stoppedAt = STOPPED_AT;
+        return { body: shipment(stoppedAt) };
+      },
+    });
+    const context = writeContext(client);
+    const preview = await executeStopShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      context,
+    );
+    const confirmed = {
+      shipment_id: SHIPMENT_ID,
+      confirmation_token: tokenOf(preview),
+    };
+
+    const first = await executeStopShipmentTracking(confirmed, client, context);
+    const retry = await executeStopShipmentTracking(confirmed, client, context);
+
+    expect(first).toMatchObject({ error: 'rate_limited' });
+    expect(retry).toMatchObject({
+      status: 'stopped',
+      shipment: { tracking: 'stopped' },
+    });
+    expect(patches(requests)).toHaveLength(2);
+  });
+
+  it('refuses a token after a server error, since the stop may have happened', async () => {
+    const { client, requests } = fakeApiClient({
+      'GET /me': { body: meBody(enabled) },
+      [`GET /shipments/${SHIPMENT_ID}`]: { body: shipment(null) },
+      [`PATCH /shipments/${SHIPMENT_ID}/stop_tracking`]: { status: 500 },
+    });
+    const context = writeContext(client);
+    const preview = await executeStopShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      context,
+    );
+    const confirmed = {
+      shipment_id: SHIPMENT_ID,
+      confirmation_token: tokenOf(preview),
+    };
+
+    await expect(
+      executeStopShipmentTracking(confirmed, client, context),
+    ).rejects.toMatchObject({ status: 500 });
+    const retry = await executeStopShipmentTracking(confirmed, client, context);
+
+    expect(retry).toMatchObject({
+      error: 'invalid_confirmation',
+      reason: 'used',
+    });
+    expect(patches(requests)).toHaveLength(1);
+  });
+
+  it('stops once when two calls confirm with the same token at the same time', async () => {
+    const { client, requests } = trackedShipment();
+    const context = writeContext(client);
+    const preview = await executeStopShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      context,
+    );
+    const confirmed = {
+      shipment_id: SHIPMENT_ID,
+      confirmation_token: tokenOf(preview),
+    };
+
+    const results = await Promise.all([
+      executeStopShipmentTracking(confirmed, client, context),
+      executeStopShipmentTracking(confirmed, client, context),
+    ]);
+
+    expect(results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ status: 'stopped' }),
+        expect.objectContaining({
+          error: 'invalid_confirmation',
+          reason: 'used',
+        }),
+      ]),
+    );
+    expect(patches(requests)).toHaveLength(1);
+  });
+
   it('stops tracking with the token from the preview', async () => {
     const { client, requests } = trackedShipment();
     const preview = await executeStopShipmentTracking(
