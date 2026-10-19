@@ -93,7 +93,7 @@ Search for bill of lading 123456789
 | `get_trade_breakdown` | Nested totals over one to three dimensions (trade intelligence) |
 | `get_trade_data_coverage` | Where trade data starts, the latest and last full month (trade intelligence) |
 
-The opt-in `operations` toolset adds seven write tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists `operations`. `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers` and `unassign_party` return a preview first and change data only when called again with the confirmation token from that preview. See [Confirming writes](packages/mcp/README.md#confirming-writes).
+The `operations` toolset adds seven write tools and is in the default toolsets. `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, and a destructive `set_party_role` or `set_custom_field` call return a preview first and change data only when called again with the confirmation token from that preview. See [Confirming writes](packages/mcp/README.md#confirming-writes).
 
 | Tool | Description |
 |------|-------------|
@@ -102,8 +102,8 @@ The opt-in `operations` toolset adds seven write tools. A deployment serves them
 | `cancel_tracking_request` | Cancel a pending tracking request, after a confirmed preview. It cannot be undone. |
 | `add_reference_numbers` | Add reference numbers to a container, shipment, or tracking request, keeping the ones already there |
 | `remove_reference_numbers` | Remove reference numbers from a container, shipment, or tracking request, after a confirmed preview |
-| `assign_party` | Link a party to a container or shipment in a role, such as customer or dray carrier |
-| `unassign_party` | Remove one party role from a container or shipment, after a confirmed preview |
+| `set_party_role` | Attach, replace, or detach a party on up to 50 containers or shipments; a call that detaches a party shows a preview first |
+| `set_custom_field` | Set or clear a custom field on up to 50 containers or shipments; a call that overwrites or clears a value shows a preview first |
 
 ### 🎯 Workflow Prompts (3)
 

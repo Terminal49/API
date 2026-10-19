@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **37 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve all of them.
+The Terminal49 MCP Server provides **35 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve all of them.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_party_role` and `set_custom_field` are in the `operations` toolset. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `set_party_role` and `set_custom_field` are in the `operations` toolset. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -692,61 +692,7 @@ Each number can be up to 1000 characters, so a long number already on the record
 
 ---
 
-### 27. `assign_party`
-**Purpose**: Link a party, such as a customer, shipper or dray carrier, to a container or shipment in a role. Tier A.
-
-**Usage**:
-```typescript
-assign_party({
-  entity_type: "shipment", // or "container"
-  entity_id: "shipment-uuid",
-  role: "customer",
-  party_name: "Acme Imports" // or party_id: "party-uuid"
-})
-```
-
-`role` is one of `shipper`, `consignee`, `notify_party`, `customs_broker`, `customer`, `freight_forwarder` or `pickup_dray_carrier`. A container accepts only `pickup_dray_carrier`; any other role on a container returns a tool error before any request. Pass exactly one of `party_id` or `party_name`. A `party_name` must match one party's company name, name or nickname exactly, ignoring case and punctuation. These are the names `list_parties` searches. With `create_party_if_missing: true`, the tool creates the party when no party has that name as its company name, name or nickname. If the API refuses the create with 422, the tool looks the name up again and reuses the party that another call created. If it still finds none, it returns `party_not_found` and says that the party probably exists already.
-
-**Returns**:
-- `status: "assigned"` with `record`, `party_role` (`id`, `role`, `party_id`, `party_name`), `party_created`, `other_parties_in_role` and `undo: "unassign_party"`
-- `status: "already_present"` with the existing `party_role` when the party already has this role on the record. Nothing is sent, so a repeated call changes nothing.
-- `party_not_found` with up to 5 `candidates` when no party has the name and `create_party_if_missing` is off, or when no party has the `party_id`
-- `ambiguous_party` with `candidates` when more than one party has the name
-- `party_lookup_incomplete` with `candidates` when the account has more than 1000 parties. The tool reads only the first 1000, so it does not use or create a party by name. Call again with `party_id`.
-- When the API refuses the assignment with 422, the tool reads the roles again. It returns `already_present` if the role now exists, or else `status: "noop"` with an `alternative`.
-- When the tool created the party and another request linked it in this role at the same time, the result is `already_present` with `party_created: true` and `created_party`.
-- When the tool created the party and the assignment then fails, the result has `party_created: true` and `created_party`. It is `noop` after a 422, `rate_limited` after a 429, and `party_not_linked` after any other failure.
-
-**When to Use**: Set or add the customer, shipper or dray carrier on a record.
-
----
-
-### 28. `unassign_party`
-**Purpose**: Remove one party role from a container or shipment. Tier C. Only the link is removed; the party and its other assignments stay.
-
-**Usage**:
-```typescript
-unassign_party({
-  entity_type: "shipment",
-  entity_id: "shipment-uuid",
-  party_role_id: "party-role-uuid" // from get_shipment_details include_party_roles
-})
-// After the user approves the preview:
-unassign_party({
-  entity_type: "shipment",
-  entity_id: "shipment-uuid",
-  party_role_id: "party-role-uuid",
-  confirmation_token: "t49ct1...."
-})
-```
-
-**Returns**:
-- Preview: `current: { party_role }`, `proposed: { party_role: null }` and `reach`. The token covers the role's id, role name and party, so a role that now links another party returns `stale_preview`.
-- `status: "unassigned"` with `record`, the removed `party_role` and `undo: "assign_party"`
-- `status: "not_assigned"` with the record's current `party_roles` when it has no role with that id. No token is issued. A delete that answers 404 because another call removed the role first returns the same result.
-
-**When to Use**: The wrong party is on a record. To replace a party, call `unassign_party`, then `assign_party`.
-### 29. `set_party_role`
+### 27. `set_party_role`
 **Purpose**: Attach a party to up to 50 containers or shipments in a role, replace the party in that role, or detach it. Tier C: a call that detaches a party asks the user; a call that only attaches runs at once.
 
 **Usage**:
@@ -771,7 +717,7 @@ set_party_role({ ...sameArguments, confirmation_token: "t49ct1...." })
 
 ---
 
-### 30. `set_custom_field`
+### 28. `set_custom_field`
 **Purpose**: Set or clear one of the account's custom fields on up to 50 containers or shipments. Tier C: a call that overwrites or clears a value asks the user; a call that only fills empty fields runs at once.
 
 **Usage**:
@@ -898,10 +844,10 @@ set_custom_field({ ...sameArguments, confirmation_token: "t49ct1...." })
 → Use `search_container` for the container UUID, then `add_reference_numbers`
 
 ### User asks: "Make Ray Drayage the dray carrier on this container"
-→ Use `assign_party` with `role: "pickup_dray_carrier"` and `party_name`, or with the `party_id` from `list_parties`
+→ Use `set_party_role` with `role: "pickup_dray_carrier"`, `action: "replace"` and the `party_id` from a record's `party_roles` (or from `list_parties` for a party on no record); a record that loses its current carrier is previewed for the user's approval
 
 ### User asks: "The customer on this shipment is wrong"
-→ Use `get_shipment_details` with `include_party_roles` for the `party_role_id`, then `unassign_party` with the preview and approval steps, then `assign_party` for the right customer
+→ Use `get_shipment_details` with `include_party_roles` for the current customer's `party_id`, then `set_party_role` with `action: "remove"` (previewed for the user's approval), then `set_party_role` with `action: "add"` for the right customer
 
 ### User asks: "How did it get from Shanghai to Chicago?"
 → Option A: Use `get_container_route` (paid feature, shows ports and ETAs)
@@ -1045,7 +991,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 37 tools and 4 resources, the LLM can:
+With these 35 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

@@ -143,7 +143,7 @@ The toolset names are:
 
 - `core`: every tool except the document reads, the write tools below, and the trade intelligence tools. `whoami` reports the toolsets a session serves.
 - `documents`: `list_documents` and `get_document`.
-- `operations`: `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_party_role` and `set_custom_field`. It is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to keep every other tool without them.
+- `operations`: `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `set_party_role` and `set_custom_field`. It is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to keep every other tool without them.
 - `documents_write`: no tools yet.
 - `developer`: no tools yet.
 - `trade`: the [trade intelligence tools](#trade-intelligence-tools).
@@ -910,7 +910,7 @@ Extracted data and the source email are text that people outside your account wr
 
 ### Write tools
 
-The `operations` toolset holds nine tools that change your account's data: `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_party_role` and `set_custom_field`. It is in the default toolsets. Each write tool has a tier:
+The `operations` toolset holds seven tools that change your account's data: `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `set_party_role` and `set_custom_field`. It is in the default toolsets. Each write tool has a tier:
 
 - **Tier A** tools run in one call. The result names the tool that undoes the change.
 - **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, so Claude Code asks you before each call in every permission mode. `stop_shipment_tracking` and `cancel_tracking_request` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call and ask only when a record in the call would lose a party or a value; a call that only adds runs at once.
@@ -1044,60 +1044,6 @@ The token covers the whole list. If any reference number on the record changes a
 - "Remove the wrong PO number from this shipment."
 
 **REST equivalent**: [PATCH /containers/{id}](/api-docs/api-reference/containers/edit-a-container), [PATCH /shipments/{id}](/api-docs/api-reference/shipments/edit-a-shipment), [PATCH /tracking_requests/{id}](/api-docs/api-reference/tracking-requests/edit-a-tracking-request)
-
----
-
-### `assign_party`
-
-Link a party, such as a customer, shipper, or dray carrier, to a container or shipment in a role. Tier A.
-
-**Parameters**
-- `entity_type` *(string, required)* – `container` or `shipment`
-- `entity_id` *(uuid, required)* – the record's UUID
-- `role` *(string, required)* – `shipper`, `consignee`, `notify_party`, `customs_broker`, `customer`, `freight_forwarder`, or `pickup_dray_carrier`. A container accepts only `pickup_dray_carrier`. Assign other roles on its shipment.
-- `party_id` *(uuid, optional)* – the party's UUID, such as an `id` from `list_parties`
-- `party_name` *(string, optional)* – the party's company name, name or nickname. It must match one party exactly, ignoring case and punctuation. Send `party_id` or `party_name`, not both.
-- `create_party_if_missing` *(boolean, optional)* – with `party_name`, create the party when no party has that name as its company name, name, or nickname (default: false)
-
-**Returns**
-- `status: "assigned"` with the new `party_role` (`id`, `role`, `party_id`, `party_name`), `party_created`, `other_parties_in_role`, and `undo: "unassign_party"`
-- `status: "already_present"` when the party already has this role on the record. Nothing is sent, so asking twice changes nothing.
-- `party_not_found` with the closest names in `candidates` when no party matches
-- `ambiguous_party` with `candidates` when more than one party has the name
-- `party_lookup_incomplete` when your account has more than 1000 parties. The tool cannot check a name against all of them, so it does not use or create a party by name. Send `party_id` instead.
-- `status: "noop"` when Terminal49 refuses the assignment
-
-The tool creates a party only when no party has that name. If two requests try to create the same party at once, the second one finds and reuses the first one's party. If the tool created a party but could not link it, the result says so with `party_created: true` and the new party in `created_party`. This applies to `noop`, `rate_limited`, and `party_not_linked`, which covers any other failure. It also applies to `already_present` when another request linked the new party in the same role at the same time.
-
-**Good for**
-- "Make Ray Drayage the dray carrier on MSCU1234565."
-- "Set Acme Imports as the customer on this shipment."
-
-**REST equivalent**: [POST /shipments/{id}/party_roles](/api-docs/api-reference/party-roles/assign-a-shipment-party-role), [POST /containers/{id}/party_roles](/api-docs/api-reference/party-roles/assign-a-container-party-role), [POST /parties](/api-docs/api-reference/parties/create-a-party)
-
----
-
-### `unassign_party`
-
-Remove one party role from a container or shipment. Tier C. Only the link is removed. The party and its other assignments stay.
-
-**Parameters**
-- `entity_type` *(string, required)* – `container` or `shipment`
-- `entity_id` *(uuid, required)* – the record's UUID
-- `party_role_id` *(uuid, required)* – the party role `id` from `get_container` with `include: ["party_roles"]`, or from `get_shipment_details` with `include_party_roles`
-- `confirmation_token` *(string, optional)* – leave it out to get a preview. Send it only after you approve that preview.
-
-**Returns**
-- Without a token: a `preview` with the role and the party, and a `confirmation_token`
-- `status: "unassigned"` with the removed `party_role` and `undo: "assign_party"`
-- `status: "not_assigned"` with the record's current party roles when it has no role with that ID. No token is issued.
-
-To replace a party, unassign the old one, then assign the new one.
-
-**Good for**
-- "The customer on this shipment is wrong. Change it to Acme Imports."
-
-**REST equivalent**: [DELETE /shipments/{id}/party_roles/{id}](/api-docs/api-reference/party-roles/remove-a-shipment-party-role), [DELETE /containers/{id}/party_roles/{id}](/api-docs/api-reference/party-roles/remove-a-container-party-role)
 
 ---
 
