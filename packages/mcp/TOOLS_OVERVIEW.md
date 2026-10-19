@@ -346,7 +346,9 @@ list_parties({ id: "party-uuid" })
 - `parties` (`id`, `name`) and `total_matched`
 - `truncated` when the list does not hold every match
 
-With `id`, the tool reads that one party and ignores `search` and `limit`. An unknown ID returns no parties. A party with no company name comes back with its name, else its nickname, else its ID, as `name`.
+Filter a customer with `advanced_filters.customer_id`, and other roles with `advanced_filters.parties` keyed by role. A customer created before party roles is listed under its customer account ID, which `customer_id` accepts and `advanced_filters.parties` does not.
+
+With `id`, the tool reads that one party, returns it under the ID you passed, and ignores `search` and `limit`. An unknown ID returns no parties. A party with no company name comes back with its name, else its nickname, else its ID, as `name`.
 
 **When to Use**: Before `list_containers` or `summarize_containers` when a question names a company. Filter with `advanced_filters.parties`, keyed by role, such as `{ customer: "<id>" }`.
 

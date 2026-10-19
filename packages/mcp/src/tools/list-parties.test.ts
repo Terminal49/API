@@ -69,12 +69,16 @@ describe('list_parties', () => {
     expect(result.total_matched).toBe(3);
   });
 
-  it('explains how to use the id with the container party filter', async () => {
+  it('routes customer ids to customer_id, which accepts both id kinds /parties returns', async () => {
     const { client } = fakeClient([[]]);
     const result = await executeListParties({}, client);
     expect(PARTY_ROLES).toContain('customer');
     expect(PARTY_ROLES).toContain('pickup_dray_carrier');
-    expect(result.usage).toContain('advanced_filters.parties');
+    expect(result.usage).toBe(
+      'Filter by a customer with advanced_filters.customer_id: "<id>" on list_containers, summarize_containers, or list_shipments. ' +
+        'For other roles use advanced_filters.parties on list_containers or summarize_containers, keyed by role: { "<role>": "<party id>" }. ' +
+        'Roles: shipper, consignee, notify_party, customs_broker, customer, freight_forwarder, pickup_dray_carrier. Use @exists for "has any".',
+    );
   });
 
   it('reports truncation when the account has more parties than it loads', async () => {
@@ -189,6 +193,19 @@ describe('list_parties', () => {
     await expect(
       executeListParties({ id: PARTY_ID }, client),
     ).rejects.toThrow();
+  });
+
+  it('keeps the requested id when /parties answers with a customer account id', async () => {
+    const CUSTOMER_ACCOUNT_ID = '5e0c2a7d-91b3-4f6a-8d2e-7c4b1a9f3e60';
+    const { client } = fakeApiClient({
+      [`GET /parties/${PARTY_ID}`]: {
+        body: { data: party(CUSTOMER_ACCOUNT_ID, 'Acme Logistics') },
+      },
+    });
+
+    const result = await executeListParties({ id: PARTY_ID }, client);
+
+    expect(result.parties).toEqual([{ id: PARTY_ID, name: 'Acme Logistics' }]);
   });
 
   it('matches nothing for an unknown party id', async () => {
