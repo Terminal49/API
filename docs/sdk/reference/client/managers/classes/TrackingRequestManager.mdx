@@ -20,7 +20,7 @@ description: "TrackingRequestManager in the Terminal49 TypeScript SDK, used to c
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
 | `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
-| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+| `defaultFormat?` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
 
 #### Returns
 
@@ -83,7 +83,7 @@ It moves to status `cancelled`. Any other status returns 422.
 | Parameter | Type |
 | ------ | ------ |
 | `number` | `string` |
-| `options` | [`CreateTrackingRequestFromInferOptions`](/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) |
+| `options?` | [`CreateTrackingRequestFromInferOptions`](/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) |
 
 #### Returns
 
@@ -171,7 +171,7 @@ Remove a custom field value from a tracking request.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) \| `undefined` |
+| `filters?` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) \| `undefined` |
 | `options?` | `Omit`\<[`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
 
 #### Returns
@@ -188,7 +188,7 @@ Remove a custom field value from a tracking request.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
+| `filters?` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
