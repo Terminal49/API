@@ -1867,7 +1867,8 @@ export function createTerminal49McpServer(
           'Add reference numbers, such as PO or job numbers, to a container, shipment, or tracking request. ' +
           'It keeps every reference number already on the record and adds only the new ones, so calling it again with the same numbers changes nothing. ' +
           'Returns added with the list before (previous) and after (ref_numbers), or already_present when every number was already there. ' +
-          'concurrent_change_detected is true when the list read back after the change differs from the list sent, which means someone else changed it at the same time.',
+          'concurrent_change_detected is true when the list read back after the change differs from the list sent, which means someone else changed it at the same time. ' +
+          'Terminal49 replaces the whole list and has no conditional update, so a number someone else adds between this tool reading the list and writing it is lost, and concurrent_change_detected does not report it.',
         inputSchema: addReferenceNumbersInputSchema,
         outputSchema: addReferenceNumbersOutputSchema,
       },
