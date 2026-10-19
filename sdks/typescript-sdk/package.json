@@ -8,7 +8,11 @@
     "directory": "sdks/typescript-sdk"
   },
   "files": [
-    "dist/**/*"
+    "dist/**/*",
+    "!dist/**/*.test.*",
+    "!dist/**/*.test-d.*",
+    "!dist/test",
+    "!dist/scripts"
   ],
   "type": "module",
   "main": "dist/index.js",
