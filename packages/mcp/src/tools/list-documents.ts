@@ -109,15 +109,16 @@ export const listDocumentsOutputSchema = listDocumentsSchema
 
 export type ListDocumentsResult = z.infer<typeof listDocumentsSchema>;
 
+// A list with no data array is a broken response, not an empty result.
 const rawListSchema = z.object({
-  data: z.array(z.unknown()).catch([]),
+  data: z.array(z.unknown()),
   included: z.array(z.unknown()).catch([]),
   links: z.record(z.string(), z.unknown()).catch({}),
   meta: z.record(z.string(), z.unknown()).catch({}),
 });
 
 const rawTypesSchema = z.object({
-  document_types: z.array(z.unknown()).catch([]),
+  document_types: z.array(z.unknown()),
 });
 
 function toDocumentTypes(entries: readonly unknown[]): DocumentType[] {
@@ -176,7 +177,7 @@ export async function executeListDocuments(
     throw error;
   }
 
-  const list = rawListSchema.parse(raw ?? {});
+  const list = rawListSchema.parse(raw);
   const result: ListDocumentsResult = {
     items: toRows(list.data, list.included),
     links: stringLinks(list.links),
@@ -184,7 +185,7 @@ export async function executeListDocuments(
   };
   if (types !== undefined) {
     result.document_types = toDocumentTypes(
-      rawTypesSchema.parse(types ?? {}).document_types,
+      rawTypesSchema.parse(types).document_types,
     );
   }
   return result;

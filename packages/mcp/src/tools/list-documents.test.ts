@@ -339,6 +339,29 @@ describe('list_documents', () => {
     expect(listDocumentsOutputSchema.safeParse(result).success).toBe(true);
   });
 
+  it.each([
+    ['no data', { meta: { total: 0 } }],
+    ['data that is not a list', { data: { id: DOCUMENT_ID } }],
+  ])(
+    'fails instead of reporting no documents for a list with %s',
+    async (_case, body) => {
+      const { client } = fakeApiClient({ 'GET /documents': { body } });
+
+      await expect(executeListDocuments({}, client)).rejects.toThrow();
+    },
+  );
+
+  it('fails instead of reporting no types for a types response with no list', async () => {
+    const { client } = fakeApiClient({
+      'GET /documents': { body: { data: [] } },
+      'GET /documents/types': { body: { types: [] } },
+    });
+
+    await expect(
+      executeListDocuments({ include_types: true }, client),
+    ).rejects.toThrow();
+  });
+
   it('rejects a document type that is not a code', () => {
     expect(
       listDocumentsInputSchema.safeParse({
