@@ -1,6 +1,7 @@
 {
   "name": "@terminal49/mcp",
   "version": "0.1.0",
+  "private": true,
   "description": "Terminal49 MCP Server for Vercel - TypeScript implementation",
   "keywords": [
     "container-tracking",

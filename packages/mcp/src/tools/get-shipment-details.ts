@@ -9,11 +9,13 @@
 import { Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
 import { type CustomFieldsResult, loadCustomFields } from './custom-fields.js';
+import { loadPartyRoles, type PartyRolesResult } from './party-roles.js';
 
 export interface GetShipmentArgs {
   id: string;
   include_containers?: boolean;
   include_custom_fields?: boolean;
+  include_party_roles?: boolean;
 }
 
 export async function executeGetShipmentDetails(
@@ -35,11 +37,16 @@ export async function executeGetShipmentDetails(
   try {
     const includeContainers = args.include_containers !== false;
     const includeCustomFields = args.include_custom_fields === true;
-    const [result, customFields] = await Promise.all([
+    const [result, customFields, partyRoles] = await Promise.all([
       client.shipments.get(args.id, includeContainers, { format: 'raw' }),
       includeCustomFields
         ? loadCustomFields(() =>
             client.shipments.customFields(args.id, { format: 'mapped' }),
+          )
+        : Promise.resolve(null),
+      args.include_party_roles === true
+        ? loadPartyRoles(() =>
+            client.shipments.partyRoles(args.id, { format: 'raw' }),
           )
         : Promise.resolve(null),
     ]);
@@ -54,7 +61,12 @@ export async function executeGetShipmentDetails(
       timestamp: new Date().toISOString(),
     });
 
-    return formatShipmentResponse(raw, includeContainers, customFields);
+    return formatShipmentResponse(
+      raw,
+      includeContainers,
+      customFields,
+      partyRoles,
+    );
   } catch (error) {
     const duration = Date.now() - startTime;
 
@@ -76,6 +88,7 @@ function formatShipmentResponse(
   apiResponse: any,
   includeContainers: boolean,
   customFields: CustomFieldsResult | null,
+  partyRoles: PartyRolesResult | null,
 ): any {
   const shipment = apiResponse.data?.attributes || {};
   const relationships = apiResponse.data?.relationships || {};
@@ -199,6 +212,10 @@ function formatShipmentResponse(
     ...(customFields?.custom_fields_note
       ? { custom_fields_note: customFields.custom_fields_note }
       : {}),
+    ...(partyRoles ? { party_roles: partyRoles.party_roles } : {}),
+    ...(partyRoles?.party_roles_note
+      ? { party_roles_note: partyRoles.party_roles_note }
+      : {}),
     tracking: {
       line_tracking_last_attempted_at: shipment.line_tracking_last_attempted_at,
       line_tracking_last_succeeded_at: shipment.line_tracking_last_succeeded_at,
@@ -216,6 +233,7 @@ function formatShipmentResponse(
         ...(Array.isArray(customFields?.custom_fields)
           ? ['custom_fields']
           : []),
+        ...(Array.isArray(partyRoles?.party_roles) ? ['party_roles'] : []),
       ],
     },
   };
