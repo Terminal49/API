@@ -229,16 +229,70 @@ function enclosingDeclaration(expression) {
 }
 
 function literalPropertyName(name) {
-  return ts.isIdentifier(name) || ts.isStringLiteralLike(name)
+  return name && (ts.isIdentifier(name) || ts.isStringLiteralLike(name))
     ? name.text
     : null;
 }
 
 const registryPath = 'packages/mcp/src/tools/registry.ts';
+// ./tools/ modules a registrar may call besides its handler. None implements a
+// tool, so adding one here is a reviewed change to this guard.
+const registrarSupportModules = new Set(['packages/mcp/src/tools/context.ts']);
+
+// readTool(name, ...) entries are trusted to register `name` only after its
+// body is shown to return an object whose sole `name` is that first parameter.
+function verifiedReadTool(sourceFile, checker) {
+  const helpers = sourceFile.statements.filter(
+    (statement) =>
+      ts.isFunctionDeclaration(statement) &&
+      statement.name?.text === 'readTool',
+  );
+  const [helper] = helpers;
+  const [statement] = helper?.body?.statements ?? [];
+  const [parameter] = helper?.parameters ?? [];
+  const returned =
+    helper?.body?.statements.length === 1 &&
+    ts.isReturnStatement(statement) &&
+    statement.expression &&
+    unwrapExpression(statement.expression);
+  const properties =
+    returned && ts.isObjectLiteralExpression(returned)
+      ? returned.properties
+      : [];
+  const names = properties.filter(
+    (property) => literalPropertyName(property.name) === 'name',
+  );
+  const [name] = names;
+  const nameSymbol =
+    name && ts.isShorthandPropertyAssignment(name)
+      ? checker.getShorthandAssignmentValueSymbol(name)
+      : name && ts.isIdentifier(name.initializer)
+        ? checker.getSymbolAtLocation(name.initializer)
+        : undefined;
+  if (
+    helpers.length !== 1 ||
+    !parameter ||
+    !ts.isIdentifier(parameter.name) ||
+    properties.length === 0 ||
+    !properties.every(
+      (property) =>
+        (ts.isPropertyAssignment(property) ||
+          ts.isShorthandPropertyAssignment(property)) &&
+        literalPropertyName(property.name) !== null,
+    ) ||
+    names.length !== 1 ||
+    !nameSymbol ||
+    nameSymbol !== checker.getSymbolAtLocation(parameter.name)
+  )
+    throw new Error(
+      `${registryPath} must declare function readTool(name, ...) once, returning an object literal whose only name property is name`,
+    );
+  return helper;
+}
 
 function collectRegistryToolNames() {
   if (!existsSync(resolve(root, registryPath))) return [];
-  const { sourceFile } = parseSource(registryPath);
+  const { sourceFile, checker } = parseSource(registryPath);
   const at = (node) => sourceLine(sourceFile, registryPath, node);
   const declarations = sourceFile.statements
     .filter(ts.isVariableStatement)
@@ -255,24 +309,33 @@ function collectRegistryToolNames() {
     throw new Error(
       `TOOL_REGISTRY at ${at(declarations[0])} must be an array literal`,
     );
+  let readTool;
   return registry.elements.map((entry) => {
-    if (ts.isCallExpression(entry)) {
+    if (
+      ts.isCallExpression(entry) &&
+      ts.isIdentifier(entry.expression) &&
+      entry.expression.text === 'readTool' &&
+      checker.getSymbolAtLocation(entry.expression)?.valueDeclaration ===
+        (readTool ??= verifiedReadTool(sourceFile, checker))
+    ) {
       const [name] = entry.arguments;
       if (name && ts.isStringLiteralLike(name)) return name.text;
     }
-    if (ts.isObjectLiteralExpression(entry)) {
-      const names = entry.properties.filter(
+    // Every property needs a literal key, so no spread, shorthand, or
+    // computed key can replace the checked name.
+    if (
+      ts.isObjectLiteralExpression(entry) &&
+      entry.properties.every(
         (property) =>
-          !ts.isPropertyAssignment(property) ||
-          literalPropertyName(property.name) === 'name',
-      );
-      const [property] = names;
-      if (
-        names.length === 1 &&
-        ts.isPropertyAssignment(property) &&
-        ts.isStringLiteralLike(property.initializer)
+          ts.isPropertyAssignment(property) &&
+          literalPropertyName(property.name) !== null,
       )
-        return property.initializer.text;
+    ) {
+      const names = entry.properties.filter(
+        (property) => literalPropertyName(property.name) === 'name',
+      );
+      if (names.length === 1 && ts.isStringLiteralLike(names[0].initializer))
+        return names[0].initializer.text;
     }
     throw new Error(
       `Unsupported MCP tool registry entry at ${at(entry)}; declare each tool with a literal name`,
@@ -388,9 +451,47 @@ function checkFeatureMap() {
       !declaration
     )
       throw unsupported();
+    checkForwardsHandler(factory, call, declaration);
     return checker.getSymbolAtLocation(declaration.name);
   }
+  // The handler map's second argument is the tool's implementation only if the
+  // registrar hands that argument, and nothing else from ./tools/, to
+  // registerTool's callback.
+  function checkForwardsHandler(factory, call, declaration) {
+    const handler = factory.parameters[1]?.name;
+    const callback = call.arguments[2];
+    const uses = [];
+    function find(node) {
+      if (
+        ts.isIdentifier(node) &&
+        node !== handler &&
+        checker.getSymbolAtLocation(node) ===
+          checker.getSymbolAtLocation(handler)
+      )
+        uses.push(node);
+      ts.forEachChild(node, find);
+    }
+    if (handler && ts.isIdentifier(handler)) find(factory.body);
+    const forwarded = (use) =>
+      use.pos >= callback.pos &&
+      use.end <= callback.end &&
+      ts.isCallExpression(use.parent) &&
+      (use.parent.expression === use || use.parent.arguments.includes(use));
+    const implementations = [...handlerImplementations(factory)].filter(
+      (module) => !registrarSupportModules.has(module),
+    );
+    if (
+      !callback ||
+      uses.length === 0 ||
+      !uses.every(forwarded) ||
+      implementations.length > 0
+    )
+      throw new Error(
+        `MCP tool registrar ${declaration.name.text} at ${at(call)} must pass its handler parameter, and no tool implementation, to registerTool's callback`,
+      );
+  }
   let registrar;
+  const literalRegistrations = [];
   function visit(node) {
     if (
       (ts.isIdentifier(node) || ts.isStringLiteralLike(node)) &&
@@ -420,6 +521,7 @@ function checkFeatureMap() {
         const name = node.arguments[0];
         if (name && ts.isStringLiteralLike(name)) {
           addTool(name.text, handlerImplementations(node.arguments[2]));
+          literalRegistrations.push(name);
         } else {
           const found = registrarFor(node, name ?? node);
           if (registrar)
@@ -491,6 +593,7 @@ function checkFeatureMap() {
       addTool(name, handlerImplementations(call.arguments[1]));
     }
     const mapDeclaration = enclosingDeclaration(handlerMap);
+    let dispatches = 0;
     references(
       checker.getSymbolAtLocation(mapDeclaration.name),
       mapDeclaration.name,
@@ -516,8 +619,39 @@ function checkFeatureMap() {
           throw new Error(
             `MCP handler map ${mapDeclaration.name.text} at ${at(reference)} must only be dispatched as ${mapDeclaration.name.text}[definition.name](definition)`,
           );
+        const statement = call.parent;
+        const loop = ts.isBlock(statement.parent)
+          ? statement.parent.parent
+          : statement.parent;
+        const [loopVariable] = ts.isForOfStatement(loop)
+          ? (loop.initializer.declarations ?? [])
+          : [];
+        if (
+          !ts.isExpressionStatement(statement) ||
+          !ts.isForOfStatement(loop) ||
+          (ts.isBlock(statement.parent) &&
+            loop.statement !== statement.parent) ||
+          !loopVariable ||
+          !ts.isIdentifier(loopVariable.name) ||
+          checker.getSymbolAtLocation(loopVariable.name) !==
+            checker.getSymbolAtLocation(definition)
+        )
+          throw dispatchRequired();
+        dispatches += 1;
       },
     );
+    if (dispatches === 0) throw dispatchRequired();
+    const [literal] = literalRegistrations;
+    if (literal)
+      throw new Error(
+        `MCP tool ${literal.text} at ${at(literal)} bypasses TOOL_REGISTRY; register every tool through the registry handler map`,
+      );
+    function dispatchRequired() {
+      const map = mapDeclaration.name.text;
+      return new Error(
+        `MCP handler map ${map} must be dispatched as for (const definition of ...) ${map}[definition.name](definition)`,
+      );
+    }
   }
   assertEqual(
     'MCP tool registry against the server handler map',
