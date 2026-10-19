@@ -176,10 +176,12 @@ type DocumentsNotEnabled = SoftResult<'FeatureNotEnabled'>;
 
 type UpdateStop = Unchanged | UnknownDocumentType | DocumentsNotEnabled;
 
+type UpdateDone = Updated | Accepted | Refused | DocumentsNotEnabled;
+
 export type UpdateDocumentResult = ConfirmedWriteResult<
   UpdatePreview,
   UpdateStop,
-  Updated | Accepted | Refused | DocumentsNotEnabled
+  UpdateDone
 >;
 
 type DocumentChange = Parameters<Terminal49Client['documents']['update']>[1];
@@ -230,7 +232,10 @@ function unknownDocumentType(
   };
 }
 
-function refused(action: DocumentAction, document: DocumentState): Refused {
+function refusedChange(
+  action: DocumentAction,
+  document: DocumentState,
+): Refused {
   return {
     status: 'noop',
     message:
@@ -333,44 +338,44 @@ export async function executeUpdateDocument(
     },
     async write(preview) {
       const before = preview.current;
-      try {
-        if (action === 'set_type') {
-          const change: DocumentChange = { documentType: document_type };
-          if (classification_notes !== undefined) {
-            change.classificationNotes = classification_notes;
-          }
-          const raw = await client.documents.update(id, change, {
-            format: 'raw',
-          });
-          return {
-            status: 'updated',
-            message: typeAlreadySetByAccount(before, document_type)
-              ? 'Terminal49 saved the classification notes. The document type did not change.'
-              : 'Terminal49 saved the document type and now records it as set by the account.',
-            action,
-            document: parseDocumentResponse(raw).document,
-            previous_document_type: before.document_type,
-          };
+      if (action === 'set_type') {
+        const change: DocumentChange = { documentType: document_type };
+        if (classification_notes !== undefined) {
+          change.classificationNotes = classification_notes;
         }
-        if (action === 'reclassify') {
-          await client.documents.reclassify(id, { format: 'raw' });
-        } else {
-          await client.documents.reextract(id, { format: 'raw' });
-        }
+        const raw = await client.documents.update(id, change, {
+          format: 'raw',
+        });
         return {
-          status: 'accepted',
-          message:
-            action === 'reclassify'
-              ? 'Terminal49 is choosing the document type again. It runs in the background, so the type can take a minute to change. document shows the document before this call.'
-              : 'Terminal49 is reading the fields from the file again. It runs in the background, so the extracted data can take a few minutes to change. document shows the document before this call.',
+          status: 'updated',
+          message: typeAlreadySetByAccount(before, document_type)
+            ? 'Terminal49 saved the classification notes. The document type did not change.'
+            : 'Terminal49 saved the document type and now records it as set by the account.',
           action,
-          document: before,
+          document: parseDocumentResponse(raw).document,
+          previous_document_type: before.document_type,
         };
-      } catch (error) {
-        if (isFeatureNotEnabled(error)) return { ...DOCUMENTS_NOT_ENABLED };
-        if (httpStatus(error) === 422) return refused(action, before);
-        throw error;
       }
+      if (action === 'reclassify') {
+        await client.documents.reclassify(id, { format: 'raw' });
+      } else {
+        await client.documents.reextract(id, { format: 'raw' });
+      }
+      return {
+        status: 'accepted',
+        message:
+          action === 'reclassify'
+            ? 'Terminal49 is choosing the document type again. It runs in the background, so the type can take a minute to change. document shows the document before this call.'
+            : 'Terminal49 is reading the fields from the file again. It runs in the background, so the extracted data can take a few minutes to change. document shows the document before this call.',
+        action,
+        document: before,
+      };
+    },
+    async refused(error, preview): Promise<UpdateDone | undefined> {
+      if (isFeatureNotEnabled(error)) return { ...DOCUMENTS_NOT_ENABLED };
+      if (httpStatus(error) === 422)
+        return refusedChange(action, preview.current);
+      return undefined;
     },
   });
 }
