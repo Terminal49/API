@@ -15,7 +15,7 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (14 Available)
+### 🛠️ Tools (23 Available)
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -33,6 +33,15 @@
 | **`list_tracking_requests`** | List tracking requests and statuses | Audit and monitoring |
 | **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
 | **`whoami`** | Identify the credential, its account, and the features it can use | Explains empty or unauthorized results |
+| **`set_party_role`** | Attach, replace, or detach a party (such as the drayage carrier) on containers or shipments | Destructive write, only on request |
+| **`set_custom_field`** | Set or clear one of the account's custom fields on containers or shipments | Destructive write, only on request |
+| **`search_importers`** | Find US importers by name, by what they import, or both | Trade intelligence, per account |
+| **`get_importer_profile`** | One importer's totals, monthly series, ports, origins, carriers, and products | Trade intelligence, per account |
+| **`search_commodities`** | Turn a product description or HS prefix into four-digit HS codes | Trade intelligence, per account |
+| **`rank_importers`** | Rank importers by containers for a product, US port, or origin country | Trade intelligence, per account |
+| **`get_trade_trends`** | Time series of containers, TEUs, or estimated value | Trade intelligence, per account |
+| **`get_trade_breakdown`** | Nested totals over one to three dimensions | Trade intelligence, per account |
+| **`get_trade_data_coverage`** | Where trade data starts, the latest and last full month | Trade intelligence, per account |
 
 ### 🎯 Prompts (3 Workflows)
 

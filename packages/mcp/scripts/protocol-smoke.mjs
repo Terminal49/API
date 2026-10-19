@@ -74,11 +74,11 @@ try {
     'set_custom_field',
   ];
   if (
-    tools.length !== 16 ||
+    tools.length !== 23 ||
     !requiredTools.every((name) => tools.some((tool) => tool.name === name))
   ) {
     throw new Error(
-      `Expected 16 tools including ${requiredTools.join(', ')} over ${protocolVersion}, received ${tools.length}`,
+      `Expected 23 tools including ${requiredTools.join(', ')} over ${protocolVersion}, received ${tools.length}`,
     );
   }
 
