@@ -1,13 +1,12 @@
 /**
- * Shared party role reads for get_container, get_shipment_details and the
- * tools that assign and unassign parties.
+ * Shared party role reads for get_container, get_shipment_details and
+ * set_party_role.
  *
  * A party role links one company (a party) to a container or shipment in a
  * role such as customer or pickup_dray_carrier. A credential that cannot read
  * them gets a note instead of a failed snapshot.
  */
 
-import type { Terminal49Client } from '@terminal49/sdk';
 import { z } from 'zod';
 import { includedList, nullableString, relationshipRef } from './api-fields.js';
 import { isFeatureNotEnabled, isNotAuthorized } from './soft-results.js';
@@ -103,55 +102,4 @@ export async function loadPartyRoles(
     }
     throw error;
   }
-}
-
-// ==================== Party assignment ====================
-
-/** The roles a party can hold on a shipment. */
-export const ASSIGNABLE_ROLES = [
-  'shipper',
-  'consignee',
-  'notify_party',
-  'customs_broker',
-  'customer',
-  'freight_forwarder',
-  'pickup_dray_carrier',
-] as const satisfies readonly Parameters<
-  Terminal49Client['shipments']['addPartyRole']
->[1]['role'][];
-
-export type AssignableRole = (typeof ASSIGNABLE_ROLES)[number];
-
-/** The only role a container accepts. */
-export const CONTAINER_ROLE = 'pickup_dray_carrier' satisfies Parameters<
-  Terminal49Client['containers']['addPartyRole']
->[1]['role'];
-
-export const PARTY_ENTITY_TYPES = ['container', 'shipment'] as const;
-
-export type PartyEntityType = (typeof PARTY_ENTITY_TYPES)[number];
-
-export const partyEntityInput = {
-  entity_type: z
-    .enum(PARTY_ENTITY_TYPES)
-    .describe('The kind of record the party is linked to.'),
-  entity_id: z
-    .string()
-    .uuid()
-    .describe(
-      'The Terminal49 ID (UUID format) of that record. Identifier only; never pass conversation text.',
-    ),
-};
-
-/** Every party role on a container or shipment. Errors are not caught. */
-export async function readPartyRoles(
-  client: Terminal49Client,
-  entityType: PartyEntityType,
-  id: string,
-): Promise<PartyRole[]> {
-  const raw =
-    entityType === 'container'
-      ? await client.containers.partyRoles(id, { format: 'raw' })
-      : await client.shipments.partyRoles(id, { format: 'raw' });
-  return formatPartyRoles(raw);
 }

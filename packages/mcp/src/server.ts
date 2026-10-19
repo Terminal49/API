@@ -54,6 +54,14 @@ import {
   listPartiesInputSchema,
 } from './tools/list-parties.js';
 import {
+  executeSetCustomField,
+  executeSetPartyRole,
+  setCustomFieldInputSchema,
+  setCustomFieldOutputSchema,
+  setPartyRoleInputSchema,
+  setPartyRoleOutputSchema,
+} from './tools/record-writes.js';
+import {
   executeGetTrackingRequest,
   getTrackingRequestInputSchema,
   getTrackingRequestOutputSchema,
@@ -103,26 +111,6 @@ import {
   removeReferenceNumbersOutputSchema,
 } from './tools/remove-reference-numbers.js';
 import {
-  assignPartyInputSchema,
-  assignPartyOutputSchema,
-  executeAssignParty,
-} from './tools/assign-party.js';
-import {
-  executeUnassignParty,
-  unassignPartyInputSchema,
-  unassignPartyOutputSchema,
-} from './tools/unassign-party.js';
-import {
-  executeSetCustomField,
-  setCustomFieldInputSchema,
-  setCustomFieldOutputSchema,
-} from './tools/set-custom-field.js';
-import {
-  executeUpdateCustomField,
-  updateCustomFieldInputSchema,
-  updateCustomFieldOutputSchema,
-} from './tools/update-custom-field.js';
-import {
   cancelTrackingRequestInputSchema,
   cancelTrackingRequestOutputSchema,
   executeCancelTrackingRequest,
@@ -147,6 +135,7 @@ import {
   type ToolSession,
 } from './tools/context.js';
 import {
+  type ConfirmationScope,
   DEFAULT_TOOLSETS,
   defaultTools,
   selectTools,
@@ -298,7 +287,16 @@ const NON_FILTER_LIST_ARGS = new Set([
  */
 const PLAUSIBLE_TOTAL_THRESHOLD = 1000;
 
-function buildContentPayload(result: unknown): ToolContent[] {
+// Record writes report per-record outcomes (failed IDs, records not reached, a
+// write that may have applied) that a summary line would hide from text-only
+// clients, so their text content is the whole result.
+const FULL_RESULT_TEXT_TOOLS = new Set(['set_party_role', 'set_custom_field']);
+
+function buildContentPayload(toolName: string, result: unknown): ToolContent[] {
+  if (FULL_RESULT_TEXT_TOOLS.has(toolName)) {
+    return [{ type: 'text', text: formatAsText(result) }];
+  }
+
   if (result && typeof result === 'object' && (result as any).summary) {
     return [{ type: 'text', text: formatAsText((result as any).summary) }];
   }
@@ -951,11 +949,17 @@ function buildListResourceLinks(
 }
 
 /**
- * How every tier C tool's description ends, so a model knows both ways the
- * user approves a change.
+ * How every tier C tool's description ends, so a model knows when a call
+ * asks the user and both ways the user approves a change.
  */
-const CONFIRMED_WRITE_CLAUSE =
-  'This change needs the user to approve a preview. The first call changes nothing. On a client that can ask the user (form elicitation), the client shows the user the preview and asks them to confirm, and the tool writes only on their yes; never pass confirmation_token there. On any other client, the first call returns the preview with a confirmation_token: show the preview to the user, and call again with the same arguments and the token only after the user approves it in this turn.';
+const CONFIRMED_WRITE_CLAUSE: Record<ConfirmationScope, string> = {
+  always:
+    'This change needs the user to approve a preview. The first call changes nothing. ',
+  destructive_only:
+    'A call in which any record would lose a party or a value needs the user to approve a preview of every change in the call, and its first call changes nothing; a call that only adds runs at once. ',
+};
+const APPROVAL_CHANNELS =
+  'On a client that can ask the user (form elicitation), the client shows the user the preview and asks them to confirm, and the tool writes only on their yes; never pass confirmation_token there. On any other client, the first call returns the preview with a confirmation_token: show the preview to the user, and call again with the same arguments and the token only after the user approves it in this turn.';
 
 function wrapTool<TArgs>(
   toolName: string,
@@ -984,7 +988,10 @@ function wrapTool<TArgs>(
         [],
         toolName,
       );
-      const content: ToolContent[] = buildContentPayload(structuredContent);
+      const content: ToolContent[] = buildContentPayload(
+        toolName,
+        structuredContent,
+      );
 
       if (buildResourceLinks) {
         content.push(...buildResourceLinks(structuredContent, args));
@@ -1107,11 +1114,6 @@ function formatToolError(
         return `No tracking request found with id ${typeof input.tracking_request_id === 'string' ? input.tracking_request_id : '(missing)'}.`;
       case 'add_reference_numbers':
       case 'remove_reference_numbers':
-      case 'assign_party':
-      case 'unassign_party':
-      case 'set_custom_field':
-      case 'update_custom_field':
-        return `No ${entityLabel(input.entity_type)} found with id ${typeof input.entity_id === 'string' ? input.entity_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
       default:
@@ -1138,6 +1140,14 @@ function formatToolError(
       return `${err.message.replace(/[.\s]*$/, '.')} Use the filter values and operators documented in the tool schema.`;
     }
     return 'Invalid or unsupported list filter. Use the names, values, and operators documented in the tool schema.';
+  }
+
+  if (err.name === 'AuthenticationError' || err.status === 401) {
+    return 'Terminal49 rejected the credentials for this request (HTTP 401). Check that the API key or connection is valid and has API access.';
+  }
+
+  if (err.name === 'AuthorizationError' || err.status === 403) {
+    return 'This Terminal49 account is not permitted to make this request (HTTP 403).';
   }
 
   return 'The Terminal49 request could not be completed. Contact support if the problem persists.';
@@ -1203,6 +1213,13 @@ export interface Terminal49McpServerOptions {
    * tier C tools refuse to write.
    */
   confirmationSecret?: string;
+  /**
+   * Epoch ms by which set_party_role and set_custom_field stop waiting on
+   * records. The HTTP gateway sets it from the request start so auth time
+   * counts against the function limit; without it each call gets
+   * CALL_BUDGET_MS from when it starts.
+   */
+  writeDeadlineAt?: number;
 }
 
 export function createTerminal49McpServer(
@@ -1232,6 +1249,7 @@ export function createTerminal49McpServer(
     credentialHash: credentialHash(apiToken),
     confirmationSecret: usableConfirmationSecret(options.confirmationSecret),
     gatewayAccountId: accountId,
+    writeDeadlineAt: options.writeDeadlineAt,
   };
   const completeCarrierScac = createCarrierScacCompleter(client);
 
@@ -1288,9 +1306,10 @@ export function createTerminal49McpServer(
         definition.name,
         {
           title: definition.title,
-          description: confirmed
-            ? `${spec.description} ${CONFIRMED_WRITE_CLAUSE}`
-            : spec.description,
+          description:
+            definition.tier === 'C'
+              ? `${spec.description} ${CONFIRMED_WRITE_CLAUSE[definition.confirms]}${APPROVAL_CHANNELS}`
+              : spec.description,
           annotations: definition.annotations,
           inputSchema: spec.inputSchema,
           outputSchema: spec.outputSchema,
@@ -1745,6 +1764,30 @@ export function createTerminal49McpServer(
       },
       async (args) => executeListParties(args, client),
     ),
+    set_party_role: tool(
+      {
+        description:
+          'Attach a party to containers or shipments in a role, replace the party in that role, or detach it, for example "set the drayage carrier to Manzo Transport on these containers" (action replace). ' +
+          "Resolve the records to container or shipment IDs first. For a party already on a record, pass the party_id shown in that record's party roles; the account's party list can show a customer under an account id that party roles do not accept, so use it only for a party on no record. Up to 50 records per call. " +
+          'Only call it when the user asks to change these records. add, and a replace that detaches nobody, run at once; remove, and a replace that detaches another party, show the user a preview of every record that changes. ' +
+          'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
+        inputSchema: setPartyRoleInputSchema,
+        outputSchema: setPartyRoleOutputSchema,
+      },
+      async (args, context) => executeSetPartyRole(args, client, context),
+    ),
+    set_custom_field: tool(
+      {
+        description:
+          "Set or clear one of the account's custom fields (for example a sales rep or PO number) on containers or shipments. " +
+          "Read the field's api_slug and expected values from the account's custom field definitions or the record's custom fields first; never guess the slug. Up to 50 records per call; a multi-select field takes an array of option values, and value null clears the field. " +
+          'Only call it when the user asks to change these records. Filling empty fields runs at once; overwriting or clearing a value on any record in the call shows the user a preview of every record that changes. ' +
+          'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
+        inputSchema: setCustomFieldInputSchema,
+        outputSchema: setCustomFieldOutputSchema,
+      },
+      async (args, context) => executeSetCustomField(args, client, context),
+    ),
     list_custom_field_definitions: tool(
       {
         description:
@@ -1899,60 +1942,6 @@ export function createTerminal49McpServer(
       async (args, context) =>
         executeRemoveReferenceNumbers(args, client, context),
     ),
-    assign_party: tool(
-      {
-        description:
-          'Link a party (a company such as a customer, shipper, or dray carrier) to a container or shipment in a role. A container accepts only pickup_dray_carrier; assign other roles on its shipment. ' +
-          'Pass party_id, or party_name to match one party exactly, ignoring case and punctuation. A party is created only with create_party_if_missing, and only when no party has that name. ' +
-          'Returns assigned with the new party_role, already_present when the party already has this role on the record, or party_not_found or ambiguous_party with candidates. ' +
-          'party_lookup_incomplete means the account has too many parties to match the name safely; ask the user for the party and pass party_id. ' +
-          'When the tool created a party but could not link it, the result has party_created true and created_party. ' +
-          'other_parties_in_role lists other parties that hold the same role.',
-        inputSchema: assignPartyInputSchema,
-        outputSchema: assignPartyOutputSchema,
-      },
-      async (args, context) => executeAssignParty(args, client, context),
-    ),
-    unassign_party: tool(
-      {
-        description:
-          'Remove one party role, such as a wrong customer or dray carrier, from a container or shipment. Only the link is removed; the party and its other assignments stay. ' +
-          'Pass the party_role_id from the record party_roles list. To replace a party, unassign the old one, then call assign_party for the new one. ' +
-          'The preview shows the role and the party. ' +
-          'Returns unassigned, or not_assigned with the current party_roles when the record has no role with that id.',
-        inputSchema: unassignPartyInputSchema,
-        outputSchema: unassignPartyOutputSchema,
-      },
-      async (args, context) => executeUnassignParty(args, client, context),
-    ),
-    set_custom_field: tool(
-      {
-        description:
-          'Fill an empty custom field, such as a PO number or project manager, on a container, shipment, or tracking request. ' +
-          "Get the field's api_slug, data_type, and allowed values from the account's custom field definitions first. The value is checked against the data_type and options before anything is sent; a value that does not fit returns invalid_value with the expected form. " +
-          'When the field already has a value, it returns already_set with current_value and changes nothing; use update_custom_field to replace or clear it. It checks before it writes but cannot block a write that lands at the same moment, so do not run two set_custom_field calls on the same field in parallel. ' +
-          'On a tracking request, Terminal49 copies the value to the shipment or containers the request creates. A later change on the tracking request does not reach those copies, so once the request has created its shipment this returns use_shipment_or_container with shipment_id; set the field on that shipment or its containers instead. ' +
-          'Returns set with the stored value, or unknown_field, field_not_applicable, or unsupported_field when the field cannot take this write. ' +
-          'Returns ambiguous_field with values when a tracking request holds one value per container for the field.',
-        inputSchema: setCustomFieldInputSchema,
-        outputSchema: setCustomFieldOutputSchema,
-      },
-      async (args, context) => executeSetCustomField(args, client, context),
-    ),
-    update_custom_field: tool(
-      {
-        description:
-          'Replace or clear a custom field value on a container, shipment, or tracking request. Terminal49 keeps no copy of the old value. ' +
-          'Pass value to replace it, checked against the data_type and options as in set_custom_field, or clear: true to remove it. ' +
-          'The preview shows the record, the field, the current value, and the proposed value. The approval stops working if the value changes in the meantime. ' +
-          'Returns updated or cleared with previous_value, unchanged when the field already has the new value, or not_set when the field has no value; fill an empty field with set_custom_field. ' +
-          'Returns ambiguous_field with values, and asks nothing, when a tracking request holds one value per container for the field. ' +
-          'Returns use_shipment_or_container with shipment_id, and asks nothing, when a tracking request already created its shipment, because the change would not reach the shipment or its containers; change the field there instead.',
-        inputSchema: updateCustomFieldInputSchema,
-        outputSchema: updateCustomFieldOutputSchema,
-      },
-      async (args, context) => executeUpdateCustomField(args, client, context),
-    ),
     search_docs: tool(
       {
         description:
@@ -2025,6 +2014,8 @@ export function createTerminal49McpServer(
               .object({
                 limit: z.number(),
                 used: z.number(),
+                active_containers: z.number().optional(),
+                pending_tracking_requests: z.number().optional(),
                 remaining: z.number(),
               })
               .nullable(),

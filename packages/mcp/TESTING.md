@@ -330,13 +330,6 @@ jobs:
 
 ---
 
-## 📝 Test Results Documentation
-
-Current test results are documented in:
-- **packages/mcp/TEST_RESULTS_V2.md** - Latest comprehensive test results
-
----
-
 ## 🎯 Summary
 
 **For quick validation:**

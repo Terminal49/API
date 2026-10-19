@@ -30,6 +30,12 @@ export interface ToolSession {
   confirmationSecret?: string;
   /** The account the gateway resolved for the credential, when it resolved one. */
   gatewayAccountId?: string;
+  /**
+   * Epoch ms by which a batch write stops waiting on records. The HTTP
+   * gateway sets it from the request start so sign-in time counts against
+   * the function limit; without it each call budgets from its own start.
+   */
+  writeDeadlineAt?: number;
 }
 
 /** What the user answered when the client asked them to confirm a preview. */

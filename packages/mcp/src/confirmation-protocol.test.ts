@@ -4,13 +4,7 @@
  * gets an input_required round the client answers for the user, and any
  * other request gets the preview-then-token flow.
  */
-import {
-  Client,
-  type ClientOptions,
-  type ElicitRequest,
-  StreamableHTTPClientTransport,
-} from '@modelcontextprotocol/client';
-import { createMcpHandler } from '@modelcontextprotocol/server';
+import type { Client } from '@modelcontextprotocol/client';
 import {
   afterEach,
   beforeEach,
@@ -19,14 +13,16 @@ import {
   it,
   vi,
 } from 'vite-plus/test';
-import { createTerminal49McpServer } from './server.js';
 import { CONFIRMATION_TTL_MS } from './tools/write-kit.js';
 import { fakeApiFetch, type FakeRoutes } from './test/fake-api.js';
 import {
-  meBody,
-  TEST_CONFIRMATION_SECRET,
-  tokenOf,
-} from './test/write-context.js';
+  answerWith,
+  asksTheUser,
+  connect,
+  modern,
+  type Session,
+} from './test/gateway-session.js';
+import { meBody, tokenOf } from './test/write-context.js';
 
 const SHIPMENT_ID = '0b5e3a1c-7d2f-4e6a-8b9c-1d2e3f4a5b6c';
 const STOPPED_AT = '2026-10-17T12:01:00Z';
@@ -70,98 +66,6 @@ function trackedShipment() {
       billOfLading = next;
     },
   };
-}
-
-type WireRequest = { method?: string; params?: Record<string, unknown> };
-
-interface Session {
-  client: Client;
-  /** Every tools/call request body the client sent, in order. */
-  calls: WireRequest[];
-  /** Every tools/call result the server answered, in order. */
-  results: unknown[];
-  close(): Promise<void>;
-}
-
-/**
- * Connects a client to an in-process gateway. `edit` rewrites a request body
- * before it reaches the server.
- */
-async function connect(
-  options: ClientOptions,
-  edit: (body: WireRequest) => WireRequest = (body) => body,
-): Promise<Session> {
-  const handler = createMcpHandler(
-    () =>
-      createTerminal49McpServer(
-        'fixture-token',
-        'https://api.test',
-        undefined,
-        {
-          toolsets: ['core', 'operations'],
-          confirmationSecret: TEST_CONFIRMATION_SECRET,
-        },
-      ),
-    { legacy: 'stateless', responseMode: 'json' },
-  );
-  const calls: WireRequest[] = [];
-  const results: unknown[] = [];
-  const client = new Client(
-    { name: 'confirmation-test', version: '1.0.0' },
-    options,
-  );
-  const transport = new StreamableHTTPClientTransport(
-    new URL('https://mcp.test/mcp'),
-    {
-      fetch: async (url, init) => {
-        const body: WireRequest =
-          typeof init?.body === 'string' ? JSON.parse(init.body) : {};
-        const sent = body.method === 'tools/call' ? edit(body) : body;
-        if (sent.method === 'tools/call') calls.push(sent);
-        const response = await handler.fetch(
-          new Request(url, { ...init, body: JSON.stringify(sent) }),
-        );
-        if (
-          sent.method === 'tools/call' &&
-          response.headers.get('content-type')?.includes('application/json')
-        ) {
-          results.push(JSON.parse(await response.clone().text()).result);
-        }
-        return response;
-      },
-    },
-  );
-  await client.connect(transport);
-  return {
-    client,
-    calls,
-    results,
-    close: async () => {
-      await client.close();
-      await handler.close();
-    },
-  };
-}
-
-const modern: ClientOptions = {
-  versionNegotiation: { mode: { pin: '2026-07-28' } },
-};
-
-const asksTheUser: ClientOptions = {
-  ...modern,
-  capabilities: { elicitation: { form: {} } },
-};
-
-function answerWith(
-  client: Client,
-  result: {
-    action: 'accept' | 'decline' | 'cancel';
-    content?: Record<string, boolean>;
-  },
-) {
-  const asked = vi.fn(async (_request: ElicitRequest) => result);
-  client.setRequestHandler('elicitation/create', asked);
-  return asked;
 }
 
 async function stop(client: Client, args: Record<string, unknown> = {}) {
