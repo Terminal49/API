@@ -6,6 +6,7 @@
 import type { Terminal49Client } from '@terminal49/sdk';
 import { z } from 'zod';
 import {
+  includedList,
   nullableNumber,
   nullableString,
   relationshipList,
@@ -182,7 +183,7 @@ export type DocumentState = z.infer<typeof documentStateSchema>;
 
 const rawDocumentResponseSchema = z.object({
   data: rawDocumentSchema,
-  included: z.array(z.unknown()).catch([]),
+  included: includedList,
 });
 
 /** Parses a GET or PATCH /documents/{id} body. */

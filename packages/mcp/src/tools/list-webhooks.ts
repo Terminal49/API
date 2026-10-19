@@ -7,7 +7,7 @@
 
 import type { Terminal49Client } from '@terminal49/sdk';
 import { z } from 'zod';
-import { nullableString, stringLinks } from './api-fields.js';
+import { nullableString, stringLinks, topLevelObject } from './api-fields.js';
 import { isFeatureNotEnabled, type SoftResult } from './soft-results.js';
 import {
   rawWebhookSchema,
@@ -81,15 +81,13 @@ export type ListWebhooksResult = z.infer<typeof listWebhooksSchema>;
 
 const rawListSchema = z.object({
   data: z.array(z.unknown()),
-  links: z.record(z.string(), z.unknown()).catch({}),
-  meta: z.record(z.string(), z.unknown()).catch({}),
+  links: topLevelObject,
+  meta: topLevelObject,
 });
 
 const rawSingleSchema = z.object({ data: rawWebhookSchema });
 
-const rawCatalogSchema = z
-  .object({ data: z.array(z.unknown()).catch([]) })
-  .catch({ data: [] });
+const rawCatalogSchema = z.object({ data: z.array(z.unknown()) });
 
 const rawCategorySchema = z.object({
   attributes: z.object({

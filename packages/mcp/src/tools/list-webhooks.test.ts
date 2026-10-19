@@ -129,6 +129,8 @@ describe('list_webhooks', () => {
   it.each([
     ['no data', { meta: { total: 0 } }],
     ['data that is not a list', { data: { id: WEBHOOK_ID } }],
+    ['links that are not an object', { data: [], links: 'next' }],
+    ['meta that is not an object', { data: [], meta: 2 }],
   ])(
     'fails instead of reporting no webhooks for a list with %s',
     async (_case, body) => {
@@ -137,6 +139,54 @@ describe('list_webhooks', () => {
       await expect(executeListWebhooks({}, client)).rejects.toThrow();
     },
   );
+
+  it.each([
+    ['no data', { meta: {} }],
+    ['data that is not a list', { data: { id: 'tracking_request' } }],
+    ['a body that is not an object', 'events'],
+  ])(
+    'fails instead of reporting an empty event catalog for a catalog with %s',
+    async (_case, body) => {
+      const { client } = fakeApiClient({
+        'GET /webhooks': { body: webhookListBody },
+        'GET /webhooks/events': { body },
+      });
+
+      await expect(
+        executeListWebhooks({ include_event_catalog: true }, client),
+      ).rejects.toThrow();
+    },
+  );
+
+  it('fails instead of reporting an empty webhook when its attributes are not an object', async () => {
+    const { client } = fakeApiClient({
+      [`GET /webhooks/${WEBHOOK_ID}`]: {
+        body: { data: { id: WEBHOOK_ID, type: 'webhook' } },
+      },
+    });
+
+    await expect(
+      executeListWebhooks({ webhook_id: WEBHOOK_ID }, client),
+    ).rejects.toThrow();
+  });
+
+  it('skips a listed webhook whose attributes are not an object', async () => {
+    const { client } = fakeApiClient({
+      'GET /webhooks': {
+        body: {
+          data: [
+            { id: SECOND_WEBHOOK_ID, type: 'webhook', attributes: 'x' },
+            rawWebhook(),
+          ],
+        },
+      },
+    });
+
+    const result = await executeListWebhooks({}, client);
+
+    expect(result).toMatchObject({ webhooks: [webhookSummary()] });
+    expect('webhooks' in result && result.webhooks).toHaveLength(1);
+  });
 
   it('reports a webhook with no secret, headers or valid URL', async () => {
     const { client } = fakeApiClient({
