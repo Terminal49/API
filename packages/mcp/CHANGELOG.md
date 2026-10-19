@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Trade intelligence tools for US ocean import market data (US Customs bill-of-lading records, January 2022 onward): `search_importers`, `get_importer_profile`, `search_commodities`, `rank_importers`, `get_trade_trends`, `get_trade_breakdown`, and `get_trade_data_coverage`. All are read-only and gated per account; without the feature they reply that trade intelligence isn't enabled instead of failing. Responses are compacted (rounded numbers, capped lists, internal fields dropped), and the tool descriptions and server instructions carry the data caveats agents need. Record-level container and bill of lading lookups stay out of MCP.
 
+### Fixed
+- `list_parties`: route customers to `advanced_filters.customer_id`. `GET /parties` lists a customer created before party roles under its customer account ID, which `customer_id` filters accept and `advanced_filters.parties` does not, so a customer filter on the returned ID matched no containers. Looking up one party by `id` now returns it under the ID you passed instead of the account ID.
+
 ## [1.2.0] - 2026-10-09
 
 ### Added
