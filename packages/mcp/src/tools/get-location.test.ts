@@ -188,6 +188,24 @@ describe('get_location', () => {
     ).rejects.toMatchObject({ name: 'NotFoundError', status: 404 });
   });
 
+  it.each([
+    ['no data', {}],
+    ['data with no id', { data: { attributes: {} } }],
+    [
+      'attributes that are not an object',
+      { data: { id: PORT_ID, attributes: 'x' } },
+    ],
+  ])(
+    'fails without reporting not found for a place response with %s',
+    async (_case, body) => {
+      const { client } = fakeApiClient({ 'GET /ports/USLAX': { body } });
+
+      await expect(
+        executeGetLocation({ kind: 'port', id: 'USLAX' }, client),
+      ).rejects.not.toMatchObject({ name: 'NotFoundError' });
+    },
+  );
+
   it('rejects a UN/LOCODE for a terminal before calling the API', async () => {
     const { client, requests } = fakeApiClient({});
 
