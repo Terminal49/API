@@ -53,15 +53,31 @@ describe('Terminal49Client.me', () => {
     });
   });
 
-  it('rejects tracking slots that are missing a documented count', async () => {
+  it('omits a missing breakdown count instead of failing', async () => {
     const doc = structuredClone(apiKeyDoc);
     const account = doc.included.find((r: any) => r.type === 'account');
     delete account.attributes.tracking_slots.active_containers;
     const { client } = clientFor(doc);
 
-    await expect(client.me({ format: 'mapped' })).rejects.toThrow(
-      'tracking_slots.active_containers must be a number',
-    );
+    const me = await client.me({ format: 'mapped' });
+
+    expect(me.account.trackingSlots).toEqual({
+      limit: 10,
+      used: 4,
+      pendingTrackingRequests: 1,
+      remaining: 6,
+    });
+  });
+
+  it('maps malformed tracking slots to null instead of failing', async () => {
+    const doc = structuredClone(apiKeyDoc);
+    const account = doc.included.find((r: any) => r.type === 'account');
+    account.attributes.tracking_slots.limit = 'ten';
+    const { client } = clientFor(doc);
+
+    const me = await client.me({ format: 'mapped' });
+
+    expect(me.account.trackingSlots).toBeNull();
   });
 
   it('returns the raw JSON:API document by default', async () => {

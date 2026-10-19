@@ -580,28 +580,20 @@ function mapCurrentAccount(
 
 // Map the known fields only. The backend adds fields to this object over time, and
 // consumers with strict output schemas (the MCP whoami tool) must not see them leak through.
+// Slot usage is informational, so a malformed object maps to null instead of failing `me()`.
 function mapTrackingSlots(raw: any): TrackingSlots | null {
   if (raw == null) return null;
-  for (const key of [
-    'limit',
-    'used',
-    'active_containers',
-    'pending_tracking_requests',
-    'remaining',
-  ]) {
-    if (typeof raw[key] !== 'number') {
-      throw new Error(
-        `Invalid /me response: tracking_slots.${key} must be a number`,
-      );
-    }
+  const { limit, used, remaining } = raw;
+  if (![limit, used, remaining].every((n) => typeof n === 'number'))
+    return null;
+  const slots: TrackingSlots = { limit, used, remaining };
+  if (typeof raw.active_containers === 'number') {
+    slots.activeContainers = raw.active_containers;
   }
-  return {
-    limit: raw.limit,
-    used: raw.used,
-    activeContainers: raw.active_containers,
-    pendingTrackingRequests: raw.pending_tracking_requests,
-    remaining: raw.remaining,
-  };
+  if (typeof raw.pending_tracking_requests === 'number') {
+    slots.pendingTrackingRequests = raw.pending_tracking_requests;
+  }
+  return slots;
 }
 
 /** Map a `GET /me` document to a {@link CurrentCredential}. */

@@ -265,9 +265,9 @@ export interface TrackingSlots {
   /** Slots in use: active containers plus pending requests, deduplicated by container number. */
   used: number;
   /** Slots held by containers currently being tracked. */
-  activeContainers: number;
+  activeContainers?: number;
   /** Slots reserved by tracking requests that have not resolved yet. */
-  pendingTrackingRequests: number;
+  pendingTrackingRequests?: number;
   /** Slots still available, never below zero. */
   remaining: number;
 }
