@@ -518,6 +518,221 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
+    // ---- core reads: tracking requests, numbers, locations, vessels, custom fields ----
+
+    it('whoami reports the session credential type and toolsets', async () => {
+      const { result, score } = await evaluate(
+        'whoami',
+        {},
+        {
+          requiredKeys: [
+            'account',
+            'credential_type',
+            'enabled_toolsets',
+            'write_tools_available',
+          ],
+          predicates: [
+            {
+              name: 'enabled_toolsets includes core',
+              test: (p) =>
+                isRecord(p) &&
+                Array.isArray(p.enabled_toolsets) &&
+                p.enabled_toolsets.includes('core'),
+            },
+          ],
+        },
+        'session',
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('get_tracking_request reads a request from the list', async ({
+      skip,
+    }) => {
+      const list = await client.callTool('list_tracking_requests', {
+        page_size: 1,
+      });
+      const first = listItems(list.payload)[0];
+      if (!first || typeof first.id !== 'string') return skip();
+      const id = first.id;
+      const { result, score } = await evaluate(
+        'get_tracking_request',
+        { id },
+        {
+          requiredKeys: ['id', 'status', 'shipment_id'],
+          predicates: [
+            { name: 'id round-trips', test: (p) => readString(p, 'id') === id },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('identify_tracking_number finds the tracked container without creating a request', async ({
+      skip,
+    }) => {
+      if (!fixtures.containerNumber) return skip();
+      const { result, score } = await evaluate(
+        'identify_tracking_number',
+        { number: fixtures.containerNumber },
+        {
+          predicates: [
+            {
+              name: 'already tracked, or rate limited',
+              test: (p) =>
+                isRecord(p) &&
+                (p.error === 'rate_limited' ||
+                  (isRecord(p.already_tracked) &&
+                    Array.isArray(p.already_tracked.containers) &&
+                    p.already_tracked.containers.length > 0)),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('get_location reads a port by UN/LOCODE', async () => {
+      const { result, score } = await evaluate(
+        'get_location',
+        { kind: 'port', id: 'USLAX' },
+        {
+          requiredKeys: ['kind', 'id', 'name', 'time_zone'],
+          predicates: [
+            {
+              name: 'code is USLAX',
+              test: (p) => readString(p, 'code') === 'USLAX',
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('get_vessel reads a vessel from the transport events', async ({
+      skip,
+    }) => {
+      if (!fixtures.containerId) return skip();
+      const events = await client.callTool('get_container_transport_events', {
+        id: fixtures.containerId,
+      });
+      const timeline =
+        isRecord(events.payload) && Array.isArray(events.payload.timeline)
+          ? events.payload.timeline.filter(isRecord)
+          : [];
+      const vesselId = timeline.find(
+        (event) => typeof event.vessel_id === 'string',
+      )?.vessel_id;
+      if (typeof vesselId !== 'string') return skip();
+      const { result, score } = await evaluate(
+        'get_vessel',
+        { id: vesselId },
+        {
+          predicates: [
+            {
+              name: 'vessel or an explained gate',
+              test: (p) =>
+                isRecord(p) &&
+                (readString(p, 'id') === vesselId ||
+                  p.error === 'FeatureNotEnabled'),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('list_custom_field_definitions returns definitions or explains why not', async () => {
+      const { result, score } = await evaluate(
+        'list_custom_field_definitions',
+        {},
+        {
+          requiredKeys: ['total', 'definitions'],
+          predicates: [
+            {
+              name: 'definitions, or a note',
+              test: (p) =>
+                isRecord(p) &&
+                (Array.isArray(p.definitions) ||
+                  typeof p.custom_fields_note === 'string'),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    // ---- document reads ----
+
+    it('list_documents returns compact rows or explains the gate', async () => {
+      const { result, score } = await evaluate(
+        'list_documents',
+        { page_size: 5 },
+        {
+          predicates: [
+            {
+              name: 'rows without extracted data, or an explained gate',
+              test: (p) =>
+                isRecord(p) &&
+                (p.error === 'FeatureNotEnabled' ||
+                  (Array.isArray(p.items) &&
+                    p.items.every(
+                      (row) => isRecord(row) && !('extracted_data' in row),
+                    ))),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('get_document labels extracted data untrusted and keeps the download URL out of text', async ({
+      skip,
+    }) => {
+      const list = await client.callTool('list_documents', { page_size: 1 });
+      const first = listItems(list.payload)[0];
+      if (!first || typeof first.id !== 'string') return skip();
+      const id = first.id;
+      const { result, score } = await evaluate(
+        'get_document',
+        { id, include_extracted_data: true, include_download_url: true },
+        {
+          requiredKeys: ['id', 'document_type', 'has_extracted_data'],
+          predicates: [
+            { name: 'id round-trips', test: (p) => readString(p, 'id') === id },
+            {
+              name: 'extracted data is labeled untrusted, or explained',
+              test: (p) =>
+                isRecord(p) &&
+                ((isRecord(p.extracted_data) &&
+                  p.extracted_data.trust === 'untrusted') ||
+                  typeof p.extracted_data_note === 'string'),
+            },
+            {
+              name: 'download link delivered outside the text, or explained',
+              test: (p, r) =>
+                isRecord(p) &&
+                !/https?:\/\/\S+[?&](?:X-Amz-Signature|Signature)=/i.test(
+                  r.rawText,
+                ) &&
+                ((isRecord(p.download) &&
+                  p.download.delivered_as === 'resource_link') ||
+                  typeof p.download_note === 'string'),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
     // ---- list filtering and pagination ----
 
     const listItems = (p: unknown): Record<string, unknown>[] =>
