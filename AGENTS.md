@@ -47,7 +47,7 @@ Vite+ (`vp`) is the toolchain, and it delegates package installs to npm. The roo
 - Test: `vp run test`. To test one package, run `vp run --filter @terminal49/mcp test`.
 - Build: `vp run build`. It builds the SDK, then the MCP server, then the CLI, because a cold build needs the SDK declarations first. The published packages build with `tsc`. Do not switch them to `vp pack` without comparing the package contents and updating both npm publish workflows.
 - Format: `vp run format`. Oxfmt skips docs, generated files, and package metadata.
-- Lint the OpenAPI spec: `spectral lint --ruleset .spectral.mjs docs/openapi.json`.
+- Lint the OpenAPI spec: `spectral lint --ruleset .spectral.yaml docs/openapi.json`.
 - Preview the docs: `cd docs && npx -y mintlify@latest dev`. The Mintlify CLI is not a workspace dependency, because the root `overrides` break its MDX parser.
 - Run the MCP server locally, or test it from Claude Desktop: see [packages/mcp/LOCAL_DEV.md](packages/mcp/LOCAL_DEV.md). The gateway env template is `.env.local.example`.
 
