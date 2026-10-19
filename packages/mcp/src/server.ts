@@ -1674,7 +1674,7 @@ export function createTerminal49McpServer(
     set_party_role: tool(
       {
         description:
-          'Attach a party to containers or shipments in a role, replace the party in that role, or detach it, for example "set the drayage carrier to Manzo Transport on these containers" (action replace). ' +
+          'Attach a party to containers or shipments in a role, replace the party in that role, or detach it, for example "set the drayage carrier to Ray Drayage on these containers" (action replace). ' +
           'Resolve the company to a party ID and the records to container or shipment IDs first. Up to 50 records per call. ' +
           'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
           'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
