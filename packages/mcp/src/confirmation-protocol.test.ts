@@ -20,6 +20,7 @@ import {
   vi,
 } from 'vite-plus/test';
 import { createTerminal49McpServer } from './server.js';
+import { CONFIRMATION_TTL_MS } from './tools/write-kit.js';
 import { fakeApiFetch, type FakeRoutes } from './test/fake-api.js';
 import {
   meBody,
@@ -33,13 +34,14 @@ const STOPPED_AT = '2026-10-17T12:01:00Z';
 /** Routes for a tracked shipment whose stop_tracking call is counted. */
 function trackedShipment() {
   let stoppedAt: string | null = null;
+  let billOfLading = 'MAEU123456789';
   const shipment = () => ({
     body: {
       data: {
         id: SHIPMENT_ID,
         type: 'shipment',
         attributes: {
-          bill_of_lading_number: 'MAEU123456789',
+          bill_of_lading_number: billOfLading,
           shipping_line_scac: 'MAEU',
           line_tracking_stopped_at: stoppedAt,
           line_tracking_stopped_reason: null,
@@ -60,6 +62,13 @@ function trackedShipment() {
   return {
     api,
     stops: () => api.requests.filter((request) => request.method === 'PATCH'),
+    reads: () =>
+      api.requests.filter(
+        (request) => request.path === `/shipments/${SHIPMENT_ID}`,
+      ),
+    rebill: (next: string) => {
+      billOfLading = next;
+    },
   };
 }
 
@@ -174,6 +183,7 @@ describe('confirming a tier C write', () => {
     session = undefined;
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   it('asks the user through the client and writes once on accept', async () => {
@@ -224,6 +234,45 @@ describe('confirming a tier C write', () => {
     });
     expect(stops()).toEqual([]);
   });
+
+  it.each(
+    (['decline', 'cancel', 'unticked accept'] as const).flatMap((answer) =>
+      (['expired', 'stale'] as const).map(
+        (preview) => [answer, preview] as const,
+      ),
+    ),
+  )(
+    'returns declined for a %s when the preview went %s before the user answered',
+    async (answer, preview) => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      const shipment = trackedShipment();
+      vi.stubGlobal('fetch', shipment.api.fetch);
+      session = await connect(asksTheUser);
+      session.client.setRequestHandler('elicitation/create', async () => {
+        if (preview === 'expired') {
+          vi.setSystemTime(Date.now() + CONFIRMATION_TTL_MS);
+        } else {
+          shipment.rebill('MAEU999999999');
+        }
+        return answer === 'unticked accept'
+          ? { action: 'accept' as const, content: { confirm: false } }
+          : { action: answer };
+      });
+
+      const result = await stop(session.client);
+
+      expect(result.structuredContent).toEqual({
+        status: 'declined',
+        message:
+          answer === 'cancel'
+            ? 'The user dismissed the confirmation without answering. Nothing was changed.'
+            : 'The user declined this change. Nothing was changed.',
+      });
+      expect(session.calls).toHaveLength(2);
+      expect(shipment.reads()).toHaveLength(1);
+      expect(shipment.stops()).toEqual([]);
+    },
+  );
 
   it('refuses a confirmation_token from a client that asks the user', async () => {
     const { api, stops } = trackedShipment();

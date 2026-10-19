@@ -763,6 +763,13 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
     await audit('execute', 'token_not_accepted');
     return tokenNotAccepted(plan.tool);
   }
+  // A no ends the call whatever the confirmation's state: it writes nothing,
+  // so there is no preview to keep fresh and no token to spend.
+  const answer = channel.kind === 'elicitation' ? channel.answer : undefined;
+  if (answer && !(answer.action === 'accept' && answer.confirm)) {
+    await audit(phase, 'declined');
+    return declined(answer.action === 'cancel' ? 'cancel' : 'decline');
+  }
 
   try {
     const read = await plan.read();
@@ -818,14 +825,9 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
         await audit(phase, 'invalid_confirmation');
         return invalidConfirmation(plan.tool, check.reason, 'elicitation');
       }
-      const { answer } = channel;
       if (answer === undefined) {
         await audit(phase, 'elicitation_required');
         return elicitConfirmation(plan, read.preview, issue());
-      }
-      if (answer.action !== 'accept' || !answer.confirm) {
-        await audit(phase, 'declined');
-        return declined(answer.action === 'cancel' ? 'cancel' : 'decline');
       }
     }
 
