@@ -255,6 +255,10 @@ Start tracking a container, bill of lading, or booking number. The tool first se
 
 Check `tracking_request_created` in the result. It is `false` when the tool returned an existing container, an in-progress request, or a duplicate. Container numbers are checked against the ISO 6346 check digit before the tool calls the API.
 
+<Tip>
+**When an agent should call `track_container`.** A new tracking request is added to your account, so call `track_container` only when the user asks to track or add a number. The tool is marked `readOnlyHint: false`, so clients that honor tool annotations can ask you to approve the call. If your client doesn't ask, confirm with the user first. To look a number up, use `search_container`, which only reads your account. If the number isn't found, say so and offer to track it.
+</Tip>
+
 **Parameters**
 - `number` *(string, required)* – container number, BL, or booking number
 - `numberType` *(string, optional)* – override inference (`container`, `bill_of_lading`, `booking_number`)

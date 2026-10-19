@@ -103,6 +103,19 @@ describe('server instructions', () => {
     }
   });
 
+  it('keeps the explicit-request rule wherever track_container is described', () => {
+    for (const toolsets of toolsetSubsets()) {
+      const tools = selectTools({ toolsets, readOnly: false });
+      const instructions = buildServerInstructions(tools);
+
+      if (tools.some((tool) => tool.name === 'track_container')) {
+        expect(instructions, toolsets.join(',')).toMatch(
+          /track_container only when the user asks to track/,
+        );
+      }
+    }
+  });
+
   it('never mentions a tool that is left out', () => {
     for (const omitted of TOOL_REGISTRY) {
       const tools = TOOL_REGISTRY.filter((tool) => tool !== omitted);
