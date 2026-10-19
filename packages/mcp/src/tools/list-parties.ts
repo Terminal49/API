@@ -12,7 +12,6 @@ import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
 import { containerFilterShape } from '../generated/list-filter-schemas.js';
 import { partyAttributesSchema, partyName, partyNames } from './party-roles.js';
-import { nullableString } from './api-fields.js';
 import { httpStatus } from './soft-results.js';
 
 const PAGE_SIZE = 100;
@@ -128,7 +127,7 @@ const rawPartyRowSchema = z.object({
 // assign_party decides whether to create a party from what this returns.
 const rawPartyPageSchema = z.object({
   data: z.array(rawPartyRowSchema),
-  links: z.object({ next: nullableString }).nullish(),
+  links: z.object({ next: z.string().nullish() }).nullish(),
 });
 
 /**

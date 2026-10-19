@@ -234,6 +234,29 @@ describe('unassign_party', () => {
     expect(result).toMatchObject({ status: 'not_assigned' });
   });
 
+  it('accepts the same token again after the delete answers 404 and the role is still there', async () => {
+    const stored = storedRoles([ACME_CUSTOMER]);
+    let missing = true;
+    const { client } = fakeApiClient({
+      [`GET ${ROLES_PATH}`]: stored.get,
+      [`DELETE ${ROLES_PATH}/${ROLE_ID}`]: () => {
+        if (missing) {
+          missing = false;
+          return { status: 404 };
+        }
+        return stored.remove();
+      },
+    });
+    const context = writeContext(client);
+    const token = tokenOf(await executeUnassignParty(args(), client, context));
+
+    const first = await executeUnassignParty(args(token), client, context);
+    const retry = await executeUnassignParty(args(token), client, context);
+
+    expect(first).toMatchObject({ status: 'not_assigned' });
+    expect(retry).toMatchObject({ status: 'unassigned' });
+  });
+
   it('deletes a container role on the container route', async () => {
     const path = `/containers/${PARTY_CONTAINER_ID}/party_roles`;
     const { client, requests } = fakeApiClient({

@@ -223,6 +223,29 @@ describe('cancel_tracking_request', () => {
     expect(auditEvents(logged).at(-1)).toMatchObject({ outcome: 'noop' });
   });
 
+  it('accepts the same token again after the API refuses the cancel with a 422', async () => {
+    let refuse = true;
+    const { client, requests, setStatus } = request('pending', () => {
+      if (refuse) {
+        refuse = false;
+        return { status: 422 };
+      }
+      setStatus('cancelled');
+      return { body: {} };
+    });
+    const token = tokenOf(await call(client));
+
+    const first = await call(client, token);
+    const retry = await call(client, token);
+
+    expect(first).toMatchObject({ status: 'noop' });
+    expect(retry).toMatchObject({
+      status: 'cancelled',
+      tracking_request: { status: 'cancelled' },
+    });
+    expect(patches(requests)).toHaveLength(2);
+  });
+
   it('reports the cancel when the read after it fails', async () => {
     let cancelled = false;
     const { client } = fakeApiClient({

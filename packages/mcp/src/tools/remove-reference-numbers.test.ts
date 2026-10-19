@@ -389,4 +389,38 @@ describe('remove_reference_numbers', () => {
 
     expect(result).toMatchObject({ status: 'noop', ref_numbers: ['PO-1'] });
   });
+
+  it('accepts the same token again after Terminal49 refuses the shorter list', async () => {
+    const stored = storedRefNumbers(['PO-1', 'PO-2']);
+    let refuse = true;
+    const { client } = fakeApiClient({
+      [`GET ${PATH}`]: stored.get,
+      [`PATCH ${PATH}`]: (request) => {
+        if (refuse) {
+          refuse = false;
+          return { status: 422 };
+        }
+        return stored.patch(request);
+      },
+    });
+    const context = writeContext(client);
+    const token = tokenOf(
+      await executeRemoveReferenceNumbers(args(['PO-2']), client, context),
+    );
+
+    const first = await executeRemoveReferenceNumbers(
+      args(['PO-2'], token),
+      client,
+      context,
+    );
+    const retry = await executeRemoveReferenceNumbers(
+      args(['PO-2'], token),
+      client,
+      context,
+    );
+
+    expect(first).toMatchObject({ status: 'noop' });
+    expect(retry).toMatchObject({ status: 'removed', ref_numbers: ['PO-1'] });
+    expect(stored.current()).toEqual(['PO-1']);
+  });
 });

@@ -159,25 +159,23 @@ export async function executeRemoveReferenceNumbers(
         },
       };
     },
+    async refused(error, preview): Promise<ListRejected | undefined> {
+      if (httpStatus(error) !== 422) return undefined;
+      const { ref_numbers: previous, ...target } = preview.current;
+      return {
+        status: 'noop',
+        message:
+          'Terminal49 would not save the shorter list on this record. Nothing was changed.',
+        alternative:
+          'Remove these reference numbers in the Terminal49 dashboard.',
+        record: target,
+        ref_numbers: previous,
+      };
+    },
     async write(preview): Promise<RemoveOutcome | ListRejected> {
       const { ref_numbers: previous, ...target } = preview.current;
       const sent = preview.proposed.ref_numbers;
-      try {
-        await writeReferenceNumbers(client, entity_type, entity_id, sent);
-      } catch (error) {
-        if (httpStatus(error) === 422) {
-          return {
-            status: 'noop',
-            message:
-              'Terminal49 would not save the shorter list on this record. Nothing was changed.',
-            alternative:
-              'Remove these reference numbers in the Terminal49 dashboard.',
-            record: target,
-            ref_numbers: previous,
-          };
-        }
-        throw error;
-      }
+      await writeReferenceNumbers(client, entity_type, entity_id, sent);
       const after = await readBackReferenceNumbers(
         client,
         entity_type,

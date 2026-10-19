@@ -127,26 +127,23 @@ export async function executeUnassignParty(
         },
       };
     },
+    async refused(error): Promise<UnassignOutcome | NotAssigned | undefined> {
+      // Another call removed the role between the check and the delete.
+      if (httpStatus(error) !== 404) return undefined;
+      return notAssigned(
+        record,
+        await readPartyRoles(client, entity_type, entity_id),
+      );
+    },
     async write(preview): Promise<UnassignOutcome | NotAssigned> {
-      try {
-        if (entity_type === 'container') {
-          await client.containers.removePartyRole(entity_id, party_role_id, {
-            format: 'raw',
-          });
-        } else {
-          await client.shipments.removePartyRole(entity_id, party_role_id, {
-            format: 'raw',
-          });
-        }
-      } catch (error) {
-        // Another call removed the role between the check and the delete.
-        if (httpStatus(error) === 404) {
-          return notAssigned(
-            record,
-            await readPartyRoles(client, entity_type, entity_id),
-          );
-        }
-        throw error;
+      if (entity_type === 'container') {
+        await client.containers.removePartyRole(entity_id, party_role_id, {
+          format: 'raw',
+        });
+      } else {
+        await client.shipments.removePartyRole(entity_id, party_role_id, {
+          format: 'raw',
+        });
       }
       return {
         status: 'unassigned',

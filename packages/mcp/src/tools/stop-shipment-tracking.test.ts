@@ -202,6 +202,46 @@ describe('stop_shipment_tracking', () => {
     expect(patches(requests)).toHaveLength(2);
   });
 
+  it('accepts the same token again after Terminal49 refuses the stop with a 422', async () => {
+    let refuse = true;
+    let stoppedAt: string | null = null;
+    const { client, requests } = fakeApiClient({
+      'GET /me': { body: meBody(enabled) },
+      [`GET /shipments/${SHIPMENT_ID}`]: () => ({ body: shipment(stoppedAt) }),
+      [`PATCH /shipments/${SHIPMENT_ID}/stop_tracking`]: () => {
+        if (refuse) {
+          refuse = false;
+          return {
+            status: 422,
+            body: { errors: [{ status: '422', detail: 'Cannot stop' }] },
+          };
+        }
+        stoppedAt = STOPPED_AT;
+        return { body: shipment(stoppedAt) };
+      },
+    });
+    const context = writeContext(client);
+    const preview = await executeStopShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      context,
+    );
+    const confirmed = {
+      shipment_id: SHIPMENT_ID,
+      confirmation_token: tokenOf(preview),
+    };
+
+    const first = await executeStopShipmentTracking(confirmed, client, context);
+    const retry = await executeStopShipmentTracking(confirmed, client, context);
+
+    expect(first).toMatchObject({ status: 'noop' });
+    expect(retry).toMatchObject({
+      status: 'stopped',
+      shipment: { tracking: 'stopped' },
+    });
+    expect(patches(requests)).toHaveLength(2);
+  });
+
   it('refuses a token after a server error, since the stop may have happened', async () => {
     const { client, requests } = fakeApiClient({
       'GET /me': { body: meBody(enabled) },
