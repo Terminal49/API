@@ -3720,8 +3720,15 @@ export interface components {
                 plan?: "free_plan" | "in_trial" | "customer" | "locked" | "churned" | null;
                 /** @description Tracking-slot usage on free and trial plans. `null` when the plan is not slot-limited. Present only on the account the credential is scoped to. */
                 tracking_slots?: {
+                    /** @description Tracking slots the plan allows. */
                     limit: number;
+                    /** @description Slots in use: active containers plus pending tracking requests that reserve capacity, deduplicated by container number. */
                     used: number;
+                    /** @description Slots held by containers that are currently being tracked. */
+                    active_containers: number;
+                    /** @description Slots reserved by tracking requests that have not resolved yet (`pending` or `awaiting_manifest`). */
+                    pending_tracking_requests: number;
+                    /** @description Slots still available, never below zero. */
                     remaining: number;
                 } | null;
             };
