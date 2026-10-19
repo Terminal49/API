@@ -63,8 +63,9 @@ describe('confirmation token', () => {
   });
 
   it('rejects a token whose expiry was moved forward', () => {
-    const [prefix, , state, signature] = issue().split('.');
-    const later = (NOW + 60 * CONFIRMATION_TTL_MS).toString(36);
+    const [prefix, issued = '', state, signature] = issue().split('.');
+    const nonce = issued.slice(-8);
+    const later = `${(NOW + 60 * CONFIRMATION_TTL_MS).toString(36)}${nonce}`;
 
     expect(
       check(
