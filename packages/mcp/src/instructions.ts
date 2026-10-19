@@ -100,7 +100,7 @@ const PARAGRAPHS: readonly Paragraph[] = [
         text: " Use identify_tracking_number to learn a number's type and likely carrier, and whether it is already tracked, without creating a tracking request.",
       },
       {
-        text: ' Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties.',
+        text: ' Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers: a customer by advanced_filters.customer_id, any other role by advanced_filters.parties.',
       },
       {
         text: ' Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.',

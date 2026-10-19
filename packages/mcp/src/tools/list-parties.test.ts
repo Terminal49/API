@@ -69,12 +69,18 @@ describe('list_parties', () => {
     expect(result.total_matched).toBe(3);
   });
 
-  it('explains how to use the id with the container party filter', async () => {
+  it('routes a customer to customer_id and other roles to the party filter', async () => {
     const { client } = fakeClient([[]]);
     const result = await executeListParties({}, client);
     expect(PARTY_ROLES).toContain('customer');
     expect(PARTY_ROLES).toContain('pickup_dray_carrier');
+    expect(result.usage).toContain(
+      'For a customer, filter list_containers, summarize_containers, or list_shipments with advanced_filters.customer_id',
+    );
     expect(result.usage).toContain('advanced_filters.parties');
+    const roles = result.usage.match(/Roles: ([^.]+)\./)?.[1].split(', ');
+    expect(roles).toContain('pickup_dray_carrier');
+    expect(roles).not.toContain('customer');
   });
 
   it('reports truncation when the account has more parties than it loads', async () => {

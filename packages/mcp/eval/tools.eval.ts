@@ -871,6 +871,63 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
+    it('list_containers customer_id finds a customer resolved by list_parties', async ({
+      skip,
+    }) => {
+      // Follow the agent path: customer name -> list_parties -> customer_id.
+      const sample = await client.callTool('list_containers', {
+        advanced_filters: { customer_id: '@exists' },
+        page_size: 1,
+      });
+      const containerId = listItems(sample.payload)[0]?.id;
+      if (typeof containerId !== 'string') return skip();
+      const container = await client.callTool('get_container', {
+        id: containerId,
+      });
+      const shipmentId =
+        isRecord(container.payload) && isRecord(container.payload.shipment)
+          ? readString(container.payload.shipment, 'id')
+          : undefined;
+      if (!shipmentId) return skip();
+      const shipment = await client.callTool('get_shipment_details', {
+        id: shipmentId,
+        include_containers: false,
+        include_party_roles: true,
+      });
+      const roles =
+        isRecord(shipment.payload) &&
+        Array.isArray(shipment.payload.party_roles)
+          ? shipment.payload.party_roles.filter(isRecord)
+          : [];
+      const name = roles.find((r) => r.role === 'customer')?.party_name;
+      if (typeof name !== 'string') return skip();
+      const parties = await client.callTool('list_parties', {
+        search: name,
+        limit: 1,
+      });
+      const partyId =
+        isRecord(parties.payload) && Array.isArray(parties.payload.parties)
+          ? parties.payload.parties.filter(isRecord)[0]?.id
+          : undefined;
+      if (typeof partyId !== 'string') return skip();
+      const { score } = await evaluate(
+        'list_containers',
+        { advanced_filters: { customer_id: partyId }, page_size: 5 },
+        {
+          requiredKeys: ['items'],
+          predicates: [
+            {
+              name: `customer_id for ${name} returns containers`,
+              test: (p) => listItems(p).length > 0,
+              detail: (p) => `total=${String(listTotal(p))}`,
+            },
+          ],
+        },
+        'customer-id-filter',
+      );
+      expect(score.contractPass).toBe(true);
+    });
+
     it('list_containers rejects a filter given at both levels', async () => {
       const { result } = await evaluate(
         'list_containers',
