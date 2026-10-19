@@ -106,6 +106,14 @@
       "implementation": "packages/mcp/src/tools/unassign-party.ts"
     },
     {
+      "name": "set_custom_field",
+      "implementation": "packages/mcp/src/tools/set-custom-field.ts"
+    },
+    {
+      "name": "update_custom_field",
+      "implementation": "packages/mcp/src/tools/update-custom-field.ts"
+    },
+    {
       "name": "search_docs",
       "implementation": "packages/mcp/src/tools/search-docs.ts"
     },
