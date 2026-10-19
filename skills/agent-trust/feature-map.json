@@ -58,6 +58,14 @@
       "implementation": "packages/mcp/src/tools/list-parties.ts"
     },
     {
+      "name": "set_party_role",
+      "implementation": "packages/mcp/src/tools/record-writes.ts"
+    },
+    {
+      "name": "set_custom_field",
+      "implementation": "packages/mcp/src/tools/record-writes.ts"
+    },
+    {
       "name": "list_custom_field_definitions",
       "implementation": "packages/mcp/src/tools/list-custom-field-definitions.ts"
     },

@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **35 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 28 of them.
+The Terminal49 MCP Server provides **37 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve all of them.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party` and `unassign_party` are in the `operations` toolset, which is not in the default toolsets yet. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_party_role` and `set_custom_field` are in the `operations` toolset. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -746,6 +746,51 @@ unassign_party({
 - `status: "not_assigned"` with the record's current `party_roles` when it has no role with that id. No token is issued. A delete that answers 404 because another call removed the role first returns the same result.
 
 **When to Use**: The wrong party is on a record. To replace a party, call `unassign_party`, then `assign_party`.
+### 29. `set_party_role`
+**Purpose**: Attach a party to up to 50 containers or shipments in a role, replace the party in that role, or detach it. Tier C: a call that detaches a party asks the user; a call that only attaches runs at once.
+
+**Usage**:
+```typescript
+set_party_role({
+  container_ids: ["<container-id>"], // or shipment_ids; 1-50, not both
+  role: "pickup_dray_carrier", // containers support only this role
+  party_id: "<party-id-from-the-record's-party_roles>",
+  action: "replace" // or "add" (beside others) or "remove"
+})
+// When a record would lose a party, after the user approves the preview:
+set_party_role({ ...sameArguments, confirmation_token: "t49ct1...." })
+```
+
+**Returns**:
+- Preview, when any record loses a party: `reach` (one sentence naming the party and the counts), `changes` with one entry per record that changes (`id`, `current` and `proposed` as lists of `party_id` and `party_name`), `unchanged` (a count), `failed` (records that cannot be changed, with the error) and `not_attempted` (records not read in time). Records that already match are left out. The token covers the party assignments in the role on every record read.
+- `updated`, `unchanged` (already matched), `failed` (`id`, `error`), and `not_attempted` (the call ran out of time before reaching them; nothing changed on them), plus a `summary`. The MCP text content is this same full result.
+- A record still being saved when time ran out, or whose save failed without a clear answer (for example a dropped connection), is in `failed` with an error saying the change may or may not have been applied; check it before calling again.
+- `party_not_found` when Terminal49 has no party with `party_id`. Nothing is read or changed. A `remove` whose `party_id` matches no role on a record that holds another party in that role fails that record with the same guidance: take `party_id` from the record's `party_roles`, not from `list_parties`, which can list a customer under its account id.
+
+**When to Use**: Only when the user asks to change these records. `pickup_dray_carrier` and `customer` hold one party per record: `add` fails where a different party holds one, and `replace` swaps it (except a shipment `customer`, which must be removed, then added).
+
+---
+
+### 30. `set_custom_field`
+**Purpose**: Set or clear one of the account's custom fields on up to 50 containers or shipments. Tier C: a call that overwrites or clears a value asks the user; a call that only fills empty fields runs at once.
+
+**Usage**:
+```typescript
+set_custom_field({
+  entity: "container", // or "shipment"
+  ids: ["<container-id>"], // 1-50
+  api_slug: "sales_rep",
+  value: "Sofia Cortina" // an array of option values for a multi-select field; null clears
+})
+// When a record would lose a value, after the user approves the preview:
+set_custom_field({ ...sameArguments, confirmation_token: "t49ct1...." })
+```
+
+**Returns**:
+- Preview, when any record has a value that would be overwritten or cleared: `reach`, `changes` with one entry per record that changes (`id`, `current`, `proposed`), `unchanged`, `failed` and `not_attempted`, as for `set_party_role`. The token covers the field's value on every record read.
+- The same `updated`, `unchanged`, `failed`, `not_attempted` and `summary` as `set_party_role`.
+
+**When to Use**: Only when the user asks to change these records. Read the field's `api_slug` from `list_custom_field_definitions`, or from `get_container` or `get_shipment_details` with custom fields, first.
 
 ---
 
@@ -1000,7 +1045,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 35 tools and 4 resources, the LLM can:
+With these 37 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

@@ -10,7 +10,7 @@
   "listing": {
     "name": "Terminal49",
     "tagline": "Track ocean shipments",
-    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, create new tracking requests, and, where trade intelligence is enabled, research US ocean import markets (importers, products, origins, ports, and carriers).",
+    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, and, where trade intelligence is enabled, research US ocean import markets (importers, products, origins, ports, and carriers). At the user's request it can also track containers, stop or resume tracking, cancel pending tracking requests, and set parties and custom field values on containers and shipments. Changes that remove or replace data show a preview first and run only after the user confirms.",
     "categories": [
       "Business"
     ],
@@ -22,6 +22,9 @@
     "icon": "public/store-icons/terminal49-light.png",
     "icon_dark": "public/store-icons/terminal49-dark.png",
     "tool_names": [
+      "add_reference_numbers",
+      "assign_party",
+      "cancel_tracking_request",
       "get_container",
       "get_container_route",
       "get_container_transport_events",
@@ -43,12 +46,18 @@
       "list_shipments",
       "list_tracking_requests",
       "rank_importers",
+      "remove_reference_numbers",
+      "resume_shipment_tracking",
       "search_commodities",
       "search_container",
       "search_docs",
       "search_importers",
+      "set_custom_field",
+      "set_party_role",
+      "stop_shipment_tracking",
       "summarize_containers",
       "track_container",
+      "unassign_party",
       "whoami"
     ]
   },
@@ -65,6 +74,9 @@
       "Inspect routes and transport events",
       "Check supported shipping lines",
       "Create new tracking requests",
+      "Stop or resume shipment tracking and cancel pending tracking requests",
+      "Edit reference numbers and party roles on containers, shipments, and tracking requests",
+      "Set parties and custom field values on containers and shipments",
       "Research US ocean import markets: importers, products, origin countries, ports, and carriers"
     ]
   }

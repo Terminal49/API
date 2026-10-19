@@ -549,7 +549,29 @@ test('workflow boundary uses immutable default code with no PR execution or merg
   assert.match(controller, /workflow_dispatch:/);
   assert.doesNotMatch(
     controller,
-    /secrets\.|npm ci|download-artifact|cache:|pull-requests: write|checks: write|gh pr merge|enablePullRequestAutoMerge/,
+    /secrets\.|npm ci|download-artifact|cache:|contents: write|checks: write|gh pr merge|enablePullRequestAutoMerge/,
+  );
+  assert.match(controller, /^permissions: \{\}$/m);
+  assert.deepEqual(
+    controller
+      .match(/^ {4}permissions:\n((?: {6}.+\n)+)/m)[1]
+      .trim()
+      .split(/\n\s*/),
+    [
+      'contents: read',
+      'actions: read',
+      'checks: read',
+      'issues: write',
+      'pull-requests: write',
+    ],
+  );
+  const reconciler = readFileSync(
+    new URL('./reconcile-trust.mjs', import.meta.url),
+    'utf8',
+  );
+  assert.doesNotMatch(
+    reconciler,
+    /createReview|submitReview|pulls\.merge|updateBranch|enablePullRequestAutoMerge|pulls\.update\b/,
   );
   const uses = controller.matchAll(/uses: ([^\n]+)/g);
   for (const [, action] of uses) assert.match(action, /@[a-f0-9]{40}$/);
@@ -971,6 +993,42 @@ test('targeted reconciliation still reports its individual failure', async () =>
     },
   });
   assert.deepEqual(failures, ['PR #10: evidence unavailable']);
+});
+
+test('a forbidden GitHub request names its endpoint and the permission GitHub accepts', async () => {
+  const { github, summary } = fakeGithub(snapshot());
+  github.rest.repos.get = async () => ({ data: { default_branch: 'main' } });
+  github.rest.pulls.get = async () => {
+    throw Object.assign(new Error('Resource not accessible by integration'), {
+      status: 403,
+      request: {
+        method: 'POST',
+        url: 'https://api.github.com/repos/Terminal49/API/pulls/10?per_page=1',
+        headers: { authorization: 'token SECRET_TOKEN' },
+      },
+      response: {
+        headers: {
+          'x-accepted-github-permissions': 'issues=write; pull_requests=write',
+        },
+      },
+    });
+  };
+  const failures = [];
+  await reconcileEvent({
+    github,
+    context: {
+      repo: { owner: 'Terminal49', repo: 'API' },
+      payload: { inputs: { pull_number: '10' } },
+    },
+    core: {
+      summary,
+      notice: () => {},
+      setFailed: (message) => failures.push(message),
+    },
+  });
+  assert.deepEqual(failures, [
+    'PR #10: Resource not accessible by integration (POST /repos/Terminal49/API/pulls/10; accepted permissions: issues=write; pull_requests=write)',
+  ]);
 });
 
 test('coverage drift checks cannot be omitted from trusted CI evidence', () => {
