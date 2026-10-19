@@ -10,6 +10,10 @@
       "implementation": "packages/mcp/src/tools/track-container.ts"
     },
     {
+      "name": "identify_tracking_number",
+      "implementation": "packages/mcp/src/tools/identify-tracking-number.ts"
+    },
+    {
       "name": "get_container",
       "implementation": "packages/mcp/src/tools/get-container.ts"
     },
@@ -30,6 +34,14 @@
       "implementation": "packages/mcp/src/tools/get-container-route.ts"
     },
     {
+      "name": "get_location",
+      "implementation": "packages/mcp/src/tools/get-location.ts"
+    },
+    {
+      "name": "get_vessel",
+      "implementation": "packages/mcp/src/tools/get-vessel.ts"
+    },
+    {
       "name": "list_shipments",
       "implementation": "packages/mcp/src/tools/list-shipments.ts"
     },
@@ -46,8 +58,24 @@
       "implementation": "packages/mcp/src/tools/list-parties.ts"
     },
     {
+      "name": "list_custom_field_definitions",
+      "implementation": "packages/mcp/src/tools/list-custom-field-definitions.ts"
+    },
+    {
       "name": "list_tracking_requests",
       "implementation": "packages/mcp/src/tools/list-tracking-requests.ts"
+    },
+    {
+      "name": "get_tracking_request",
+      "implementation": "packages/mcp/src/tools/get-tracking-request.ts"
+    },
+    {
+      "name": "list_documents",
+      "implementation": "packages/mcp/src/tools/list-documents.ts"
+    },
+    {
+      "name": "get_document",
+      "implementation": "packages/mcp/src/tools/get-document.ts"
     },
     {
       "name": "search_docs",
