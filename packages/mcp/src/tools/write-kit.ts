@@ -194,8 +194,7 @@ export function checkConfirmationToken(
 ): ConfirmationCheck {
   const match = TOKEN_PATTERN.exec(token);
   if (!match) return { ok: false, reason: 'malformed' };
-  const [, encodedExpiry = '', nonce = '', state = '', signature = ''] =
-    match;
+  const [, encodedExpiry = '', nonce = '', state = '', signature = ''] = match;
   const expiresAt = Number.parseInt(encodedExpiry, 36);
   // The MAC covers the expiry, the nonce and the state tag, so an edit to any
   // of them is a mismatch, never a stale preview.

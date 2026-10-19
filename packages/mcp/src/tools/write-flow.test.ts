@@ -420,14 +420,17 @@ describe('runConfirmedWrite on a request that can ask the user', () => {
   });
 
   /** A context whose channel is parsed from what a client sent. */
-  function answeredContext(requestState: string | undefined, response: unknown) {
+  function answeredContext(
+    requestState: string | undefined,
+    response: unknown,
+  ) {
     return context(
       {},
       undefined,
       confirmationChannel({
         envelope: { [CLIENT_CAPABILITIES_META_KEY]: { elicitation: {} } },
         inputResponses: { [CONFIRM_REQUEST_KEY]: response },
-        requestState: <T,>() => requestState as T,
+        requestState: <T>() => requestState as T,
       }),
     );
   }

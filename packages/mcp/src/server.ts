@@ -107,10 +107,7 @@ import {
   resumeShipmentTrackingInputSchema,
   resumeShipmentTrackingOutputSchema,
 } from './tools/resume-shipment-tracking.js';
-import {
-  credentialHash,
-  usableConfirmationSecret,
-} from './tools/write-kit.js';
+import { credentialHash, usableConfirmationSecret } from './tools/write-kit.js';
 import {
   confirmationChannel,
   createToolContext,
