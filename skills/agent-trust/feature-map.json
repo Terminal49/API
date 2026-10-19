@@ -10,6 +10,10 @@
       "implementation": "packages/mcp/src/tools/track-container.ts"
     },
     {
+      "name": "identify_tracking_number",
+      "implementation": "packages/mcp/src/tools/identify-tracking-number.ts"
+    },
+    {
       "name": "get_container",
       "implementation": "packages/mcp/src/tools/get-container.ts"
     },
@@ -30,20 +34,20 @@
       "implementation": "packages/mcp/src/tools/get-container-route.ts"
     },
     {
+      "name": "get_location",
+      "implementation": "packages/mcp/src/tools/get-location.ts"
+    },
+    {
+      "name": "get_vessel",
+      "implementation": "packages/mcp/src/tools/get-vessel.ts"
+    },
+    {
       "name": "list_shipments",
       "implementation": "packages/mcp/src/tools/list-shipments.ts"
     },
     {
       "name": "list_containers",
       "implementation": "packages/mcp/src/tools/list-containers.ts"
-    },
-    {
-      "name": "list_tracking_requests",
-      "implementation": "packages/mcp/src/tools/list-tracking-requests.ts"
-    },
-    {
-      "name": "search_docs",
-      "implementation": "packages/mcp/src/tools/search-docs.ts"
     },
     {
       "name": "summarize_containers",
@@ -54,8 +58,72 @@
       "implementation": "packages/mcp/src/tools/list-parties.ts"
     },
     {
+      "name": "list_custom_field_definitions",
+      "implementation": "packages/mcp/src/tools/list-custom-field-definitions.ts"
+    },
+    {
+      "name": "list_tracking_requests",
+      "implementation": "packages/mcp/src/tools/list-tracking-requests.ts"
+    },
+    {
+      "name": "get_tracking_request",
+      "implementation": "packages/mcp/src/tools/get-tracking-request.ts"
+    },
+    {
+      "name": "list_documents",
+      "implementation": "packages/mcp/src/tools/list-documents.ts"
+    },
+    {
+      "name": "get_document",
+      "implementation": "packages/mcp/src/tools/get-document.ts"
+    },
+    {
+      "name": "stop_shipment_tracking",
+      "implementation": "packages/mcp/src/tools/stop-shipment-tracking.ts"
+    },
+    {
+      "name": "resume_shipment_tracking",
+      "implementation": "packages/mcp/src/tools/resume-shipment-tracking.ts"
+    },
+    {
+      "name": "cancel_tracking_request",
+      "implementation": "packages/mcp/src/tools/cancel-tracking-request.ts"
+    },
+    {
+      "name": "search_docs",
+      "implementation": "packages/mcp/src/tools/search-docs.ts"
+    },
+    {
       "name": "whoami",
       "implementation": "packages/mcp/src/tools/whoami.ts"
+    },
+    {
+      "name": "search_importers",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
+    },
+    {
+      "name": "get_importer_profile",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
+    },
+    {
+      "name": "search_commodities",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
+    },
+    {
+      "name": "rank_importers",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
+    },
+    {
+      "name": "get_trade_trends",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
+    },
+    {
+      "name": "get_trade_breakdown",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
+    },
+    {
+      "name": "get_trade_data_coverage",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
     }
   ],
   "sdkEntrypoints": [
