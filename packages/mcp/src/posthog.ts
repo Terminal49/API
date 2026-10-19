@@ -18,6 +18,7 @@
  */
 import type { McpServer } from '@modelcontextprotocol/server';
 import type { BeforeSendFn, UserIdentity } from '@posthog/mcp';
+import { redactSignedUrlsDeep } from './signed-urls.js';
 // `PostHog` is imported from `@posthog/mcp`'s re-export rather than from
 // `posthog-node` directly, and deliberately so. `posthog-node` is a *peer*
 // dependency of `@posthog/mcp`, and this monorepo also carries a transitive
@@ -47,7 +48,7 @@ type Environment = NodeJS.ProcessEnv;
 const DEFAULT_POSTHOG_HOST = 'https://f.terminal49.com';
 
 export const SERVER_NAME = 'terminal49-mcp';
-export const SERVER_VERSION = '1.2.0';
+export const SERVER_VERSION = '1.2.1';
 
 /**
  * Event properties stripped from every outgoing event.
@@ -155,8 +156,9 @@ export function initializePostHogFromEnv(
 }
 
 /**
- * `beforeSend` hook. Drops `$exception` events wholesale and strips
- * customer-identifying properties from everything else.
+ * `beforeSend` hook. Drops `$exception` events wholesale, strips
+ * customer-identifying properties from everything else, and redacts signed
+ * URLs from what remains.
  */
 const redactSensitiveProperties: BeforeSendFn = (event) => {
   // `enableExceptionAutocapture: false` below should mean these never appear.
@@ -173,6 +175,7 @@ const redactSensitiveProperties: BeforeSendFn = (event) => {
     }
   }
 
+  event.properties = redactSignedUrlsDeep(event.properties);
   return event;
 };
 
@@ -253,7 +256,7 @@ export function instrumentMcpServerWithPostHog<TServer extends McpServer>(
     instrument(server, client, {
       // Do NOT inject PostHog's `context` argument. It is a *required* addition
       // to every tool's advertised inputSchema, which would change this
-      // server's public MCP contract for all 10 tools. Tool telemetry must not
+      // server's public MCP contract for every tool. Tool telemetry must not
       // add conversation-adjacent arguments to Terminal49 tool schemas.
       context: false,
       // Sentry is the error tracker. Suppress the `$exception` sibling event so

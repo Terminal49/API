@@ -1,0 +1,69 @@
+{
+  "company_name": "EXAMPLE OUTDOOR SUPPLY",
+  "company_state": null,
+  "since": "2025-10",
+  "until": "2026-09",
+  "found": true,
+  "totals": {
+    "containers": 1240,
+    "containers_as_consignee": 1180,
+    "containers_as_notify_party": 60,
+    "teus": 2310.5,
+    "states": [
+      "GA",
+      "CA"
+    ]
+  },
+  "monthly": [
+    {
+      "month": "2025-10",
+      "containers": 95,
+      "teus": 180.0
+    },
+    {
+      "month": "2025-11",
+      "containers": 110,
+      "teus": 205.5
+    }
+  ],
+  "ports_of_discharge": [
+    {
+      "name": "SAVANNAH",
+      "containers": 900,
+      "teus": 1700.0
+    }
+  ],
+  "origin_countries": [
+    {
+      "name": "VIETNAM",
+      "containers": 700,
+      "teus": 1300.0
+    }
+  ],
+  "carriers": [
+    {
+      "name": "MAERSK LINE",
+      "containers": 500,
+      "teus": 950.0
+    }
+  ],
+  "destination_states": [
+    {
+      "name": "GA",
+      "containers": 900,
+      "teus": 1700.0
+    }
+  ],
+  "commodities_hs4": [
+    {
+      "hs4": "9401",
+      "description": "Seats (other than barber, dental, etc), and part",
+      "containers": 800,
+      "estimated_value": 31000000.0
+    }
+  ],
+  "notes": [
+    "volume is physical containers, each counted once even when it appears on several bills",
+    "the period covers full calendar months ending last month"
+  ]
+}

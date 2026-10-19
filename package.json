@@ -9,70 +9,29 @@
   ],
   "type": "module",
   "scripts": {
+    "agent-verify": "node bin/agent-verify.mjs",
+    "agent-verify:quick": "node bin/agent-verify.mjs --quick",
     "build": "npm run build --workspace @terminal49/sdk && npm run build --workspace @terminal49/mcp && npm run build --workspace @terminal49/cli",
+    "check:agent-trust": "node bin/check-agent-trust.mjs && node bin/check-openapi-types.mjs",
     "check": "vp check && npm run build --workspace @terminal49/sdk && npm run type-check:api && vp run -r type-check",
     "format": "vp fmt --write api packages sdks",
     "lint:api": "vp lint api && vp fmt --check api",
-    "test": "vp run -r test",
+    "test": "npm run test:agent-trust && npm run test:risk-policy && vp run -r test",
     "test:coverage": "node --test tools/generate-coverage.test.mjs tools/generate-rail-terminals.test.mjs tools/verify-deployed-coverage.test.mjs && node tools/generate-coverage.mjs --check && node tools/generate-rail-terminals.mjs --check",
+    "test:agent-trust": "node --test bin/check-agent-trust.test.mjs bin/check-openapi-types.test.mjs",
+    "test:risk-policy": "node --test scripts/ci/*.test.mjs",
     "type-check:api": "tsc --noEmit -p tsconfig.json",
     "sdk:docs": "npm run docs --workspace @terminal49/sdk"
   },
-  "dependencies": {
-    "mintlify": "^4.2.939",
-    "openapi-fetch": "^0.15.2",
-    "openapi-typescript": "^7.13.0"
-  },
   "devDependencies": {
-    "@oxlint/plugins": "1.79.0",
+    "@oxlint/plugins": "1.88.0",
     "@types/node": "^24.10.13",
-    "dotenv": "^17.3.1",
-    "vite-plus": "0.3.3"
+    "openapi-to-postmanv2": "6.3.0",
+    "vite-plus": "1.3.0"
   },
   "overrides": {
-    "@mintlify/previewing": {
-      "express": "4.22.2"
-    },
-    "@mintlify/scraping": {
-      "zod": "3.25.76"
-    },
-    "@mintlify/validation": {
-      "zod": "3.25.76"
-    },
-    "@terminal49/sdk": {
-      "typedoc": {
-        "minimatch": {
-          "brace-expansion": "5.0.6"
-        }
-      }
-    },
-    "axios": "^1.16.0",
-    "brace-expansion": "5.0.6",
-    "chromium-bidi": {
-      "zod": "3.23.8"
-    },
-    "express-rate-limit": "^8.5.2",
-    "fast-uri": "^3.1.8",
-    "hono": "^4.12.16",
-    "ip-address": "^10.1.1",
-    "js-yaml": "^4.3.1",
-    "lodash": "^4.18.1",
-    "minimatch": {
-      "brace-expansion": "5.0.6"
-    },
-    "minimatch@10.2.5": {
-      "brace-expansion": "5.0.6"
-    },
-    "postcss": "^8.5.28",
-    "rollup": "^4.60.4",
-    "typedoc": {
-      "minimatch": {
-        "brace-expansion": "5.0.6"
-      }
-    },
-    "uuid": "^11.1.1",
-    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3",
-    "vitest": "4.1.11"
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.3.0",
+    "vitest": "5.0.5"
   },
   "engines": {
     "node": "24.x"

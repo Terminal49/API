@@ -29,7 +29,7 @@ export T49_API_TOKEN='your_token_here'
 ```
 
 **What it tests:**
-- ✅ All 10 tools, 3 prompts, and resources
+- ✅ All tools, 3 prompts, and resources
 - ✅ All 3 prompts (track-shipment, analyze-delays, etc.)
 - ✅ Resources (container status, milestone glossary)
 - ✅ SCAC completions
@@ -327,13 +327,6 @@ jobs:
         env:
           T49_API_TOKEN: ${{ secrets.T49_API_TOKEN }}
 ```
-
----
-
-## 📝 Test Results Documentation
-
-Current test results are documented in:
-- **packages/mcp/TEST_RESULTS_V2.md** - Latest comprehensive test results
 
 ---
 

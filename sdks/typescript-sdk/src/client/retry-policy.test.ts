@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
   computeBackoffDelay,
   isIdempotentMethod,
+  isReadOnlyQueryPath,
   isRetryableNetworkError,
   isRetryableStatus,
   parseRetryAfterMs,
@@ -77,6 +78,37 @@ describe('retry-policy', () => {
       expect(
         shouldRetryRequest({ method: 'POST', hasIdempotencyKey: true }),
       ).toBe(true);
+    });
+
+    it('allows retry for POSTs to read-only query routes', () => {
+      expect(
+        shouldRetryRequest({ method: 'POST', path: '/trade_intel/trends' }),
+      ).toBe(true);
+      expect(
+        shouldRetryRequest({
+          method: 'post',
+          path: '/trade_intel/bills_of_lading/lookup',
+        }),
+      ).toBe(true);
+    });
+
+    it('still blocks retry for writes on other routes and for non-POST writes', () => {
+      expect(
+        shouldRetryRequest({ method: 'POST', path: '/tracking_requests' }),
+      ).toBe(false);
+      expect(
+        shouldRetryRequest({ method: 'PATCH', path: '/trade_intel/trends' }),
+      ).toBe(false);
+    });
+  });
+
+  describe('isReadOnlyQueryPath', () => {
+    it('recognizes trade intelligence routes only', () => {
+      expect(isReadOnlyQueryPath('/trade_intel/meta')).toBe(true);
+      expect(isReadOnlyQueryPath('/trade_intel/companies/search')).toBe(true);
+      expect(isReadOnlyQueryPath('/shipments')).toBe(false);
+      expect(isReadOnlyQueryPath('/trade_intelligence')).toBe(false);
+      expect(isReadOnlyQueryPath(undefined)).toBe(false);
     });
   });
 

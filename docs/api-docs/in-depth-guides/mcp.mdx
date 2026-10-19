@@ -170,7 +170,7 @@ Once configured, verify everything works:
   <Step title="Ask Claude to list tools">
     > "List the tools available in the Terminal49 MCP server."
 
-    Claude should respond with a list of 14 tools including `search_container`, `track_container`, and list tools.
+    Claude should respond with a list of 30 tools including `search_container`, `track_container`, the list tools, and the trade intelligence tools.
   </Step>
   <Step title="Search for a test container">
     > "Using the Terminal49 MCP server, search for container TCLU1234567 and summarize its status."
@@ -221,18 +221,25 @@ T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio 2>&1 | head -20
 |------|-------------|------------|
 | `search_container` | Find containers by number, BL, booking, or ref | `query: string` |
 | `track_container` | Start tracking a container | `number`, `numberType?`, `scac?`, `refNumbers?` |
-| `get_container` | Get container with optional includes | `id: uuid`, `include?: ['shipment', 'pod_terminal', 'transport_events', 'custom_fields']` |
-| `get_shipment_details` | Get shipment and containers | `id: uuid`, `include_containers?: boolean`, `include_custom_fields?: boolean` |
+| `identify_tracking_number` | Predict a number's type and carrier, and check whether it is already tracked, without tracking it | `number: string` |
+| `get_container` | Get container with optional includes | `id: uuid`, `include?: ['shipment', 'pod_terminal', 'transport_events', 'custom_fields', 'party_roles']` |
+| `get_shipment_details` | Get shipment and containers | `id: uuid`, `include_containers?: boolean`, `include_custom_fields?: boolean`, `include_party_roles?: boolean` |
 | `get_container_transport_events` | Get event timeline | `id: uuid` |
 | `get_supported_shipping_lines` | List carriers with SCAC codes | `search?: string` |
 | `get_container_route` | Get ports in route order with ETAs and the current vessel (paid feature) | `id: uuid` |
+| `get_location` | Get a port, terminal, or metro area | `kind` (`port`, `terminal`, or `metro_area`), `id` (UUID, or a UN/LOCODE for a port or metro area) |
+| `get_vessel` | Get a vessel's position and, optionally, its projected arrival at a port (projection is a paid feature) | `id: uuid`, `eta_to?: { port_id, previous_port_id, latitude?, longitude? }` |
 | `list_shipments` | List shipments with filters + pagination | `number?`, `tracking_stopped?`, `actively_tracked?`, `voyage_status?`, `pod_code?`, `pol_code?`, `pod_arrival?`, `created_at?`, `tags?`, `advanced_filters?`, `include_stopped_tracking?`, `sort?`, `include_containers?`, `page?`, `page_size?` |
 | `list_containers` | List containers with filters + pagination | `number?`, `current_status?`, `pod_code?`, `pol_code?`, `shipping_line_scac?`, `has_holds?`, `has_fees?`, `requires_attention?`, `actively_tracked?`, `arrival?`, `pickup_lfd?`, `tags?`, `advanced_filters?`, `include_stopped_tracking?`, `sort?`, `include?: ['shipment', 'pod_terminal']`, `view?`, `page?`, `page_size?` |
 | `summarize_containers` | Count containers grouped by one dimension | `group_by` (`pod_terminal`, `current_status`, `shipping_line`, `port_of_discharge`, `hold_type`, `pickup_lfd_date`, or `pod_arrival_date`), plus the `list_containers` filters except `sort`, `include`, `view`, `page`, and `page_size` |
-| `list_parties` | Find parties by company name and return their IDs | `search?`, `limit?` (default 25, maximum 50) |
+| `list_parties` | Find parties by company name, or read one by ID | `id?`, `search?`, `limit?` (default 25, maximum 50) |
+| `list_custom_field_definitions` | List the account's custom fields, their types, and enum options | `entity_type?` (`container` or `shipment`), `include_archived?: boolean` |
 | `list_tracking_requests` | List tracking requests with filters | `request_number?`, `status?` (`pending`, `created`, `failed`, or `cancelled`), `scac?`, `page?`, `page_size?` |
+| `get_tracking_request` | Get one tracking request's status, failure reason, and shipment | `id: uuid`, `include_custom_fields?: boolean` |
+| `list_documents` | Find documents such as Bills of Lading and arrival notices; rows never include extracted data or file links | `filename?`, `reference?`, `document_types?`, `sort?`, `page?`, `page_size?`, `include_types?: boolean` |
+| `get_document` | Get one document, with opt-in extracted data and source email (both labeled untrusted) and a download link returned as a `resource_link` | `id: uuid`, `include_extracted_data?: boolean`, `include_source_email?: boolean`, `include_download_url?: boolean` |
 | `search_docs` | Search the public Terminal49 documentation | `query: string`, `limit?` (1-10, default 5) |
-| `whoami` | Identify the credential, its account, and available features | none |
+| `whoami` | Identify the credential, its account, available features, and the session's toolsets | none |
 
 ### Prompts
 
@@ -352,6 +359,9 @@ The `vercel.json` configures the MCP server (excerpt):
 | `T49_API_BASE_URL` | No | Override API URL (default: `https://api.terminal49.com/v2`) |
 | `T49_MCP_ALLOWED_HOSTS` | No | Comma-separated host allowlist for request Host validation |
 | `T49_MCP_ALLOWED_ORIGINS` | No | Comma-separated origin allowlist for request Origin validation |
+| `T49_MCP_TOOLSETS` | No | Comma-separated toolsets the server allows; defaults to `core,documents,operations,trade`. An unknown name or a value made only of commas stops stdio and fails HTTP requests |
+| `T49_MCP_READ_ONLY` | No | Serves only read-only tools when set to `true` or `1`; defaults to `false` |
+| `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | Serves toolsets other than `core` and `trade` when callers share `T49_API_TOKEN`; defaults to `false` |
 | `SENTRY_DSN` | No | Enables Sentry MCP Monitoring |
 | `SENTRY_ENVIRONMENT` | No | Sentry environment name; defaults to `NODE_ENV` |
 | `SENTRY_RELEASE` | No | Sentry release identifier; defaults to `VERCEL_GIT_COMMIT_SHA` |
@@ -359,6 +369,8 @@ The `vercel.json` configures the MCP server (excerpt):
 | `SENTRY_MCP_RECORD_INPUTS` | No | Records MCP inputs in Sentry when set to `true`; defaults to `false` |
 | `SENTRY_MCP_RECORD_OUTPUTS` | No | Records MCP outputs in Sentry when set to `true`; defaults to `false` |
 | `SENTRY_SEND_DEFAULT_PII` | No | Enables Sentry default PII behavior; defaults to `false` |
+
+Clients can remove tools per request with the `X-T49-MCP-Toolsets` and `X-T49-MCP-Read-Only` headers. A header can only narrow what the env allows. See [Limit the tools](/mcp/home#limit-the-tools).
 
 ---
 

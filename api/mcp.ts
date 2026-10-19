@@ -15,10 +15,19 @@ import {
 import { toNodeHandler } from '@modelcontextprotocol/node';
 import * as Sentry from '@sentry/node';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
+import { CALL_BUDGET_MS } from '../packages/mcp/src/tools/record-writes.js';
 import { flushPostHogEvents } from '../packages/mcp/src/posthog.js';
 import { captureMcpException } from '../packages/mcp/src/sentry.js';
 import { protectedResourceMetadataUrl } from '../packages/mcp/src/resource.js';
 import { logMcpEvent } from '../packages/mcp/src/logging.js';
+import type { McpCredentialType } from '../packages/mcp/src/tools/context.js';
+import type { ToolSelection } from '../packages/mcp/src/tools/registry.js';
+import {
+  READ_ONLY_HEADER,
+  resolveToolSelection,
+  ToolSelectionRequestError,
+  TOOLSETS_HEADER,
+} from '../packages/mcp/src/toolsets.js';
 
 type RequestLike = {
   method?: string;
@@ -49,7 +58,7 @@ function setCorsHeaders(res: ResponseLike): void {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, X-Account-ID, X-T49-Credential-Type, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id',
+    `Content-Type, Authorization, X-Account-ID, X-T49-Credential-Type, ${TOOLSETS_HEADER}, ${READ_ONLY_HEADER}, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id`,
   );
 }
 
@@ -92,6 +101,7 @@ type ResolvedTerminal49Auth = {
   apiToken: string;
   accountId?: string;
   authSource: 'authorization' | 'environment' | 'workos_mcp';
+  credentialType: McpCredentialType;
 };
 
 type ConnectedClientResolutionResponse = {
@@ -174,9 +184,31 @@ class ConnectedClientResolveError extends Error {
   }
 }
 
+/** Rejects with an upstream error if `signal` aborts before `work` settles. */
+function untilDeadline<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () =>
+      reject(
+        new ConnectedClientResolveError(
+          'Terminal49 connected client resolve ran past the request deadline.',
+          'upstream',
+        ),
+      );
+    if (signal.aborted) {
+      onAbort();
+      return;
+    }
+    signal.addEventListener('abort', onAbort, { once: true });
+    work
+      .then(resolve, reject)
+      .finally(() => signal.removeEventListener('abort', onAbort));
+  });
+}
+
 async function resolveConnectedClientToken(
   token: string,
   requestId: string,
+  deadlineAt: number,
 ): Promise<{ apiToken: string; accountId: string }> {
   const resolveSecret =
     process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET?.trim() ||
@@ -188,31 +220,51 @@ async function resolveConnectedClientToken(
     );
   }
 
+  // Sign-in counts against the same deadline as the tool call, so a slow
+  // resolver cannot push the request past the function limit.
+  const deadline = new AbortController();
+  const timer = setTimeout(
+    () => deadline.abort(),
+    Math.max(deadlineAt - Date.now(), 0),
+  );
   let response: Response;
-  try {
-    response = await fetch(resolveEndpointUrl(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-T49-Connected-Clients-Resolve-Secret': resolveSecret,
-        'X-Request-Id': requestId,
-      },
-      body: JSON.stringify({ access_token: token }),
-    });
-  } catch (error) {
-    const err = asError(error);
-    throw new ConnectedClientResolveError(
-      `Terminal49 connected client resolve request failed: ${err.message}`,
-      'upstream',
-    );
-  }
-
   let payload: ConnectedClientResolutionResponse = {};
   try {
-    // SAFETY: The fields read below are optional and validated before use.
-    payload = (await response.json()) as ConnectedClientResolutionResponse;
-  } catch {
-    payload = {};
+    try {
+      response = await untilDeadline(
+        fetch(resolveEndpointUrl(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-T49-Connected-Clients-Resolve-Secret': resolveSecret,
+            'X-Request-Id': requestId,
+          },
+          body: JSON.stringify({ access_token: token }),
+          signal: deadline.signal,
+        }),
+        deadline.signal,
+      );
+    } catch (error) {
+      if (error instanceof ConnectedClientResolveError) throw error;
+      const err = asError(error);
+      throw new ConnectedClientResolveError(
+        `Terminal49 connected client resolve request failed: ${err.message}`,
+        'upstream',
+      );
+    }
+
+    try {
+      // SAFETY: The fields read below are optional and validated before use.
+      payload = (await untilDeadline(
+        response.json(),
+        deadline.signal,
+      )) as ConnectedClientResolutionResponse;
+    } catch (error) {
+      if (error instanceof ConnectedClientResolveError) throw error;
+      payload = {};
+    }
+  } finally {
+    clearTimeout(timer);
   }
 
   if (!response.ok) {
@@ -385,6 +437,8 @@ export default async function handler(
   res: ResponseLike,
 ): Promise<void> {
   const requestId = buildRequestId();
+  // vercel.json caps this function at 30s from the request, auth included.
+  const deadlineAt = Date.now() + CALL_BUDGET_MS;
   setCorsHeaders(res);
   logLifecycle('mcp.request.start', requestId, {
     method: req.method ?? 'UNKNOWN',
@@ -525,6 +579,7 @@ export default async function handler(
         credentialType === 'agent' ? `Bearer ${callerToken}` : callerToken,
       accountId: credentialType === 'agent' ? requestedAccountId : undefined,
       authSource: resolvedAuth.source ?? 'authorization',
+      credentialType: credentialType === 'agent' ? 'agent' : 'api_key',
     };
 
     // Intentional: when AuthKit is enabled, `Bearer` is reserved for WorkOS OAuth
@@ -537,11 +592,13 @@ export default async function handler(
         const resolved = await resolveConnectedClientToken(
           callerToken,
           requestId,
+          deadlineAt,
         );
         resolvedTerminal49Auth = {
           apiToken: resolved.apiToken,
           accountId: resolved.accountId,
           authSource: 'workos_mcp',
+          credentialType: 'user',
         };
       } catch (error) {
         const err = asError(error);
@@ -617,11 +674,34 @@ export default async function handler(
       resolvedTerminal49Auth = {
         apiToken: configuredApiToken,
         authSource: 'environment',
+        credentialType: 'shared_token',
       };
+    }
+
+    let toolSelection: ToolSelection;
+    try {
+      toolSelection = resolveToolSelection({
+        env: process.env,
+        credentialType: resolvedTerminal49Auth.credentialType,
+        toolsetsHeader: getHeaderValue(req.headers['x-t49-mcp-toolsets']),
+        readOnlyHeader: getHeaderValue(req.headers['x-t49-mcp-read-only']),
+      });
+    } catch (error) {
+      if (!(error instanceof ToolSelectionRequestError)) {
+        throw error;
+      }
+      res.status(400).json({ error: 'Bad Request', message: error.message });
+      logLifecycle('mcp.request.complete', requestId, {
+        reason: 'invalid_tool_selection',
+      });
+      return;
     }
 
     logLifecycle('mcp.request.auth', requestId, {
       auth_source: resolvedTerminal49Auth.authSource,
+      credential_type: resolvedTerminal49Auth.credentialType,
+      toolsets: [...toolSelection.toolsets],
+      read_only: String(toolSelection.readOnly),
     });
 
     setCorsHeaders(res);
@@ -646,6 +726,10 @@ export default async function handler(
           {
             transport: 'http',
             authSource: resolvedTerminal49Auth.authSource,
+            credentialType: resolvedTerminal49Auth.credentialType,
+            toolsets: toolSelection.toolsets,
+            readOnly: toolSelection.readOnly,
+            writeDeadlineAt: deadlineAt,
           },
         ),
       {

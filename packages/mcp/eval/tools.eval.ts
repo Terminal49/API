@@ -24,6 +24,7 @@ import {
   hasArray,
   hasNonEmptyArray,
   readString,
+  scoreFeatureNotEnabled,
   scoreResult,
   type QualitySpec,
   type QualityScore,
@@ -49,6 +50,9 @@ if (!cfg) {
     containerNumber?: string;
   } = {};
   let serverInfo: unknown;
+  // Tools the server under test lists. Cases for tools added in a PR skip
+  // when the push-time eval runs against production before they deploy.
+  let listedTools = new Set<string>();
 
   /** Call a tool, score it, record the row, and return both for assertions. */
   async function evaluate(
@@ -60,6 +64,32 @@ if (!cfg) {
     const result = await client.callTool(tool, args);
     const score = scoreResult(result, spec);
     rows.push({ tool, testCase, result, score });
+    return { result, score };
+  }
+
+  /**
+   * Like evaluate(), but a "not enabled for this account" reply from an
+   * account-gated tool is scored as the allowed outcome it is.
+   */
+  async function evaluateGated(
+    tool: string,
+    args: Record<string, unknown>,
+    spec: QualitySpec,
+    testCase = 'happy-path',
+  ): Promise<{ result: ToolResult; score: QualityScore }> {
+    const result = await client.callTool(tool, args);
+    const notEnabled =
+      !result.isError &&
+      /isn't enabled for this Terminal49 account/.test(result.rawText);
+    const score = notEnabled
+      ? scoreFeatureNotEnabled(result)
+      : scoreResult(result, spec);
+    rows.push({
+      tool,
+      testCase: notEnabled ? 'not-enabled' : testCase,
+      result,
+      score,
+    });
     return { result, score };
   }
 
@@ -81,6 +111,7 @@ if (!cfg) {
       const init = await client.initialize();
       serverInfo = init.serverInfo;
       expect(init.http).toBe(200);
+      listedTools = new Set((await client.listTools()).map((t) => t.name));
 
       // Discover real ids to feed the detail tools.
       const ships = await client.callTool('list_shipments', {
@@ -351,6 +382,81 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
+    // ---- trade intelligence ----
+    // Enabled per account. Without it the tools answer with a plain
+    // not-enabled message (not a tool error), which is a passing outcome here.
+
+    it('get_trade_data_coverage reports history from 2022 or a plain not-enabled message', async ({
+      skip,
+    }) => {
+      if (!listedTools.has('get_trade_data_coverage')) return skip();
+      const { result, score } = await evaluateGated(
+        'get_trade_data_coverage',
+        {},
+        {
+          requiredKeys: ['history_starts', 'latest_month', 'last_full_month'],
+          predicates: [
+            {
+              name: 'history starts in January 2022',
+              test: (p) => readString(p, 'history_starts') === '2022-01',
+            },
+            {
+              name: 'internal build fields are not exposed',
+              test: (p) =>
+                isRecord(p) && !('facts_hash' in p) && !('fact_rows' in p),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('search_commodities resolves a product to HS codes or explains it is not enabled', async ({
+      skip,
+    }) => {
+      if (!listedTools.has('search_commodities')) return skip();
+      const { result, score } = await evaluateGated(
+        'search_commodities',
+        { query: 'office chairs', limit: 3 },
+        {
+          requiredKeys: ['products'],
+          predicates: [
+            {
+              name: 'returns four-digit codes with common goods',
+              test: (p) =>
+                isRecord(p) &&
+                Array.isArray(p.products) &&
+                p.products.length > 0 &&
+                p.products.every(
+                  (row) =>
+                    isRecord(row) &&
+                    typeof row.hs4 === 'string' &&
+                    /^\d{4}$/.test(row.hs4) &&
+                    Array.isArray(row.common_goods),
+                ),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('get_trade_trends rejects an impossible month before calling the API', async ({
+      skip,
+    }) => {
+      if (!listedTools.has('get_trade_trends')) return skip();
+      const { result, score } = await evaluate(
+        'get_trade_trends',
+        { since: '2026-13' },
+        { expectError: true },
+        'invalid-month',
+      );
+      expect(result.isError).toBe(true);
+      expect(score.contractPass).toBe(true);
+    });
+
     // ---- search + track ----
 
     it('search_container finds the tracked container', async ({ skip }) => {
@@ -409,6 +515,221 @@ if (!cfg) {
       expect(
         isRecord(result.payload) && result.payload.tracking_request_created,
       ).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    // ---- core reads: tracking requests, numbers, locations, vessels, custom fields ----
+
+    it('whoami reports the session credential type and toolsets', async () => {
+      const { result, score } = await evaluate(
+        'whoami',
+        {},
+        {
+          requiredKeys: [
+            'account',
+            'credential_type',
+            'enabled_toolsets',
+            'write_tools_available',
+          ],
+          predicates: [
+            {
+              name: 'enabled_toolsets includes core',
+              test: (p) =>
+                isRecord(p) &&
+                Array.isArray(p.enabled_toolsets) &&
+                p.enabled_toolsets.includes('core'),
+            },
+          ],
+        },
+        'session',
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('get_tracking_request reads a request from the list', async ({
+      skip,
+    }) => {
+      const list = await client.callTool('list_tracking_requests', {
+        page_size: 1,
+      });
+      const first = listItems(list.payload)[0];
+      if (!first || typeof first.id !== 'string') return skip();
+      const id = first.id;
+      const { result, score } = await evaluate(
+        'get_tracking_request',
+        { id },
+        {
+          requiredKeys: ['id', 'status', 'shipment_id'],
+          predicates: [
+            { name: 'id round-trips', test: (p) => readString(p, 'id') === id },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('identify_tracking_number finds the tracked container without creating a request', async ({
+      skip,
+    }) => {
+      if (!fixtures.containerNumber) return skip();
+      const { result, score } = await evaluate(
+        'identify_tracking_number',
+        { number: fixtures.containerNumber },
+        {
+          predicates: [
+            {
+              name: 'already tracked, or rate limited',
+              test: (p) =>
+                isRecord(p) &&
+                (p.error === 'rate_limited' ||
+                  (isRecord(p.already_tracked) &&
+                    Array.isArray(p.already_tracked.containers) &&
+                    p.already_tracked.containers.length > 0)),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('get_location reads a port by UN/LOCODE', async () => {
+      const { result, score } = await evaluate(
+        'get_location',
+        { kind: 'port', id: 'USLAX' },
+        {
+          requiredKeys: ['kind', 'id', 'name', 'time_zone'],
+          predicates: [
+            {
+              name: 'code is USLAX',
+              test: (p) => readString(p, 'code') === 'USLAX',
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('get_vessel reads a vessel from the transport events', async ({
+      skip,
+    }) => {
+      if (!fixtures.containerId) return skip();
+      const events = await client.callTool('get_container_transport_events', {
+        id: fixtures.containerId,
+      });
+      const timeline =
+        isRecord(events.payload) && Array.isArray(events.payload.timeline)
+          ? events.payload.timeline.filter(isRecord)
+          : [];
+      const vesselId = timeline.find(
+        (event) => typeof event.vessel_id === 'string',
+      )?.vessel_id;
+      if (typeof vesselId !== 'string') return skip();
+      const { result, score } = await evaluate(
+        'get_vessel',
+        { id: vesselId },
+        {
+          predicates: [
+            {
+              name: 'vessel or an explained gate',
+              test: (p) =>
+                isRecord(p) &&
+                (readString(p, 'id') === vesselId ||
+                  p.error === 'FeatureNotEnabled'),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('list_custom_field_definitions returns definitions or explains why not', async () => {
+      const { result, score } = await evaluate(
+        'list_custom_field_definitions',
+        {},
+        {
+          requiredKeys: ['total', 'definitions'],
+          predicates: [
+            {
+              name: 'definitions, or a note',
+              test: (p) =>
+                isRecord(p) &&
+                (Array.isArray(p.definitions) ||
+                  typeof p.custom_fields_note === 'string'),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    // ---- document reads ----
+
+    it('list_documents returns compact rows or explains the gate', async () => {
+      const { result, score } = await evaluate(
+        'list_documents',
+        { page_size: 5 },
+        {
+          predicates: [
+            {
+              name: 'rows without extracted data, or an explained gate',
+              test: (p) =>
+                isRecord(p) &&
+                (p.error === 'FeatureNotEnabled' ||
+                  (Array.isArray(p.items) &&
+                    p.items.every(
+                      (row) => isRecord(row) && !('extracted_data' in row),
+                    ))),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('get_document labels extracted data untrusted and keeps the download URL out of text', async ({
+      skip,
+    }) => {
+      const list = await client.callTool('list_documents', { page_size: 1 });
+      const first = listItems(list.payload)[0];
+      if (!first || typeof first.id !== 'string') return skip();
+      const id = first.id;
+      const { result, score } = await evaluate(
+        'get_document',
+        { id, include_extracted_data: true, include_download_url: true },
+        {
+          requiredKeys: ['id', 'document_type', 'has_extracted_data'],
+          predicates: [
+            { name: 'id round-trips', test: (p) => readString(p, 'id') === id },
+            {
+              name: 'extracted data is labeled untrusted, or explained',
+              test: (p) =>
+                isRecord(p) &&
+                ((isRecord(p.extracted_data) &&
+                  p.extracted_data.trust === 'untrusted') ||
+                  typeof p.extracted_data_note === 'string'),
+            },
+            {
+              name: 'download link delivered outside the text, or explained',
+              test: (p, r) =>
+                isRecord(p) &&
+                !/https?:\/\/\S+[?&](?:X-Amz-Signature|Signature)=/i.test(
+                  r.rawText,
+                ) &&
+                ((isRecord(p.download) &&
+                  p.download.delivered_as === 'resource_link') ||
+                  typeof p.download_note === 'string'),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
       expect(score.contractPass).toBe(true);
     });
 
