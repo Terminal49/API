@@ -1660,7 +1660,7 @@ export function createTerminal49McpServer(
       {
         description:
           'Attach a party to containers or shipments in a role, replace the party in that role, or detach it, for example "set the drayage carrier to Manzo Transport on these containers" (action replace). ' +
-          'Resolve the company to a party_id with list_parties first, and the records to IDs with search_container or list_containers. Up to 50 records per call. ' +
+          'Resolve the company to a party ID and the records to container or shipment IDs first. Up to 50 records per call. ' +
           'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
           'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
         inputSchema: z.preprocess(stripLegacyIntent, setPartyRoleInputSchema),
@@ -1673,7 +1673,7 @@ export function createTerminal49McpServer(
       {
         description:
           "Set or clear one of the account's custom fields (for example a sales rep or PO number) on containers or shipments. " +
-          "Read the field's api_slug and expected values from get_container or get_shipment_details with custom_fields first; never guess the slug. Up to 50 records per call; a multi-select field takes an array of option values, and value null clears the field. " +
+          "Read the field's api_slug and expected values from the record's custom fields first; never guess the slug. Up to 50 records per call; a multi-select field takes an array of option values, and value null clears the field. " +
           'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
           'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
         inputSchema: z.preprocess(stripLegacyIntent, setCustomFieldInputSchema),

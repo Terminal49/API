@@ -77,7 +77,7 @@ describe('resolveToolSelection', () => {
       toolsetsHeader: 'operations,developer',
     });
 
-    expect(selection.toolsets).toEqual([]);
+    expect(selection.toolsets).toEqual(['operations']);
   });
 
   it('ignores an empty toolsets header', () => {

@@ -76,7 +76,7 @@ export const setPartyRoleInputSchema = z
     party_id: z
       .string()
       .uuid()
-      .describe('Party ID from list_parties. Never pass a company name.'),
+      .describe('Party ID. Never pass a company name.'),
     action: z
       .enum(['add', 'replace', 'remove'])
       .describe(
@@ -103,7 +103,7 @@ export const setCustomFieldInputSchema = z.strictObject({
     .min(1)
     .max(100)
     .describe(
-      "The custom field's api_slug from the account's custom field definitions (shown on get_container or get_shipment_details with custom_fields). Never guess it from the display name.",
+      "The custom field's api_slug from the account's custom field definitions. Never guess it from the display name.",
     ),
   value: z
     .union([
