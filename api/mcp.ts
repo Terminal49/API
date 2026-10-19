@@ -184,9 +184,31 @@ class ConnectedClientResolveError extends Error {
   }
 }
 
+/** Rejects with an upstream error if `signal` aborts before `work` settles. */
+function untilDeadline<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () =>
+      reject(
+        new ConnectedClientResolveError(
+          'Terminal49 connected client resolve ran past the request deadline.',
+          'upstream',
+        ),
+      );
+    if (signal.aborted) {
+      onAbort();
+      return;
+    }
+    signal.addEventListener('abort', onAbort, { once: true });
+    work
+      .then(resolve, reject)
+      .finally(() => signal.removeEventListener('abort', onAbort));
+  });
+}
+
 async function resolveConnectedClientToken(
   token: string,
   requestId: string,
+  deadlineAt: number,
 ): Promise<{ apiToken: string; accountId: string }> {
   const resolveSecret =
     process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET?.trim() ||
@@ -198,31 +220,51 @@ async function resolveConnectedClientToken(
     );
   }
 
+  // Sign-in counts against the same deadline as the tool call, so a slow
+  // resolver cannot push the request past the function limit.
+  const deadline = new AbortController();
+  const timer = setTimeout(
+    () => deadline.abort(),
+    Math.max(deadlineAt - Date.now(), 0),
+  );
   let response: Response;
-  try {
-    response = await fetch(resolveEndpointUrl(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-T49-Connected-Clients-Resolve-Secret': resolveSecret,
-        'X-Request-Id': requestId,
-      },
-      body: JSON.stringify({ access_token: token }),
-    });
-  } catch (error) {
-    const err = asError(error);
-    throw new ConnectedClientResolveError(
-      `Terminal49 connected client resolve request failed: ${err.message}`,
-      'upstream',
-    );
-  }
-
   let payload: ConnectedClientResolutionResponse = {};
   try {
-    // SAFETY: The fields read below are optional and validated before use.
-    payload = (await response.json()) as ConnectedClientResolutionResponse;
-  } catch {
-    payload = {};
+    try {
+      response = await untilDeadline(
+        fetch(resolveEndpointUrl(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-T49-Connected-Clients-Resolve-Secret': resolveSecret,
+            'X-Request-Id': requestId,
+          },
+          body: JSON.stringify({ access_token: token }),
+          signal: deadline.signal,
+        }),
+        deadline.signal,
+      );
+    } catch (error) {
+      if (error instanceof ConnectedClientResolveError) throw error;
+      const err = asError(error);
+      throw new ConnectedClientResolveError(
+        `Terminal49 connected client resolve request failed: ${err.message}`,
+        'upstream',
+      );
+    }
+
+    try {
+      // SAFETY: The fields read below are optional and validated before use.
+      payload = (await untilDeadline(
+        response.json(),
+        deadline.signal,
+      )) as ConnectedClientResolutionResponse;
+    } catch (error) {
+      if (error instanceof ConnectedClientResolveError) throw error;
+      payload = {};
+    }
+  } finally {
+    clearTimeout(timer);
   }
 
   if (!response.ok) {
@@ -396,7 +438,7 @@ export default async function handler(
 ): Promise<void> {
   const requestId = buildRequestId();
   // vercel.json caps this function at 30s from the request, auth included.
-  const writeDeadlineAt = Date.now() + CALL_BUDGET_MS;
+  const deadlineAt = Date.now() + CALL_BUDGET_MS;
   setCorsHeaders(res);
   logLifecycle('mcp.request.start', requestId, {
     method: req.method ?? 'UNKNOWN',
@@ -550,6 +592,7 @@ export default async function handler(
         const resolved = await resolveConnectedClientToken(
           callerToken,
           requestId,
+          deadlineAt,
         );
         resolvedTerminal49Auth = {
           apiToken: resolved.apiToken,
@@ -686,7 +729,7 @@ export default async function handler(
             credentialType: resolvedTerminal49Auth.credentialType,
             toolsets: toolSelection.toolsets,
             readOnly: toolSelection.readOnly,
-            writeDeadlineAt,
+            writeDeadlineAt: deadlineAt,
           },
         ),
       {

@@ -64,6 +64,8 @@ type Route = {
   body: unknown;
   /** Drop the connection after the request is sent. */
   reset?: boolean;
+  /** Send the headers at once and finish the body this much later. */
+  bodyDelayMs?: number;
 };
 
 interface Upstream {
@@ -90,6 +92,7 @@ function stubUpstream(route: (method: string, path: string) => Route) {
         status = 200,
         body,
         reset = false,
+        bodyDelayMs = 0,
       } = route(request.method, url.pathname);
       if (delayMs > 0) {
         await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -99,6 +102,21 @@ function stubUpstream(route: (method: string, path: string) => Route) {
           cause: Object.assign(new Error('read ECONNRESET'), {
             code: 'ECONNRESET',
           }),
+        });
+      }
+      if (bodyDelayMs > 0) {
+        const text = JSON.stringify(body);
+        const slowBody = new ReadableStream<Uint8Array>({
+          start(controller) {
+            setTimeout(() => {
+              controller.enqueue(new TextEncoder().encode(text));
+              controller.close();
+            }, bodyDelayMs);
+          },
+        });
+        return new Response(slowBody, {
+          status,
+          headers: { 'content-type': 'application/vnd.api+json' },
         });
       }
       return new Response(JSON.stringify(body), {
@@ -456,4 +474,53 @@ describe('record writes through the /mcp gateway', () => {
       ),
     ).toHaveLength(1);
   });
+
+  it.each([
+    ['answers late', { ...slowResolve, delayMs: 2 * CALL_BUDGET_MS }],
+    [
+      'sends its body late',
+      { ...slowResolve, delayMs: 0, bodyDelayMs: 2 * CALL_BUDGET_MS },
+    ],
+  ])(
+    'stops waiting at the deadline when the OAuth resolver %s',
+    async (_case, resolveRoute) => {
+      vi.useFakeTimers();
+      process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
+      process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
+      const upstream = stubUpstream((_method, path) =>
+        path === '/v2/connected-clients/resolve'
+          ? resolveRoute
+          : { status: 201, body: createdCustomField(C1, 'PO-NEW') },
+      );
+      const { default: handler } = await import('../../../api/mcp.ts');
+      const startedAt = Date.now();
+      const res = new NodeResponse();
+
+      const done = handler(
+        toolsCall('Bearer workos-access-token', 'set_custom_field', {
+          entity: 'container',
+          ids: [C1],
+          api_slug: 'po_number',
+          value: 'PO-NEW',
+        }) as any,
+        res as any,
+      );
+      await vi.advanceTimersByTimeAsync(CALL_BUDGET_MS);
+
+      expect(res.endedAt).toBeDefined();
+      expect(res.endedAt! - startedAt).toBeLessThanOrEqual(CALL_BUDGET_MS);
+      expect(res.statusCode).toBe(502);
+      expect(res.body()).toEqual({
+        error: 'Bad Gateway',
+        message:
+          'Authorization service is temporarily unavailable. Please retry.',
+      });
+      expect(
+        upstream.some((call) => call.path.startsWith('/v2/containers/')),
+      ).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(2 * CALL_BUDGET_MS);
+      await done;
+    },
+  );
 });
