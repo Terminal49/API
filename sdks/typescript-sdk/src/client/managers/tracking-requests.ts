@@ -128,12 +128,13 @@ export class TrackingRequestManager extends BaseManager {
    * Cancel a tracking request that is still `pending` or `awaiting_manifest`.
    * It moves to status `cancelled`. Any other status returns 422.
    */
-  async cancel(id: string): Promise<any> {
-    return this.transport.execute(() =>
+  async cancel(id: string, options?: CallOptions): Promise<any> {
+    const raw = await this.transport.execute(() =>
       this.transport.client.PATCH('/tracking_requests/{id}/cancel', {
         params: { path: { id } },
       }),
     );
+    return this.formatResult(raw, options?.format);
   }
 
   /** List custom field values set on a tracking request, with their definitions. */

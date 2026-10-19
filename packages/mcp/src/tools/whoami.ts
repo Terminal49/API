@@ -5,15 +5,15 @@
  * that enforces the feature.
  */
 
-import type {
-  CurrentAccount,
-  CurrentCredential,
-  Terminal49Client,
-} from '@terminal49/sdk';
+import type { CurrentAccount } from '@terminal49/sdk';
+import type { McpCredentialType, ToolContext } from './context.js';
+import type { Toolset } from './registry.js';
 
 export interface WhoamiTrackingSlots {
   limit: number;
   used: number;
+  active_containers?: number;
+  pending_tracking_requests?: number;
   remaining: number;
 }
 
@@ -55,6 +55,11 @@ export interface WhoamiResponse {
   /** Other open accounts the signed-in user can work in. Empty for API keys. */
   other_accounts: Array<{ id: string; company_name: string }>;
   features: Record<string, WhoamiFeature>;
+  /** How this MCP session signed in. */
+  credential_type: McpCredentialType;
+  enabled_toolsets: Toolset[];
+  /** False when the session serves only read-only tools. */
+  write_tools_available: boolean;
 }
 
 function location(account: CurrentAccount): string | null {
@@ -73,15 +78,31 @@ function toAccount(account: CurrentAccount): WhoamiAccount {
     scac: account.scac ?? null,
     abbr_name: account.abbrName ?? null,
     location: location(account),
-    tracking_slots: account.trackingSlots ?? null,
+    tracking_slots: trackingSlots(account),
+  };
+}
+
+// Build the object field by field so a backend addition can never fail the strict output schema.
+function trackingSlots(account: CurrentAccount): WhoamiTrackingSlots | null {
+  const slots = account.trackingSlots;
+  if (!slots) return null;
+  return {
+    limit: slots.limit,
+    used: slots.used,
+    ...(slots.activeContainers !== undefined && {
+      active_containers: slots.activeContainers,
+    }),
+    ...(slots.pendingTrackingRequests !== undefined && {
+      pending_tracking_requests: slots.pendingTrackingRequests,
+    }),
+    remaining: slots.remaining,
   };
 }
 
 export async function executeWhoami(
-  client: Terminal49Client,
+  context: ToolContext,
 ): Promise<WhoamiResponse> {
-  // SAFETY: `format: 'mapped'` makes the SDK return the result of mapCurrentCredential.
-  const me = (await client.me({ format: 'mapped' })) as CurrentCredential;
+  const me = await context.me();
 
   const user = me.user
     ? {
@@ -107,5 +128,8 @@ export async function executeWhoami(
     user,
     other_accounts: otherAccounts,
     features: me.features ?? {},
+    credential_type: context.credentialType,
+    enabled_toolsets: [...context.toolsets],
+    write_tools_available: context.writeToolsAvailable,
   };
 }

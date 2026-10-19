@@ -199,7 +199,7 @@ describe('PostHog MCP analytics', () => {
 
       expect(lastInstrumentOptions().eventProperties({})).toEqual({
         mcp_server_name: 'terminal49-mcp',
-        mcp_server_version: '1.2.0',
+        mcp_server_version: '1.2.1',
         mcp_transport: 'http',
         mcp_auth_source: 'workos_mcp',
         $groups: { account: 'acct_123' },
@@ -219,7 +219,7 @@ describe('PostHog MCP analytics', () => {
 
       expect(lastInstrumentOptions().eventProperties({})).toEqual({
         mcp_server_name: 'terminal49-mcp',
-        mcp_server_version: '1.2.0',
+        mcp_server_version: '1.2.1',
         mcp_transport: 'stdio',
       });
     });
@@ -314,6 +314,23 @@ describe('PostHog MCP analytics', () => {
       });
 
       expect(result).toBeNull();
+    });
+
+    it('redacts signed URLs from the properties it keeps', async () => {
+      const url =
+        'https://bucket.s3.amazonaws.com/a.pdf?X-Amz-Expires=3600&X-Amz-Signature=abc';
+      const result = (await redact({
+        event: '$mcp_tool_call',
+        properties: {
+          $mcp_tool_name: 'get_document',
+          $mcp_result_links: [{ uri: url }],
+        },
+      })) as { properties: Record<string, unknown> };
+
+      expect(result.properties).toEqual({
+        $mcp_tool_name: 'get_document',
+        $mcp_result_links: [{ uri: '[REDACTED_URL]' }],
+      });
     });
 
     it('leaves an event with nothing sensitive unchanged', async () => {

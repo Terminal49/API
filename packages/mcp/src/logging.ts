@@ -1,3 +1,5 @@
+import { redactSignedUrls } from './signed-urls.js';
+
 const REDACTED_VALUE = '[REDACTED]';
 
 const SENSITIVE_KEYS = new Set([
@@ -65,12 +67,16 @@ function sanitizeValue(value: unknown): unknown {
     return sanitizeMcpLogEvent(value as Record<string, unknown>);
   }
 
+  if (typeof value === 'string') {
+    return redactSignedUrls(value);
+  }
+
   return value;
 }
 
 /**
- * Removes customer identifiers, request inputs, credentials, and upstream
- * messages before an operational MCP event is serialized to stderr.
+ * Removes customer identifiers, request inputs, credentials, signed URLs,
+ * and upstream messages before an operational MCP event is serialized to stderr.
  */
 export function sanitizeMcpLogEvent(
   event: Record<string, unknown>,

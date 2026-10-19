@@ -31,7 +31,7 @@ function normalizeText(value: string | undefined): string | undefined {
   return text.toUpperCase();
 }
 
-function normalizeTrackingNumber(value: string): string {
+export function normalizeTrackingNumber(value: string): string {
   return value.trim().replace(/\s+/g, '').toUpperCase();
 }
 
@@ -326,7 +326,7 @@ type ExistingTracking =
  * new request for the same number while one is in either status. Search never
  * returns `created` requests, so a succeeded request surfaces as its container.
  */
-const IN_PROGRESS_REQUEST_STATUSES: ReadonlySet<string> = new Set([
+export const IN_PROGRESS_REQUEST_STATUSES: ReadonlySet<string> = new Set([
   'pending',
   'awaiting_manifest',
 ]);
