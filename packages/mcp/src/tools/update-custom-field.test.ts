@@ -560,6 +560,42 @@ describe('update_custom_field', () => {
     expect(result).toMatchObject({ status: 'noop', record: RECORD });
   });
 
+  it('accepts the same token again after Terminal49 rejects the value with 422', async () => {
+    const stored = storedCustomFields(CF_CONTAINER_PATH, { po_number: 'PO-1' });
+    const patchRoute = `PATCH ${CF_CONTAINER_PATH}/custom_fields/po_number`;
+    const save = stored.routes[patchRoute];
+    let reject = true;
+    const { client } = fakeApiClient({
+      ...stored.routes,
+      [patchRoute]: (request) => {
+        if (reject) {
+          reject = false;
+          return { status: 422 };
+        }
+        return typeof save === 'function' ? save(request) : save;
+      },
+    });
+    const context = writeContext(client);
+    const token = tokenOf(
+      await executeUpdateCustomField(overwrite('PO-2'), client, context),
+    );
+
+    const first = await executeUpdateCustomField(
+      overwrite('PO-2', token),
+      client,
+      context,
+    );
+    const retry = await executeUpdateCustomField(
+      overwrite('PO-2', token),
+      client,
+      context,
+    );
+
+    expect(first).toMatchObject({ status: 'noop' });
+    expect(retry).toMatchObject({ status: 'updated', value: 'PO-2' });
+    expect(stored.values.get('po_number')).toBe('PO-2');
+  });
+
   it('returns credential_not_supported when Terminal49 refuses an API key', async () => {
     const { client, requests } = fakeApiClient({
       'GET /accounts/current/custom_field_definitions': { status: 401 },
