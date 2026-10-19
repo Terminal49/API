@@ -191,31 +191,6 @@ export const TOOL_REGISTRY = [
     },
   },
   {
-    name: 'assign_party',
-    title: 'Assign Party',
-    toolset: 'operations',
-    tier: 'A',
-    annotations: {
-      readOnlyHint: false,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: false,
-    },
-  },
-  {
-    name: 'unassign_party',
-    title: 'Unassign Party',
-    toolset: 'operations',
-    tier: 'C',
-    confirms: 'always',
-    annotations: {
-      readOnlyHint: false,
-      destructiveHint: true,
-      idempotentHint: true,
-      openWorldHint: false,
-    },
-  },
-  {
     name: 'search_docs',
     title: 'Search Terminal49 Docs',
     toolset: 'core',

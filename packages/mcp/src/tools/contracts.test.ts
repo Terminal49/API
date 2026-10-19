@@ -6,7 +6,6 @@ import {
 } from '@terminal49/sdk';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { executeAddReferenceNumbers } from './add-reference-numbers.js';
-import { executeAssignParty } from './assign-party.js';
 import { executeCancelTrackingRequest } from './cancel-tracking-request.js';
 import { auditEvents, tokenOf, writeContext } from '../test/write-context.js';
 import { executeGetContainer } from './get-container.js';
@@ -21,7 +20,6 @@ import { executeResumeShipmentTracking } from './resume-shipment-tracking.js';
 import { executeSearchContainer } from './search-container.js';
 import { executeStopShipmentTracking } from './stop-shipment-tracking.js';
 import { executeTrackContainer } from './track-container.js';
-import { executeUnassignParty } from './unassign-party.js';
 import { buildListContract } from '../server.js';
 import { EXPECTED_ROUTE_SUMMARY, routeFixture } from '../test/route-fixture.js';
 
@@ -2073,91 +2071,6 @@ describe('MCP write tool contracts', () => {
       removed: ['PO-2'],
       ref_numbers: ['PO-1'],
       undo: 'add_reference_numbers',
-    });
-  });
-
-  it('assign_party calls shipments.addPartyRole with the role and party', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const addPartyRole = vi.fn().mockResolvedValue({
-      data: {
-        id: ROLE_ID,
-        type: 'party_role',
-        attributes: { role: 'customer' },
-      },
-    });
-    const client = asClient({
-      parties: {
-        get: vi.fn().mockResolvedValue({
-          data: { id: PARTY_ID, attributes: { company_name: 'Acme' } },
-        }),
-      },
-      shipments: {
-        partyRoles: vi.fn().mockResolvedValue(rawPartyRoles([])),
-        addPartyRole,
-      },
-    });
-
-    const result = await executeAssignParty(
-      {
-        entity_type: 'shipment',
-        entity_id: SHIPMENT_ID,
-        role: 'customer',
-        party_id: PARTY_ID,
-      },
-      client,
-      writeContext(client),
-    );
-
-    expect(addPartyRole).toHaveBeenCalledWith(
-      SHIPMENT_ID,
-      { role: 'customer', partyId: PARTY_ID },
-      { format: 'raw' },
-    );
-    expect(result).toMatchObject({
-      status: 'assigned',
-      party_role: { id: ROLE_ID, role: 'customer', party_id: PARTY_ID },
-      undo: 'unassign_party',
-    });
-  });
-
-  it('unassign_party previews, then calls shipments.removePartyRole with the token', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const removePartyRole = vi.fn().mockResolvedValue({});
-    const client = asClient({
-      shipments: {
-        partyRoles: vi
-          .fn()
-          .mockResolvedValue(
-            rawPartyRoles([{ id: ROLE_ID, role: 'customer' }]),
-          ),
-        removePartyRole,
-      },
-    });
-    const args = {
-      entity_type: 'shipment' as const,
-      entity_id: SHIPMENT_ID,
-      party_role_id: ROLE_ID,
-    };
-
-    const preview = await executeUnassignParty(
-      args,
-      client,
-      writeContext(client),
-    );
-    expect(removePartyRole).not.toHaveBeenCalled();
-    const result = await executeUnassignParty(
-      { ...args, confirmation_token: tokenOf(preview) },
-      client,
-      writeContext(client),
-    );
-
-    expect(removePartyRole).toHaveBeenCalledWith(SHIPMENT_ID, ROLE_ID, {
-      format: 'raw',
-    });
-    expect(result).toMatchObject({
-      status: 'unassigned',
-      party_role: { id: ROLE_ID, party_name: 'Acme' },
-      undo: 'assign_party',
     });
   });
 });

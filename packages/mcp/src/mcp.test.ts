@@ -459,17 +459,6 @@ describe('MCP server wiring', () => {
         entity_id: id,
         remove: ['PO-1'],
       },
-      assign_party: {
-        entity_type: 'shipment',
-        entity_id: id,
-        role: 'customer',
-        party_id: id,
-      },
-      unassign_party: {
-        entity_type: 'shipment',
-        entity_id: id,
-        party_role_id: id,
-      },
       set_party_role: {
         container_ids: [id],
         role: 'pickup_dray_carrier',

@@ -444,8 +444,6 @@ describe('MCP protocol compatibility', () => {
             'cancel_tracking_request',
             'add_reference_numbers',
             'remove_reference_numbers',
-            'assign_party',
-            'unassign_party',
           ].includes(tool.name),
           destructiveHint: [
             'set_party_role',
@@ -453,7 +451,6 @@ describe('MCP protocol compatibility', () => {
             'stop_shipment_tracking',
             'cancel_tracking_request',
             'remove_reference_numbers',
-            'unassign_party',
           ].includes(tool.name),
           openWorldHint: tool.name === 'search_docs',
         });

@@ -155,7 +155,6 @@ describe('MCP tool annotations', () => {
 
     expect(writes.sort()).toEqual([
       'add_reference_numbers',
-      'assign_party',
       'cancel_tracking_request',
       'remove_reference_numbers',
       'resume_shipment_tracking',
@@ -163,7 +162,6 @@ describe('MCP tool annotations', () => {
       'set_party_role',
       'stop_shipment_tracking',
       'track_container',
-      'unassign_party',
     ]);
     expect(destructiveTools.sort()).toEqual([
       'cancel_tracking_request',
@@ -171,7 +169,6 @@ describe('MCP tool annotations', () => {
       'set_custom_field',
       'set_party_role',
       'stop_shipment_tracking',
-      'unassign_party',
     ]);
   });
 

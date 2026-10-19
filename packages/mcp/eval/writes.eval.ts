@@ -43,7 +43,6 @@ if (!enableWrite || !sandboxToken) {
   });
   let served: string[] = [];
   let shipmentId: string | undefined;
-  let partyId: string | undefined;
 
   /** Previews a tier C call, then confirms it with the token it returned. */
   const confirmed = async (tool: string, args: Record<string, unknown>) => {
@@ -63,17 +62,6 @@ if (!enableWrite || !sandboxToken) {
       expect(init.http).toBe(200);
       served = (await client.listTools()).map((tool) => tool.name);
       if (!served.includes('stop_shipment_tracking')) return;
-
-      const parties = structured(
-        await client.callTool('list_parties', { limit: 1 }),
-      );
-      const firstParty = Array.isArray(parties.parties)
-        ? parties.parties.find(isRecord)
-        : undefined;
-      partyId =
-        firstParty && typeof firstParty.id === 'string'
-          ? firstParty.id
-          : undefined;
 
       // Takes the first shipment. The case skips if it is already stopped.
       const shipments = await client.callTool('list_shipments', {
@@ -196,40 +184,6 @@ if (!enableWrite || !sandboxToken) {
             remove: [refNumber],
           });
         }
-      }
-    });
-
-    it('assigns a party, then unassigns it with a confirmed preview', async ({
-      skip,
-    }) => {
-      if (!served.includes('assign_party') || !shipmentId || !partyId) {
-        return skip();
-      }
-      const target = { entity_type: 'shipment', entity_id: shipmentId };
-
-      const assigned = structured(
-        await client.callTool('assign_party', {
-          ...target,
-          role: 'notify_party',
-          party_id: partyId,
-        }),
-      );
-      // Never remove a role this run did not create.
-      if (assigned.status === 'already_present') return skip();
-      expect(assigned.status).toBe('assigned');
-      const role = isRecord(assigned.party_role) ? assigned.party_role : {};
-      const unassign = () =>
-        confirmed('unassign_party', { ...target, party_role_id: role.id });
-
-      let needsUnassign = true;
-      try {
-        expect(typeof role.id).toBe('string');
-        const unassigned = await unassign();
-        if (unassigned.status === 'unassigned') needsUnassign = false;
-        expect(unassigned.status).toBe('unassigned');
-        expect(unassigned.undo).toBe('assign_party');
-      } finally {
-        if (needsUnassign && typeof role.id === 'string') await unassign();
       }
     });
   });

@@ -406,7 +406,6 @@ export const AUDIT_ENTITY_TYPES = [
   'shipment',
   'tracking_request',
   'document',
-  'party',
 ] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
@@ -597,17 +596,6 @@ export async function runWrite<Result>(
   } catch (error) {
     return failedWrite(error, (outcome) => audit('execute', outcome));
   }
-}
-
-/**
- * Audits a record a tier A write created on the way to its own change, as a
- * separate event, so the record stays traceable whatever the write's outcome.
- */
-export async function auditCreatedRecord(
-  context: ToolContext,
-  target: WriteTarget,
-): Promise<void> {
-  await auditor(context, target, 'A')('execute', 'created');
 }
 
 /**

@@ -111,16 +111,6 @@ import {
   removeReferenceNumbersOutputSchema,
 } from './tools/remove-reference-numbers.js';
 import {
-  assignPartyInputSchema,
-  assignPartyOutputSchema,
-  executeAssignParty,
-} from './tools/assign-party.js';
-import {
-  executeUnassignParty,
-  unassignPartyInputSchema,
-  unassignPartyOutputSchema,
-} from './tools/unassign-party.js';
-import {
   cancelTrackingRequestInputSchema,
   cancelTrackingRequestOutputSchema,
   executeCancelTrackingRequest,
@@ -1124,9 +1114,6 @@ function formatToolError(
         return `No tracking request found with id ${typeof input.tracking_request_id === 'string' ? input.tracking_request_id : '(missing)'}.`;
       case 'add_reference_numbers':
       case 'remove_reference_numbers':
-      case 'assign_party':
-      case 'unassign_party':
-        return `No ${entityLabel(input.entity_type)} found with id ${typeof input.entity_id === 'string' ? input.entity_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
       default:
@@ -1954,32 +1941,6 @@ export function createTerminal49McpServer(
       },
       async (args, context) =>
         executeRemoveReferenceNumbers(args, client, context),
-    ),
-    assign_party: tool(
-      {
-        description:
-          'Link a party (a company such as a customer, shipper, or dray carrier) to a container or shipment in a role. A container accepts only pickup_dray_carrier; assign other roles on its shipment. ' +
-          'Pass party_id, or party_name to match one party exactly, ignoring case and punctuation. A party is created only with create_party_if_missing, and only when no party has that name. ' +
-          'Returns assigned with the new party_role, already_present when the party already has this role on the record, or party_not_found or ambiguous_party with candidates. ' +
-          'party_lookup_incomplete means the account has too many parties to match the name safely; ask the user for the party and pass party_id. ' +
-          'When the tool created a party but could not link it, the result has party_created true and created_party. ' +
-          'other_parties_in_role lists other parties that hold the same role.',
-        inputSchema: assignPartyInputSchema,
-        outputSchema: assignPartyOutputSchema,
-      },
-      async (args, context) => executeAssignParty(args, client, context),
-    ),
-    unassign_party: tool(
-      {
-        description:
-          'Remove one party role, such as a wrong customer or dray carrier, from a container or shipment. Only the link is removed; the party and its other assignments stay. ' +
-          'Pass the party_role_id from the record party_roles list. To replace a party, unassign the old one, then call assign_party for the new one. ' +
-          'The preview shows the role and the party. ' +
-          'Returns unassigned, or not_assigned with the current party_roles when the record has no role with that id.',
-        inputSchema: unassignPartyInputSchema,
-        outputSchema: unassignPartyOutputSchema,
-      },
-      async (args, context) => executeUnassignParty(args, client, context),
     ),
     search_docs: tool(
       {

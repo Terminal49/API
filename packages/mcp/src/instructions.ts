@@ -28,10 +28,6 @@ const WRITE_EFFECTS = {
     'adds reference numbers to a container, shipment or tracking request and keeps the ones already there',
   remove_reference_numbers:
     'removes reference numbers from a container, shipment or tracking request',
-  assign_party:
-    'links a party such as a customer or dray carrier to a container or shipment in a role',
-  unassign_party:
-    'removes one party role from a container or shipment and keeps the party',
   set_party_role:
     'attaches, replaces or detaches a party (such as the drayage carrier) on up to 50 containers or shipments',
   set_custom_field:
@@ -97,9 +93,6 @@ const PARAGRAPHS: readonly Paragraph[] = [
       },
       {
         text: ' Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties.',
-      },
-      {
-        text: " Before unassign_party, read the record's party roles with get_container include ['party_roles'] or get_shipment_details include_party_roles to get the party_role_id.",
       },
       {
         text: ' Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.',

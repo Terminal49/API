@@ -188,30 +188,6 @@
         "destructive_justification": "Removes the named reference numbers from the record. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview."
       }
     },
-    "assign_party": {
-      "annotations": {
-        "readOnlyHint": false,
-        "openWorldHint": false,
-        "destructiveHint": false
-      },
-      "justifications": {
-        "read_only_justification": "Links a party, such as a customer or dray carrier, to one container or shipment in the user's Terminal49 account, and can create the party when the user names one that does not exist.",
-        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
-        "destructive_justification": "Adds one party role and keeps the parties already on the record. unassign_party undoes the change."
-      }
-    },
-    "unassign_party": {
-      "annotations": {
-        "readOnlyHint": false,
-        "openWorldHint": false,
-        "destructiveHint": true
-      },
-      "justifications": {
-        "read_only_justification": "Removes one party role from a container or shipment in the user's Terminal49 account.",
-        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
-        "destructive_justification": "Removes the link between the party and the record and keeps the party itself. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview."
-      }
-    },
     "search_docs": {
       "annotations": {
         "readOnlyHint": true,

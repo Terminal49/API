@@ -106,14 +106,6 @@
       "implementation": "packages/mcp/src/tools/remove-reference-numbers.ts"
     },
     {
-      "name": "assign_party",
-      "implementation": "packages/mcp/src/tools/assign-party.ts"
-    },
-    {
-      "name": "unassign_party",
-      "implementation": "packages/mcp/src/tools/unassign-party.ts"
-    },
-    {
       "name": "search_docs",
       "implementation": "packages/mcp/src/tools/search-docs.ts"
     },
