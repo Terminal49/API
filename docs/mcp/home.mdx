@@ -676,7 +676,7 @@ Attach a party to containers or shipments in a role, replace the party in that r
 - `party_id` *(string)* - the party's ID.
 - `action` *(string)* - `add`, `replace`, or `remove`. `add` attaches the party beside any others in the role. A record holds one `pickup_dray_carrier` and one `customer`, so `add` fails on a record where a different party already holds one of those; use `replace` to swap it. `replace` makes the party the only one in the role and detaches the rest. It does not replace a shipment's `customer`: remove the current customer, then add the new one. `remove` detaches the party.
 
-Returns the records that changed, those that already matched, and any that failed. A call stops after about 20 seconds; on the hosted server that time starts when the request arrives, so checking your credentials counts toward it. Records it had not started saving by then are listed in `not_attempted`, unchanged, so you can call again with them. A record that was still being saved when time ran out is listed in `failed`; check it before you call again.
+Returns the records that changed, those that already matched, and any that failed. A call stops after about 20 seconds; on the hosted server that time starts when the request arrives, so checking your credentials counts toward it. Records it had not started saving by then are listed in `not_attempted`, unchanged, so you can call again with them. A record that was still being saved when time ran out is listed in `failed`, and so is a save that failed without a clear answer from Terminal49, such as a dropped connection. The change may have been applied to these records, so check them before you call again.
 
 **Good for**
 
@@ -695,7 +695,7 @@ Set or clear one of your account's custom fields on containers or shipments.
 - `api_slug` *(string)* - the custom field's API slug.
 - `value` *(string, number, boolean, array of strings, or null)* - the new value; pass an array of option values for a multi-select field, and `null` to clear the field.
 
-Returns the records that changed, those that already matched, and any that failed. A call stops after about 20 seconds; on the hosted server that time starts when the request arrives, so checking your credentials counts toward it. Records it had not started saving by then are listed in `not_attempted`, unchanged, so you can call again with them. A record that was still being saved when time ran out is listed in `failed`; check it before you call again.
+Returns the records that changed, those that already matched, and any that failed. A call stops after about 20 seconds; on the hosted server that time starts when the request arrives, so checking your credentials counts toward it. Records it had not started saving by then are listed in `not_attempted`, unchanged, so you can call again with them. A record that was still being saved when time ran out is listed in `failed`, and so is a save that failed without a clear answer from Terminal49, such as a dropped connection. The change may have been applied to these records, so check them before you call again.
 
 **Good for**
 
