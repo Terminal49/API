@@ -774,8 +774,12 @@ for (const option of ['incremental', 'composite']) {
   });
 }
 
+const forwardingRegistrar =
+  'server.registerTool(definition.name, spec, wrapTool(definition.name, handler));';
+
 const registryServer = ({
   handlers = '  tool_a: tool({}, async () => executeA()),',
+  registrar = forwardingRegistrar,
   dispatch = 'for (const definition of selected) {\n  tools[definition.name](definition);\n}',
   extra = '',
 } = {}) => `
@@ -784,7 +788,7 @@ import { executeB } from './tools/tool-b.js';
 const tool =
   (spec, handler) =>
   (definition) => {
-    server.registerTool(definition.name, spec, wrapTool(definition.name, handler));
+    ${registrar}
   };
 const tools = {
 ${handlers}
@@ -793,9 +797,23 @@ ${dispatch}
 ${extra}
 `;
 
+const readToolHelper = `function readTool(name, title, toolset = 'core') {
+  return {
+    name,
+    title,
+    toolset,
+    tier: 'read',
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+  };
+}`;
+
 function createRegistryRepository(
   t,
-  { registry = "readTool('tool_a', 'Tool A')", server = registryServer() } = {},
+  {
+    registry = "readTool('tool_a', 'Tool A')",
+    readTool = readToolHelper,
+    server = registryServer(),
+  } = {},
 ) {
   const repository = createGuardRepository(t);
   mkdirSync(join(repository, 'packages/mcp/src/tools'));
@@ -810,7 +828,7 @@ function createRegistryRepository(
   }
   writeFileSync(
     join(repository, 'packages/mcp/src/tools/registry.ts'),
-    `export const TOOL_REGISTRY = [\n  ${registry},\n] as const satisfies readonly ToolDefinition[];`,
+    `export const TOOL_REGISTRY = [\n  ${registry},\n] as const satisfies readonly ToolDefinition[];\n${readTool}\n`,
   );
   writeFileSync(join(repository, 'packages/mcp/src/server.ts'), server);
   writeJson(repository, 'skills/agent-trust/feature-map.json', {
@@ -936,3 +954,153 @@ for (const [form, server, message] of [
     assert.match(result.stderr, message);
   });
 }
+
+function mapTools(repository, tools) {
+  writeJson(repository, 'skills/agent-trust/feature-map.json', {
+    mcpTools: Object.entries(tools).map(([name, file]) => ({
+      name,
+      implementation: `packages/mcp/src/tools/${file}`,
+    })),
+    sdkEntrypoints: [],
+    docsRoutes: [],
+  });
+}
+
+for (const [placement, server] of [
+  [
+    'after',
+    registryServer({
+      extra: "server.registerTool('extra', {}, () => executeB());",
+    }),
+  ],
+  [
+    'before',
+    `server.registerTool('extra', {}, () => executeB());\n${registryServer()}`,
+  ],
+]) {
+  test(`rejects a literal registration ${placement} the registry registrar`, (t) => {
+    const repository = createRegistryRepository(t, { server });
+    mapTools(repository, { tool_a: 'tool-a.ts', extra: 'tool-b.ts' });
+    const result = runGuard(repository);
+    assert.equal(result.status, 1, result.stdout);
+    assert.match(
+      result.stderr,
+      /MCP tool extra at packages\/mcp\/src\/server\.ts:\d+ bypasses TOOL_REGISTRY; register every tool through the registry handler map/,
+    );
+  });
+}
+
+for (const [form, options] of [
+  [
+    'a call to a helper other than readTool',
+    { registry: "otherTool('tool_a', 'Tool A')" },
+  ],
+  [
+    'a computed property that can replace the name',
+    {
+      registry: "{ ['na' + 'me']: 'tool_x', name: 'tool_a', title: 'Tool A' }",
+    },
+  ],
+  ['a shorthand name property', { registry: "{ name, title: 'Tool A' }" }],
+]) {
+  test(`rejects a registry entry using ${form}`, (t) => {
+    const result = runGuard(createRegistryRepository(t, options));
+    assert.equal(result.status, 1, result.stdout);
+    assert.match(
+      result.stderr,
+      /Unsupported MCP tool registry entry at packages\/mcp\/src\/tools\/registry\.ts:2;/,
+    );
+  });
+}
+
+for (const [form, readTool] of [
+  [
+    'returns a name other than its first argument',
+    "function readTool(name, title) {\n  return { name: 'tool_x', title };\n}",
+  ],
+  [
+    'lets a later property replace the name',
+    'function readTool(name, title, extra) {\n  return { name, title, ...extra };\n}',
+  ],
+  [
+    'lets a computed property replace the name',
+    "function readTool(name, title) {\n  return { name, title, ['na' + 'me']: 'tool_x' };\n}",
+  ],
+  ['is missing', ''],
+]) {
+  test(`rejects a readTool helper that ${form}`, (t) => {
+    const result = runGuard(createRegistryRepository(t, { readTool }));
+    assert.equal(result.status, 1, result.stdout);
+    assert.match(
+      result.stderr,
+      /packages\/mcp\/src\/tools\/registry\.ts must declare function readTool\(name, \.\.\.\) once, returning an object literal whose only name property is name/,
+    );
+  });
+}
+
+for (const [form, registrar] of [
+  [
+    'replaces the handler',
+    'server.registerTool(definition.name, spec, wrapTool(definition.name, () => executeB()));',
+  ],
+  [
+    'calls an implementation besides the handler',
+    'server.registerTool(definition.name, spec, wrapTool(definition.name, pick(handler, () => executeB())));',
+  ],
+  [
+    'only conditionally uses the handler',
+    'server.registerTool(definition.name, spec, wrapTool(definition.name, handler ? other : handler));',
+  ],
+  [
+    'uses the handler outside the registered callback',
+    'void handler;\n    server.registerTool(definition.name, spec, wrapTool(definition.name, other));',
+  ],
+  ['registers no callback', 'server.registerTool(definition.name, spec);'],
+]) {
+  test(`rejects a registrar that ${form}`, (t) => {
+    const result = runGuard(
+      createRegistryRepository(t, { server: registryServer({ registrar }) }),
+    );
+    assert.equal(result.status, 1, result.stdout);
+    assert.match(
+      result.stderr,
+      /MCP tool registrar tool at packages\/mcp\/src\/server\.ts:\d+ must pass its handler parameter, and no tool implementation, to registerTool's callback/,
+    );
+  });
+}
+
+for (const [form, dispatch] of [
+  ['no dispatch', ''],
+  [
+    'a dispatch outside a for...of loop over the definition',
+    'const definition = selected[0];\ntools[definition.name](definition);',
+  ],
+]) {
+  test(`rejects a handler map with ${form}`, (t) => {
+    const result = runGuard(
+      createRegistryRepository(t, { server: registryServer({ dispatch }) }),
+    );
+    assert.equal(result.status, 1, result.stdout);
+    assert.match(
+      result.stderr,
+      /MCP handler map tools must be dispatched as for \(const definition of \.\.\.\) tools\[definition\.name\]\(definition\)/,
+    );
+  });
+}
+
+test('accepts a registrar that builds the tool context from ./tools/context', (t) => {
+  const repository = createRegistryRepository(t, {
+    server: `import { createToolContext } from './tools/context.js';\n${registryServer(
+      {
+        registrar:
+          'server.registerTool(definition.name, spec, wrapTool(definition.name, (args) => handler(args, createToolContext(client))));',
+      },
+    )}`,
+  });
+  writeFileSync(
+    join(repository, 'packages/mcp/src/tools/context.ts'),
+    'export function createToolContext() {}',
+  );
+  const result = runGuard(repository);
+  assert.equal(result.status, 0, result.stderr);
+});
