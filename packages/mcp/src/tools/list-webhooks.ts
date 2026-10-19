@@ -80,7 +80,7 @@ export const listWebhooksOutputSchema = listWebhooksSchema.partial().extend({
 export type ListWebhooksResult = z.infer<typeof listWebhooksSchema>;
 
 const rawListSchema = z.object({
-  data: z.array(z.unknown()).catch([]),
+  data: z.array(z.unknown()),
   links: z.record(z.string(), z.unknown()).catch({}),
   meta: z.record(z.string(), z.unknown()).catch({}),
 });
@@ -152,7 +152,7 @@ export async function executeListWebhooks(
   if (input.webhook_id) {
     result = { webhooks: [toWebhookSummary(rawSingleSchema.parse(raw).data)] };
   } else {
-    const list = rawListSchema.parse(raw ?? {});
+    const list = rawListSchema.parse(raw);
     result = {
       webhooks: toRows(list.data),
       links: stringLinks(list.links),

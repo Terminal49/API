@@ -74,6 +74,22 @@ describe('list_webhook_notifications', () => {
     expect(requests[0]?.query.get('page[size]')).toBe('10');
   });
 
+  it.each([
+    ['no data', { meta: { total: 0 } }],
+    ['data that is not a list', { data: { id: NOTIFICATION_ID } }],
+  ])(
+    'fails instead of reporting no notifications for a list with %s',
+    async (_case, body) => {
+      const { client } = fakeApiClient({
+        'GET /webhook_notifications': { body },
+      });
+
+      await expect(
+        executeListWebhookNotifications({}, client),
+      ).rejects.toThrow();
+    },
+  );
+
   it('reads a notification with no relationships as null links', async () => {
     const { client } = fakeApiClient({
       'GET /webhook_notifications': {
