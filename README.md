@@ -87,4 +87,8 @@ Use conventional commit prefixes (`docs:`, `feat:`, `fix:`, `chore:`), and keep 
 
 This is a public repository. Never commit API keys, secrets, or customer data. Use placeholders such as `Token YOUR_API_KEY` in examples.
 
-To report a security issue, email [support@terminal49.com](mailto:support@terminal49.com).
+To report a security issue privately, see [SECURITY.md](SECURITY.md).
+
+## License
+
+Copyright (c) 2026 Terminal49, Inc. Released under the [MIT License](LICENSE). The license does not grant rights to the Terminal49 name or logos.
