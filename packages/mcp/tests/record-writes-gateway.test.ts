@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 import {
   afterEach,
+  beforeAll,
   beforeEach,
   describe,
   expect,
@@ -235,6 +236,14 @@ describe('record writes through the /mcp gateway', () => {
     'T49_MCP_ALLOWED_ORIGINS',
   ];
   let savedEnv: Record<string, string | undefined> = {};
+
+  // The first import transforms the whole gateway and server graph, which can
+  // take more than the 5s test timeout when every package runs its tests at
+  // once. Each test still re-imports the handler after vi.resetModules(), but
+  // from the warm transform cache.
+  beforeAll(async () => {
+    await import('../../../api/mcp.ts');
+  }, 60_000);
 
   beforeEach(() => {
     vi.resetModules();
