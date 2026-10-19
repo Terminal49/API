@@ -7,6 +7,7 @@ import {
   vi,
 } from 'vite-plus/test';
 import { fakeApiClient } from '../test/fake-api.js';
+import { executeAddReferenceNumbers } from './add-reference-numbers.js';
 import {
   REF_CONTAINER_ID,
   refContainer,
@@ -167,6 +168,44 @@ describe('remove_reference_numbers', () => {
     });
     expect(result).not.toHaveProperty('undo');
     expect(stored.current()).toEqual(['PO-2']);
+  });
+
+  it('refuses a token replayed after add_reference_numbers restored the list', async () => {
+    const stored = storedRefNumbers(['PO-1', 'PO-2']);
+    const { client, requests } = fakeApiClient({
+      [`GET ${PATH}`]: stored.get,
+      [`PATCH ${PATH}`]: stored.patch,
+    });
+    const context = writeContext(client);
+    const preview = await executeRemoveReferenceNumbers(
+      args(['PO-2']),
+      client,
+      context,
+    );
+    await executeRemoveReferenceNumbers(
+      args(['PO-2'], tokenOf(preview)),
+      client,
+      context,
+    );
+    await executeAddReferenceNumbers(
+      { entity_type: 'container', entity_id: CONTAINER_ID, add: ['PO-2'] },
+      client,
+      context,
+    );
+
+    const replay = await executeRemoveReferenceNumbers(
+      args(['PO-2'], tokenOf(preview)),
+      client,
+      context,
+    );
+
+    expect(replay).toMatchObject({
+      error: 'invalid_confirmation',
+      reason: 'used',
+    });
+    expect(
+      requests.filter((request) => request.method === 'PATCH'),
+    ).toHaveLength(2);
   });
 
   it('returns stale_preview and writes nothing when the list changed', async () => {
