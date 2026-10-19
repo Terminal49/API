@@ -82,7 +82,7 @@ could create a real tracking request.
 sandbox account. It runs only when `MCP_EVAL_ENABLE_WRITE=1` and
 `MCP_EVAL_SANDBOX_TOKEN` are both set, and it uses that token, never
 `MCP_EVAL_TOKEN`. Each case except the document case is a round trip that
-leaves the record as it found it:
+leaves the record as it found it. The document case only previews. The cases:
 
 - stop a shipment with a confirmed preview, then resume it;
 - refuse a stop with an edited confirmation token;
@@ -97,13 +97,14 @@ leaves the record as it found it:
   unset. That token is short-lived, so set it just before the run. Before it
   writes, the case calls `whoami` with both credentials and fails when the
   bearer's account is not the `MCP_EVAL_SANDBOX_TOKEN` account.
-- relink the first document, and preview a `reextract` with `update_document`
-  without confirming it. This case is not a round trip. A relink repeats
-  Terminal49's matching and can add shipment or container links, and nothing
-  removes them. A document fix cannot be undone exactly, so the case never
-  confirms one. It depends on the `documents_write` toolset, not
-  `operations`. It skips when the gateway does not list those tools or the
-  account has no document.
+- preview a `reextract` of the first document with `update_document`, without
+  confirming it, so it changes nothing. A document fix cannot be undone
+  exactly, so the case never confirms one. `relink_document` has no live case,
+  because a relink repeats Terminal49's matching and can add shipment or
+  container links that nothing removes; its fixture tests cover it. The case
+  depends on the `documents_write` toolset, not `operations`. It skips when
+  the gateway does not list `update_document` or the account has no
+  document.
 
 Every other case skips when the gateway does not list the write tools, which
 happens when its toolsets leave out `operations`, or when the sandbox account
