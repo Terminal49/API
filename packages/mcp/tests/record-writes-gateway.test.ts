@@ -9,6 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 import { CALL_BUDGET_MS } from '../src/tools/record-writes.js';
+import { TEST_CONFIRMATION_SECRET } from '../src/test/write-context.js';
 
 const C1 = '11111111-1111-4111-8111-111111111111';
 const C2 = '22222222-2222-4222-8222-222222222222';
@@ -17,39 +18,17 @@ const C4 = '44444444-4444-4444-8444-444444444444';
 const C5 = '55555555-5555-4555-8555-555555555555';
 const C6 = '66666666-6666-4666-8666-666666666666';
 const ACCOUNT = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-const DEFINITION = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 const PARTY = '99999999-9999-4999-8999-999999999999';
 const TIMED_OUT_MID_WRITE =
   'Ran out of time while saving. The change may or may not have been applied; check this record before calling again.';
 
-// GET /containers/{id}/custom_fields?include=definition, shaped like the
-// custom_field and custom_field_definition schemas in docs/openapi.json.
-const customFieldsDoc = (containerId: string, value: string) => ({
-  data: [
-    {
-      id: `cf-${containerId}`,
-      type: 'custom_field',
-      attributes: { api_slug: 'po_number', value, display_value: value },
-      relationships: {
-        entity: { data: { type: 'container', id: containerId } },
-        definition: {
-          data: { type: 'custom_field_definition', id: DEFINITION },
-        },
-      },
-    },
-  ],
-  included: [
-    {
-      id: DEFINITION,
-      type: 'custom_field_definition',
-      attributes: {
-        api_slug: 'po_number',
-        display_name: 'PO Number',
-        data_type: 'text',
-      },
-    },
-  ],
-});
+const partyDoc = {
+  data: {
+    id: PARTY,
+    type: 'party',
+    attributes: { company_name: 'Manzo Transport' },
+  },
+};
 
 const createdCustomField = (containerId: string, value: string) => ({
   data: {
@@ -234,6 +213,7 @@ describe('record writes through the /mcp gateway', () => {
     'T49_API_BASE_URL',
     'T49_MCP_ALLOWED_HOSTS',
     'T49_MCP_ALLOWED_ORIGINS',
+    'T49_MCP_CONFIRMATION_SECRET',
   ];
   let savedEnv: Record<string, string | undefined> = {};
 
@@ -252,6 +232,7 @@ describe('record writes through the /mcp gateway', () => {
     );
     for (const name of GATEWAY_ENV) delete process.env[name];
     process.env.T49_API_BASE_URL = 'https://api.test/v2';
+    process.env.T49_MCP_CONFIRMATION_SECRET = TEST_CONFIRMATION_SECRET;
   });
 
   afterEach(() => {
@@ -271,7 +252,7 @@ describe('record writes through the /mcp gateway', () => {
       if (path === '/v2/connected-clients/resolve') return slowResolve;
       const id = path.split('/')[3] ?? '';
       if (method === 'GET') {
-        return { delayMs: 3_000, body: customFieldsDoc(id, 'PO-OLD') };
+        return { delayMs: 3_000, body: { data: [] } };
       }
       return {
         delayMs: id === C5 ? 10_000 : 3_000,
@@ -328,6 +309,7 @@ describe('record writes through the /mcp gateway', () => {
     process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
     stubUpstream((method, path) => {
       if (path === '/v2/connected-clients/resolve') return slowResolve;
+      if (path === `/v2/parties/${PARTY}`) return { body: partyDoc };
       const id = path.split('/')[3] ?? '';
       if (method === 'GET') {
         return { delayMs: id === C3 ? 9_000 : 3_000, body: { data: [] } };
@@ -388,7 +370,7 @@ describe('record writes through the /mcp gateway', () => {
         };
       }
       if (method === 'GET') {
-        return { body: customFieldsDoc(id, 'PO-OLD') };
+        return { body: { data: [] } };
       }
       if (id === C2) {
         return {
@@ -440,7 +422,7 @@ describe('record writes through the /mcp gateway', () => {
     const upstream = stubUpstream((method, path) => {
       const id = path.split('/')[3] ?? '';
       if (method === 'GET') {
-        return { body: customFieldsDoc(id, 'PO-OLD') };
+        return { body: { data: [] } };
       }
       if (id === C2) {
         return { body: null, reset: true };

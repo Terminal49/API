@@ -56,11 +56,10 @@ import {
 import {
   executeSetCustomField,
   executeSetPartyRole,
-  recordWriteOutputSchema,
   setCustomFieldInputSchema,
+  setCustomFieldOutputSchema,
   setPartyRoleInputSchema,
-  type SetCustomFieldArgs,
-  type SetPartyRoleArgs,
+  setPartyRoleOutputSchema,
 } from './tools/record-writes.js';
 import {
   executeGetTrackingRequest,
@@ -126,6 +125,7 @@ import {
   type ToolSession,
 } from './tools/context.js';
 import {
+  type ConfirmationScope,
   DEFAULT_TOOLSETS,
   defaultTools,
   selectTools,
@@ -939,11 +939,17 @@ function buildListResourceLinks(
 }
 
 /**
- * How every tier C tool's description ends, so a model knows both ways the
- * user approves a change.
+ * How every tier C tool's description ends, so a model knows when a call
+ * asks the user and both ways the user approves a change.
  */
-const CONFIRMED_WRITE_CLAUSE =
-  'This change needs the user to approve a preview. The first call changes nothing. On a client that can ask the user (form elicitation), the client shows the user the preview and asks them to confirm, and the tool writes only on their yes; never pass confirmation_token there. On any other client, the first call returns the preview with a confirmation_token: show the preview to the user, and call again with the same arguments and the token only after the user approves it in this turn.';
+const CONFIRMED_WRITE_CLAUSE: Record<ConfirmationScope, string> = {
+  always:
+    'This change needs the user to approve a preview. The first call changes nothing. ',
+  destructive_only:
+    'A call in which any record would lose a party or a value needs the user to approve a preview of every change in the call, and its first call changes nothing; a call that only adds runs at once. ',
+};
+const APPROVAL_CHANNELS =
+  'On a client that can ask the user (form elicitation), the client shows the user the preview and asks them to confirm, and the tool writes only on their yes; never pass confirmation_token there. On any other client, the first call returns the preview with a confirmation_token: show the preview to the user, and call again with the same arguments and the token only after the user approves it in this turn.';
 
 function wrapTool<TArgs>(
   toolName: string,
@@ -1220,6 +1226,7 @@ export function createTerminal49McpServer(
     credentialHash: credentialHash(apiToken),
     confirmationSecret: usableConfirmationSecret(options.confirmationSecret),
     gatewayAccountId: accountId,
+    writeDeadlineAt: options.writeDeadlineAt,
   };
   const completeCarrierScac = createCarrierScacCompleter(client);
 
@@ -1276,9 +1283,10 @@ export function createTerminal49McpServer(
         definition.name,
         {
           title: definition.title,
-          description: confirmed
-            ? `${spec.description} ${CONFIRMED_WRITE_CLAUSE}`
-            : spec.description,
+          description:
+            definition.tier === 'C'
+              ? `${spec.description} ${CONFIRMED_WRITE_CLAUSE[definition.confirms]}${APPROVAL_CHANNELS}`
+              : spec.description,
           annotations: definition.annotations,
           inputSchema: spec.inputSchema,
           outputSchema: spec.outputSchema,
@@ -1737,27 +1745,25 @@ export function createTerminal49McpServer(
       {
         description:
           'Attach a party to containers or shipments in a role, replace the party in that role, or detach it, for example "set the drayage carrier to Manzo Transport on these containers" (action replace). ' +
-          'Resolve the company to a party ID and the records to container or shipment IDs first. Up to 50 records per call. ' +
-          'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
+          "Resolve the records to container or shipment IDs first. For a party already on a record, pass the party_id shown in that record's party roles; the account's party list can show a customer under an account id that party roles do not accept, so use it only for a party on no record. Up to 50 records per call. " +
+          'Only call it when the user asks to change these records. add, and a replace that detaches nobody, run at once; remove, and a replace that detaches another party, show the user a preview of every record that changes. ' +
           'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
-        inputSchema: z.preprocess(stripLegacyIntent, setPartyRoleInputSchema),
-        outputSchema: recordWriteOutputSchema,
+        inputSchema: setPartyRoleInputSchema,
+        outputSchema: setPartyRoleOutputSchema,
       },
-      async (args: SetPartyRoleArgs) =>
-        executeSetPartyRole(args, client, options.writeDeadlineAt),
+      async (args, context) => executeSetPartyRole(args, client, context),
     ),
     set_custom_field: tool(
       {
         description:
           "Set or clear one of the account's custom fields (for example a sales rep or PO number) on containers or shipments. " +
-          "Read the field's api_slug and expected values from the record's custom fields first; never guess the slug. Up to 50 records per call; a multi-select field takes an array of option values, and value null clears the field. " +
-          'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
+          "Read the field's api_slug and expected values from the account's custom field definitions or the record's custom fields first; never guess the slug. Up to 50 records per call; a multi-select field takes an array of option values, and value null clears the field. " +
+          'Only call it when the user asks to change these records. Filling empty fields runs at once; overwriting or clearing a value on any record in the call shows the user a preview of every record that changes. ' +
           'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
-        inputSchema: z.preprocess(stripLegacyIntent, setCustomFieldInputSchema),
-        outputSchema: recordWriteOutputSchema,
+        inputSchema: setCustomFieldInputSchema,
+        outputSchema: setCustomFieldOutputSchema,
       },
-      async (args: SetCustomFieldArgs) =>
-        executeSetCustomField(args, client, options.writeDeadlineAt),
+      async (args, context) => executeSetCustomField(args, client, context),
     ),
     list_custom_field_definitions: tool(
       {

@@ -430,18 +430,6 @@ describe('MCP server wiring', () => {
       list_containers: {},
       summarize_containers: { group_by: 'pod_terminal' },
       list_parties: { search: 'Acme' },
-      set_party_role: {
-        container_ids: [id],
-        role: 'pickup_dray_carrier',
-        party_id: id,
-        action: 'add',
-      },
-      set_custom_field: {
-        entity: 'container',
-        ids: [id],
-        api_slug: 'sales_rep',
-        value: 'X',
-      },
       list_custom_field_definitions: {},
       list_tracking_requests: {},
       get_tracking_request: { id },
@@ -461,6 +449,18 @@ describe('MCP server wiring', () => {
       stop_shipment_tracking: { shipment_id: id },
       resume_shipment_tracking: { shipment_id: id },
       cancel_tracking_request: { tracking_request_id: id },
+      set_party_role: {
+        container_ids: [id],
+        role: 'pickup_dray_carrier',
+        party_id: id,
+        action: 'add',
+      },
+      set_custom_field: {
+        entity: 'container',
+        ids: [id],
+        api_slug: 'sales_rep',
+        value: 'X',
+      },
     };
     const newWrites = new Set<string>(
       TOOL_REGISTRY.filter(

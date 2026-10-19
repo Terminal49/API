@@ -598,14 +598,19 @@ export async function runWrite<Result>(
   }
 }
 
-/** What a tier C read found: a reason to stop, or the state to confirm. */
+/**
+ * What a tier C read found: a reason to stop, the state to confirm, or, for
+ * a tool that asks only when a record would lose data, a change that is
+ * additive throughout and so writes without asking.
+ */
 export type ConfirmedWriteRead<Preview, Stop> =
   | { stop: Stop }
   | {
       /** The exact fields the write reads or changes. */
       state: unknown;
       preview: Preview;
-    };
+    }
+  | { additive: Preview };
 
 export interface ConfirmedWrite<Preview, Stop, Done> extends WriteTarget {
   /** The tool arguments, with confirmation_token when the caller sent one. */
@@ -624,6 +629,11 @@ export interface ConfirmedWrite<Preview, Stop, Done> extends WriteTarget {
    * call.
    */
   refused?(error: unknown, preview: Preview): Promise<Done | undefined>;
+  /**
+   * The preview as text for the confirmation dialog. Defaults to one line
+   * per preview field; a batch tool lists its records instead.
+   */
+  describe?(preview: Preview): string;
 }
 
 export type ConfirmedWriteResult<Preview, Stop, Done> =
@@ -646,14 +656,9 @@ const previewTextSchema = z
  * The preview as text for the confirmation dialog: what the change reaches,
  * then each preview field, so the user sees the record now and after.
  */
-export function describeChange(
-  target: WriteTarget,
-  preview: unknown,
-  note?: string,
-): string {
+export function describeChange(target: WriteTarget, preview: unknown): string {
   const { reach, ...fields } = previewTextSchema.parse(preview);
   const lines = [
-    ...(note ? [note] : []),
     `${target.tool} on ${target.entityType} ${target.entityId ?? ''}`.trim(),
     ...(reach ? [reach] : []),
     ...Object.entries(fields).map(
@@ -664,16 +669,22 @@ export function describeChange(
 }
 
 /** Asks the client to show the preview and get the user's yes or no. */
-function elicitConfirmation(
-  target: WriteTarget,
-  preview: unknown,
+function elicitConfirmation<Preview>(
+  plan: Pick<
+    ConfirmedWrite<Preview, unknown, unknown>,
+    keyof WriteTarget | 'describe'
+  >,
+  preview: Preview,
   issued: IssuedConfirmation,
   note?: string,
 ): InputRequiredResult {
+  const text = plan.describe
+    ? plan.describe(preview)
+    : describeChange(plan, preview);
   return inputRequired({
     inputRequests: {
       [CONFIRM_REQUEST_KEY]: inputRequired.elicit({
-        message: describeChange(target, preview, note),
+        message: note ? `${note}\n${text}` : text,
         requestedSchema: {
           type: 'object',
           properties: {
@@ -759,11 +770,35 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
     return declined(answer.action === 'cancel' ? 'cancel' : 'decline');
   }
 
+  // Runs the write. A 4xx means Terminal49 refused the request and changed
+  // nothing, so the approval still stands and the token is released. A 5xx
+  // or a lost response may hide a write, so the error fails the call.
+  const commit = async (
+    preview: Preview,
+    confirmation: string | undefined,
+  ): Promise<Done> => {
+    try {
+      return await plan.write(preview);
+    } catch (error) {
+      const status = httpStatus(error);
+      if (status === undefined || status < 400 || status >= 500) throw error;
+      if (confirmation) spentTokens.delete(confirmation);
+      const answer = await plan.refused?.(error, preview);
+      if (answer === undefined) throw error;
+      return answer;
+    }
+  };
+
   try {
     const read = await plan.read();
     if ('stop' in read) {
       await audit(phase, auditOutcome(read.stop));
       return read.stop;
+    }
+    if ('additive' in read) {
+      const done = await commit(read.additive, undefined);
+      await audit('execute', auditOutcome(done));
+      return done;
     }
     const binding: ConfirmationBinding = {
       tool: plan.tool,
@@ -825,19 +860,7 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
       await audit(phase, 'invalid_confirmation');
       return invalidConfirmation(plan.tool, 'used', channel.kind);
     }
-    let done: Done;
-    try {
-      done = await plan.write(read.preview);
-    } catch (error) {
-      // A 4xx means Terminal49 refused the request and changed nothing, so
-      // the approval still stands. A 5xx or a lost response may hide a write.
-      const status = httpStatus(error);
-      if (status === undefined || status < 400 || status >= 500) throw error;
-      if (confirmation) spentTokens.delete(confirmation);
-      const answer = await plan.refused?.(error, read.preview);
-      if (answer === undefined) throw error;
-      done = answer;
-    }
+    const done = await commit(read.preview, confirmation);
     await audit(phase, auditOutcome(done));
     return done;
   } catch (error) {

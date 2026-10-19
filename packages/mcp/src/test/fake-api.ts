@@ -46,10 +46,12 @@ export function fakeApiFetch(routes: FakeRoutes) {
         : (route ?? { status: 404 });
     const status = response.status ?? 200;
     return new Response(
-      JSON.stringify(
-        response.body ??
-          (status >= 400 ? { errors: [{ status: String(status) }] } : {}),
-      ),
+      status === 204
+        ? null
+        : JSON.stringify(
+            response.body ??
+              (status >= 400 ? { errors: [{ status: String(status) }] } : {}),
+          ),
       {
         status,
         headers: {

@@ -20,9 +20,16 @@ export type Toolset = (typeof TOOLSETS)[number];
 
 /**
  * `read` tools only fetch data. Tier `A` writes are additive or reversible and
- * run in one call. Tier `C` writes need a confirmation token.
+ * run in one call. Tier `C` writes need the user's approval of a preview.
  */
 export type ToolTier = 'read' | 'A' | 'C';
+
+/**
+ * When a tier C tool asks the user. `always`: every call previews first.
+ * `destructive_only`: a batch tool that asks only when a record in the call
+ * would lose a value or a party, and otherwise writes at once.
+ */
+export type ConfirmationScope = 'always' | 'destructive_only';
 
 export interface ToolAnnotations {
   readOnlyHint: boolean;
@@ -31,13 +38,16 @@ export interface ToolAnnotations {
   openWorldHint: boolean;
 }
 
-export interface ToolDefinition {
+interface ToolBase {
   name: string;
   title: string;
   toolset: Toolset;
-  tier: ToolTier;
   annotations: ToolAnnotations;
 }
+
+export type ToolDefinition =
+  | (ToolBase & { tier: 'read' | 'A' })
+  | (ToolBase & { tier: 'C'; confirms: ConfirmationScope });
 
 function readTool<const Name extends string>(
   name: Name,
@@ -90,7 +100,8 @@ export const TOOL_REGISTRY = [
     name: 'set_party_role',
     title: 'Set Party Role',
     toolset: 'operations',
-    tier: 'A',
+    tier: 'C',
+    confirms: 'destructive_only',
     annotations: {
       readOnlyHint: false,
       destructiveHint: true,
@@ -102,7 +113,8 @@ export const TOOL_REGISTRY = [
     name: 'set_custom_field',
     title: 'Set Custom Field',
     toolset: 'operations',
-    tier: 'A',
+    tier: 'C',
+    confirms: 'destructive_only',
     annotations: {
       readOnlyHint: false,
       destructiveHint: true,
@@ -120,6 +132,7 @@ export const TOOL_REGISTRY = [
     title: 'Stop Shipment Tracking',
     toolset: 'operations',
     tier: 'C',
+    confirms: 'always',
     annotations: {
       readOnlyHint: false,
       destructiveHint: true,
@@ -144,6 +157,7 @@ export const TOOL_REGISTRY = [
     title: 'Cancel Tracking Request',
     toolset: 'operations',
     tier: 'C',
+    confirms: 'always',
     annotations: {
       readOnlyHint: false,
       destructiveHint: true,
