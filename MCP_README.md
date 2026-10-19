@@ -95,7 +95,7 @@ The default toolsets serve 39 tools. Twelve of them change account data: `track_
 | `get_trade_breakdown` | Nested totals over one to three dimensions (trade intelligence) |
 | `get_trade_data_coverage` | Where trade data starts, the latest and last full month (trade intelligence) |
 
-The `operations` toolset adds nine write tools and is in the default toolsets. Of the write tools, `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `unassign_party`, `update_custom_field` and `update_document` never change data on their first call: the user approves a preview first, in a confirmation dialog the client shows (MCP 2026-07-28 form elicitation) or, on other clients, by approving the preview in the chat so the model can call again with the confirmation token from it. See [Confirming writes](packages/mcp/README.md#confirming-writes).
+The `operations` toolset adds seven write tools and the `documents_write` toolset two more; both are in the default toolsets. Of the write tools, `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers` and `update_document` never change data on their first call, and `set_party_role` and `set_custom_field` do the same on a call in which a record would lose a party or a value: the user approves a preview first, in a confirmation dialog the client shows (MCP 2026-07-28 form elicitation) or, on other clients, by approving the preview in the chat so the model can call again with the confirmation token from it. See [Confirming writes](packages/mcp/README.md#confirming-writes).
 
 | Tool | Description |
 |------|-------------|
@@ -104,10 +104,8 @@ The `operations` toolset adds nine write tools and is in the default toolsets. O
 | `cancel_tracking_request` | Cancel a pending tracking request, after a confirmed preview. It cannot be undone. |
 | `add_reference_numbers` | Add reference numbers to a container, shipment, or tracking request, keeping the ones already there |
 | `remove_reference_numbers` | Remove reference numbers from a container, shipment, or tracking request, after a confirmed preview |
-| `assign_party` | Link a party to a container or shipment in a role, such as customer or dray carrier |
-| `unassign_party` | Remove one party role from a container or shipment, after a confirmed preview |
-| `set_custom_field` | Fill an empty custom field on a container, shipment, or tracking request |
-| `update_custom_field` | Replace or clear a custom field value, after a confirmed preview |
+| `set_party_role` | Attach, replace, or detach a party on up to 50 containers or shipments; a call that detaches a party shows a preview first |
+| `set_custom_field` | Set or clear a custom field on up to 50 containers or shipments; a call that overwrites or clears a value shows a preview first |
 
 The `documents_write` toolset adds two tools and is in the default toolsets. The `developer` toolset adds two reads. It is opt-in, so a deployment serves it only when `T49_MCP_TOOLSETS` lists `developer`.
 

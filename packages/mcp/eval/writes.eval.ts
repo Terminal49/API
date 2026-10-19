@@ -13,7 +13,14 @@
  * fixtures in write-fixtures.ts: the one shipment with reference number
  * MCP-EVAL-FIXTURE, the party "MCP Eval (do not use)", and the short_text
  * custom field mcp_eval_fixture. A case skips when its fixture is missing.
- * It never falls back to another record.
+ * It never falls back to another record. The party must exist already:
+ * set_party_role never creates one.
+ *
+ * The party and custom field cases call the batch tools on the one fixture
+ * record. An additive call (attach a party, fill an empty field) writes at
+ * once; a destructive one (detach, overwrite, clear) returns a preview, and
+ * the case confirms it with the token, the way a client without form
+ * elicitation does.
  *
  * Terminal49 accepts custom field changes only from a signed-in user, never
  * from an API key. So the custom field case also needs
@@ -41,10 +48,8 @@ import {
   EVAL_CUSTOM_FIELD_SLUG,
   EVAL_FIXTURE_REF,
   EVAL_PARTY_NAME,
-  evalPartyNameIsFree,
   selectEvalDefinition,
   selectEvalParty,
-  selectEvalPartyRoles,
   selectFixtureDocument,
   selectFixtureShipment,
   type FixtureShipment,
@@ -58,6 +63,13 @@ function structured(result: ToolResult): Record<string, unknown> {
   return isRecord(result.payload) ? result.payload : {};
 }
 
+/** The record ids in a batch result list. */
+function ids(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
+}
+
 if (!cfg) {
   describe.skip('Terminal49 MCP write eval (set MCP_EVAL_ENABLE_WRITE and MCP_EVAL_SANDBOX_TOKEN)', () => {
     it('is skipped without a sandbox account', () => {
@@ -69,19 +81,31 @@ if (!cfg) {
   let served: string[] = [];
   let fixture: FixtureShipment | undefined;
   let partyId: string | undefined;
-  let partyNameIsFree = false;
 
-  /** Previews a tier C call, then confirms it with the token it returned. */
-  const confirmed = async (tool: string, args: Record<string, unknown>) => {
-    const preview = structured(await client.callTool(tool, args));
-    if (preview.status !== 'confirmation_required') return preview;
-    return structured(
-      await client.callTool(tool, {
+  /**
+   * Calls a write tool and, when it answers with a preview, calls it again
+   * with the token: the flow of a client that cannot ask the user itself.
+   */
+  const confirmedWith = async (
+    session: EvalClient,
+    tool: string,
+    args: Record<string, unknown>,
+  ) => {
+    const first = structured(await session.callTool(tool, args));
+    if (first.status !== 'confirmation_required') {
+      return { result: first, previewed: false };
+    }
+    expect(typeof first.confirmation_token).toBe('string');
+    const result = structured(
+      await session.callTool(tool, {
         ...args,
-        confirmation_token: preview.confirmation_token,
+        confirmation_token: first.confirmation_token,
       }),
     );
+    return { result, previewed: true };
   };
+  const confirmed = async (tool: string, args: Record<string, unknown>) =>
+    (await confirmedWith(client, tool, args)).result;
 
   describe('Terminal49 MCP write eval (sandbox account)', () => {
     beforeAll(async () => {
@@ -117,7 +141,6 @@ if (!cfg) {
         }),
       );
       partyId = selectEvalParty(parties.parties);
-      partyNameIsFree = evalPartyNameIsFree(parties.parties);
     });
 
     it('stops a shipment with a confirmed preview, then resumes it', async ({
@@ -233,64 +256,53 @@ if (!cfg) {
       }
     });
 
-    it('assigns the eval party, then unassigns it with a confirmed preview', async ({
+    it('attaches the eval party at once, then detaches it with a confirmed preview', async ({
       skip,
     }) => {
-      if (!served.includes('assign_party') || !fixture) {
+      if (!served.includes('set_party_role') || !fixture) {
         return skip(NO_FIXTURE);
       }
-      if (!partyId && !partyNameIsFree) {
+      if (!partyId) {
         return skip(
-          `A party other than exactly "${EVAL_PARTY_NAME}" matches its name, so assign_party could link it.`,
+          `No party is named exactly "${EVAL_PARTY_NAME}". Create it in the sandbox account first; set_party_role never creates a party.`,
         );
       }
-      const target = { entity_type: 'shipment', entity_id: fixture.id };
-
-      // Every eval party role on the fixture, found by reading the shipment,
-      // so a role whose assign response was lost is still removed.
-      const evalRoles = async () => {
-        const details = structured(
-          await client.callTool('get_shipment_details', {
-            id: target.entity_id,
-            include_party_roles: true,
-          }),
-        );
-        return selectEvalPartyRoles(details.party_roles, partyId);
+      const target = {
+        shipment_ids: [fixture.id],
+        role: 'notify_party',
+        party_id: partyId,
       };
-
-      let unassigned = false;
-      try {
-        // The first run creates the eval party; later runs find it by name.
-        const assigned = structured(
-          await client.callTool('assign_party', {
-            ...target,
-            role: 'notify_party',
-            ...(partyId
-              ? { party_id: partyId }
-              : { party_name: EVAL_PARTY_NAME, create_party_if_missing: true }),
-          }),
-        );
-        const role = isRecord(assigned.party_role) ? assigned.party_role : {};
-        expect(assigned.status).toBe('assigned');
-        expect(role.party_name).toBe(EVAL_PARTY_NAME);
-        if (partyId) expect(role.party_id).toBe(partyId);
-        const result = await confirmed('unassign_party', {
+      const detach = () =>
+        confirmedWith(client, 'set_party_role', {
           ...target,
-          party_role_id: role.id,
+          action: 'remove',
         });
-        unassigned = result.status === 'unassigned';
-        expect(result.status).toBe('unassigned');
-        expect(result.undo).toBe('assign_party');
+
+      let detached = false;
+      try {
+        // add is additive, so it writes without a preview. A role left behind
+        // by a lost run comes back unchanged and is detached below.
+        const added = structured(
+          await client.callTool('set_party_role', { ...target, action: 'add' }),
+        );
+        expect(added.status).toBeUndefined();
+        expect(added.failed).toEqual([]);
+        expect([...ids(added.updated), ...ids(added.unchanged)]).toEqual([
+          fixture.id,
+        ]);
+
+        const removed = await detach();
+        detached = ids(removed.result.updated).includes(fixture.id);
+        expect(removed.previewed).toBe(true);
+        expect(removed.result.updated).toEqual([fixture.id]);
+        expect(removed.result.failed).toEqual([]);
       } finally {
-        if (!unassigned) {
-          for (const party_role_id of await evalRoles()) {
-            await confirmed('unassign_party', { ...target, party_role_id });
-          }
-        }
+        // A party no longer in the role comes back unchanged.
+        if (!detached) await detach();
       }
     });
 
-    it('sets the eval custom field, then updates and clears it with confirmed previews', async ({
+    it('fills the eval custom field at once, then overwrites and clears it with confirmed previews', async ({
       skip,
     }) => {
       if (!cfg.user) {
@@ -336,47 +348,34 @@ if (!cfg) {
         );
       }
       const target = {
-        entity_type: 'shipment',
-        entity_id: fixture.id,
+        entity: 'shipment',
+        ids: [fixture.id],
         api_slug: apiSlug,
       };
       const value = `MCP-EVAL-${Date.now().toString(36).toUpperCase()}`;
-      const confirmedAsUser = async (args: Record<string, unknown>) => {
-        const preview = structured(
-          await user.callTool('update_custom_field', args),
-        );
-        if (preview.status !== 'confirmation_required') return preview;
-        return structured(
-          await user.callTool('update_custom_field', {
-            ...args,
-            confirmation_token: preview.confirmation_token,
-          }),
-        );
-      };
+      const setAsUser = (fieldValue: string | null) =>
+        confirmedWith(user, 'set_custom_field', {
+          ...target,
+          value: fieldValue,
+        });
 
       try {
-        const set = structured(
-          await user.callTool('set_custom_field', { ...target, value }),
-        );
-        // A value an earlier run left behind. The clear below removes it.
-        if (set.status === 'already_set') return skip();
-        expect(set.status).toBe('set');
-        expect(set.value).toBe(value);
+        // A value an earlier run left behind makes this an overwrite, which
+        // previews first; the field is normally empty, so it fills at once.
+        const filled = await setAsUser(value);
+        expect(filled.result.updated).toEqual([fixture.id]);
 
-        const updated = await confirmedAsUser({
-          ...target,
-          value: `${value}-2`,
-        });
-        expect(updated.status).toBe('updated');
-        expect(updated.previous_value).toBe(value);
+        const overwritten = await setAsUser(`${value}-2`);
+        expect(overwritten.previewed).toBe(true);
+        expect(overwritten.result.updated).toEqual([fixture.id]);
 
-        const cleared = await confirmedAsUser({ ...target, clear: true });
-        expect(cleared.status).toBe('cleared');
-        expect(cleared.undo).toBe('set_custom_field');
+        const cleared = await setAsUser(null);
+        expect(cleared.previewed).toBe(true);
+        expect(cleared.result.updated).toEqual([fixture.id]);
       } finally {
         // The field is eval-only, so it ends every run empty. An empty field
-        // comes back not_set, unchanged.
-        await confirmedAsUser({ ...target, clear: true });
+        // comes back unchanged.
+        await setAsUser(null);
       }
     });
 

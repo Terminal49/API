@@ -79,15 +79,13 @@ describe('writesEnabled', () => {
 describe('missingDefaultWriteTools', () => {
   const writeTools = [
     'track_container',
+    'set_party_role',
+    'set_custom_field',
     'stop_shipment_tracking',
     'resume_shipment_tracking',
     'cancel_tracking_request',
     'add_reference_numbers',
     'remove_reference_numbers',
-    'assign_party',
-    'unassign_party',
-    'set_custom_field',
-    'update_custom_field',
     'relink_document',
     'update_document',
   ];

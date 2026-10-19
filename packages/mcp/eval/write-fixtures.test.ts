@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
-  evalPartyNameIsFree,
   selectEvalDefinition,
   selectEvalParty,
-  selectEvalPartyRoles,
   selectFixtureDocument,
   selectFixtureShipment,
 } from './write-fixtures.js';
@@ -76,61 +74,6 @@ describe('selectEvalParty', () => {
     ['the payload has no parties', undefined],
   ])('refuses to pick a party when %s', (_case, parties) => {
     expect(selectEvalParty(parties)).toBeUndefined();
-  });
-});
-
-describe('selectEvalPartyRoles', () => {
-  const roles = [
-    {
-      id: 'eval-notify',
-      role: 'notify_party',
-      party_id: 'eval-party',
-      party_name: 'MCP Eval (do not use)',
-    },
-    {
-      id: 'demo-notify',
-      role: 'notify_party',
-      party_id: 'demo-party',
-      party_name: 'MCP Eval (do not use) Inc',
-    },
-    {
-      id: 'eval-customer',
-      role: 'customer',
-      party_id: 'eval-party',
-      party_name: 'MCP Eval (do not use)',
-    },
-  ];
-
-  it('picks only the eval party in the notify_party role', () => {
-    expect(selectEvalPartyRoles(roles, undefined)).toEqual(['eval-notify']);
-  });
-
-  it('requires the eval party id once it is known', () => {
-    expect(selectEvalPartyRoles(roles, 'eval-party')).toEqual(['eval-notify']);
-    expect(selectEvalPartyRoles(roles, 'other-party')).toEqual([]);
-  });
-
-  it('returns nothing when the roles are not a list', () => {
-    expect(selectEvalPartyRoles(undefined, undefined)).toEqual([]);
-  });
-});
-
-describe('evalPartyNameIsFree', () => {
-  it('lets the first run create the eval party when the search finds no party', () => {
-    expect(evalPartyNameIsFree([])).toBe(true);
-  });
-
-  it.each([
-    ['differs only in punctuation', 'MCP Eval do not use'],
-    ['differs only in case', 'mcp eval (do not use)'],
-    ['contains the name', 'MCP Eval (do not use) archive'],
-    ['is the eval party', 'MCP Eval (do not use)'],
-  ])('refuses when the search found a party that %s', (_case, name) => {
-    expect(evalPartyNameIsFree([{ id: 'near', name }])).toBe(false);
-  });
-
-  it('refuses when the payload has no party list', () => {
-    expect(evalPartyNameIsFree(undefined)).toBe(false);
   });
 });
 

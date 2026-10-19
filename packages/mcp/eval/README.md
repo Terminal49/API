@@ -108,9 +108,9 @@ Do these steps once in the sandbox account before the first run:
 2. Create a shipment custom field with the API slug `mcp_eval_fixture` and the
    type short text. Use it for nothing else.
 
-You do not need to create the party. The first run creates
-`MCP Eval (do not use)` with `assign_party`, and later runs find it by name.
-Do not rename it or use it on other records.
+3. Create a party named exactly `MCP Eval (do not use)`. `set_party_role`
+   never creates a party, so the party case skips until it exists. Do not
+   rename it or use it on other records.
 
 ### Cases
 
@@ -121,12 +121,14 @@ block, so the change is undone even when an assertion fails:
 - refuse a stop with an edited confirmation token;
 - add a reference number to the fixture shipment, then remove it with a
   confirmed preview;
-- assign the eval party as `notify_party` on the fixture shipment, then
-  unassign it with a confirmed preview. When the case fails, it reads the
-  shipment's party roles and unassigns every eval party role it finds, so a
-  role whose assign response was lost is removed too;
-- set `mcp_eval_fixture` on the fixture shipment, then overwrite it and clear
-  it with confirmed previews. Terminal49 accepts custom field changes only
+- attach the eval party as `notify_party` on the fixture shipment with
+  `set_party_role` (`add` writes at once), then detach it with `remove`,
+  which returns a preview the case confirms with the token. When the case
+  fails, it detaches the party again; a party no longer in the role comes
+  back unchanged;
+- fill `mcp_eval_fixture` on the fixture shipment with `set_custom_field`,
+  which writes at once on an empty field, then overwrite it and clear it,
+  each after confirming the preview with the token. Terminal49 accepts custom field changes only
   from a signed-in user, never from an API key. So this case runs as the user
   in `MCP_EVAL_SANDBOX_BEARER` and skips when it is unset. That token is
   short-lived, so set it just before the run. Before it writes, the case
@@ -143,9 +145,9 @@ list every default write tool, so a gateway that lost `operations` or
 `documents_write` cannot pass with every case skipped.
 `MCP_EVAL_ALLOW_SPARSE=1` turns that failure into skips. The two stop cases
 also skip when the sandbox key cannot stop tracking (`FeatureNotEnabled`) or
-the fixture shipment is already stopped. The custom field case skips when the
-field already has a value, and its cleanup removes that value for the next
-run.
+the fixture shipment is already stopped. A value an earlier run left in the custom
+field makes the first write an overwrite, which previews too; the cleanup
+clears the field for the next run.
 
 `cancel_tracking_request` and `relink_document` have no live case. A cancel
 cannot be undone, and each run would need a new, billable tracking request. A

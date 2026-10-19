@@ -124,7 +124,6 @@ const rawPartyRowSchema = z.object({
 });
 
 // Strict, so an unreadable page fails the load instead of looking complete:
-// assign_party decides whether to create a party from what this returns.
 const rawPartyPageSchema = z.object({
   data: z.array(rawPartyRowSchema),
   links: z.object({ next: z.string().nullish() }).nullish(),

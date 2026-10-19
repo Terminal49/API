@@ -53,15 +53,10 @@ function initializeInstructions(
   return connect(options, async (client) => client.getInstructions());
 }
 
-const TOOL_NAME = new RegExp(
-  `\\b(?:${TOOL_REGISTRY.map((tool) => tool.name).join('|')})\\b`,
-  'g',
-);
-
 function mentionedTools(instructions: string): string[] {
-  return [
-    ...new Set(Array.from(instructions.matchAll(TOOL_NAME), ([name]) => name)),
-  ];
+  return TOOL_REGISTRY.map((tool) => tool.name).filter((name) =>
+    new RegExp(`\\b${name}\\b`).test(instructions),
+  );
 }
 
 function toolsetSubsets(): Toolset[][] {
@@ -230,7 +225,5 @@ describe('tool descriptions', () => {
         }
       }
     }
-    // One MCP connection per toolset subset and mode: 128 round trips that
-    // grow with every toolset.
   }, 60_000);
 });

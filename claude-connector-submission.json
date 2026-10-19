@@ -23,7 +23,6 @@
     "icon_dark": "public/store-icons/terminal49-dark.png",
     "tool_names": [
       "add_reference_numbers",
-      "assign_party",
       "cancel_tracking_request",
       "get_container",
       "get_container_route",
@@ -54,11 +53,10 @@
       "search_docs",
       "search_importers",
       "set_custom_field",
+      "set_party_role",
       "stop_shipment_tracking",
       "summarize_containers",
       "track_container",
-      "unassign_party",
-      "update_custom_field",
       "update_document",
       "whoami"
     ]
@@ -77,9 +75,9 @@
       "Check supported shipping lines",
       "Create new tracking requests",
       "Stop or resume shipment tracking and cancel pending tracking requests",
-      "Edit reference numbers, parties, and custom field values on containers and shipments",
+      "Edit reference numbers on containers, shipments, and tracking requests",
+      "Set parties and custom field values on containers and shipments",
       "Fix a document's type, extraction, or links",
-      "Inspect routes and transport events",
       "Research US ocean import markets: importers, products, origin countries, ports, and carriers"
     ]
   }

@@ -55,6 +55,8 @@
         "tracking_slots": {
           "limit": 10,
           "used": 4,
+          "active_containers": 3,
+          "pending_tracking_requests": 1,
           "remaining": 6
         }
       }

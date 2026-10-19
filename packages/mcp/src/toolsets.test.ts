@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { resolveToolSelection, ToolSelectionRequestError } from './toolsets.js';
-import { DEFAULT_TOOLSETS } from './tools/registry.js';
+import { DEFAULT_TOOLSETS, selectTools } from './tools/registry.js';
+
+const RECORD_WRITES = ['set_party_role', 'set_custom_field'];
+
+function selectedRecordWrites(
+  input: Parameters<typeof resolveToolSelection>[0],
+): string[] {
+  return selectTools(resolveToolSelection(input))
+    .map((tool) => tool.name)
+    .filter((name) => RECORD_WRITES.includes(name));
+}
 
 describe('resolveToolSelection', () => {
   it('serves the default toolsets when the operator sets none', () => {
@@ -171,5 +181,27 @@ describe('resolveToolSelection', () => {
     });
 
     expect(selection.toolsets).toEqual(['core', 'documents', 'operations']);
+  });
+
+  it('serves the record write tools to a signed-in user by default', () => {
+    expect(selectedRecordWrites({ env: {}, credentialType: 'user' })).toEqual(
+      RECORD_WRITES,
+    );
+  });
+
+  it('keeps the record write tools from the shared env token by default', () => {
+    expect(
+      selectedRecordWrites({ env: {}, credentialType: 'shared_token' }),
+    ).toEqual([]);
+  });
+
+  it('lets a client keep core reads without the record write tools', () => {
+    expect(
+      selectedRecordWrites({
+        env: {},
+        credentialType: 'user',
+        toolsetsHeader: 'core',
+      }),
+    ).toEqual([]);
   });
 });

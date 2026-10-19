@@ -10,7 +10,7 @@ import { isRecord } from './client.js';
 /** The reference number that marks the one shipment the write evals edit. */
 export const EVAL_FIXTURE_REF = 'MCP-EVAL-FIXTURE';
 
-/** The one party the write evals assign. assign_party creates it once. */
+/** The one party the write evals attach. It must exist; set_party_role never creates a party. */
 export const EVAL_PARTY_NAME = 'MCP Eval (do not use)';
 
 /** The api_slug of the one short_text custom field the write evals set. */
@@ -64,37 +64,6 @@ export function selectEvalParty(parties: unknown): string | undefined {
       ),
   );
   return party ? String(party.id) : undefined;
-}
-
-/**
- * The ids of the eval party's notify_party roles in a get_shipment_details
- * party_roles list. Only the write eval assigns that party, so each one is a
- * role an eval run created.
- */
-export function selectEvalPartyRoles(
-  roles: unknown,
-  partyId: string | undefined,
-): string[] {
-  return (Array.isArray(roles) ? roles : [])
-    .filter(isRecord)
-    .filter(
-      (row) =>
-        typeof row.id === 'string' &&
-        row.role === 'notify_party' &&
-        row.party_name === EVAL_PARTY_NAME &&
-        (partyId === undefined || row.party_id === partyId),
-    )
-    .map((row) => String(row.id));
-}
-
-/**
- * Whether assign_party may create the eval party: the list_parties search for
- * EVAL_PARTY_NAME found no party at all. assign_party links any party whose
- * name or nickname matches ignoring case and punctuation, and list_parties
- * shows only display names, so any hit could be the party it would link.
- */
-export function evalPartyNameIsFree(parties: unknown): boolean {
-  return Array.isArray(parties) && parties.length === 0;
 }
 
 /** The api_slug of the live short_text definition EVAL_CUSTOM_FIELD_SLUG. */
