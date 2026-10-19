@@ -38,14 +38,6 @@
       "implementation": "packages/mcp/src/tools/list-containers.ts"
     },
     {
-      "name": "list_tracking_requests",
-      "implementation": "packages/mcp/src/tools/list-tracking-requests.ts"
-    },
-    {
-      "name": "search_docs",
-      "implementation": "packages/mcp/src/tools/search-docs.ts"
-    },
-    {
       "name": "summarize_containers",
       "implementation": "packages/mcp/src/tools/summarize-containers.ts"
     },
@@ -54,8 +46,52 @@
       "implementation": "packages/mcp/src/tools/list-parties.ts"
     },
     {
+      "name": "set_party_role",
+      "implementation": "packages/mcp/src/tools/record-writes.ts"
+    },
+    {
+      "name": "set_custom_field",
+      "implementation": "packages/mcp/src/tools/record-writes.ts"
+    },
+    {
+      "name": "list_tracking_requests",
+      "implementation": "packages/mcp/src/tools/list-tracking-requests.ts"
+    },
+    {
+      "name": "search_docs",
+      "implementation": "packages/mcp/src/tools/search-docs.ts"
+    },
+    {
       "name": "whoami",
       "implementation": "packages/mcp/src/tools/whoami.ts"
+    },
+    {
+      "name": "search_importers",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
+    },
+    {
+      "name": "get_importer_profile",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
+    },
+    {
+      "name": "search_commodities",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
+    },
+    {
+      "name": "rank_importers",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
+    },
+    {
+      "name": "get_trade_trends",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
+    },
+    {
+      "name": "get_trade_breakdown",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
+    },
+    {
+      "name": "get_trade_data_coverage",
+      "implementation": "packages/mcp/src/tools/trade-intel.ts"
     }
   ],
   "sdkEntrypoints": [

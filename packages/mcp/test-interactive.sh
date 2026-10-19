@@ -21,7 +21,9 @@ echo ""
 
 # Test 1: List Tools
 echo "📋 Test 1: Listing Tools..."
-echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | npm run mcp:stdio 2>/dev/null | jq -r '.result.tools[] | "  ✓ \(.name) - \(.title)"'
+TOOLS=$(echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | npm run mcp:stdio 2>/dev/null)
+echo "$TOOLS" | jq -r '.result.tools[] | "  ✓ \(.name) - \(.title)"'
+TOOL_COUNT=$(echo "$TOOLS" | jq '.result.tools | length')
 echo ""
 
 # Test 2: List Prompts
@@ -75,7 +77,7 @@ echo ""
 echo "✅ All tests passed!"
 echo ""
 echo "📊 Summary:"
-echo "  • 10 tools available"
+echo "  • $TOOL_COUNT tools available"
 echo "  • 3 prompts available"
 echo "  • 1+ resources available"
 echo "  • SCAC completions working"

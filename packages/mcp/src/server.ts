@@ -7,6 +7,8 @@ import {
   completable,
   McpServer,
   ResourceTemplate,
+  type StandardSchemaWithJSON,
+  type ToolCallback,
 } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
@@ -59,6 +61,20 @@ import {
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
+  createToolContext,
+  type McpCredentialType,
+  type ToolContext,
+} from './tools/context.js';
+import {
+  DEFAULT_TOOLSETS,
+  defaultTools,
+  selectTools,
+  type ToolDefinition,
+  type ToolName,
+  type ToolSelection,
+  type Toolset,
+} from './tools/registry.js';
+import {
   executeGetImporterProfile,
   executeGetTradeBreakdown,
   executeGetTradeDataCoverage,
@@ -99,6 +115,8 @@ import {
   instrumentMcpServer,
 } from './sentry.js';
 import { logMcpEvent } from './logging.js';
+import { resolveToolSelection } from './toolsets.js';
+import { buildServerInstructions } from './instructions.js';
 
 type ContentAnnotations = {
   audience?: Array<'user' | 'assistant'>;
@@ -122,22 +140,12 @@ type ResourceLinkContent = {
 
 type ToolContent = TextContent | ResourceLinkContent;
 
-/**
- * Server-level instructions (MCP `ServerOptions.instructions`). This is a
- * concise operating guide handed to the LLM at initialize time so it
- * understands the ocean-tracking domain and how to chain the tools.
- */
-export const TERMINAL49_SERVER_INSTRUCTIONS = `Terminal49 tracks ocean containers and shipments live from carriers and terminals. Data is real-time from ocean carriers (by SCAC, e.g. MAEU = Maersk) and US/Canada terminals, so values change between calls.
+/** Registers one tool on the server from its registry definition. */
+type ToolRegistrar = (definition: ToolDefinition) => void;
 
-Domain vocabulary: SCAC = 4-letter carrier code; BOL = bill of lading and booking number identify a shipment; POL/POD = port of lading/discharge; LFD = last free day (pickup deadline before demurrage accrues); demurrage/detention = late fees; holds = customs/freight/terminal blocks preventing pickup; transport events = carrier milestones (vessel loaded, departed, arrived, discharged, rail, delivered); custom fields = account-defined fields (PO number, project manager, etc.) on containers and shipments, loaded with get_container include ['custom_fields'] or get_shipment_details include_custom_fields.
-
-Three tools change Terminal49 account records and are marked non-read-only: track_container creates a tracking request to begin monitoring a number; set_party_role attaches, replaces, or detaches a party (such as the drayage carrier) on containers or shipments; set_custom_field sets or clears an account custom field on containers or shipments. Call the two set_ tools only when the user asks to change those records. They can detach a party or overwrite or clear a field value, so they are marked destructive; neither deletes a container, shipment, or party. The other tools only fetch data and are marked read-only. The shipment, container, tracking, party, record-write, and whoami tools operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation; the trade intelligence tools read US import market data, not the account's shipments.
-
-Canonical chaining: start with search_container to resolve a container number / BOL / reference into Terminal49 UUIDs, then get_container or get_shipment_details for a snapshot, then get_container_transport_events for the milestone timeline (and get_container_route for ports, ETAs, and the current vessel if the account has Routing Data). Use get_supported_shipping_lines to resolve a carrier name to its SCAC before track_container. Use list_parties to resolve a company name (customer, shipper, dray carrier) to a party ID before filtering containers by advanced_filters.parties. Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists. Use search_docs for how-to and API questions (webhooks, statuses, LFD rules, SDK, MCP) and cite the returned links. Call whoami to learn which account and credential this session is bound to and which features it can use: when the user asks who they are or which account is connected, when a lookup returns nothing or an authorization error, or before relying on a gated feature such as routing, custom fields, or stop tracking.
-Trade intelligence (search_importers, get_importer_profile, search_commodities, rank_importers, get_trade_trends, get_trade_breakdown, get_trade_data_coverage) answers market questions about US ocean imports: who imports a product, what a named company imports and how that is changing, where goods come from, and port, carrier, and lane volumes. It is built from US Customs bill-of-lading records from January 2022 to today, refreshed daily, and is enabled per account; if a tool says it isn't enabled, tell the user to contact support@terminal49.com and don't retry or invent figures.
-Resolve first, then analyze: search_importers for a company (use its exact company_name), search_commodities for a product (check common_goods before trusting an HS4 code). Then get_importer_profile for one company (months: 24 for a year-over-year trend; the company filter in trends is a substring match), rank_importers for "who imports X", get_trade_trends for change over time, get_trade_breakdown for mix and share. Most answers take two to five calls.
-Read the numbers carefully: volume is physical containers, each counted once; values are estimates, not declared customs values; trends and breakdowns include the current, incomplete month unless until is set, so a last-period drop is usually that; history starts in January 2022, not where the default two-year trends window begins. A company can appear under several names and once per state, and some importers keep their names off the records or ship under a forwarder, so low or missing volume is a floor, not the company's size. Forwarders and customs brokers appear among importers. A high share_as_notify_party is a clue, not proof: large cargo owners can also be listed mostly as notify party, so also weigh the name (LOGISTICS, FREIGHT, SHIPPING, CUSTOMS, BROKERAGE) and the product mix before calling a company a forwarder. Don't add volumes across products or companies. Carriers appear under spelling variants; merge them before computing shares.
-Answer in plain language: lead with the takeaway, name the period, round numbers, and describe caveats in everyday words rather than field names.`;
+/** The instructions a server with the default toolsets sends. */
+export const TERMINAL49_SERVER_INSTRUCTIONS =
+  buildServerInstructions(defaultTools());
 
 type ResponseDisplayColumn = {
   key: string;
@@ -1056,23 +1064,29 @@ function createCarrierScacCompleter(
   };
 }
 
-export interface Terminal49McpServerTelemetry {
+export interface Terminal49McpServerOptions {
   transport?: McpTransportKind;
   authSource?: McpAuthSource;
+  /** Toolsets to register. Defaults to DEFAULT_TOOLSETS. */
+  toolsets?: readonly Toolset[];
+  /** Register only tools whose readOnlyHint is true. */
+  readOnly?: boolean;
+  /** How the caller authenticated. Defaults to api_key. */
+  credentialType?: McpCredentialType;
+  /**
+   * Epoch ms by which set_party_role and set_custom_field stop waiting on
+   * records. The HTTP gateway sets it from the request start so auth time
+   * counts against the function limit; without it each call gets
+   * CALL_BUDGET_MS from when it starts.
+   */
+  writeDeadlineAt?: number;
 }
 
-/**
- * @param writeDeadlineAt Epoch ms by which set_party_role and set_custom_field
- *   stop waiting on records. The HTTP gateway sets it from the request start so
- *   auth time counts against the function limit; without it each call gets
- *   CALL_BUDGET_MS from when it starts.
- */
 export function createTerminal49McpServer(
   apiToken: string,
   apiBaseUrl?: string,
   accountId?: string,
-  telemetry: Terminal49McpServerTelemetry = {},
-  writeDeadlineAt?: number,
+  options: Terminal49McpServerOptions = {},
 ): McpServer {
   const client = new Terminal49Client({
     apiToken,
@@ -1081,6 +1095,11 @@ export function createTerminal49McpServer(
     defaultFormat: 'mapped',
   });
 
+  const credentialType = options.credentialType ?? 'api_key';
+  const selectedTools = selectTools({
+    toolsets: options.toolsets ?? DEFAULT_TOOLSETS,
+    readOnly: options.readOnly ?? false,
+  });
   const completeCarrierScac = createCarrierScacCompleter(client);
 
   // Observability wrapping, outermost last. Sentry's wrapper returns a wrapped
@@ -1096,166 +1115,204 @@ export function createTerminal49McpServer(
           version: SERVER_VERSION,
         },
         {
-          instructions: TERMINAL49_SERVER_INSTRUCTIONS,
+          instructions: buildServerInstructions(selectedTools),
+          // Answer tools/list with an empty list, not "method not found",
+          // when the selected toolsets have no tools.
+          capabilities: { tools: { listChanged: true } },
         },
       ),
     ),
     // Groups the stateless HTTP path's events per account instead of minting an
     // anonymous person per request.
-    { distinctId: accountId, ...telemetry },
+    {
+      distinctId: accountId,
+      transport: options.transport,
+      authSource: options.authSource,
+    },
   );
 
   // ==================== TOOLS ====================
 
-  // Tool 1: Search Container
-  server.registerTool(
-    'search_container',
-    {
-      title: 'Search Containers',
-      description:
-        'Search for containers, shipments, and tracking information by container number, ' +
-        'booking number, bill of lading, or reference number. Returns matching private-account containers, shipments, and tracking requests. Only a request whose tracking was stopped (status tracking_stopped) carries shipment_id. Succeeded requests appear as their container or shipment, and a request whose number matches a returned shipment is omitted. ' +
-        'Use get_container or get_shipment_details with a returned UUID for a detailed snapshot. ' +
-        'Pass exactly one identifier, never a user message or conversation history. ' +
-        'Examples: CAIU2885402, MAEU123456789, or a customer reference number.',
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
+  const tool =
+    <
+      InputArgs extends StandardSchemaWithJSON,
+      OutputArgs extends StandardSchemaWithJSON,
+    >(
+      spec: {
+        description: string;
+        inputSchema: InputArgs;
+        outputSchema: OutputArgs;
       },
-      inputSchema: z.object({
-        query: z
-          .string()
-          .trim()
-          .min(1)
-          .max(128)
-          .describe(
-            'One container number, booking number, Bill of Lading number, or customer reference (maximum 128 characters). Identifier only; never pass conversation text, a user message, or full history.',
-          ),
-      }),
-      outputSchema: z.object({
-        containers: z.array(
-          z.object({
-            id: z.string(),
-            container_number: z.string(),
-            status: z.string(),
-            shipping_line: z.string(),
-            pod_terminal: z.string().optional(),
-            pol_terminal: z.string().optional(),
-            destination: z.string().optional(),
-            duplicate_number: z.boolean().optional(),
-          }),
-        ),
-        shipments: z.array(
-          z.object({
-            id: z.string(),
-            ref_numbers: z.array(z.string()),
-            shipping_line: z.string(),
-            container_count: z.number(),
-          }),
-        ),
-        tracking_requests: z.array(
-          z.object({
-            id: z.string(),
-            request_number: z.string(),
-            status: z.string(),
-            failed_reason: z.string().optional(),
-            scac: z.string().optional(),
-            shipment_id: z.string().optional(),
-          }),
-        ),
-        total_results: z.number(),
-      }),
-    },
-    wrapTool('search_container', async ({ query }) =>
-      executeSearchContainer({ query }, client),
-    ),
-  );
+      handler: (
+        args: StandardSchemaWithJSON.InferOutput<InputArgs>,
+        context: ToolContext,
+      ) => Promise<unknown>,
+      buildResourceLinks?: (result: unknown) => ResourceLinkContent[],
+    ): ToolRegistrar =>
+    (definition) => {
+      server.registerTool(
+        definition.name,
+        {
+          title: definition.title,
+          description: spec.description,
+          annotations: definition.annotations,
+          inputSchema: spec.inputSchema,
+          outputSchema: spec.outputSchema,
+        },
+        // SAFETY: the callback takes the parsed output of `spec.inputSchema`,
+        // which is what ToolCallback<InputArgs> resolves to. TypeScript cannot
+        // resolve that conditional type while InputArgs is still generic.
+        wrapTool(
+          definition.name,
+          (args: StandardSchemaWithJSON.InferOutput<InputArgs>) =>
+            handler(args, createToolContext(client, credentialType)),
+          buildResourceLinks,
+        ) as ToolCallback<InputArgs>,
+      );
+    };
 
-  // Tool 2: Track Container
-  server.registerTool(
-    'track_container',
-    {
-      title: 'Track Container',
-      description:
-        'Track a container, bill of lading, or booking number. ' +
-        "If the number matches a container that is still being tracked, returns that container's details; " +
-        'if it matches an in-progress tracking request, returns that request. ' +
-        'Otherwise uses inference to choose the carrier/type when possible and creates a tracking request. ' +
-        'A new request returns the request (id, request_number, number_type, scac). ' +
-        'Container details come back only when the create response links a container, which a new request normally does not, ' +
-        'so poll list_tracking_requests for its status, then use search_container or get_shipment_details. ' +
-        'When the carrier cannot be inferred it asks for scac; a container prefix names the equipment owner, not the carrier.',
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: false,
+  // Trade intelligence: US import market data (bill-of-lading records). Gated
+  // per account at call time; a missing entitlement returns a plain "not
+  // enabled" result.
+  const notEnabledFields = {
+    error: z.string().optional(),
+    message: z.string().optional(),
+    alternative: z.string().optional(),
+  };
+  const rows = z.array(z.record(z.string(), z.unknown())).optional();
+  const period = z
+    .object({ from: z.string().optional(), to: z.string().optional() })
+    .passthrough()
+    .optional();
+
+  const tools = {
+    search_container: tool(
+      {
+        description:
+          'Search for containers, shipments, and tracking information by container number, ' +
+          'booking number, bill of lading, or reference number. Returns matching private-account containers, shipments, and tracking requests. Only a request whose tracking was stopped (status tracking_stopped) carries shipment_id. Succeeded requests appear as their container or shipment, and a request whose number matches a returned shipment is omitted. ' +
+          'Use get_container or get_shipment_details with a returned UUID for a detailed snapshot. ' +
+          'Pass exactly one identifier, never a user message or conversation history. ' +
+          'Examples: CAIU2885402, MAEU123456789, or a customer reference number.',
+        inputSchema: z.object({
+          query: z
+            .string()
+            .trim()
+            .min(1)
+            .max(128)
+            .describe(
+              'One container number, booking number, Bill of Lading number, or customer reference (maximum 128 characters). Identifier only; never pass conversation text, a user message, or full history.',
+            ),
+        }),
+        outputSchema: z.object({
+          containers: z.array(
+            z.object({
+              id: z.string(),
+              container_number: z.string(),
+              status: z.string(),
+              shipping_line: z.string(),
+              pod_terminal: z.string().optional(),
+              pol_terminal: z.string().optional(),
+              destination: z.string().optional(),
+              duplicate_number: z.boolean().optional(),
+            }),
+          ),
+          shipments: z.array(
+            z.object({
+              id: z.string(),
+              ref_numbers: z.array(z.string()),
+              shipping_line: z.string(),
+              container_count: z.number(),
+            }),
+          ),
+          tracking_requests: z.array(
+            z.object({
+              id: z.string(),
+              request_number: z.string(),
+              status: z.string(),
+              failed_reason: z.string().optional(),
+              scac: z.string().optional(),
+              shipment_id: z.string().optional(),
+            }),
+          ),
+          total_results: z.number(),
+        }),
       },
-      inputSchema: z.object({
-        number: z
-          .string()
-          .trim()
-          .min(1)
-          .max(64)
-          .describe(
-            'One container, Bill of Lading, or booking number (maximum 64 characters). Identifier only; never pass conversation text.',
-          ),
-        numberType: z
-          .enum(['container', 'bill_of_lading', 'booking_number'])
-          .optional()
-          .describe(
-            'Optional override: container | bill_of_lading | booking_number',
-          ),
-        containerNumber: z
-          .string()
-          .trim()
-          .min(1)
-          .max(64)
-          .optional()
-          .describe(
-            'Deprecated alias for one container number (maximum 64 characters)',
-          ),
-        bookingNumber: z
-          .string()
-          .trim()
-          .min(1)
-          .max(64)
-          .optional()
-          .describe(
-            'Deprecated alias for one booking or Bill of Lading number (maximum 64 characters)',
-          ),
-        scac: z
-          .string()
-          .trim()
-          .length(4)
-          .regex(/^[A-Za-z]{4}$/)
-          .optional()
-          .describe(
-            'Four-letter shipping-line SCAC (e.g., MAEU for Maersk). Optional, but required when Terminal49 cannot infer the carrier.',
-          ),
-        refNumbers: z
-          .array(z.string().trim().min(1).max(64))
-          .max(10)
-          .optional()
-          .describe(
-            'Up to 10 reference-number identifiers, each at most 64 characters. Never pass conversation text.',
-          ),
-      }),
-      outputSchema: z
-        .object({
-          error: z.string().optional(),
-          message: z.string().optional(),
-          id: z.string().optional(),
-          container_number: z.string().optional(),
-          status: z.string().optional(),
-          tracking_request_created: z.boolean().optional(),
-          infer_result: z.any().optional(),
-        })
-        .passthrough(),
-    },
-    wrapTool(
-      'track_container',
+      async ({ query }) => executeSearchContainer({ query }, client),
+    ),
+    track_container: tool(
+      {
+        description:
+          'Track a container, bill of lading, or booking number. ' +
+          "If the number matches a container that is still being tracked, returns that container's details; " +
+          'if it matches an in-progress tracking request, returns that request. ' +
+          'Otherwise uses inference to choose the carrier/type when possible and creates a tracking request. ' +
+          'A new request returns the request (id, request_number, number_type, scac). ' +
+          'Container details come back only when the create response links a container, which a new request normally does not, ' +
+          'so poll list_tracking_requests for its status, then use search_container or get_shipment_details. ' +
+          'When the carrier cannot be inferred it asks for scac; a container prefix names the equipment owner, not the carrier.',
+        inputSchema: z.object({
+          number: z
+            .string()
+            .trim()
+            .min(1)
+            .max(64)
+            .describe(
+              'One container, Bill of Lading, or booking number (maximum 64 characters). Identifier only; never pass conversation text.',
+            ),
+          numberType: z
+            .enum(['container', 'bill_of_lading', 'booking_number'])
+            .optional()
+            .describe(
+              'Optional override: container | bill_of_lading | booking_number',
+            ),
+          containerNumber: z
+            .string()
+            .trim()
+            .min(1)
+            .max(64)
+            .optional()
+            .describe(
+              'Deprecated alias for one container number (maximum 64 characters)',
+            ),
+          bookingNumber: z
+            .string()
+            .trim()
+            .min(1)
+            .max(64)
+            .optional()
+            .describe(
+              'Deprecated alias for one booking or Bill of Lading number (maximum 64 characters)',
+            ),
+          scac: z
+            .string()
+            .trim()
+            .length(4)
+            .regex(/^[A-Za-z]{4}$/)
+            .optional()
+            .describe(
+              'Four-letter shipping-line SCAC (e.g., MAEU for Maersk). Optional, but required when Terminal49 cannot infer the carrier.',
+            ),
+          refNumbers: z
+            .array(z.string().trim().min(1).max(64))
+            .max(10)
+            .optional()
+            .describe(
+              'Up to 10 reference-number identifiers, each at most 64 characters. Never pass conversation text.',
+            ),
+        }),
+        outputSchema: z
+          .object({
+            error: z.string().optional(),
+            message: z.string().optional(),
+            id: z.string().optional(),
+            container_number: z.string().optional(),
+            status: z.string().optional(),
+            tracking_request_created: z.boolean().optional(),
+            infer_result: z.any().optional(),
+          })
+          .passthrough(),
+      },
       async ({
         number,
         numberType,
@@ -1276,727 +1333,524 @@ export function createTerminal49McpServer(
           client,
         ),
     ),
-  );
-
-  // Tool 3: Get Container
-  server.registerTool(
-    'get_container',
-    {
-      title: 'Get Container Details',
-      description:
-        'Get container information with flexible data loading. Returns core container data (status, location, equipment, dates) ' +
-        'plus optional shipment, terminal, or transport-event data. Transport events are excluded by default to keep snapshots compact. ' +
-        'Call get_container_transport_events for the complete milestone timeline.',
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
+    get_container: tool(
+      {
+        description:
+          'Get container information with flexible data loading. Returns core container data (status, location, equipment, dates) ' +
+          'plus optional shipment, terminal, or transport-event data. Transport events are excluded by default to keep snapshots compact. ' +
+          'Call get_container_transport_events for the complete milestone timeline.',
+        inputSchema: z.object({
+          id: z
+            .string()
+            .uuid()
+            .describe('The Terminal49 container ID (UUID format)'),
+          include: z
+            .array(
+              z.enum([
+                'shipment',
+                'pod_terminal',
+                'transport_events',
+                'custom_fields',
+              ]),
+            )
+            .optional()
+            .default(['shipment'])
+            .describe(
+              "Optional related data to include. Default: ['shipment'] covers most use cases. " +
+                '• shipment: Routing, BOL, line, ref numbers (lightweight, always useful) ' +
+                '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
+                '• transport_events: Active event summary (count, rail event count, and latest event); use get_container_transport_events for the full timeline ' +
+                '• custom_fields: Account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)',
+            ),
+        }),
+        outputSchema: z.object({}).passthrough(),
       },
-      inputSchema: z.object({
-        id: z
-          .string()
-          .uuid()
-          .describe('The Terminal49 container ID (UUID format)'),
-        include: z
-          .array(
-            z.enum([
-              'shipment',
-              'pod_terminal',
-              'transport_events',
-              'custom_fields',
-            ]),
-          )
-          .optional()
-          .default(['shipment'])
-          .describe(
-            "Optional related data to include. Default: ['shipment'] covers most use cases. " +
-              '• shipment: Routing, BOL, line, ref numbers (lightweight, always useful) ' +
-              '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
-              '• transport_events: Active event summary (count, rail event count, and latest event); use get_container_transport_events for the full timeline ' +
-              '• custom_fields: Account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)',
-          ),
-      }),
-      outputSchema: z.object({}).passthrough(),
-    },
-    wrapTool('get_container', async ({ id, include }) =>
-      executeGetContainer({ id, include }, client),
+      async ({ id, include }) => executeGetContainer({ id, include }, client),
     ),
-  );
-
-  // Tool 4: Get Shipment Details
-  server.registerTool(
-    'get_shipment_details',
-    {
-      title: 'Get Shipment Details',
-      description:
-        'Get detailed shipment information including routing, BOL, containers, and port details. ' +
-        'Returns: Bill of Lading, shipping line, port details, vessel info, ETAs, container list. ' +
-        'Use get_container with a returned container UUID for pickup availability, holds, fees, and last free day.',
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
+    get_shipment_details: tool(
+      {
+        description:
+          'Get detailed shipment information including routing, BOL, containers, and port details. ' +
+          'Returns: Bill of Lading, shipping line, port details, vessel info, ETAs, container list. ' +
+          'Use get_container with a returned container UUID for pickup availability, holds, fees, and last free day.',
+        inputSchema: z.object({
+          id: z
+            .string()
+            .uuid()
+            .describe('The Terminal49 shipment ID (UUID format)'),
+          include_containers: z
+            .boolean()
+            .optional()
+            .default(true)
+            .describe(
+              'Include list of containers in this shipment. Default: true',
+            ),
+          include_custom_fields: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe(
+              'Include account-defined custom fields (e.g. PO number, project manager) set on this shipment. Needs a signed-in user, not an API key. Default: false',
+            ),
+        }),
+        outputSchema: z.object({}).passthrough(),
       },
-      inputSchema: z.object({
-        id: z
-          .string()
-          .uuid()
-          .describe('The Terminal49 shipment ID (UUID format)'),
-        include_containers: z
-          .boolean()
-          .optional()
-          .default(true)
-          .describe(
-            'Include list of containers in this shipment. Default: true',
-          ),
-        include_custom_fields: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe(
-            'Include account-defined custom fields (e.g. PO number, project manager) set on this shipment. Needs a signed-in user, not an API key. Default: false',
-          ),
-      }),
-      outputSchema: z.object({}).passthrough(),
-    },
-    wrapTool(
-      'get_shipment_details',
       async ({ id, include_containers, include_custom_fields }) =>
         executeGetShipmentDetails(
           { id, include_containers, include_custom_fields },
           client,
         ),
     ),
-  );
-
-  // Tool 5: Get Container Transport Events
-  server.registerTool(
-    'get_container_transport_events',
-    {
-      title: 'Get Container Transport Events',
-      description: getContainerTransportEventsTool.description,
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
+    get_container_transport_events: tool(
+      {
+        description: getContainerTransportEventsTool.description,
+        inputSchema: z.object({
+          id: z
+            .string()
+            .uuid()
+            .describe('The Terminal49 container ID (UUID format)'),
+        }),
+        outputSchema: z.object({}).passthrough(),
       },
-      inputSchema: z.object({
-        id: z
-          .string()
-          .uuid()
-          .describe('The Terminal49 container ID (UUID format)'),
-      }),
-      outputSchema: z.object({}).passthrough(),
-    },
-    wrapTool('get_container_transport_events', async ({ id }) =>
-      executeGetContainerTransportEvents({ id }, client),
+      async ({ id }) => executeGetContainerTransportEvents({ id }, client),
     ),
-  );
-
-  // Tool 6: Get Supported Shipping Lines
-  server.registerTool(
-    'get_supported_shipping_lines',
-    {
-      title: 'Get Supported Shipping Lines',
-      description:
-        'Get list of shipping lines (carriers) supported by Terminal49 for container tracking. ' +
-        'Returns SCAC codes, full names, and common abbreviations, with optional name or SCAC filtering. ' +
-        'Pass the returned four-letter SCAC to track_container when carrier inference is ambiguous.',
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
-      },
-      inputSchema: z.object({
-        search: z
-          .string()
-          .trim()
-          .min(1)
-          .max(64)
-          .optional()
-          .describe(
-            'Optional carrier name or SCAC only (maximum 64 characters). Never pass a user message or conversation history.',
+    get_supported_shipping_lines: tool(
+      {
+        description:
+          'Get list of shipping lines (carriers) supported by Terminal49 for container tracking. ' +
+          'Returns SCAC codes, full names, and common abbreviations, with optional name or SCAC filtering. ' +
+          (selectedTools.some((tool) => tool.name === 'track_container')
+            ? 'Pass the returned four-letter SCAC to track_container when carrier inference is ambiguous.'
+            : 'Use the returned four-letter SCAC when a carrier code is needed.'),
+        inputSchema: z.object({
+          search: z
+            .string()
+            .trim()
+            .min(1)
+            .max(64)
+            .optional()
+            .describe(
+              'Optional carrier name or SCAC only (maximum 64 characters). Never pass a user message or conversation history.',
+            ),
+        }),
+        outputSchema: z.object({
+          total_lines: z.number(),
+          shipping_lines: z.array(
+            z.object({
+              scac: z.string(),
+              name: z.string(),
+              short_name: z.string().optional(),
+              bol_prefix: z.string().optional(),
+              notes: z.string().optional(),
+            }),
           ),
-      }),
-      outputSchema: z.object({
-        total_lines: z.number(),
-        shipping_lines: z.array(
-          z.object({
-            scac: z.string(),
-            name: z.string(),
-            short_name: z.string().optional(),
-            bol_prefix: z.string().optional(),
-            notes: z.string().optional(),
-          }),
-        ),
-      }),
-    },
-    wrapTool('get_supported_shipping_lines', async ({ search }) =>
-      executeGetSupportedShippingLines({ search }, client),
-    ),
-  );
-
-  // Tool 7: Get Container Route
-  server.registerTool(
-    'get_container_route',
-    {
-      title: 'Get Container Route',
-      description:
-        'Get the ocean route for a container: ports in order (POL, transshipment ports, POD) with ETA/ATA and ETD/ATD, ' +
-        'plus the vessel carrying it now (name, IMO, voyage, position with the time it was reported, speed) while it is at sea. ' +
-        'This paid feature (Routing Data) may not be available for every account.',
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
+        }),
       },
-      inputSchema: z.object({
-        id: z
-          .string()
-          .uuid()
-          .describe('The Terminal49 container ID (UUID format)'),
-      }),
-      outputSchema: routeSummaryOrSoftErrorSchema,
-    },
-    wrapTool('get_container_route', async ({ id }) =>
-      executeGetContainerRoute({ id }, client),
+      async ({ search }) =>
+        executeGetSupportedShippingLines({ search }, client),
     ),
-  );
-
-  // Tool 8: List Shipments
-  server.registerTool(
-    'list_shipments',
-    {
-      title: 'List Shipments',
-      description:
-        'Return one requested page of shipments using common filters or advanced_filters for the confirmed public API catalog. Page size is capped at 25. ' +
-        'Like the dashboard, only actively tracked shipments are returned unless include_stopped_tracking is true (use it for history over a past period). Report meta.total for the requested set. ' +
-        'Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_shipment_details with a returned UUID for routing and container details. Never pass conversation text into identifier fields.',
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
+    get_container_route: tool(
+      {
+        description:
+          'Get the ocean route for a container: ports in order (POL, transshipment ports, POD) with ETA/ATA and ETD/ATD, ' +
+          'plus the vessel carrying it now (name, IMO, voyage, position with the time it was reported, speed) while it is at sea. ' +
+          'This paid feature (Routing Data) may not be available for every account.',
+        inputSchema: z.object({
+          id: z
+            .string()
+            .uuid()
+            .describe('The Terminal49 container ID (UUID format)'),
+        }),
+        outputSchema: routeSummaryOrSoftErrorSchema,
       },
-      inputSchema: z.preprocess(stripLegacyIntent, shipmentListInputSchema),
-      outputSchema: z.object({
-        items: z.array(z.record(z.string(), z.any())),
-        links: z.record(z.string(), z.string().nullable()).optional(),
-        meta: z.record(z.string(), z.any()).optional(),
-        unsupportedFilters: z.array(z.string()),
-        _metadata: listResponseMetadataSchema,
-      }),
-    },
-    wrapTool('list_shipments', async (args) =>
-      executeListShipments(args, client),
+      async ({ id }) => executeGetContainerRoute({ id }, client),
     ),
-  );
-
-  // Tool 9: List Containers
-  server.registerTool(
-    'list_containers',
-    {
-      title: 'List Containers',
-      description:
-        'Return one requested page of containers using common status, port, carrier, milestone, hold and fee filters, or advanced_filters for the confirmed public API catalog. Page size is capped at 25. ' +
-        'Like the dashboard, only actively tracked containers are returned unless include_stopped_tracking is true (use it for history such as pickups or dwell over a past period). ' +
-        'Use the dashboard definitions and report meta.total for that set before any narrowing: ready for pickup = current_status available; at risk of demurrage or needs attention = requires_attention true with sort attention_priority (the Containers at Risk view); discharged but not picked up = current_status available,not_available,grounded,awaiting_inland_transfer. ' +
-        'Add extra conditions such as LFD windows, fees or holds only when the user asks, and present them as a subset of that total. ' +
-        'Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_container with a returned UUID for a detailed snapshot. Do not pass conversation text into filters.',
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
+    list_shipments: tool(
+      {
+        description:
+          'Return one requested page of shipments using common filters or advanced_filters for the confirmed public API catalog. Page size is capped at 25. ' +
+          'Like the dashboard, only actively tracked shipments are returned unless include_stopped_tracking is true (use it for history over a past period). Report meta.total for the requested set. ' +
+          'Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_shipment_details with a returned UUID for routing and container details. Never pass conversation text into identifier fields.',
+        inputSchema: z.preprocess(stripLegacyIntent, shipmentListInputSchema),
+        outputSchema: z.object({
+          items: z.array(z.record(z.string(), z.any())),
+          links: z.record(z.string(), z.string().nullable()).optional(),
+          meta: z.record(z.string(), z.any()).optional(),
+          unsupportedFilters: z.array(z.string()),
+          _metadata: listResponseMetadataSchema,
+        }),
       },
-      inputSchema: z.preprocess(stripLegacyIntent, containerListInputSchema),
-      outputSchema: z.object({
-        items: z.array(z.record(z.string(), z.any())),
-        links: z.record(z.string(), z.string().nullable()).optional(),
-        meta: z.record(z.string(), z.any()).optional(),
-        unsupportedFilters: z.array(z.string()),
-        _metadata: listResponseMetadataSchema,
-      }),
-    },
-    wrapTool(
-      'list_containers',
+      async (args) => executeListShipments(args, client),
+    ),
+    list_containers: tool(
+      {
+        description:
+          'Return one requested page of containers using common status, port, carrier, milestone, hold and fee filters, or advanced_filters for the confirmed public API catalog. Page size is capped at 25. ' +
+          'Like the dashboard, only actively tracked containers are returned unless include_stopped_tracking is true (use it for history such as pickups or dwell over a past period). ' +
+          'Use the dashboard definitions and report meta.total for that set before any narrowing: ready for pickup = current_status available; at risk of demurrage or needs attention = requires_attention true with sort attention_priority (the Containers at Risk view); discharged but not picked up = current_status available,not_available,grounded,awaiting_inland_transfer. ' +
+          'Add extra conditions such as LFD windows, fees or holds only when the user asks, and present them as a subset of that total. ' +
+          'Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_container with a returned UUID for a detailed snapshot. Do not pass conversation text into filters.',
+        inputSchema: z.preprocess(stripLegacyIntent, containerListInputSchema),
+        outputSchema: z.object({
+          items: z.array(z.record(z.string(), z.any())),
+          links: z.record(z.string(), z.string().nullable()).optional(),
+          meta: z.record(z.string(), z.any()).optional(),
+          unsupportedFilters: z.array(z.string()),
+          _metadata: listResponseMetadataSchema,
+        }),
+      },
       async (args) => executeListContainers(args, client),
       // ResourceLinks: each container row becomes a compact link to the
       // registered terminal49://container/{id} resource, so the client can
       // resolve full details on demand instead of paying for them up front.
       (result) => buildListResourceLinks(result, 'container'),
     ),
-  );
-
-  // Tool 9b: Summarize Containers
-  server.registerTool(
-    'summarize_containers',
-    {
-      title: 'Summarize Containers',
-      description:
-        'Count containers grouped by POD terminal, status, shipping line, port of discharge, hold type, LFD date or POD arrival date, using the same filters as list_containers. ' +
-        'Use it for "how many" and "break down by" questions; use list_containers for "which ones". ' +
-        'Like the dashboard, only actively tracked containers are counted unless include_stopped_tracking is true. ' +
-        'hold_type counts each distinct current POD hold name, including pending holds, so a container with two holds counts twice; dates follow dashboard display timezones, falling back to UTC when missing or invalid. A null key means the container has no value (no hold, no LFD, no arrival). ' +
-        'Report the total, and say so when truncated is true (more than 200 groups).',
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
-      },
-      inputSchema: z.preprocess(
-        stripLegacyIntent,
-        summarizeContainersInputSchema,
-      ),
-      outputSchema: z.object({
-        total: z.number(),
-        group_by: z.string(),
-        truncated: z.boolean(),
-        groups: z.array(
-          z.object({
-            key: z.string().nullable(),
-            label: z.string().nullable(),
-            count: z.number(),
-          }),
+    summarize_containers: tool(
+      {
+        description:
+          'Count containers grouped by POD terminal, status, shipping line, port of discharge, hold type, LFD date or POD arrival date, using the same filters as list_containers. ' +
+          'Use it for "how many" and "break down by" questions; use list_containers for "which ones". ' +
+          'Like the dashboard, only actively tracked containers are counted unless include_stopped_tracking is true. ' +
+          'hold_type counts each distinct current POD hold name, including pending holds, so a container with two holds counts twice; dates follow dashboard display timezones, falling back to UTC when missing or invalid. A null key means the container has no value (no hold, no LFD, no arrival). ' +
+          'Report the total, and say so when truncated is true (more than 200 groups).',
+        inputSchema: z.preprocess(
+          stripLegacyIntent,
+          summarizeContainersInputSchema,
         ),
-        applied_filters: z.record(z.string(), z.unknown()),
-      }),
-    },
-    wrapTool('summarize_containers', async (args) =>
-      executeSummarizeContainers(args, client),
-    ),
-  );
-
-  // Tool 9c: List Parties
-  server.registerTool(
-    'list_parties',
-    {
-      title: 'List Parties',
-      description:
-        "Find the companies on this account's shipments (customers, shippers, consignees, customs brokers, freight forwarders, dray carriers) by name and return their IDs. " +
-        'Use it before list_containers or summarize_containers when a question names a company, then filter with advanced_filters.parties keyed by role, for example { "customer": "<id>" }.',
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
-      },
-      inputSchema: z.preprocess(stripLegacyIntent, listPartiesInputSchema),
-      outputSchema: z.object({
-        total_matched: z.number(),
-        parties: z.array(z.object({ id: z.string(), name: z.string() })),
-        truncated: z.boolean(),
-        usage: z.string(),
-      }),
-    },
-    wrapTool('list_parties', async (args) => executeListParties(args, client)),
-  );
-
-  // Tool 9d: Set Party Role
-  server.registerTool(
-    'set_party_role',
-    {
-      title: 'Set Party Role',
-      description:
-        'Attach a party to containers or shipments in a role, replace the party in that role, or detach it, for example "set the drayage carrier to Manzo Transport on these containers" (action replace). ' +
-        'Resolve the company to a party_id with list_parties first, and the records to IDs with search_container or list_containers. Up to 50 records per call. ' +
-        'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
-        'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: true,
-        idempotentHint: true,
-        openWorldHint: false,
-      },
-      inputSchema: z.preprocess(stripLegacyIntent, setPartyRoleInputSchema),
-      outputSchema: recordWriteOutputSchema,
-    },
-    wrapTool('set_party_role', async (args: SetPartyRoleArgs) =>
-      executeSetPartyRole(args, client, writeDeadlineAt),
-    ),
-  );
-
-  // Tool 9e: Set Custom Field
-  server.registerTool(
-    'set_custom_field',
-    {
-      title: 'Set Custom Field',
-      description:
-        "Set or clear one of the account's custom fields (for example a sales rep or PO number) on containers or shipments. " +
-        "Read the field's api_slug and expected values from get_container or get_shipment_details with custom_fields first; never guess the slug. Up to 50 records per call; a multi-select field takes an array of option values, and value null clears the field. " +
-        'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
-        'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: true,
-        idempotentHint: true,
-        openWorldHint: false,
-      },
-      inputSchema: z.preprocess(stripLegacyIntent, setCustomFieldInputSchema),
-      outputSchema: recordWriteOutputSchema,
-    },
-    wrapTool('set_custom_field', async (args: SetCustomFieldArgs) =>
-      executeSetCustomField(args, client, writeDeadlineAt),
-    ),
-  );
-
-  // Tool 10: List Tracking Requests
-  server.registerTool(
-    'list_tracking_requests',
-    {
-      title: 'List Tracking Requests',
-      description:
-        'Return one intentionally requested page of tracking requests, optionally filtered by request identifier, status, or carrier SCAC. Page size is capped at 25. A request whose status is created has succeeded; its shipment.id is the shipment UUID for get_shipment_details. Identifier fields must never contain user messages or conversation history.',
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
-      },
-      inputSchema: z.preprocess(
-        stripLegacyIntent,
-        z
-          .object({
-            request_number: z
-              .string()
-              .trim()
-              .min(1)
-              .max(64)
-              .optional()
-              .describe(
-                'One tracking request identifier (maximum 64 characters). Never pass conversation text.',
-              ),
-            status: z
-              .enum(TRACKING_REQUEST_STATUS_FILTERS)
-              .optional()
-              .describe(
-                'Filter by request status: pending (still being processed), created (succeeded: the shipment was created), failed, or cancelled. ' +
-                  'This filter cannot select awaiting_manifest (still being processed while the carrier manifest is pending) or tracking_stopped; ' +
-                  'to find those, pass request_number without status.',
-              ),
-            scac: z
-              .string()
-              .trim()
-              .length(4)
-              .regex(/^[A-Za-z]{4}$/)
-              .optional()
-              .describe('Filter by one four-letter shipping-line SCAC'),
-            page: listPageSchema,
-            page_size: listPageSizeSchema,
-          })
-          .strict(),
-      ),
-      outputSchema: z.object({
-        items: z.array(z.record(z.string(), z.any())),
-        links: z.record(z.string(), z.string()).optional(),
-        meta: z.record(z.string(), z.any()).optional(),
-      }),
-    },
-    wrapTool('list_tracking_requests', async (args) =>
-      executeListTrackingRequests(args, client),
-    ),
-  );
-
-  // Tool 11: Search Docs
-  server.registerTool(
-    'search_docs',
-    {
-      title: 'Search Terminal49 Docs',
-      description:
-        'Search the public Terminal49 documentation (terminal49.com/docs): API guides, webhooks, ' +
-        'container statuses, holds and last free day rules, DataSync, the SDK, and this MCP server. ' +
-        'Returns matching sections with title, link, and an excerpt. Use it for how-to and definition ' +
-        'questions, not for account data, and cite the links in the answer.',
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: true,
-      },
-      inputSchema: z.object({
-        query: z
-          .string()
-          .trim()
-          .min(1)
-          .max(256)
-          .describe(
-            'A short documentation search query (maximum 256 characters), e.g. "webhook retries".',
+        outputSchema: z.object({
+          total: z.number(),
+          group_by: z.string(),
+          truncated: z.boolean(),
+          groups: z.array(
+            z.object({
+              key: z.string().nullable(),
+              label: z.string().nullable(),
+              count: z.number(),
+            }),
           ),
-        limit: z
-          .number()
-          .int()
-          .min(1)
-          .max(10)
-          .optional()
-          .describe('Maximum results to return (1-10, default 5).'),
-      }),
-      outputSchema: z.object({
-        query: z.string(),
-        total_results: z.number(),
-        results: z.array(
-          z.object({
-            title: z.string(),
-            url: z.string(),
-            page: z.string(),
-            content: z.string(),
-          }),
-        ),
-      }),
-    },
-    wrapTool('search_docs', async ({ query, limit }) =>
-      executeSearchDocs(
-        { query, limit },
-        { assistantApiKey: process.env.MINTLIFY_ASSISTANT_API_KEY },
-      ),
-    ),
-  );
-
-  // Tool 14: Whoami
-  server.registerTool(
-    'whoami',
-    {
-      title: 'Who Am I',
-      description:
-        'Identify the caller: whether this session uses an API key or a signed-in user, which ' +
-        'Terminal49 account it is scoped to (company name, business type, plan, location), and ' +
-        'which gated features that credential can use here (data_out_api, custom_fields, ' +
-        'routing_data, rail_data, stop_tracking, trade_intel). Each feature carries a status: ' +
-        'available, requires_paid_plan, requires_user_credential, or not_enabled. Call it when ' +
-        'the user asks who they are or which account is connected, when another tool returns ' +
-        'nothing or an authorization error, or before relying on a gated feature. Takes no arguments.',
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
+          applied_filters: z.record(z.string(), z.unknown()),
+        }),
       },
-      inputSchema: z.object({}),
-      outputSchema: z.object({
-        kind: z.enum(['api_key', 'user']),
-        channel: z.string(),
-        credential_name: z.string().nullable(),
-        account: z.object({
-          id: z.string(),
-          company_name: z.string(),
-          company_type: z.string().nullable(),
-          plan: z.string().nullable(),
-          scac: z.string().nullable(),
-          abbr_name: z.string().nullable(),
-          location: z.string().nullable(),
-          tracking_slots: z
+      async (args) => executeSummarizeContainers(args, client),
+    ),
+    list_parties: tool(
+      {
+        description:
+          "Find the companies on this account's shipments (customers, shippers, consignees, customs brokers, freight forwarders, dray carriers) by name and return their IDs. " +
+          'Use it before list_containers or summarize_containers when a question names a company, then filter with advanced_filters.parties keyed by role, for example { "customer": "<id>" }.',
+        inputSchema: z.preprocess(stripLegacyIntent, listPartiesInputSchema),
+        outputSchema: z.object({
+          total_matched: z.number(),
+          parties: z.array(z.object({ id: z.string(), name: z.string() })),
+          truncated: z.boolean(),
+          usage: z.string(),
+        }),
+      },
+      async (args) => executeListParties(args, client),
+    ),
+    set_party_role: tool(
+      {
+        description:
+          'Attach a party to containers or shipments in a role, replace the party in that role, or detach it, for example "set the drayage carrier to Manzo Transport on these containers" (action replace). ' +
+          'Resolve the company to a party_id with list_parties first, and the records to IDs with search_container or list_containers. Up to 50 records per call. ' +
+          'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
+          'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
+        inputSchema: z.preprocess(stripLegacyIntent, setPartyRoleInputSchema),
+        outputSchema: recordWriteOutputSchema,
+      },
+      async (args: SetPartyRoleArgs) =>
+        executeSetPartyRole(args, client, options.writeDeadlineAt),
+    ),
+    set_custom_field: tool(
+      {
+        description:
+          "Set or clear one of the account's custom fields (for example a sales rep or PO number) on containers or shipments. " +
+          "Read the field's api_slug and expected values from get_container or get_shipment_details with custom_fields first; never guess the slug. Up to 50 records per call; a multi-select field takes an array of option values, and value null clears the field. " +
+          'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
+          'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
+        inputSchema: z.preprocess(stripLegacyIntent, setCustomFieldInputSchema),
+        outputSchema: recordWriteOutputSchema,
+      },
+      async (args: SetCustomFieldArgs) =>
+        executeSetCustomField(args, client, options.writeDeadlineAt),
+    ),
+    list_tracking_requests: tool(
+      {
+        description:
+          'Return one intentionally requested page of tracking requests, optionally filtered by request identifier, status, or carrier SCAC. Page size is capped at 25. A request whose status is created has succeeded; its shipment.id is the shipment UUID for get_shipment_details. Identifier fields must never contain user messages or conversation history.',
+        inputSchema: z.preprocess(
+          stripLegacyIntent,
+          z
             .object({
-              limit: z.number(),
-              used: z.number(),
-              remaining: z.number(),
+              request_number: z
+                .string()
+                .trim()
+                .min(1)
+                .max(64)
+                .optional()
+                .describe(
+                  'One tracking request identifier (maximum 64 characters). Never pass conversation text.',
+                ),
+              status: z
+                .enum(TRACKING_REQUEST_STATUS_FILTERS)
+                .optional()
+                .describe(
+                  'Filter by request status: pending (still being processed), created (succeeded: the shipment was created), failed, or cancelled. ' +
+                    'This filter cannot select awaiting_manifest (still being processed while the carrier manifest is pending) or tracking_stopped; ' +
+                    'to find those, pass request_number without status.',
+                ),
+              scac: z
+                .string()
+                .trim()
+                .length(4)
+                .regex(/^[A-Za-z]{4}$/)
+                .optional()
+                .describe('Filter by one four-letter shipping-line SCAC'),
+              page: listPageSchema,
+              page_size: listPageSizeSchema,
+            })
+            .strict(),
+        ),
+        outputSchema: z.object({
+          items: z.array(z.record(z.string(), z.any())),
+          links: z.record(z.string(), z.string()).optional(),
+          meta: z.record(z.string(), z.any()).optional(),
+        }),
+      },
+      async (args) => executeListTrackingRequests(args, client),
+    ),
+    search_docs: tool(
+      {
+        description:
+          'Search the public Terminal49 documentation (terminal49.com/docs): API guides, webhooks, ' +
+          'container statuses, holds and last free day rules, DataSync, the SDK, and this MCP server. ' +
+          'Returns matching sections with title, link, and an excerpt. Use it for how-to and definition ' +
+          'questions, not for account data, and cite the links in the answer.',
+        inputSchema: z.object({
+          query: z
+            .string()
+            .trim()
+            .min(1)
+            .max(256)
+            .describe(
+              'A short documentation search query (maximum 256 characters), e.g. "webhook retries".',
+            ),
+          limit: z
+            .number()
+            .int()
+            .min(1)
+            .max(10)
+            .optional()
+            .describe('Maximum results to return (1-10, default 5).'),
+        }),
+        outputSchema: z.object({
+          query: z.string(),
+          total_results: z.number(),
+          results: z.array(
+            z.object({
+              title: z.string(),
+              url: z.string(),
+              page: z.string(),
+              content: z.string(),
+            }),
+          ),
+        }),
+      },
+      async ({ query, limit }) =>
+        executeSearchDocs(
+          { query, limit },
+          { assistantApiKey: process.env.MINTLIFY_ASSISTANT_API_KEY },
+        ),
+    ),
+    whoami: tool(
+      {
+        description:
+          'Identify the caller: whether this session uses an API key or a signed-in user, which ' +
+          'Terminal49 account it is scoped to (company name, business type, plan, location), and ' +
+          'which gated features that credential can use here (data_out_api, custom_fields, ' +
+          'routing_data, rail_data, stop_tracking, trade_intel). Each feature carries a status: ' +
+          'available, requires_paid_plan, requires_user_credential, or not_enabled. Call it when ' +
+          'the user asks who they are or which account is connected, when another tool returns ' +
+          'nothing or an authorization error, or before relying on a gated feature. Takes no arguments.',
+        inputSchema: z.object({}),
+        outputSchema: z.object({
+          kind: z.enum(['api_key', 'user']),
+          channel: z.string(),
+          credential_name: z.string().nullable(),
+          account: z.object({
+            id: z.string(),
+            company_name: z.string(),
+            company_type: z.string().nullable(),
+            plan: z.string().nullable(),
+            scac: z.string().nullable(),
+            abbr_name: z.string().nullable(),
+            location: z.string().nullable(),
+            tracking_slots: z
+              .object({
+                limit: z.number(),
+                used: z.number(),
+                remaining: z.number(),
+              })
+              .nullable(),
+          }),
+          user: z
+            .object({
+              id: z.string(),
+              email: z.string(),
+              name: z.string().nullable(),
+              role: z.string().nullable(),
+              job_role: z.string().nullable(),
+              job_title: z.string().nullable(),
+              terminal49_staff: z.boolean(),
             })
             .nullable(),
+          other_accounts: z.array(
+            z.object({ id: z.string(), company_name: z.string() }),
+          ),
+          features: z.record(z.string(), z.object({ status: z.string() })),
         }),
-        user: z
-          .object({
-            id: z.string(),
-            email: z.string(),
-            name: z.string().nullable(),
-            role: z.string().nullable(),
-            job_role: z.string().nullable(),
-            job_title: z.string().nullable(),
-            terminal49_staff: z.boolean(),
-          })
-          .nullable(),
-        other_accounts: z.array(
-          z.object({ id: z.string(), company_name: z.string() }),
+      },
+      async (_args, context) => executeWhoami(context),
+    ),
+    search_importers: tool(
+      {
+        description:
+          'Find US importers by company name (typos and partial names are fine), by what they import in plain words, or both, optionally narrowed by state, US port, or origin country. ' +
+          'Each result covers the 12-month search window in period (it can end a month or two before the last full month; use get_importer_profile for the latest months): containers, how many as consignee versus notify party, TEUs, estimated value, and top ports, origin countries, carriers, and products. ' +
+          'Results are ordered by match quality, not size, and one company appears once per US state and often under several names (divisions, distribution centers), so read every row before answering. ' +
+          'A high share_as_notify_party suggests a forwarder or customs broker, but large cargo owners can also be listed mostly as notify party, so weigh the name and product mix too. Long lists are cut to the top five, with more_not_shown counting the rest. Low volume for a well-known company is a floor: some importers keep their names off the records or ship under a forwarder. ' +
+          'Pass a returned company_name unchanged to get_importer_profile.',
+        inputSchema: z.preprocess(
+          stripLegacyIntent,
+          searchImportersInputSchema,
         ),
-        features: z.record(z.string(), z.object({ status: z.string() })),
-      }),
-    },
-    wrapTool('whoami', async () => executeWhoami(client)),
-  );
-
-  // ==================== TRADE INTELLIGENCE ====================
-  // US import market data (bill-of-lading records). Read-only and gated per
-  // account; a missing entitlement returns a plain "not enabled" result.
-
-  const tradeIntelAnnotations = {
-    readOnlyHint: true,
-    destructiveHint: false,
-    openWorldHint: false,
-  };
-  const notEnabledFields = {
-    error: z.string().optional(),
-    message: z.string().optional(),
-    alternative: z.string().optional(),
-  };
-  const rows = z.array(z.record(z.string(), z.unknown())).optional();
-  const period = z
-    .object({ from: z.string().optional(), to: z.string().optional() })
-    .passthrough()
-    .optional();
-
-  server.registerTool(
-    'search_importers',
-    {
-      title: 'Search US Importers',
-      description:
-        'Find US importers by company name (typos and partial names are fine), by what they import in plain words, or both, optionally narrowed by state, US port, or origin country. ' +
-        'Each result covers the 12-month search window in period (it can end a month or two before the last full month; use get_importer_profile for the latest months): containers, how many as consignee versus notify party, TEUs, estimated value, and top ports, origin countries, carriers, and products. ' +
-        'Results are ordered by match quality, not size, and one company appears once per US state and often under several names (divisions, distribution centers), so read every row before answering. ' +
-        'A high share_as_notify_party suggests a forwarder or customs broker, but large cargo owners can also be listed mostly as notify party, so weigh the name and product mix too. Long lists are cut to the top five, with more_not_shown counting the rest. Low volume for a well-known company is a floor: some importers keep their names off the records or ship under a forwarder. ' +
-        'Pass a returned company_name unchanged to get_importer_profile.',
-      annotations: tradeIntelAnnotations,
-      inputSchema: z.preprocess(stripLegacyIntent, searchImportersInputSchema),
-      outputSchema: z
-        .object({ ...notEnabledFields, period, importers: rows })
-        .passthrough(),
-    },
-    wrapTool('search_importers', async (args) =>
-      executeSearchImporters(args, client),
+        outputSchema: z
+          .object({ ...notEnabledFields, period, importers: rows })
+          .passthrough(),
+      },
+      async (args) => executeSearchImporters(args, client),
     ),
-  );
-
-  server.registerTool(
-    'get_importer_profile',
-    {
-      title: 'Get Importer Profile',
-      description:
-        "One importer's US ocean imports over full calendar months ending last month: totals, a monthly series (up to 60 months), US ports, origin countries, carriers, destination states, and products with estimated value. " +
-        'company_name must be the exact name from search_importers; omit company_state to combine all of its locations. ' +
-        "This is the right tool for one company's trend: use months: 24 and compare the latest months with the same months a year earlier (the get_trade_trends company filter matches every name containing the text). " +
-        'If the company imports under several names, profile each and say which you included. Values are estimates, not declared customs values. Carrier names have spelling variants; merge them before computing shares.',
-      annotations: tradeIntelAnnotations,
-      inputSchema: z.preprocess(
-        stripLegacyIntent,
-        getImporterProfileInputSchema,
-      ),
-      outputSchema: z
-        .object({
-          ...notEnabledFields,
-          company_name: z.string().optional(),
-          found: z.boolean().optional(),
-          period,
-          totals: z.record(z.string(), z.unknown()).optional(),
-          monthly: rows,
-        })
-        .passthrough(),
-    },
-    wrapTool('get_importer_profile', async (args) =>
-      executeGetImporterProfile(args, client),
+    get_importer_profile: tool(
+      {
+        description:
+          "One importer's US ocean imports over full calendar months ending last month: totals, a monthly series (up to 60 months), US ports, origin countries, carriers, destination states, and products with estimated value. " +
+          'company_name must be the exact name from search_importers; omit company_state to combine all of its locations. ' +
+          "This is the right tool for one company's trend: use months: 24 and compare the latest months with the same months a year earlier (the get_trade_trends company filter matches every name containing the text). " +
+          'If the company imports under several names, profile each and say which you included. Values are estimates, not declared customs values. Carrier names have spelling variants; merge them before computing shares.',
+        inputSchema: z.preprocess(
+          stripLegacyIntent,
+          getImporterProfileInputSchema,
+        ),
+        outputSchema: z
+          .object({
+            ...notEnabledFields,
+            company_name: z.string().optional(),
+            found: z.boolean().optional(),
+            period,
+            totals: z.record(z.string(), z.unknown()).optional(),
+            monthly: rows,
+          })
+          .passthrough(),
+      },
+      async (args) => executeGetImporterProfile(args, client),
     ),
-  );
-
-  server.registerTool(
-    'search_commodities',
-    {
-      title: 'Search Commodities',
-      description:
-        'Turn a product description ("office chairs") or an HS code prefix ("94") into four-digit HS product codes, with the goods commonly declared under each code, the number of importers, and 12-month estimated import value. ' +
-        'HS descriptions are terse and codes are broader than everyday product names (0306 covers all frozen crustaceans, not just shrimp), so check common_goods before using a code (common_goods_not_shown counts goods left out), and say which code you used. ' +
-        'Pass hs4 to rank_importers or as a filter to get_trade_trends and get_trade_breakdown.',
-      annotations: tradeIntelAnnotations,
-      inputSchema: z.preprocess(
-        stripLegacyIntent,
-        searchCommoditiesInputSchema,
-      ),
-      outputSchema: z
-        .object({ ...notEnabledFields, products: rows })
-        .passthrough(),
-    },
-    wrapTool('search_commodities', async (args) =>
-      executeSearchCommodities(args, client),
+    search_commodities: tool(
+      {
+        description:
+          'Turn a product description ("office chairs") or an HS code prefix ("94") into four-digit HS product codes, with the goods commonly declared under each code, the number of importers, and 12-month estimated import value. ' +
+          'HS descriptions are terse and codes are broader than everyday product names (0306 covers all frozen crustaceans, not just shrimp), so check common_goods before using a code (common_goods_not_shown counts goods left out), and say which code you used. ' +
+          'Pass hs4 to rank_importers or as a filter to get_trade_trends and get_trade_breakdown.',
+        inputSchema: z.preprocess(
+          stripLegacyIntent,
+          searchCommoditiesInputSchema,
+        ),
+        outputSchema: z
+          .object({ ...notEnabledFields, products: rows })
+          .passthrough(),
+      },
+      async (args) => executeSearchCommodities(args, client),
     ),
-  );
-
-  server.registerTool(
-    'rank_importers',
-    {
-      title: 'Rank US Importers',
-      description:
-        'Rank US importers by physical containers over full calendar months ending last month, for a product (hs4), a US port, an origin country, or any combination; includes estimated value when hs4 is given. ' +
-        'Use it for "who imports X" and "top importers through Y". The ranking includes forwarders and customs brokers and does not say which rows are; check the top names with search_importers when that matters, using share_as_notify_party together with the company name and product mix (large cargo owners can also be mostly notify party). ' +
-        'Big importers can be split across names, and some keep their names off the records, so absence from the list does not mean low volume.',
-      annotations: tradeIntelAnnotations,
-      inputSchema: z.preprocess(stripLegacyIntent, rankImportersInputSchema),
-      outputSchema: z
-        .object({ ...notEnabledFields, period, importers: rows })
-        .passthrough(),
-    },
-    wrapTool('rank_importers', async (args) =>
-      executeRankImporters(args, client),
+    rank_importers: tool(
+      {
+        description:
+          'Rank US importers by physical containers over full calendar months ending last month, for a product (hs4), a US port, an origin country, or any combination; includes estimated value when hs4 is given. ' +
+          'Use it for "who imports X" and "top importers through Y". The ranking includes forwarders and customs brokers and does not say which rows are; check the top names with search_importers when that matters, using share_as_notify_party together with the company name and product mix (large cargo owners can also be mostly notify party). ' +
+          'Big importers can be split across names, and some keep their names off the records, so absence from the list does not mean low volume.',
+        inputSchema: z.preprocess(stripLegacyIntent, rankImportersInputSchema),
+        outputSchema: z
+          .object({ ...notEnabledFields, period, importers: rows })
+          .passthrough(),
+      },
+      async (args) => executeRankImporters(args, client),
     ),
-  );
-
-  server.registerTool(
-    'get_trade_trends',
-    {
-      title: 'Get Trade Trends',
-      description:
-        'Time series of US ocean imports (containers, TEUs, or estimated value) by month, quarter, or year, optionally split by up to two dimensions (origin country, US port, coast, carrier, product, importer, and more) and filtered by any of them. ' +
-        'Default window: the 24 months ending with the current month, which is still incomplete (its points are marked partial), so a drop in the last period is usually that. Set until to the last full month and compare like periods. History goes back to January 2022; pass since for a longer view. ' +
-        "The company filter is a substring match (IKEA also matches IKEA SUPPLY AG); for one company use get_importer_profile. Use this without a company filter for market totals, and don't add values across products or companies. " +
-        'Countries and ports use the records\' spellings (filter "china", not "China"); merge carrier spelling variants before computing shares.',
-      annotations: tradeIntelAnnotations,
-      inputSchema: z.preprocess(stripLegacyIntent, getTradeTrendsInputSchema),
-      outputSchema: z
-        .object({
-          ...notEnabledFields,
-          measure: z.string().optional(),
-          interval: z.string().optional(),
-          period,
-          series: rows,
-          truncated: z.boolean().optional(),
-        })
-        .passthrough(),
-    },
-    wrapTool('get_trade_trends', async (args) =>
-      executeGetTradeTrends(args, client),
+    get_trade_trends: tool(
+      {
+        description:
+          'Time series of US ocean imports (containers, TEUs, or estimated value) by month, quarter, or year, optionally split by up to two dimensions (origin country, US port, coast, carrier, product, importer, and more) and filtered by any of them. ' +
+          'Default window: the 24 months ending with the current month, which is still incomplete (its points are marked partial), so a drop in the last period is usually that. Set until to the last full month and compare like periods. History goes back to January 2022; pass since for a longer view. ' +
+          "The company filter is a substring match (IKEA also matches IKEA SUPPLY AG); for one company use get_importer_profile. Use this without a company filter for market totals, and don't add values across products or companies. " +
+          'Countries and ports use the records\' spellings (filter "china", not "China"); merge carrier spelling variants before computing shares.',
+        inputSchema: z.preprocess(stripLegacyIntent, getTradeTrendsInputSchema),
+        outputSchema: z
+          .object({
+            ...notEnabledFields,
+            measure: z.string().optional(),
+            interval: z.string().optional(),
+            period,
+            series: rows,
+            truncated: z.boolean().optional(),
+          })
+          .passthrough(),
+      },
+      async (args) => executeGetTradeTrends(args, client),
     ),
-  );
-
-  server.registerTool(
-    'get_trade_breakdown',
-    {
-      title: 'Get Trade Breakdown',
-      description:
-        'Nested totals of US ocean imports over one to three dimensions, such as region > country > US port or HS chapter > HS code, with a grand total (level 0) and subtotals at every level, keeping the largest children under each parent. Use it for mix and share questions. ' +
-        'Default window: the 12 months ending with the current, incomplete month, so it is not 12 full months; for an annual total set since and until to 12 full months. ' +
-        "The company filter is a substring match. Don't add values across products or companies. Merge carrier spelling variants before computing shares. Values are estimates, not declared customs values.",
-      annotations: tradeIntelAnnotations,
-      inputSchema: z.preprocess(
-        stripLegacyIntent,
-        getTradeBreakdownInputSchema,
-      ),
-      outputSchema: z
-        .object({
-          ...notEnabledFields,
-          measure: z.string().optional(),
-          period,
-          rows,
-          truncated: z.boolean().optional(),
-        })
-        .passthrough(),
-    },
-    wrapTool('get_trade_breakdown', async (args) =>
-      executeGetTradeBreakdown(args, client),
+    get_trade_breakdown: tool(
+      {
+        description:
+          'Nested totals of US ocean imports over one to three dimensions, such as region > country > US port or HS chapter > HS code, with a grand total (level 0) and subtotals at every level, keeping the largest children under each parent. Use it for mix and share questions. ' +
+          'Default window: the 12 months ending with the current, incomplete month, so it is not 12 full months; for an annual total set since and until to 12 full months. ' +
+          "The company filter is a substring match. Don't add values across products or companies. Merge carrier spelling variants before computing shares. Values are estimates, not declared customs values.",
+        inputSchema: z.preprocess(
+          stripLegacyIntent,
+          getTradeBreakdownInputSchema,
+        ),
+        outputSchema: z
+          .object({
+            ...notEnabledFields,
+            measure: z.string().optional(),
+            period,
+            rows,
+            truncated: z.boolean().optional(),
+          })
+          .passthrough(),
+      },
+      async (args) => executeGetTradeBreakdown(args, client),
     ),
-  );
-
-  server.registerTool(
-    'get_trade_data_coverage',
-    {
-      title: 'Get Trade Data Coverage',
-      description:
-        'What the trade intelligence data covers right now: where history starts (January 2022), the latest month and whether it is still incomplete, the last full month, the 12-month window search_importers uses, and when the data was last built. ' +
-        'Call it before quoting a period or when the user asks how current or how far back the data goes. It also shows whether trade intelligence is enabled for the account.',
-      annotations: tradeIntelAnnotations,
-      inputSchema: z.preprocess(
-        stripLegacyIntent,
-        getTradeDataCoverageInputSchema,
-      ),
-      outputSchema: z
-        .object({
-          ...notEnabledFields,
-          history_starts: z.string().optional(),
-          latest_month: z.string().optional(),
-          last_full_month: z.string().optional(),
-        })
-        .passthrough(),
-    },
-    wrapTool('get_trade_data_coverage', async () =>
-      executeGetTradeDataCoverage(client),
+    get_trade_data_coverage: tool(
+      {
+        description:
+          'What the trade intelligence data covers right now: where history starts (January 2022), the latest month and whether it is still incomplete, the last full month, the 12-month window search_importers uses, and when the data was last built. ' +
+          'Call it before quoting a period or when the user asks how current or how far back the data goes. It also shows whether trade intelligence is enabled for the account.',
+        inputSchema: z.preprocess(
+          stripLegacyIntent,
+          getTradeDataCoverageInputSchema,
+        ),
+        outputSchema: z
+          .object({
+            ...notEnabledFields,
+            history_starts: z.string().optional(),
+            latest_month: z.string().optional(),
+            last_full_month: z.string().optional(),
+          })
+          .passthrough(),
+      },
+      async () => executeGetTradeDataCoverage(client),
     ),
-  );
+  } satisfies Record<ToolName, ToolRegistrar>;
+
+  for (const definition of selectedTools) {
+    tools[definition.name](definition);
+  }
 
   // ==================== PROMPTS ====================
 
@@ -2179,7 +2033,9 @@ export function createTerminal49McpServer(
 }
 
 // Stdio transport runner
-export async function runStdioServer() {
+export async function runStdioServer(
+  serve: (factory: () => McpServer) => void = serveStdio,
+) {
   const apiToken = process.env.T49_API_TOKEN;
   const apiBaseUrl = process.env.T49_API_BASE_URL;
 
@@ -2199,15 +2055,32 @@ export async function runStdioServer() {
   // registers no listener at all) when PostHog is unconfigured.
   registerPostHogExitHook();
 
+  let toolSelection: ToolSelection;
+  try {
+    toolSelection = resolveToolSelection({
+      env: process.env,
+      credentialType: 'api_key',
+    });
+  } catch (error) {
+    console.error(
+      `ERROR: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    process.exit(1);
+  }
+
   if (process.env.T49_MCP_STDIO_BANNER === '1') {
-    console.error('Terminal49 MCP Server v1.0.0 running on stdio');
-    console.error('Available: 20 tools | 3 prompts | 4 resources');
+    console.error(`Terminal49 MCP Server v${SERVER_VERSION} running on stdio`);
+    console.error(
+      `Available: ${selectTools(toolSelection).length} tools | 3 prompts | 4 resources`,
+    );
     console.error('SDK: @modelcontextprotocol/server v2 (McpServer API)');
   }
 
-  serveStdio(() =>
+  serve(() =>
     createTerminal49McpServer(apiToken, apiBaseUrl, undefined, {
       transport: 'stdio',
+      credentialType: 'api_key',
+      ...toolSelection,
     }),
   );
 }

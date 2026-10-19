@@ -2,6 +2,7 @@ import {
   Client,
   StreamableHTTPClientTransport,
 } from '@modelcontextprotocol/client';
+import { defaultTools } from '../src/tools/registry.ts';
 
 const endpoint = process.env.MCP_HTTP_ENDPOINT;
 const protocolVersion = process.env.MCP_PROTOCOL_VERSION;
@@ -23,6 +24,7 @@ if (!token) {
 const isModern = protocolVersion === '2026-07-28';
 const expectedHandshake = isModern ? 'server/discover' : 'initialize';
 const observedRequests = [];
+const expectedTools = defaultTools().map((tool) => tool.name);
 
 const client = new Client(
   { name: 'terminal49-preview-protocol-ci', version: '1.0.0' },
@@ -77,18 +79,9 @@ try {
   }
 
   const { tools } = await client.listTools();
-  const requiredTools = [
-    'search_docs',
-    'whoami',
-    'set_party_role',
-    'set_custom_field',
-  ];
-  if (
-    tools.length !== 23 ||
-    !requiredTools.every((name) => tools.some((tool) => tool.name === name))
-  ) {
+  if (tools.map((tool) => tool.name).join() !== expectedTools.join()) {
     throw new Error(
-      `Expected 23 preview tools including ${requiredTools.join(', ')} over ${protocolVersion}, received ${tools.length}`,
+      `Expected preview tools ${expectedTools.join(', ')} over ${protocolVersion}, received ${tools.map((tool) => tool.name).join(', ')}`,
     );
   }
 
