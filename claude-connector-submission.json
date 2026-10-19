@@ -10,7 +10,7 @@
   "listing": {
     "name": "Terminal49",
     "tagline": "Track ocean shipments",
-    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, create new tracking requests, and, where trade intelligence is enabled, research US ocean import markets (importers, products, origins, ports, and carriers).",
+    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, and, where trade intelligence is enabled, research US ocean import markets (importers, products, origins, ports, and carriers). At the user's request it can also track containers, stop or resume tracking, cancel pending tracking requests, and set parties and custom field values on containers and shipments. Changes that remove or replace data show a preview first and run only after the user confirms.",
     "categories": [
       "Business"
     ],
@@ -71,6 +71,7 @@
       "Check supported shipping lines",
       "Create new tracking requests",
       "Stop or resume shipment tracking and cancel pending tracking requests",
+      "Set parties and custom field values on containers and shipments",
       "Research US ocean import markets: importers, products, origin countries, ports, and carriers"
     ]
   }

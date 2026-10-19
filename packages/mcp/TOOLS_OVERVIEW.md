@@ -635,28 +635,32 @@ cancel_tracking_request({
 ---
 
 ### 25. `set_party_role`
-**Purpose**: Attach a party to containers or shipments in a role, replace the party in that role, or detach it. Tier C: a call that detaches a party needs the user's approval; a call that only attaches runs at once.
+**Purpose**: Attach a party to up to 50 containers or shipments in a role, replace the party in that role, or detach it. Tier C: a call that detaches a party asks the user; a call that only attaches runs at once.
 
 **Usage**:
 ```typescript
 set_party_role({
   container_ids: ["<container-id>"], // or shipment_ids; 1-50, not both
   role: "pickup_dray_carrier", // containers support only this role
-  party_id: "<party-id-from-list_parties>",
+  party_id: "<party-id-from-the-record's-party_roles>",
   action: "replace" // or "add" (beside others) or "remove"
 })
+// When a record would lose a party, after the user approves the preview:
+set_party_role({ ...sameArguments, confirmation_token: "t49ct1...." })
 ```
 
 **Returns**:
-- `updated`, `unchanged` (already matched), `failed` (`id`, `error`), and `not_attempted` (the call ran out of time before reaching them; nothing changed on them)
-- A record still being saved when time ran out, or whose save failed without a clear answer (for example a dropped connection), is in `failed` with an error saying the change may or may not have been applied; check it before calling again
+- Preview, when any record loses a party: `reach` (one sentence naming the party and the counts), `changes` with one entry per record that changes (`id`, `current` and `proposed` as lists of `party_id` and `party_name`), `unchanged` (a count), `failed` (records that cannot be changed, with the error) and `not_attempted` (records not read in time). Records that already match are left out. The token covers the party assignments in the role on every record read.
+- `updated`, `unchanged` (already matched), `failed` (`id`, `error`), and `not_attempted` (the call ran out of time before reaching them; nothing changed on them), plus a `summary`. The MCP text content is this same full result.
+- A record still being saved when time ran out, or whose save failed without a clear answer (for example a dropped connection), is in `failed` with an error saying the change may or may not have been applied; check it before calling again.
+- `party_not_found` when Terminal49 has no party with `party_id`. Nothing is read or changed. A `remove` whose `party_id` matches no role on a record that holds another party in that role fails that record with the same guidance: take `party_id` from the record's `party_roles`, not from `list_parties`, which can list a customer under its account id.
 
-**When to Use**: Only when the user asks to change these records. Resolve the company with `list_parties` first. `pickup_dray_carrier` and `customer` hold one party per record: `add` fails where a different party holds one, and `replace` swaps it (except a shipment `customer`, which must be removed, then added).
+**When to Use**: Only when the user asks to change these records. `pickup_dray_carrier` and `customer` hold one party per record: `add` fails where a different party holds one, and `replace` swaps it (except a shipment `customer`, which must be removed, then added).
 
 ---
 
 ### 26. `set_custom_field`
-**Purpose**: Set or clear one of the account's custom fields on containers or shipments (destructive writes: overwrites or clears the previous value)
+**Purpose**: Set or clear one of the account's custom fields on up to 50 containers or shipments. Tier C: a call that overwrites or clears a value asks the user; a call that only fills empty fields runs at once.
 
 **Usage**:
 ```typescript
@@ -666,11 +670,15 @@ set_custom_field({
   api_slug: "sales_rep",
   value: "Sofia Cortina" // an array of option values for a multi-select field; null clears
 })
+// When a record would lose a value, after the user approves the preview:
+set_custom_field({ ...sameArguments, confirmation_token: "t49ct1...." })
 ```
 
-**Returns**: the same `updated`, `unchanged`, `failed`, and `not_attempted` lists as `set_party_role`
+**Returns**:
+- Preview, when any record has a value that would be overwritten or cleared: `reach`, `changes` with one entry per record that changes (`id`, `current`, `proposed`), `unchanged`, `failed` and `not_attempted`, as for `set_party_role`. The token covers the field's value on every record read.
+- The same `updated`, `unchanged`, `failed`, `not_attempted` and `summary` as `set_party_role`.
 
-**When to Use**: Only when the user asks to change these records. Read the field's `api_slug` from `get_container` or `get_shipment_details` with custom fields first.
+**When to Use**: Only when the user asks to change these records. Read the field's `api_slug` from `list_custom_field_definitions`, or from `get_container` or `get_shipment_details` with custom fields, first.
 
 ---
 
