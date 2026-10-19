@@ -12,13 +12,20 @@ import {
 } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
-import { executeGetContainer } from './tools/get-container.js';
+import {
+  containerStatusSchema,
+  executeGetContainer,
+} from './tools/get-container.js';
 import { executeTrackContainer } from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
-import { executeGetShipmentDetails } from './tools/get-shipment-details.js';
+import {
+  executeGetShipmentDetails,
+  shipmentDetailsSchema,
+} from './tools/get-shipment-details.js';
 import {
   executeGetContainerTransportEvents,
   getContainerTransportEventsTool,
+  transportEventsSchema,
 } from './tools/get-container-transport-events.js';
 import { executeGetSupportedShippingLines } from './tools/get-supported-shipping-lines.js';
 import {
@@ -1450,7 +1457,7 @@ export function createTerminal49McpServer(
                 '• party_roles: Companies assigned to this container by role (customer, shipper, consignee, pickup_dray_carrier, ...), each with its party role id',
             ),
         }),
-        outputSchema: z.object({}).passthrough(),
+        outputSchema: containerStatusSchema,
       },
       async ({ id, include }) => executeGetContainer({ id, include }, client),
     ),
@@ -1487,7 +1494,7 @@ export function createTerminal49McpServer(
               'Include the companies assigned to this shipment by role (customer, shipper, consignee, ...), each with its party role id. Default: false',
             ),
         }),
-        outputSchema: z.object({}).passthrough(),
+        outputSchema: shipmentDetailsSchema,
       },
       async (args) => executeGetShipmentDetails(args, client),
     ),
@@ -1500,7 +1507,7 @@ export function createTerminal49McpServer(
             .uuid()
             .describe('The Terminal49 container ID (UUID format)'),
         }),
-        outputSchema: z.object({}).passthrough(),
+        outputSchema: transportEventsSchema,
       },
       async ({ id }) => executeGetContainerTransportEvents({ id }, client),
     ),
